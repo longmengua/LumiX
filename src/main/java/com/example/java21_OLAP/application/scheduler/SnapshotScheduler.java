@@ -43,10 +43,10 @@ public class SnapshotScheduler {
                 map.put("account", Map.of("uid", acc.uid()));
 
                 var positions = posRepo.findAllByUid(uid).stream().map(p -> Map.of(
-                        "base", p.getSymbol().base(),
-                        "quote", p.getSymbol().quote(),
-                        "priceScale", p.getSymbol().priceScale(),
-                        "qtyScale", p.getSymbol().qtyScale(),
+                        "base", p.getSymbol().getBase(),
+                        "quote", p.getSymbol().getQuote(),
+                        "priceScale", p.getSymbol().getPriceScale(),
+                        "qtyScale", p.getSymbol().getQtyScale(),
                         "mode", p.getMode().name(),
                         "lev", p.getLeverage()
                 )).toList();

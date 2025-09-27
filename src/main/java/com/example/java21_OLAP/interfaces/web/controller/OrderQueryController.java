@@ -30,14 +30,13 @@ public class OrderQueryController {
 
         List<OrderInfoResponse> result = orders.stream()
                 .map(o -> new OrderInfoResponse(
-                        o.getId(),
+                        o.getId().toString(),
                         o.getUid(),
                         o.getSymbol().code(),
                         o.getSide(),
                         o.getType(),
                         o.getPrice(),
                         o.getQty(),
-                        o.getRemainQty(),
                         o.getStatus().name(),
                         o.getCtime()
                 ))
@@ -54,14 +53,13 @@ public class OrderQueryController {
 
         List<OrderInfoResponse> result = orders.stream()
                 .map(o -> new OrderInfoResponse(
-                        o.getId(),
+                        o.getId().toString(),
                         o.getUid(),
                         o.getSymbol().code(),
                         o.getSide(),
                         o.getType(),
                         o.getPrice(),
                         o.getQty(),
-                        o.getRemainQty(),
                         o.getStatus().name(),
                         o.getCtime()
                 ))

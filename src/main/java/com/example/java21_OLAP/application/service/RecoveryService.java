@@ -60,8 +60,12 @@ public class RecoveryService {
             var levNum = (Number) pm.get("lev");
             var lev = (levNum == null) ? 20 : levNum.intValue();
 
-            Position p = new Position(uid, sym, mode, java.math.BigDecimal.valueOf(lev));
-            positionRepo.save(p);
+            positionRepo.save(
+                    Position.builder()
+                            .uid(uid)
+                            .symbol(sym)
+                            .mode(mode)
+                            .leverage(java.math.BigDecimal.valueOf(lev)).build());
         }
 
         long lastSeq = snap.lastEventSeq();

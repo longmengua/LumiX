@@ -42,6 +42,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
   # -----------------------------
   # Redis（給 Repository 使用）
@@ -53,15 +54,16 @@ services:
       - "6379:6379"
     command: ["redis-server", "--appendonly", "yes"]
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping | grep PONG || exit 1"]
       interval: 5s
       timeout: 3s
       retries: 20
     volumes:
       - redis_data:/data
+    restart: unless-stopped
 
   # -----------------------------
-  # MySQL 8.4（若你不用 JPA 可忽略）
+  # MySQL 8.4
   # -----------------------------
   mysql:
     image: mysql:8.4
@@ -76,7 +78,6 @@ services:
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_0900_ai_ci
-      --default-authentication-plugin=caching_sha2_password
       --skip-log-bin
     volumes:
       - mysql_data:/var/lib/mysql
@@ -85,18 +86,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    restart: unless-stopped
 
-# 依賴排序（可選）：如要在同個 compose 裡再加上你的 app container，可用 depends_on + condition
-# 例如：
-#   app:
-#     build: .
-#     depends_on:
-#       single-kafka:
-#         condition: service_healthy
-#       redis:
-#         condition: service_healthy
-#       mysql:
-#         condition: service_healthy
+# 如果要把你的 Spring Boot app 也放進來，建議加 depends_on 並等待健康檢查通過再啟動。
 
 volumes:
   single_kafka_data:

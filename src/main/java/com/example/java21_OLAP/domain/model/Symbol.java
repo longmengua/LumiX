@@ -1,13 +1,21 @@
 package com.example.java21_OLAP.domain.model;
 
+import lombok.*;
+import lombok.extern.jackson.Jacksonized;
+
 /**
- * Symbol (交易對)
- *
- * - base: BTC
- * - quote: USDT
- * - priceScale: 小數精度
- * - qtyScale: 數量精度
+ * 交易對值物件
  */
-public record Symbol(String base, String quote, int priceScale, int qtyScale) {
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Builder
+@Jacksonized
+public class Symbol {
+    private String base;
+    private String quote;
+    private int priceScale;
+    private int qtyScale;
     public String code() { return base + quote; }
 }
+

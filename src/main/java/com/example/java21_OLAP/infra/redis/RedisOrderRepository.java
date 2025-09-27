@@ -61,8 +61,15 @@ public class RedisOrderRepository implements OrderRepository {
      */
     @Override
     public void save(Order o) {
+        // 1) 寫單筆
         redis.opsForValue().set(orderKey(o.getId()), o);
-        redis.opsForList().rightPush(listKey(o.getUid()), o.getId().toString());
+
+        // 2) 確保使用者清單不重複（Redis 7 有 LPOS，可用來判斷是否已存在）
+        var uidKey = listKey(o.getUid());
+        Long idx = redis.opsForList().indexOf(uidKey, o.getId().toString()); // Spring Data Redis 3.3+ 有 indexOf；若沒有可改用 Lua/Set
+        if (idx == null || idx < 0) {
+            redis.opsForList().rightPush(uidKey, o.getId().toString());
+        }
     }
 
     /**

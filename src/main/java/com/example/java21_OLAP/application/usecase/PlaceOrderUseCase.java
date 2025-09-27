@@ -11,14 +11,13 @@ import java.math.BigDecimal;
  * 下單用例（接入撮合引擎）
  *
  * - LIMIT：使用者提供的 price/qty
- * - MARKET：為了在「限價簿」中吃單，用極端價格模擬（BUY → 超高價、SELL → 超低價）
- *   （正式版會在引擎層支援 MARKET 型別；此處為簡化）
+ * - MARKET：為了在限價簿中吃單，用極端價格模擬（BUY → 超高價、SELL → 超低價）
  */
 @Component
 public class PlaceOrderUseCase {
 
-    private static final BigDecimal MARKET_BUY_PRICE  = new BigDecimal("1000000000");   // 很高的價格
-    private static final BigDecimal MARKET_SELL_PRICE = new BigDecimal("0.00000001");   // 很低的價格
+    private static final BigDecimal MARKET_BUY_PRICE  = new BigDecimal("1000000000");   // 超高價
+    private static final BigDecimal MARKET_SELL_PRICE = new BigDecimal("0.00000001");   // 超低價
 
     private final OrderService orderService;
 
@@ -27,30 +26,36 @@ public class PlaceOrderUseCase {
     }
 
     public void handle(PlaceOrderCommand cmd) {
-        // 解析 symbol（簡化：假設 quote = USDT）
+        // 解析 symbol（簡化：假設 quote=USDT）
         String code = cmd.symbol();
         String base = code.replace("USDT", "");
-        Symbol sym = new Symbol(base, "USDT", 2, 3);
+
+        // ✅ 使用 Builder 產生 Symbol（因為 Symbol 改成 @Builder/@Jacksonized）
+        Symbol sym = Symbol.builder()
+                .base(base)
+                .quote("USDT")
+                .priceScale(2)
+                .qtyScale(3)
+                .build();
 
         BigDecimal price;
         if (cmd.type() == OrderType.MARKET) {
             price = (cmd.side() == OrderSide.BUY) ? MARKET_BUY_PRICE : MARKET_SELL_PRICE;
         } else {
-            price = cmd.price(); // LIMIT 必須有價格
+            price = cmd.price();
             if (price == null) throw new IllegalArgumentException("LIMIT order requires price");
         }
 
-        // 建立訂單（剩餘 qty 初始 = 下單 qty）
-        Order order = new Order(
-                cmd.uid(),
-                sym,
-                cmd.side(),
-                cmd.type(),
-                price,
-                cmd.qty()
-        );
+        // 建立訂單（這版的 Order 將 qty 視為「剩餘數量」）
+        Order order = Order.builder()
+                .uid(cmd.uid())
+                .symbol(sym)
+                .side(cmd.side())
+                .type(cmd.type())
+                .price(price)
+                .qty(cmd.qty())
+                .build();
 
-        // 丟給 OrderService → 撮合 → 事件落庫/發布 → 倉位更新
         orderService.processOrder(order);
     }
 }

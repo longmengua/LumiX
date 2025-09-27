@@ -35,7 +35,7 @@ public class RedisPositionRepository implements PositionRepository {
 
     @Override
     public void save(Position p) {
-        redis.opsForHash().put(key(p.uid()), p.symbol().code(), p);
+        redis.opsForHash().put(key(p.getUid()), p.getSymbol().code(), p);
     }
 
     @Override

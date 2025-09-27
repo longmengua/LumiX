@@ -17,7 +17,6 @@ public record OrderInfoResponse(
         OrderType type,
         BigDecimal price,
         BigDecimal qty,
-        BigDecimal remainQty,
         String status,
         Instant ctime
 ) {}
