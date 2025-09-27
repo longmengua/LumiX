@@ -1,15 +1,19 @@
 version: "3.9"
 
 services:
+  # -----------------------------
+  # Kafka (KRaft 單節點)
+  # -----------------------------
   single-kafka:
     image: bitnami/kafka:3.5.1
     container_name: single-kafka
     hostname: single-kafka
     ports:
-      - "9092:9092"   # 主機/外部：localhost:9092
+      - "9092:9092"   # Host/外部用：localhost:9092
     environment:
+      # 啟用 KRaft（無需 ZooKeeper）
       KAFKA_ENABLE_KRAFT: "yes"
-      KAFKA_KRAFT_CLUSTER_ID: "oU-3kfkGQyKz2hP2uj9tOg"    # 任意固定ID即可
+      KAFKA_KRAFT_CLUSTER_ID: "oU-3kfkGQyKz2hP2uj9tOg"    # 固定 UUID 亦可
       KAFKA_CFG_NODE_ID: "4"
       KAFKA_CFG_PROCESS_ROLES: "controller,broker"
       KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
@@ -22,13 +26,15 @@ services:
       KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
       KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "INTERNAL"
 
+      # 資料與 Topic 設定
       KAFKA_CFG_LOG_DIRS: "/bitnami/kafka/data"
       KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      # 單機必要參數（避免 __consumer_offsets 建 topic 失敗）
+      # 單節點必要參數（避免 __consumer_offsets 建立失敗）
       KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
       KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
       KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
-      KAFKA_CFG_NUM_PARTITIONS: "1"
+      # 預設分區數量 → 調成 3（與程式中 NewTopic(…, 3, …) 對齊）
+      KAFKA_CFG_NUM_PARTITIONS: "3"
     volumes:
       - single_kafka_data:/bitnami/kafka
     healthcheck:
@@ -37,6 +43,26 @@ services:
       timeout: 5s
       retries: 10
 
+  # -----------------------------
+  # Redis（給 Repository 使用）
+  # -----------------------------
+  redis:
+    image: redis:7.4-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    volumes:
+      - redis_data:/data
+
+  # -----------------------------
+  # MySQL 8.4（若你不用 JPA 可忽略）
+  # -----------------------------
   mysql:
     image: mysql:8.4
     container_name: mysql
@@ -60,6 +86,19 @@ services:
       timeout: 5s
       retries: 10
 
+# 依賴排序（可選）：如要在同個 compose 裡再加上你的 app container，可用 depends_on + condition
+# 例如：
+#   app:
+#     build: .
+#     depends_on:
+#       single-kafka:
+#         condition: service_healthy
+#       redis:
+#         condition: service_healthy
+#       mysql:
+#         condition: service_healthy
+
 volumes:
   single_kafka_data:
+  redis_data:
   mysql_data:
