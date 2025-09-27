@@ -1,0 +1,62 @@
+# ---------------------------------------------------------------------------
+# Profile: dev (本機開發模式)
+# - Spring Boot 在本機跑，連接 docker-compose 暴露出來的 MySQL:3306、Kafka:9092
+# ---------------------------------------------------------------------------
+spring:
+  config:
+    activate:
+      on-profile: dev   # 啟用方式：--spring.profiles.active=dev
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/appdb?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    # 資料庫連線字串，指向本機 localhost:3306 -> docker-compose 對外映射的 MySQL
+    username: appuser   # MySQL 帳號（對應 docker-compose 環境變數）
+    password: apppass   # MySQL 密碼
+    driver-class-name: com.mysql.cj.jdbc.Driver  # JDBC Driver 類別
+    hikari:             # HikariCP 連線池設定
+      maximum-pool-size: 10      # 最大連線數
+      minimum-idle: 2            # 最小空閒連線數
+      connection-timeout: 30000  # 取得連線的最長等待時間（毫秒）
+      idle-timeout: 600000       # 空閒連線回收時間（毫秒）
+      max-lifetime: 1800000      # 單一連線的最長存活時間（毫秒）
+      validation-timeout: 5000   # 驗證連線可用性的超時（毫秒）
+
+  jpa:
+    open-in-view: false            # 關閉 OSIV，避免懶加載污染 Web 層
+    hibernate:
+      ddl-auto: create-drop               # 控制 Hibernate 啟動時對資料庫 schema 的處理方式：
+                                      #   none        → 不做任何事（建議搭配 Flyway 使用，正式環境首選）
+                                      #   validate    → 驗證實體與資料庫是否一致，不一致就報錯（CI/開發期常用）
+                                      #   update      → 嘗試修改資料庫使其符合實體（開發測試可用，生產不推薦）
+                                      #   create      → 啟動時建立新 schema，覆蓋原有表（資料會被清空）
+                                      #   create-drop → 啟動時建立 schema，應用結束時丟棄（單元測試方便）
+    show-sql: true                 # 是否在日誌中輸出 SQL
+    properties:
+      hibernate.format_sql: true   # SQL 輸出格式化
+      hibernate.jdbc.time_zone: UTC  # JDBC 層統一時區
+
+  jackson:
+    time-zone: Asia/Taipei         # JSON 序列化/反序列化的時區
+
+  kafka:
+    bootstrap-servers: localhost:9092  # Kafka broker 的位址（本機連 docker 的映射埠）
+    client-id: ${spring.application.name}-dev  # Kafka client ID
+    properties:
+      request.timeout.ms: 30000       # Producer/Consumer 請求超時
+      delivery.timeout.ms: 120000     # 投遞超時
+    producer:
+      acks: all                       # Producer 確認模式：all = 最安全
+      retries: 5                      # 失敗重試次數
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer   # key 序列化器
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer # value 序列化器
+      linger-ms: 5                    # 批次合併延遲時間
+      batch-size: 16384               # 批次大小（bytes）
+    consumer:
+      group-id: ${spring.application.name}-dev-group  # Consumer group ID
+      auto-offset-reset: latest       # 從最新 offset 開始
+      enable-auto-commit: false       # 關閉自動提交 offset
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer   # key 反序列化器
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer # value 反序列化器
+      max-poll-records: 500           # 每次 poll 最大筆數
+      properties:
+        isolation.level: read_committed  # 只讀取已提交的交易訊息
