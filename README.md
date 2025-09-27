@@ -7,16 +7,37 @@
 - 快照 / 強平
 - API 提供下單、查詢、訂單簿
 
-架構遵循 **Clean Architecture**：
-- **domain**：核心業務模型與介面
-- **application**：應用場景用例（UseCase）
-- **infra**：技術細節（Redis、Kafka、DB、撮合引擎實作）
-- **interfaces**：API 層（Web / Consumer）
+## 🏛️ 系統架構
 
----
+```
++--------------------------+
+|      interfaces          | <- I/O 邊界層
+|                          |    - Web (REST API Controller)
+|                          |    - Consumer (Kafka / MQ)
+|                          |    - DTO / Validator / Exception Handler
++--------------------------+
+|      application         | <- 應用層 (Use Case 驅動流程)
+|                          |    - Command / UseCase
+|                          |    - Application Service
+|                          |    - Scheduler (排程)
+|                          |    - Event (應用事件)
++--------------------------+
+|      domain              | <- 核心業務邏輯 (不依賴任何技術)
+|                          |    - Model (Entity, Value Object, Aggregate)
+|                          |    - Domain Event
+|                          |    - Repository (抽象介面)
+|                          |    - Service (例如 MatchingEngine)
++--------------------------+
+|      infra               | <- 技術細節 (Infrastructure)
+|                          |    - Redis Repository 實作
+|                          |    - Kafka Adapter
+|                          |    - Config (Spring Beans, Redis, Kafka)
+|                          |    - InMemoryMatchingEngine (撮合引擎實作)
++--------------------------+
 
-## 📦 資料夾結構
+```
 
+## 🗂️ 資料夾結構
 
 ```
 com.example
@@ -97,12 +118,6 @@ com.example
       └─ validator
 ```
 
-
----
-
-
----
-
 ## 🧠 核心功能
 
 ### 1. 撮合引擎 (Matching Engine)
@@ -129,5 +144,3 @@ com.example
 
 ### 4. 強平 (Liquidation)
 - **LiquidateCommand / UseCase**：當保證金不足時觸發強平訂單，丟回撮合引擎
-
-
