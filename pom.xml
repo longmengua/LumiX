@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-  專案：java21-OLAP
+  專案：java21-exchange
   說明：
   - Spring Boot 3.5.6 + Java 21
   - 含 Web、JPA、Kafka、Redis、Validation、Lombok、Devtools
@@ -21,10 +21,10 @@
 
     <!-- 專案座標 -->
     <groupId>com.example</groupId>
-    <artifactId>java21-OLAP</artifactId>
+    <artifactId>java21-exchange</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>java21-OLAP</name>
-    <description>java21-OLAP</description>
+    <name>java21-exchange</name>
+    <description>java21-exchange</description>
 
     <!-- 可留白或日後補齊（開源資訊、SCM 等） -->
     <url/>

@@ -69,7 +69,7 @@ spring:
       request.timeout.ms: 30000
       delivery.timeout.ms: 120000
       # 允許反序列化來自我們 package 的類別（消費端）
-      spring.json.trusted.packages: "com.example.java21_OLAP.*"
+      spring.json.trusted.packages: "com.example.exchange.*"
     producer:
       acks: all
       retries: 5
@@ -89,11 +89,11 @@ spring:
       properties:
         isolation.level: read_committed
         # 信任反序列化的 package（或設為 * 僅在本機開發時使用）
-        spring.json.trusted.packages: "com.example.java21_OLAP.*"
+        spring.json.trusted.packages: "com.example.exchange.*"
         # 若使用 record type，需要 type info：預設 JsonDeserializer 會用 header 判斷類型
         spring.json.use.type.headers: true
         # 也可指定預設目標類型（單 topic 類型固定時好用）
-        # spring.json.value.default.type: com.example.java21_OLAP.domain.event.TradeExecuted
+        # spring.json.value.default.type: com.example.exchange.domain.event.TradeExecuted
 
   # --------------------------------
   # 排程（我們有 Snapshot/FundingRate Scheduler）
@@ -133,4 +133,4 @@ logging:
     org.springframework.web: INFO
     org.springframework.kafka: INFO
     org.apache.kafka: WARN
-    com.example.java21_OLAP: DEBUG  # 你自己的程式碼
+    com.example.exchange: DEBUG  # 你自己的程式碼
