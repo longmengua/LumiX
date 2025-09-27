@@ -38,7 +38,7 @@ public class RecoveryService {
 
         Snapshot snap = snapOpt.get();
 
-        // 1) 還原 Account（示範：只建立空帳戶；實務上應從 snapshot 內容重建所有欄位）
+        // 1) 還原 Account（示範：只建立空帳戶；實務上應從 snapshot.sh 內容重建所有欄位）
         Map<String, Object> accMap = (Map<String, Object>) snap.aggregates().get("account");
         if (accMap != null) {
             Account acc = new Account(uid);
