@@ -1,51 +1,65 @@
 package com.example.java21_OLAP.application.service;
 
-import com.example.java21_OLAP.domain.model.*;
-import com.example.java21_OLAP.domain.repository.*;
+import com.example.java21_OLAP.application.event.DomainEventPublisher;
 import com.example.java21_OLAP.domain.event.TradeExecuted;
+import com.example.java21_OLAP.domain.model.*;
+import com.example.java21_OLAP.domain.repository.EventStore;
+import com.example.java21_OLAP.domain.repository.PositionRepository;
+import com.example.java21_OLAP.domain.service.MatchingEngine;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.util.List;
 
 /**
- * 下單/成交相關服務（簡化示範）
- * - 真實專案應該把撮合交給撮合引擎，這裡僅示範生成成交事件並作用在 Position
+ * 訂單/成交服務
+ *
+ * - 現在不再「假裝成交」，而是把訂單交給 MatchingEngine
+ * - 撮合回來的每一筆 TradeExecuted：
+ *     1) append 到 EventStore（取得 seq）
+ *     2) 作用到對應 uid 的 Position（買 +qty；賣 -qty）
+ *     3) 發布事件（Kafka/其他），供外部副作用（快取、審計、推播）
  */
 @Service
 public class OrderService {
 
-    private final OrderRepository orderRepo;
+    private final MatchingEngine matchingEngine;
     private final PositionRepository posRepo;
     private final EventStore eventStore;
+    private final DomainEventPublisher<TradeExecuted> publisher;
 
-    public OrderService(OrderRepository orderRepo, PositionRepository posRepo, EventStore eventStore) {
-        this.orderRepo = orderRepo;
+    public OrderService(MatchingEngine matchingEngine,
+                        PositionRepository posRepo,
+                        EventStore eventStore,
+                        DomainEventPublisher<TradeExecuted> publisher) {
+        this.matchingEngine = matchingEngine;
         this.posRepo = posRepo;
         this.eventStore = eventStore;
+        this.publisher = publisher;
     }
 
     /**
-     * 執行「市價成交」示範流（實務上由撮合引擎產生）
-     * - 將成交結果以 TradeExecuted 事件形式 append 到 EventStore
-     * - 並把成交影響套用到 Position（VWAP/數量變化）
+     * 下單 → 撮合 → 回寫持倉與事件
+     * @param order 建立好的訂單（LIMIT 或 MARKET 模擬成極端價格）
      */
-    public TradeExecuted executeMarket(long uid, Symbol symbol, OrderSide side, BigDecimal qty, BigDecimal price) {
-        // 簽名：BUY -> +qty；SELL -> -qty
-        BigDecimal signedQty = (side == OrderSide.BUY) ? qty : qty.negate();
+    public void processOrder(Order order) {
+        // 1) 丟進撮合引擎
+        List<TradeExecuted> trades = matchingEngine.submitOrder(order);
 
-        Position pos = posRepo.find(uid, symbol)
-                .orElseGet(() -> new Position(uid, symbol, MarginMode.CROSS, BigDecimal.valueOf(20)));
+        // 2) 處理每筆成交
+        for (TradeExecuted t : trades) {
+            // 2.1 事件入庫並取得 seq
+            long seq = eventStore.append(t);
+            TradeExecuted withSeq = t.withSeq(seq);
 
-        // 作用成交到倉位（更新均價/數量）
-        pos.applyTrade(signedQty, price);
-        posRepo.save(pos);
+            // 2.2 作用到 Position（注意 qty 帶方向：買 +，賣 -）
+            Position pos = posRepo.find(t.uid(), t.symbol())
+                    .orElseGet(() -> new Position(t.uid(), t.symbol(), MarginMode.CROSS, BigDecimal.valueOf(20)));
+            pos.applyTrade(t.qty(), t.price());
+            posRepo.save(pos);
 
-        // 追加事件到 EventStore，取得遞增 seq
-        TradeExecuted appended = new TradeExecuted(uid, symbol, signedQty, price, 0L, Instant.now());
-        long seq = eventStore.append(appended);
-
-        // 回傳帶 seq 的事件（方便上層/外部系統引用）
-        return appended.withSeq(seq);
+            // 2.3 對外發布（Kafka 等）
+            publisher.publish(withSeq);
+        }
     }
 }

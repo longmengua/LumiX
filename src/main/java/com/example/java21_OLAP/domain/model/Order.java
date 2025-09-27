@@ -1,5 +1,7 @@
 package com.example.java21_OLAP.domain.model;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
@@ -13,6 +15,7 @@ import java.util.UUID;
  * - price: 價格 (Market 可能為 null)
  * - qty: 剩餘數量
  */
+@Data
 public class Order {
 
     public enum Status { NEW, PARTIALLY_FILLED, FILLED, CANCELED }
