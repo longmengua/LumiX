@@ -1,113 +1,163 @@
-package com.example.exchange.infra.redis;
+package com.example.exchange.infra.redis; // 套件名稱，放在 infra.redis 命名空間下
 
-import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.repository.OrderRepository;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Repository;
+import com.example.exchange.domain.model.Order; // 匯入網域模型：訂單
+import com.example.exchange.domain.repository.OrderRepository; // 匯入訂單儲存庫介面
+import org.springframework.dao.DataAccessException; // 匯入資料存取例外
+import org.springframework.data.redis.core.*; // 匯入 Spring Data Redis 相關操作介面
+import org.springframework.stereotype.Repository; // 匯入 Repository 註解
+import org.springframework.transaction.support.TransactionSynchronizationManager; // 匯入交易同步管理器，用來判斷是否在事務中
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import java.util.*; // 匯入 Java 通用工具類別
+import java.util.stream.Collectors; // 匯入串流工具
 
 /**
- * Order Repository 的 Redis 實作
- *
- * 設計概念：
- * 1. 每一筆訂單（Order）會存成一個 Redis key
- *    - key 格式：order:{uuid}
- *    - value   ：Order 物件（需序列化，可用 JDK 序列化或 JSON）
- *
- * 2. 每個使用者會有一份「訂單 ID 列表」
- *    - key 格式：ord:{uid}
- *    - value   ：List<String>（訂單 UUID 字串）
- *
- * 優點：
- * - 存取速度快（O(1) 讀寫）
- * - 適合撮合引擎高頻查詢
- *
- * 限制：
- * - Redis 不是長期存儲，適合「快取/即時狀態」
- * - 歷史訂單仍應定期落庫 MySQL
+ * RedisOrderRepository
+ * -------------------------------------------------
+ * 設計重點：
+ * 1) 單筆訂單本體：key = order:{uuid}，value = Order 物件
+ * 2) 每位用戶的訂單索引：
+ *    - 有序清單(List)：key = ord:list:{uid}，保存訂單 ID（字串）以保留插入順序
+ *    - 去重集合(Set)：key = ord:set:{uid}，用於檢查是否已存在，避免重複 push 到 List
+ * 3) 批量查詢使用 multiGet，減少往返；兼容叢集
+ * 4) 自動清理懸掛(dangling) ID（List/Set 都會移除），但避免在 Spring 事務中執行
+ * 5) 保留方法語意：openOrders / findOpenOrders / findAllOrders
  */
 @Repository
 public class RedisOrderRepository implements OrderRepository {
 
-    private final RedisTemplate<String, Object> redis;
+    private final RedisTemplate<String, Object> redis; // 注入的 RedisTemplate，用來與 Redis 互動（key=String, value=Object）
 
-    public RedisOrderRepository(RedisTemplate<String, Object> redis) {
-        this.redis = redis;
+    public RedisOrderRepository(RedisTemplate<String, Object> redis) { // 建構子，透過依賴注入取得 RedisTemplate
+        this.redis = redis; // 指派成員變數
     }
 
-    /** 使用者訂單列表的 key，例如 ord:1001 */
-    private String listKey(long uid) { return "ord:" + uid; }
+    // ========================= Key 規範 =========================
 
-    /** 單筆訂單的 key，例如 order:550e8400-e29b-41d4-a716-446655440000 */
-    private String orderKey(UUID id) { return "order:" + id; }
+    private String listKey(long uid) { return "ord:list:" + uid; } // 取得用戶訂單清單(List)的 key，例如 ord:list:1001
 
-    /**
-     * 依 UUID 查詢訂單
-     * - 從 Redis 取出 key = order:{uuid}
-     */
+    private String setKey(long uid) { return "ord:set:" + uid; } // 取得用戶訂單集合(Set)的 key，例如 ord:set:1001
+
+    private String orderKey(UUID id) { return "order:" + id; } // 取得單筆訂單本體的 key，例如 order:550e8400-e29b-41d4-a716-446655440000
+
+    // ========================= 介面實作 =========================
+
     @Override
-    public Optional<Order> findById(UUID id) {
-        return Optional.ofNullable((Order) redis.opsForValue().get(orderKey(id)));
+    public Optional<Order> findById(UUID id) { // 依照 UUID 查詢單筆訂單
+        Object v = redis.opsForValue().get(orderKey(id)); // 直接透過 ValueOperations 取得值（對應 GET）
+        if (!(v instanceof Order)) return Optional.empty(); // 若不是 Order 型別（或為 null），回傳空 Optional
+        return Optional.of((Order) v); // 轉型成功則回傳包裝好的 Optional<Order>
     }
 
-    /**
-     * 儲存訂單
-     * - 1) 把訂單本體存到 Redis (order:{uuid})
-     * - 2) 把訂單 ID 放進使用者的訂單列表 (ord:{uid})
-     */
     @Override
-    public void save(Order o) {
-        // 1) 寫單筆
-        redis.opsForValue().set(orderKey(o.getId()), o);
+    public void save(Order o) { // 儲存訂單（本體 + 將 ID 放入用戶索引）
+        String orderKey = orderKey(o.getId()); // 準備訂單本體 key
+        String uidListKey = listKey(o.getUid()); // 準備用戶 List key
+        String uidSetKey = setKey(o.getUid()); // 準備用戶 Set key
+        String idStr = o.getId().toString(); // 將 UUID 轉為字串存入索引
 
-        // 2) 確保使用者清單不重複（Redis 7 有 LPOS，可用來判斷是否已存在）
-        var uidKey = listKey(o.getUid());
-        Long idx = redis.opsForList().indexOf(uidKey, o.getId().toString()); // Spring Data Redis 3.3+ 有 indexOf；若沒有可改用 Lua/Set
-        if (idx == null || idx < 0) {
-            redis.opsForList().rightPush(uidKey, o.getId().toString());
+        redis.opsForValue().set(orderKey, o); // 1) 先寫入訂單本體（SET order:{uuid} -> Order）
+
+        Long added = redis.opsForSet().add(uidSetKey, idStr); // 2) 嘗試加入 Set 做去重（SADD 回傳 1 表示成功新增、0 表示已存在）
+        if (added != null && added > 0) { // 如果成功加入 Set（代表先前不存在）
+            redis.opsForList().rightPush(uidListKey, idStr); // 才 push 到 List（保序）
         }
     }
 
-    /**
-     * 查詢使用者的「未完成」訂單
-     * - 條件：狀態 != FILLED && != CANCELED
-     */
     @Override
-    public List<Order> openOrders(long uid) {
-        var ids = redis.opsForList().range(listKey(uid), 0, -1);
-        if (ids == null) return List.of();
-        return ids.stream()
-                .map(s -> (Order) redis.opsForValue().get("order:" + s))
-                .filter(o -> o != null &&
-                        o.getStatus() != Order.Status.FILLED &&
-                        o.getStatus() != Order.Status.CANCELED)
-                .toList();
-    }
+    public List<Order> openOrders(long uid) { // 查詢使用者所有「未完成」訂單
+        List<String> ids = readIdList(uid); // 讀取用戶的訂單 ID 清單（保序）
+        if (ids.isEmpty()) return List.of(); // 若沒有任何 ID，直接回傳空集合
 
-    /**
-     * 查詢使用者在指定交易對的「未完成」訂單
-     */
-    @Override
-    public List<Order> findOpenOrders(Long uid, String symbol) {
-        return openOrders(uid).stream()
-                .filter(o -> o.getSymbol().code().equalsIgnoreCase(symbol))
+        Map<String, Order> map = batchGetOrders(ids); // 批量取得訂單本體（ID -> Order）
+
+        removeDanglingIds(uid, ids, map); // 自動清掉清單中找不到本體的 ID（避免髒資料）
+
+        return map.values().stream()
+                .filter(Objects::nonNull) // 移除 null
+                .filter(o -> o.getStatus() != Order.Status.FILLED && o.getStatus() != Order.Status.CANCELED) // 過濾掉已成交/已取消
                 .collect(Collectors.toList());
     }
 
-    /**
-     * 查詢使用者在指定交易對的「所有」訂單（含歷史）
-     */
     @Override
-    public List<Order> findAllOrders(Long uid, String symbol) {
-        var ids = redis.opsForList().range(listKey(uid), 0, -1);
-        if (ids == null) return List.of();
-        return ids.stream()
-                .map(s -> (Order) redis.opsForValue().get("order:" + s))
-                .filter(o -> o != null && o.getSymbol().code().equalsIgnoreCase(symbol))
-                .toList();
+    public List<Order> findOpenOrders(Long uid, String symbol) { // 查詢指定交易對的「未完成」訂單
+        String sym = symbol == null ? "" : symbol.trim(); // 安全處理 symbol
+        if (sym.isEmpty()) return List.of(); // 空字串直接回傳空集合
+
+        return openOrders(uid).stream() // 先取得所有未完成訂單，再過濾 symbol
+                .filter(o -> o.getSymbol() != null && o.getSymbol().code() != null)
+                .filter(o -> o.getSymbol().code().equalsIgnoreCase(sym))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Order> findAllOrders(Long uid, String symbol) { // 查詢指定交易對的「所有訂單」（含歷史）
+        String sym = symbol == null ? "" : symbol.trim(); // 處理 symbol 空白/空值
+        if (sym.isEmpty()) return List.of(); // 空字串直接回傳空集合
+
+        List<String> ids = readIdList(uid); // 取得該用戶的所有訂單 ID（保序）
+        if (ids.isEmpty()) return List.of(); // 若無 ID 直接回傳空集合
+
+        Map<String, Order> map = batchGetOrders(ids); // 批量取得訂單本體
+
+        removeDanglingIds(uid, ids, map); // 移除失效 ID（List/Set 同步清理）
+
+        return map.values().stream()
+                .filter(Objects::nonNull)
+                .filter(o -> o.getSymbol() != null && o.getSymbol().code() != null)
+                .filter(o -> o.getSymbol().code().equalsIgnoreCase(sym))
+                .collect(Collectors.toList());
+    }
+
+    // ======================= 私有工具方法 =======================
+
+    @SuppressWarnings("unchecked")
+    private List<String> readIdList(long uid) { // 讀取使用者的訂單 ID 清單（List）
+        List<Object> raw = redis.opsForList().range(listKey(uid), 0, -1); // 從 Redis 取出整個 List
+        if (raw == null || raw.isEmpty()) return List.of();
+        List<String> ids = new ArrayList<>(raw.size());
+        for (Object o : raw) {
+            if (o == null) continue;
+            if (o instanceof String s) ids.add(s);
+            else ids.add(String.valueOf(o));
+        }
+        return ids;
+    }
+
+    private Map<String, Order> batchGetOrders(List<String> ids) { // 批量查詢訂單本體
+        if (ids.isEmpty()) return Collections.emptyMap();
+
+        List<String> keys = ids.stream().map(id -> "order:" + id).collect(Collectors.toList()); // 轉成 order key
+        ValueOperations<String, Object> vo = redis.opsForValue();
+        List<Object> values = vo.multiGet(keys); // MGET
+
+        Map<String, Order> map = new LinkedHashMap<>(ids.size());
+        if (values == null) {
+            ids.forEach(id -> map.put(id, null));
+            return map;
+        }
+
+        for (int i = 0; i < ids.size(); i++) {
+            Object v = values.size() > i ? values.get(i) : null;
+            map.put(ids.get(i), (v instanceof Order) ? (Order) v : null);
+        }
+        return map;
+    }
+
+    private void removeDanglingIds(long uid, List<String> ids, Map<String, Order> id2Order) { // 清除沒有本體的 ID
+        if (TransactionSynchronizationManager.isActualTransactionActive()) return; // 若在事務中，跳過清理
+
+        List<String> toRemove = ids.stream().filter(id -> id2Order.get(id) == null).collect(Collectors.toList());
+        if (toRemove.isEmpty()) return;
+
+        try {
+            BoundListOperations<String, Object> lo = redis.boundListOps(listKey(uid));
+            BoundSetOperations<String, Object> so = redis.boundSetOps(setKey(uid));
+            for (String id : toRemove) {
+                lo.remove(0, id); // 從 List 移除
+                so.remove(id); // 從 Set 移除
+            }
+        } catch (DataAccessException ignored) {
+            // 清理失敗不影響主流程
+        }
     }
 }
