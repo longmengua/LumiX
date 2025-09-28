@@ -1,31 +1,123 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
+import com.example.exchange.application.service.OrderService;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
+import com.example.exchange.domain.model.Order;
+import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import com.example.exchange.interfaces.web.dto.PlaceOrderRequest;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
- * 下單相關 REST API
- * - 只負責接收/回應，不放商業邏輯
+ * OrderController
+ * --------------------------
+ * 下單相關 REST API Controller
+ * - 僅負責「接收 HTTP 請求」與「回應結果」
+ * - 不包含業務邏輯（business logic），業務邏輯由 UseCase / Service / Repository 處理
  */
-@RestController
-@RequestMapping("/api/order")
+@RestController                      // 標記為 REST 控制器，自動返回 JSON
+@RequestMapping("/api/order")        // 所有 API 以 /api/order 開頭
+@RequiredArgsConstructor             // Lombok：自動產生建構子注入 final 欄位
 public class OrderController {
 
+    // Use Case：處理下單邏輯（DDD：應用層）
     private final PlaceOrderUseCase usecase;
 
-    public OrderController(PlaceOrderUseCase usecase) {
-        this.usecase = usecase;
-    }
+    // Repository：查詢訂單（DDD：領域層）
+    private final OrderRepository orderRepo;
 
+    /**
+     * 下單 API
+     * -------------------
+     * - URL: POST /api/order/place
+     * - 輸入：PlaceOrderRequest (JSON)
+     * - 輸出：ApiResponse<String>，固定回傳 "accepted"
+     *
+     * @param r 下單請求參數 (uid, symbol, side, type, price, qty, leverage, marginMode)
+     * @return 下單結果 (固定回覆 "accepted")
+     */
     @PostMapping("/place")
     public ApiResponse<String> place(@Valid @RequestBody PlaceOrderRequest r) {
+        // 將請求轉換成 Command，交給 UseCase 處理
         usecase.handle(new PlaceOrderCommand(
-                r.uid(), r.symbol(), r.side(), r.type(), r.price(), r.qty(), r.leverage(), r.marginMode()
+                r.getUid(), r.getSymbol(), r.getSide(), r.getType(), r.getPrice(), r.getQty(), r.getLeverage(), r.getMarginMode()
         ));
         return ApiResponse.ok("accepted");
+    }
+
+    /**
+     * 查詢使用者「當前掛單」
+     * -------------------
+     * - URL: GET /api/order/open?uid=123&symbol=BTCUSDT
+     * - 僅返回「尚未成交或部分成交」的訂單
+     *
+     * @param uid    使用者 ID (必填)
+     * @param symbol 交易對 (選填，若不填則返回該用戶所有交易對的掛單)
+     * @return 該用戶當前掛單清單
+     */
+    @GetMapping("/open")
+    public ApiResponse<List<OrderInfoResponse>> openOrders(@RequestParam Long uid,
+                                                           @RequestParam(required = false) String symbol) {
+        // 從 Repository 查詢使用者掛單
+        List<Order> orders = orderRepo.findOpenOrders(uid, symbol);
+
+        // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
+        List<OrderInfoResponse> result = orders.stream()
+                .map(o -> new OrderInfoResponse(
+                        o.getId().toString(),        // 訂單 ID (轉字串，方便前端處理)
+                        o.getUid(),                  // 使用者 ID
+                        o.getSymbol().code(),        // 交易對 (字串形式)
+                        o.getSide(),                 // 買/賣方向
+                        o.getType(),                 // 訂單類型 (限價、市價…)
+                        o.getPrice(),                // 價格
+                        o.getQty(),                  // 數量
+                        o.getStatus().name(),        // 狀態 (列舉轉字串)
+                        o.getCtime()                 // 建立時間
+                ))
+                .collect(Collectors.toList());
+
+        return ApiResponse.ok(result);
+    }
+
+    /**
+     * 查詢使用者「所有訂單」（含歷史）
+     * -------------------
+     * - URL: GET /api/order/all?uid=123&symbol=BTCUSDT
+     * - 包含歷史訂單與已完成/取消的訂單
+     *
+     * @param uid    使用者 ID (必填)
+     * @param symbol 交易對 (選填，若不填則返回該用戶所有交易對的訂單)
+     * @return 該用戶所有訂單清單
+     */
+    @GetMapping("/all")
+    public ApiResponse<List<OrderInfoResponse>> allOrders(@RequestParam Long uid,
+                                                          @RequestParam(required = false) String symbol) {
+        // 從 Repository 查詢所有訂單（含歷史）
+        List<Order> orders = orderRepo.findAllOrders(uid, symbol);
+
+        // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
+        List<OrderInfoResponse> result = orders.stream()
+                .map(o -> new OrderInfoResponse(
+                        o.getId().toString(),
+                        o.getUid(),
+                        o.getSymbol().code(),
+                        o.getSide(),
+                        o.getType(),
+                        o.getPrice(),
+                        o.getQty(),
+                        o.getStatus().name(),
+                        o.getCtime()
+                ))
+                .collect(Collectors.toList());
+
+        return ApiResponse.ok(result);
     }
 }

@@ -1,5 +1,6 @@
 package com.example.exchange.interfaces.web.controller;
 
+import com.example.exchange.domain.model.TopOfBook;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBookSnapshot;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
@@ -30,14 +31,13 @@ public class DepthController {
         OrderBookSnapshot snap = matchingEngine.snapshot(symbol, depth);
 
         // 取得最優價
-        var top = matchingEngine.top(symbol).orElseGet(() ->
-                new MatchingEngine.TopOfBook(null, null));
+        var top = matchingEngine.top(symbol).orElseGet(() -> TopOfBook.builder().build());
 
         // 轉成回應 DTO
         DepthResponse res = new DepthResponse(
                 symbol,
-                top.bestBid(),
-                top.bestAsk(),
+                top.getBestBid(),
+                top.getBestAsk(),
                 snap.bids().stream()
                         .map(l -> new DepthResponse.Level(l.price(), l.qty()))
                         .toList(),

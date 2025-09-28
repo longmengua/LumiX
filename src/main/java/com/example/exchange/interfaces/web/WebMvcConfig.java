@@ -6,16 +6,24 @@ import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
- * Web MVC 組態
- * - 註冊請求攔截器
- * - 可在此加入 CORS、MessageConverter、格式化器等
+ * Web MVC 組態 (Configuration)
+ * --------------------------
+ * - 此類別用於 Spring MVC 的組態設定
+ * - 可以在這裡註冊攔截器 (Interceptor)、跨域設定 (CORS)、訊息轉換器 (MessageConverter)、格式化器 (Formatter) 等
  */
-@Configuration
+@Configuration // 告訴 Spring 這是一個配置類，會在啟動時載入
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    /**
+     * 註冊自定義攔截器
+     * - 在這裡我們註冊 RequestLoggingInterceptor
+     * - 可以攔截所有 HTTP 請求，並做統一處理 (例如：請求日誌、權限驗證、參數校驗等)
+     *
+     * @param registry 攔截器註冊器，用來新增/配置攔截器
+     */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new RequestLoggingInterceptor())
-                .addPathPatterns("/**");
+        registry.addInterceptor(new RequestLoggingInterceptor()) // 新增一個 RequestLoggingInterceptor
+                .addPathPatterns("/**"); // 設定攔截路徑，"**" 表示攔截所有請求
     }
 }

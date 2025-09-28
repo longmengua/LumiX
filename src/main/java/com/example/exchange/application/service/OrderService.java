@@ -5,7 +5,7 @@ import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.*;
 import com.example.exchange.domain.repository.EventStore;
 import com.example.exchange.domain.repository.PositionRepository;
-import com.example.exchange.domain.repository.OrderRepository; // << 新增
+import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.service.MatchingEngine;
 import org.springframework.stereotype.Service;
 
@@ -27,24 +27,33 @@ public class OrderService {
     private final PositionRepository posRepo;
     private final EventStore eventStore;
     private final DomainEventPublisher<TradeExecuted> publisher;
-    private final OrderRepository orderRepo; // << 新增相依
+    private final OrderRepository orderRepo;
+
+    // TODO: 注入資金/費率/帳戶資產服務
+    // private final AccountService accountSvc;         // 查詢&操作餘額、凍結/解凍
+    // private final FeeService feeSvc;                 // 計算 maker/taker 手續費、VIP/券折抵
+    // private final FundingService fundingSvc;         // 資金費（永續合約），計提與結算
+    // private final RiskService riskSvc;               // 保證金比率、強平監控
+    // private final InsuranceFundService insuranceSvc; // 保險基金（強平虧損兜底）
 
     public OrderService(MatchingEngine matchingEngine,
                         PositionRepository posRepo,
                         EventStore eventStore,
                         DomainEventPublisher<TradeExecuted> publisher,
-                        OrderRepository orderRepo) { // << 新增
+                        OrderRepository orderRepo) {
         this.matchingEngine = matchingEngine;
         this.posRepo = posRepo;
         this.eventStore = eventStore;
         this.publisher = publisher;
-        this.orderRepo = orderRepo; // << 新增
+        this.orderRepo = orderRepo;
     }
 
     /**
-     * 下單 → 撮合 → 回寫持倉/事件 → **回寫訂單狀態**
+     * 下單 → 撮合 → 回寫持倉/事件 → 回寫訂單狀態 →（資金/費用/MtM 等處理）
      */
     public void processOrder(Order order) {
+        // TODO: 根據 order.side/type 推導可能的 maker/taker 身份（預估用）
+
         // 1) 丟進撮合引擎
         List<TradeExecuted> trades = matchingEngine.submitOrder(order);
 
@@ -52,6 +61,14 @@ public class OrderService {
         for (TradeExecuted t : trades) {
             long seq = eventStore.append(t);
             TradeExecuted withSeq = t.withSeq(seq);
+
+            // === TODO: 計費與保證金（以每筆成交為單位） ===
+            // TODO: 判定此筆成交對於當事人是 maker 還是 taker（引擎需回傳角色或由訂單簿狀態判斷）
+            // TODO: 計算手續費 fee = notional * feeRate（支援 VIP、持倉等級、券/點卡抵扣）
+            // TODO: 計提資金費（若為永續合約）：
+            //       - 將 notional/方向 累加到 funding accrual bucket（到資金費結算時間再批量結算）
+            // TODO: 計算/更新逐筆實現損益（partial close 時）
+            // TODO: 以成交價更新保證金需求（IM/維持保證金 MM），並調整已凍結金額
 
             Position pos = posRepo.find(t.uid(), t.symbol()).orElseGet(() ->
                     Position.builder()
@@ -61,20 +78,39 @@ public class OrderService {
                             .leverage(BigDecimal.valueOf(20))
                             .build()
             );
+
+            // TODO: pos.applyTrade 內部需同時刷新：
+            // - 倉位方向/数量/均價
+            // - 已實現盈虧（若減倉）
+            // - 未實現盈虧（可延後到標記價格變動時計算）
             pos.applyTrade(t.qty(), t.price());
             posRepo.save(pos);
+
+            // TODO: 扣除手續費（資產帳戶可用額減少，或從保證金中扣）
+            // TODO: 更新/調整凍結（若為首次成交，可能將部分預凍費率下調）
+            // TODO: 強平風控：若成交後保證金率 < 閾值 → 觸發逐級減倉/強平流程入隊
 
             publisher.publish(withSeq);
         }
 
-        // 3) **回寫新單狀態**（非常重要）
-        //    - 如果此訂單還有剩餘量（NEW / PARTIALLY_FILLED），需要能被查到 → save()
-        //    - 如果完全成交（FILLED）或取消（CANCELED），也建議 save() 讓歷史可查
+        // 3) **回寫新單狀態**
+        //    - 若仍有剩餘量（NEW/PARTIALLY_FILLED）→ save() 以便 /api/order/open 查詢
+        //    - FILLED/CANCELED 也建議保存史料以供追溯
         orderRepo.save(order);
 
-        // ⚠️ 注意：撮合過程中對手方訂單（bestBid/bestAsk）也可能被部分成交或全成交。
-        // 由於 InMemoryMatchingEngine 會拿到「原始對手方 Order 物件」並呼叫 order.fill(execQty)，
-        // 所以它們的狀態也變了。為了讓查詢端看見最新狀態，建議在撮合引擎回傳「被影響的訂單集合」，
-        // 或在這裡另外將「簿中最佳單」變更後回寫。簡化起見，這版先保證「新單」一定會被存。
+        // 4) **凍結資金調整/釋放**
+        // TODO: 若訂單完全成交 → 釋放剩餘凍結（多退少補）；若部分成交 → 按剩餘名義金額重算凍結
+        // TODO: 若 MTL 轉掛且仍在簿 → 按最新掛簿價重估 IM & 手續費上限凍結
+
+        // 5) **資金費計提與結算（出入點）**
+        // TODO: 若到資金費結算瞬間（ fundingSvc.shouldSettle(symbol, now) ）：
+        //       - 根據標記價格/指數價計算資金費
+        //       - 對多空雙邊倉位做轉移（多→空或空→多）
+        //       - 考慮資金費不足時從可用/保證金扣減，不足觸發強平保護
+        //       - 記錄事件/流水（可發布 FundingSettled 事件）
+
+        // 6) **保險基金/強平清算（出入點）**
+        // TODO: 若強平導致負資產 → 由保險基金/自動減倉（ADL）處理
+        // TODO: 記錄對保險基金的入出帳流水，確保審計可回放
     }
 }

@@ -2,42 +2,66 @@ package com.example.exchange.interfaces.web.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.lang.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.ModelAndView;
+
+import java.util.UUID;
 
 /**
- * 請求日誌攔截器（簡化版）
- * - 記錄方法、路徑、查詢參數與處理時間
- * - 生產中可加入 traceId、uid、body 限流輸出等
+ * RequestLoggingInterceptor
+ * -------------------------
+ * - 功能：
+ *   1. 每個請求分配唯一 UUID，方便日誌追蹤
+ *   2. 記錄請求 Method、URI
+ *   3. 計算請求耗時
+ *   4. 統一輸出例外
  */
+@Slf4j
 public class RequestLoggingInterceptor implements HandlerInterceptor {
 
-    private static final Logger log = LoggerFactory.getLogger(RequestLoggingInterceptor.class);
-
-    private static final String ATTR_START = "req_start_ns";
+    private static final String START_TIME = "requestStartTime";
+    private static final String REQUEST_ID = "requestUUID";
 
     @Override
-    public boolean preHandle(@NonNull HttpServletRequest request,
-                             @NonNull HttpServletResponse response,
-                             @NonNull Object handler) {
-        request.setAttribute(ATTR_START, System.nanoTime());
-        log.info("[REQ] {} {}{}", request.getMethod(), request.getRequestURI(),
-                request.getQueryString() != null ? ("?" + request.getQueryString()) : "");
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        // 產生唯一的 Request UUID
+        String requestId = UUID.randomUUID().toString();
+        request.setAttribute(REQUEST_ID, requestId);
+
+        // 紀錄開始時間
+        long startTime = System.currentTimeMillis();
+        request.setAttribute(START_TIME, startTime);
+
+        // 加到 Response Header，方便前端或其他服務追蹤
+        response.setHeader("X-Request-Id", requestId);
+
+        log.info("[{}] 請求開始 => Method: {}, URI: {}",
+                requestId, request.getMethod(), request.getRequestURI());
+
         return true;
     }
 
     @Override
-    public void afterCompletion(@NonNull HttpServletRequest request,
-                                @NonNull HttpServletResponse response,
-                                @NonNull Object handler,
-                                Exception ex) {
-        Object st = request.getAttribute(ATTR_START);
-        long costMs = (st instanceof Long) ? (System.nanoTime() - (Long) st) / 1_000_000L : -1L;
-        log.info("[RES] {} {} -> {} ({} ms)", request.getMethod(), request.getRequestURI(), response.getStatus(), costMs);
+    public void postHandle(HttpServletRequest request, HttpServletResponse response,
+                           Object handler, ModelAndView modelAndView) {
+        String requestId = (String) request.getAttribute(REQUEST_ID);
+        log.debug("[{}] Controller 執行完成", requestId);
+    }
+
+    @Override
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
+                                Object handler, Exception ex) {
+        String requestId = (String) request.getAttribute(REQUEST_ID);
+        Long startTime = (Long) request.getAttribute(START_TIME);
+
+        if (startTime != null) {
+            long duration = System.currentTimeMillis() - startTime;
+            log.info("[{}] 請求完成 => 耗時 {} ms", requestId, duration);
+        }
+
         if (ex != null) {
-            log.warn("[ERR] {} {} ex: {}", request.getMethod(), request.getRequestURI(), ex.toString());
+            log.error("[{}] 請求發生例外: {}", requestId, ex.getMessage(), ex);
         }
     }
 }
