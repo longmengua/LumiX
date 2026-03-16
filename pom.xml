@@ -22,7 +22,7 @@
     <!-- 專案座標 -->
     <groupId>com.example</groupId>
     <artifactId>java21-exchange</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>0.0.1</version>
     <name>java21-exchange</name>
     <description>java21-exchange</description>
 
