@@ -5,6 +5,7 @@ import com.example.exchange.domain.model.MatchingResult;
 import com.example.exchange.domain.model.Order;
 import com.example.exchange.domain.model.OrderSide;
 import com.example.exchange.domain.model.OrderType;
+import com.example.exchange.domain.model.TimeInForce;
 import com.example.exchange.domain.model.TopOfBook;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBook;
@@ -25,30 +26,42 @@ import java.util.concurrent.ConcurrentHashMap;
  * -------------------------------------------------
  *
  * 角色定位：
- * - 此類別是 MatchingEngine 的基礎實作，負責在記憶體中維護多個交易對的訂單簿，
+ * - 此類別是 MatchingEngine 的一個簡化版實作，負責在記憶體中維護多個交易對的訂單簿，
  *   並對新訂單執行撮合。
  * - 每個 symbol（例如 BTCUSDT）對應一個獨立的 OrderBook。
  *
- * 設計說明：
- * 1) 使用 ConcurrentHashMap 管理多交易對的 order book
- * 2) 對單一 OrderBook 採 synchronized，避免同一交易對同時撮合造成資料競態
- * 3) 新單預設視為 taker，簿中的掛單視為 maker
- * 4) 支援：
- *    - LIMIT：能成交的先成交，吃不完則續掛簿
- *    - MARKET：能成交的先成交，吃不完則轉為 LIMIT 掛簿（簡化版 MTL）
+ * 目前支援：
+ * 1) LIMIT / MARKET 訂單
+ * 2) GTC / IOC / FOK
+ * 3) 取消訂單
+ * 4) 訂單簿快照與 Top-of-Book 查詢
  *
- * 注意事項：
- * - 目前是 Demo 級別實作，不是生產級撮合核心
- * - 尚未完整實作：
- *   - 價格/數量精度量化
- *   - 自成交防護（SMP）
- *   - IOC / FOK / POST_ONLY / REDUCE_ONLY
+ * 設計原則（本版）：
+ * - LIMIT 單：
+ *   - 依價格條件撮合
+ *   - 在 GTC 下，若有剩餘量，可繼續掛簿
+ *
+ * - MARKET 單：
+ *   - 不帶價格限制
+ *   - 只吃現有對手盤
+ *   - 吃不完的剩餘量直接失效
+ *   - 不應進入 order book
+ *
+ * TimeInForce 規則（本版）：
+ * - LIMIT + GTC：剩餘量可掛簿
+ * - LIMIT + IOC：立即成交可成交部分，剩餘量失效
+ * - LIMIT + FOK：若不能一次全部成交，整張直接失效，不產生成交
+ * - MARKET：只吃現有對手盤，不掛簿；若剩餘量未成交，直接失效
+ *
+ * 目前限制：
+ * - 僅為 Demo 級撮合，不是生產級撮合核心
+ * - 尚未完整支援：
+ *   - 價格/數量量化
+ *   - 價格優先 + 時間優先（目前只有價格優先）
+ *   - Self Match Prevention
+ *   - POST_ONLY / REDUCE_ONLY
  *   - maker/taker fee
- *   - 單簿序列器 / Disruptor / 高效能無鎖模型
- *
- * 相容性：
- * - submitOrder(Order)：舊版 API，只回傳成交事件列表
- * - submitOrderV2(Order)：新版 API，回傳 trades + affectedOrders
+ *   - 更高效的單執行緒序列器模型
  */
 @Component
 public class InMemoryMatchingEngine implements MatchingEngine {
@@ -61,210 +74,90 @@ public class InMemoryMatchingEngine implements MatchingEngine {
     private final Map<String, OrderBook> books = new ConcurrentHashMap<>();
 
     /**
-     * 取得指定交易對的 OrderBook
+     * 取得指定交易對的訂單簿
      * - 若不存在則自動建立
      *
      * @param symbolCode 交易對代碼
-     * @return 該交易對對應的訂單簿
+     * @return 對應的 OrderBook
      */
     private OrderBook book(String symbolCode) {
         return books.computeIfAbsent(symbolCode, k -> new OrderBook());
     }
 
-    // -------------------------------------------------
-    // 相容舊版 API
-    // -------------------------------------------------
-
     /**
-     * 舊版下單 API
-     * - 僅需要成交事件列表
-     * - 內部委派給 submitOrderV2()，再取出 trades
-     *
-     * @param order 新訂單
-     * @return 成交事件列表
-     */
-    @Override
-    public List<TradeExecuted> submitOrder(Order order) {
-        return submitOrderV2(order).getTrades();
-    }
-
-    // -------------------------------------------------
-    // 新版 API
-    // -------------------------------------------------
-
-    /**
-     * 新版下單 API
+     * 提交新訂單並執行撮合
      * -------------------------------------------------
-     * 功能：
-     * - 對傳入的新訂單做撮合
-     * - 回傳本次撮合產生的成交事件（trades）
-     * - 回傳所有受影響的訂單（affectedOrders）
      *
-     * 撮合規則（簡化版）：
-     * - BUY 單會去吃賣簿 asks
-     * - SELL 單會去吃買簿 bids
-     * - 若為 LIMIT 且有剩餘量，續掛簿
-     * - 若為 MARKET 且有剩餘量，轉為 LIMIT 掛簿（MTL）
+     * 核心流程：
+     * 1) 依 symbol 取得訂單簿
+     * 2) 若為 FOK，先預估是否可完全成交
+     * 3) 依 BUY / SELL 分別對對手簿撮合
+     * 4) 根據 TimeInForce 與訂單型別處理剩餘量
+     * 5) 回傳 trades + affectedOrders
      *
      * @param order 新訂單
-     * @return 撮合結果（trades + affectedOrders）
+     * @return 撮合結果
      */
     @Override
-    public MatchingResult submitOrderV2(Order order) {
+    public MatchingResult submit(Order order) {
         String symbolCode = order.getSymbol().code();
         OrderBook orderBook = book(symbolCode);
 
-        // 本次撮合產生的成交事件
         final List<TradeExecuted> trades = new ArrayList<>();
-
-        // 受影響訂單集合：
-        // - 使用 LinkedHashSet 保持插入順序
-        // - 同時避免同一張單被重複加入
         final LinkedHashSet<Order> affectedOrders = new LinkedHashSet<>();
-        affectedOrders.add(order); // 新單一定受影響
+        affectedOrders.add(order);
 
         synchronized (orderBook) {
-            // 記錄本輪最後成交價，供 MARKET 殘量轉 LIMIT 掛簿時使用
-            BigDecimal lastExecPrice = null;
-
             // TODO: 依 symbol 的 priceScale / qtyScale 對價格與數量做量化
-            // TODO: 加入自成交防護（Self Match Prevention）
-            // TODO: 支援 IOC / FOK / POST_ONLY / REDUCE_ONLY
+            // TODO: 自成交防護（Self Match Prevention）
+            // TODO: 支援 POST_ONLY / REDUCE_ONLY
+
+            TimeInForce tif = (order.getTimeInForce() == null)
+                    ? TimeInForce.GTC
+                    : order.getTimeInForce();
+
+            /**
+             * FOK（Fill Or Kill）
+             * -------------------------------------------------
+             * 若不能一次全部成交，則整張失效，不成交、不掛簿。
+             *
+             * 注意：
+             * - 這裡對 LIMIT / MARKET 都適用
+             * - MARKET FOK 的意思是：必須在當前簿況下一次吃滿，否則整張失效
+             */
+            if (tif == TimeInForce.FOK) {
+                BigDecimal matchable = orderBook.matchableQty(order);
+                if (matchable.compareTo(order.getQty()) < 0) {
+                    order.expire();
+                    return MatchingResult.builder()
+                            .trades(List.of())
+                            .affectedOrders(new ArrayList<>(affectedOrders))
+                            .build();
+                }
+            }
 
             if (order.getSide() == OrderSide.BUY) {
-                // BUY：買單吃賣簿
-                while (orderBook.peekBestAsk() != null
-                        && order.getQty().signum() > 0
-                        && order.getPrice() != null
-                        && order.getPrice().compareTo(orderBook.peekBestAsk().getPrice()) >= 0) {
-
-                    Order bestAsk = orderBook.pollBestAsk();
-                    affectedOrders.add(bestAsk);
-
-                    // 本次實際成交量 = taker 剩餘量 與 maker 剩餘量 取最小值
-                    BigDecimal execQty = order.getQty().min(bestAsk.getQty());
-
-                    // BUY 吃 SELL 時，成交價取 maker（賣簿）價格
-                    BigDecimal execPx = bestAsk.getPrice();
-
-                    Instant now = Instant.now();
-
-                    // 對 taker（BUY 方）而言，成交數量為正
-                    trades.add(new TradeExecuted(
-                            order.getUid(),
-                            order.getSymbol(),
-                            execQty,
-                            execPx,
-                            0L,
-                            now
-                    ));
-
-                    // 對 maker（SELL 方）而言，成交數量為負
-                    trades.add(new TradeExecuted(
-                            bestAsk.getUid(),
-                            bestAsk.getSymbol(),
-                            execQty.negate(),
-                            execPx,
-                            0L,
-                            now
-                    ));
-
-                    lastExecPrice = execPx;
-
-                    // 更新雙方訂單狀態與成交資訊
-                    order.fill(execQty, execPx);
-                    bestAsk.fill(execQty, execPx);
-
-                    // 若對手單尚未完全成交，放回簿中
-                    if (bestAsk.getQty().signum() > 0) {
-                        orderBook.add(bestAsk);
-                    }
-                }
-
-                // BUY 單有殘量時的處理
-                if (order.getQty().signum() > 0) {
-                    if (order.getType() == OrderType.MARKET) {
-                        // MARKET 殘量 → 轉 LIMIT 掛簿（簡化版 MTL）
-                        BigDecimal postPrice = choosePostPriceForBuy(orderBook, order, lastExecPrice);
-                        order.setType(OrderType.LIMIT);
-                        order.setPrice(postPrice);
-                        orderBook.add(order);
-
-                        // TODO: 通知上層重新評估保證金與費率凍結
-                    } else {
-                        // LIMIT 吃不完 → 原樣掛簿
-                        orderBook.add(order);
-
-                        // TODO: 通知上層凍結剩餘委託對應 IM / fee
-                    }
-                }
-
+                matchBuy(orderBook, order, trades, affectedOrders);
             } else {
-                // SELL：賣單吃買簿
-                while (orderBook.peekBestBid() != null
-                        && order.getQty().signum() > 0
-                        && order.getPrice() != null
-                        && order.getPrice().compareTo(orderBook.peekBestBid().getPrice()) <= 0) {
+                matchSell(orderBook, order, trades, affectedOrders);
+            }
 
-                    Order bestBid = orderBook.pollBestBid();
-                    affectedOrders.add(bestBid);
-
-                    // 本次實際成交量 = taker 剩餘量 與 maker 剩餘量 取最小值
-                    BigDecimal execQty = order.getQty().min(bestBid.getQty());
-
-                    // SELL 吃 BUY 時，成交價取 maker（買簿）價格
-                    BigDecimal execPx = bestBid.getPrice();
-
-                    Instant now = Instant.now();
-
-                    // 對 taker（SELL 方）而言，成交數量為負
-                    trades.add(new TradeExecuted(
-                            order.getUid(),
-                            order.getSymbol(),
-                            execQty.negate(),
-                            execPx,
-                            0L,
-                            now
-                    ));
-
-                    // 對 maker（BUY 方）而言，成交數量為正
-                    trades.add(new TradeExecuted(
-                            bestBid.getUid(),
-                            bestBid.getSymbol(),
-                            execQty,
-                            execPx,
-                            0L,
-                            now
-                    ));
-
-                    lastExecPrice = execPx;
-
-                    // 更新雙方訂單狀態與成交資訊
-                    order.fill(execQty, execPx);
-                    bestBid.fill(execQty, execPx);
-
-                    // 若對手單尚未完全成交，放回簿中
-                    if (bestBid.getQty().signum() > 0) {
-                        orderBook.add(bestBid);
-                    }
-                }
-
-                // SELL 單有殘量時的處理
-                if (order.getQty().signum() > 0) {
-                    if (order.getType() == OrderType.MARKET) {
-                        // MARKET 殘量 → 轉 LIMIT 掛簿（簡化版 MTL）
-                        BigDecimal postPrice = choosePostPriceForSell(orderBook, order, lastExecPrice);
-                        order.setType(OrderType.LIMIT);
-                        order.setPrice(postPrice);
-                        orderBook.add(order);
-
-                        // TODO: 通知上層重新評估保證金與費率凍結
-                    } else {
-                        // LIMIT 吃不完 → 原樣掛簿
-                        orderBook.add(order);
-
-                        // TODO: 通知上層凍結剩餘委託對應 IM / fee
-                    }
+            /**
+             * 剩餘量處理
+             * -------------------------------------------------
+             * - 若訂單已全成，無需處理
+             * - 若仍有剩餘量：
+             *   - IOC 直接失效
+             *   - FOK 理論上不應走到這裡（前面已預檢），此處保留防守性處理
+             *   - GTC：
+             *       * LIMIT 可掛簿
+             *       * MARKET 不掛簿，直接失效
+             */
+            if (order.getQty().signum() > 0) {
+                switch (tif) {
+                    case IOC -> order.expire();
+                    case FOK -> order.expire(); // 防守性處理
+                    case GTC -> handleRemainderForGtc(orderBook, order);
                 }
             }
         }
@@ -275,6 +168,193 @@ public class InMemoryMatchingEngine implements MatchingEngine {
                 .build();
     }
 
+    /**
+     * BUY 單撮合邏輯
+     * -------------------------------------------------
+     * - BUY 單會去吃 asks（賣簿）
+     * - LIMIT BUY：必須滿足 buyPrice >= bestAsk.price
+     * - MARKET BUY：只要有 asks 就持續吃
+     *
+     * @param orderBook      訂單簿
+     * @param order          新買單
+     * @param trades         成交事件輸出列表
+     * @param affectedOrders 受影響訂單集合
+     */
+    private void matchBuy(OrderBook orderBook,
+                          Order order,
+                          List<TradeExecuted> trades,
+                          LinkedHashSet<Order> affectedOrders) {
+
+        while (canMatchBuy(order, orderBook)) {
+            Order bestAsk = orderBook.pollBestAsk();
+            affectedOrders.add(bestAsk);
+
+            BigDecimal execQty = order.getQty().min(bestAsk.getQty());
+            BigDecimal execPx = bestAsk.getPrice();
+            Instant now = Instant.now();
+
+            // taker（BUY 方）成交量為正
+            trades.add(new TradeExecuted(
+                    order.getUid(),
+                    order.getSymbol(),
+                    execQty,
+                    execPx,
+                    0L,
+                    now
+            ));
+
+            // maker（SELL 方）成交量為負
+            trades.add(new TradeExecuted(
+                    bestAsk.getUid(),
+                    bestAsk.getSymbol(),
+                    execQty.negate(),
+                    execPx,
+                    0L,
+                    now
+            ));
+
+            order.fill(execQty, execPx);
+            bestAsk.fill(execQty, execPx);
+
+            // 對手單若尚未完全成交，放回簿中
+            if (bestAsk.getQty().signum() > 0) {
+                orderBook.add(bestAsk);
+            }
+        }
+    }
+
+    /**
+     * SELL 單撮合邏輯
+     * -------------------------------------------------
+     * - SELL 單會去吃 bids（買簿）
+     * - LIMIT SELL：必須滿足 sellPrice <= bestBid.price
+     * - MARKET SELL：只要有 bids 就持續吃
+     *
+     * @param orderBook      訂單簿
+     * @param order          新賣單
+     * @param trades         成交事件輸出列表
+     * @param affectedOrders 受影響訂單集合
+     */
+    private void matchSell(OrderBook orderBook,
+                           Order order,
+                           List<TradeExecuted> trades,
+                           LinkedHashSet<Order> affectedOrders) {
+
+        while (canMatchSell(order, orderBook)) {
+            Order bestBid = orderBook.pollBestBid();
+            affectedOrders.add(bestBid);
+
+            BigDecimal execQty = order.getQty().min(bestBid.getQty());
+            BigDecimal execPx = bestBid.getPrice();
+            Instant now = Instant.now();
+
+            // taker（SELL 方）成交量為負
+            trades.add(new TradeExecuted(
+                    order.getUid(),
+                    order.getSymbol(),
+                    execQty.negate(),
+                    execPx,
+                    0L,
+                    now
+            ));
+
+            // maker（BUY 方）成交量為正
+            trades.add(new TradeExecuted(
+                    bestBid.getUid(),
+                    bestBid.getSymbol(),
+                    execQty,
+                    execPx,
+                    0L,
+                    now
+            ));
+
+            order.fill(execQty, execPx);
+            bestBid.fill(execQty, execPx);
+
+            // 對手單若尚未完全成交，放回簿中
+            if (bestBid.getQty().signum() > 0) {
+                orderBook.add(bestBid);
+            }
+        }
+    }
+
+    /**
+     * 判斷 BUY 單是否可與當前最佳賣單成交
+     * -------------------------------------------------
+     * 規則：
+     * - 若賣簿為空，不能成交
+     * - 若剩餘量 <= 0，不能成交
+     * - MARKET BUY：只要有賣簿就能吃
+     * - LIMIT BUY：需滿足 buyPrice >= bestAsk.price
+     *
+     * @param order     傳入訂單
+     * @param orderBook 訂單簿
+     * @return 是否可成交
+     */
+    private boolean canMatchBuy(Order order, OrderBook orderBook) {
+        if (orderBook.peekBestAsk() == null || order.getQty().signum() <= 0) {
+            return false;
+        }
+
+        if (order.getType() == OrderType.MARKET) {
+            return true;
+        }
+
+        return order.getPrice() != null
+                && order.getPrice().compareTo(orderBook.peekBestAsk().getPrice()) >= 0;
+    }
+
+    /**
+     * 判斷 SELL 單是否可與當前最佳買單成交
+     * -------------------------------------------------
+     * 規則：
+     * - 若買簿為空，不能成交
+     * - 若剩餘量 <= 0，不能成交
+     * - MARKET SELL：只要有買簿就能吃
+     * - LIMIT SELL：需滿足 sellPrice <= bestBid.price
+     *
+     * @param order     傳入訂單
+     * @param orderBook 訂單簿
+     * @return 是否可成交
+     */
+    private boolean canMatchSell(Order order, OrderBook orderBook) {
+        if (orderBook.peekBestBid() == null || order.getQty().signum() <= 0) {
+            return false;
+        }
+
+        if (order.getType() == OrderType.MARKET) {
+            return true;
+        }
+
+        return order.getPrice() != null
+                && order.getPrice().compareTo(orderBook.peekBestBid().getPrice()) <= 0;
+    }
+
+    /**
+     * GTC 訂單剩餘量處理
+     * -------------------------------------------------
+     * 規則：
+     * - LIMIT：剩餘量直接掛簿
+     * - MARKET：不應掛簿，剩餘量直接失效
+     *
+     * @param orderBook 訂單簿
+     * @param order     尚有剩餘量的訂單
+     */
+    private void handleRemainderForGtc(OrderBook orderBook, Order order) {
+        if (order.getType() == OrderType.MARKET) {
+            // 正統市場單不應掛簿；若流動性不足，剩餘量直接失效
+            order.expire();
+
+            // TODO: 通知上層釋放未使用的凍結資金
+            return;
+        }
+
+        // LIMIT 剩餘量直接掛簿
+        orderBook.add(order);
+
+        // TODO: 通知上層凍結剩餘委託對應 IM / fee
+    }
+
     // -------------------------------------------------
     // 其他行為：撤單 / 查詢
     // -------------------------------------------------
@@ -283,14 +363,14 @@ public class InMemoryMatchingEngine implements MatchingEngine {
      * 取消訂單
      * -------------------------------------------------
      * 功能：
-     * - 從指定交易對的訂單簿中移除該訂單
+     * - 從對應交易對的 order book 中移除該訂單
      *
      * 注意：
-     * - 此方法僅從 order book 移除訂單，不直接改 Order 狀態
-     * - 狀態更新（例如設成 CANCELED）應交由上層 OrderService 處理
+     * - 此方法僅處理「從簿中移除」
+     * - Order 狀態更新（例如設為 CANCELED）應由上層服務處理
      *
      * @param order 欲取消的訂單
-     * @return true 表示成功從訂單簿移除；false 表示找不到或未成功移除
+     * @return true 表示成功移除；false 表示未找到或簿不存在
      */
     @Override
     public boolean cancelOrder(Order order) {
@@ -298,7 +378,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         if (orderBook == null) return false;
 
         synchronized (orderBook) {
-            // TODO: 取消成功後通知上層釋放剩餘凍結（IM + 未使用費率預留）
+            // TODO: 取消成功後通知上層釋放剩餘凍結（IM + 未用手續費）
             return orderBook.cancel(order);
         }
     }
@@ -307,8 +387,8 @@ public class InMemoryMatchingEngine implements MatchingEngine {
      * 取得訂單簿快照
      *
      * @param symbolCode 交易對代碼
-     * @param depth      返回檔位深度
-     * @return 指定交易對的訂單簿快照
+     * @param depth      返回深度
+     * @return 該交易對的訂單簿快照；若不存在則回傳空快照
      */
     @Override
     public OrderBookSnapshot snapshot(String symbolCode, int depth) {
@@ -326,7 +406,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
      * 取得最優買賣價（Top of Book）
      *
      * @param symbolCode 交易對代碼
-     * @return 最優買價 / 最優賣價；若此簿不存在或無掛單，回傳 Optional.empty()
+     * @return 最優買價 / 最優賣價；若無資料則回傳 empty
      */
     @Override
     public Optional<TopOfBook> top(String symbolCode) {
@@ -353,61 +433,5 @@ public class InMemoryMatchingEngine implements MatchingEngine {
                             .build()
             );
         }
-    }
-
-    // -------------------------------------------------
-    // MARKET 殘量轉 LIMIT 掛簿（MTL）掛價策略
-    // -------------------------------------------------
-
-    /**
-     * BUY 單在 MARKET 殘量情況下的掛簿價格選擇策略
-     * -------------------------------------------------
-     * 優先順序：
-     * 1) 本輪最後成交價
-     * 2) 當前最佳買價 bestBid
-     * 3) 當前最佳賣價 bestAsk
-     * 4) 保留原始價格（通常是市價模擬時的極端價格）
-     *
-     * @param orderBook      該交易對的訂單簿
-     * @param order          新單
-     * @param lastExecPrice  本輪最後成交價
-     * @return 應掛簿的 LIMIT 價格
-     */
-    private BigDecimal choosePostPriceForBuy(OrderBook orderBook, Order order, BigDecimal lastExecPrice) {
-        if (lastExecPrice != null) return lastExecPrice;
-
-        Order bestBid = orderBook.peekBestBid();
-        if (bestBid != null) return bestBid.getPrice();
-
-        Order bestAsk = orderBook.peekBestAsk();
-        if (bestAsk != null) return bestAsk.getPrice();
-
-        return order.getPrice();
-    }
-
-    /**
-     * SELL 單在 MARKET 殘量情況下的掛簿價格選擇策略
-     * -------------------------------------------------
-     * 優先順序：
-     * 1) 本輪最後成交價
-     * 2) 當前最佳賣價 bestAsk
-     * 3) 當前最佳買價 bestBid
-     * 4) 保留原始價格
-     *
-     * @param orderBook      該交易對的訂單簿
-     * @param order          新單
-     * @param lastExecPrice  本輪最後成交價
-     * @return 應掛簿的 LIMIT 價格
-     */
-    private BigDecimal choosePostPriceForSell(OrderBook orderBook, Order order, BigDecimal lastExecPrice) {
-        if (lastExecPrice != null) return lastExecPrice;
-
-        Order bestAsk = orderBook.peekBestAsk();
-        if (bestAsk != null) return bestAsk.getPrice();
-
-        Order bestBid = orderBook.peekBestBid();
-        if (bestBid != null) return bestBid.getPrice();
-
-        return order.getPrice();
     }
 }

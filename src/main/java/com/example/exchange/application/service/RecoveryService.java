@@ -2,6 +2,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.*;
 import com.example.exchange.domain.repository.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,22 +14,13 @@ import java.util.Map;
  * - 回放事件的取得與套用邏輯，實務上由 infra EventStore 或專屬 replay 程序提供
  */
 @Service
+@RequiredArgsConstructor
 public class RecoveryService {
 
     private final SnapshotRepository snapshotRepo;
     private final EventStore eventStore;
     private final AccountRepository accountRepo;
     private final PositionRepository positionRepo;
-
-    public RecoveryService(SnapshotRepository snapshotRepo,
-                           EventStore eventStore,
-                           AccountRepository accountRepo,
-                           PositionRepository positionRepo) {
-        this.snapshotRepo = snapshotRepo;
-        this.eventStore = eventStore;
-        this.accountRepo = accountRepo;
-        this.positionRepo = positionRepo;
-    }
 
     /** 依 uid 恢復狀態（示範版） */
     @SuppressWarnings("unchecked")

@@ -2,6 +2,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.Account;
 import com.example.exchange.domain.repository.AccountRepository;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -11,13 +12,10 @@ import java.math.BigDecimal;
  * - 封裝 Cross/Isolated 劃轉
  */
 @Service
+@RequiredArgsConstructor
 public class MarginService {
 
     private final AccountRepository accountRepo;
-
-    public MarginService(AccountRepository accountRepo) {
-        this.accountRepo = accountRepo;
-    }
 
     /**
      * 劃轉：Cross <-> Isolated

@@ -2,6 +2,7 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.Order;
 import com.example.exchange.domain.model.OrderSide;
+import com.example.exchange.domain.model.OrderType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
  * 後續可擴充：
  * - 價格優先 + 時間優先
  * - 每一個價位對應 FIFO queue
- * - 支援 IOC / FOK 的完整可成交量預估
+ * - 支援 IOC / FOK 的更完整預估
  * - 支援 reduce-only / post-only 等訂單限制
  */
 public class OrderBook {
@@ -102,6 +103,10 @@ public class OrderBook {
      * - BUY 進 bids
      * - SELL 進 asks
      *
+     * 注意：
+     * - 一般只有 LIMIT / 可掛簿的訂單才應進入此方法
+     * - 正統 MARKET 單不應掛進 order book
+     *
      * @param order 欲加入掛簿的訂單
      */
     public void add(Order order) {
@@ -132,23 +137,31 @@ public class OrderBook {
      * 預估此訂單在當前訂單簿中最多可成交多少數量
      * -------------------------------------------------
      * 用途：
-     * - 可作為 FOK（Fill Or Kill）判斷依據
-     * - 也可用來做風控或撮合前的可成交量估算
+     * - 可作為 FOK（Fill Or Kill）的判斷依據
+     * - 也可作為撮合前的可成交量估算
      *
      * 規則：
-     * - BUY 單：只累加賣簿中「價格 <= 買價」的掛單量
-     * - SELL 單：只累加買簿中「價格 >= 賣價」的掛單量
-     * - 不會修改原始訂單簿
+     * - LIMIT BUY：
+     *   只累加 asks 中「價格 <= 買價」的掛單量
+     *
+     * - LIMIT SELL：
+     *   只累加 bids 中「價格 >= 賣價」的掛單量
+     *
+     * - MARKET BUY：
+     *   不看價格限制，直接累加 asks 的量，直到滿足委託數量或賣簿為空
+     *
+     * - MARKET SELL：
+     *   不看價格限制，直接累加 bids 的量，直到滿足委託數量或買簿為空
      *
      * 注意：
-     * - 此方法目前僅依價格判斷，不考慮時間優先
-     * - 若 order.price 為 null，回傳 0（因為無法做價格比較）
+     * - 此方法不會修改原始訂單簿
+     * - 此方法目前僅依價格優先做估算，尚未考慮時間優先
      *
      * @param incoming 傳入的新訂單
-     * @return 在目前簿況下理論上可成交的最大數量
+     * @return 在目前簿況下理論上最多可成交的數量
      */
     public BigDecimal matchableQty(Order incoming) {
-        if (incoming == null || incoming.getPrice() == null || incoming.getQty() == null) {
+        if (incoming == null || incoming.getQty() == null) {
             return BigDecimal.ZERO;
         }
 
@@ -161,12 +174,21 @@ public class OrderBook {
             sortedAsks.sort(Comparator.comparing(Order::getPrice));
 
             for (Order ask : sortedAsks) {
-                if (remaining.signum() <= 0) break;
-                if (ask.getPrice() == null || ask.getQty() == null) continue;
-
-                // BUY 單只能吃到價格 <= 自己出價的賣單
-                if (incoming.getPrice().compareTo(ask.getPrice()) < 0) {
+                if (remaining.signum() <= 0) {
                     break;
+                }
+                if (ask.getQty() == null || ask.getQty().signum() <= 0) {
+                    continue;
+                }
+
+                // LIMIT BUY 需滿足價格條件；MARKET BUY 不需要
+                if (incoming.getType() == OrderType.LIMIT) {
+                    if (incoming.getPrice() == null) {
+                        return BigDecimal.ZERO;
+                    }
+                    if (incoming.getPrice().compareTo(ask.getPrice()) < 0) {
+                        break;
+                    }
                 }
 
                 BigDecimal execQty = remaining.min(ask.getQty());
@@ -179,12 +201,21 @@ public class OrderBook {
             sortedBids.sort(Comparator.comparing(Order::getPrice).reversed());
 
             for (Order bid : sortedBids) {
-                if (remaining.signum() <= 0) break;
-                if (bid.getPrice() == null || bid.getQty() == null) continue;
-
-                // SELL 單只能吃到價格 >= 自己賣價的買單
-                if (incoming.getPrice().compareTo(bid.getPrice()) > 0) {
+                if (remaining.signum() <= 0) {
                     break;
+                }
+                if (bid.getQty() == null || bid.getQty().signum() <= 0) {
+                    continue;
+                }
+
+                // LIMIT SELL 需滿足價格條件；MARKET SELL 不需要
+                if (incoming.getType() == OrderType.LIMIT) {
+                    if (incoming.getPrice() == null) {
+                        return BigDecimal.ZERO;
+                    }
+                    if (incoming.getPrice().compareTo(bid.getPrice()) > 0) {
+                        break;
+                    }
                 }
 
                 BigDecimal execQty = remaining.min(bid.getQty());
