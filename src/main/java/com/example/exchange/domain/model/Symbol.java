@@ -73,7 +73,6 @@ public class Symbol {
      * - 顯示層若需要 "BTC/USDT" 可在 UI 轉換或新增 displayCode()。
      */
     public String code() {
-        return base + quote;
-        // TODO: 若要統一大寫可改為：return (base == null ? "" : base.toUpperCase()) + (quote == null ? "" : quote.toUpperCase());
+        return (base == null ? "" : base.toUpperCase()) + (quote == null ? "" : quote.toUpperCase());
     }
 }

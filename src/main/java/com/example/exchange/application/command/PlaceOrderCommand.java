@@ -17,5 +17,8 @@ public record PlaceOrderCommand(
         BigDecimal price,   // 價格（市價單可為 null）
         BigDecimal qty,     // 數量
         int leverage,       // 槓桿倍數（1~125）
-        String marginMode   // "CROSS" / "ISOLATED"
+        String marginMode,   // "CROSS" / "ISOLATED"
+        String clientOrderId,
+        String timeInForce,
+        boolean reduceOnly
 ) {}

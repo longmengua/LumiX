@@ -1,7 +1,6 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
-import com.example.exchange.application.service.OrderService;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
 import com.example.exchange.domain.model.Order;
 import com.example.exchange.domain.repository.OrderRepository;
@@ -12,7 +11,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
-import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,7 +27,7 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     // Use Case：處理下單邏輯（DDD：應用層）
-    private final PlaceOrderUseCase usecase;
+    private final PlaceOrderUseCase useCase;
 
     // Repository：查詢訂單（DDD：領域層）
     private final OrderRepository orderRepo;
@@ -47,9 +45,7 @@ public class OrderController {
     @PostMapping("/place")
     public ApiResponse<String> place(@Valid @RequestBody PlaceOrderRequest r) {
         // 將請求轉換成 Command，交給 UseCase 處理
-        usecase.handle(new PlaceOrderCommand(
-                r.getUid(), r.getSymbol(), r.getSide(), r.getType(), r.getPrice(), r.getQty(), r.getLeverage(), r.getMarginMode()
-        ));
+        useCase.handle(r.toPlaceOrderCommand());
         return ApiResponse.ok("accepted");
     }
 
@@ -71,17 +67,7 @@ public class OrderController {
 
         // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
         List<OrderInfoResponse> result = orders.stream()
-                .map(o -> new OrderInfoResponse(
-                        o.getId().toString(),        // 訂單 ID (轉字串，方便前端處理)
-                        o.getUid(),                  // 使用者 ID
-                        o.getSymbol().code(),        // 交易對 (字串形式)
-                        o.getSide(),                 // 買/賣方向
-                        o.getType(),                 // 訂單類型 (限價、市價…)
-                        o.getPrice(),                // 價格
-                        o.getQty(),                  // 數量
-                        o.getStatus().name(),        // 狀態 (列舉轉字串)
-                        o.getCtime()                 // 建立時間
-                ))
+                .map(Order::toOrderInfoResponse)
                 .collect(Collectors.toList());
 
         return ApiResponse.ok(result);
@@ -105,19 +91,14 @@ public class OrderController {
 
         // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
         List<OrderInfoResponse> result = orders.stream()
-                .map(o -> new OrderInfoResponse(
-                        o.getId().toString(),
-                        o.getUid(),
-                        o.getSymbol().code(),
-                        o.getSide(),
-                        o.getType(),
-                        o.getPrice(),
-                        o.getQty(),
-                        o.getStatus().name(),
-                        o.getCtime()
-                ))
+                .map(Order::toOrderInfoResponse)
                 .collect(Collectors.toList());
 
         return ApiResponse.ok(result);
+    }
+
+    @GetMapping("/{orderId}")
+    public ApiResponse<Boolean> cancelOrder() {
+        return ApiResponse.ok(true);
     }
 }

@@ -13,211 +13,401 @@ import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * In-memory 撮合引擎（多交易對）
+ * InMemoryMatchingEngine（記憶體版撮合引擎）
+ * -------------------------------------------------
  *
- * 功能重點：
- * 1) 先以「價格撮合」處理傳入訂單（taker）
- * 2) 若為 MARKET 且未完全成交 → 轉為 LIMIT 掛簿（MTL）
- *    - 掛簿價優先取「最後成交價」，否則取該側合理的 Top-of-Book 價位
+ * 角色定位：
+ * - 此類別是 MatchingEngine 的基礎實作，負責在記憶體中維護多個交易對的訂單簿，
+ *   並對新訂單執行撮合。
+ * - 每個 symbol（例如 BTCUSDT）對應一個獨立的 OrderBook。
+ *
+ * 設計說明：
+ * 1) 使用 ConcurrentHashMap 管理多交易對的 order book
+ * 2) 對單一 OrderBook 採 synchronized，避免同一交易對同時撮合造成資料競態
+ * 3) 新單預設視為 taker，簿中的掛單視為 maker
+ * 4) 支援：
+ *    - LIMIT：能成交的先成交，吃不完則續掛簿
+ *    - MARKET：能成交的先成交，吃不完則轉為 LIMIT 掛簿（簡化版 MTL）
+ *
+ * 注意事項：
+ * - 目前是 Demo 級別實作，不是生產級撮合核心
+ * - 尚未完整實作：
+ *   - 價格/數量精度量化
+ *   - 自成交防護（SMP）
+ *   - IOC / FOK / POST_ONLY / REDUCE_ONLY
+ *   - maker/taker fee
+ *   - 單簿序列器 / Disruptor / 高效能無鎖模型
  *
  * 相容性：
- * - submitOrderV2(Order) 回傳 MatchingResult（含 affectedOrders）
- * - submitOrder(Order) 仍保留，委派至 V2 結果的 trades
+ * - submitOrder(Order)：舊版 API，只回傳成交事件列表
+ * - submitOrderV2(Order)：新版 API，回傳 trades + affectedOrders
  */
 @Component
 public class InMemoryMatchingEngine implements MatchingEngine {
 
-    /** key = symbolCode（例：BTCUSDT） */
+    /**
+     * 多交易對的訂單簿容器
+     * - key   = symbol code（例如 BTCUSDT）
+     * - value = 該交易對的 OrderBook
+     */
     private final Map<String, OrderBook> books = new ConcurrentHashMap<>();
 
+    /**
+     * 取得指定交易對的 OrderBook
+     * - 若不存在則自動建立
+     *
+     * @param symbolCode 交易對代碼
+     * @return 該交易對對應的訂單簿
+     */
     private OrderBook book(String symbolCode) {
         return books.computeIfAbsent(symbolCode, k -> new OrderBook());
     }
 
-    // ------------------------- 相容舊版 API -------------------------
+    // -------------------------------------------------
+    // 相容舊版 API
+    // -------------------------------------------------
 
+    /**
+     * 舊版下單 API
+     * - 僅需要成交事件列表
+     * - 內部委派給 submitOrderV2()，再取出 trades
+     *
+     * @param order 新訂單
+     * @return 成交事件列表
+     */
     @Override
     public List<TradeExecuted> submitOrder(Order order) {
-        // 舊版僅需成交事件；新版則同時帶 affectedOrders
         return submitOrderV2(order).getTrades();
     }
 
-    // ------------------------- 新版 API -------------------------
+    // -------------------------------------------------
+    // 新版 API
+    // -------------------------------------------------
 
+    /**
+     * 新版下單 API
+     * -------------------------------------------------
+     * 功能：
+     * - 對傳入的新訂單做撮合
+     * - 回傳本次撮合產生的成交事件（trades）
+     * - 回傳所有受影響的訂單（affectedOrders）
+     *
+     * 撮合規則（簡化版）：
+     * - BUY 單會去吃賣簿 asks
+     * - SELL 單會去吃買簿 bids
+     * - 若為 LIMIT 且有剩餘量，續掛簿
+     * - 若為 MARKET 且有剩餘量，轉為 LIMIT 掛簿（MTL）
+     *
+     * @param order 新訂單
+     * @return 撮合結果（trades + affectedOrders）
+     */
     @Override
     public MatchingResult submitOrderV2(Order order) {
-        String sym = order.getSymbol().code();
-        OrderBook ob = book(sym);
+        String symbolCode = order.getSymbol().code();
+        OrderBook orderBook = book(symbolCode);
 
+        // 本次撮合產生的成交事件
         final List<TradeExecuted> trades = new ArrayList<>();
-        final LinkedHashSet<Order> affectedOrders = new LinkedHashSet<>(); // 去重、保序
-        affectedOrders.add(order); // 新單一定受影響（狀態/剩餘量可能變動）
 
-        synchronized (ob) {
-            BigDecimal lastExecPrice = null; // 記錄本輪最後成交價（供 MTL 掛價）
+        // 受影響訂單集合：
+        // - 使用 LinkedHashSet 保持插入順序
+        // - 同時避免同一張單被重複加入
+        final LinkedHashSet<Order> affectedOrders = new LinkedHashSet<>();
+        affectedOrders.add(order); // 新單一定受影響
 
-            // TODO: 價格/數量量化：先按 symbol priceScale/qtyScale 做 round/scale
-            // TODO: 自成交防護（SMP）：若對手簿最佳單同 uid → 依策略取消/跳過/改價
+        synchronized (orderBook) {
+            // 記錄本輪最後成交價，供 MARKET 殘量轉 LIMIT 掛簿時使用
+            BigDecimal lastExecPrice = null;
+
+            // TODO: 依 symbol 的 priceScale / qtyScale 對價格與數量做量化
+            // TODO: 加入自成交防護（Self Match Prevention）
+            // TODO: 支援 IOC / FOK / POST_ONLY / REDUCE_ONLY
 
             if (order.getSide() == OrderSide.BUY) {
-                // BUY：買單 vs 賣簿撮合（買價 >= 最佳賣價）
-                while (ob.peekBestAsk() != null
+                // BUY：買單吃賣簿
+                while (orderBook.peekBestAsk() != null
                         && order.getQty().signum() > 0
                         && order.getPrice() != null
-                        && order.getPrice().compareTo(ob.peekBestAsk().getPrice()) >= 0) {
+                        && order.getPrice().compareTo(orderBook.peekBestAsk().getPrice()) >= 0) {
 
-                    Order bestAsk = ob.pollBestAsk();
-                    affectedOrders.add(bestAsk); // 對手單必定受影響
+                    Order bestAsk = orderBook.pollBestAsk();
+                    affectedOrders.add(bestAsk);
 
+                    // 本次實際成交量 = taker 剩餘量 與 maker 剩餘量 取最小值
                     BigDecimal execQty = order.getQty().min(bestAsk.getQty());
-                    BigDecimal execPx  = bestAsk.getPrice();
 
-                    // TODO: maker/taker 角色標記（供費率）；此處新單多為 taker，簿中單為 maker
-                    // TODO: TradeExecuted 可擴充 role/fee 欄位（或交由上層計算）
+                    // BUY 吃 SELL 時，成交價取 maker（賣簿）價格
+                    BigDecimal execPx = bestAsk.getPrice();
 
+                    Instant now = Instant.now();
+
+                    // 對 taker（BUY 方）而言，成交數量為正
                     trades.add(new TradeExecuted(
-                            order.getUid(), order.getSymbol(), execQty, execPx, 0L, Instant.now()));
+                            order.getUid(),
+                            order.getSymbol(),
+                            execQty,
+                            execPx,
+                            0L,
+                            now
+                    ));
+
+                    // 對 maker（SELL 方）而言，成交數量為負
                     trades.add(new TradeExecuted(
-                            bestAsk.getUid(), bestAsk.getSymbol(), execQty.negate(), execPx, 0L, Instant.now()));
+                            bestAsk.getUid(),
+                            bestAsk.getSymbol(),
+                            execQty.negate(),
+                            execPx,
+                            0L,
+                            now
+                    ));
 
                     lastExecPrice = execPx;
 
-                    order.fill(execQty);
-                    bestAsk.fill(execQty);
+                    // 更新雙方訂單狀態與成交資訊
+                    order.fill(execQty, execPx);
+                    bestAsk.fill(execQty, execPx);
 
+                    // 若對手單尚未完全成交，放回簿中
                     if (bestAsk.getQty().signum() > 0) {
-                        ob.add(bestAsk);            // 部分成交 → 放回簿中
-                        // affectedOrders 已加過 bestAsk；此處不重複加
+                        orderBook.add(bestAsk);
                     }
                 }
 
-                // 殘量處理（BUY）
+                // BUY 單有殘量時的處理
                 if (order.getQty().signum() > 0) {
                     if (order.getType() == OrderType.MARKET) {
-                        // ✅ MTL：市價殘量 → 轉 LIMIT 掛簿
-                        BigDecimal postPx = choosePostPriceForBuy(ob, order, lastExecPrice);
+                        // MARKET 殘量 → 轉 LIMIT 掛簿（簡化版 MTL）
+                        BigDecimal postPrice = choosePostPriceForBuy(orderBook, order, lastExecPrice);
                         order.setType(OrderType.LIMIT);
-                        order.setPrice(postPx);
-                        ob.add(order);
-                        // TODO: 通知上層依新掛簿價重估 IM & 手續費凍結
+                        order.setPrice(postPrice);
+                        orderBook.add(order);
+
+                        // TODO: 通知上層重新評估保證金與費率凍結
                     } else {
-                        ob.add(order); // LIMIT 吃不完 → 續掛
-                        // TODO: 通知上層凍結 IM（若先前只凍結 taker 上限需調整）
+                        // LIMIT 吃不完 → 原樣掛簿
+                        orderBook.add(order);
+
+                        // TODO: 通知上層凍結剩餘委託對應 IM / fee
                     }
                 }
 
             } else {
-                // SELL：賣單 vs 買簿撮合（賣價 <= 最佳買價）
-                while (ob.peekBestBid() != null
+                // SELL：賣單吃買簿
+                while (orderBook.peekBestBid() != null
                         && order.getQty().signum() > 0
                         && order.getPrice() != null
-                        && order.getPrice().compareTo(ob.peekBestBid().getPrice()) <= 0) {
+                        && order.getPrice().compareTo(orderBook.peekBestBid().getPrice()) <= 0) {
 
-                    Order bestBid = ob.pollBestBid();
-                    affectedOrders.add(bestBid); // 對手單受影響
+                    Order bestBid = orderBook.pollBestBid();
+                    affectedOrders.add(bestBid);
 
+                    // 本次實際成交量 = taker 剩餘量 與 maker 剩餘量 取最小值
                     BigDecimal execQty = order.getQty().min(bestBid.getQty());
-                    BigDecimal execPx  = bestBid.getPrice();
 
-                    // TODO: maker/taker 角色標記（供費率）
+                    // SELL 吃 BUY 時，成交價取 maker（買簿）價格
+                    BigDecimal execPx = bestBid.getPrice();
+
+                    Instant now = Instant.now();
+
+                    // 對 taker（SELL 方）而言，成交數量為負
                     trades.add(new TradeExecuted(
-                            order.getUid(), order.getSymbol(), execQty.negate(), execPx, 0L, Instant.now()));
+                            order.getUid(),
+                            order.getSymbol(),
+                            execQty.negate(),
+                            execPx,
+                            0L,
+                            now
+                    ));
+
+                    // 對 maker（BUY 方）而言，成交數量為正
                     trades.add(new TradeExecuted(
-                            bestBid.getUid(), bestBid.getSymbol(), execQty, execPx, 0L, Instant.now()));
+                            bestBid.getUid(),
+                            bestBid.getSymbol(),
+                            execQty,
+                            execPx,
+                            0L,
+                            now
+                    ));
 
                     lastExecPrice = execPx;
 
-                    order.fill(execQty);
-                    bestBid.fill(execQty);
+                    // 更新雙方訂單狀態與成交資訊
+                    order.fill(execQty, execPx);
+                    bestBid.fill(execQty, execPx);
 
+                    // 若對手單尚未完全成交，放回簿中
                     if (bestBid.getQty().signum() > 0) {
-                        ob.add(bestBid);          // 部分成交 → 放回簿中
+                        orderBook.add(bestBid);
                     }
                 }
 
-                // 殘量處理（SELL）
+                // SELL 單有殘量時的處理
                 if (order.getQty().signum() > 0) {
                     if (order.getType() == OrderType.MARKET) {
-                        BigDecimal postPx = choosePostPriceForSell(ob, order, lastExecPrice);
+                        // MARKET 殘量 → 轉 LIMIT 掛簿（簡化版 MTL）
+                        BigDecimal postPrice = choosePostPriceForSell(orderBook, order, lastExecPrice);
                         order.setType(OrderType.LIMIT);
-                        order.setPrice(postPx);
-                        ob.add(order);
-                        // TODO: 通知上層依新掛簿價重估 IM & 手續費凍結
+                        order.setPrice(postPrice);
+                        orderBook.add(order);
+
+                        // TODO: 通知上層重新評估保證金與費率凍結
                     } else {
-                        ob.add(order);
-                        // TODO: 通知上層凍結 IM
+                        // LIMIT 吃不完 → 原樣掛簿
+                        orderBook.add(order);
+
+                        // TODO: 通知上層凍結剩餘委託對應 IM / fee
                     }
                 }
             }
         }
 
-        return MatchingResult.builder().trades(trades).affectedOrders(new ArrayList<Order>(affectedOrders)).build();
+        return MatchingResult.builder()
+                .trades(trades)
+                .affectedOrders(new ArrayList<>(affectedOrders))
+                .build();
     }
 
-    // ------------------------- 其他行為：取消/查詢 -------------------------
-
-    @Override
-    public boolean cancelOrder(Order order) {
-        OrderBook ob = books.get(order.getSymbol().code());
-        if (ob == null) return false;
-        synchronized (ob) {
-            // TODO: 取消成功後通知上層釋放剩餘凍結（IM + 未用手續費）
-            return ob.cancel(order);
-        }
-    }
-
-    @Override
-    public OrderBookSnapshot snapshot(String symbolCode, int depth) {
-        OrderBook ob = books.get(symbolCode);
-        if (ob == null) {
-            return new OrderBookSnapshot(Collections.emptyList(), Collections.emptyList());
-        }
-        synchronized (ob) {
-            return ob.snapshot(Math.max(1, depth));
-        }
-    }
-
-    @Override
-    public Optional<TopOfBook> top(String symbolCode) {
-        OrderBook ob = books.get(symbolCode);
-        if (ob == null) return Optional.empty();
-        synchronized (ob) {
-            BigDecimal bid = (ob.peekBestBid() != null) ? ob.peekBestBid().getPrice() : null;
-            BigDecimal ask = (ob.peekBestAsk() != null) ? ob.peekBestAsk().getPrice() : null;
-            if (bid == null && ask == null) return Optional.empty();
-            return Optional.of(TopOfBook.builder().bestAsk(ask).bestBid(bid).build());
-        }
-    }
-
-    // ------------------------- 掛價策略（MTL） -------------------------
+    // -------------------------------------------------
+    // 其他行為：撤單 / 查詢
+    // -------------------------------------------------
 
     /**
-     * 買單 MTL 的掛簿價格選擇邏輯
-     * 優先序：1) lastExecPrice 2) bestBid 3) bestAsk 4) retain original (市價單應已設極端價)
+     * 取消訂單
+     * -------------------------------------------------
+     * 功能：
+     * - 從指定交易對的訂單簿中移除該訂單
+     *
+     * 注意：
+     * - 此方法僅從 order book 移除訂單，不直接改 Order 狀態
+     * - 狀態更新（例如設成 CANCELED）應交由上層 OrderService 處理
+     *
+     * @param order 欲取消的訂單
+     * @return true 表示成功從訂單簿移除；false 表示找不到或未成功移除
      */
-    private BigDecimal choosePostPriceForBuy(OrderBook ob, Order order, BigDecimal lastExecPrice) {
+    @Override
+    public boolean cancelOrder(Order order) {
+        OrderBook orderBook = books.get(order.getSymbol().code());
+        if (orderBook == null) return false;
+
+        synchronized (orderBook) {
+            // TODO: 取消成功後通知上層釋放剩餘凍結（IM + 未使用費率預留）
+            return orderBook.cancel(order);
+        }
+    }
+
+    /**
+     * 取得訂單簿快照
+     *
+     * @param symbolCode 交易對代碼
+     * @param depth      返回檔位深度
+     * @return 指定交易對的訂單簿快照
+     */
+    @Override
+    public OrderBookSnapshot snapshot(String symbolCode, int depth) {
+        OrderBook orderBook = books.get(symbolCode);
+        if (orderBook == null) {
+            return new OrderBookSnapshot(List.of(), List.of());
+        }
+
+        synchronized (orderBook) {
+            return orderBook.snapshot(Math.max(1, depth));
+        }
+    }
+
+    /**
+     * 取得最優買賣價（Top of Book）
+     *
+     * @param symbolCode 交易對代碼
+     * @return 最優買價 / 最優賣價；若此簿不存在或無掛單，回傳 Optional.empty()
+     */
+    @Override
+    public Optional<TopOfBook> top(String symbolCode) {
+        OrderBook orderBook = books.get(symbolCode);
+        if (orderBook == null) return Optional.empty();
+
+        synchronized (orderBook) {
+            BigDecimal bestBid = (orderBook.peekBestBid() != null)
+                    ? orderBook.peekBestBid().getPrice()
+                    : null;
+
+            BigDecimal bestAsk = (orderBook.peekBestAsk() != null)
+                    ? orderBook.peekBestAsk().getPrice()
+                    : null;
+
+            if (bestBid == null && bestAsk == null) {
+                return Optional.empty();
+            }
+
+            return Optional.of(
+                    TopOfBook.builder()
+                            .bestBid(bestBid)
+                            .bestAsk(bestAsk)
+                            .build()
+            );
+        }
+    }
+
+    // -------------------------------------------------
+    // MARKET 殘量轉 LIMIT 掛簿（MTL）掛價策略
+    // -------------------------------------------------
+
+    /**
+     * BUY 單在 MARKET 殘量情況下的掛簿價格選擇策略
+     * -------------------------------------------------
+     * 優先順序：
+     * 1) 本輪最後成交價
+     * 2) 當前最佳買價 bestBid
+     * 3) 當前最佳賣價 bestAsk
+     * 4) 保留原始價格（通常是市價模擬時的極端價格）
+     *
+     * @param orderBook      該交易對的訂單簿
+     * @param order          新單
+     * @param lastExecPrice  本輪最後成交價
+     * @return 應掛簿的 LIMIT 價格
+     */
+    private BigDecimal choosePostPriceForBuy(OrderBook orderBook, Order order, BigDecimal lastExecPrice) {
         if (lastExecPrice != null) return lastExecPrice;
-        Order bestBid = ob.peekBestBid();
+
+        Order bestBid = orderBook.peekBestBid();
         if (bestBid != null) return bestBid.getPrice();
-        Order bestAsk = ob.peekBestAsk();
+
+        Order bestAsk = orderBook.peekBestAsk();
         if (bestAsk != null) return bestAsk.getPrice();
+
         return order.getPrice();
     }
 
     /**
-     * 賣單 MTL 的掛簿價格選擇邏輯
-     * 優先序：1) lastExecPrice 2) bestAsk 3) bestBid 4) retain original
+     * SELL 單在 MARKET 殘量情況下的掛簿價格選擇策略
+     * -------------------------------------------------
+     * 優先順序：
+     * 1) 本輪最後成交價
+     * 2) 當前最佳賣價 bestAsk
+     * 3) 當前最佳買價 bestBid
+     * 4) 保留原始價格
+     *
+     * @param orderBook      該交易對的訂單簿
+     * @param order          新單
+     * @param lastExecPrice  本輪最後成交價
+     * @return 應掛簿的 LIMIT 價格
      */
-    private BigDecimal choosePostPriceForSell(OrderBook ob, Order order, BigDecimal lastExecPrice) {
+    private BigDecimal choosePostPriceForSell(OrderBook orderBook, Order order, BigDecimal lastExecPrice) {
         if (lastExecPrice != null) return lastExecPrice;
-        Order bestAsk = ob.peekBestAsk();
+
+        Order bestAsk = orderBook.peekBestAsk();
         if (bestAsk != null) return bestAsk.getPrice();
-        Order bestBid = ob.peekBestBid();
+
+        Order bestBid = orderBook.peekBestBid();
         if (bestBid != null) return bestBid.getPrice();
+
         return order.getPrice();
     }
 }

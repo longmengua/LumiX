@@ -1,4 +1,5 @@
 package com.example.exchange.application.command;
 
-public class CancelOrderCommand {
-}
+import java.util.UUID;
+
+public record CancelOrderCommand(UUID orderId, long uid) {}

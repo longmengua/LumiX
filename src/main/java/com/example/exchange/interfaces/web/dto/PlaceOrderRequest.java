@@ -1,5 +1,6 @@
 package com.example.exchange.interfaces.web.dto;
 
+import com.example.exchange.application.command.PlaceOrderCommand;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.validation.constraints.*;
 import java.math.BigDecimal;
@@ -51,6 +52,7 @@ public class PlaceOrderRequest {
      * - 必填
      * - 最小值 = 0.0001
      */
+    @NotNull(message = "qty 不可為空")
     @DecimalMin(value = "0.0001", message = "qty 必須 >= 0.0001")
     private BigDecimal qty;
 
@@ -59,9 +61,16 @@ public class PlaceOrderRequest {
      * - 必填
      * - 範圍 = 1 ~ 125
      */
+    @NotNull(message = "leverage 不可為空")
     @Min(value = 1, message = "leverage 最小為 1")
     @Max(value = 125, message = "leverage 最大為 125")
     private Integer leverage;
+
+    private String clientOrderId;
+
+    private String timeInForce;
+
+    private Boolean reduceOnly;
 
     /**
      * 保證金模式
@@ -70,4 +79,20 @@ public class PlaceOrderRequest {
      */
     @NotBlank(message = "marginMode 不可為空")
     private String marginMode;
+
+    public PlaceOrderCommand toPlaceOrderCommand() {
+        return new PlaceOrderCommand(
+            getUid(),
+            getSymbol(),
+            getSide(),
+            getType(),
+            getPrice(),
+            getQty(),
+            getLeverage(),
+            getMarginMode(),
+            getClientOrderId(),
+            getTimeInForce(),
+            Boolean.TRUE.equals(getReduceOnly())
+        );
+    }
 }

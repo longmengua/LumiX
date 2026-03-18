@@ -16,8 +16,6 @@ import java.math.BigDecimal;
 @Component
 public class PlaceOrderUseCase {
     private static final String defaultQuote = "USDT";
-    private static final BigDecimal MARKET_BUY_PRICE  = new BigDecimal("1000000000");   // 超高價
-    private static final BigDecimal MARKET_SELL_PRICE = new BigDecimal("0.00000001");   // 超低價
 
     private final OrderService orderService;
 
@@ -37,12 +35,19 @@ public class PlaceOrderUseCase {
                 .qtyScale(3)
                 .build();
 
-        BigDecimal price;
-        if (cmd.type() == OrderType.MARKET) {
-            price = (cmd.side() == OrderSide.BUY) ? MARKET_BUY_PRICE : MARKET_SELL_PRICE;
-        } else {
+        TimeInForce tif = (cmd.timeInForce() == null || cmd.timeInForce().isBlank())
+                ? TimeInForce.GTC
+                : TimeInForce.valueOf(cmd.timeInForce().trim().toUpperCase());
+
+        BigDecimal price = null;
+        // 不是市價單，就得有價格
+        if (cmd.type() != OrderType.MARKET) {
             price = cmd.price();
             if (price == null) throw new IllegalArgumentException("LIMIT order requires price");
+        }
+        // 市價單不進入訂單簿，可以沒價格
+        if (cmd.type() == OrderType.MARKET) {
+            // todo: 市價單特殊處置
         }
 
         // ===== TODO: 風控 & 資金前置檢查 =====
@@ -56,6 +61,9 @@ public class PlaceOrderUseCase {
         // TODO: 凍結資金：凍結 IM 及「預估手續費上限」（返回 freezeId 以便後續釋放/調整）
 
         // 建立訂單（這版的 Order 將 qty 視為「剩餘數量」）
+        // TODO: order.attachFreezeId(freezeId)  // 把凍結資金的憑證綁在訂單上
+        // TODO: order.setLeverage(leverage)     // 記錄下單時的槓桿與保證金模式
+        // TODO: order.setMarginMode(MarginMode.CROSS / ISOLATED)
         Order order = Order.builder()
                 .uid(cmd.uid())
                 .symbol(sym)
@@ -63,9 +71,12 @@ public class PlaceOrderUseCase {
                 .type(cmd.type())
                 .price(price)
                 .qty(cmd.qty())
-                // TODO: order.attachFreezeId(freezeId)  // 把凍結資金的憑證綁在訂單上
-                // TODO: order.setLeverage(leverage)     // 記錄下單時的槓桿與保證金模式
-                // TODO: order.setMarginMode(MarginMode.CROSS / ISOLATED)
+                .origQty(cmd.qty())
+                .executedQty(BigDecimal.ZERO)
+                .avgPrice(BigDecimal.ZERO)
+                .timeInForce(tif)
+                .reduceOnly(cmd.reduceOnly())
+                .clientOrderId(cmd.clientOrderId())
                 .build();
 
         // TODO: 記錄審計/上報（風控審核流水、神策/GA 埋點）
