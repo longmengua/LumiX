@@ -1,9 +1,8 @@
 package com.example.exchange.interfaces.web.controller;
 
-import com.example.exchange.application.command.PlaceOrderCommand;
+import com.example.exchange.application.usecase.OrderUserCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
 import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import com.example.exchange.interfaces.web.dto.PlaceOrderRequest;
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
  * --------------------------
  * 下單相關 REST API Controller
  * - 僅負責「接收 HTTP 請求」與「回應結果」
- * - 不包含業務邏輯（business logic），業務邏輯由 UseCase / Service / Repository 處理
+ * - 不包含業務邏輯（business logic），業務邏輯由 UseCase 處理
  */
 @RestController                      // 標記為 REST 控制器，自動返回 JSON
 @RequestMapping("/api/order")        // 所有 API 以 /api/order 開頭
@@ -27,10 +26,10 @@ import java.util.stream.Collectors;
 public class OrderController {
 
     // Use Case：處理下單邏輯（DDD：應用層）
-    private final PlaceOrderUseCase useCase;
+    private final PlaceOrderUseCase placeOrderUseCase;
 
-    // Repository：查詢訂單（DDD：領域層）
-    private final OrderRepository orderRepo;
+    // Order Case：查詢訂單（DDD：領域層）
+    private final OrderUserCase orderUserCase;
 
     /**
      * 下單 API
@@ -45,7 +44,7 @@ public class OrderController {
     @PostMapping("/place")
     public ApiResponse<String> place(@Valid @RequestBody PlaceOrderRequest r) {
         // 將請求轉換成 Command，交給 UseCase 處理
-        useCase.handle(r.toPlaceOrderCommand());
+        placeOrderUseCase.handle(r.toPlaceOrderCommand());
         return ApiResponse.ok("accepted");
     }
 
@@ -60,10 +59,12 @@ public class OrderController {
      * @return 該用戶當前掛單清單
      */
     @GetMapping("/open")
-    public ApiResponse<List<OrderInfoResponse>> openOrders(@RequestParam Long uid,
-                                                           @RequestParam(required = false) String symbol) {
-        // 從 Repository 查詢使用者掛單
-        List<Order> orders = orderRepo.findOpenOrders(uid, symbol);
+    public ApiResponse<List<OrderInfoResponse>> openOrders(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol
+    ) {
+        // 查詢使用者掛單
+        List<Order> orders = orderUserCase.findOpenOrders(uid, symbol);
 
         // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
         List<OrderInfoResponse> result = orders.stream()
@@ -84,10 +85,12 @@ public class OrderController {
      * @return 該用戶所有訂單清單
      */
     @GetMapping("/all")
-    public ApiResponse<List<OrderInfoResponse>> allOrders(@RequestParam Long uid,
-                                                          @RequestParam(required = false) String symbol) {
-        // 從 Repository 查詢所有訂單（含歷史）
-        List<Order> orders = orderRepo.findAllOrders(uid, symbol);
+    public ApiResponse<List<OrderInfoResponse>> allOrders(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol
+    ) {
+        // 查詢所有訂單（含歷史）
+        List<Order> orders = orderUserCase.findAllOrders(uid, symbol);
 
         // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
         List<OrderInfoResponse> result = orders.stream()
