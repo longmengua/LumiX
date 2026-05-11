@@ -1,7 +1,7 @@
 package com.example.exchange.interfaces.web.dto;
 
-import com.example.exchange.domain.model.OrderSide;
-import com.example.exchange.domain.model.OrderType;
+import com.example.exchange.domain.model.enums.OrderSide;
+import com.example.exchange.domain.model.enums.OrderType;
 
 import java.math.BigDecimal;
 import java.time.Instant;

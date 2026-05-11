@@ -1,6 +1,10 @@
 package com.example.exchange.interfaces.web.controller;
 
-import jakarta.validation.Valid;
+import com.example.exchange.domain.service.PredictionMarketDiscoveryService;
+import com.example.exchange.domain.service.PredictionMarketFullSyncService;
+import com.example.exchange.domain.service.PredictionMarketPriceRefreshService;
+import com.example.exchange.domain.service.PredictionMarketService;
+import com.example.exchange.interfaces.web.dto.PredictionMarketResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,6 +28,7 @@ import java.util.List;
 @RequestMapping("/api/prediction")
 @RequiredArgsConstructor
 public class PredictionOrderController {
+    private final PredictionMarketDiscoveryService predictionMarketDiscoveryService;
 
     /**
      * Market 查詢服務。
@@ -31,11 +36,6 @@ public class PredictionOrderController {
      * 給前端 Bitmart 類 UI 使用。
      */
     private final PredictionMarketService predictionMarketService;
-
-    /**
-     * Quote / Order 服務。
-     */
-    private final PredictionOrderService predictionOrderService;
 
     /**
      * Full Sync Service。
@@ -133,28 +133,19 @@ public class PredictionOrderController {
     }
 
     /**
-     * Quote API。
+     * 手動全量 discovery。
      *
-     * HTTP:
-     * POST /api/prediction/quote
-     */
-    @PostMapping("/quote")
-    public PredictionQuoteResponse quote(
-            @Valid @RequestBody PredictionQuoteRequest request
-    ) {
-        return predictionOrderService.quote(request);
-    }
-
-    /**
-     * 建立 Prediction Order。
+     * 用途：
+     * 1. 全量拉 Gamma active/open markets
+     * 2. 自動發現 FIFA World Cup events
+     * 3. 自動建立 prediction_market_sync_key
+     * 4. 自動建立 prediction_market_info
      *
-     * HTTP:
-     * POST /api/prediction/orders
+     * 注意：
+     * 這是重任務，不建議高頻呼叫。
      */
-    @PostMapping("/orders")
-    public PredictionCreateOrderResponse createOrder(
-            @Valid @RequestBody PredictionCreateOrderRequest request
-    ) {
-        return predictionOrderService.createOrder(request);
+    @PostMapping("/markets/discover")
+    public String discoverMarkets() {
+        return predictionMarketDiscoveryService.discoverWorldCupMarkets();
     }
 }

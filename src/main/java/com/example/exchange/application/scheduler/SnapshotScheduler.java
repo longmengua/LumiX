@@ -1,8 +1,7 @@
 package com.example.exchange.application.scheduler;
 
-import com.example.exchange.domain.model.Snapshot;
+import com.example.exchange.domain.model.dto.Snapshot;
 import com.example.exchange.domain.repository.*;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;

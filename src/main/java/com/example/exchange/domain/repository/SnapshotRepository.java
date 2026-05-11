@@ -1,6 +1,6 @@
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.Snapshot;
+import com.example.exchange.domain.model.dto.Snapshot;
 
 import java.util.Optional;
 

@@ -1,6 +1,10 @@
 package com.example.exchange.application.service;
 
-import com.example.exchange.domain.model.*;
+import com.example.exchange.domain.model.dto.Snapshot;
+import com.example.exchange.domain.model.entity.Account;
+import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.entity.Symbol;
+import com.example.exchange.domain.model.enums.MarginMode;
 import com.example.exchange.domain.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

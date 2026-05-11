@@ -1,12 +1,12 @@
 package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.event.TradeExecuted;
-import com.example.exchange.domain.model.MatchingResult;
-import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.model.OrderSide;
-import com.example.exchange.domain.model.OrderType;
-import com.example.exchange.domain.model.TimeInForce;
-import com.example.exchange.domain.model.TopOfBook;
+import com.example.exchange.domain.model.dto.MatchingResult;
+import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.enums.OrderSide;
+import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.enums.TimeInForce;
+import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBook;
 import com.example.exchange.domain.service.OrderBookSnapshot;

@@ -1,6 +1,6 @@
 package com.example.exchange.interfaces.web.controller;
 
-import com.example.exchange.domain.model.TopOfBook;
+import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBookSnapshot;
 import com.example.exchange.interfaces.web.dto.ApiResponse;

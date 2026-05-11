@@ -1,6 +1,6 @@
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.Account;
+import com.example.exchange.domain.model.entity.Account;
 
 import java.util.Optional;
 

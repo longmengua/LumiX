@@ -2,10 +2,10 @@ package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
 import com.example.exchange.application.service.OrderService;
-import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.model.OrderType;
-import com.example.exchange.domain.model.Symbol;
-import com.example.exchange.domain.model.TimeInForce;
+import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.entity.Symbol;
+import com.example.exchange.domain.model.enums.TimeInForce;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 

@@ -1,5 +1,8 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.entity;
 
+import com.example.exchange.domain.model.enums.OrderSide;
+import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.enums.TimeInForce;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;

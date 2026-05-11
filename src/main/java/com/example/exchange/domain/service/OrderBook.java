@@ -1,8 +1,8 @@
 package com.example.exchange.domain.service;
 
-import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.model.OrderSide;
-import com.example.exchange.domain.model.OrderType;
+import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.enums.OrderSide;
+import com.example.exchange.domain.model.enums.OrderType;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;

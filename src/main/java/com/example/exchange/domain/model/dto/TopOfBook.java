@@ -1,4 +1,4 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;

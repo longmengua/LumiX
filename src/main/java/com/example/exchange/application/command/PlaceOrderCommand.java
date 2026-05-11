@@ -1,8 +1,8 @@
 package com.example.exchange.application.command;
 
 import java.math.BigDecimal;
-import com.example.exchange.domain.model.OrderType;
-import com.example.exchange.domain.model.OrderSide;
+import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.enums.OrderSide;
 
 /**
  * 下單指令（用例輸入）

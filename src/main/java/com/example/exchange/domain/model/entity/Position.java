@@ -1,5 +1,6 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.entity;
 
+import com.example.exchange.domain.model.enums.MarginMode;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;

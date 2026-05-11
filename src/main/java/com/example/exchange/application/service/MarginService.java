@@ -1,6 +1,6 @@
 package com.example.exchange.application.service;
 
-import com.example.exchange.domain.model.Account;
+import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.repository.AccountRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

@@ -1,7 +1,7 @@
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.Position;
-import com.example.exchange.domain.model.Symbol;
+import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.entity.Symbol;
 import com.example.exchange.domain.repository.PositionRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

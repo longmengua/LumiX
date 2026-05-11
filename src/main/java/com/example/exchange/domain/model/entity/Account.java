@@ -1,4 +1,4 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.entity;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -2,7 +2,7 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.usecase.OrderUserCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
-import com.example.exchange.domain.model.Order;
+import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import com.example.exchange.interfaces.web.dto.PlaceOrderRequest;

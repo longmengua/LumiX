@@ -1,4 +1,4 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.enums;
 
 /**
  * TimeInForce 表示訂單在市場中的有效時間規則

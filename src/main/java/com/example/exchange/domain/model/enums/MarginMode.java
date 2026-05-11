@@ -1,4 +1,4 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.enums;
 
 /**
  * Margin 模式

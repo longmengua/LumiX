@@ -1,6 +1,6 @@
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.Snapshot;
+import com.example.exchange.domain.model.dto.Snapshot;
 import com.example.exchange.domain.repository.SnapshotRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

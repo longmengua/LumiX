@@ -2,10 +2,10 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.domain.event.TradeExecuted;
-import com.example.exchange.domain.model.MarginMode;
-import com.example.exchange.domain.model.MatchingResult;
-import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.model.Position;
+import com.example.exchange.domain.model.enums.MarginMode;
+import com.example.exchange.domain.model.dto.MatchingResult;
+import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.repository.EventStore;
 import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.PositionRepository;

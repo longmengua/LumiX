@@ -1,8 +1,8 @@
 package com.example.exchange.domain.service;
 
-import com.example.exchange.domain.model.MatchingResult;
-import com.example.exchange.domain.model.Order;
-import com.example.exchange.domain.model.TopOfBook;
+import com.example.exchange.domain.model.dto.MatchingResult;
+import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.TopOfBook;
 
 import java.util.Optional;
 

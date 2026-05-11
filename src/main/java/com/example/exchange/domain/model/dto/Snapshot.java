@@ -1,4 +1,4 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.dto;
 
 import java.time.Instant;
 import java.util.Map;

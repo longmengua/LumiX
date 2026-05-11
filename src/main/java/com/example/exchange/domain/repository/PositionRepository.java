@@ -1,7 +1,7 @@
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.Position;
-import com.example.exchange.domain.model.Symbol;
+import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.entity.Symbol;
 
 import java.util.List;
 import java.util.Optional;

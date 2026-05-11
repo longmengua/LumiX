@@ -1,6 +1,7 @@
-package com.example.exchange.domain.model;
+package com.example.exchange.domain.model.dto;
 
 import com.example.exchange.domain.event.TradeExecuted;
+import com.example.exchange.domain.model.entity.Order;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

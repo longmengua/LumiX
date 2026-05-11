@@ -1,6 +1,6 @@
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.Account;
+import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.repository.AccountRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

@@ -1,6 +1,6 @@
 package com.example.exchange.domain.event;
 
-import com.example.exchange.domain.model.Symbol;
+import com.example.exchange.domain.model.entity.Symbol;
 
 import java.math.BigDecimal;
 import java.time.Instant;

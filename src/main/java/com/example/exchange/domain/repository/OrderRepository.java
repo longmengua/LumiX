@@ -1,6 +1,6 @@
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.Order;
+import com.example.exchange.domain.model.entity.Order;
 
 import java.util.List;
 import java.util.Optional;

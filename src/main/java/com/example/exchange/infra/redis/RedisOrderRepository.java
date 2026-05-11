@@ -1,6 +1,6 @@
 package com.example.exchange.infra.redis; // 套件名稱，放在 infra.redis 命名空間下
 
-import com.example.exchange.domain.model.Order; // 匯入網域模型：訂單
+import com.example.exchange.domain.model.entity.Order; // 匯入網域模型：訂單
 import com.example.exchange.domain.repository.OrderRepository; // 匯入訂單儲存庫介面
 import org.springframework.dao.DataAccessException; // 匯入資料存取例外
 import org.springframework.data.redis.core.*; // 匯入 Spring Data Redis 相關操作介面
