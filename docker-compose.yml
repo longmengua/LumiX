@@ -1,96 +1,203 @@
+# =========================================================
+# Docker Compose
+#
+# 用途：
+# - 本機開發環境
+# - Spring Boot + Kafka + Redis + MySQL
+#
+# 啟動：
+#   docker compose up -d
+#
+# 停止：
+#   docker compose down
+#
+# 刪除 volume（資料全清）：
+#   docker compose down -v
+# =========================================================
+
 version: "3.9"
 
 services:
-  # -----------------------------
-  # Kafka (KRaft 單節點)
-  # -----------------------------
+
+  # =========================================================
+  # Kafka (KRaft Single Node)
+  #
+  # 用途：
+  # - 撮合事件
+  # - WS push
+  # - Risk event
+  # - Ledger event
+  # - Snapshot event
+  #
+  # 說明：
+  # - 使用 Kafka KRaft mode
+  # - 不需要 ZooKeeper
+  # - 單 broker 開發模式
+  #
+  # Spring Boot 對應：
+  # spring.kafka.bootstrap-servers=localhost:9092
+  # =========================================================
   single-kafka:
-    image: bitnami/kafka:3.5.1
+    image: confluentinc/cp-kafka:7.6.1
     container_name: single-kafka
     hostname: single-kafka
+    restart: unless-stopped
+
     ports:
-      - "9092:9092"   # Host/外部用：localhost:9092
+      - "9092:9092"
+
     environment:
-      # 啟用 KRaft（無需 ZooKeeper）
-      KAFKA_ENABLE_KRAFT: "yes"
-      KAFKA_KRAFT_CLUSTER_ID: "oU-3kfkGQyKz2hP2uj9tOg"    # 固定 UUID 亦可
-      KAFKA_CFG_NODE_ID: "4"
-      KAFKA_CFG_PROCESS_ROLES: "controller,broker"
-      KAFKA_CFG_CONTROLLER_LISTENER_NAMES: "CONTROLLER"
-      KAFKA_CFG_CONTROLLER_QUORUM_VOTERS: "4@single-kafka:9093"
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@single-kafka:9093
 
-      # 三個 listener：外部(9092)、內部(9094)、控制器(9093)
-      KAFKA_CFG_LISTENERS: "PLAINTEXT://0.0.0.0:9092,INTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093"
-      # 外部客戶端用 localhost:9092；容器內互連用 single-kafka:9094
-      KAFKA_CFG_ADVERTISED_LISTENERS: "PLAINTEXT://localhost:9092,INTERNAL://single-kafka:9094"
-      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT"
-      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
 
-      # 資料與 Topic 設定
-      KAFKA_CFG_LOG_DIRS: "/bitnami/kafka/data"
-      KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE: "true"
-      # 單節點必要參數（避免 __consumer_offsets 建立失敗）
-      KAFKA_CFG_OFFSETS_TOPIC_REPLICATION_FACTOR: "1"
-      KAFKA_CFG_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: "1"
-      KAFKA_CFG_TRANSACTION_STATE_LOG_MIN_ISR: "1"
-      # 預設分區數量 → 調成 3（與程式中 NewTopic(…, 3, …) 對齊）
-      KAFKA_CFG_NUM_PARTITIONS: "3"
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_NUM_PARTITIONS: 3
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+
     volumes:
-      - single_kafka_data:/bitnami/kafka
+      - single_kafka_data:/var/lib/kafka/data
+
     healthcheck:
-      test: ["CMD-SHELL", "kafka-topics.sh --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1"]
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list >/dev/null 2>&1 || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 10
+
+  # =========================================================
+  # Redis
+  #
+  # 用途：
+  # - quote cache
+  # - session
+  # - sliding window risk
+  # - temporary state
+  # - distributed lock
+  #
+  # Spring Boot 對應：
+  # spring.data.redis.host=localhost
+  # spring.data.redis.port=6379
+  # =========================================================
+  redis:
+
+    image: redis:7.4-alpine
+
+    container_name: redis
+
     restart: unless-stopped
 
-  # -----------------------------
-  # Redis（給 Repository 使用）
-  # -----------------------------
-  redis:
-    image: redis:7.4-alpine
-    container_name: redis
     ports:
       - "6379:6379"
-    command: ["redis-server", "--appendonly", "yes"]
+
+    # AOF persistence
+    command:
+      [
+        "redis-server",
+        "--appendonly",
+        "yes"
+      ]
+
+    # Redis data persistence
+    volumes:
+      - redis_data:/data
+
+    # Redis healthcheck
     healthcheck:
-      test: ["CMD-SHELL", "redis-cli -h 127.0.0.1 ping | grep PONG || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "redis-cli -h 127.0.0.1 ping | grep PONG || exit 1"
+        ]
       interval: 5s
       timeout: 3s
       retries: 20
-    volumes:
-      - redis_data:/data
+
+  # =========================================================
+  # MySQL 8.4
+  #
+  # 用途：
+  # - order
+  # - ledger
+  # - position
+  # - user
+  # - market metadata
+  #
+  # Spring Boot 對應：
+  # spring.datasource.url=jdbc:mysql://localhost:3306/appdb
+  # =========================================================
+  mysql:
+
+    image: mysql:8.4
+
+    container_name: mysql
+
     restart: unless-stopped
 
-  # -----------------------------
-  # MySQL 8.4
-  # -----------------------------
-  mysql:
-    image: mysql:8.4
-    container_name: mysql
+    # Host Port Mapping
     ports:
       - "3306:3306"
+
     environment:
+
+      # root password
       MYSQL_ROOT_PASSWORD: rootpass
+
+      # default database
       MYSQL_DATABASE: appdb
+
+      # app user
       MYSQL_USER: appuser
+
+      # app password
       MYSQL_PASSWORD: apppass
+
+      # timezone
+      TZ: Asia/Taipei
+
+    # MySQL startup command
     command: >
       --character-set-server=utf8mb4
       --collation-server=utf8mb4_0900_ai_ci
       --skip-log-bin
+
+    # MySQL data persistence
     volumes:
       - mysql_data:/var/lib/mysql
+
+    # MySQL healthcheck
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -prootpass -h 127.0.0.1 || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -prootpass -h 127.0.0.1 || exit 1"
+        ]
       interval: 10s
       timeout: 5s
       retries: 10
-    restart: unless-stopped
 
-# 如果要把你的 Spring Boot app 也放進來，建議加 depends_on 並等待健康檢查通過再啟動。
-
+# =========================================================
+# Docker Volumes
+#
+# 用途：
+# - container 重啟後資料仍保留
+# =========================================================
 volumes:
+
+  # Kafka data
   single_kafka_data:
+
+  # Redis data
   redis_data:
+
+  # MySQL data
   mysql_data:

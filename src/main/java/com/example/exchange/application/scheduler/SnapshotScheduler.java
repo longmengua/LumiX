@@ -33,7 +33,7 @@ public class SnapshotScheduler {
     }
 
     /** 每 1 分鐘做示範性快照（實務請改成事件驅動或分片輪詢） */
-    @Scheduled(fixedDelay = 60_000)
+//    @Scheduled(fixedDelay = 60_000)
     public void run() {
         // DEMO：假設掃描少量 uid；生產要改為 key-scan/shard 分批
         for (long uid : List.of(1L, 2L)) {

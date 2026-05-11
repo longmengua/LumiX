@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 public class FundingRateScheduler {
 
     /** 每 8 小時觸發一次（示範 cron，請按實際時區/對齊時間調整） */
-    @Scheduled(cron = "0 0 */8 * * *")
+//    @Scheduled(cron = "0 0 */8 * * *")
     public void settle() {
         // TODO:
         // 1) 計算每個 symbol 當前資金費率

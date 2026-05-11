@@ -11,7 +11,7 @@ spring:
   # DataSource (MySQL via JPA)
   # ---------------------------
   datasource:
-    url: jdbc:mysql://localhost:3306/appdb?useSSL=false&serverTimezone=UTC&characterEncoding=utf8
+    url: jdbc:mysql://localhost:3306/appdb?useSSL=false&serverTimezone=UTC&characterEncoding=utf8&allowPublicKeyRetrieval=true
     # 指向本機 localhost:3306 → docker-compose 對外映射的 MySQL
     username: appuser
     password: apppass
@@ -28,6 +28,7 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: create-drop   # dev 用；prod 建議 validate 或 none + Flyway
+#      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -134,3 +135,19 @@ logging:
     org.springframework.kafka: INFO
     org.apache.kafka: WARN
     com.example.exchange: DEBUG  # 你自己的程式碼
+
+
+prediction:
+  market:
+    price-sync-delay-ms: 10000
+
+  clob:
+    base-url: https://clob.polymarket.com
+
+    private-key: YOUR_PRIVATE_KEY
+
+    api-key: YOUR_API_KEY
+    passphrase: YOUR_API_PASSPHRASE
+    secret: YOUR_API_SECRET
+
+    chain-id: 137
