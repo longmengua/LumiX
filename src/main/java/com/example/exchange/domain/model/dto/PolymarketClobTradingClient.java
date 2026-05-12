@@ -20,7 +20,6 @@ public class PolymarketClobTradingClient {
 
     private final ObjectMapper objectMapper;
     private final PolymarketConfigs polymarketConfigs;
-    private final PolymarketL2AuthSigner l2AuthSigner;
 
     private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
             .connectTimeout(java.time.Duration.ofSeconds(10))
@@ -53,7 +52,7 @@ public class PolymarketClobTradingClient {
                     maskSignature(safeGetSignature(clobOrderRequest))
             );
 
-            Map<String, String> authHeaders = l2AuthSigner.sign(
+            Map<String, String> authHeaders = PolymarketL2AuthSigner.sign(
                     polymarketConfigs,
                     "POST",
                     path,

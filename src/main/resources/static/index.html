@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Polymarket Session Signer Demo</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 24px;
+            background: #111827;
+            color: #f3f4f6;
+        }
+
+        h1 {
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: #1f2937;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-top: 8px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #111827;
+            color: white;
+        }
+
+        .label {
+            margin-top: 12px;
+            font-size: 14px;
+            color: #9ca3af;
+        }
+
+        pre {
+            background: #111827;
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+
+        .success {
+            color: #22c55e;
+        }
+
+        .error {
+            color: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+
+<h1>Polymarket Session Signer Demo</h1>
+
+<div class="card">
+    <h2>1. Connect MetaMask</h2>
+
+    <button onclick="connectWallet()">
+        Connect Wallet
+    </button>
+
+    <div class="label">User Address</div>
+    <input id="userAddress" readonly/>
+</div>
+
+<div class="card">
+    <h2>2. Init Session</h2>
+
+    <button onclick="initSession()">
+        Init Session
+    </button>
+
+    <div class="label">Session ID</div>
+    <input id="sessionId" readonly/>
+
+    <div class="label">Session Signer Address</div>
+    <input id="sessionSignerAddress" readonly/>
+
+    <div class="label">Message</div>
+    <textarea id="sessionMessage" rows="4" readonly></textarea>
+</div>
+
+<div class="card">
+    <h2>3. Sign Session Message</h2>
+
+    <button onclick="signMessage()">
+        Sign Message
+    </button>
+
+    <div class="label">Signature</div>
+    <textarea id="signature" rows="5" readonly></textarea>
+</div>
+
+<div class="card">
+    <h2>4. Confirm Session</h2>
+
+    <button onclick="confirmSession()">
+        Confirm Session
+    </button>
+
+    <pre id="confirmResult"></pre>
+</div>
+
+<div class="card">
+    <h2>5. Place Order</h2>
+
+    <button onclick="placeOrder()">
+        Place BUY YES Order
+    </button>
+
+    <pre id="orderResult"></pre>
+</div>
+
+<script>
+
+    let currentUserAddress = null;
+
+    async function connectWallet() {
+        try {
+            if (!window.ethereum) {
+                alert("MetaMask not installed");
+                return;
+            }
+
+            const accounts = await window.ethereum.request({
+                method: "eth_requestAccounts"
+            });
+
+            currentUserAddress = accounts[0];
+
+            document.getElementById("userAddress").value =
+                currentUserAddress;
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message);
+        }
+    }
+
+    async function initSession() {
+        try {
+            const res = await fetch("/api/session/init", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    userAddress: currentUserAddress
+                })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("sessionId").value =
+                data.sessionId;
+
+            document.getElementById("sessionSignerAddress").value =
+                data.sessionSignerAddress;
+
+            document.getElementById("sessionMessage").value =
+                data.message;
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message);
+        }
+    }
+
+    async function signMessage() {
+        try {
+            const message =
+                document.getElementById("sessionMessage").value;
+
+            const signature = await window.ethereum.request({
+                method: "personal_sign",
+                params: [
+                    message,
+                    currentUserAddress
+                ]
+            });
+
+            document.getElementById("signature").value =
+                signature;
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message);
+        }
+    }
+
+    async function confirmSession() {
+        try {
+            const res = await fetch("/api/session/confirm", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    sessionId:
+                        document.getElementById("sessionId").value,
+
+                    userAddress:
+                        currentUserAddress,
+
+                    signature:
+                        document.getElementById("signature").value
+                })
+            });
+
+            const data = await res.json();
+
+            document.getElementById("confirmResult").innerHTML =
+                JSON.stringify(data, null, 2);
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message);
+        }
+    }
+
+    async function placeOrder() {
+        try {
+            const payload = {
+                userId: "10001",
+
+                eventSlug: "fifwc-prt-uzb-2026-06-23",
+
+                marketSlug: "fifwc-prt-uzb-2026-06-23-prt",
+
+                outcomeKey: "homeWin",
+
+                yesTokenId:
+                    "46788745865873849751895851580006231458025441200398102606849707486161173481896",
+
+                yesBuyPrice: 0.79,
+                yesSellPrice: 0.73,
+
+                noTokenId:
+                    "49345825332372730347978355238185144259194455124479271140856628847570082902553",
+
+                noBuyPrice: 0.27,
+                noSellPrice: 0.21,
+
+                direction: "BUY_YES",
+
+                usdtAmount: 1,
+
+                orderType: "FOK"
+            };
+
+            const res = await fetch("/api/prediction/orders", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+
+            document.getElementById("orderResult").innerHTML =
+                JSON.stringify(data, null, 2);
+
+        } catch (e) {
+            console.error(e);
+            alert(e.message);
+        }
+    }
+
+</script>
+
+</body>
+</html>
