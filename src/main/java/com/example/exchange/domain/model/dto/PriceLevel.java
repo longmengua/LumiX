@@ -1,4 +1,4 @@
-package com.example.exchange.domain.service;
+package com.example.exchange.domain.model.dto;
 
 import java.math.BigDecimal;
 

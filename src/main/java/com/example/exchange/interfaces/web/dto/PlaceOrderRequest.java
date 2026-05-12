@@ -11,7 +11,7 @@ import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * PlaceOrderRequest
+ * PolymarketPlaceOrderRequest
  * --------------------------
  * 下單 API 的 Request DTO (Data Transfer Object)
  * - 使用 class 實作（非 record）

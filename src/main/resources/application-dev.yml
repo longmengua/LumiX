@@ -151,7 +151,7 @@ polymarket:
     api-secret: ${POLYMARKET_API_SECRET:}
     api-passphrase: ${POLYMARKET_API_PASSPHRASE:}
 
-    chain-id: 137
+    chain: 137
 
   relayer:
     base-url: https://relayer-v2.polymarket.com

@@ -28,7 +28,7 @@ import java.util.List;
  */
 @Service
 @RequiredArgsConstructor
-public class PredictionMarketService {
+public class PolymarketMarketService {
 
     private final PredictionMarketSyncKeyRepository syncKeyRepository;
     private final PredictionMarketInfoRepository marketInfoRepository;
@@ -107,7 +107,7 @@ public class PredictionMarketService {
          * No 買入價
          */
         BigDecimal noBuyPrice = firstNonNull(
-                subtractFromOne(bestAsk),
+                subtractFromOne(bestBid),
                 subtractFromOne(lastTradePrice),
                 toBigDecimal(entity.getStaticNoPrice())
         );
@@ -116,9 +116,9 @@ public class PredictionMarketService {
          * No 賣出價
          */
         BigDecimal noSellPrice = firstNonNull(
-                subtractFromOne(bestBid),
-                toBigDecimal(entity.getStaticNoPrice()),
-                subtractFromOne(lastTradePrice)
+                subtractFromOne(bestAsk),
+                subtractFromOne(lastTradePrice),
+                toBigDecimal(entity.getStaticNoPrice())
         );
 
         /**

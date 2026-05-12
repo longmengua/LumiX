@@ -35,7 +35,7 @@ public class OrderController {
      * 下單 API
      * -------------------
      * - URL: POST /api/order/place
-     * - 輸入：PlaceOrderRequest (JSON)
+     * - 輸入：PolymarketPlaceOrderRequest (JSON)
      * - 輸出：ApiResponse<String>，固定回傳 "accepted"
      *
      * @param r 下單請求參數 (uid, symbol, side, type, price, qty, leverage, marginMode)

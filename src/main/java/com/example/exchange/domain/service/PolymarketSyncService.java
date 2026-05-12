@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PredictionMarketFullSyncService {
+public class PolymarketSyncService {
 
     private static final String JOB_NAME = "PREDICTION_MARKET_KEY_SYNC";
 
@@ -51,7 +51,7 @@ public class PredictionMarketFullSyncService {
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private final PredictionGammaMarketClient gammaMarketClient;
-    private final PredictionMarketMetadataSyncService metadataSyncService;
+    private final PolymarketMetadataSyncService metadataSyncService;
     private final PredictionMarketSyncKeyRepository syncKeyRepository;
     private final PredictionMarketSyncProgressRepository progressRepository;
     private final PredictionMarketInfoRepository marketInfoRepository;

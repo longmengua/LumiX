@@ -1,7 +1,7 @@
 package com.example.exchange.application.scheduler;
 
-import com.example.exchange.domain.service.PredictionMarketFullSyncService;
-import com.example.exchange.domain.service.PredictionMarketPriceRefreshService;
+import com.example.exchange.domain.service.PolymarketSyncService;
+import com.example.exchange.domain.service.PolymarketPriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @RequiredArgsConstructor
 public class PredictionMarketScheduler {
 
-    private final PredictionMarketPriceRefreshService priceRefreshService;
+    private final PolymarketPriceService priceRefreshService;
 
-    private final PredictionMarketFullSyncService fullSyncService;
+    private final PolymarketSyncService fullSyncService;
 
     private final AtomicBoolean priceRunning = new AtomicBoolean(false);
 

@@ -14,6 +14,9 @@ import java.math.BigDecimal;
 @Validated
 @ConfigurationProperties(prefix = "polymarket")
 public class PolymarketConfigs {
+    @Valid
+    @NotNull
+    private Chain chain = new Chain();
 
     @Valid
     @NotNull
@@ -114,5 +117,26 @@ public class PolymarketConfigs {
         @NotNull
         @DecimalMin("0")
         private BigDecimal maxOrderUsdt = new BigDecimal("1000");
+    }
+
+    @Data
+    public static class Chain {
+
+        /**
+         * Polygon mainnet chainId。
+         */
+        private Integer chainId = 137;
+
+        /**
+         * Polymarket CTF Exchange V2。
+         * 一般 binary market 用這個。
+         */
+        private String exchangeV2 = "0xE111180000d2663C0091e4f400237545B87B996B";
+
+        /**
+         * Polymarket NegRisk CTF Exchange V2。
+         * 多 outcome / sports event 通常用這個。
+         */
+        private String negRiskExchangeV2 = "0xe2222d279d744050d28e00520000310F59";
     }
 }

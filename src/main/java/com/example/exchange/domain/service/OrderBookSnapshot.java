@@ -1,5 +1,7 @@
 package com.example.exchange.domain.service;
 
+import com.example.exchange.domain.model.dto.PriceLevel;
+
 import java.util.List;
 
 /**

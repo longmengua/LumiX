@@ -40,7 +40,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PredictionMarketDiscoveryService {
+public class PolymarketDiscoveryService {
 
     private static final String SOURCE = "FIFA_2026";
     private static final String SERIES_FIFA_WORLD_CUP = "soccer-fifwc";

@@ -31,7 +31,7 @@ import java.util.*;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class PredictionMarketMetadataSyncService {
+public class PolymarketMetadataSyncService {
 
     private static final String SERIES_FIFA_WORLD_CUP = "soccer-fifwc";
 
