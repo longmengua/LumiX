@@ -86,45 +86,62 @@ public class PredictionMarketService {
         BigDecimal lastTradePrice = toBigDecimal(entity.getLastTradePrice());
 
         /**
-         * 買入價：
-         * 優先用 bestAsk。
-         * 沒有 bestAsk 就用 outcomePrices[0]。
+         * Yes 買入價
          */
-        BigDecimal buyPrice = firstNonNull(
+        BigDecimal yesBuyPrice = firstNonNull(
                 bestAsk,
-                staticYesPrice,
-                lastTradePrice
+                lastTradePrice,
+                staticYesPrice
         );
 
         /**
-         * 賣出價：
-         * 優先用 bestBid。
-         * 沒有 bestBid 就用 outcomePrices[0]。
+         * Yes 賣出價
          */
-        BigDecimal sellPrice = firstNonNull(
+        BigDecimal yesSellPrice = firstNonNull(
                 bestBid,
-                staticYesPrice,
-                lastTradePrice
+                lastTradePrice,
+                staticYesPrice
+        );
+
+        /**
+         * No 買入價
+         */
+        BigDecimal noBuyPrice = firstNonNull(
+                subtractFromOne(bestAsk),
+                subtractFromOne(lastTradePrice),
+                toBigDecimal(entity.getStaticNoPrice())
+        );
+
+        /**
+         * No 賣出價
+         */
+        BigDecimal noSellPrice = firstNonNull(
+                subtractFromOne(bestBid),
+                toBigDecimal(entity.getStaticNoPrice()),
+                subtractFromOne(lastTradePrice)
         );
 
         /**
          * 機率：
-         * MVP 先用 buyPrice * 100。
+         * MVP 先用 yesBuyPrice * 100。
          */
         BigDecimal probabilityPct =
-                buyPrice == null
+                yesBuyPrice == null
                         ? BigDecimal.ZERO
-                        : buyPrice.multiply(BigDecimal.valueOf(100));
+                        : yesBuyPrice.multiply(BigDecimal.valueOf(100));
 
         return new PredictionOutcomeResponse(
                 entity.getOutcomeKey(),
                 entity.getOutcomeLabel(),
                 entity.getQuestion(),
                 entity.getMarketSlug(),
-                buyPrice,
-                sellPrice,
+                entity.getYesTokenId(),
+                yesBuyPrice,
+                yesSellPrice,
+                entity.getNoTokenId(),
+                noBuyPrice,
+                noSellPrice,
                 probabilityPct,
-                lastTradePrice,
                 toBigDecimal(entity.getLiquidity()),
                 toBigDecimal(entity.getVolume()),
                 toBigDecimal(entity.getVolume24hr())
@@ -186,5 +203,13 @@ public class PredictionMarketService {
         }
 
         return third;
+    }
+
+    private BigDecimal subtractFromOne(BigDecimal value) {
+        if (value == null) {
+            return null;
+        }
+
+        return BigDecimal.ONE.subtract(value);
     }
 }

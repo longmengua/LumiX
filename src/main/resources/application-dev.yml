@@ -27,8 +27,8 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      ddl-auto: create-drop   # dev 用；prod 建議 validate 或 none + Flyway
-#      ddl-auto: update
+      ddl-auto: update
+#      ddl-auto: create-drop   # dev 用；prod 建議 validate 或 none + Flyway
     show-sql: true
     properties:
       hibernate:
@@ -136,18 +136,45 @@ logging:
     org.apache.kafka: WARN
     com.example.exchange: DEBUG  # 你自己的程式碼
 
+polymarket:
+  key-sync-ms: 600000
+  price-refresh-ms: 5000
 
-prediction:
-  market:
-    price-sync-delay-ms: 10000
+  gamma:
+    base-url: https://gamma-api.polymarket.com
 
   clob:
     base-url: https://clob.polymarket.com
 
-    private-key: YOUR_PRIVATE_KEY
-
-    api-key: YOUR_API_KEY
-    passphrase: YOUR_API_PASSPHRASE
-    secret: YOUR_API_SECRET
+    # 之後填 Polymarket API Credential
+    api-key: ${POLYMARKET_API_KEY:}
+    api-secret: ${POLYMARKET_API_SECRET:}
+    api-passphrase: ${POLYMARKET_API_PASSPHRASE:}
 
     chain-id: 137
+
+  relayer:
+    base-url: https://relayer-v2.polymarket.com
+    api-key: ${POLYMARKET_RELAYER_API_KEY:}
+
+  wallet:
+    # 平台 Polymarket 錢包
+    private-key: ${POLYMARKET_PRIVATE_KEY:}
+    funder-address: ${POLYMARKET_FUNDER_ADDRESS:}
+    signature-type: 0
+
+  trading:
+    # 你平台加價，例如 10% = 0.10
+    buy-markup-rate: 0.10
+
+    # 賣出獲利手續費，例如 0.5% = 0.005
+    sell-profit-fee-rate: 0.005
+
+    # 最大允許滑點，例如 2% = 0.02
+    max-slippage-rate: 0.02
+
+    # 最小下單 USDT
+    min-order-usdt: 1
+
+    # 最大下單 USDT
+    max-order-usdt: 1000

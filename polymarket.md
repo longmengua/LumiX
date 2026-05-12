@@ -18,6 +18,16 @@ Gamma 全量拉 active markets
 ↓
 GET /markets 回傳 Bitmart UI 格式
 
+## poly market
+
+| 模組               | 用途                                           | 你該怎麼用              |
+| ---------------- | -------------------------------------------- | ------------------ |
+| Gamma API        | 市場列表、賽事、問題、tokenId                           | 讀市場資料              |
+| CLOB Read API    | orderbook、price、spread                       | 報價、滑點檢查            |
+| CLOB Trading API | 下單、撤單、查訂單                                    | **核心下單通道**         |
+| Relayer API      | gasless transaction、approval、redeem、鏈上 tx 輔助 | **不要拿來取代 CLOB 下單** |
+
+
 ## curls
 
 - 手動全量發現世界杯 markets，Discovery Flow（負載：重），curl -X POST http://localhost:8080/api/prediction/markets/discover

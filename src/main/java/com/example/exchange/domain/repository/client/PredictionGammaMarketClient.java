@@ -36,7 +36,7 @@ public class PredictionGammaMarketClient {
     private final ObjectMapper objectMapper;
     private final OkHttpClient okHttpClient;
 
-    @Value("${prediction.gamma.base-url:https://gamma-api.polymarket.com}")
+    @Value("${polymarket.gamma.base-url:https://gamma-api.polymarket.com}")
     private String gammaBaseUrl;
 
     /**

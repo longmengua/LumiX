@@ -40,10 +40,10 @@ public class PredictionMarketScheduler {
      *
      * application.yml 可設定：
      *
-     * prediction:
+     * polymarket:
      *   price-refresh-ms: 5000
      */
-    @Scheduled(fixedDelayString = "${prediction.price-refresh-ms:10000}")
+    @Scheduled(fixedDelayString = "${polymarket.price-refresh-ms:10000}")
     public void refreshPrices() {
         if (!priceRunning.compareAndSet(false, true)) {
             log.warn("Prediction price refresh skipped, previous job still running");
@@ -70,10 +70,10 @@ public class PredictionMarketScheduler {
      *
      * application.yml 可設定：
      *
-     * prediction:
+     * polymarket:
      *   key-sync-ms: 600000
      */
-    @Scheduled(fixedDelayString = "${prediction.key-sync-ms:600000}")
+    @Scheduled(fixedDelayString = "${polymarket.key-sync-ms:600000}")
     public void syncKnownKeys() {
         if (!keySyncRunning.compareAndSet(false, true)) {
             log.warn("Prediction key sync skipped, previous job still running");
