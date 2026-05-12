@@ -43,7 +43,7 @@ public class PredictionMarketScheduler {
      * prediction:
      *   price-refresh-ms: 5000
      */
-    @Scheduled(fixedDelayString = "${prediction.price-refresh-ms:5000}")
+    @Scheduled(fixedDelayString = "${prediction.price-refresh-ms:10000}")
     public void refreshPrices() {
         if (!priceRunning.compareAndSet(false, true)) {
             log.warn("Prediction price refresh skipped, previous job still running");

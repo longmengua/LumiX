@@ -45,4 +45,9 @@ public interface PredictionMarketInfoRepository
             String eventSlug,
             String outcomeKey
     );
+
+    /**
+     *
+     * */
+    List<PredictionMarketInfoEntity> findByActiveTrueAndClosedFalseOrderByEventDateAsc();
 }

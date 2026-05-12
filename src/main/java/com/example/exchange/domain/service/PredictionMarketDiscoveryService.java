@@ -8,6 +8,7 @@ import com.example.exchange.domain.repository.client.PredictionGammaMarketClient
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.repository.jpa.PredictionMarketSyncKeyRepository;
 import com.example.exchange.domain.util.PredictionJsonUtils;
+import com.example.exchange.domain.util.TeamNameParser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -178,12 +179,12 @@ public class PredictionMarketDiscoveryService {
 
         String eventTitle = event.getTitle();
 
-        TeamPair teamPair = parseTeamPair(eventTitle);
+        TeamNameParser.TeamPair teamPair = TeamNameParser.parseTeamPair(eventTitle);
 
         key.setEventSlug(eventSlug);
         key.setEventTitle(eventTitle);
-        key.setTeamA(teamPair.teamA());
-        key.setTeamB(teamPair.teamB());
+        key.setTeamA(teamPair.homeTeam());
+        key.setTeamB(teamPair.awayTeam());
         key.setEventDate(resolveEventDate(event, eventMarkets));
         key.setSource(SOURCE);
         key.setSyncEnabled(true);
@@ -197,31 +198,6 @@ public class PredictionMarketDiscoveryService {
         }
 
         return syncKeyRepository.save(key);
-    }
-
-    /**
-     * 從 event title 解析 teamA / teamB。
-     *
-     * 常見格式：
-     * Mexico vs South Africa
-     */
-    private TeamPair parseTeamPair(String title) {
-        if (title == null || title.isBlank()) {
-            return new TeamPair("UNKNOWN", "UNKNOWN");
-        }
-
-        String normalized = title.replace(" v ", " vs ");
-
-        String[] parts = normalized.split("(?i)\\s+vs\\s+");
-
-        if (parts.length >= 2) {
-            return new TeamPair(
-                    parts[0].trim(),
-                    parts[1].trim()
-            );
-        }
-
-        return new TeamPair(title.trim(), "UNKNOWN");
     }
 
     /**
@@ -450,11 +426,5 @@ public class PredictionMarketDiscoveryService {
 
     private String safe(String value) {
         return value == null ? "" : value;
-    }
-
-    private record TeamPair(
-            String teamA,
-            String teamB
-    ) {
     }
 }

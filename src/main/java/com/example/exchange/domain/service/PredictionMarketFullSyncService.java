@@ -1,9 +1,13 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
+import com.example.exchange.domain.model.dto.CheckResult;
+import com.example.exchange.domain.model.dto.SyncOneResult;
+import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
 import com.example.exchange.domain.model.entity.PredictionMarketSyncKeyEntity;
 import com.example.exchange.domain.model.entity.PredictionMarketSyncProgressEntity;
 import com.example.exchange.domain.repository.client.PredictionGammaMarketClient;
+import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.repository.jpa.PredictionMarketSyncKeyRepository;
 import com.example.exchange.domain.repository.jpa.PredictionMarketSyncProgressRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,23 +17,24 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * Prediction Market Key Sync Service。
  *
- * 這個 Service 不負責 full discovery。
- *
  * 職責：
  * 1. 讀取 prediction_market_sync_key
- * 2. 逐筆同步已知 event
- * 3. 支援 resume
- * 4. 支援 reset
- * 5. 支援指定 eventSlug retry
- * 6. 記錄 sync progress
+ * 2. 對每個 key 用 teamA + teamB 查 Gamma search API
+ * 3. 補齊 prediction_market_info 裡缺少的 homeWin / draw / awayWin
+ * 4. 更新 sync key 狀態
+ * 5. 更新 sync progress
  *
+ * 注意：
+ * 這裡不做 Gamma 全量 discovery。
  * 全量 discovery 請走：
- * PredictionMarketDiscoveryService
+ * POST /api/prediction/markets/discover
  */
 @Slf4j
 @Service
@@ -43,20 +48,18 @@ public class PredictionMarketFullSyncService {
     private static final String STATUS_SUCCESS = "SUCCESS";
     private static final String STATUS_FAILED = "FAILED";
 
-    /**
-     * 防止同時重複執行 sync。
-     */
     private final AtomicBoolean running = new AtomicBoolean(false);
 
     private final PredictionGammaMarketClient gammaMarketClient;
     private final PredictionMarketMetadataSyncService metadataSyncService;
     private final PredictionMarketSyncKeyRepository syncKeyRepository;
     private final PredictionMarketSyncProgressRepository progressRepository;
+    private final PredictionMarketInfoRepository marketInfoRepository;
 
     /**
      * Resume sync。
      *
-     * 從 progress.lastSyncKeyId 後面繼續跑。
+     * 從 progress.lastSyncKeyId 後面繼續處理。
      */
     public String syncResume() {
         if (!running.compareAndSet(false, true)) {
@@ -99,8 +102,7 @@ public class PredictionMarketFullSyncService {
     /**
      * 指定重試某場 event。
      *
-     * 例如：
-     * POST /api/prediction/markets/retry/fifwc-mex-rsa-2026-06-11
+     * 這裡會重新 search Gamma，嘗試補齊該 event 的 outcome。
      */
     public String retryEvent(String eventSlug) {
         try {
@@ -110,27 +112,20 @@ public class PredictionMarketFullSyncService {
                                     "sync key not found, eventSlug=" + eventSlug
                             ));
 
-            int saved = syncOneKeyWithFreshMarkets(key);
+            SyncOneResult result = syncOneKeyBySearch(key, true);
 
-            if (saved <= 0) {
-                key.setSyncStatus("FAILED");
-                key.setLastError("no matched market");
-                key.setRetryCount(safeInt(key.getRetryCount()) + 1);
-                syncKeyRepository.save(key);
-
-                return "retry failed, no matched market, eventSlug=" + eventSlug;
+            if (result.isSuccess()) {
+                return "retry sync success, eventSlug=" + eventSlug
+                        + ", saved=" + result.getSavedCount();
             }
 
-            key.setSyncStatus("SUCCESS");
-            key.setLastError(null);
-            key.setLastSyncedAt(LocalDateTime.now());
-            syncKeyRepository.save(key);
-
-            return "retry success, eventSlug=" + eventSlug + ", saved=" + saved;
+            return "retry sync failed, eventSlug=" + eventSlug
+                    + ", error=" + result.getMessage();
 
         } catch (Exception e) {
-            log.warn("retry event failed, eventSlug={}", eventSlug, e);
-            return "retry failed, eventSlug=" + eventSlug + ", error=" + e.getMessage();
+            log.warn("retry event sync failed, eventSlug={}", eventSlug, e);
+            return "retry sync failed, eventSlug=" + eventSlug
+                    + ", error=" + e.getMessage();
         }
     }
 
@@ -144,18 +139,8 @@ public class PredictionMarketFullSyncService {
     /**
      * 核心同步流程。
      *
-     * reset=false：
-     * - 從 lastSyncKeyId 後面繼續
-     *
-     * reset=true：
-     * - 從 id > 0 開始
-     *
-     * 注意：
-     * 這裡會拉一次 Gamma active markets，
-     * 然後用這份資料同步所有 key。
-     *
-     * 這不是 discovery。
-     * 它只處理 DB 裡已存在的 key。
+     * 這裡不全量拉 Gamma。
+     * 每個 key 只用 teamA + teamB 做 search。
      */
     @Transactional
     protected void doSync(boolean reset) {
@@ -166,7 +151,8 @@ public class PredictionMarketFullSyncService {
                 : safeLong(progress.getLastSyncKeyId());
 
         List<PredictionMarketSyncKeyEntity> keys =
-                syncKeyRepository.findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(lastSyncKeyId);
+                syncKeyRepository
+                        .findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(lastSyncKeyId);
 
         progress.setStatus(STATUS_RUNNING);
         progress.setTotalCount(keys.size());
@@ -179,125 +165,204 @@ public class PredictionMarketFullSyncService {
         progressRepository.save(progress);
 
         if (keys.isEmpty()) {
-            progress.setStatus(STATUS_SUCCESS);
-            progress.setFinishedAt(LocalDateTime.now());
-            progress.setUpdatedAt(LocalDateTime.now());
-            progressRepository.save(progress);
+            finishProgress(progress, 0);
             return;
         }
-
-        /**
-         * 只拉一次 Gamma markets。
-         *
-         * 這裡是為了避免每個 key 都打一遍 Gamma API。
-         */
-        List<PredictionGammaMarketDto> allMarkets =
-                gammaMarketClient.fetchAllActiveMarkets();
 
         int successCount = 0;
         int failedCount = 0;
 
         for (PredictionMarketSyncKeyEntity key : keys) {
             try {
-                int saved = syncOneKeyWithRetry(key, allMarkets);
+                SyncOneResult result = syncOneKeyBySearch(key, false);
 
-                if (saved > 0) {
+                if (result.isSuccess()) {
                     successCount++;
-
-                    key.setSyncStatus("SUCCESS");
-                    key.setLastError(null);
-                    key.setLastSyncedAt(LocalDateTime.now());
                 } else {
                     failedCount++;
-
-                    key.setSyncStatus("FAILED");
-                    key.setLastError("no matched market");
-                    key.setRetryCount(safeInt(key.getRetryCount()) + 1);
                 }
-
-                syncKeyRepository.save(key);
 
                 progress.setLastSyncKeyId(key.getId());
                 progress.setSuccessCount(successCount);
                 progress.setFailedCount(failedCount);
                 progress.setUpdatedAt(LocalDateTime.now());
+
+                if (!result.isSuccess()) {
+                    progress.setLastError(
+                            "eventSlug=" + key.getEventSlug()
+                                    + ", error=" + result.getMessage()
+                    );
+                }
+
                 progressRepository.save(progress);
+
+                /**
+                 * 避免 search API 打太快。
+                 */
+                sleepQuietly(300);
 
             } catch (Exception e) {
                 failedCount++;
 
-                key.setSyncStatus("FAILED");
+                key.setSyncStatus(STATUS_FAILED);
                 key.setLastError(e.getMessage());
-                key.setRetryCount(safeInt(key.getRetryCount()) + 1);
                 syncKeyRepository.save(key);
 
                 progress.setLastSyncKeyId(key.getId());
                 progress.setSuccessCount(successCount);
                 progress.setFailedCount(failedCount);
                 progress.setLastError(
-                        "eventSlug=" + key.getEventSlug() + ", error=" + e.getMessage()
+                        "eventSlug=" + key.getEventSlug()
+                                + ", error=" + e.getMessage()
                 );
                 progress.setUpdatedAt(LocalDateTime.now());
                 progressRepository.save(progress);
 
-                log.warn(
-                        "Prediction key sync failed, id={}, eventSlug={}",
-                        key.getId(),
-                        key.getEventSlug(),
-                        e
-                );
+                log.warn("Prediction key sync failed, eventSlug={}", key.getEventSlug(), e);
             }
         }
 
-        progress.setStatus(failedCount > 0 ? STATUS_FAILED : STATUS_SUCCESS);
+        finishProgress(progress, failedCount);
+    }
+
+    /**
+     * 用 Gamma search 同步單一 key。
+     *
+     * 流程：
+     * 1. search teamA + teamB
+     * 2. metadataSyncService 進行 match / classify / save
+     * 3. 再檢查 DB 是否已經有完整 outcome
+     *
+     * @param increaseRetryCount 是否增加 retryCount，手動 retry 才增加
+     */
+    private SyncOneResult syncOneKeyBySearch(
+            PredictionMarketSyncKeyEntity key,
+            boolean increaseRetryCount
+    ) {
+        String keyword = buildSearchKeyword(key);
+
+        List<PredictionGammaMarketDto> searchResult =
+                gammaMarketClient.searchMarkets(keyword);
+
+        int saved = 0;
+
+        if (!searchResult.isEmpty()) {
+            saved = metadataSyncService.syncOneKey(key, searchResult);
+        }
+
+        CheckResult checkResult = checkOneKey(key);
+
+        applyCheckResult(key, checkResult, increaseRetryCount);
+
+        syncKeyRepository.save(key);
+
+        if (checkResult.isSuccess()) {
+            return new SyncOneResult(true, saved, null);
+        }
+
+        String message = checkResult.getMessage();
+
+        if (searchResult.isEmpty()) {
+            message = "Gamma search empty, keyword=" + keyword;
+        }
+
+        return new SyncOneResult(false, saved, message);
+    }
+
+    /**
+     * 建立 Gamma search keyword。
+     *
+     * 不使用 eventSlug。
+     * 因為 eventSlug 是 event 層，不是 market slug。
+     */
+    private String buildSearchKeyword(PredictionMarketSyncKeyEntity key) {
+        return safe(key.getTeamA()) + " " + safe(key.getTeamB());
+    }
+
+    /**
+     * 檢查單一 key 是否已有完整 outcome。
+     */
+    private CheckResult checkOneKey(PredictionMarketSyncKeyEntity key) {
+        if (key.getEventSlug() == null || key.getEventSlug().isBlank()) {
+            return new CheckResult(false, "missing eventSlug");
+        }
+
+        List<PredictionMarketInfoEntity> markets =
+                marketInfoRepository.findByEventSlug(key.getEventSlug());
+
+        Set<String> outcomeKeys =
+                markets.stream()
+                        .map(PredictionMarketInfoEntity::getOutcomeKey)
+                        .collect(Collectors.toSet());
+
+        boolean hasHome = outcomeKeys.contains("homeWin");
+        boolean hasDraw = outcomeKeys.contains("draw");
+        boolean hasAway = outcomeKeys.contains("awayWin");
+
+        if (hasHome && hasDraw && hasAway) {
+            return new CheckResult(true, null);
+        }
+
+        StringBuilder missing = new StringBuilder();
+
+        if (!hasHome) {
+            missing.append("homeWin ");
+        }
+
+        if (!hasDraw) {
+            missing.append("draw ");
+        }
+
+        if (!hasAway) {
+            missing.append("awayWin ");
+        }
+
+        return new CheckResult(false, missing.toString().trim());
+    }
+
+    /**
+     * 根據檢查結果更新 key。
+     */
+    private void applyCheckResult(
+            PredictionMarketSyncKeyEntity key,
+            CheckResult result,
+            boolean increaseRetryCount
+    ) {
+        if (result.isSuccess()) {
+            key.setSyncStatus(STATUS_SUCCESS);
+            key.setLastError(null);
+            key.setLastSyncedAt(LocalDateTime.now());
+            return;
+        }
+
+        key.setSyncStatus(STATUS_FAILED);
+        key.setLastError(result.getMessage());
+
+        if (increaseRetryCount) {
+            key.setRetryCount(safeInt(key.getRetryCount()) + 1);
+        }
+    }
+
+    /**
+     * 結束 progress。
+     *
+     * 注意：
+     * 只要 job 跑完，就標 SUCCESS。
+     * failedCount 用來表示有多少 event 還沒有補齊。
+     */
+    private void finishProgress(
+            PredictionMarketSyncProgressEntity progress,
+            int failedCount
+    ) {
+        progress.setStatus(STATUS_SUCCESS);
         progress.setFinishedAt(LocalDateTime.now());
         progress.setUpdatedAt(LocalDateTime.now());
-        progressRepository.save(progress);
-    }
 
-    /**
-     * 單一 key sync，重試 3 次。
-     */
-    private int syncOneKeyWithRetry(
-            PredictionMarketSyncKeyEntity key,
-            List<PredictionGammaMarketDto> allMarkets
-    ) {
-        RuntimeException lastException = null;
-
-        for (int attempt = 1; attempt <= 3; attempt++) {
-            try {
-                return metadataSyncService.syncOneKey(key, allMarkets);
-            } catch (RuntimeException e) {
-                lastException = e;
-
-                log.warn(
-                        "sync key retry failed, eventSlug={}, attempt={}",
-                        key.getEventSlug(),
-                        attempt,
-                        e
-                );
-
-                sleepQuietly(attempt * 1000L);
-            }
+        if (failedCount > 0) {
+            progress.setLastError("incomplete event count=" + failedCount);
         }
 
-        throw lastException == null
-                ? new RuntimeException("sync key failed")
-                : lastException;
-    }
-
-    /**
-     * 指定 retry 用。
-     *
-     * 每次 retry event 時，重新拉一份最新 Gamma markets。
-     */
-    private int syncOneKeyWithFreshMarkets(
-            PredictionMarketSyncKeyEntity key
-    ) {
-        List<PredictionGammaMarketDto> allMarkets =
-                gammaMarketClient.fetchAllActiveMarkets();
-
-        return metadataSyncService.syncOneKey(key, allMarkets);
+        progressRepository.save(progress);
     }
 
     /**
@@ -321,7 +386,7 @@ public class PredictionMarketFullSyncService {
     }
 
     /**
-     * 標記 job failed。
+     * 標記 job 程式異常失敗。
      */
     @Transactional
     public void markFailed(String error) {
@@ -362,6 +427,10 @@ public class PredictionMarketFullSyncService {
 
     private int safeInt(Integer value) {
         return value == null ? 0 : value;
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private void sleepQuietly(long millis) {

@@ -65,61 +65,62 @@ public class PredictionMarketPriceRefreshService {
     public void refreshPrices() {
         LocalDateTime now = LocalDateTime.now();
 
-        List<PredictionMarketInfoEntity> needRefresh =
-                marketInfoRepository.findByActiveTrueAndClosedFalse()
-                        .stream()
-                        .filter(entity -> shouldRefresh(entity, now))
-                        .toList();
+        List<PredictionMarketInfoEntity> markets =
+                marketInfoRepository.findByActiveTrueAndClosedFalseOrderByEventDateAsc();
 
-        if (needRefresh.isEmpty()) {
-            log.info("Prediction price refresh skipped, no market need refresh");
+        if (markets.isEmpty()) {
+            log.info("Prediction price refresh skipped, no active markets");
             return;
         }
 
-        /**
-         * 一次性拉 Gamma active markets。
-         *
-         * 注意：
-         * 這裡只做價格刷新，
-         * 不做 discovery。
-         */
-        List<PredictionGammaMarketDto> gammaMarkets =
-                gammaMarketClient.fetchAllActiveMarkets();
-
-        /**
-         * marketSlug -> Gamma market
-         */
-        Map<String, PredictionGammaMarketDto> gammaBySlug =
-                gammaMarkets.stream()
-                        .filter(m -> m.getSlug() != null)
-                        .collect(Collectors.toMap(
-                                PredictionGammaMarketDto::getSlug,
-                                Function.identity(),
-                                (a, b) -> a
-                        ));
-
         int updated = 0;
+        int failed = 0;
 
-        for (PredictionMarketInfoEntity entity : needRefresh) {
-            PredictionGammaMarketDto gamma =
-                    gammaBySlug.get(entity.getMarketSlug());
-
-            if (gamma == null) {
+        for (PredictionMarketInfoEntity entity : markets) {
+            if (entity.getMarketSlug() == null || entity.getMarketSlug().isBlank()) {
                 continue;
             }
 
-            updatePriceFields(entity, gamma, now);
+            try {
+                PredictionGammaMarketDto gamma =
+                        gammaMarketClient.getMarketBySlug(entity.getMarketSlug());
 
-            updated++;
+                if (gamma == null) {
+                    failed++;
+                    continue;
+                }
+
+                updatePriceFields(entity, gamma, now);
+                updated++;
+
+                sleepQuietly(50);
+
+            } catch (Exception e) {
+                failed++;
+                log.warn(
+                        "Prediction price refresh failed, marketSlug={}",
+                        entity.getMarketSlug(),
+                        e
+                );
+            }
         }
 
-        marketInfoRepository.saveAll(needRefresh);
+        marketInfoRepository.saveAll(markets);
 
         log.info(
-                "Prediction price refresh finished, needRefresh={}, updated={}",
-                needRefresh.size(),
-                updated
+                "Prediction price refresh finished, total={}, updated={}, failed={}",
+                markets.size(),
+                updated,
+                failed
         );
+    }
+
+    private void sleepQuietly(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
     }
 
     /**
