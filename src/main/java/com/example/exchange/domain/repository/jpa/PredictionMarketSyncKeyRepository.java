@@ -1,23 +1,23 @@
 package com.example.exchange.domain.repository.jpa;
 
-import com.example.exchange.domain.model.entity.PredictionMarketSyncKeyEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketSyncKey;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface PredictionMarketSyncKeyRepository
-        extends JpaRepository<PredictionMarketSyncKeyEntity, Long> {
+        extends JpaRepository<PredictionMarketSyncKey, Long> {
 
-    List<PredictionMarketSyncKeyEntity> findBySyncEnabledTrueOrderByIdAsc();
+    List<PredictionMarketSyncKey> findBySyncEnabledTrueOrderByIdAsc();
 
-    List<PredictionMarketSyncKeyEntity> findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(
+    List<PredictionMarketSyncKey> findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(
             Long id
     );
 
-    Optional<PredictionMarketSyncKeyEntity> findByEventSlug(String eventSlug);
+    Optional<PredictionMarketSyncKey> findByEventSlug(String eventSlug);
 
-    Optional<PredictionMarketSyncKeyEntity> findByTeamAAndTeamBAndEventDate(
+    Optional<PredictionMarketSyncKey> findByTeamAAndTeamBAndEventDate(
             String teamA,
             String teamB,
             java.time.LocalDate eventDate

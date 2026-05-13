@@ -38,7 +38,7 @@ import java.time.LocalDateTime;
                 )
         }
 )
-public class PredictionMarketInfoEntity {
+public class PredictionMarketInfo {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

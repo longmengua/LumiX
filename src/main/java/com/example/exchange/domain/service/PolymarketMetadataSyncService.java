@@ -2,8 +2,8 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PredictionGammaEventDto;
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
-import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
-import com.example.exchange.domain.model.entity.PredictionMarketSyncKeyEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
+import com.example.exchange.domain.model.entity.PredictionMarketSyncKey;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.util.PredictionJsonUtils;
 import lombok.RequiredArgsConstructor;
@@ -50,7 +50,7 @@ public class PolymarketMetadataSyncService {
      */
     @Transactional
     public int syncOneKey(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             List<PredictionGammaMarketDto> allMarkets
     ) {
         List<PredictionGammaMarketDto> relatedMarkets =
@@ -126,7 +126,7 @@ public class PolymarketMetadataSyncService {
      */
     private boolean eventMatchesKey(
             PredictionGammaMarketDto market,
-            PredictionMarketSyncKeyEntity key
+            PredictionMarketSyncKey key
     ) {
         PredictionGammaEventDto event = firstEvent(market);
 
@@ -170,7 +170,7 @@ public class PolymarketMetadataSyncService {
      * 分類並選出每個 outcome liquidity 最大的 market。
      */
     private Map<String, PredictionGammaMarketDto> classifyAndPickBest(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             List<PredictionGammaMarketDto> markets
     ) {
         Map<String, PredictionGammaMarketDto> result = new HashMap<>();
@@ -199,7 +199,7 @@ public class PolymarketMetadataSyncService {
      * text = groupItemTitle + question + slug
      */
     private String classifyOutcome(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             PredictionGammaMarketDto market
     ) {
         String text = norm(
@@ -245,13 +245,13 @@ public class PolymarketMetadataSyncService {
      * 寫入 / 更新 prediction_market_info。
      */
     private void saveMarketInfo(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             String outcomeKey,
             PredictionGammaMarketDto market
     ) {
-        PredictionMarketInfoEntity entity =
+        PredictionMarketInfo entity =
                 marketInfoRepository.findByMarketSlug(market.getSlug())
-                        .orElseGet(PredictionMarketInfoEntity::new);
+                        .orElseGet(PredictionMarketInfo::new);
 
         PredictionGammaEventDto event = firstEvent(market);
 
@@ -321,7 +321,7 @@ public class PolymarketMetadataSyncService {
     }
 
     private String toOutcomeLabel(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             String outcomeKey
     ) {
         return switch (outcomeKey) {

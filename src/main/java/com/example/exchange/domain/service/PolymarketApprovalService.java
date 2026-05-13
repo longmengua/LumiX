@@ -22,20 +22,17 @@ import java.util.List;
 /**
  * Polymarket approval query service。
  *
- * 正式 Deposit Wallet + Session Signer 架構：
+ * Deposit Wallet + Session Signer 架構：
  *
- * - approval transaction 必須由前端 MetaMask 自己送
+ * - approval transaction 必須由前端 MetaMask 送出
  * - 後端不能代替使用者 approve
  * - 後端只負責：
- *   1. allowance query
- *   2. approval query
- *   3. 下單前 validation
+ *   1. ERC20 allowance query
+ *   2. ERC1155 approval query
+ *   3. placeOrder 前 validation
  *
  * 注意：
- * owner 必須是：
- * - deposit wallet
- * - 真正持有資產的 wallet
- *
+ * owner 必須是 deposit wallet。
  * 不是 session signer。
  */
 @Slf4j
@@ -48,7 +45,7 @@ public class PolymarketApprovalService {
     private final PolymarketConfigs polymarketConfigs;
 
     /**
-     * 查指定 owner 的 ERC20 allowance。
+     * 查指定 owner 的 USDC allowance。
      *
      * BUY YES / BUY NO 需要。
      */
@@ -56,11 +53,25 @@ public class PolymarketApprovalService {
             String owner
     ) {
         try {
-            return getErc20Allowance(
-                    polymarketConfigs.getChain().getCollateralToken(),
+            String token =
+                    polymarketConfigs.getChain().getCollateralToken();
+
+            String spender =
+                    polymarketConfigs.getChain().getNegRiskExchangeV2();
+
+            log.info(
+                    "[Approval] Query ERC20 allowance. token={}, owner={}, spender={}",
+                    token,
                     owner,
-                    polymarketConfigs.getChain().getNegRiskExchangeV2()
+                    spender
             );
+
+            return getErc20Allowance(
+                    token,
+                    owner,
+                    spender
+            );
+
         } catch (Exception e) {
             log.error(
                     "Get collateral allowance failed. owner={}",
@@ -77,7 +88,7 @@ public class PolymarketApprovalService {
     }
 
     /**
-     * 查指定 owner 是否已 ERC1155 approve。
+     * 查指定 owner 是否已 approve Conditional Tokens。
      *
      * SELL YES / SELL NO 需要。
      */
@@ -85,11 +96,25 @@ public class PolymarketApprovalService {
             String owner
     ) {
         try {
-            return isErc1155ApprovedForAll(
-                    polymarketConfigs.getChain().getConditionalTokens(),
+            String token =
+                    polymarketConfigs.getChain().getConditionalTokens();
+
+            String operator =
+                    polymarketConfigs.getChain().getNegRiskExchangeV2();
+
+            log.info(
+                    "[Approval] Query ERC1155 approval. token={}, owner={}, operator={}",
+                    token,
                     owner,
-                    polymarketConfigs.getChain().getNegRiskExchangeV2()
+                    operator
             );
+
+            return isErc1155ApprovedForAll(
+                    token,
+                    owner,
+                    operator
+            );
+
         } catch (Exception e) {
             log.error(
                     "Get conditional token approval failed. owner={}",
@@ -106,7 +131,7 @@ public class PolymarketApprovalService {
     }
 
     /**
-     * 下單前檢查 BUY allowance。
+     * BUY 下單前檢查 USDC allowance。
      */
     public void requireCollateralAllowance(
             String owner,
@@ -129,7 +154,7 @@ public class PolymarketApprovalService {
     }
 
     /**
-     * 下單前檢查 SELL approval。
+     * SELL 下單前檢查 ERC1155 approval。
      */
     public void requireConditionalTokensApproval(
             String owner
@@ -147,7 +172,7 @@ public class PolymarketApprovalService {
     }
 
     /**
-     * ERC20 allowance(owner, spender)
+     * ERC20 allowance(owner, spender)。
      */
     private BigInteger getErc20Allowance(
             String token,
@@ -155,22 +180,28 @@ public class PolymarketApprovalService {
             String spender
     ) throws Exception {
 
-        Function function = new Function(
-                "allowance",
-                List.of(
-                        new Address(owner),
-                        new Address(spender)
-                ),
-                List.of(
-                        new TypeReference<Uint256>() {
-                        }
-                )
-        );
+        validateAddress(token, "collateral token");
+        validateAddress(owner, "owner");
+        validateAddress(spender, "spender");
 
-        EthCall response = ethCall(
-                token,
-                FunctionEncoder.encode(function)
-        );
+        Function function =
+                new Function(
+                        "allowance",
+                        List.of(
+                                addressParam(owner),
+                                addressParam(spender)
+                        ),
+                        List.of(
+                                new TypeReference<Uint256>() {
+                                }
+                        )
+                );
+
+        EthCall response =
+                ethCall(
+                        token,
+                        FunctionEncoder.encode(function)
+                );
 
         if (response.hasError()) {
             throw new IllegalStateException(
@@ -195,7 +226,7 @@ public class PolymarketApprovalService {
     }
 
     /**
-     * ERC1155 isApprovedForAll(owner, operator)
+     * ERC1155 isApprovedForAll(owner, operator)。
      */
     private Boolean isErc1155ApprovedForAll(
             String token,
@@ -203,22 +234,28 @@ public class PolymarketApprovalService {
             String operator
     ) throws Exception {
 
-        Function function = new Function(
-                "isApprovedForAll",
-                List.of(
-                        new Address(owner),
-                        new Address(operator)
-                ),
-                List.of(
-                        new TypeReference<Bool>() {
-                        }
-                )
-        );
+        validateAddress(token, "conditional token");
+        validateAddress(owner, "owner");
+        validateAddress(operator, "operator");
 
-        EthCall response = ethCall(
-                token,
-                FunctionEncoder.encode(function)
-        );
+        Function function =
+                new Function(
+                        "isApprovedForAll",
+                        List.of(
+                                addressParam(owner),
+                                addressParam(operator)
+                        ),
+                        List.of(
+                                new TypeReference<Bool>() {
+                                }
+                        )
+                );
+
+        EthCall response =
+                ethCall(
+                        token,
+                        FunctionEncoder.encode(function)
+                );
 
         if (response.hasError()) {
             throw new IllegalStateException(
@@ -243,16 +280,55 @@ public class PolymarketApprovalService {
     }
 
     /**
-     * eth_call
+     * 建立 ABI address 參數。
+     *
+     * 注意：
+     * 使用 new Address(address)，不要使用 new Address(160, address)。
+     */
+    private Address addressParam(
+            String address
+    ) {
+        validateAddress(address, "address");
+
+        return new Address(address);
+    }
+
+    /**
+     * address 基礎檢查。
+     */
+    private void validateAddress(
+            String address,
+            String name
+    ) {
+        if (address == null || address.isBlank()) {
+            throw new IllegalArgumentException(
+                    name + " address is blank"
+            );
+        }
+
+        if (!address.matches("^0x[0-9a-fA-F]{40}$")) {
+            throw new IllegalArgumentException(
+                    name + " address invalid: " + address
+            );
+        }
+    }
+
+    /**
+     * eth_call。
+     *
+     * from 可為 null。
+     * to 必須是 contract address。
      */
     private EthCall ethCall(
             String contractAddress,
             String data
     ) throws Exception {
 
+        validateAddress(contractAddress, "contract");
+
         Transaction transaction =
                 Transaction.createEthCallTransaction(
-                        contractAddress,
+                        null,
                         contractAddress,
                         data
                 );

@@ -1,9 +1,15 @@
 package com.example.exchange.domain.service;
 
-import com.example.exchange.domain.model.dto.*;
+import com.example.exchange.domain.model.dto.PolymarketClobOrderRequest;
+import com.example.exchange.domain.model.dto.PolymarketNormalizedClobOrder;
+import com.example.exchange.domain.model.dto.PolymarketPlaceOrderRequest;
+import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
 import com.example.exchange.domain.model.entity.PredictionSessionRecord;
 import com.example.exchange.domain.model.enums.PolymarketClobSide;
-import com.example.exchange.domain.util.PolymarketOrderMapper;
+import com.example.exchange.domain.model.enums.PolymarketOrderDirection;
+import com.example.exchange.domain.model.enums.PolymarketOrderType;
+import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.util.PolymarketOrderSigner;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import lombok.RequiredArgsConstructor;
@@ -12,40 +18,29 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.util.UUID;
 
 /**
  * Polymarket order service。
  *
- * 正式架構：
+ * Deposit Wallet + POLY_1271 架構：
  *
- * Deposit Wallet：
- * - 真正持有資產
- * - 真正做 ERC20 / ERC1155 approve
+ * 1. 使用者資產放在 Polymarket Deposit Wallet。
+ * 2. 下單時，真正檢查 allowance / approval 的 owner 是 Deposit Wallet。
+ * 3. Session Signer 只負責簽 CLOB order。
+ * 4. maker / signer / signatureType 由 PolymarketOrderSigner 處理。
  *
- * Session Signer：
- * - 只負責簽 CLOB order
- * - 不持有資產
- * - 不做鏈上 approve
- *
- * 流程：
- * 1. 前端 MetaMask connect
- * 2. 建立 session signer
- * 3. EIP712 confirm session
- * 4. Deposit wallet 前端自行 approve
- * 5. placeOrder
- * 6. 後端驗證 allowance / approval
- * 7. session signer 簽 CLOB order
- * 8. POST Polymarket CLOB /order
+ * TODO:
+ * 1. prediction_market_info 補 neg_risk 欄位。
+ * 2. no_buy_price / no_sell_price 建議直接入庫，不要每次推導。
+ * 3. 下單成功後補內部 order record / ledger / reconciliation。
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class PolymarketOrderService {
 
-    /**
-     * USDC 6 decimals。
-     */
     private static final BigDecimal ATOMIC_UNIT =
             new BigDecimal("1000000");
 
@@ -56,6 +51,8 @@ public class PolymarketOrderService {
     private final PolymarketSessionService polymarketSessionService;
 
     private final PolymarketApprovalService polymarketApprovalService;
+
+    private final PredictionMarketInfoRepository predictionMarketInfoRepository;
 
     /**
      * 建立真實 Polymarket CLOB order。
@@ -74,79 +71,58 @@ public class PolymarketOrderService {
         try {
             validate(request);
 
-            /**
-             * ACTIVE session。
-             */
             PredictionSessionRecord sessionRecord =
                     polymarketSessionService.getActiveSession(
                             request.getSessionId()
                     );
 
             /**
-             * 真正持有資產的 wallet。
+             * Deposit Wallet / POLY_1271 模式：
              *
-             * 正式架構：
-             * Deposit Wallet 持有資產
-             * Session Signer 只負責簽單
-             *
-             * TODO:
-             * 後續如果：
-             * user wallet
-             * deposit wallet
-             * session signer
-             * 分離，
-             * 這裡應該改成：
-             *
-             * sessionRecord.getDepositWalletAddress()
+             * 資產 owner 是 deposit wallet，
+             * 不是 session signer，
+             * 也不是前端登入 MetaMask EOA。
              */
             String assetOwner =
-                    sessionRecord.getUserAddress();
+                    polymarketConfigs
+                            .getWallet()
+                            .getFunderAddress();
 
-            log.info(
-                    "[PolymarketOrder] Active session loaded. internalOrderId={}, sessionId={}, userAddress={}, sessionSignerAddress={}, assetOwner={}",
-                    internalOrderId,
-                    sessionRecord.getSessionId(),
-                    sessionRecord.getUserAddress(),
-                    sessionRecord.getSessionSignerAddress(),
-                    assetOwner
-            );
+            PredictionMarketInfo marketInfo =
+                    predictionMarketInfoRepository
+                            .findByMarketSlug(request.getMarketSlug())
+                            .orElseThrow(() ->
+                                    new IllegalArgumentException(
+                                            "market not found: "
+                                                    + request.getMarketSlug()
+                                    )
+                            );
 
-            /**
-             * 前端 request
-             * -> 標準化 CLOB order
-             */
             PolymarketNormalizedClobOrder normalizedOrder =
-                    PolymarketOrderMapper.toClobOrder(
-                            request
+                    buildNormalizedOrder(
+                            request,
+                            marketInfo
                     );
 
             log.info(
-                    "[PolymarketOrder] Normalized order. internalOrderId={}, tokenId={}, side={}, price={}, size={}, usdtAmount={}, orderType={}, negRisk={}",
+                    "[PolymarketOrder] Normalized order. internalOrderId={}, marketSlug={}, tokenId={}, side={}, price={}, size={}, usdtAmount={}, orderType={}, negRisk={}, assetOwner={}",
                     internalOrderId,
+                    request.getMarketSlug(),
                     normalizedOrder.getTokenId(),
                     normalizedOrder.getSide(),
                     normalizedOrder.getPrice(),
                     normalizedOrder.getSize(),
                     normalizedOrder.getUsdtAmount(),
                     normalizedOrder.getOrderType(),
-                    normalizedOrder.getNegRisk()
+                    normalizedOrder.getNegRisk(),
+                    assetOwner
             );
 
-            /**
-             * 下單前驗證：
-             * Deposit Wallet allowance / approval。
-             */
             checkApprovalBeforeOrder(
                     assetOwner,
                     normalizedOrder
             );
 
-            /**
-             * Session signer 簽 CLOB order。
-             *
-             * 注意：
-             * signer 不一定是資產 owner。
-             */
             PolymarketClobOrderRequest clobOrderRequest =
                     PolymarketOrderSigner.sign(
                             polymarketConfigs,
@@ -159,9 +135,6 @@ public class PolymarketOrderService {
                     clobOrderRequest
             );
 
-            /**
-             * 真正送 Polymarket CLOB。
-             */
             PolymarketPlaceOrderResponse response =
                     polymarketClobTradingClient.postOrder(
                             clobOrderRequest
@@ -182,7 +155,6 @@ public class PolymarketOrderService {
             return response;
 
         } catch (Exception e) {
-
             log.error(
                     "[PolymarketOrder] Place order exception. internalOrderId={}, userId={}, sessionId={}, marketSlug={}, direction={}",
                     internalOrderId,
@@ -203,37 +175,176 @@ public class PolymarketOrderService {
     }
 
     /**
+     * 從 DB market info 組 CLOB order。
+     */
+    private PolymarketNormalizedClobOrder buildNormalizedOrder(
+            PolymarketPlaceOrderRequest request,
+            PredictionMarketInfo marketInfo
+    ) {
+        PolymarketOrderType orderType =
+                request.getOrderType() == null
+                        ? PolymarketOrderType.FOK
+                        : request.getOrderType();
+
+        TokenAndPrice tokenAndPrice =
+                resolveTokenAndPrice(
+                        request.getDirection(),
+                        marketInfo
+                );
+
+        BigDecimal size =
+                request.getUsdtAmount()
+                        .divide(
+                                tokenAndPrice.price(),
+                                6,
+                                RoundingMode.DOWN
+                        );
+
+        return PolymarketNormalizedClobOrder.builder()
+                .userId(request.getUserId())
+                .eventSlug(marketInfo.getEventSlug())
+                .marketSlug(marketInfo.getMarketSlug())
+                .outcomeKey(marketInfo.getOutcomeKey())
+                .tokenId(tokenAndPrice.tokenId())
+                .side(tokenAndPrice.side())
+                .price(tokenAndPrice.price())
+                .size(size)
+                .usdtAmount(request.getUsdtAmount())
+                .orderType(orderType)
+
+                /**
+                 * TODO:
+                 * 目前 FIFA / sports 預設 true。
+                 * 正式建議 prediction_market_info 補 neg_risk 欄位。
+                 */
+                .negRisk(true)
+                .build();
+    }
+
+    /**
+     * 根據方向決定 tokenId / side / price。
+     */
+    private TokenAndPrice resolveTokenAndPrice(
+            PolymarketOrderDirection direction,
+            PredictionMarketInfo marketInfo
+    ) {
+        return switch (direction) {
+            case BUY_YES -> new TokenAndPrice(
+                    marketInfo.getYesTokenId(),
+                    PolymarketClobSide.BUY,
+                    toBigDecimal(
+                            marketInfo.getBestAsk(),
+                            "bestAsk"
+                    )
+            );
+
+            case SELL_YES -> new TokenAndPrice(
+                    marketInfo.getYesTokenId(),
+                    PolymarketClobSide.SELL,
+                    toBigDecimal(
+                            marketInfo.getBestBid(),
+                            "bestBid"
+                    )
+            );
+
+            case BUY_NO -> new TokenAndPrice(
+                    marketInfo.getNoTokenId(),
+                    PolymarketClobSide.BUY,
+                    resolveNoBuyPrice(marketInfo)
+            );
+
+            case SELL_NO -> new TokenAndPrice(
+                    marketInfo.getNoTokenId(),
+                    PolymarketClobSide.SELL,
+                    resolveNoSellPrice(marketInfo)
+            );
+        };
+    }
+
+    /**
+     * BUY_NO price。
+     *
+     * TODO:
+     * 正式建議 DB 直接存 no_buy_price。
+     */
+    private BigDecimal resolveNoBuyPrice(
+            PredictionMarketInfo marketInfo
+    ) {
+        if (marketInfo.getStaticNoPrice() != null) {
+            return toBigDecimal(
+                    marketInfo.getStaticNoPrice(),
+                    "staticNoPrice"
+            );
+        }
+
+        return BigDecimal.ONE.subtract(
+                toBigDecimal(
+                        marketInfo.getBestBid(),
+                        "bestBid"
+                )
+        );
+    }
+
+    /**
+     * SELL_NO price。
+     *
+     * TODO:
+     * 正式建議 DB 直接存 no_sell_price。
+     */
+    private BigDecimal resolveNoSellPrice(
+            PredictionMarketInfo marketInfo
+    ) {
+        if (marketInfo.getStaticNoPrice() != null) {
+            return toBigDecimal(
+                    marketInfo.getStaticNoPrice(),
+                    "staticNoPrice"
+            );
+        }
+
+        return BigDecimal.ONE.subtract(
+                toBigDecimal(
+                        marketInfo.getBestAsk(),
+                        "bestAsk"
+                )
+        );
+    }
+
+    private BigDecimal toBigDecimal(
+            Double value,
+            String fieldName
+    ) {
+        if (value == null || value <= 0) {
+            throw new IllegalStateException(
+                    fieldName + " is empty or invalid"
+            );
+        }
+
+        return BigDecimal.valueOf(value);
+    }
+
+    /**
      * 下單前檢查 allowance / approval。
      *
      * BUY：
-     * ERC20 allowance
+     * 需要 Deposit Wallet approve pUSD 給 Exchange / NegRiskExchange。
      *
      * SELL：
-     * ERC1155 approval
+     * 需要 Deposit Wallet setApprovalForAll ConditionalTokens。
+     *
+     * TODO:
+     * Deposit Wallet 模式下，approval 正式應走 Polymarket relayer WALLET batch。
      */
     private void checkApprovalBeforeOrder(
             String assetOwner,
             PolymarketNormalizedClobOrder normalizedOrder
     ) {
-
-        /**
-         * BUY：
-         * 需要 ERC20 allowance。
-         */
         if (normalizedOrder.getSide() == PolymarketClobSide.BUY) {
-
             BigInteger requiredAmountAtomic =
                     toAtomic(
-                            normalizedOrder.getPrice()
+                            normalizedOrder
+                                    .getPrice()
                                     .multiply(normalizedOrder.getSize())
                     );
-
-            log.info(
-                    "[PolymarketOrder] Check collateral allowance. assetOwner={}, tokenId={}, requiredAmountAtomic={}",
-                    assetOwner,
-                    normalizedOrder.getTokenId(),
-                    requiredAmountAtomic
-            );
 
             polymarketApprovalService.requireCollateralAllowance(
                     assetOwner,
@@ -243,24 +354,11 @@ public class PolymarketOrderService {
             return;
         }
 
-        /**
-         * SELL：
-         * 需要 ERC1155 approval。
-         */
-        log.info(
-                "[PolymarketOrder] Check conditional token approval. assetOwner={}, tokenId={}",
-                assetOwner,
-                normalizedOrder.getTokenId()
-        );
-
         polymarketApprovalService.requireConditionalTokensApproval(
                 assetOwner
         );
     }
 
-    /**
-     * 轉 atomic amount。
-     */
     private BigInteger toAtomic(
             BigDecimal value
     ) {
@@ -269,24 +367,33 @@ public class PolymarketOrderService {
                 .toBigInteger();
     }
 
-    /**
-     * 基礎 request validation。
-     */
     private void validate(
             PolymarketPlaceOrderRequest request
     ) {
-
         if (request == null) {
             throw new IllegalArgumentException(
                     "request is required"
             );
         }
 
+        if (request.getUserId() == null
+                || request.getUserId().isBlank()) {
+            throw new IllegalArgumentException(
+                    "userId is required"
+            );
+        }
+
         if (request.getSessionId() == null
                 || request.getSessionId().isBlank()) {
-
             throw new IllegalArgumentException(
                     "sessionId is required"
+            );
+        }
+
+        if (request.getMarketSlug() == null
+                || request.getMarketSlug().isBlank()) {
+            throw new IllegalArgumentException(
+                    "marketSlug is required"
             );
         }
 
@@ -298,87 +405,24 @@ public class PolymarketOrderService {
 
         if (request.getUsdtAmount() == null
                 || request.getUsdtAmount().signum() <= 0) {
-
             throw new IllegalArgumentException(
                     "usdtAmount must be positive"
             );
         }
 
-        if (request.getEventSlug() == null
-                || request.getEventSlug().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "eventSlug is required"
-            );
-        }
-
-        if (request.getMarketSlug() == null
-                || request.getMarketSlug().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "marketSlug is required"
-            );
-        }
-
-        if (request.getOutcomeKey() == null
-                || request.getOutcomeKey().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "outcomeKey is required"
-            );
-        }
-
-        if (request.getYesTokenId() == null
-                || request.getYesTokenId().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "yesTokenId is required"
-            );
-        }
-
-        if (request.getNoTokenId() == null
-                || request.getNoTokenId().isBlank()) {
-
-            throw new IllegalArgumentException(
-                    "noTokenId is required"
-            );
-        }
-
-        if (request.getYesBuyPrice() == null) {
-            throw new IllegalArgumentException(
-                    "yesBuyPrice is required"
-            );
-        }
-
-        if (request.getYesSellPrice() == null) {
-            throw new IllegalArgumentException(
-                    "yesSellPrice is required"
-            );
-        }
-
-        if (request.getNoBuyPrice() == null) {
-            throw new IllegalArgumentException(
-                    "noBuyPrice is required"
-            );
-        }
-
-        if (request.getNoSellPrice() == null) {
-            throw new IllegalArgumentException(
-                    "noSellPrice is required"
-            );
-        }
-
         validateClobApiConfig();
+
+        if (polymarketConfigs.getWallet().getFunderAddress() == null
+                || polymarketConfigs.getWallet().getFunderAddress().isBlank()) {
+            throw new IllegalStateException(
+                    "polymarket wallet funder-address is empty"
+            );
+        }
     }
 
-    /**
-     * 驗證 CLOB API config。
-     */
     private void validateClobApiConfig() {
-
         if (polymarketConfigs.getClob().getApiKey() == null
                 || polymarketConfigs.getClob().getApiKey().isBlank()) {
-
             throw new IllegalStateException(
                     "polymarket clob api key is empty"
             );
@@ -386,7 +430,6 @@ public class PolymarketOrderService {
 
         if (polymarketConfigs.getClob().getApiSecret() == null
                 || polymarketConfigs.getClob().getApiSecret().isBlank()) {
-
             throw new IllegalStateException(
                     "polymarket clob api secret is empty"
             );
@@ -394,87 +437,53 @@ public class PolymarketOrderService {
 
         if (polymarketConfigs.getClob().getApiPassphrase() == null
                 || polymarketConfigs.getClob().getApiPassphrase().isBlank()) {
-
             throw new IllegalStateException(
                     "polymarket clob api passphrase is empty"
             );
         }
     }
 
-    /**
-     * 回填 response。
-     */
     private void fillResponse(
             PolymarketPlaceOrderResponse response,
             String internalOrderId,
             PolymarketNormalizedClobOrder normalizedOrder
     ) {
-
-        response.setInternalOrderId(
-                internalOrderId
-        );
-
-        response.setTokenId(
-                normalizedOrder.getTokenId()
-        );
-
-        response.setSide(
-                normalizedOrder.getSide()
-        );
-
-        response.setPrice(
-                normalizedOrder.getPrice()
-        );
-
-        response.setSize(
-                normalizedOrder.getSize()
-        );
-
-        response.setUsdtAmount(
-                normalizedOrder.getUsdtAmount()
-        );
+        response.setInternalOrderId(internalOrderId);
+        response.setTokenId(normalizedOrder.getTokenId());
+        response.setSide(normalizedOrder.getSide());
+        response.setPrice(normalizedOrder.getPrice());
+        response.setSize(normalizedOrder.getSize());
+        response.setUsdtAmount(normalizedOrder.getUsdtAmount());
     }
 
-    /**
-     * Start log。
-     */
     private void logStart(
             String internalOrderId,
             PolymarketPlaceOrderRequest request
     ) {
-
         if (request == null) {
-
             log.info(
                     "[PolymarketOrder] Start place order. internalOrderId={}, request=null",
                     internalOrderId
             );
-
             return;
         }
 
         log.info(
-                "[PolymarketOrder] Start place order. internalOrderId={}, userId={}, sessionId={}, eventSlug={}, marketSlug={}, outcomeKey={}, direction={}, usdtAmount={}, orderType={}",
+                "[PolymarketOrder] Start place order. internalOrderId={}, userId={}, sessionId={}, marketSlug={}, direction={}, usdtAmount={}, orderType={}",
                 internalOrderId,
                 request.getUserId(),
                 request.getSessionId(),
-                request.getEventSlug(),
                 request.getMarketSlug(),
-                request.getOutcomeKey(),
                 request.getDirection(),
                 request.getUsdtAmount(),
                 request.getOrderType()
         );
     }
 
-    /**
-     * Signed order log。
-     */
     private void logSignedOrder(
             String internalOrderId,
             PolymarketClobOrderRequest clobOrderRequest
     ) {
-
         log.info(
                 "[PolymarketOrder] Signed CLOB order. internalOrderId={}, owner={}, orderType={}, deferExec={}, maker={}, signer={}, tokenId={}, makerAmount={}, takerAmount={}, side={}, signatureType={}, signaturePrefix={}",
                 internalOrderId,
@@ -494,17 +503,12 @@ public class PolymarketOrderService {
         );
     }
 
-    /**
-     * Result log。
-     */
     private void logResult(
             String internalOrderId,
             PolymarketPlaceOrderRequest request,
             PolymarketPlaceOrderResponse response
     ) {
-
         if (Boolean.TRUE.equals(response.getSuccess())) {
-
             log.info(
                     "[PolymarketOrder] Place order success. internalOrderId={}, sessionId={}, clobOrderId={}, status={}",
                     internalOrderId,
@@ -512,7 +516,6 @@ public class PolymarketOrderService {
                     response.getClobOrderId(),
                     response.getStatus()
             );
-
             return;
         }
 
@@ -525,21 +528,22 @@ public class PolymarketOrderService {
         );
     }
 
-    /**
-     * 避免 log 完整 signature。
-     */
     private String maskSignature(
             String signature
     ) {
-
-        if (signature == null
-                || signature.length() < 16) {
-
+        if (signature == null || signature.length() < 16) {
             return "EMPTY";
         }
 
         return signature.substring(0, 10)
                 + "..."
                 + signature.substring(signature.length() - 6);
+    }
+
+    private record TokenAndPrice(
+            String tokenId,
+            PolymarketClobSide side,
+            BigDecimal price
+    ) {
     }
 }

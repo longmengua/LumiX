@@ -40,7 +40,7 @@ import java.time.LocalDateTime;
                 )
         }
 )
-public class PredictionMarketSyncKeyEntity {
+public class PredictionMarketSyncKey {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

@@ -1,6 +1,6 @@
 package com.example.exchange.domain.repository.jpa;
 
-import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -15,7 +15,7 @@ import java.util.Optional;
  * - awayWin
  */
 public interface PredictionMarketInfoRepository
-        extends JpaRepository<PredictionMarketInfoEntity, Long> {
+        extends JpaRepository<PredictionMarketInfo, Long> {
 
     /**
      * 用 Polymarket outcome market slug 查詢。
@@ -24,24 +24,24 @@ public interface PredictionMarketInfoRepository
      * 你的 Entity 欄位叫 marketSlug，
      * 所以 Repository method 必須叫 findByMarketSlug。
      */
-    Optional<PredictionMarketInfoEntity> findByMarketSlug(String marketSlug);
+    Optional<PredictionMarketInfo> findByMarketSlug(String marketSlug);
 
     /**
      * 查詢某場 event 的所有 outcome markets。
      */
-    List<PredictionMarketInfoEntity> findByEventSlug(String eventSlug);
+    List<PredictionMarketInfo> findByEventSlug(String eventSlug);
 
     /**
      * 查詢 active 且未 closed 的 markets。
      *
      * 價格刷新用。
      */
-    List<PredictionMarketInfoEntity> findByActiveTrueAndClosedFalse();
+    List<PredictionMarketInfo> findByActiveTrueAndClosedFalse();
 
     /**
      * 查詢某場 event 的指定 outcome。
      */
-    Optional<PredictionMarketInfoEntity> findByEventSlugAndOutcomeKey(
+    Optional<PredictionMarketInfo> findByEventSlugAndOutcomeKey(
             String eventSlug,
             String outcomeKey
     );
@@ -49,5 +49,5 @@ public interface PredictionMarketInfoRepository
     /**
      *
      * */
-    List<PredictionMarketInfoEntity> findByActiveTrueAndClosedFalseOrderByEventDateAsc();
+    List<PredictionMarketInfo> findByActiveTrueAndClosedFalseOrderByEventDateAsc();
 }

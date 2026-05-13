@@ -1,7 +1,7 @@
 package com.example.exchange.domain.service;
 
-import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
-import com.example.exchange.domain.model.entity.PredictionMarketSyncKeyEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
+import com.example.exchange.domain.model.entity.PredictionMarketSyncKey;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.repository.jpa.PredictionMarketSyncKeyRepository;
 import com.example.exchange.interfaces.web.dto.PredictionMarketResponse;
@@ -47,7 +47,7 @@ public class PolymarketMarketService {
      * event 層轉 response。
      */
     private PredictionMarketResponse toMarketResponse(
-            PredictionMarketSyncKeyEntity key
+            PredictionMarketSyncKey key
     ) {
         List<PredictionOutcomeResponse> outcomes =
                 marketInfoRepository.findByEventSlug(key.getEventSlug())
@@ -78,7 +78,7 @@ public class PolymarketMarketService {
      * - probabilityPct
      */
     private PredictionOutcomeResponse toOutcomeResponse(
-            PredictionMarketInfoEntity entity
+            PredictionMarketInfo entity
     ) {
         BigDecimal bestAsk = toBigDecimal(entity.getBestAsk());
         BigDecimal bestBid = toBigDecimal(entity.getBestBid());
@@ -152,7 +152,7 @@ public class PolymarketMarketService {
      * 只顯示 Bitmart UI 支援的三種 outcome。
      */
     private boolean isDisplayableOutcome(
-            PredictionMarketInfoEntity entity
+            PredictionMarketInfo entity
     ) {
         if (entity.getOutcomeKey() == null) {
             return false;
@@ -171,7 +171,7 @@ public class PolymarketMarketService {
      * 3. awayWin
      */
     private int outcomeOrder(
-            PredictionMarketInfoEntity entity
+            PredictionMarketInfo entity
     ) {
         if (entity.getOutcomeKey() == null) {
             return 99;

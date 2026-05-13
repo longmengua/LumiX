@@ -1,7 +1,7 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
-import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
 import com.example.exchange.domain.repository.client.PredictionGammaMarketClient;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.util.PredictionJsonUtils;
@@ -62,7 +62,7 @@ public class PolymarketPriceService {
     public void refreshPrices() {
         LocalDateTime now = LocalDateTime.now();
 
-        List<PredictionMarketInfoEntity> markets =
+        List<PredictionMarketInfo> markets =
                 marketInfoRepository.findByActiveTrueAndClosedFalseOrderByEventDateAsc();
 
         if (markets.isEmpty()) {
@@ -73,7 +73,7 @@ public class PolymarketPriceService {
         int updated = 0;
         int failed = 0;
 
-        for (PredictionMarketInfoEntity entity : markets) {
+        for (PredictionMarketInfo entity : markets) {
             if (entity.getMarketSlug() == null || entity.getMarketSlug().isBlank()) {
                 continue;
             }
@@ -127,7 +127,7 @@ public class PolymarketPriceService {
      * 超過 5 秒才更新。
      */
     private boolean shouldRefresh(
-            PredictionMarketInfoEntity entity,
+            PredictionMarketInfo entity,
             LocalDateTime now
     ) {
         if (entity.getLastPriceUpdatedAt() == null) {
@@ -157,7 +157,7 @@ public class PolymarketPriceService {
      * 只更新熱資料。
      */
     private void updatePriceFields(
-            PredictionMarketInfoEntity entity,
+            PredictionMarketInfo entity,
             PredictionGammaMarketDto gamma,
             LocalDateTime now
     ) {

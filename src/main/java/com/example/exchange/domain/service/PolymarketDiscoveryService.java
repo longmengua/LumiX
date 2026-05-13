@@ -2,8 +2,8 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PredictionGammaEventDto;
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
-import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
-import com.example.exchange.domain.model.entity.PredictionMarketSyncKeyEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
+import com.example.exchange.domain.model.entity.PredictionMarketSyncKey;
 import com.example.exchange.domain.repository.client.PredictionGammaMarketClient;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.repository.jpa.PredictionMarketSyncKeyRepository;
@@ -89,7 +89,7 @@ public class PolymarketDiscoveryService {
                 continue;
             }
 
-            PredictionMarketSyncKeyEntity key =
+            PredictionMarketSyncKey key =
                     upsertSyncKey(eventSlug, event, eventMarkets);
 
             Map<String, PredictionGammaMarketDto> bestByOutcome =
@@ -168,14 +168,14 @@ public class PolymarketDiscoveryService {
      * 注意：
      * discovery 模式下，不需要人工 insert sync key。
      */
-    private PredictionMarketSyncKeyEntity upsertSyncKey(
+    private PredictionMarketSyncKey upsertSyncKey(
             String eventSlug,
             PredictionGammaEventDto event,
             List<PredictionGammaMarketDto> eventMarkets
     ) {
-        PredictionMarketSyncKeyEntity key =
+        PredictionMarketSyncKey key =
                 syncKeyRepository.findByEventSlug(eventSlug)
-                        .orElseGet(PredictionMarketSyncKeyEntity::new);
+                        .orElseGet(PredictionMarketSyncKey::new);
 
         String eventTitle = event.getTitle();
 
@@ -241,7 +241,7 @@ public class PolymarketDiscoveryService {
      * 同一 outcome 取 liquidity 最大的 market。
      */
     private Map<String, PredictionGammaMarketDto> classifyAndPickBest(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             List<PredictionGammaMarketDto> markets
     ) {
         Map<String, PredictionGammaMarketDto> result = new HashMap<>();
@@ -267,7 +267,7 @@ public class PolymarketDiscoveryService {
      * outcome 分類。
      */
     private String classifyOutcome(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             PredictionGammaMarketDto market
     ) {
         String text = norm(
@@ -303,13 +303,13 @@ public class PolymarketDiscoveryService {
      * 寫入 prediction_market_info。
      */
     private void saveMarketInfo(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             String outcomeKey,
             PredictionGammaMarketDto market
     ) {
-        PredictionMarketInfoEntity entity =
+        PredictionMarketInfo entity =
                 marketInfoRepository.findByMarketSlug(market.getSlug())
-                        .orElseGet(PredictionMarketInfoEntity::new);
+                        .orElseGet(PredictionMarketInfo::new);
 
         entity.setEventSlug(key.getEventSlug());
         entity.setEventTitle(key.getEventTitle());
@@ -367,7 +367,7 @@ public class PolymarketDiscoveryService {
     }
 
     private String toOutcomeLabel(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             String outcomeKey
     ) {
         return switch (outcomeKey) {

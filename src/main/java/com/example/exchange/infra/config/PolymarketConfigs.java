@@ -141,7 +141,7 @@ public class PolymarketConfigs {
          * https://docs.polymarket.com/resources/contracts
          */
         private String exchangeV2 =
-                "0x4bFb41d5B3570DeFd03C39a9A4d8de6bd8B8982E";
+                "0xE111180000d2663C0091e4f400237545B87B996B";
 
         /**
          * Polymarket Neg Risk CTF Exchange
@@ -154,7 +154,7 @@ public class PolymarketConfigs {
          * https://docs.polymarket.com/resources/contracts
          */
         private String negRiskExchangeV2 =
-                "0xC5d563A36AE78145C45A50134D48A1215220cA94";
+                "0xe2222d279d744050d28e00520010520000310F59";
 
         /**
          * Polymarket NegRisk Adapter
@@ -176,7 +176,7 @@ public class PolymarketConfigs {
          * approve 這個 ERC20 給 exchange。
          */
         private String collateralToken =
-                "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+                "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB";
 
         /**
          * Conditional Tokens Framework (ERC1155)

@@ -15,22 +15,43 @@ import java.math.BigDecimal;
 /**
  * Polymarket place order request。
  *
- * 這是前端呼叫：
- *
+ * 前端：
  * POST /api/prediction/orders
  *
- * 使用的下單 request。
+ * 正式架構：
  *
- * 正式流程：
- * 1. 前端先完成 /session/init
- * 2. 前端完成 /session/confirm
- * 3. 前端拿 ACTIVE sessionId
- * 4. 下單時帶 sessionId
- * 5. 後端使用 session signer private key 簽 CLOB order
+ * 前端：
+ * - 不應傳 tokenId
+ * - 不應傳價格
+ * - 不應傳 negRisk
  *
- * 注意：
- * 這裡傳入的是你平台整理後的 market/outcome 資料，
- * 不是直接傳 Polymarket 原始 response。
+ * 後端：
+ * 根據 marketSlug 查 DB：
+ *
+ * prediction_market_info
+ *
+ * 取得：
+ * - yes_token_id
+ * - no_token_id
+ * - best_bid
+ * - best_ask
+ * - neg_risk
+ * - outcome info
+ *
+ * 然後：
+ * 組真正 CLOB order。
+ *
+ * --------------------------------------------------
+ *
+ * 真正 CLOB 下單核心其實只需要：
+ *
+ * 1. tokenId
+ * 2. side
+ * 3. price
+ * 4. size
+ *
+ * 但這些都應由後端計算，
+ * 不應信任前端。
  */
 @Data
 @Builder
@@ -42,38 +63,12 @@ public class PolymarketPlaceOrderRequest {
      * 你平台內部 user id。
      *
      * TODO:
-     * 正式環境應從登入態 / JWT / session 中取得，
-     * 不應完全信任前端傳入。
+     * 正式環境應從：
+     * JWT / session / auth context 取得，
+     * 不應直接信任前端。
      */
     @NotBlank
     private String userId;
-
-    /**
-     * 事件 slug。
-     *
-     * 例如：
-     * fifwc-prt-uzb-2026-06-23
-     */
-    @NotBlank
-    private String eventSlug;
-
-    /**
-     * Polymarket market slug。
-     *
-     * 例如：
-     * fifwc-prt-uzb-2026-06-23-prt
-     */
-    @NotBlank
-    private String marketSlug;
-
-    /**
-     * outcome key。
-     *
-     * 例如：
-     * homeWin / draw / awayWin
-     */
-    @NotBlank
-    private String outcomeKey;
 
     /**
      * ACTIVE session id。
@@ -84,67 +79,30 @@ public class PolymarketPlaceOrderRequest {
      * 3. 使用 session signer 簽 CLOB order
      *
      * TODO:
-     * 後端還需要確認：
-     * session.userAddress 是否對應當前登入使用者。
+     * 後端需確認：
+     * session.userAddress
+     * 是否對應當前登入使用者。
      */
     @NotBlank
     private String sessionId;
 
     /**
-     * YES token id。
+     * Polymarket market slug。
      *
-     * BUY_YES / SELL_YES 使用。
+     * 後端透過 marketSlug：
+     *
+     * prediction_market_info
+     *
+     * 查：
+     * - token ids
+     * - prices
+     * - market info
+     *
+     * 例如：
+     * fifwc-bra-mar-2026-06-13-bra
      */
     @NotBlank
-    private String yesTokenId;
-
-    /**
-     * NO token id。
-     *
-     * BUY_NO / SELL_NO 使用。
-     */
-    @NotBlank
-    private String noTokenId;
-
-    /**
-     * BUY YES 價格。
-     *
-     * 來源通常是：
-     * ask / bestAsk。
-     */
-    @NotNull
-    @DecimalMin("0.000001")
-    private BigDecimal yesBuyPrice;
-
-    /**
-     * SELL YES 價格。
-     *
-     * 來源通常是：
-     * bid / bestBid。
-     */
-    @NotNull
-    @DecimalMin("0.000001")
-    private BigDecimal yesSellPrice;
-
-    /**
-     * BUY NO 價格。
-     *
-     * Binary market 常見推導：
-     * noBuyPrice = 1 - yesSellPrice
-     */
-    @NotNull
-    @DecimalMin("0.000001")
-    private BigDecimal noBuyPrice;
-
-    /**
-     * SELL NO 價格。
-     *
-     * Binary market 常見推導：
-     * noSellPrice = 1 - yesBuyPrice
-     */
-    @NotNull
-    @DecimalMin("0.000001")
-    private BigDecimal noSellPrice;
+    private String marketSlug;
 
     /**
      * 使用者交易方向。
@@ -159,12 +117,13 @@ public class PolymarketPlaceOrderRequest {
     private PolymarketOrderDirection direction;
 
     /**
-     * 使用者輸入的 USDT / USDC 金額。
+     * 使用者輸入 USDC 金額。
      *
-     * 目前你的產品邏輯是：
-     * 使用者輸入金額，不直接輸入 shares。
+     * 目前你的產品邏輯：
+     * 使用者輸入金額，
+     * 不直接輸入 share size。
      *
-     * 後端會依 price 換算：
+     * 後端：
      * size = usdtAmount / price
      */
     @NotNull
@@ -175,21 +134,18 @@ public class PolymarketPlaceOrderRequest {
      * Polymarket order type。
      *
      * 建議：
-     * - POC / 市價立即成交：FOK
-     * - 一般掛單：GTC
      *
-     * 若前端不傳，Mapper / Service 可預設 FOK。
-     */
-    private PolymarketOrderType orderType;
-
-    /**
-     * 是否為 Neg Risk market。
+     * FOK：
+     * 立即成交，
+     * POC 最常用。
      *
-     * FIFA / Sports / multi-outcome market 通常為 true。
+     * GTC：
+     * 掛單。
      *
      * TODO:
-     * 正式環境最好不要信任前端傳入。
-     * 應該由後端根據 marketSlug / conditionId / market info 查 DB 判斷。
+     * 若前端不傳，
+     * Service 可預設：
+     * FOK。
      */
-    private Boolean negRisk;
+    private PolymarketOrderType orderType;
 }

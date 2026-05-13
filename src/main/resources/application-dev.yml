@@ -3,9 +3,6 @@
 # - Spring Boot 在本機跑，連接 docker-compose 暴露的 MySQL:3306、Kafka:9092、Redis:6379
 # ---------------------------------------------------------------------------
 spring:
-  config:
-    activate:
-      on-profile: dev   # 啟用方式：--spring.profiles.active=dev
 
   # ---------------------------
   # DataSource (MySQL via JPA)
@@ -28,7 +25,7 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: update
-#      ddl-auto: create-drop   # dev 用；prod 建議 validate 或 none + Flyway
+    #      ddl-auto: create-drop   # dev 用；prod 建議 validate 或 none + Flyway
     show-sql: true
     properties:
       hibernate:
@@ -101,8 +98,8 @@ spring:
   # --------------------------------
   task:
     scheduling:
-          pool:
-            size: 2   # dev 小池即可
+      pool:
+        size: 2   # dev 小池即可
 
 # --------------------------------
 # Server 與錯誤輸出
@@ -140,34 +137,49 @@ polymarket:
   key-sync-ms: 600000
   price-refresh-ms: 5000
 
-  chain:
-    chain-id: 137
-    exchangeV2: 0x4bFb41d5B3570DeFd03C39a9A4d8de6bd8B8982E
-    negRiskExchangeV2: 0xC5d563A36AE78145C45A50134D48A1215220cA94
-    negRiskAdapter: 0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296
-    collateralToken: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
-    conditionalTokens: 0x4D97DCd97eC945f40cF65F87097ACe5EA0476045
-
   gamma:
     base-url: https://gamma-api.polymarket.com
 
   clob:
     base-url: https://clob.polymarket.com
 
-    # 之後填 Polymarket API Credential
-    api-key: ${POLYMARKET_API_KEY:}
-    api-secret: ${POLYMARKET_API_SECRET:}
-    api-passphrase: ${POLYMARKET_API_PASSPHRASE:}
+    # Polymarket CLOB API credentials。
+    # 用於後端呼叫 CLOB API，例如 POST /order。
+    # 注意：這不是 wallet private key。
+    api-key:
+    api-secret:
+    api-passphrase:
 
   relayer:
+    # 目前 placeOrder 主流程暫時沒用到。
+    # 後續如果接 Polymarket Builder / Relayer 才會用。
     base-url: https://relayer-v2.polymarket.com
-    api-key: ${POLYMARKET_RELAYER_API_KEY:}
+    api-key:
 
   wallet:
-    # 平台 Polymarket 錢包
-    private-key: ${POLYMARKET_PRIVATE_KEY:}
-    funder-address: ${POLYMARKET_FUNDER_ADDRESS:}
+    # session signer 架構下，不再放平台 private-key。
+    # CLOB order 簽名使用 PredictionSessionRecord.sessionPrivateKey。
+
+    # Polymarket funder / deposit wallet address。
+    # TODO:
+    # 目前先保留。
+    # 後續若 maker/signer/funder 拆分，需要用這個欄位。
+    funder-address:
+
+    # Polymarket signature type。
+    # 0 = EOA。
+    # TODO:
+    # 如果後續改成 proxy wallet / smart contract wallet，
+    # 這裡可能要改成 Polymarket 對應的 signature type。
     signature-type: 0
+
+  chain:
+    chain-id: 137
+    exchange-v2: "0xE111180000d2663C0091e4f400237545B87B996B"
+    neg-risk-exchange-v2: "0xe2222d279d744050d28e00520010520000310F59"
+    neg-risk-adapter: "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296"
+    collateral-token: "0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB"
+    conditional-tokens: "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
 
   trading:
     # 你平台加價，例如 10% = 0.10
@@ -179,8 +191,13 @@ polymarket:
     # 最大允許滑點，例如 2% = 0.02
     max-slippage-rate: 0.02
 
-    # 最小下單 USDT
+    # 最小下單 USDC
     min-order-usdt: 1
 
-    # 最大下單 USDT
+    # 最大下單 USDC
     max-order-usdt: 1000
+
+web3:
+  # 後端查 allowance / approval 用。
+  # 如果遇到 401 / rate limit，換成自己的 Alchemy / Infura / QuickNode。
+  polygon-rpc-url: https://polygon-bor-rpc.publicnode.com

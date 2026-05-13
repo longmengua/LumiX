@@ -1,5 +1,7 @@
-package com.example.exchange.domain.model.dto;
+package com.example.exchange.domain.service;
 
+import com.example.exchange.domain.model.dto.PolymarketClobOrderRequest;
+import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
 import com.example.exchange.domain.util.PolymarketL2AuthSigner;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.core.type.TypeReference;

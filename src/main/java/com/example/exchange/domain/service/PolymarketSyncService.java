@@ -3,9 +3,9 @@ package com.example.exchange.domain.service;
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
 import com.example.exchange.domain.model.dto.CheckResult;
 import com.example.exchange.domain.model.dto.SyncOneResult;
-import com.example.exchange.domain.model.entity.PredictionMarketInfoEntity;
-import com.example.exchange.domain.model.entity.PredictionMarketSyncKeyEntity;
-import com.example.exchange.domain.model.entity.PredictionMarketSyncProgressEntity;
+import com.example.exchange.domain.model.entity.PredictionMarketInfo;
+import com.example.exchange.domain.model.entity.PredictionMarketSyncKey;
+import com.example.exchange.domain.model.entity.PredictionMarketSyncProgress;
 import com.example.exchange.domain.repository.client.PredictionGammaMarketClient;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
 import com.example.exchange.domain.repository.jpa.PredictionMarketSyncKeyRepository;
@@ -106,7 +106,7 @@ public class PolymarketSyncService {
      */
     public String retryEvent(String eventSlug) {
         try {
-            PredictionMarketSyncKeyEntity key =
+            PredictionMarketSyncKey key =
                     syncKeyRepository.findByEventSlug(eventSlug)
                             .orElseThrow(() -> new IllegalArgumentException(
                                     "sync key not found, eventSlug=" + eventSlug
@@ -132,7 +132,7 @@ public class PolymarketSyncService {
     /**
      * 查詢同步進度。
      */
-    public PredictionMarketSyncProgressEntity getProgress() {
+    public PredictionMarketSyncProgress getProgress() {
         return getOrCreateProgress();
     }
 
@@ -144,13 +144,13 @@ public class PolymarketSyncService {
      */
     @Transactional
     protected void doSync(boolean reset) {
-        PredictionMarketSyncProgressEntity progress = getOrCreateProgress();
+        PredictionMarketSyncProgress progress = getOrCreateProgress();
 
         Long lastSyncKeyId = reset
                 ? 0L
                 : safeLong(progress.getLastSyncKeyId());
 
-        List<PredictionMarketSyncKeyEntity> keys =
+        List<PredictionMarketSyncKey> keys =
                 syncKeyRepository
                         .findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(lastSyncKeyId);
 
@@ -172,7 +172,7 @@ public class PolymarketSyncService {
         int successCount = 0;
         int failedCount = 0;
 
-        for (PredictionMarketSyncKeyEntity key : keys) {
+        for (PredictionMarketSyncKey key : keys) {
             try {
                 SyncOneResult result = syncOneKeyBySearch(key, false);
 
@@ -236,7 +236,7 @@ public class PolymarketSyncService {
      * @param increaseRetryCount 是否增加 retryCount，手動 retry 才增加
      */
     private SyncOneResult syncOneKeyBySearch(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             boolean increaseRetryCount
     ) {
         String keyword = buildSearchKeyword(key);
@@ -275,24 +275,24 @@ public class PolymarketSyncService {
      * 不使用 eventSlug。
      * 因為 eventSlug 是 event 層，不是 market slug。
      */
-    private String buildSearchKeyword(PredictionMarketSyncKeyEntity key) {
+    private String buildSearchKeyword(PredictionMarketSyncKey key) {
         return safe(key.getTeamA()) + " " + safe(key.getTeamB());
     }
 
     /**
      * 檢查單一 key 是否已有完整 outcome。
      */
-    private CheckResult checkOneKey(PredictionMarketSyncKeyEntity key) {
+    private CheckResult checkOneKey(PredictionMarketSyncKey key) {
         if (key.getEventSlug() == null || key.getEventSlug().isBlank()) {
             return new CheckResult(false, "missing eventSlug");
         }
 
-        List<PredictionMarketInfoEntity> markets =
+        List<PredictionMarketInfo> markets =
                 marketInfoRepository.findByEventSlug(key.getEventSlug());
 
         Set<String> outcomeKeys =
                 markets.stream()
-                        .map(PredictionMarketInfoEntity::getOutcomeKey)
+                        .map(PredictionMarketInfo::getOutcomeKey)
                         .collect(Collectors.toSet());
 
         boolean hasHome = outcomeKeys.contains("homeWin");
@@ -324,7 +324,7 @@ public class PolymarketSyncService {
      * 根據檢查結果更新 key。
      */
     private void applyCheckResult(
-            PredictionMarketSyncKeyEntity key,
+            PredictionMarketSyncKey key,
             CheckResult result,
             boolean increaseRetryCount
     ) {
@@ -351,7 +351,7 @@ public class PolymarketSyncService {
      * failedCount 用來表示有多少 event 還沒有補齊。
      */
     private void finishProgress(
-            PredictionMarketSyncProgressEntity progress,
+            PredictionMarketSyncProgress progress,
             int failedCount
     ) {
         progress.setStatus(STATUS_SUCCESS);
@@ -370,7 +370,7 @@ public class PolymarketSyncService {
      */
     @Transactional
     public void resetProgress() {
-        PredictionMarketSyncProgressEntity progress = getOrCreateProgress();
+        PredictionMarketSyncProgress progress = getOrCreateProgress();
 
         progress.setLastSyncKeyId(0L);
         progress.setStatus(STATUS_IDLE);
@@ -390,7 +390,7 @@ public class PolymarketSyncService {
      */
     @Transactional
     public void markFailed(String error) {
-        PredictionMarketSyncProgressEntity progress = getOrCreateProgress();
+        PredictionMarketSyncProgress progress = getOrCreateProgress();
 
         progress.setStatus(STATUS_FAILED);
         progress.setLastError(error);
@@ -403,11 +403,11 @@ public class PolymarketSyncService {
     /**
      * 查詢或初始化 progress。
      */
-    private PredictionMarketSyncProgressEntity getOrCreateProgress() {
+    private PredictionMarketSyncProgress getOrCreateProgress() {
         return progressRepository.findByJobName(JOB_NAME)
                 .orElseGet(() -> {
-                    PredictionMarketSyncProgressEntity progress =
-                            new PredictionMarketSyncProgressEntity();
+                    PredictionMarketSyncProgress progress =
+                            new PredictionMarketSyncProgress();
 
                     progress.setJobName(JOB_NAME);
                     progress.setLastSyncKeyId(0L);

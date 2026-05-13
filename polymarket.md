@@ -1,5 +1,21 @@
 # poly-market
 
+## Wallet
+
+使用者 MetaMask
+│
+│ approve / login / ownership
+▼
+Deposit Wallet（真正持有資產）
+│
+│ 授權
+▼
+Session Signer（臨時簽名器）
+│
+│ sign CLOB order
+▼
+Polymarket CLOB
+
 ## flow
 
 世界杯賽事 Sync Key
