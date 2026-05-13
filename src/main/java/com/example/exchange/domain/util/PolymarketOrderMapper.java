@@ -8,6 +8,27 @@ import com.example.exchange.domain.model.enums.PolymarketOrderType;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+/**
+ * Polymarket order mapper。
+ *
+ * 職責：
+ * 將前端下單 request 轉成後端內部標準化 CLOB order。
+ *
+ * 前端語意：
+ * - BUY_YES
+ * - SELL_YES
+ * - BUY_NO
+ * - SELL_NO
+ *
+ * CLOB 實際語意：
+ * - tokenId
+ * - BUY / SELL
+ * - price
+ * - size
+ *
+ * 注意：
+ * 這裡只做 mapping，不做簽名、不送 CLOB、不查 DB。
+ */
 public class PolymarketOrderMapper {
 
     private PolymarketOrderMapper() {
@@ -16,6 +37,8 @@ public class PolymarketOrderMapper {
     public static PolymarketNormalizedClobOrder toClobOrder(
             PolymarketPlaceOrderRequest request
     ) {
+        validate(request);
+
         PolymarketOrderType orderType = request.getOrderType() == null
                 ? PolymarketOrderType.FOK
                 : request.getOrderType();
@@ -48,6 +71,19 @@ public class PolymarketOrderMapper {
             default -> throw new IllegalArgumentException("unsupported direction");
         }
 
+        /**
+         * 使用者只輸入 USDT / USDC 金額。
+         *
+         * 後端換算 shares：
+         * size = usdtAmount / price
+         *
+         * RoundingMode.DOWN：
+         * 避免超花使用者資金。
+         *
+         * TODO:
+         * 正式環境建議依 Polymarket tickSize / minSize
+         * 做額外 rounding / validation。
+         */
         BigDecimal size = request.getUsdtAmount()
                 .divide(price, 6, RoundingMode.DOWN);
 
@@ -64,15 +100,42 @@ public class PolymarketOrderMapper {
                 .orderType(orderType)
 
                 /**
-                 * FIFA / sports 這種多 outcome / neg-risk market
-                 * 下單簽名時要用 Neg Risk Exchange。
+                 * 是否使用 NegRisk Exchange。
                  *
-                 * 如果你的 request 已經有 negRisk 欄位，
-                 * 這裡改成：
+                 * FIFA / Sports / multi-outcome 通常為 true。
                  *
-                 * .negRisk(Boolean.TRUE.equals(request.getNegRisk()))
+                 * 注意：
+                 * 不要長期信任前端傳入。
+                 *
+                 * TODO:
+                 * 正式環境建議：
+                 * 1. 根據 marketSlug 查 DB
+                 * 2. 由後端 market info 決定 negRisk
+                 * 3. 不由前端決定
                  */
-                .negRisk(true)
+                .negRisk(Boolean.TRUE.equals(request.getNegRisk()))
                 .build();
+    }
+
+    /**
+     * Mapper 層基礎防呆。
+     *
+     * Service 層已經會做 validation，
+     * 這裡再做一次是避免其他內部程式直接呼叫 mapper 時出錯。
+     */
+    private static void validate(
+            PolymarketPlaceOrderRequest request
+    ) {
+        if (request == null) {
+            throw new IllegalArgumentException("request is required");
+        }
+
+        if (request.getDirection() == null) {
+            throw new IllegalArgumentException("direction is required");
+        }
+
+        if (request.getUsdtAmount() == null || request.getUsdtAmount().signum() <= 0) {
+            throw new IllegalArgumentException("usdtAmount must be positive");
+        }
     }
 }

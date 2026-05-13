@@ -140,6 +140,14 @@ polymarket:
   key-sync-ms: 600000
   price-refresh-ms: 5000
 
+  chain:
+    chain-id: 137
+    exchangeV2: 0x4bFb41d5B3570DeFd03C39a9A4d8de6bd8B8982E
+    negRiskExchangeV2: 0xC5d563A36AE78145C45A50134D48A1215220cA94
+    negRiskAdapter: 0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296
+    collateralToken: 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174
+    conditionalTokens: 0x4D97DCd97eC945f40cF65F87097ACe5EA0476045
+
   gamma:
     base-url: https://gamma-api.polymarket.com
 
@@ -150,8 +158,6 @@ polymarket:
     api-key: ${POLYMARKET_API_KEY:}
     api-secret: ${POLYMARKET_API_SECRET:}
     api-passphrase: ${POLYMARKET_API_PASSPHRASE:}
-
-    chain: 137
 
   relayer:
     base-url: https://relayer-v2.polymarket.com

@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Polymarket Session Signer Demo</title>
+    <title>Polymarket Trading</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/ethers@6.13.1/dist/ethers.umd.min.js"></script>
 
     <style>
         body {
@@ -13,8 +15,8 @@
             color: #f3f4f6;
         }
 
-        h1 {
-            margin-bottom: 24px;
+        h1, h2 {
+            margin-bottom: 16px;
         }
 
         .card {
@@ -32,13 +34,14 @@
             border-radius: 8px;
             cursor: pointer;
             margin-top: 12px;
+            margin-right: 8px;
         }
 
         button:hover {
             background: #1d4ed8;
         }
 
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 10px;
             margin-top: 8px;
@@ -46,6 +49,11 @@
             border: 1px solid #374151;
             background: #111827;
             color: white;
+            box-sizing: border-box;
+        }
+
+        textarea {
+            font-family: monospace;
         }
 
         .label {
@@ -59,35 +67,50 @@
             padding: 12px;
             border-radius: 8px;
             overflow-x: auto;
+            white-space: pre-wrap;
         }
 
-        .success {
-            color: #22c55e;
+        .danger {
+            color: #f87171;
+            font-size: 13px;
+            line-height: 1.5;
         }
 
-        .error {
-            color: #ef4444;
+        .hint {
+            color: #9ca3af;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
         }
     </style>
 </head>
 
 <body>
 
-<h1>Polymarket Session Signer Demo</h1>
+<h1>Polymarket Trading</h1>
 
 <div class="card">
-    <h2>1. Connect MetaMask</h2>
+    <h2>1. Connect Wallet</h2>
 
     <button onclick="connectWallet()">
         Connect Wallet
     </button>
 
-    <div class="label">User Address</div>
+    <div class="label">Deposit Wallet</div>
     <input id="userAddress" readonly/>
 </div>
 
 <div class="card">
     <h2>2. Init Session</h2>
+
+    <p class="hint">
+        後端建立 session signer。
+    </p>
 
     <button onclick="initSession()">
         Init Session
@@ -99,50 +122,189 @@
     <div class="label">Session Signer Address</div>
     <input id="sessionSignerAddress" readonly/>
 
-    <div class="label">Message</div>
-    <textarea id="sessionMessage" rows="4" readonly></textarea>
+    <div class="label">Typed Data</div>
+    <textarea id="typedData" rows="16" readonly></textarea>
 </div>
 
 <div class="card">
-    <h2>3. Sign Session Message</h2>
+    <h2>3. Sign Session</h2>
 
-    <button onclick="signMessage()">
-        Sign Message
+    <button onclick="signTypedData()">
+        Sign Typed Data
     </button>
-
-    <div class="label">Signature</div>
-    <textarea id="signature" rows="5" readonly></textarea>
-</div>
-
-<div class="card">
-    <h2>4. Confirm Session</h2>
 
     <button onclick="confirmSession()">
         Confirm Session
     </button>
 
+    <div class="label">Signature</div>
+    <textarea id="signature" rows="4" readonly></textarea>
+
+    <div class="label">Confirm Result</div>
     <pre id="confirmResult"></pre>
 </div>
 
 <div class="card">
-    <h2>5. Place Order</h2>
+    <h2>4. Session Management</h2>
 
-    <button onclick="placeOrder()">
-        Place BUY YES Order
+    <button onclick="listSessions()">
+        List Sessions
     </button>
 
+    <button onclick="revokeCurrentSession()">
+        Revoke Current Session
+    </button>
+
+    <button onclick="revokeAllSessions()">
+        Revoke All Sessions
+    </button>
+
+    <div class="label">Session Result</div>
+    <pre id="sessionResult"></pre>
+</div>
+
+<div class="card">
+    <h2>5. Deposit Wallet Approvals</h2>
+
+    <p class="danger">
+        這裡是真正鏈上 approve transaction。
+    </p>
+
+    <button onclick="approveCollateral()">
+        Approve USDC
+    </button>
+
+    <button onclick="approveConditionalTokens()">
+        Approve Conditional Tokens
+    </button>
+
+    <button onclick="checkApprovals()">
+        Check Approvals
+    </button>
+
+    <div class="label">Approval Result</div>
+    <pre id="approvalResult"></pre>
+</div>
+
+<div class="card">
+    <h2>6. Place Real Order</h2>
+
+    <p class="danger">
+        這會真實送 Polymarket order。
+    </p>
+
+    <div class="grid">
+
+        <div>
+            <div class="label">User ID</div>
+            <input id="userId" value="10001"/>
+        </div>
+
+        <div>
+            <div class="label">Direction</div>
+
+            <select id="direction">
+                <option value="BUY_YES">BUY_YES</option>
+                <option value="SELL_YES">SELL_YES</option>
+                <option value="BUY_NO">BUY_NO</option>
+                <option value="SELL_NO">SELL_NO</option>
+            </select>
+        </div>
+
+        <div>
+            <div class="label">Order Type</div>
+
+            <select id="orderType">
+                <option value="FOK">FOK</option>
+                <option value="GTC">GTC</option>
+                <option value="FAK">FAK</option>
+                <option value="GTD">GTD</option>
+            </select>
+        </div>
+
+        <div>
+            <div class="label">USDC Amount</div>
+            <input id="usdtAmount" value="1"/>
+        </div>
+
+        <div>
+            <div class="label">Neg Risk</div>
+
+            <select id="negRisk">
+                <option value="true">true</option>
+                <option value="false">false</option>
+            </select>
+        </div>
+
+    </div>
+
+    <div class="label">Event Slug</div>
+    <input id="eventSlug"/>
+
+    <div class="label">Market Slug</div>
+    <input id="marketSlug"/>
+
+    <div class="label">Outcome Key</div>
+    <input id="outcomeKey"/>
+
+    <div class="label">YES Token ID</div>
+    <textarea id="yesTokenId" rows="2"></textarea>
+
+    <div class="label">NO Token ID</div>
+    <textarea id="noTokenId" rows="2"></textarea>
+
+    <div class="grid">
+
+        <div>
+            <div class="label">YES Buy Price</div>
+            <input id="yesBuyPrice"/>
+        </div>
+
+        <div>
+            <div class="label">YES Sell Price</div>
+            <input id="yesSellPrice"/>
+        </div>
+
+        <div>
+            <div class="label">NO Buy Price</div>
+            <input id="noBuyPrice"/>
+        </div>
+
+        <div>
+            <div class="label">NO Sell Price</div>
+            <input id="noSellPrice"/>
+        </div>
+
+    </div>
+
+    <button onclick="placeOrder()">
+        Place Order
+    </button>
+
+    <div class="label">Order Result</div>
     <pre id="orderResult"></pre>
 </div>
 
 <script>
+    const NEG_RISK_EXCHANGE =
+        "0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982e";
+
+    const CONDITIONAL_TOKENS =
+        "0x4d97dcd97ec945f40cf65f87097ace5ea0476045";
+
+    const USDC =
+        "0x2791bca1f2de4661ed88a30c99a7a9449aa84174";
+
+    const MAX_UINT256 =
+        "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
 
     let currentUserAddress = null;
+    let currentTypedData = null;
 
     async function connectWallet() {
         try {
             if (!window.ethereum) {
-                alert("MetaMask not installed");
-                return;
+                throw new Error("MetaMask not installed");
             }
 
             const accounts = await window.ethereum.request({
@@ -155,141 +317,437 @@
                 currentUserAddress;
 
         } catch (e) {
-            console.error(e);
-            alert(e.message);
+            handleError(e);
         }
     }
 
     async function initSession() {
         try {
-            const res = await fetch("/api/session/init", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    userAddress: currentUserAddress
-                })
-            });
+            requireWalletConnected();
 
-            const data = await res.json();
+            const res = await fetch(
+                "/api/prediction/session/init",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        userAddress: currentUserAddress
+                    })
+                }
+            );
+
+            const data = await readJsonResponse(res);
+
+            currentTypedData = data.typedData;
 
             document.getElementById("sessionId").value =
-                data.sessionId;
+                data.sessionId || "";
 
             document.getElementById("sessionSignerAddress").value =
-                data.sessionSignerAddress;
+                data.sessionSignerAddress || "";
 
-            document.getElementById("sessionMessage").value =
-                data.message;
+            document.getElementById("typedData").value =
+                JSON.stringify(data.typedData, null, 2);
 
         } catch (e) {
-            console.error(e);
-            alert(e.message);
+            handleError(e);
         }
     }
 
-    async function signMessage() {
+    async function signTypedData() {
         try {
-            const message =
-                document.getElementById("sessionMessage").value;
+            requireWalletConnected();
 
-            const signature = await window.ethereum.request({
-                method: "personal_sign",
-                params: [
-                    message,
-                    currentUserAddress
-                ]
-            });
+            if (!currentTypedData) {
+                throw new Error("typedData is empty");
+            }
+
+            const signature =
+                await window.ethereum.request({
+                    method: "eth_signTypedData_v4",
+                    params: [
+                        currentUserAddress,
+                        JSON.stringify(currentTypedData)
+                    ]
+                });
 
             document.getElementById("signature").value =
                 signature;
 
         } catch (e) {
-            console.error(e);
-            alert(e.message);
+            handleError(e);
         }
     }
 
     async function confirmSession() {
         try {
-            const res = await fetch("/api/session/confirm", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    sessionId:
-                        document.getElementById("sessionId").value,
+            requireWalletConnected();
 
-                    userAddress:
-                        currentUserAddress,
+            const res = await fetch(
+                "/api/prediction/session/confirm",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        sessionId: getValue("sessionId"),
+                        userAddress: currentUserAddress,
+                        signature: getValue("signature")
+                    })
+                }
+            );
 
-                    signature:
-                        document.getElementById("signature").value
-                })
-            });
-
-            const data = await res.json();
+            const data = await readJsonResponse(res);
 
             document.getElementById("confirmResult").innerHTML =
                 JSON.stringify(data, null, 2);
 
         } catch (e) {
-            console.error(e);
-            alert(e.message);
+            handleError(e);
+        }
+    }
+
+    async function listSessions() {
+        try {
+            requireWalletConnected();
+
+            const res = await fetch(
+                "/api/prediction/session/list?userAddress="
+                + encodeURIComponent(currentUserAddress)
+            );
+
+            const data = await readJsonResponse(res);
+
+            document.getElementById("sessionResult").innerHTML =
+                JSON.stringify(data, null, 2);
+
+        } catch (e) {
+            handleError(e);
+        }
+    }
+
+    async function revokeCurrentSession() {
+        try {
+            requireWalletConnected();
+
+            const sessionId = getValue("sessionId");
+
+            if (!sessionId) {
+                throw new Error("sessionId is empty");
+            }
+
+            const res = await fetch(
+                "/api/prediction/session/revoke",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        sessionId: sessionId,
+                        userAddress: currentUserAddress
+                    })
+                }
+            );
+
+            const data = await readTextOrJsonResponse(res);
+
+            document.getElementById("sessionResult").innerHTML =
+                stringify(data);
+
+        } catch (e) {
+            handleError(e);
+        }
+    }
+
+    async function revokeAllSessions() {
+        try {
+            requireWalletConnected();
+
+            const res = await fetch(
+                "/api/prediction/session/revoke-all?userAddress="
+                + encodeURIComponent(currentUserAddress),
+                {
+                    method: "POST"
+                }
+            );
+
+            const data = await readTextOrJsonResponse(res);
+
+            document.getElementById("sessionResult").innerHTML =
+                stringify(data);
+
+        } catch (e) {
+            handleError(e);
+        }
+    }
+
+    async function approveCollateral() {
+        try {
+            requireWalletConnected();
+
+            const provider =
+                new ethers.BrowserProvider(window.ethereum);
+
+            const signer =
+                await provider.getSigner();
+
+            const abi = [
+                "function approve(address spender, uint256 amount) public returns (bool)"
+            ];
+
+            const contract =
+                new ethers.Contract(
+                    USDC,
+                    abi,
+                    signer
+                );
+
+            const tx =
+                await contract.approve(
+                    NEG_RISK_EXCHANGE,
+                    MAX_UINT256
+                );
+
+            document.getElementById("approvalResult").innerHTML =
+                JSON.stringify({
+                    type: "USDC_APPROVE",
+                    txHash: tx.hash
+                }, null, 2);
+
+            await tx.wait();
+
+        } catch (e) {
+            handleError(e);
+        }
+    }
+
+    async function approveConditionalTokens() {
+        try {
+            requireWalletConnected();
+
+            const provider =
+                new ethers.BrowserProvider(window.ethereum);
+
+            const signer =
+                await provider.getSigner();
+
+            const abi = [
+                "function setApprovalForAll(address operator, bool approved)"
+            ];
+
+            const contract =
+                new ethers.Contract(
+                    CONDITIONAL_TOKENS,
+                    abi,
+                    signer
+                );
+
+            const tx =
+                await contract.setApprovalForAll(
+                    NEG_RISK_EXCHANGE,
+                    true
+                );
+
+            document.getElementById("approvalResult").innerHTML =
+                JSON.stringify({
+                    type: "ERC1155_APPROVE",
+                    txHash: tx.hash
+                }, null, 2);
+
+            await tx.wait();
+
+        } catch (e) {
+            handleError(e);
+        }
+    }
+
+    async function checkApprovals() {
+        try {
+            requireWalletConnected();
+
+            const provider =
+                new ethers.BrowserProvider(window.ethereum);
+
+            const erc20Abi = [
+                "function allowance(address owner, address spender) view returns (uint256)"
+            ];
+
+            const erc1155Abi = [
+                "function isApprovedForAll(address owner, address operator) view returns (bool)"
+            ];
+
+            const usdc =
+                new ethers.Contract(
+                    USDC,
+                    erc20Abi,
+                    provider
+                );
+
+            const conditional =
+                new ethers.Contract(
+                    CONDITIONAL_TOKENS,
+                    erc1155Abi,
+                    provider
+                );
+
+            const allowance =
+                await usdc.allowance(
+                    currentUserAddress,
+                    NEG_RISK_EXCHANGE
+                );
+
+            const approved =
+                await conditional.isApprovedForAll(
+                    currentUserAddress,
+                    NEG_RISK_EXCHANGE
+                );
+
+            document.getElementById("approvalResult").innerHTML =
+                JSON.stringify({
+                    owner: currentUserAddress,
+                    exchange: NEG_RISK_EXCHANGE,
+                    collateralAllowance: allowance.toString(),
+                    conditionalApproved: approved
+                }, null, 2);
+
+        } catch (e) {
+            handleError(e);
         }
     }
 
     async function placeOrder() {
         try {
             const payload = {
-                userId: "10001",
-
-                eventSlug: "fifwc-prt-uzb-2026-06-23",
-
-                marketSlug: "fifwc-prt-uzb-2026-06-23-prt",
-
-                outcomeKey: "homeWin",
-
-                yesTokenId:
-                    "46788745865873849751895851580006231458025441200398102606849707486161173481896",
-
-                yesBuyPrice: 0.79,
-                yesSellPrice: 0.73,
-
-                noTokenId:
-                    "49345825332372730347978355238185144259194455124479271140856628847570082902553",
-
-                noBuyPrice: 0.27,
-                noSellPrice: 0.21,
-
-                direction: "BUY_YES",
-
-                usdtAmount: 1,
-
-                orderType: "FOK"
+                userId: getValue("userId"),
+                sessionId: getValue("sessionId"),
+                eventSlug: getValue("eventSlug"),
+                marketSlug: getValue("marketSlug"),
+                outcomeKey: getValue("outcomeKey"),
+                yesTokenId: getValue("yesTokenId"),
+                noTokenId: getValue("noTokenId"),
+                yesBuyPrice: toNumber("yesBuyPrice"),
+                yesSellPrice: toNumber("yesSellPrice"),
+                noBuyPrice: toNumber("noBuyPrice"),
+                noSellPrice: toNumber("noSellPrice"),
+                direction: getValue("direction"),
+                usdtAmount: toNumber("usdtAmount"),
+                orderType: getValue("orderType"),
+                negRisk: getValue("negRisk") === "true"
             };
 
-            const res = await fetch("/api/prediction/orders", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(payload)
-            });
+            const res =
+                await fetch(
+                    "/api/prediction/orders",
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(payload)
+                    }
+                );
 
-            const data = await res.json();
+            const data = await readJsonResponse(res);
 
             document.getElementById("orderResult").innerHTML =
                 JSON.stringify(data, null, 2);
 
         } catch (e) {
-            console.error(e);
-            alert(e.message);
+            handleError(e);
         }
     }
 
+    function getValue(id) {
+        return document
+            .getElementById(id)
+            .value
+            .trim();
+    }
+
+    function toNumber(id) {
+        const value =
+            Number(getValue(id));
+
+        if (!Number.isFinite(value)) {
+            throw new Error(id + " invalid number");
+        }
+
+        return value;
+    }
+
+    function requireWalletConnected() {
+        if (!window.ethereum) {
+            throw new Error("MetaMask not installed");
+        }
+
+        if (!currentUserAddress) {
+            throw new Error("wallet not connected");
+        }
+    }
+
+    async function readJsonResponse(res) {
+        const text = await res.text();
+
+        let data;
+
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            throw new Error(text);
+        }
+
+        if (!res.ok) {
+            throw new Error(
+                data.message
+                || data.error
+                || text
+            );
+        }
+
+        return data;
+    }
+
+    async function readTextOrJsonResponse(res) {
+        const text = await res.text();
+
+        let data;
+
+        try {
+            data = text ? JSON.parse(text) : {};
+        } catch (e) {
+            data = text;
+        }
+
+        if (!res.ok) {
+            throw new Error(
+                typeof data === "string"
+                    ? data
+                    : JSON.stringify(data)
+            );
+        }
+
+        return data;
+    }
+
+    function stringify(data) {
+        if (typeof data === "string") {
+            return data;
+        }
+
+        return JSON.stringify(data, null, 2);
+    }
+
+    function handleError(e) {
+        console.error(e);
+
+        alert(
+            e.message || "operation failed"
+        );
+    }
 </script>
 
 </body>

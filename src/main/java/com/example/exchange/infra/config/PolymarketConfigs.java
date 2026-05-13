@@ -10,6 +10,11 @@ import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
 
+/**
+ * polymarket contract addresses
+ *
+ * https://docs.polymarket.com/resources/contracts?utm_source=chatgpt.com
+ * */
 @Data
 @Validated
 @ConfigurationProperties(prefix = "polymarket")
@@ -123,20 +128,63 @@ public class PolymarketConfigs {
     public static class Chain {
 
         /**
-         * Polygon mainnet chainId。
+         * Polygon Mainnet
          */
         private Integer chainId = 137;
 
         /**
-         * Polymarket CTF Exchange V2。
-         * 一般 binary market 用這個。
+         * Polymarket CTF Exchange V2
+         *
+         * 一般 binary YES/NO market 使用。
+         *
+         * 官方：
+         * https://docs.polymarket.com/resources/contracts
          */
-        private String exchangeV2 = "0xE111180000d2663C0091e4f400237545B87B996B";
+        private String exchangeV2 =
+                "0x4bFb41d5B3570DeFd03C39a9A4d8de6bd8B8982E";
 
         /**
-         * Polymarket NegRisk CTF Exchange V2。
-         * 多 outcome / sports event 通常用這個。
+         * Polymarket Neg Risk CTF Exchange
+         *
+         * Sports / FIFA / multi-outcome market 使用。
+         *
+         * 你現在世界杯幾乎都會走這個。
+         *
+         * 官方：
+         * https://docs.polymarket.com/resources/contracts
          */
-        private String negRiskExchangeV2 = "0xe2222d279d744050d28e00520000310F59";
+        private String negRiskExchangeV2 =
+                "0xC5d563A36AE78145C45A50134D48A1215220cA94";
+
+        /**
+         * Polymarket NegRisk Adapter
+         *
+         * multi-outcome market settlement / conversion 用。
+         *
+         * TODO:
+         * 後面做 redeem / merge / split 時會用到。
+         */
+        private String negRiskAdapter =
+                "0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296";
+
+        /**
+         * Polygon USDC.e
+         *
+         * Polymarket collateral token。
+         *
+         * BUY YES / BUY NO：
+         * approve 這個 ERC20 給 exchange。
+         */
+        private String collateralToken =
+                "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+
+        /**
+         * Conditional Tokens Framework (ERC1155)
+         *
+         * SELL YES / SELL NO：
+         * setApprovalForAll(exchange, true)
+         */
+        private String conditionalTokens =
+                "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045";
     }
 }

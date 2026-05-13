@@ -2,91 +2,64 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderRequest;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
+import com.example.exchange.domain.service.PolymarketApprovalService;
 import com.example.exchange.domain.service.PolymarketDiscoveryService;
 import com.example.exchange.domain.service.PolymarketMarketService;
 import com.example.exchange.domain.service.PolymarketOrderService;
 import com.example.exchange.domain.service.PolymarketPriceService;
+import com.example.exchange.domain.service.PolymarketSessionService;
 import com.example.exchange.domain.service.PolymarketSyncService;
 import com.example.exchange.interfaces.web.dto.PredictionMarketResponse;
+import com.example.exchange.interfaces.web.dto.SessionConfirmRequest;
+import com.example.exchange.interfaces.web.dto.SessionConfirmResponse;
+import com.example.exchange.interfaces.web.dto.SessionInitRequest;
+import com.example.exchange.interfaces.web.dto.SessionInitResponse;
+import com.example.exchange.interfaces.web.dto.SessionListResponse;
+import com.example.exchange.interfaces.web.dto.SessionRevokeRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigInteger;
 import java.util.List;
 
 /**
  * Prediction Market API Controller。
  *
- * 目前包含：
+ * 正式架構：
  *
- * 1. Discovery：
- *    全量拉 Gamma，發現世界杯 markets。
+ * Deposit Wallet：
+ * - 真正持有資產
+ * - 前端 MetaMask 自行 approve
  *
- * 2. Sync：
- *    根據已知 sync key，用 search 補齊缺失 outcome。
+ * Session Signer：
+ * - 後端生成
+ * - 只負責簽 CLOB order
+ * - 不持有資產
+ * - 可 revoke / expire
  *
- * 3. Price Refresh：
- *    根據已知 marketSlug 更新價格。
- *
- * 4. Query：
- *    給前端 Bitmart 類 UI 查詢市場資料。
- *
- * 5. Order：
- *    根據前端選擇的 outcome / YES / NO / BUY / SELL，
- *    轉換成 Polymarket CLOB 下單請求。
+ * 後端不代送 approve tx。
  */
 @RestController
 @RequestMapping("/api/prediction")
 @RequiredArgsConstructor
 public class PredictionOrderController {
 
-    /**
-     * 前端查詢 market list。
-     */
     private final PolymarketMarketService predictionMarketService;
 
-    /**
-     * 全量 discovery service。
-     *
-     * 重任務，手動觸發。
-     */
     private final PolymarketDiscoveryService predictionMarketDiscoveryService;
 
-    /**
-     * key sync service。
-     *
-     * 用 search 補齊已知 key 的 outcome。
-     */
     private final PolymarketSyncService predictionMarketFullSyncService;
 
-    /**
-     * 價格刷新 service。
-     */
     private final PolymarketPriceService predictionMarketPriceRefreshService;
 
-    /**
-     * Polymarket 下單 service。
-     *
-     * 主要流程：
-     * 1. 接收前端傳入的 outcome 下單資料
-     * 2. 根據 direction 判斷使用 yesTokenId / noTokenId
-     * 3. 根據 direction 判斷 BUY / SELL
-     * 4. 根據價格與 USDT 金額換算 shares size
-     * 5. 建立 CLOB signed order
-     * 6. 呼叫 Polymarket CLOB /order
-     */
     private final PolymarketOrderService polymarketOrderService;
 
+    private final PolymarketApprovalService polymarketApprovalService;
+
+    private final PolymarketSessionService polymarketSessionService;
+
     /**
-     * 全量發現世界杯 markets。
-     *
-     * 這個 API 會：
-     * 1. Gamma 全量拉 active/open markets
-     * 2. 過濾 FIFA World Cup
-     * 3. 自動建立 prediction_market_sync_key
-     * 4. 自動建立 prediction_market_info
-     *
-     * HTTP:
      * POST /api/prediction/markets/discover
      */
     @PostMapping("/markets/discover")
@@ -95,14 +68,6 @@ public class PredictionOrderController {
     }
 
     /**
-     * 補同步已知 key。
-     *
-     * 這個 API 不做全量拉取。
-     * 它會針對 prediction_market_sync_key 裡的資料，
-     * 用 teamA + teamB search Gamma，
-     * 嘗試補齊 homeWin / draw / awayWin。
-     *
-     * HTTP:
      * POST /api/prediction/markets/sync
      */
     @PostMapping("/markets/sync")
@@ -111,9 +76,6 @@ public class PredictionOrderController {
     }
 
     /**
-     * 重置 sync progress 後重新同步所有 key。
-     *
-     * HTTP:
      * POST /api/prediction/markets/sync-reset
      */
     @PostMapping("/markets/sync-reset")
@@ -122,9 +84,6 @@ public class PredictionOrderController {
     }
 
     /**
-     * 查詢 sync progress。
-     *
-     * HTTP:
      * GET /api/prediction/markets/sync-progress
      */
     @GetMapping("/markets/sync-progress")
@@ -133,12 +92,6 @@ public class PredictionOrderController {
     }
 
     /**
-     * 指定重試某一場 event。
-     *
-     * 這個 API 會重新 search Gamma，
-     * 嘗試補齊指定 eventSlug 的 outcome。
-     *
-     * HTTP:
      * POST /api/prediction/markets/retry/{eventSlug}
      */
     @PostMapping("/markets/retry/{eventSlug}")
@@ -149,16 +102,6 @@ public class PredictionOrderController {
     }
 
     /**
-     * 手動刷新價格。
-     *
-     * 這個 API 只更新已知 marketSlug 的價格：
-     * - bestBid
-     * - bestAsk
-     * - lastTradePrice
-     * - liquidity
-     * - volume
-     *
-     * HTTP:
      * POST /api/prediction/markets/price-refresh
      */
     @PostMapping("/markets/price-refresh")
@@ -168,11 +111,6 @@ public class PredictionOrderController {
     }
 
     /**
-     * 查詢 Prediction Markets。
-     *
-     * 給前端 Bitmart 類 UI 使用。
-     *
-     * HTTP:
      * GET /api/prediction/markets
      */
     @GetMapping("/markets")
@@ -181,32 +119,68 @@ public class PredictionOrderController {
     }
 
     /**
-     * 建立 Polymarket 下單。
+     * 初始化 Session Signer。
      *
-     * 這個 API 給前端交易按鈕使用。
+     * POST /api/prediction/session/init
+     */
+    @PostMapping("/session/init")
+    public SessionInitResponse initSession(
+            @Valid @RequestBody SessionInitRequest request
+    ) {
+        return polymarketSessionService.initSession(request);
+    }
+
+    /**
+     * 確認 Session Signer。
      *
-     * 前端需要傳：
-     * - eventSlug
-     * - marketSlug
-     * - outcomeKey
-     * - yesTokenId
-     * - noTokenId
-     * - yesBuyPrice
-     * - yesSellPrice
-     * - noBuyPrice
-     * - noSellPrice
-     * - direction: BUY_YES / SELL_YES / BUY_NO / SELL_NO
-     * - usdtAmount
-     * - orderType: 建議先用 FOK
+     * POST /api/prediction/session/confirm
+     */
+    @PostMapping("/session/confirm")
+    public SessionConfirmResponse confirmSession(
+            @Valid @RequestBody SessionConfirmRequest request
+    ) {
+        return polymarketSessionService.confirmSession(request);
+    }
+
+    /**
+     * 查詢使用者 sessions。
      *
-     * 後端會做：
-     * 1. 根據 direction 選 tokenId
-     * 2. 根據 direction 選 BUY / SELL side
-     * 3. 根據 price 換算 shares size
-     * 4. 建立 signed CLOB order
-     * 5. 呼叫 Polymarket CLOB 下單 API
+     * GET /api/prediction/session/list?userAddress=0x...
+     */
+    @GetMapping("/session/list")
+    public List<SessionListResponse> listSessions(
+            @RequestParam String userAddress
+    ) {
+        return polymarketSessionService.listSessions(userAddress);
+    }
+
+    /**
+     * 撤銷單一 session。
      *
-     * HTTP:
+     * POST /api/prediction/session/revoke
+     */
+    @PostMapping("/session/revoke")
+    public String revokeSession(
+            @Valid @RequestBody SessionRevokeRequest request
+    ) {
+        return polymarketSessionService.revokeSession(request);
+    }
+
+    /**
+     * 撤銷使用者全部 ACTIVE sessions。
+     *
+     * POST /api/prediction/session/revoke-all?userAddress=0x...
+     */
+    @PostMapping("/session/revoke-all")
+    public String revokeAllSessions(
+            @RequestParam String userAddress
+    ) {
+        return polymarketSessionService.revokeAllSessions(userAddress);
+    }
+
+    /**
+     * 真實下單。
+     *
      * POST /api/prediction/orders
      */
     @PostMapping("/orders")
@@ -214,5 +188,32 @@ public class PredictionOrderController {
             @Valid @RequestBody PolymarketPlaceOrderRequest request
     ) {
         return polymarketOrderService.placeOrder(request);
+    }
+
+    /**
+     * 查 ERC20 allowance。
+     *
+     * GET /api/prediction/approve/collateral/allowance?owner=0x...
+     */
+    @GetMapping("/approve/collateral/allowance")
+    public String getCollateralAllowance(
+            @RequestParam String owner
+    ) {
+        BigInteger allowance =
+                polymarketApprovalService.getCollateralAllowance(owner);
+
+        return allowance.toString();
+    }
+
+    /**
+     * 查 ERC1155 approve status。
+     *
+     * GET /api/prediction/approve/conditional-tokens/status?owner=0x...
+     */
+    @GetMapping("/approve/conditional-tokens/status")
+    public Boolean isConditionalTokensApproved(
+            @RequestParam String owner
+    ) {
+        return polymarketApprovalService.isConditionalTokensApproved(owner);
     }
 }
