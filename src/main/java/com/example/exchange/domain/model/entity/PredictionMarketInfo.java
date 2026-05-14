@@ -45,6 +45,12 @@ public class PredictionMarketInfo {
     private Long id;
 
     /**
+     * Polymarket market ID
+     * */
+    @Column(name = "market_id", nullable = false, length = 128)
+    private String marketId;
+
+    /**
      * event 層 slug。
      */
     @Column(name = "event_slug", nullable = false, length = 128)

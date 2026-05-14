@@ -1,5 +1,14 @@
 # poly-market
 
+##
+
+- polymarket config api 
+
+=> private key, api-key, api-secret, api-passphrase => over SDK create
+
+- 由前端打sdk 去產生
+=> api-key, api-secret, api-passphrase => over SDK create
+
 ## Wallet
 
 使用者 MetaMask

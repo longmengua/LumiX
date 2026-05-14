@@ -80,6 +80,7 @@ public class PolymarketDiscoveryService {
         int outcomeCount = 0;
 
         for (Map.Entry<String, List<PredictionGammaMarketDto>> entry : marketsByEventSlug.entrySet()) {
+            log.info("eventSlug={}, markets={}", entry.getKey(), entry.getValue());
             String eventSlug = entry.getKey();
             List<PredictionGammaMarketDto> eventMarkets = entry.getValue();
 
@@ -316,6 +317,7 @@ public class PolymarketDiscoveryService {
         entity.setTeamA(key.getTeamA());
         entity.setTeamB(key.getTeamB());
         entity.setEventDate(key.getEventDate());
+        entity.setMarketId(market.getId());
 
         entity.setConditionId(
                 market.getConditionId() != null
