@@ -16,7 +16,7 @@ import java.util.List;
  * - trades：本次撮合產生的成交事件（雙邊事件列表）
  * - affectedOrders：受影響的訂單集合（含新單與被部分/全成交的對手單），供上層一次回寫狀態與凍結調整
  *
- * TODO: 可擴充 maker/taker 角色、撮合序號（execSeq）、撮合來源（takerId/makerId）等欄位。
+ * TradeExecuted 內已攜帶 maker/taker、matchId、orderId 與 counterOrderId。
  */
 @Getter
 @ToString

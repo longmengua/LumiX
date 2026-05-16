@@ -80,11 +80,14 @@ src/main/java/com/example/exchange
 ### 內部交易所核心
 
 - 下單 API：`POST /api/order/place`
+- 撤單 API：`DELETE /api/order/{orderId}`
 - 查詢掛單：`GET /api/order/open`
 - 查詢全部訂單：`GET /api/order/all`
 - 訂單簿深度：`GET /api/depth/{symbol}?depth=10`
-- 保證金轉入/轉出
-- 持倉與保證金更新
+- 保證金轉入/轉出、測試入金：`POST /api/margin/deposit`
+- 帳戶/流水查詢：`GET /api/margin/account`、`GET /api/margin/ledger`
+- 行情查詢：`GET /api/market-data/{symbol}/ticker`、`trades`、`klines`、`depth-delta`
+- 持倉、保證金、fee、rebate、realized PnL 更新
 - 快照排程與恢復
 - Kafka domain event publish/store
 
@@ -97,14 +100,18 @@ src/main/java/com/example/exchange
 - GTC / IOC / FOK
 - 部分成交與剩餘量處理
 - book snapshot / top of book
+- 單 symbol 單執行緒 sequencer
+- 價格時間優先、穩定 order id 索引、近 O(1) cancel
+- Self Match Prevention
+- POST_ONLY / REDUCE_ONLY 核心語義
+- maker/taker fee 與 referral rebate
 
 目前限制：
 
-- 尚未完整生產化價格時間優先。
-- 尚未完成 Self Match Prevention。
-- 尚未完成 POST_ONLY / REDUCE_ONLY。
-- 尚未完成 maker/taker fee。
-- 尚未使用單 symbol 單執行緒 sequencer / Disruptor 類模型。
+- 記憶體 sequencer 尚未持久化 offset/replay，不是完整 event-sourced matching core。
+- amend primitive 已在 order book 層，REST/API 語義尚未產品化。
+- funding、liquidation、保險基金與 ADL 還是後續項目。
+- WebSocket gateway 尚未接上 market data service。
 
 ### Polymarket 整合
 
@@ -452,27 +459,27 @@ polymarket.user.events
 - [x] Approval / allowance 結果加入 cache 與過期策略，避免高頻 RPC 查詢。
 - [x] Polymarket API error code 正規化，避免 controller 直接回傳原始 exception message。
 
-P0 目前是可測 MVP：已具備資料表、API、Kafka consumer、WS event 冪等、CLOB 查詢/取消與本地 order reconciliation。後續 P1 仍需補完整 ledger、風控、outbox、DLQ 與正式 migration。
+P0 目前是可測 MVP：已具備資料表、API、Kafka consumer、WS event 冪等、CLOB 查詢/取消與本地 order reconciliation。P1 已補內部交易所核心的 ledger、風控、sequencer 與行情服務；後續仍需 outbox、DLQ、正式 migration、funding 與 liquidation 完整產品化。
 
 ### P1：交易所級帳務與風控
 
-- [ ] 補 Wallet-Ledger 雙式簿記模型，所有資金變化必須可追溯。
-- [ ] 下單前風控預檢：餘額、保證金、槓桿、最大倉位、最大下單金額、價格偏離。
-- [ ] 成交後更新 position、realized PnL、fee、rebate、ledger。
-- [ ] 補 maker/taker fee tier、VIP 等級、推薦返佣。
+- [x] 補 Wallet-Ledger 雙式簿記模型，所有資金變化必須可追溯。
+- [x] 下單前風控預檢：餘額、保證金、槓桿、最大倉位、最大下單金額、價格偏離。
+- [x] 成交後更新 position、realized PnL、fee、rebate、ledger。
+- [x] 補 maker/taker fee 與推薦返佣基礎；VIP 等級待接會員資料源。
 - [ ] 補 liquidation engine：部分平倉、全平、保險基金、ADL。
 - [ ] 補 funding rate 計算與結算流水。
-- [ ] 補 symbol config：tick size、lot size、min notional、risk tier、fee config。
+- [x] 補 symbol config：tick size、lot size、min notional、risk tier、fee config。
 
 ### P1：高流量撮合與行情
 
-- [ ] 將 memory matching engine 演進為單 symbol 單執行緒 sequencer。
-- [ ] 補價格時間優先的嚴格排序與穩定 order id 索引。
-- [ ] 補 cancel / amend 的 O(1) 或近 O(1) 查找路徑。
-- [ ] 補 Self Match Prevention。
-- [ ] 補 POST_ONLY / REDUCE_ONLY 完整語義。
+- [x] 將 memory matching engine 演進為單 symbol 單執行緒 sequencer。
+- [x] 補價格時間優先的嚴格排序與穩定 order id 索引。
+- [x] 補 cancel 的近 O(1) 查找路徑與 order book amend primitive。
+- [x] 補 Self Match Prevention。
+- [x] 補 POST_ONLY / REDUCE_ONLY 核心語義。
 - [ ] Kafka topic 按事件類型與 symbol partition 規劃，確保同 symbol 順序。
-- [ ] Market data service 輸出 depth delta、ticker、trade tape、kline。
+- [x] Market data service 輸出 depth delta、ticker、trade tape、kline。
 - [ ] WebSocket gateway 支援訂單簿與使用者私有推送。
 
 ### P2：可靠性與資料恢復

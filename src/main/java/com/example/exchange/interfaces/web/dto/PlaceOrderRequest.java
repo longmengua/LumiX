@@ -72,6 +72,8 @@ public class PlaceOrderRequest {
 
     private Boolean reduceOnly;
 
+    private Boolean postOnly;
+
     /**
      * 保證金模式
      * - 必填
@@ -92,7 +94,8 @@ public class PlaceOrderRequest {
             getMarginMode(),
             getClientOrderId(),
             getTimeInForce(),
-            Boolean.TRUE.equals(getReduceOnly())
+            Boolean.TRUE.equals(getReduceOnly()),
+            Boolean.TRUE.equals(getPostOnly())
         );
     }
 }

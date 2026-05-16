@@ -20,5 +20,6 @@ public record PlaceOrderCommand(
         String marginMode,   // "CROSS" / "ISOLATED"
         String clientOrderId,
         String timeInForce,
-        boolean reduceOnly
+        boolean reduceOnly,
+        boolean postOnly
 ) {}

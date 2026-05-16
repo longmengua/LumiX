@@ -21,6 +21,6 @@ public class OrderUserCase {
 
     // 查詢所有訂單（含歷史）
     public List<Order> findAllOrders(Long uid, String symbol) {
-        return orderRepository.findOpenOrders(uid, symbol);
+        return orderRepository.findAllOrders(uid, symbol);
     }
 }

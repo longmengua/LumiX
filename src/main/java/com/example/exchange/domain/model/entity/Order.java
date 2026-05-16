@@ -3,10 +3,12 @@ package com.example.exchange.domain.model.entity;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.model.enums.TimeInForce;
+import com.example.exchange.domain.model.enums.MarginMode;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.jackson.Jacksonized;
 
 import java.math.BigDecimal;
@@ -48,6 +50,7 @@ import java.util.UUID;
 @Builder
 @Jacksonized
 @JsonIgnoreProperties(ignoreUnknown = true)
+@EqualsAndHashCode(of = "id")
 public class Order {
 
     /**
@@ -159,6 +162,33 @@ public class Order {
      */
     @Builder.Default
     private boolean reduceOnly = false;
+
+    /**
+     * 是否為 post-only 訂單。
+     * - true：如果送入時會立即吃單，撮合核心必須拒絕，避免 taker fee 與非預期成交。
+     */
+    @Builder.Default
+    private boolean postOnly = false;
+
+    /**
+     * 下單時使用的槓桿倍數。
+     */
+    @Builder.Default
+    private int leverage = 1;
+
+    /**
+     * 下單時使用的保證金模式。
+     */
+    @Builder.Default
+    private MarginMode marginMode = MarginMode.CROSS;
+
+    /**
+     * 此訂單目前佔用的委託凍結金額。
+     * - 下單前風控會預凍初始保證金與最高手續費。
+     * - 成交、取消、過期後由帳務服務按剩餘量調整。
+     */
+    @Builder.Default
+    private BigDecimal reservedAmount = BigDecimal.ZERO;
 
     /**
      * 客戶端自定義訂單 ID

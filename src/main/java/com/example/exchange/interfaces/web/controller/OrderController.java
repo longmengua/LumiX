@@ -1,6 +1,7 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.usecase.OrderUserCase;
+import com.example.exchange.application.usecase.CancelOrderUseCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -30,6 +32,7 @@ public class OrderController {
 
     // Order Case：查詢訂單（DDD：領域層）
     private final OrderUserCase orderUserCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
 
     /**
      * 下單 API
@@ -100,8 +103,8 @@ public class OrderController {
         return ApiResponse.ok(result);
     }
 
-    @GetMapping("/{orderId}")
-    public ApiResponse<Boolean> cancelOrder() {
-        return ApiResponse.ok(true);
+    @DeleteMapping("/{orderId}")
+    public ApiResponse<Boolean> cancelOrder(@PathVariable UUID orderId) {
+        return ApiResponse.ok(cancelOrderUseCase.handle(orderId));
     }
 }

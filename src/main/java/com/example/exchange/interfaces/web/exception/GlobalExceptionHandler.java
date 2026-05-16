@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -74,6 +75,18 @@ public class GlobalExceptionHandler {
                         code.getMessage(),
 
                         // traceId 用於串接 log（需搭配 MDC 設定）
+                        MDC.get("traceId")
+                ));
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, MethodArgumentNotValidException.class})
+    public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
+        log.warn("Bad request: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(new ErrorResponse(
+                        400,
+                        "參數或業務條件不合法",
                         MDC.get("traceId")
                 ));
     }

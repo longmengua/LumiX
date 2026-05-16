@@ -74,7 +74,7 @@ public class RedisOrderRepository implements OrderRepository {
 
         return map.values().stream()
                 .filter(Objects::nonNull) // 移除 null
-                .filter(o -> o.getStatus() != Order.Status.FILLED && o.getStatus() != Order.Status.CANCELED) // 過濾掉已成交/已取消
+                .filter(this::isOpen) // 過濾掉已終態訂單
                 .collect(Collectors.toList());
     }
 
@@ -159,5 +159,10 @@ public class RedisOrderRepository implements OrderRepository {
         } catch (DataAccessException ignored) {
             // 清理失敗不影響主流程
         }
+    }
+
+    private boolean isOpen(Order order) {
+        return order.getStatus() == Order.Status.NEW
+                || order.getStatus() == Order.Status.PARTIALLY_FILLED;
     }
 }
