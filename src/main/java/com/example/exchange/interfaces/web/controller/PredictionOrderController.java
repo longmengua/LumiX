@@ -3,6 +3,7 @@ package com.example.exchange.interfaces.web.controller;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderRequest;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
 import com.example.exchange.domain.model.dto.PolymarketApiCredentialsResponse;
+import com.example.exchange.domain.model.dto.PolymarketUserWsStatusResponse;
 import com.example.exchange.domain.model.dto.PredictionPriceRefreshResult;
 import com.example.exchange.domain.model.dto.PredictionSyncResult;
 import com.example.exchange.domain.service.PolymarketApprovalService;
@@ -13,6 +14,7 @@ import com.example.exchange.domain.service.PolymarketOrderService;
 import com.example.exchange.domain.service.PolymarketPriceService;
 import com.example.exchange.domain.service.PolymarketSessionService;
 import com.example.exchange.domain.service.PolymarketSyncService;
+import com.example.exchange.domain.service.PolymarketUserWebSocketService;
 import com.example.exchange.interfaces.web.dto.PredictionMarketResponse;
 import com.example.exchange.interfaces.web.dto.SessionConfirmRequest;
 import com.example.exchange.interfaces.web.dto.SessionConfirmResponse;
@@ -64,6 +66,8 @@ public class PredictionOrderController {
     private final PolymarketApprovalService polymarketApprovalService;
 
     private final PolymarketSessionService polymarketSessionService;
+
+    private final PolymarketUserWebSocketService polymarketUserWebSocketService;
 
     /**
      * POST /api/prediction/markets/discover
@@ -217,6 +221,36 @@ public class PredictionOrderController {
             @Valid @RequestBody PolymarketPlaceOrderRequest request
     ) {
         return polymarketOrderService.placeOrder(request);
+    }
+
+    /**
+     * 啟動 Polymarket user WebSocket。
+     *
+     * POST /api/prediction/ws/user/start
+     */
+    @PostMapping("/ws/user/start")
+    public PolymarketUserWsStatusResponse startUserWebSocket() {
+        return polymarketUserWebSocketService.startUserChannel();
+    }
+
+    /**
+     * 停止 Polymarket user WebSocket。
+     *
+     * POST /api/prediction/ws/user/stop
+     */
+    @PostMapping("/ws/user/stop")
+    public PolymarketUserWsStatusResponse stopUserWebSocket() {
+        return polymarketUserWebSocketService.stopUserChannel();
+    }
+
+    /**
+     * 查 Polymarket user WebSocket 狀態。
+     *
+     * GET /api/prediction/ws/user/status
+     */
+    @GetMapping("/ws/user/status")
+    public PolymarketUserWsStatusResponse userWebSocketStatus() {
+        return polymarketUserWebSocketService.status();
     }
 
     /**

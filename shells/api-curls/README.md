@@ -18,6 +18,8 @@ Optional sections:
 RUN_CLOB_AUTH=1 CLOB_AUTH_NONCE=0 ./shells/api-curls/polymarket.sh
 RUN_SESSION=1 ./shells/api-curls/polymarket.sh
 RUN_APPROVAL=1 OWNER=0x... ./shells/api-curls/polymarket.sh
+RUN_USER_WS=1 ./shells/api-curls/polymarket.sh
+RUN_USER_WS_STOP=1 ./shells/api-curls/polymarket.sh
 RUN_REAL_ORDER=1 SESSION_ID=... MARKET_SLUG=... ./shells/api-curls/polymarket.sh
 ```
 
@@ -28,4 +30,13 @@ Suggested Polymarket setup flow:
 3. Copy returned `apiKey`, `secret`, and `passphrase` into `polymarket.clob.*`.
 4. Restart Spring Boot.
 5. Run market sync/price refresh.
-6. Run a real order only with `RUN_REAL_ORDER=1`.
+6. Start private order/trade updates with `RUN_USER_WS=1`.
+7. Run a real order only with `RUN_REAL_ORDER=1`.
+
+Polymarket user WebSocket:
+
+- `GET /api/prediction/ws/user/status`
+- `POST /api/prediction/ws/user/start`
+- `POST /api/prediction/ws/user/stop`
+- Events are published to Kafka topic `polymarket.user.events`.
+- The channel is authenticated with `polymarket.clob.api-key`, `polymarket.clob.api-secret`, and `polymarket.clob.api-passphrase`, so it only receives updates related to that API key / wallet.

@@ -115,6 +115,7 @@ src/main/java/com/example/exchange
 - 5 秒價格刷新
 - Bitmart UI 風格 market response
 - CLOB API credentials create / derive，不依賴官方 SDK
+- Polymarket user WebSocket：接收本錢包 order / trade / settlement lifecycle 更新
 - Session Signer init / confirm / list / revoke
 - Polymarket CLOB order EIP-712 signing
 - Polymarket CLOB L2 HMAC request signing
@@ -152,6 +153,45 @@ curl "http://localhost:8080/api/prediction/session/list?userAddress=0x..."
 curl -X POST http://localhost:8080/api/prediction/session/revoke
 curl -X POST http://localhost:8080/api/prediction/orders
 ```
+
+User WebSocket：
+
+```bash
+# 狀態查詢
+curl http://localhost:8080/api/prediction/ws/user/status
+
+# 啟動後會用 polymarket.clob.api-* 訂閱官方 user channel
+curl -X POST http://localhost:8080/api/prediction/ws/user/start
+
+# 停止長連線
+curl -X POST http://localhost:8080/api/prediction/ws/user/stop
+```
+
+Polymarket user WebSocket 事件會發布到 Kafka topic：
+
+```text
+polymarket.user.events
+```
+
+目前接收官方 user channel 的 `order` 與 `trade` 類事件；成交從 matched 到 confirmed / failed 的 settlement lifecycle 也會保留在原始 payload 內。這條 channel 使用 CLOB `apiKey / secret / passphrase` 驗證，官方會按 API key 過濾，因此只接收該錢包相關資訊。
+
+目前 WS 流程：
+
+```text
+Polymarket user WSS
+    │
+    │ apiKey / secret / passphrase auth
+    │ PING heartbeat every 10s
+    ▼
+PolymarketUserWebSocketService
+    │
+    │ parse order / trade payload
+    │ keep raw payload for reconciliation
+    ▼
+Kafka: polymarket.user.events
+```
+
+`polymarket.ws.user-market-condition-ids` 可選填 condition id，用來只訂閱特定市場；空陣列代表接收這組 CLOB API key 的全部個人更新。正式環境應讓 WS 服務獨立部署並搭配 consumer 落庫，避免長連線生命週期被 REST app 重啟影響。
 
 ---
 
@@ -227,6 +267,11 @@ docker compose up -d
 - `polymarket.clob.api-key`
 - `polymarket.clob.api-secret`
 - `polymarket.clob.api-passphrase`
+- `polymarket.ws.user-url`
+- `polymarket.ws.user-enabled`
+- `polymarket.ws.user-market-condition-ids`
+- `polymarket.ws.ping-interval-ms`
+- `polymarket.ws.reconnect-delay-ms`
 - `polymarket.wallet.private-key`
 - `polymarket.wallet.funder-address`
 - `polymarket.wallet.signature-type`
@@ -241,9 +286,152 @@ Polymarket 下單前的建議設定順序：
 2. 呼叫 `POST /api/prediction/clob/api-key/create?nonce=0`。
 3. 將回傳的 `apiKey`、`secret`、`passphrase` 填入 `polymarket.clob.*`。
 4. 重新啟動服務。
-5. 用 `POST /api/prediction/orders` 測試下單。
+5. 用 `POST /api/prediction/ws/user/start` 啟動私有 order/trade 更新。
+6. 用 `POST /api/prediction/orders` 測試下單。
+
+WS 測試建議：
+
+```bash
+# 只查狀態，不啟動長連線
+./shells/api-curls/polymarket.sh
+
+# 啟動 Polymarket user channel
+RUN_USER_WS=1 ./shells/api-curls/polymarket.sh
+
+# 停止 Polymarket user channel
+RUN_USER_WS_STOP=1 ./shells/api-curls/polymarket.sh
+```
 
 正式環境不要把 key 寫在 yml，應改用 Vault / KMS / Secret Manager / Kubernetes Secret。
+
+---
+
+## 測試指引
+
+以下是目前建議的本機實測順序。先跑只讀與同步類 API，再啟動私有 WS，最後才測真實下單。
+
+### 1. 啟動環境
+
+```bash
+docker compose up -d
+./mvnw spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+確認基礎編譯與 Spring context：
+
+```bash
+./mvnw test
+```
+
+### 2. 準備設定
+
+在 `src/main/resources/application-dev.yml` 填好：
+
+- `polymarket.wallet.private-key`
+- `polymarket.wallet.funder-address`
+- `polymarket.wallet.signature-type: 3`
+- `web3.polygon-rpc-url`
+
+第一次還沒有 CLOB credentials 時，先產生：
+
+```bash
+RUN_CLOB_AUTH=1 CLOB_AUTH_NONCE=0 ./shells/api-curls/polymarket.sh
+```
+
+將回傳的 `apiKey`、`secret`、`passphrase` 填回：
+
+- `polymarket.clob.api-key`
+- `polymarket.clob.api-secret`
+- `polymarket.clob.api-passphrase`
+
+填完後重啟 Spring Boot。
+
+### 3. 測 market sync
+
+先跑你已驗證過的查詢與 discover：
+
+```bash
+curl http://localhost:8080/api/prediction/markets
+curl -X POST http://localhost:8080/api/prediction/markets/discover
+curl http://localhost:8080/api/prediction/markets/sync-progress
+```
+
+再測目前待確認的 sync / price refresh：
+
+```bash
+curl -X POST http://localhost:8080/api/prediction/markets/sync
+curl -X POST http://localhost:8080/api/prediction/markets/price-refresh
+curl http://localhost:8080/api/prediction/markets
+```
+
+也可以用整包腳本跑一般檢查：
+
+```bash
+./shells/api-curls/polymarket.sh
+```
+
+### 4. 測 Polymarket user WS
+
+先查狀態：
+
+```bash
+curl http://localhost:8080/api/prediction/ws/user/status
+```
+
+啟動 user channel：
+
+```bash
+curl -X POST http://localhost:8080/api/prediction/ws/user/start
+```
+
+或使用 shell：
+
+```bash
+RUN_USER_WS=1 ./shells/api-curls/polymarket.sh
+```
+
+啟動後下一筆你的 Polymarket order / trade / settlement lifecycle 更新會被發布到 Kafka：
+
+```text
+polymarket.user.events
+```
+
+停止 WS：
+
+```bash
+curl -X POST http://localhost:8080/api/prediction/ws/user/stop
+```
+
+### 5. 測 approval 狀態
+
+這會打 Polygon RPC：
+
+```bash
+RUN_APPROVAL=1 OWNER=0x你的funderAddress ./shells/api-curls/polymarket.sh
+```
+
+確認 collateral allowance 與 conditional token approval 都符合預期後，再做真實下單。
+
+### 6. 測真實下單
+
+真實下單會送到 Polymarket CLOB。確認 market、金額與錢包設定後才執行：
+
+```bash
+RUN_REAL_ORDER=1 \
+SESSION_ID=你的sessionId \
+MARKET_SLUG=fifwc-mex-rsa-2026-06-11-mex \
+DIRECTION=BUY_YES \
+USDT_AMOUNT=1 \
+ORDER_TYPE=FOK \
+./shells/api-curls/polymarket.sh
+```
+
+下單後檢查：
+
+- `POST /api/prediction/orders` 的回傳是否成功。
+- `GET /api/prediction/ws/user/status` 的 `lastMessageAt` 是否更新。
+- Kafka `polymarket.user.events` 是否收到 `order` / `trade` event。
+- `GET /api/prediction/markets` 的價格資料是否仍正常。
 
 ---
 
@@ -254,6 +442,10 @@ Polymarket 下單前的建議設定順序：
 - [ ] `prediction_market_info` 補 `neg_risk` 欄位，交易時不再硬編碼 sports 預設值。
 - [ ] `prediction_market_info` 補 `no_buy_price`、`no_sell_price`，價格刷新時直接入庫。
 - [ ] 下單成功後建立內部 order record，保存 `internalOrderId`、Polymarket order id、market、token、side、price、size、status。
+- [x] 接 Polymarket user WebSocket，接收本錢包 order / trade / settlement lifecycle 更新。
+- [ ] 將 Polymarket user WebSocket 事件落 DB，更新內部 order / trade 狀態。
+- [ ] 建立 `polymarket.user.events` consumer，處理 order accepted / canceled / matched / confirmed / failed。
+- [ ] 建立 WS event idempotency key，避免重連或 replay 造成重複成交。
 - [ ] 建立 reconciliation job，定期對 Polymarket CLOB 訂單狀態與內部訂單狀態。
 - [ ] 補 CLOB order 查詢、取消訂單、成交回報同步。
 - [ ] Session Signer 加上過期時間、最大下單額、每日限額、撤銷審計。

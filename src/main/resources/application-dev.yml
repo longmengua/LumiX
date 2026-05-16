@@ -150,6 +150,20 @@ polymarket:
     api-secret:
     api-passphrase:
 
+  ws:
+    # Polymarket user channel，只推這組 CLOB API key 對應錢包的 order / trade 更新。
+    user-url: wss://ws-subscriptions-clob.polymarket.com/ws/user
+
+    # 開發環境建議先用 POST /api/prediction/ws/user/start 手動啟動。
+    user-enabled: false
+
+    # 可選：填 condition id 才會只訂閱特定市場；空陣列代表全部個人更新。
+    user-market-condition-ids: []
+
+    # 官方 market/user channel 需要每 10 秒送一次 PING。
+    ping-interval-ms: 10000
+    reconnect-delay-ms: 5000
+
   relayer:
     # 目前 placeOrder 主流程暫時沒用到。
     # 後續如果接 Polymarket Builder / Relayer 才會用。

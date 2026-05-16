@@ -14,6 +14,8 @@ CLOB_AUTH_NONCE="${CLOB_AUTH_NONCE:-0}"
 RUN_CLOB_AUTH="${RUN_CLOB_AUTH:-0}"
 RUN_SESSION="${RUN_SESSION:-0}"
 RUN_APPROVAL="${RUN_APPROVAL:-0}"
+RUN_USER_WS="${RUN_USER_WS:-0}"
+RUN_USER_WS_STOP="${RUN_USER_WS_STOP:-0}"
 RUN_REAL_ORDER="${RUN_REAL_ORDER:-0}"
 
 json_post() {
@@ -61,6 +63,23 @@ json_post "/api/prediction/markets/sync" '{}'
 
 echo "== price refresh =="
 json_post "/api/prediction/markets/price-refresh" '{}'
+
+echo "== user websocket status =="
+get "/api/prediction/ws/user/status"
+
+echo "== user websocket start =="
+if [[ "${RUN_USER_WS}" == "1" ]]; then
+  json_post "/api/prediction/ws/user/start" '{}'
+else
+  echo "Skipped. Set RUN_USER_WS=1 to start Polymarket user WebSocket."
+fi
+
+echo "== user websocket stop =="
+if [[ "${RUN_USER_WS_STOP}" == "1" ]]; then
+  json_post "/api/prediction/ws/user/stop" '{}'
+else
+  echo "Skipped. Set RUN_USER_WS_STOP=1 to stop Polymarket user WebSocket."
+fi
 
 echo "== sync reset: optional heavy =="
 echo "Run manually if needed:"

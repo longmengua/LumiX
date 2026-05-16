@@ -9,6 +9,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * polymarket contract addresses
@@ -42,6 +44,10 @@ public class PolymarketConfigs {
     @Valid
     @NotNull
     private Trading trading = new Trading();
+
+    @Valid
+    @NotNull
+    private Ws ws = new Ws();
 
     @Data
     public static class Gamma {
@@ -122,6 +128,38 @@ public class PolymarketConfigs {
         @NotNull
         @DecimalMin("0")
         private BigDecimal maxOrderUsdt = new BigDecimal("1000");
+    }
+
+    @Data
+    public static class Ws {
+        /**
+         * Polymarket authenticated user channel.
+         *
+         * 官方：
+         * https://docs.polymarket.com/api-reference/wss/user
+         */
+        @NotBlank
+        private String userUrl =
+                "wss://ws-subscriptions-clob.polymarket.com/ws/user";
+
+        /**
+         * 是否在 Spring Boot 啟動後自動連線。
+         * 建議開發環境先用 API 手動 start。
+         */
+        @NotNull
+        private Boolean userEnabled = false;
+
+        /**
+         * 可選：只訂閱特定 condition id。
+         * 空陣列代表 user channel 按 API key 接收全部個人 order/trade 更新。
+         */
+        private List<String> userMarketConditionIds = new ArrayList<>();
+
+        @NotNull
+        private Long pingIntervalMs = 10_000L;
+
+        @NotNull
+        private Long reconnectDelayMs = 5_000L;
     }
 
     @Data
