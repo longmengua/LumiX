@@ -11,6 +11,8 @@ public interface PredictionMarketSyncKeyRepository
 
     List<PredictionMarketSyncKey> findBySyncEnabledTrueOrderByIdAsc();
 
+    List<PredictionMarketSyncKey> findBySyncEnabledTrueOrderByEventDateAsc();
+
     List<PredictionMarketSyncKey> findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(
             Long id
     );

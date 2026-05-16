@@ -37,7 +37,7 @@ public class PolymarketMarketService {
      * 查詢所有啟用中的世界杯 Prediction Markets。
      */
     public List<PredictionMarketResponse> getMarkets() {
-        return syncKeyRepository.findBySyncEnabledTrueOrderByIdAsc()
+        return syncKeyRepository.findBySyncEnabledTrueOrderByEventDateAsc()
                 .stream()
                 .map(this::toMarketResponse)
                 .toList();
