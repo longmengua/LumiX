@@ -58,7 +58,7 @@ public class PolymarketPriceService {
      *
      * 流程：
      * 1. 找出需要更新的 markets
-     * 2. Gamma 全量拉 active/open markets
+     * 2. Gamma 拉 FIFA World Cup events 並 flatten markets
      * 3. 用 marketSlug match
      * 4. 更新價格欄位
      */
@@ -93,7 +93,7 @@ public class PolymarketPriceService {
         }
 
         Map<String, PredictionGammaMarketDto> gammaBySlug =
-                gammaMarketClient.fetchAllActiveMarkets()
+                gammaMarketClient.fetchFifaWorldCupMarkets()
                         .stream()
                         .filter(gamma -> gamma.getSlug() != null && !gamma.getSlug().isBlank())
                         .collect(Collectors.toMap(
@@ -103,14 +103,14 @@ public class PolymarketPriceService {
                         ));
 
         if (gammaBySlug.isEmpty()) {
-            log.warn("Prediction price refresh failed, Gamma active markets empty");
+            log.warn("Prediction price refresh failed, Gamma FIFA markets empty");
             return PredictionPriceRefreshResult.builder()
                     .totalCount(markets.size())
                     .updatedCount(0)
                     .skippedCount(0)
                     .failedCount(markets.size())
                     .forceRefresh(forceRefresh)
-                    .message("Gamma active markets empty")
+                    .message("Gamma FIFA markets empty")
                     .build();
         }
 

@@ -3,6 +3,8 @@ package com.example.exchange.domain.model.dto;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 /**
  * Gamma API Event DTO。
  *
@@ -46,4 +48,12 @@ public class PredictionGammaEventDto {
      * soccer-fifwc
      */
     private String seriesSlug;
+
+    /**
+     * Event 底下的 markets。
+     *
+     * GET /events 會直接帶回這個欄位，
+     * FIFA World Cup discovery 優先使用 events endpoint。
+     */
+    private List<PredictionGammaMarketDto> markets;
 }

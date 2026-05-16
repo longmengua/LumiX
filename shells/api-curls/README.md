@@ -1,42 +1,80 @@
 # API curl scripts
 
-Run from project root.
+每個 shell 只對應一個 API path。沒有環境變數與聚合流程；要改 host、wallet、session、market slug 或 body，直接打開該 `.sh` 手動修改。
+
+從專案根目錄執行：
 
 ```bash
-BASE_URL=http://localhost:8080 ./shells/api-curls/polymarket.sh
-BASE_URL=http://localhost:8080 ./shells/api-curls/exchange-core.sh
-BASE_URL=http://localhost:8080 ./shells/api-curls/all.sh
+./shells/api-curls/prediction/markets-discover-post.sh
+./shells/api-curls/prediction/markets-sync-progress-get.sh
+./shells/api-curls/exchange/depth-get.sh
 ```
 
-Default `BASE_URL` is `http://localhost:8080`.
+## Prediction
 
-Polymarket order/session calls use environment variables. Copy values from the API response or your wallet flow before running those sections.
-
-Optional sections:
+Markets：
 
 ```bash
-RUN_CLOB_AUTH=1 CLOB_AUTH_NONCE=0 ./shells/api-curls/polymarket.sh
-RUN_SESSION=1 ./shells/api-curls/polymarket.sh
-RUN_APPROVAL=1 OWNER=0x... ./shells/api-curls/polymarket.sh
-RUN_USER_WS=1 ./shells/api-curls/polymarket.sh
-RUN_USER_WS_STOP=1 ./shells/api-curls/polymarket.sh
-RUN_REAL_ORDER=1 SESSION_ID=... MARKET_SLUG=... ./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/markets-get.sh
+./shells/api-curls/prediction/markets-discover-post.sh
+./shells/api-curls/prediction/markets-sync-post.sh
+./shells/api-curls/prediction/markets-sync-reset-post.sh
+./shells/api-curls/prediction/markets-sync-progress-get.sh
+./shells/api-curls/prediction/markets-retry-post.sh
+./shells/api-curls/prediction/markets-price-refresh-post.sh
 ```
 
-Suggested Polymarket setup flow:
+CLOB credentials：
 
-1. Set `polymarket.wallet.private-key`, `polymarket.wallet.funder-address`, and `polymarket.wallet.signature-type: 3`.
-2. Run `RUN_CLOB_AUTH=1 CLOB_AUTH_NONCE=0 ./shells/api-curls/polymarket.sh`.
-3. Copy returned `apiKey`, `secret`, and `passphrase` into `polymarket.clob.*`.
-4. Restart Spring Boot.
-5. Run market sync/price refresh.
-6. Start private order/trade updates with `RUN_USER_WS=1`.
-7. Run a real order only with `RUN_REAL_ORDER=1`.
+```bash
+./shells/api-curls/prediction/clob-api-key-create-post.sh
+./shells/api-curls/prediction/clob-api-key-derive-get.sh
+```
 
-Polymarket user WebSocket:
+Session / order：
 
-- `GET /api/prediction/ws/user/status`
-- `POST /api/prediction/ws/user/start`
-- `POST /api/prediction/ws/user/stop`
-- Events are published to Kafka topic `polymarket.user.events`.
-- The channel is authenticated with `polymarket.clob.api-key`, `polymarket.clob.api-secret`, and `polymarket.clob.api-passphrase`, so it only receives updates related to that API key / wallet.
+```bash
+./shells/api-curls/prediction/session-init-post.sh
+./shells/api-curls/prediction/session-confirm-post.sh
+./shells/api-curls/prediction/session-list-get.sh
+./shells/api-curls/prediction/session-revoke-post.sh
+./shells/api-curls/prediction/session-revoke-all-post.sh
+./shells/api-curls/prediction/orders-post.sh
+```
+
+Approval：
+
+```bash
+./shells/api-curls/prediction/approve-collateral-allowance-get.sh
+./shells/api-curls/prediction/approve-conditional-tokens-status-get.sh
+```
+
+User WebSocket：
+
+```bash
+./shells/api-curls/prediction/ws-user-status-get.sh
+./shells/api-curls/prediction/ws-user-start-post.sh
+./shells/api-curls/prediction/ws-user-stop-post.sh
+```
+
+## Exchange
+
+```bash
+./shells/api-curls/exchange/order-place-limit-buy-post.sh
+./shells/api-curls/exchange/order-place-market-sell-post.sh
+./shells/api-curls/exchange/order-open-get.sh
+./shells/api-curls/exchange/order-all-get.sh
+./shells/api-curls/exchange/depth-get.sh
+./shells/api-curls/exchange/margin-transfer-post.sh
+./shells/api-curls/exchange/recovery-recover-post.sh
+```
+
+## Suggested Polymarket Flow
+
+1. 填好 `application-dev.yml` 的 `polymarket.wallet.private-key`、`polymarket.wallet.funder-address`、`polymarket.wallet.signature-type: 3`。
+2. 執行 `./shells/api-curls/prediction/clob-api-key-create-post.sh`。
+3. 將回傳的 `apiKey`、`secret`、`passphrase` 填入 `polymarket.clob.*`。
+4. 重啟 Spring Boot。
+5. 依序執行 `markets-discover-post.sh`、`markets-sync-progress-get.sh`、`markets-sync-post.sh`、`markets-price-refresh-post.sh`。
+6. 執行 `ws-user-start-post.sh` 啟動私有 order / trade 更新。
+7. 修改 `orders-post.sh` 裡的 `sessionId`、`marketSlug`、`direction`、`usdtAmount` 後再真實下單。

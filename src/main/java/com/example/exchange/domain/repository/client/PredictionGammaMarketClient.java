@@ -1,5 +1,6 @@
 package com.example.exchange.domain.repository.client;
 
+import com.example.exchange.domain.model.dto.PredictionGammaEventDto;
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,13 +21,9 @@ import java.util.List;
  * Polymarket Gamma Market Client。
  *
  * 用途：
- * 1. 從 Gamma API 拉取 active / open markets
- * 2. 支援分頁全量拉取
- * 3. 保留 marketSlug 精準查詢
- *
- * 注意：
- * - eventSlug 不能用 /markets/slug/{slug} 查
- * - /markets/slug/{slug} 只能查 marketSlug
+ * 1. 從 Gamma /events 拉取 FIFA World Cup events
+ * 2. 將 event 內 markets flatten 給 price refresh 使用
+ * 3. 保留 search fallback 給單一 key retry 使用
  */
 @Slf4j
 @Component
@@ -40,19 +37,20 @@ public class PredictionGammaMarketClient {
     private String gammaBaseUrl;
 
     /**
-     * 全量拉取 Gamma active / open markets。
+     * 拉取 FIFA World Cup active / open events。
      *
-     * 對應 TS：
-     * fetchAllMarkets()
+     * Gamma 目前 sports event 的 canonical source 是 /events，
+     * event 內會直接帶 markets。
      */
-    public List<PredictionGammaMarketDto> fetchAllActiveMarkets() {
-        int limit = 1000;
+    public List<PredictionGammaEventDto> fetchFifaWorldCupEvents() {
+        int limit = 100;
         int offset = 0;
 
-        List<PredictionGammaMarketDto> all = new ArrayList<>();
+        List<PredictionGammaEventDto> all = new ArrayList<>();
 
         while (true) {
-            List<PredictionGammaMarketDto> page = fetchMarketsPage(limit, offset);
+            List<PredictionGammaEventDto> page =
+                    fetchFifaWorldCupEventsPage(limit, offset);
 
             if (page.isEmpty()) {
                 break;
@@ -61,7 +59,7 @@ public class PredictionGammaMarketClient {
             all.addAll(page);
 
             log.info(
-                    "Gamma markets loaded, offset={}, pageSize={}, total={}",
+                    "Gamma FIFA events loaded, offset={}, pageSize={}, total={}",
                     offset,
                     page.size(),
                     all.size()
@@ -79,21 +77,28 @@ public class PredictionGammaMarketClient {
         return all;
     }
 
-    /**
-     * 分頁拉取 Gamma markets。
-     *
-     * API:
-     * GET /markets?limit=1000&offset=0&active=true&closed=false
-     */
-    public List<PredictionGammaMarketDto> fetchMarketsPage(int limit, int offset) {
+    public List<PredictionGammaMarketDto> fetchFifaWorldCupMarkets() {
+        return fetchFifaWorldCupEvents()
+                .stream()
+                .filter(event -> event.getMarkets() != null)
+                .flatMap(event -> event.getMarkets().stream())
+                .filter(market -> market.getSlug() != null && !market.getSlug().isBlank())
+                .toList();
+    }
+
+    public List<PredictionGammaEventDto> fetchFifaWorldCupEventsPage(
+            int limit,
+            int offset
+    ) {
         try {
             String url = UriComponentsBuilder
                     .fromHttpUrl(gammaBaseUrl)
-                    .path("/markets")
+                    .path("/events")
                     .queryParam("limit", limit)
                     .queryParam("offset", offset)
                     .queryParam("active", true)
                     .queryParam("closed", false)
+                    .queryParam("series_slug", "soccer-fifwc")
                     .toUriString();
 
             Request request = new Request.Builder()
@@ -108,7 +113,7 @@ public class PredictionGammaMarketClient {
 
                 if (!response.isSuccessful()) {
                     log.warn(
-                            "Gamma fetch markets page failed, offset={}, code={}, body={}",
+                            "Gamma fetch FIFA events page failed, offset={}, code={}, body={}",
                             offset,
                             response.code(),
                             body
@@ -122,68 +127,18 @@ public class PredictionGammaMarketClient {
 
                 return objectMapper.readValue(
                         body,
-                        new TypeReference<List<PredictionGammaMarketDto>>() {
+                        new TypeReference<List<PredictionGammaEventDto>>() {
                         }
                 );
             }
-
         } catch (Exception e) {
             log.warn(
-                    "Gamma fetch markets page error, limit={}, offset={}",
+                    "Gamma fetch FIFA events page error, limit={}, offset={}",
                     limit,
                     offset,
                     e
             );
             return Collections.emptyList();
-        }
-    }
-
-    /**
-     * 用 marketSlug 精準查單一 market。
-     *
-     * 注意：
-     * 這裡不能傳 eventSlug。
-     *
-     * 可以查：
-     * fifwc-mex-rsa-2026-06-11-mex
-     *
-     * 不能查：
-     * fifwc-mex-rsa-2026-06-11
-     */
-    public PredictionGammaMarketDto getMarketBySlug(String marketSlug) {
-        try {
-            String url = gammaBaseUrl + "/markets/slug/" + marketSlug;
-
-            Request request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .header("Accept", "application/json")
-                    .header("User-Agent", "java21-exchange")
-                    .build();
-
-            try (Response response = okHttpClient.newCall(request).execute()) {
-                String body = response.body() == null ? "" : response.body().string();
-
-                if (!response.isSuccessful()) {
-                    log.warn(
-                            "Gamma get market by slug failed, marketSlug={}, code={}, body={}",
-                            marketSlug,
-                            response.code(),
-                            body
-                    );
-                    return null;
-                }
-
-                if (body.isBlank()) {
-                    return null;
-                }
-
-                return objectMapper.readValue(body, PredictionGammaMarketDto.class);
-            }
-
-        } catch (Exception e) {
-            log.warn("Gamma get market by slug error, marketSlug={}", marketSlug, e);
-            return null;
         }
     }
 

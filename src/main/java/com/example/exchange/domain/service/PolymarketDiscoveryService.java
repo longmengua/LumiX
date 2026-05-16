@@ -23,8 +23,7 @@ import java.util.*;
  * Prediction Market Discovery Service。
  *
  * 用途：
- * 手動全量拉 Gamma markets，
- * 自動發現 FIFA World Cup markets，
+ * 手動拉 Gamma FIFA World Cup events，
  * 然後建立：
  *
  * 1. prediction_market_sync_key
@@ -54,44 +53,42 @@ public class PolymarketDiscoveryService {
     private final PredictionMarketInfoRepository marketInfoRepository;
 
     /**
-     * 全量 discovery。
+     * FIFA World Cup discovery。
      *
      * 流程：
-     * 1. Gamma 全量拉 active/open markets
-     * 2. 過濾 FIFA World Cup
-     * 3. 按 eventSlug group
-     * 4. 自動建立 sync key
-     * 5. 自動建立 outcome market info
+     * 1. Gamma 拉 /events?series_slug=soccer-fifwc
+     * 2. event 內 markets 分類 home/draw/away
+     * 3. 自動建立 sync key
+     * 4. 自動建立 outcome market info
      */
     @Transactional
     public String discoverWorldCupMarkets() {
-        List<PredictionGammaMarketDto> allMarkets =
-                gammaMarketClient.fetchAllActiveMarkets();
-
-        List<PredictionGammaMarketDto> fifaMarkets =
-                allMarkets.stream()
-                        .filter(this::isFifaWorldCupMarket)
+        List<PredictionGammaEventDto> fifaEvents =
+                gammaMarketClient.fetchFifaWorldCupEvents()
+                        .stream()
+                        .filter(this::isFifaWorldCupEvent)
                         .toList();
-
-        Map<String, List<PredictionGammaMarketDto>> marketsByEventSlug =
-                groupByEventSlug(fifaMarkets);
 
         int eventCount = 0;
         int outcomeCount = 0;
+        int skippedWithoutMarkets = 0;
 
-        for (Map.Entry<String, List<PredictionGammaMarketDto>> entry : marketsByEventSlug.entrySet()) {
-            log.info("eventSlug={}, markets={}", entry.getKey(), entry.getValue());
-            String eventSlug = entry.getKey();
-            List<PredictionGammaMarketDto> eventMarkets = entry.getValue();
+        for (PredictionGammaEventDto event : fifaEvents) {
+            List<PredictionGammaMarketDto> eventMarkets =
+                    event.getMarkets() == null
+                            ? Collections.emptyList()
+                            : event.getMarkets()
+                            .stream()
+                            .filter(this::isTradableMarket)
+                            .toList();
 
-            PredictionGammaEventDto event = firstEvent(eventMarkets.get(0));
-
-            if (event == null) {
+            if (eventMarkets.isEmpty()) {
+                skippedWithoutMarkets++;
                 continue;
             }
 
             PredictionMarketSyncKey key =
-                    upsertSyncKey(eventSlug, event, eventMarkets);
+                    upsertSyncKey(event.getSlug(), event, eventMarkets);
 
             Map<String, PredictionGammaMarketDto> bestByOutcome =
                     classifyAndPickBest(key, eventMarkets);
@@ -113,54 +110,31 @@ public class PolymarketDiscoveryService {
             eventCount++;
         }
 
-        return "discover finished, events=" + eventCount + ", outcomes=" + outcomeCount;
+        return "discover finished, source=events, loadedEvents="
+                + fifaEvents.size()
+                + ", skippedWithoutMarkets="
+                + skippedWithoutMarkets
+                + ", events="
+                + eventCount
+                + ", outcomes="
+                + outcomeCount;
     }
 
-    /**
-     * 判斷是否 FIFA World Cup market。
-     *
-     * 對齊 TS：
-     * - event.seriesSlug == soccer-fifwc
-     * - event.slug startsWith fifwc-
-     * - market.slug startsWith fifwc-
-     */
-    private boolean isFifaWorldCupMarket(PredictionGammaMarketDto market) {
-        if (startsWithFifwc(market.getSlug())) {
-            return true;
-        }
-
-        if (market.getEvents() == null) {
+    private boolean isFifaWorldCupEvent(PredictionGammaEventDto event) {
+        if (event == null) {
             return false;
         }
 
-        return market.getEvents()
-                .stream()
-                .anyMatch(event ->
-                        SERIES_FIFA_WORLD_CUP.equals(event.getSeriesSlug())
-                                || startsWithFifwc(event.getSlug())
-                );
+        return SERIES_FIFA_WORLD_CUP.equals(event.getSeriesSlug())
+                || startsWithFifwc(event.getSlug());
     }
 
-    /**
-     * eventSlug -> markets。
-     */
-    private Map<String, List<PredictionGammaMarketDto>> groupByEventSlug(
-            List<PredictionGammaMarketDto> markets
-    ) {
-        Map<String, List<PredictionGammaMarketDto>> result = new HashMap<>();
-
-        for (PredictionGammaMarketDto market : markets) {
-            PredictionGammaEventDto event = firstEvent(market);
-
-            if (event == null || event.getSlug() == null || event.getSlug().isBlank()) {
-                continue;
-            }
-
-            result.computeIfAbsent(event.getSlug(), k -> new ArrayList<>())
-                    .add(market);
-        }
-
-        return result;
+    private boolean isTradableMarket(PredictionGammaMarketDto market) {
+        return market != null
+                && Boolean.TRUE.equals(market.getActive())
+                && !Boolean.TRUE.equals(market.getClosed())
+                && market.getSlug() != null
+                && !market.getSlug().isBlank();
     }
 
     /**
@@ -378,14 +352,6 @@ public class PolymarketDiscoveryService {
             case OUTCOME_AWAY_WIN -> key.getTeamB();
             default -> outcomeKey;
         };
-    }
-
-    private PredictionGammaEventDto firstEvent(PredictionGammaMarketDto market) {
-        if (market.getEvents() == null || market.getEvents().isEmpty()) {
-            return null;
-        }
-
-        return market.getEvents().get(0);
     }
 
     private boolean startsWithFifwc(String value) {

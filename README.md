@@ -5,7 +5,7 @@ Java 21 + Spring Boot 3.5 的交易所核心雛形，目標是逐步演進成可
 目前專案包含兩條主線：
 
 - 內部交易所核心：下單、撮合、訂單簿、保證金、持倉、快照、事件發布。
-- Polymarket 整合：Gamma market discovery/sync、價格刷新、Session Signer、CLOB 下單、allowance/approval 查詢。
+- Polymarket 整合：Gamma FIFA event discovery/sync、價格刷新、Session Signer、CLOB 下單、allowance/approval 查詢。
 
 這不是單純教學 Demo。現在的程式碼已經有 DDD 分層、Redis/Kafka/MySQL 基礎設施、Polymarket CLOB 簽名與交易流程雛形；但距離「交易所高流量大項目」還需要補齊撮合性能、帳務一致性、風控、可觀測性、壓測與安全邊界。
 
@@ -110,7 +110,7 @@ src/main/java/com/example/exchange
 
 目前已有：
 
-- Gamma API market discovery
+- Gamma API FIFA World Cup event discovery：使用 `/events?series_slug=soccer-fifwc`
 - sync key resume / reset / retry
 - 5 秒價格刷新
 - Bitmart UI 風格 market response
@@ -126,6 +126,7 @@ src/main/java/com/example/exchange
 Markets / sync：
 
 ```bash
+# discovery 會拉 Gamma FIFA World Cup events，回傳 source=events
 curl -X POST http://localhost:8080/api/prediction/markets/discover
 curl -X POST http://localhost:8080/api/prediction/markets/sync
 curl -X POST http://localhost:8080/api/prediction/markets/sync-reset
@@ -293,13 +294,13 @@ WS 測試建議：
 
 ```bash
 # 只查狀態，不啟動長連線
-./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/ws-user-status-get.sh
 
 # 啟動 Polymarket user channel
-RUN_USER_WS=1 ./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/ws-user-start-post.sh
 
 # 停止 Polymarket user channel
-RUN_USER_WS_STOP=1 ./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/ws-user-stop-post.sh
 ```
 
 正式環境不要把 key 寫在 yml，應改用 Vault / KMS / Secret Manager / Kubernetes Secret。
@@ -335,7 +336,7 @@ docker compose up -d
 第一次還沒有 CLOB credentials 時，先產生：
 
 ```bash
-RUN_CLOB_AUTH=1 CLOB_AUTH_NONCE=0 ./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/clob-api-key-create-post.sh
 ```
 
 將回傳的 `apiKey`、`secret`、`passphrase` 填回：
@@ -346,48 +347,50 @@ RUN_CLOB_AUTH=1 CLOB_AUTH_NONCE=0 ./shells/api-curls/polymarket.sh
 
 填完後重啟 Spring Boot。
 
-### 3. 測 market sync
+### 3. 測 market discovery / sync
 
-先跑你已驗證過的查詢與 discover：
+先跑查詢與 discover。`discover` 現在不再全量掃 `/markets`，而是走 Gamma events endpoint：
 
-```bash
-curl http://localhost:8080/api/prediction/markets
-curl -X POST http://localhost:8080/api/prediction/markets/discover
-curl http://localhost:8080/api/prediction/markets/sync-progress
+```text
+GET https://gamma-api.polymarket.com/events?series_slug=soccer-fifwc&active=true&closed=false
 ```
 
-再測目前待確認的 sync / price refresh：
+測試：
 
 ```bash
-curl -X POST http://localhost:8080/api/prediction/markets/sync
-curl -X POST http://localhost:8080/api/prediction/markets/price-refresh
-curl http://localhost:8080/api/prediction/markets
+./shells/api-curls/prediction/markets-get.sh
+./shells/api-curls/prediction/markets-discover-post.sh
+./shells/api-curls/prediction/markets-sync-progress-get.sh
 ```
 
-也可以用整包腳本跑一般檢查：
+`discover` 正常時會看到類似：
+
+```text
+discover finished, source=events, loadedEvents=..., skippedWithoutMarkets=..., events=..., outcomes=...
+```
+
+再測 sync / price refresh。price refresh 也使用 FIFA events 裡的 markets 更新價格，不再掃全站 active markets：
 
 ```bash
-./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/markets-sync-post.sh
+./shells/api-curls/prediction/markets-price-refresh-post.sh
+./shells/api-curls/prediction/markets-get.sh
 ```
+
+所有 curl shell 都是一個 API path 一個檔案，集中在 `shells/api-curls/`；要改 host、wallet、session、market slug 或 body，直接修改該 `.sh`。
 
 ### 4. 測 Polymarket user WS
 
 先查狀態：
 
 ```bash
-curl http://localhost:8080/api/prediction/ws/user/status
+./shells/api-curls/prediction/ws-user-status-get.sh
 ```
 
 啟動 user channel：
 
 ```bash
-curl -X POST http://localhost:8080/api/prediction/ws/user/start
-```
-
-或使用 shell：
-
-```bash
-RUN_USER_WS=1 ./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/ws-user-start-post.sh
 ```
 
 啟動後下一筆你的 Polymarket order / trade / settlement lifecycle 更新會被發布到 Kafka：
@@ -399,7 +402,7 @@ polymarket.user.events
 停止 WS：
 
 ```bash
-curl -X POST http://localhost:8080/api/prediction/ws/user/stop
+./shells/api-curls/prediction/ws-user-stop-post.sh
 ```
 
 ### 5. 測 approval 狀態
@@ -407,7 +410,8 @@ curl -X POST http://localhost:8080/api/prediction/ws/user/stop
 這會打 Polygon RPC：
 
 ```bash
-RUN_APPROVAL=1 OWNER=0x你的funderAddress ./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/approve-collateral-allowance-get.sh
+./shells/api-curls/prediction/approve-conditional-tokens-status-get.sh
 ```
 
 確認 collateral allowance 與 conditional token approval 都符合預期後，再做真實下單。
@@ -417,14 +421,10 @@ RUN_APPROVAL=1 OWNER=0x你的funderAddress ./shells/api-curls/polymarket.sh
 真實下單會送到 Polymarket CLOB。確認 market、金額與錢包設定後才執行：
 
 ```bash
-RUN_REAL_ORDER=1 \
-SESSION_ID=你的sessionId \
-MARKET_SLUG=fifwc-mex-rsa-2026-06-11-mex \
-DIRECTION=BUY_YES \
-USDT_AMOUNT=1 \
-ORDER_TYPE=FOK \
-./shells/api-curls/polymarket.sh
+./shells/api-curls/prediction/orders-post.sh
 ```
+
+下單前先打開 `orders-post.sh`，手動確認 `sessionId`、`marketSlug`、`direction`、`usdtAmount`、`orderType`。
 
 下單後檢查：
 
