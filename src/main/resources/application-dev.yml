@@ -157,8 +157,10 @@ polymarket:
     api-key:
 
   wallet:
-    # session signer 架構下，不再放平台 private-key。
-    # CLOB order 簽名使用 PredictionSessionRecord.sessionPrivateKey。
+    # 後端平台 signer private key。
+    # 不用 SDK 時，後端用這把 key 做 CLOB order EIP-712 signing。
+    # polymarket.clob.api-* 必須由同一把 private key create/derive。
+    private-key:
 
     # Polymarket funder / deposit wallet address。
     # TODO:
@@ -167,11 +169,10 @@ polymarket:
     funder-address:
 
     # Polymarket signature type。
-    # 0 = EOA。
-    # TODO:
-    # 如果後續改成 proxy wallet / smart contract wallet，
-    # 這裡可能要改成 Polymarket 對應的 signature type。
-    signature-type: 0
+    # 官方新 API deposit wallet flow 建議：
+    # 3 = POLY_1271，funder-address 填 deposit wallet。
+    # 0 = EOA，funder-address 必須是同一個 EOA。
+    signature-type: 3
 
   chain:
     chain-id: 137

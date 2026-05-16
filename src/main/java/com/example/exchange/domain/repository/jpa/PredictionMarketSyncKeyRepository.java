@@ -17,6 +17,10 @@ public interface PredictionMarketSyncKeyRepository
             Long id
     );
 
+    List<PredictionMarketSyncKey> findBySyncEnabledTrueAndSyncStatusNotOrderByIdAsc(
+            String syncStatus
+    );
+
     Optional<PredictionMarketSyncKey> findByEventSlug(String eventSlug);
 
     Optional<PredictionMarketSyncKey> findByTeamAAndTeamBAndEventDate(

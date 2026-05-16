@@ -15,6 +15,7 @@ import com.example.exchange.infra.config.PolymarketConfigs;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.web3j.crypto.Credentials;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -76,6 +77,14 @@ public class PolymarketOrderService {
                             request.getSessionId()
                     );
 
+            String signingPrivateKey =
+                    resolveSigningPrivateKey(sessionRecord);
+
+            String polygonSignerAddress =
+                    Credentials
+                            .create(signingPrivateKey)
+                            .getAddress();
+
             /**
              * Deposit Wallet / POLY_1271 模式：
              *
@@ -126,7 +135,7 @@ public class PolymarketOrderService {
             PolymarketClobOrderRequest clobOrderRequest =
                     PolymarketOrderSigner.sign(
                             polymarketConfigs,
-                            sessionRecord.getSessionPrivateKey(),
+                            signingPrivateKey,
                             normalizedOrder
                     );
 
@@ -137,6 +146,7 @@ public class PolymarketOrderService {
 
             PolymarketPlaceOrderResponse response =
                     polymarketClobTradingClient.postOrder(
+                            polygonSignerAddress,
                             clobOrderRequest
                     );
 
@@ -172,6 +182,35 @@ public class PolymarketOrderService {
                     .errorMsg(e.getMessage())
                     .build();
         }
+    }
+
+    /**
+     * 官方 CLOB REST 方式要求：
+     * 1. order payload 由 signer private key 做 EIP-712 簽名。
+     * 2. POST /order 的 L2 API credentials 必須由同一個 signer 派生。
+     *
+     * 目前先採用後端平台 signer：
+     * - polymarket.wallet.private-key 負責簽 CLOB order
+     * - polymarket.clob.api-* 必須由這把 private key create/derive
+     *
+     * SessionRecord 在這個版本只作為你平台內部的交易授權，不直接作為
+     * Polymarket order signer。若要改成 per-session signer，必須替每個
+     * session signer 派生並保存各自的 CLOB API credentials。
+     */
+    private String resolveSigningPrivateKey(
+            PredictionSessionRecord sessionRecord
+    ) {
+        String platformPrivateKey =
+                polymarketConfigs
+                        .getWallet()
+                        .getPrivateKey();
+
+        if (platformPrivateKey != null
+                && !platformPrivateKey.isBlank()) {
+            return platformPrivateKey;
+        }
+
+        return sessionRecord.getSessionPrivateKey();
     }
 
     /**

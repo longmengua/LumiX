@@ -30,6 +30,7 @@ public class PolymarketClobTradingClient {
             .build();
 
     public PolymarketPlaceOrderResponse postOrder(
+            String polygonSignerAddress,
             PolymarketClobOrderRequest clobOrderRequest
     ) {
         String path = "/order";
@@ -56,6 +57,7 @@ public class PolymarketClobTradingClient {
 
             Map<String, String> authHeaders = PolymarketL2AuthSigner.sign(
                     polymarketConfigs,
+                    polygonSignerAddress,
                     "POST",
                     path,
                     body

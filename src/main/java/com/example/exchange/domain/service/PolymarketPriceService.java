@@ -1,6 +1,7 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
+import com.example.exchange.domain.model.dto.PredictionPriceRefreshResult;
 import com.example.exchange.domain.model.entity.PredictionMarketInfo;
 import com.example.exchange.domain.repository.client.PredictionGammaMarketClient;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
@@ -13,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Prediction Market 價格刷新服務。
@@ -59,7 +63,18 @@ public class PolymarketPriceService {
      * 4. 更新價格欄位
      */
     @Transactional
-    public void refreshPrices() {
+    public PredictionPriceRefreshResult refreshPrices() {
+        return refreshPrices(false);
+    }
+
+    /**
+     * 手動刷新價格。
+     *
+     * Controller 入口會使用 forceRefresh=true，方便人工測試時立即打 Gamma。
+     * Scheduler 入口使用預設 refreshPrices()，避免同一批資料被高頻重複刷新。
+     */
+    @Transactional
+    public PredictionPriceRefreshResult refreshPrices(boolean forceRefresh) {
         LocalDateTime now = LocalDateTime.now();
 
         List<PredictionMarketInfo> markets =
@@ -67,20 +82,56 @@ public class PolymarketPriceService {
 
         if (markets.isEmpty()) {
             log.info("Prediction price refresh skipped, no active markets");
-            return;
+            return PredictionPriceRefreshResult.builder()
+                    .totalCount(0)
+                    .updatedCount(0)
+                    .skippedCount(0)
+                    .failedCount(0)
+                    .forceRefresh(forceRefresh)
+                    .message("no active markets")
+                    .build();
+        }
+
+        Map<String, PredictionGammaMarketDto> gammaBySlug =
+                gammaMarketClient.fetchAllActiveMarkets()
+                        .stream()
+                        .filter(gamma -> gamma.getSlug() != null && !gamma.getSlug().isBlank())
+                        .collect(Collectors.toMap(
+                                PredictionGammaMarketDto::getSlug,
+                                Function.identity(),
+                                this::pickMoreLiquidMarket
+                        ));
+
+        if (gammaBySlug.isEmpty()) {
+            log.warn("Prediction price refresh failed, Gamma active markets empty");
+            return PredictionPriceRefreshResult.builder()
+                    .totalCount(markets.size())
+                    .updatedCount(0)
+                    .skippedCount(0)
+                    .failedCount(markets.size())
+                    .forceRefresh(forceRefresh)
+                    .message("Gamma active markets empty")
+                    .build();
         }
 
         int updated = 0;
+        int skipped = 0;
         int failed = 0;
 
         for (PredictionMarketInfo entity : markets) {
             if (entity.getMarketSlug() == null || entity.getMarketSlug().isBlank()) {
+                skipped++;
+                continue;
+            }
+
+            if (!forceRefresh && !shouldRefresh(entity, now)) {
+                skipped++;
                 continue;
             }
 
             try {
                 PredictionGammaMarketDto gamma =
-                        gammaMarketClient.getMarketBySlug(entity.getMarketSlug());
+                        gammaBySlug.get(entity.getMarketSlug());
 
                 if (gamma == null) {
                     failed++;
@@ -89,8 +140,6 @@ public class PolymarketPriceService {
 
                 updatePriceFields(entity, gamma, now);
                 updated++;
-
-                sleepQuietly(50);
 
             } catch (Exception e) {
                 failed++;
@@ -105,19 +154,22 @@ public class PolymarketPriceService {
         marketInfoRepository.saveAll(markets);
 
         log.info(
-                "Prediction price refresh finished, total={}, updated={}, failed={}",
+                "Prediction price refresh finished, total={}, updated={}, skipped={}, failed={}, force={}",
                 markets.size(),
                 updated,
-                failed
+                skipped,
+                failed,
+                forceRefresh
         );
-    }
 
-    private void sleepQuietly(long millis) {
-        try {
-            Thread.sleep(millis);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        return PredictionPriceRefreshResult.builder()
+                .totalCount(markets.size())
+                .updatedCount(updated)
+                .skippedCount(skipped)
+                .failedCount(failed)
+                .forceRefresh(forceRefresh)
+                .message("Prediction market price refresh finished")
+                .build();
     }
 
     /**
@@ -210,5 +262,18 @@ public class PolymarketPriceService {
         }
 
         entity.setLastPriceUpdatedAt(now);
+    }
+
+    private PredictionGammaMarketDto pickMoreLiquidMarket(
+            PredictionGammaMarketDto first,
+            PredictionGammaMarketDto second
+    ) {
+        Double firstLiquidity = first.getLiquidityNum();
+        Double secondLiquidity = second.getLiquidityNum();
+
+        double a = firstLiquidity == null ? 0D : firstLiquidity;
+        double b = secondLiquidity == null ? 0D : secondLiquidity;
+
+        return b > a ? second : first;
     }
 }

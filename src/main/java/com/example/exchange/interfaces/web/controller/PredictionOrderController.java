@@ -2,7 +2,11 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderRequest;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
+import com.example.exchange.domain.model.dto.PolymarketApiCredentialsResponse;
+import com.example.exchange.domain.model.dto.PredictionPriceRefreshResult;
+import com.example.exchange.domain.model.dto.PredictionSyncResult;
 import com.example.exchange.domain.service.PolymarketApprovalService;
+import com.example.exchange.domain.service.PolymarketClobAuthService;
 import com.example.exchange.domain.service.PolymarketDiscoveryService;
 import com.example.exchange.domain.service.PolymarketMarketService;
 import com.example.exchange.domain.service.PolymarketOrderService;
@@ -55,6 +59,8 @@ public class PredictionOrderController {
 
     private final PolymarketOrderService polymarketOrderService;
 
+    private final PolymarketClobAuthService polymarketClobAuthService;
+
     private final PolymarketApprovalService polymarketApprovalService;
 
     private final PolymarketSessionService polymarketSessionService;
@@ -71,7 +77,7 @@ public class PredictionOrderController {
      * POST /api/prediction/markets/sync
      */
     @PostMapping("/markets/sync")
-    public String syncMarkets() {
+    public PredictionSyncResult syncMarkets() {
         return predictionMarketFullSyncService.syncResume();
     }
 
@@ -79,7 +85,7 @@ public class PredictionOrderController {
      * POST /api/prediction/markets/sync-reset
      */
     @PostMapping("/markets/sync-reset")
-    public String resetAndSyncMarkets() {
+    public PredictionSyncResult resetAndSyncMarkets() {
         return predictionMarketFullSyncService.resetAndSync();
     }
 
@@ -105,9 +111,8 @@ public class PredictionOrderController {
      * POST /api/prediction/markets/price-refresh
      */
     @PostMapping("/markets/price-refresh")
-    public String refreshPrices() {
-        predictionMarketPriceRefreshService.refreshPrices();
-        return "Prediction market price refresh triggered";
+    public PredictionPriceRefreshResult refreshPrices() {
+        return predictionMarketPriceRefreshService.refreshPrices(true);
     }
 
     /**
@@ -116,6 +121,30 @@ public class PredictionOrderController {
     @GetMapping("/markets")
     public List<PredictionMarketResponse> getMarkets() {
         return predictionMarketService.getMarkets();
+    }
+
+    /**
+     * 建立 Polymarket CLOB API credentials。
+     *
+     * POST /api/prediction/clob/api-key/create?nonce=0
+     */
+    @PostMapping("/clob/api-key/create")
+    public PolymarketApiCredentialsResponse createClobApiKey(
+            @RequestParam(defaultValue = "0") BigInteger nonce
+    ) {
+        return polymarketClobAuthService.createApiKey(nonce);
+    }
+
+    /**
+     * 取回同 nonce 對應的 Polymarket CLOB API credentials。
+     *
+     * GET /api/prediction/clob/api-key/derive?nonce=0
+     */
+    @GetMapping("/clob/api-key/derive")
+    public PolymarketApiCredentialsResponse deriveClobApiKey(
+            @RequestParam(defaultValue = "0") BigInteger nonce
+    ) {
+        return polymarketClobAuthService.deriveApiKey(nonce);
     }
 
     /**

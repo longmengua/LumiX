@@ -13,7 +13,13 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class PolymarketL2AuthSigner {
-    public static Map<String, String> sign(PolymarketConfigs polymarketConfigs, String method, String requestPath, String body) {
+    public static Map<String, String> sign(
+            PolymarketConfigs polymarketConfigs,
+            String polygonSignerAddress,
+            String method,
+            String requestPath,
+            String body
+    ) {
         String timestamp = String.valueOf(Instant.now().getEpochSecond());
 
         String payload = timestamp
@@ -27,7 +33,7 @@ public class PolymarketL2AuthSigner {
         );
 
         Map<String, String> headers = new LinkedHashMap<>();
-        headers.put("POLY_ADDRESS", polymarketConfigs.getWallet().getFunderAddress());
+        headers.put("POLY_ADDRESS", polygonSignerAddress);
         headers.put("POLY_SIGNATURE", signature);
         headers.put("POLY_TIMESTAMP", timestamp);
         headers.put("POLY_API_KEY", polymarketConfigs.getClob().getApiKey());
@@ -40,7 +46,7 @@ public class PolymarketL2AuthSigner {
         try {
             Mac mac = Mac.getInstance("HmacSHA256");
             SecretKeySpec keySpec = new SecretKeySpec(
-                    secret.getBytes(StandardCharsets.UTF_8),
+                    decodeSecret(secret),
                     "HmacSHA256"
             );
             mac.init(keySpec);
@@ -49,6 +55,18 @@ public class PolymarketL2AuthSigner {
             return Base64.getEncoder().encodeToString(raw);
         } catch (Exception e) {
             throw new IllegalStateException("Sign Polymarket L2 auth failed", e);
+        }
+    }
+
+    private static byte[] decodeSecret(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalArgumentException("clob apiSecret is required");
+        }
+
+        try {
+            return Base64.getDecoder().decode(secret);
+        } catch (IllegalArgumentException ignored) {
+            return secret.getBytes(StandardCharsets.UTF_8);
         }
     }
 }

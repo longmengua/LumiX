@@ -16,14 +16,11 @@ import java.time.Instant;
  *
  * Deposit Wallet + POLY_1271 架構：
  *
- * 1. maker = Deposit Wallet address
- * 2. signer = Deposit Wallet address
- * 3. signatureType = 3
- * 4. session signer private key 只負責產生 EIP-712 signature
- * 5. REST /order owner = CLOB apiKey owner UUID
- *
- * TODO:
- * 後續應確認 session signer 是否已透過 Polymarket Deposit Wallet / Relayer 正式授權。
+ * 1. maker = Deposit Wallet / funder address
+ * 2. signer = EOA address derived from signing private key
+ * 3. signatureType = config, new API deposit wallet flow should use POLY_1271 = 3
+ * 4. REST /order owner = CLOB apiKey owner UUID
+ * 5. L2 API credentials must be derived from the same signer private key
  */
 public class PolymarketOrderSigner {
 
@@ -38,17 +35,17 @@ public class PolymarketOrderSigner {
 
     public static PolymarketClobOrderRequest sign(
             PolymarketConfigs polymarketProperties,
-            String sessionPrivateKey,
+            String signingPrivateKey,
             PolymarketNormalizedClobOrder order
     ) {
         validateInputs(
                 polymarketProperties,
-                sessionPrivateKey,
+                signingPrivateKey,
                 order
         );
 
         Credentials credentials =
-                Credentials.create(sessionPrivateKey);
+                Credentials.create(signingPrivateKey);
 
         String depositWalletAddress =
                 polymarketProperties
@@ -59,7 +56,7 @@ public class PolymarketOrderSigner {
                 depositWalletAddress;
 
         String signer =
-                depositWalletAddress;
+                credentials.getAddress();
 
         BigInteger salt =
                 new BigInteger(
@@ -89,10 +86,7 @@ public class PolymarketOrderSigner {
                         .metadata(ZERO_BYTES32)
                         .builder(ZERO_BYTES32)
 
-                        /**
-                         * POLY_1271 = 3。
-                         */
-                        .signatureType(3)
+                        .signatureType(resolveSignatureType(polymarketProperties))
                         .build();
 
         String signature =
@@ -160,7 +154,7 @@ public class PolymarketOrderSigner {
 
     private static void validateInputs(
             PolymarketConfigs polymarketProperties,
-            String sessionPrivateKey,
+            String signingPrivateKey,
             PolymarketNormalizedClobOrder order
     ) {
         if (polymarketProperties == null) {
@@ -169,10 +163,10 @@ public class PolymarketOrderSigner {
             );
         }
 
-        if (sessionPrivateKey == null
-                || sessionPrivateKey.isBlank()) {
+        if (signingPrivateKey == null
+                || signingPrivateKey.isBlank()) {
             throw new IllegalArgumentException(
-                    "sessionPrivateKey is required"
+                    "signingPrivateKey is required"
             );
         }
 
@@ -228,6 +222,15 @@ public class PolymarketOrderSigner {
                     "orderType is required"
             );
         }
+    }
+
+    private static int resolveSignatureType(
+            PolymarketConfigs polymarketProperties
+    ) {
+        Integer signatureType =
+                polymarketProperties.getWallet().getSignatureType();
+
+        return signatureType == null ? 3 : signatureType;
     }
 
     private record AmountPair(

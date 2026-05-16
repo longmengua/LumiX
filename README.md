@@ -114,13 +114,15 @@ src/main/java/com/example/exchange
 - sync key resume / reset / retry
 - 5 秒價格刷新
 - Bitmart UI 風格 market response
+- CLOB API credentials create / derive，不依賴官方 SDK
 - Session Signer init / confirm / list / revoke
-- Polymarket CLOB order signing
+- Polymarket CLOB order EIP-712 signing
+- Polymarket CLOB L2 HMAC request signing
 - 真實 CLOB 下單 API
 - ERC20 collateral allowance 查詢
 - ERC1155 conditional token approval status 查詢
 
-主要 API：
+Markets / sync：
 
 ```bash
 curl -X POST http://localhost:8080/api/prediction/markets/discover
@@ -129,6 +131,16 @@ curl -X POST http://localhost:8080/api/prediction/markets/sync-reset
 curl -X POST http://localhost:8080/api/prediction/markets/price-refresh
 curl http://localhost:8080/api/prediction/markets/sync-progress
 curl http://localhost:8080/api/prediction/markets
+```
+
+CLOB credentials：
+
+```bash
+# 用 polymarket.wallet.private-key 建立 CLOB API credentials
+curl -X POST "http://localhost:8080/api/prediction/clob/api-key/create?nonce=0"
+
+# 如果 nonce 已建立過，用 derive 取回同一組 credentials
+curl "http://localhost:8080/api/prediction/clob/api-key/derive?nonce=0"
 ```
 
 Session / order：
@@ -168,6 +180,10 @@ Polymarket CLOB
 - 後端不代送 approve transaction。
 - CLOB Trading API 是核心下單通道。
 - Relayer API 不應取代 CLOB 下單。
+- 不用官方 SDK 時，後端要自己做兩件事：
+  - L1：用 private key 簽 CLOB `ClobAuth` EIP-712，建立或 derive `apiKey / secret / passphrase`。
+  - L2：下單時用 `apiSecret` 對 request 做 HMAC header，同時 order payload 仍要 EIP-712 簽名。
+- 目前下單簽名優先使用 `polymarket.wallet.private-key`；`sessionId` 保留作為平台內部授權，不直接暴露 private key 到前端。
 
 ---
 
@@ -211,12 +227,21 @@ docker compose up -d
 - `polymarket.clob.api-key`
 - `polymarket.clob.api-secret`
 - `polymarket.clob.api-passphrase`
+- `polymarket.wallet.private-key`
 - `polymarket.wallet.funder-address`
 - `polymarket.wallet.signature-type`
 - `polymarket.trading.buy-markup-rate`
 - `polymarket.trading.sell-profit-fee-rate`
 - `polymarket.trading.max-slippage-rate`
 - `web3.polygon-rpc-url`
+
+Polymarket 下單前的建議設定順序：
+
+1. 填入 `polymarket.wallet.private-key`、`polymarket.wallet.funder-address`、`polymarket.wallet.signature-type: 3`。
+2. 呼叫 `POST /api/prediction/clob/api-key/create?nonce=0`。
+3. 將回傳的 `apiKey`、`secret`、`passphrase` 填入 `polymarket.clob.*`。
+4. 重新啟動服務。
+5. 用 `POST /api/prediction/orders` 測試下單。
 
 正式環境不要把 key 寫在 yml，應改用 Vault / KMS / Secret Manager / Kubernetes Secret。
 

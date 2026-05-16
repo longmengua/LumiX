@@ -2,6 +2,7 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
 import com.example.exchange.domain.model.dto.CheckResult;
+import com.example.exchange.domain.model.dto.PredictionSyncResult;
 import com.example.exchange.domain.model.dto.SyncOneResult;
 import com.example.exchange.domain.model.entity.PredictionMarketInfo;
 import com.example.exchange.domain.model.entity.PredictionMarketSyncKey;
@@ -61,18 +62,23 @@ public class PolymarketSyncService {
      *
      * 從 progress.lastSyncKeyId 後面繼續處理。
      */
-    public String syncResume() {
+    public PredictionSyncResult syncResume() {
         if (!running.compareAndSet(false, true)) {
-            return "Prediction market sync is already running";
+            return PredictionSyncResult.builder()
+                    .status(STATUS_RUNNING)
+                    .message("Prediction market sync is already running")
+                    .build();
         }
 
         try {
-            doSync(false);
-            return "Prediction market key sync finished";
+            return doSync(false);
         } catch (Exception e) {
             log.warn("Prediction market key sync failed", e);
             markFailed(e.getMessage());
-            return "Prediction market key sync failed: " + e.getMessage();
+            return PredictionSyncResult.builder()
+                    .status(STATUS_FAILED)
+                    .message("Prediction market key sync failed: " + e.getMessage())
+                    .build();
         } finally {
             running.set(false);
         }
@@ -81,19 +87,24 @@ public class PolymarketSyncService {
     /**
      * Reset progress 後重新同步所有 key。
      */
-    public String resetAndSync() {
+    public PredictionSyncResult resetAndSync() {
         if (!running.compareAndSet(false, true)) {
-            return "Prediction market sync is already running";
+            return PredictionSyncResult.builder()
+                    .status(STATUS_RUNNING)
+                    .message("Prediction market sync is already running")
+                    .build();
         }
 
         try {
             resetProgress();
-            doSync(true);
-            return "Prediction market key reset and sync finished";
+            return doSync(true);
         } catch (Exception e) {
             log.warn("Prediction market key reset and sync failed", e);
             markFailed(e.getMessage());
-            return "Prediction market key reset and sync failed: " + e.getMessage();
+            return PredictionSyncResult.builder()
+                    .status(STATUS_FAILED)
+                    .message("Prediction market key reset and sync failed: " + e.getMessage())
+                    .build();
         } finally {
             running.set(false);
         }
@@ -143,7 +154,7 @@ public class PolymarketSyncService {
      * 每個 key 只用 teamA + teamB 做 search。
      */
     @Transactional
-    protected void doSync(boolean reset) {
+    protected PredictionSyncResult doSync(boolean reset) {
         PredictionMarketSyncProgress progress = getOrCreateProgress();
 
         Long lastSyncKeyId = reset
@@ -153,6 +164,12 @@ public class PolymarketSyncService {
         List<PredictionMarketSyncKey> keys =
                 syncKeyRepository
                         .findBySyncEnabledTrueAndIdGreaterThanOrderByIdAsc(lastSyncKeyId);
+
+        if (!reset && keys.isEmpty() && lastSyncKeyId > 0) {
+            keys =
+                    syncKeyRepository
+                            .findBySyncEnabledTrueAndSyncStatusNotOrderByIdAsc(STATUS_SUCCESS);
+        }
 
         progress.setStatus(STATUS_RUNNING);
         progress.setTotalCount(keys.size());
@@ -166,14 +183,40 @@ public class PolymarketSyncService {
 
         if (keys.isEmpty()) {
             finishProgress(progress, 0);
-            return;
+            return PredictionSyncResult.builder()
+                    .status(STATUS_SUCCESS)
+                    .totalCount(0)
+                    .successCount(0)
+                    .failedCount(0)
+                    .skippedCount(0)
+                    .message("Prediction market key sync finished, no pending keys")
+                    .build();
         }
 
         int successCount = 0;
         int failedCount = 0;
+        int skippedCount = 0;
 
         for (PredictionMarketSyncKey key : keys) {
             try {
+                CheckResult existing = checkOneKey(key);
+
+                if (existing.isSuccess()) {
+                    applyCheckResult(key, existing, false);
+                    syncKeyRepository.save(key);
+
+                    successCount++;
+                    skippedCount++;
+
+                    progress.setLastSyncKeyId(key.getId());
+                    progress.setSuccessCount(successCount);
+                    progress.setFailedCount(failedCount);
+                    progress.setUpdatedAt(LocalDateTime.now());
+                    progressRepository.save(progress);
+
+                    continue;
+                }
+
                 SyncOneResult result = syncOneKeyBySearch(key, false);
 
                 if (result.isSuccess()) {
@@ -223,6 +266,15 @@ public class PolymarketSyncService {
         }
 
         finishProgress(progress, failedCount);
+
+        return PredictionSyncResult.builder()
+                .status(STATUS_SUCCESS)
+                .totalCount(keys.size())
+                .successCount(successCount)
+                .failedCount(failedCount)
+                .skippedCount(skippedCount)
+                .message("Prediction market key sync finished")
+                .build();
     }
 
     /**
