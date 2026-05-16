@@ -40,6 +40,12 @@ Session / order：
 ./shells/api-curls/prediction/session-revoke-post.sh
 ./shells/api-curls/prediction/session-revoke-all-post.sh
 ./shells/api-curls/prediction/orders-post.sh
+./shells/api-curls/prediction/orders-local-get.sh
+./shells/api-curls/prediction/orders-local-one-get.sh
+./shells/api-curls/prediction/orders-local-sync-post.sh
+./shells/api-curls/prediction/orders-local-cancel-post.sh
+./shells/api-curls/prediction/orders-reconcile-post.sh
+./shells/api-curls/prediction/orders-trades-get.sh
 ```
 
 Approval：

@@ -149,6 +149,125 @@ public class PolymarketClobTradingClient {
         }
     }
 
+    public Map<String, Object> getOrder(
+            String polygonSignerAddress,
+            String clobOrderId
+    ) {
+        return authenticatedJsonRequest(
+                polygonSignerAddress,
+                "GET",
+                "/order/" + clobOrderId,
+                null
+        );
+    }
+
+    public Map<String, Object> cancelOrder(
+            String polygonSignerAddress,
+            String clobOrderId
+    ) {
+        return authenticatedJsonRequest(
+                polygonSignerAddress,
+                "DELETE",
+                "/order",
+                Map.of("orderID", clobOrderId)
+        );
+    }
+
+    public Map<String, Object> getTrades(
+            String polygonSignerAddress
+    ) {
+        return authenticatedJsonRequest(
+                polygonSignerAddress,
+                "GET",
+                "/trades",
+                null
+        );
+    }
+
+    private Map<String, Object> authenticatedJsonRequest(
+            String polygonSignerAddress,
+            String method,
+            String path,
+            Object payload
+    ) {
+        String url =
+                polymarketConfigs.getClob().getBaseUrl() + path;
+
+        try {
+            String body =
+                    payload == null
+                            ? ""
+                            : objectMapper.writeValueAsString(payload);
+
+            Map<String, String> authHeaders =
+                    PolymarketL2AuthSigner.sign(
+                            polymarketConfigs,
+                            polygonSignerAddress,
+                            method,
+                            path,
+                            body
+                    );
+
+            Request.Builder builder =
+                    new Request.Builder()
+                            .url(url);
+
+            if ("GET".equalsIgnoreCase(method)) {
+                builder.get();
+            } else if ("DELETE".equalsIgnoreCase(method)) {
+                builder.delete(RequestBody.create(body, JSON));
+                builder.addHeader("Content-Type", "application/json");
+            } else {
+                throw new IllegalArgumentException("unsupported method: " + method);
+            }
+
+            authHeaders.forEach(builder::addHeader);
+
+            try (Response response = okHttpClient.newCall(builder.build()).execute()) {
+                String responseBody =
+                        response.body() == null
+                                ? ""
+                                : response.body().string();
+
+                Map<String, Object> raw =
+                        parseJsonToMap(responseBody);
+
+                if (!response.isSuccessful()) {
+                    return Map.of(
+                            "success", false,
+                            "httpCode", response.code(),
+                            "errorMsg", classifyClobError(responseBody),
+                            "raw", responseBody
+                    );
+                }
+
+                if (raw.isEmpty()) {
+                    return Map.of(
+                            "success", true,
+                            "httpCode", response.code()
+                    );
+                }
+
+                raw.put("success", true);
+                raw.put("httpCode", response.code());
+                return raw;
+            }
+        } catch (Exception e) {
+            log.warn(
+                    "[PolymarketCLOB] Authenticated request exception. method={}, path={}",
+                    method,
+                    path,
+                    e
+            );
+
+            return Map.of(
+                    "success", false,
+                    "status", "EXCEPTION",
+                    "errorMsg", e.getMessage()
+            );
+        }
+    }
+
     private Map<String, Object> parseJsonToMap(String responseBody) {
         if (responseBody == null || responseBody.isBlank()) {
             return Map.of();

@@ -84,6 +84,8 @@ public class PolymarketMarketService {
         BigDecimal bestBid = toBigDecimal(entity.getBestBid());
         BigDecimal staticYesPrice = toBigDecimal(entity.getStaticYesPrice());
         BigDecimal lastTradePrice = toBigDecimal(entity.getLastTradePrice());
+        BigDecimal storedNoBuyPrice = toBigDecimal(entity.getNoBuyPrice());
+        BigDecimal storedNoSellPrice = toBigDecimal(entity.getNoSellPrice());
 
         /**
          * Yes 買入價
@@ -107,6 +109,7 @@ public class PolymarketMarketService {
          * No 買入價
          */
         BigDecimal noBuyPrice = firstNonNull(
+                storedNoBuyPrice,
                 subtractFromOne(bestBid),
                 subtractFromOne(lastTradePrice),
                 toBigDecimal(entity.getStaticNoPrice())
@@ -116,6 +119,7 @@ public class PolymarketMarketService {
          * No 賣出價
          */
         BigDecimal noSellPrice = firstNonNull(
+                storedNoSellPrice,
                 subtractFromOne(bestAsk),
                 subtractFromOne(lastTradePrice),
                 toBigDecimal(entity.getStaticNoPrice())
@@ -203,6 +207,19 @@ public class PolymarketMarketService {
         }
 
         return third;
+    }
+
+    private BigDecimal firstNonNull(
+            BigDecimal first,
+            BigDecimal second,
+            BigDecimal third,
+            BigDecimal fourth
+    ) {
+        if (first != null) {
+            return first;
+        }
+
+        return firstNonNull(second, third, fourth);
     }
 
     private BigDecimal subtractFromOne(BigDecimal value) {

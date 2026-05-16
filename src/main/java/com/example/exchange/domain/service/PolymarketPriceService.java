@@ -229,6 +229,8 @@ public class PolymarketPriceService {
 
         entity.setClobTokenIds(gamma.getClobTokenIds());
 
+        entity.setNegRisk(Boolean.TRUE.equals(gamma.getNegRisk()));
+
         /**
          * 更新 static YES / NO price。
          */
@@ -247,6 +249,8 @@ public class PolymarketPriceService {
             );
         }
 
+        refreshNoPrices(entity);
+
         /**
          * 更新 YES / NO token id。
          */
@@ -262,6 +266,20 @@ public class PolymarketPriceService {
         }
 
         entity.setLastPriceUpdatedAt(now);
+    }
+
+    private void refreshNoPrices(PredictionMarketInfo entity) {
+        if (entity.getStaticNoPrice() != null && entity.getStaticNoPrice() > 0) {
+            entity.setNoBuyPrice(entity.getStaticNoPrice());
+        } else if (entity.getBestBid() != null) {
+            entity.setNoBuyPrice(1D - entity.getBestBid());
+        }
+
+        if (entity.getStaticNoPrice() != null && entity.getStaticNoPrice() > 0) {
+            entity.setNoSellPrice(entity.getStaticNoPrice());
+        } else if (entity.getBestAsk() != null) {
+            entity.setNoSellPrice(1D - entity.getBestAsk());
+        }
     }
 
     private PredictionGammaMarketDto pickMoreLiquidMarket(

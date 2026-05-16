@@ -71,6 +71,11 @@ public class PredictionGammaMarketDto {
     private Boolean enableOrderBook;
 
     /**
+     * 是否為 Polymarket negative-risk market。
+     */
+    private Boolean negRisk;
+
+    /**
      * Market 結束時間。
      */
     private String endDate;
@@ -81,6 +86,16 @@ public class PredictionGammaMarketDto {
      * TS classifyOutcome 有用到 groupItemTitle。
      */
     private String groupItemTitle;
+
+    /**
+     * Polymarket sports group item threshold。
+     *
+     * FIFA moneyline:
+     * - 0 = home win
+     * - 1 = draw
+     * - 2 = away win
+     */
+    private String groupItemThreshold;
 
     /**
      * 運動市場類型。

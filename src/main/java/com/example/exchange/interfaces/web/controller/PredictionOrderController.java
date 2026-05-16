@@ -6,11 +6,13 @@ import com.example.exchange.domain.model.dto.PolymarketApiCredentialsResponse;
 import com.example.exchange.domain.model.dto.PolymarketUserWsStatusResponse;
 import com.example.exchange.domain.model.dto.PredictionPriceRefreshResult;
 import com.example.exchange.domain.model.dto.PredictionSyncResult;
+import com.example.exchange.domain.model.entity.PredictionPolymarketOrder;
 import com.example.exchange.domain.service.PolymarketApprovalService;
 import com.example.exchange.domain.service.PolymarketClobAuthService;
 import com.example.exchange.domain.service.PolymarketDiscoveryService;
 import com.example.exchange.domain.service.PolymarketMarketService;
 import com.example.exchange.domain.service.PolymarketOrderService;
+import com.example.exchange.domain.service.PolymarketOrderTrackingService;
 import com.example.exchange.domain.service.PolymarketPriceService;
 import com.example.exchange.domain.service.PolymarketSessionService;
 import com.example.exchange.domain.service.PolymarketSyncService;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Prediction Market API Controller。
@@ -68,6 +71,8 @@ public class PredictionOrderController {
     private final PolymarketSessionService polymarketSessionService;
 
     private final PolymarketUserWebSocketService polymarketUserWebSocketService;
+
+    private final PolymarketOrderTrackingService polymarketOrderTrackingService;
 
     /**
      * POST /api/prediction/markets/discover
@@ -221,6 +226,72 @@ public class PredictionOrderController {
             @Valid @RequestBody PolymarketPlaceOrderRequest request
     ) {
         return polymarketOrderService.placeOrder(request);
+    }
+
+    /**
+     * 查內部 Polymarket orders。
+     *
+     * GET /api/prediction/orders/local
+     */
+    @GetMapping("/orders/local")
+    public List<PredictionPolymarketOrder> listLocalOrders() {
+        return polymarketOrderTrackingService.listLocalOrders();
+    }
+
+    /**
+     * 查單一內部 Polymarket order。
+     *
+     * GET /api/prediction/orders/local/{internalOrderId}
+     */
+    @GetMapping("/orders/local/{internalOrderId}")
+    public PredictionPolymarketOrder getLocalOrder(
+            @PathVariable String internalOrderId
+    ) {
+        return polymarketOrderTrackingService.getLocalOrder(internalOrderId);
+    }
+
+    /**
+     * 從 CLOB 同步單一 order 狀態。
+     *
+     * POST /api/prediction/orders/local/{internalOrderId}/sync
+     */
+    @PostMapping("/orders/local/{internalOrderId}/sync")
+    public PredictionPolymarketOrder syncLocalOrder(
+            @PathVariable String internalOrderId
+    ) {
+        return polymarketOrderTrackingService.syncOrder(internalOrderId);
+    }
+
+    /**
+     * 取消單一 CLOB order。
+     *
+     * POST /api/prediction/orders/local/{internalOrderId}/cancel
+     */
+    @PostMapping("/orders/local/{internalOrderId}/cancel")
+    public PredictionPolymarketOrder cancelLocalOrder(
+            @PathVariable String internalOrderId
+    ) {
+        return polymarketOrderTrackingService.cancelOrder(internalOrderId);
+    }
+
+    /**
+     * 對帳本地未終態 orders。
+     *
+     * POST /api/prediction/orders/reconcile
+     */
+    @PostMapping("/orders/reconcile")
+    public Map<String, Object> reconcileOrders() {
+        return polymarketOrderTrackingService.reconcileOpenOrders();
+    }
+
+    /**
+     * 查 CLOB trades。
+     *
+     * GET /api/prediction/orders/trades
+     */
+    @GetMapping("/orders/trades")
+    public Map<String, Object> getTrades() {
+        return polymarketOrderTrackingService.getTrades();
     }
 
     /**

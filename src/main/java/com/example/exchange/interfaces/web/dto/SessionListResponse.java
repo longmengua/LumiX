@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
 /**
  * Session list response。
  *
@@ -63,4 +65,12 @@ public class SessionListResponse {
      * 最後使用時間。
      */
     private String lastUsedAt;
+
+    private BigDecimal maxOrderUsdt;
+
+    private BigDecimal dailyLimitUsdt;
+
+    private BigDecimal dailyUsedUsdt;
+
+    private String dailyResetDate;
 }

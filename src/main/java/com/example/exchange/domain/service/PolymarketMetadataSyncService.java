@@ -80,6 +80,15 @@ public class PolymarketMetadataSyncService {
             saved++;
         }
 
+        if (bestByOutcome.size() < 3) {
+            log.warn(
+                    "Prediction metadata outcome incomplete, eventSlug={}, outcomes={}, related={}",
+                    key.getEventSlug(),
+                    bestByOutcome.keySet(),
+                    relatedMarkets.size()
+            );
+        }
+
         log.info(
                 "Prediction metadata synced, eventSlug={}, related={}, saved={}",
                 key.getEventSlug(),
@@ -202,8 +211,17 @@ public class PolymarketMetadataSyncService {
             PredictionMarketSyncKey key,
             PredictionGammaMarketDto market
     ) {
+        String byThreshold =
+                classifyByGroupItemThreshold(market);
+
+        if (byThreshold != null) {
+            return byThreshold;
+        }
+
         String text = norm(
                 safe(market.getGroupItemTitle())
+                        + " "
+                        + safe(market.getGroupItemThreshold())
                         + " "
                         + safe(market.getQuestion())
                         + " "
@@ -239,6 +257,22 @@ public class PolymarketMetadataSyncService {
         }
 
         return null;
+    }
+
+    private String classifyByGroupItemThreshold(PredictionGammaMarketDto market) {
+        if (market == null || market.getGroupItemThreshold() == null) {
+            return null;
+        }
+
+        String threshold =
+                market.getGroupItemThreshold().trim();
+
+        return switch (threshold) {
+            case "0" -> OUTCOME_HOME_WIN;
+            case "1" -> OUTCOME_DRAW;
+            case "2" -> OUTCOME_AWAY_WIN;
+            default -> null;
+        };
     }
 
     /**
@@ -287,6 +321,7 @@ public class PolymarketMetadataSyncService {
         entity.setClosed(Boolean.TRUE.equals(market.getClosed()));
         entity.setAcceptingOrders(Boolean.TRUE.equals(market.getAcceptingOrders()));
         entity.setEnableOrderBook(Boolean.TRUE.equals(market.getEnableOrderBook()));
+        entity.setNegRisk(Boolean.TRUE.equals(market.getNegRisk()));
 
         entity.setBestBid(market.getBestBid());
         entity.setBestAsk(market.getBestAsk());
@@ -307,6 +342,8 @@ public class PolymarketMetadataSyncService {
             entity.setStaticNoPrice(PredictionJsonUtils.safeDouble(prices.get(1)));
         }
 
+        refreshNoPrices(entity);
+
         List<String> tokenIds =
                 PredictionJsonUtils.safeStringArray(market.getClobTokenIds());
 
@@ -318,6 +355,20 @@ public class PolymarketMetadataSyncService {
         entity.setLastPriceUpdatedAt(LocalDateTime.now());
 
         marketInfoRepository.save(entity);
+    }
+
+    private void refreshNoPrices(PredictionMarketInfo entity) {
+        if (entity.getStaticNoPrice() != null && entity.getStaticNoPrice() > 0) {
+            entity.setNoBuyPrice(entity.getStaticNoPrice());
+        } else if (entity.getBestBid() != null) {
+            entity.setNoBuyPrice(1D - entity.getBestBid());
+        }
+
+        if (entity.getStaticNoPrice() != null && entity.getStaticNoPrice() > 0) {
+            entity.setNoSellPrice(entity.getStaticNoPrice());
+        } else if (entity.getBestAsk() != null) {
+            entity.setNoSellPrice(1D - entity.getBestAsk());
+        }
     }
 
     private String toOutcomeLabel(

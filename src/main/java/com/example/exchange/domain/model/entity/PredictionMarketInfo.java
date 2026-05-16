@@ -56,6 +56,16 @@ public class PredictionMarketInfo {
     @Column(name = "event_slug", nullable = false, length = 128)
     private String eventSlug;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+            name = "event_slug",
+            referencedColumnName = "event_slug",
+            insertable = false,
+            updatable = false,
+            foreignKey = @ForeignKey(name = "fk_pm_info_event_slug")
+    )
+    private PredictionMarketSyncKey event;
+
     @Column(name = "event_title", length = 256)
     private String eventTitle;
 
@@ -123,6 +133,12 @@ public class PredictionMarketInfo {
     private Boolean enableOrderBook;
 
     /**
+     * Polymarket negative-risk market。
+     */
+    @Column(name = "neg_risk")
+    private Boolean negRisk;
+
+    /**
      * Gamma bestBid。
      *
      * 前端 sellPrice 優先用這個。
@@ -152,6 +168,18 @@ public class PredictionMarketInfo {
      */
     @Column(name = "static_no_price")
     private Double staticNoPrice;
+
+    /**
+     * BUY_NO 使用價格。
+     */
+    @Column(name = "no_buy_price")
+    private Double noBuyPrice;
+
+    /**
+     * SELL_NO 使用價格。
+     */
+    @Column(name = "no_sell_price")
+    private Double noSellPrice;
 
     @Column(name = "liquidity")
     private Double liquidity;

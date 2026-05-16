@@ -14,7 +14,9 @@ import org.web3j.crypto.StructuredDataEncoder;
 import org.web3j.utils.Numeric;
 
 import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -150,6 +152,10 @@ public class PolymarketSessionService {
                             .issuedAt(issuedAt)
                             .expiresAt(expiresAt)
                             .createdAt(Instant.now().toString())
+                            .maxOrderUsdt(resolveMaxOrderUsdt(request))
+                            .dailyLimitUsdt(resolveDailyLimitUsdt(request))
+                            .dailyUsedUsdt(BigDecimal.ZERO)
+                            .dailyResetDate(LocalDate.now().toString())
                             .build();
 
             sessionRecordRepository.save(record);
@@ -368,6 +374,10 @@ public class PolymarketSessionService {
                                 .createdAt(session.getCreatedAt())
                                 .confirmedAt(session.getConfirmedAt())
                                 .lastUsedAt(session.getLastUsedAt())
+                                .maxOrderUsdt(session.getMaxOrderUsdt())
+                                .dailyLimitUsdt(session.getDailyLimitUsdt())
+                                .dailyUsedUsdt(session.getDailyUsedUsdt())
+                                .dailyResetDate(session.getDailyResetDate())
                                 .build()
                 )
                 .toList();
@@ -398,6 +408,7 @@ public class PolymarketSessionService {
         }
 
         session.setStatus("REVOKED");
+        session.setRevokedReason("USER_REVOKED");
 
         session.setRevokedAt(
                 Instant.now().toString()
@@ -436,6 +447,7 @@ public class PolymarketSessionService {
             }
 
             session.setStatus("REVOKED");
+            session.setRevokedReason("USER_REVOKED_ALL");
 
             session.setRevokedAt(
                     Instant.now().toString()
@@ -476,6 +488,76 @@ public class PolymarketSessionService {
         }
 
         sessionRecordRepository.saveAll(expired);
+    }
+
+    public void assertAndConsumeLimit(
+            PredictionSessionRecord session,
+            BigDecimal usdtAmount
+    ) {
+        if (session == null || usdtAmount == null) {
+            return;
+        }
+
+        resetDailyUsageIfNeeded(session);
+
+        if (session.getMaxOrderUsdt() != null
+                && usdtAmount.compareTo(session.getMaxOrderUsdt()) > 0) {
+            throw new IllegalStateException(
+                    "session max order limit exceeded. max="
+                            + session.getMaxOrderUsdt()
+                            + ", requested="
+                            + usdtAmount
+            );
+        }
+
+        BigDecimal dailyUsed =
+                session.getDailyUsedUsdt() == null
+                        ? BigDecimal.ZERO
+                        : session.getDailyUsedUsdt();
+
+        if (session.getDailyLimitUsdt() != null
+                && dailyUsed.add(usdtAmount).compareTo(session.getDailyLimitUsdt()) > 0) {
+            throw new IllegalStateException(
+                    "session daily limit exceeded. limit="
+                            + session.getDailyLimitUsdt()
+                            + ", used="
+                            + dailyUsed
+                            + ", requested="
+                            + usdtAmount
+            );
+        }
+
+        session.setDailyUsedUsdt(dailyUsed.add(usdtAmount));
+        session.setLastUsedAt(Instant.now().toString());
+        sessionRecordRepository.save(session);
+    }
+
+    private void resetDailyUsageIfNeeded(PredictionSessionRecord session) {
+        String today =
+                LocalDate.now().toString();
+
+        if (!today.equals(session.getDailyResetDate())) {
+            session.setDailyResetDate(today);
+            session.setDailyUsedUsdt(BigDecimal.ZERO);
+        }
+    }
+
+    private BigDecimal resolveMaxOrderUsdt(SessionInitRequest request) {
+        if (request.getMaxOrderUsdt() != null
+                && request.getMaxOrderUsdt().signum() > 0) {
+            return request.getMaxOrderUsdt();
+        }
+
+        return new BigDecimal("100");
+    }
+
+    private BigDecimal resolveDailyLimitUsdt(SessionInitRequest request) {
+        if (request.getDailyLimitUsdt() != null
+                && request.getDailyLimitUsdt().signum() > 0) {
+            return request.getDailyLimitUsdt();
+        }
+
+        return new BigDecimal("1000");
     }
 
     /**

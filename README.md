@@ -439,18 +439,20 @@ polymarket.user.events
 
 ### P0：Polymarket 接入完成
 
-- [ ] `prediction_market_info` 補 `neg_risk` 欄位，交易時不再硬編碼 sports 預設值。
-- [ ] `prediction_market_info` 補 `no_buy_price`、`no_sell_price`，價格刷新時直接入庫。
-- [ ] 下單成功後建立內部 order record，保存 `internalOrderId`、Polymarket order id、market、token、side、price、size、status。
+- [x] `prediction_market_info` 補 `neg_risk` 欄位，交易時不再硬編碼 sports 預設值。
+- [x] `prediction_market_info` 補 `no_buy_price`、`no_sell_price`，價格刷新時直接入庫。
+- [x] 下單成功後建立內部 order record，保存 `internalOrderId`、Polymarket order id、market、token、side、price、size、status。
 - [x] 接 Polymarket user WebSocket，接收本錢包 order / trade / settlement lifecycle 更新。
-- [ ] 將 Polymarket user WebSocket 事件落 DB，更新內部 order / trade 狀態。
-- [ ] 建立 `polymarket.user.events` consumer，處理 order accepted / canceled / matched / confirmed / failed。
-- [ ] 建立 WS event idempotency key，避免重連或 replay 造成重複成交。
-- [ ] 建立 reconciliation job，定期對 Polymarket CLOB 訂單狀態與內部訂單狀態。
-- [ ] 補 CLOB order 查詢、取消訂單、成交回報同步。
-- [ ] Session Signer 加上過期時間、最大下單額、每日限額、撤銷審計。
-- [ ] Approval / allowance 結果加入 cache 與過期策略，避免高頻 RPC 查詢。
-- [ ] Polymarket API error code 正規化，避免 controller 直接回傳原始 exception message。
+- [x] 將 Polymarket user WebSocket 事件落 DB，更新內部 order / trade 狀態。
+- [x] 建立 `polymarket.user.events` consumer，處理 order accepted / canceled / matched / confirmed / failed。
+- [x] 建立 WS event idempotency key，避免重連或 replay 造成重複成交。
+- [x] 建立 reconciliation job，定期對 Polymarket CLOB 訂單狀態與內部訂單狀態。
+- [x] 補 CLOB order 查詢、取消訂單、成交回報同步。
+- [x] Session Signer 加上過期時間、最大下單額、每日限額、撤銷審計。
+- [x] Approval / allowance 結果加入 cache 與過期策略，避免高頻 RPC 查詢。
+- [x] Polymarket API error code 正規化，避免 controller 直接回傳原始 exception message。
+
+P0 目前是可測 MVP：已具備資料表、API、Kafka consumer、WS event 冪等、CLOB 查詢/取消與本地 order reconciliation。後續 P1 仍需補完整 ledger、風控、outbox、DLQ 與正式 migration。
 
 ### P1：交易所級帳務與風控
 

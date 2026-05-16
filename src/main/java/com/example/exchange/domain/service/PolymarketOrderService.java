@@ -5,11 +5,13 @@ import com.example.exchange.domain.model.dto.PolymarketNormalizedClobOrder;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderRequest;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
 import com.example.exchange.domain.model.entity.PredictionMarketInfo;
+import com.example.exchange.domain.model.entity.PredictionPolymarketOrder;
 import com.example.exchange.domain.model.entity.PredictionSessionRecord;
 import com.example.exchange.domain.model.enums.PolymarketClobSide;
 import com.example.exchange.domain.model.enums.PolymarketOrderDirection;
 import com.example.exchange.domain.model.enums.PolymarketOrderType;
 import com.example.exchange.domain.repository.jpa.PredictionMarketInfoRepository;
+import com.example.exchange.domain.repository.jpa.PredictionPolymarketOrderRepository;
 import com.example.exchange.domain.util.PolymarketOrderSigner;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import lombok.RequiredArgsConstructor;
@@ -55,6 +57,8 @@ public class PolymarketOrderService {
 
     private final PredictionMarketInfoRepository predictionMarketInfoRepository;
 
+    private final PredictionPolymarketOrderRepository polymarketOrderRepository;
+
     /**
      * 建立真實 Polymarket CLOB order。
      */
@@ -85,6 +89,11 @@ public class PolymarketOrderService {
                             .create(signingPrivateKey)
                             .getAddress();
 
+            polymarketSessionService.assertAndConsumeLimit(
+                    sessionRecord,
+                    request.getUsdtAmount()
+            );
+
             /**
              * Deposit Wallet / POLY_1271 模式：
              *
@@ -111,6 +120,14 @@ public class PolymarketOrderService {
                     buildNormalizedOrder(
                             request,
                             marketInfo
+                    );
+
+            PredictionPolymarketOrder orderRecord =
+                    createOrderRecord(
+                            internalOrderId,
+                            request,
+                            marketInfo,
+                            normalizedOrder
                     );
 
             log.info(
@@ -156,6 +173,11 @@ public class PolymarketOrderService {
                     normalizedOrder
             );
 
+            updateOrderRecord(
+                    orderRecord,
+                    response
+            );
+
             logResult(
                     internalOrderId,
                     request,
@@ -179,9 +201,49 @@ public class PolymarketOrderService {
                     .success(false)
                     .internalOrderId(internalOrderId)
                     .status("EXCEPTION")
-                    .errorMsg(e.getMessage())
+                    .errorMsg(normalizeError(e))
                     .build();
         }
+    }
+
+    private String normalizeError(Exception e) {
+        if (e == null || e.getMessage() == null) {
+            return "UNKNOWN_ERROR";
+        }
+
+        String message =
+                e.getMessage();
+
+        String lower =
+                message.toLowerCase();
+
+        if (lower.contains("market not found")) {
+            return "MARKET_NOT_FOUND: " + message;
+        }
+
+        if (lower.contains("allowance")) {
+            return "INSUFFICIENT_ALLOWANCE: " + message;
+        }
+
+        if (lower.contains("conditional tokens not approved")) {
+            return "CONDITIONAL_TOKENS_NOT_APPROVED: " + message;
+        }
+
+        if (lower.contains("session expired")) {
+            return "SESSION_EXPIRED";
+        }
+
+        if (lower.contains("session is not active")) {
+            return "SESSION_NOT_ACTIVE";
+        }
+
+        if (lower.contains("api key")
+                || lower.contains("api secret")
+                || lower.contains("api passphrase")) {
+            return "CLOB_AUTH_CONFIG_ERROR: " + message;
+        }
+
+        return "ORDER_ERROR: " + message;
     }
 
     /**
@@ -251,12 +313,7 @@ public class PolymarketOrderService {
                 .usdtAmount(request.getUsdtAmount())
                 .orderType(orderType)
 
-                /**
-                 * TODO:
-                 * 目前 FIFA / sports 預設 true。
-                 * 正式建議 prediction_market_info 補 neg_risk 欄位。
-                 */
-                .negRisk(true)
+                .negRisk(Boolean.TRUE.equals(marketInfo.getNegRisk()))
                 .build();
     }
 
@@ -289,63 +346,21 @@ public class PolymarketOrderService {
             case BUY_NO -> new TokenAndPrice(
                     marketInfo.getNoTokenId(),
                     PolymarketClobSide.BUY,
-                    resolveNoBuyPrice(marketInfo)
+                    toBigDecimal(
+                            marketInfo.getNoBuyPrice(),
+                            "noBuyPrice"
+                    )
             );
 
             case SELL_NO -> new TokenAndPrice(
                     marketInfo.getNoTokenId(),
                     PolymarketClobSide.SELL,
-                    resolveNoSellPrice(marketInfo)
+                    toBigDecimal(
+                            marketInfo.getNoSellPrice(),
+                            "noSellPrice"
+                    )
             );
         };
-    }
-
-    /**
-     * BUY_NO price。
-     *
-     * TODO:
-     * 正式建議 DB 直接存 no_buy_price。
-     */
-    private BigDecimal resolveNoBuyPrice(
-            PredictionMarketInfo marketInfo
-    ) {
-        if (marketInfo.getStaticNoPrice() != null) {
-            return toBigDecimal(
-                    marketInfo.getStaticNoPrice(),
-                    "staticNoPrice"
-            );
-        }
-
-        return BigDecimal.ONE.subtract(
-                toBigDecimal(
-                        marketInfo.getBestBid(),
-                        "bestBid"
-                )
-        );
-    }
-
-    /**
-     * SELL_NO price。
-     *
-     * TODO:
-     * 正式建議 DB 直接存 no_sell_price。
-     */
-    private BigDecimal resolveNoSellPrice(
-            PredictionMarketInfo marketInfo
-    ) {
-        if (marketInfo.getStaticNoPrice() != null) {
-            return toBigDecimal(
-                    marketInfo.getStaticNoPrice(),
-                    "staticNoPrice"
-            );
-        }
-
-        return BigDecimal.ONE.subtract(
-                toBigDecimal(
-                        marketInfo.getBestAsk(),
-                        "bestAsk"
-                )
-        );
     }
 
     private BigDecimal toBigDecimal(
@@ -493,6 +508,45 @@ public class PolymarketOrderService {
         response.setPrice(normalizedOrder.getPrice());
         response.setSize(normalizedOrder.getSize());
         response.setUsdtAmount(normalizedOrder.getUsdtAmount());
+    }
+
+    private PredictionPolymarketOrder createOrderRecord(
+            String internalOrderId,
+            PolymarketPlaceOrderRequest request,
+            PredictionMarketInfo marketInfo,
+            PolymarketNormalizedClobOrder normalizedOrder
+    ) {
+        PredictionPolymarketOrder entity =
+                new PredictionPolymarketOrder();
+
+        entity.setInternalOrderId(internalOrderId);
+        entity.setUserId(request.getUserId());
+        entity.setSessionId(request.getSessionId());
+        entity.setEventSlug(marketInfo.getEventSlug());
+        entity.setMarketSlug(marketInfo.getMarketSlug());
+        entity.setConditionId(marketInfo.getConditionId());
+        entity.setOutcomeKey(marketInfo.getOutcomeKey());
+        entity.setTokenId(normalizedOrder.getTokenId());
+        entity.setDirection(request.getDirection().name());
+        entity.setSide(normalizedOrder.getSide().name());
+        entity.setOrderType(normalizedOrder.getOrderType().name());
+        entity.setPrice(normalizedOrder.getPrice());
+        entity.setSize(normalizedOrder.getSize());
+        entity.setUsdtAmount(normalizedOrder.getUsdtAmount());
+        entity.setStatus("CREATED");
+
+        return polymarketOrderRepository.save(entity);
+    }
+
+    private void updateOrderRecord(
+            PredictionPolymarketOrder entity,
+            PolymarketPlaceOrderResponse response
+    ) {
+        entity.setClobOrderId(response.getClobOrderId());
+        entity.setStatus(response.getStatus());
+        entity.setLastError(response.getErrorMsg());
+
+        polymarketOrderRepository.save(entity);
     }
 
     private void logStart(

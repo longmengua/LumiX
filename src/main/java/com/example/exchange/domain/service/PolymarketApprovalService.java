@@ -17,7 +17,10 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.protocol.core.methods.response.EthCall;
 
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Polymarket approval query service。
@@ -40,9 +43,17 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PolymarketApprovalService {
 
+    private static final long CACHE_TTL_SECONDS = 30;
+
     private final Web3j web3j;
 
     private final PolymarketConfigs polymarketConfigs;
+
+    private final Map<String, CacheValue<BigInteger>> allowanceCache =
+            new ConcurrentHashMap<>();
+
+    private final Map<String, CacheValue<Boolean>> approvalCache =
+            new ConcurrentHashMap<>();
 
     /**
      * 查指定 owner 的 USDC allowance。
@@ -53,6 +64,16 @@ public class PolymarketApprovalService {
             String owner
     ) {
         try {
+            String cacheKey =
+                    owner.toLowerCase();
+
+            CacheValue<BigInteger> cached =
+                    allowanceCache.get(cacheKey);
+
+            if (cached != null && !cached.isExpired()) {
+                return cached.value();
+            }
+
             String token =
                     polymarketConfigs.getChain().getCollateralToken();
 
@@ -66,11 +87,19 @@ public class PolymarketApprovalService {
                     spender
             );
 
-            return getErc20Allowance(
+            BigInteger allowance =
+                    getErc20Allowance(
                     token,
                     owner,
                     spender
             );
+
+            allowanceCache.put(
+                    cacheKey,
+                    CacheValue.of(allowance)
+            );
+
+            return allowance;
 
         } catch (Exception e) {
             log.error(
@@ -96,6 +125,16 @@ public class PolymarketApprovalService {
             String owner
     ) {
         try {
+            String cacheKey =
+                    owner.toLowerCase();
+
+            CacheValue<Boolean> cached =
+                    approvalCache.get(cacheKey);
+
+            if (cached != null && !cached.isExpired()) {
+                return cached.value();
+            }
+
             String token =
                     polymarketConfigs.getChain().getConditionalTokens();
 
@@ -109,11 +148,19 @@ public class PolymarketApprovalService {
                     operator
             );
 
-            return isErc1155ApprovedForAll(
+            Boolean approved =
+                    isErc1155ApprovedForAll(
                     token,
                     owner,
                     operator
             );
+
+            approvalCache.put(
+                    cacheKey,
+                    CacheValue.of(approved)
+            );
+
+            return approved;
 
         } catch (Exception e) {
             log.error(
@@ -337,5 +384,21 @@ public class PolymarketApprovalService {
                 transaction,
                 DefaultBlockParameterName.LATEST
         ).send();
+    }
+
+    private record CacheValue<T>(
+            T value,
+            long expiresAt
+    ) {
+        static <T> CacheValue<T> of(T value) {
+            return new CacheValue<>(
+                    value,
+                    Instant.now().getEpochSecond() + CACHE_TTL_SECONDS
+            );
+        }
+
+        boolean isExpired() {
+            return Instant.now().getEpochSecond() >= expiresAt;
+        }
     }
 }

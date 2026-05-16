@@ -3,6 +3,8 @@ package com.example.exchange.domain.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.math.BigDecimal;
+
 /**
  * Polymarket session signer record。
  *
@@ -239,4 +241,19 @@ public class PredictionSessionRecord {
             length = 64
     )
     private String lastUsedAt;
+
+    @Column(name = "max_order_usdt", precision = 38, scale = 18)
+    private BigDecimal maxOrderUsdt;
+
+    @Column(name = "daily_limit_usdt", precision = 38, scale = 18)
+    private BigDecimal dailyLimitUsdt;
+
+    @Column(name = "daily_used_usdt", precision = 38, scale = 18)
+    private BigDecimal dailyUsedUsdt;
+
+    @Column(name = "daily_reset_date", length = 16)
+    private String dailyResetDate;
+
+    @Column(name = "revoked_reason", length = 256)
+    private String revokedReason;
 }
