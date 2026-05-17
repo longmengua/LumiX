@@ -9,6 +9,7 @@ Technical documentation is for engineers who need to understand how the system i
 
 | Document | Description |
 | --- | --- |
+| [Current State](current-state.md) | Quick status dashboard for MVP baseline, completed capabilities, production blockers, and near-term priorities. |
 | [Technical Notes](../../NOTES.md) | Architecture and implementation review covering layers, strengths, risks, and production priorities. |
 | [API curl scripts](../../shells/api-curls/README.md) | Local curl-script guide for exchange and Polymarket API endpoints. |
 | [Matching Engine](../../src/main/java/com/example/exchange/infra/matching/README.md) | Notes for the current in-memory matching engine and its production evolution path. |
@@ -24,4 +25,5 @@ Technical documentation is for engineers who need to understand how the system i
 - Local infrastructure: MySQL, Redis, Kafka, Kafka UI.
 - API test scripts and manual verification flows.
 - Matching engine behavior and current limitations.
+- Current completion level, MVP baseline, and production blockers.
 - Production engineering gaps that need implementation before real traffic.

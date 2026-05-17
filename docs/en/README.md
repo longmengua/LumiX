@@ -14,6 +14,7 @@ This page is the English **Product Documentation** entry.
 | Category | Description | Link |
 | --- | --- | --- |
 | Product Documentation | Business-facing overview, features, modules, APIs, and order placement flow. | Current page |
+| Current State | Quick snapshot of completion level, MVP baseline, production blockers, and near-term priorities. | [current-state.md](current-state.md) |
 | Technical Documentation | Architecture, implementation notes, API curl scripts, and matching engine notes. | [technical.md](technical.md) |
 | TODO Documentation | Production-readiness roadmap grouped by priority and domain. | [todo.md](todo.md) |
 

@@ -9,6 +9,7 @@ English version: [../en/technical.md](../en/technical.md)
 
 | 文件 | 說明 |
 | --- | --- |
+| [目前狀態](current-state.md) | 快速判斷目前是 MVP baseline，並列出已完成能力、production blocker 與近期優先順序。 |
 | [技術筆記](../../NOTES_ch.md) | 架構與實作審查，涵蓋分層、已完成能力、風險與 production 優先事項。 |
 | [API curl 腳本](../../shells/api-curls/README_ch.md) | 本機 exchange 與 Polymarket API curl 腳本使用說明。 |
 | [撮合引擎](../../src/main/java/com/example/exchange/infra/matching/README_ch.md) | 目前 in-memory matching engine 說明與 production 演進方向。 |
@@ -24,4 +25,5 @@ English version: [../en/technical.md](../en/technical.md)
 - 本機基礎設施：MySQL、Redis、Kafka、Kafka UI。
 - API 測試腳本與手動驗證流程。
 - 撮合引擎行為與目前限制。
+- 目前完成度、MVP baseline 與 production blocker。
 - 真實流量前需要補齊的 production 工程缺口。
