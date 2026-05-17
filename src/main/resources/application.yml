@@ -5,6 +5,16 @@ spring:
   profiles:
     active: dev
 
+api-auth:
+  # dev 預設關閉，prod profile 預設開啟；也可用 API_AUTH_ENABLED 覆蓋。
+  enabled: ${API_AUTH_ENABLED:false}
+  api-key-enabled: ${API_AUTH_API_KEY_ENABLED:true}
+  api-key-header: ${API_AUTH_API_KEY_HEADER:X-API-Key}
+  api-keys: ${API_AUTH_API_KEYS:}
+  jwt-enabled: ${API_AUTH_JWT_ENABLED:true}
+  jwt-hmac-secret: ${API_AUTH_JWT_HMAC_SECRET:}
+  clock-skew-seconds: ${API_AUTH_CLOCK_SKEW_SECONDS:60}
+
 security-controls:
   # 受保護 API 的安全控制基線：rate limit、IP allowlist、audit log。
   enabled: ${SECURITY_CONTROLS_ENABLED:true}

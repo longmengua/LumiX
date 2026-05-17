@@ -42,7 +42,6 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Security
 
-- Add API authentication and authorization: JWT, API keys, scopes, roles, and admin isolation.
 - Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
 
 ## P1 Strongly Recommended

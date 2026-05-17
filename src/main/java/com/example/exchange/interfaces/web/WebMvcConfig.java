@@ -3,9 +3,12 @@
  */
 package com.example.exchange.interfaces.web;
 
+import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.SecurityControlsProperties;
+import com.example.exchange.interfaces.web.interceptor.ApiAuthenticationInterceptor;
 import com.example.exchange.interfaces.web.interceptor.ProtectedApiSecurityInterceptor;
 import com.example.exchange.interfaces.web.interceptor.RequestLoggingInterceptor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -21,7 +24,11 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @RequiredArgsConstructor
 public class WebMvcConfig implements WebMvcConfigurer {
 
+    private final ApiAuthProperties apiAuthProperties;
+
     private final SecurityControlsProperties securityControlsProperties;
+
+    private final ObjectMapper objectMapper;
 
     /**
      * 註冊自定義攔截器
@@ -36,6 +43,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**"); // 設定攔截路徑，"**" 表示攔截所有請求
 
         registry.addInterceptor(new ProtectedApiSecurityInterceptor(securityControlsProperties))
+                .addPathPatterns(securityControlsProperties.getProtectedPathPatterns());
+
+        registry.addInterceptor(new ApiAuthenticationInterceptor(apiAuthProperties, objectMapper))
                 .addPathPatterns(securityControlsProperties.getProtectedPathPatterns());
     }
 }

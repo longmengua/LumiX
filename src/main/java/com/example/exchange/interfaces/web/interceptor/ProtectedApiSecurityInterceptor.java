@@ -5,6 +5,8 @@ package com.example.exchange.interfaces.web.interceptor;
 
 import com.example.exchange.infra.config.SecurityControlsProperties;
 import com.example.exchange.interfaces.web.security.IpAllowlist;
+import com.example.exchange.interfaces.web.security.ProtectedApiCategory;
+import com.example.exchange.interfaces.web.security.ProtectedApiClassifier;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +41,7 @@ public class ProtectedApiSecurityInterceptor implements HandlerInterceptor {
 
         String path = request.getRequestURI();
         String clientIp = resolveClientIp(request);
-        String category = classify(path);
+        ProtectedApiCategory category = ProtectedApiClassifier.classify(path);
 
         request.setAttribute(START_TIME, System.currentTimeMillis());
         request.setAttribute(AUDIT_CATEGORY, category);
@@ -70,7 +72,7 @@ public class ProtectedApiSecurityInterceptor implements HandlerInterceptor {
             return;
         }
 
-        String category = (String) request.getAttribute(AUDIT_CATEGORY);
+        ProtectedApiCategory category = (ProtectedApiCategory) request.getAttribute(AUDIT_CATEGORY);
         String clientIp = (String) request.getAttribute(CLIENT_IP);
         Long startTime = (Long) request.getAttribute(START_TIME);
         long durationMs = startTime == null ? 0 : System.currentTimeMillis() - startTime;
@@ -80,7 +82,7 @@ public class ProtectedApiSecurityInterceptor implements HandlerInterceptor {
         audit(request, response, category, clientIp, result, reason, durationMs);
     }
 
-    private boolean consumeRateLimit(String clientIp, String category) {
+    private boolean consumeRateLimit(String clientIp, ProtectedApiCategory category) {
         long minuteBucket = Instant.now().getEpochSecond() / 60;
         String key = clientIp + ":" + category;
 
@@ -114,7 +116,7 @@ public class ProtectedApiSecurityInterceptor implements HandlerInterceptor {
         rateLimitWindows.entrySet().removeIf(entry -> entry.getValue().lastSeenSequence < threshold);
     }
 
-    private void audit(HttpServletRequest request, HttpServletResponse response, String category,
+    private void audit(HttpServletRequest request, HttpServletResponse response, ProtectedApiCategory category,
                        String clientIp, String result, String reason, long durationMs) {
         if (!properties.isAuditEnabled()) {
             return;
@@ -122,7 +124,7 @@ public class ProtectedApiSecurityInterceptor implements HandlerInterceptor {
 
         log.info(
                 "SECURITY_AUDIT category={} result={} reason={} method={} path={} clientIp={} status={} durationMs={} requestId={}",
-                category,
+                category == null ? "UNKNOWN" : category.name(),
                 result,
                 reason,
                 request.getMethod(),
@@ -144,33 +146,6 @@ public class ProtectedApiSecurityInterceptor implements HandlerInterceptor {
         }
 
         return request.getRemoteAddr();
-    }
-
-    private String classify(String path) {
-        if (path == null) {
-            return "UNKNOWN";
-        }
-
-        if (path.startsWith("/api/order")
-                || path.startsWith("/api/prediction/orders")
-                || path.startsWith("/api/prediction/session")) {
-            return "TRADING";
-        }
-
-        if (path.startsWith("/api/margin")
-                || path.startsWith("/api/prediction/approve")) {
-            return "FUNDS";
-        }
-
-        if (path.startsWith("/api/risk")
-                || path.startsWith("/api/recovery")
-                || path.startsWith("/api/prediction/clob")
-                || path.startsWith("/api/prediction/markets")
-                || path.startsWith("/api/prediction/ws")) {
-            return "ADMIN";
-        }
-
-        return "PROTECTED";
     }
 
     private void writeError(HttpServletResponse response, int status, String message)

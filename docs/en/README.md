@@ -332,6 +332,24 @@ Security control environment variables:
 - `SECURITY_CONTROLS_IP_ALLOWLIST`
 - `SECURITY_CONTROLS_CLIENT_IP_HEADER`
 
+Protected APIs also support `api-auth` authentication and authorization. Production enables it by default and accepts either SHA-256 hashed API keys or HS256 JWT bearer tokens. Admin APIs require `ROLE_ADMIN` or `admin` scope; trading APIs require trader/user roles or trading scopes; funds APIs require funds/admin roles or funds scopes.
+
+API auth environment variables:
+
+- `API_AUTH_ENABLED`
+- `API_AUTH_API_KEY_ENABLED`
+- `API_AUTH_API_KEY_HEADER`
+- `API_AUTH_API_KEYS`
+- `API_AUTH_JWT_ENABLED`
+- `API_AUTH_JWT_HMAC_SECRET`
+- `API_AUTH_CLOCK_SKEW_SECONDS`
+
+`API_AUTH_API_KEYS` format:
+
+```text
+keyId:sha256Hex:ROLE_ADMIN|ROLE_TRADER:admin|trade:write;trader:sha256Hex:ROLE_TRADER:trade:write
+```
+
 ## Tests
 
 ```bash

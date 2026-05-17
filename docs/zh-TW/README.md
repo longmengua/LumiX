@@ -332,6 +332,24 @@ Polymarket 的 `private-key`、CLOB `api-key/api-secret/api-passphrase`、relaye
 - `SECURITY_CONTROLS_IP_ALLOWLIST`
 - `SECURITY_CONTROLS_CLIENT_IP_HEADER`
 
+受保護 API 也支援 `api-auth` authentication / authorization。正式環境預設啟用，支援 SHA-256 hash API key 與 HS256 JWT bearer token。Admin API 需要 `ROLE_ADMIN` 或 `admin` scope；交易 API 需要 trader/user 角色或交易 scope；資金 API 需要 funds/admin 角色或 funds scope。
+
+API auth 相關環境變數：
+
+- `API_AUTH_ENABLED`
+- `API_AUTH_API_KEY_ENABLED`
+- `API_AUTH_API_KEY_HEADER`
+- `API_AUTH_API_KEYS`
+- `API_AUTH_JWT_ENABLED`
+- `API_AUTH_JWT_HMAC_SECRET`
+- `API_AUTH_CLOCK_SKEW_SECONDS`
+
+`API_AUTH_API_KEYS` 格式：
+
+```text
+keyId:sha256Hex:ROLE_ADMIN|ROLE_TRADER:admin|trade:write;trader:sha256Hex:ROLE_TRADER:trade:write
+```
+
 ## 測試
 
 ```bash

@@ -8,6 +8,10 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+api-auth:
+  # Production 預設啟用 authentication / authorization。
+  enabled: ${API_AUTH_ENABLED:true}
+
 polymarket:
   key-sync-ms: ${POLYMARKET_KEY_SYNC_MS:600000}
   price-refresh-ms: ${POLYMARKET_PRICE_REFRESH_MS:5000}

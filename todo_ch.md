@@ -40,7 +40,6 @@
 
 ### 安全
 
-- API authentication / authorization：JWT、API key、scope、角色權限、admin 權限隔離。
 - Session signer lifecycle 要有過期、撤銷、審計、異常使用檢測。
 
 ## P1 強烈建議

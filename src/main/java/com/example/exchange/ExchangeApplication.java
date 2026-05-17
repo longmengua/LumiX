@@ -3,6 +3,7 @@
  */
 package com.example.exchange;
 
+import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.example.exchange.infra.config.SecurityControlsProperties;
 import org.springframework.boot.SpringApplication;
@@ -21,6 +22,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         basePackages = "com.example.exchange.domain.model.entity"
 )
 @EnableConfigurationProperties({
+        ApiAuthProperties.class,
         PolymarketConfigs.class,
         SecurityControlsProperties.class
 })
