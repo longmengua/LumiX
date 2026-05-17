@@ -2,6 +2,8 @@ package com.example.exchange.domain.repository;
 
 import com.example.exchange.domain.event.TradeExecuted;
 
+import java.util.List;
+
 /**
  * 事件儲存（Event Store）的抽象
  *
@@ -21,4 +23,11 @@ public interface EventStore {
      * 查詢某使用者的最後事件序號（恢復時決定從哪個 seq 之後開始 replay）
      */
     long lastSeq(long uid);
+
+    /**
+     * 查詢指定 uid 在 afterSeq 之後的事件，用於 snapshot replay。
+     */
+    default List<TradeExecuted> fetchAfter(long uid, long afterSeq, int limit) {
+        return List.of();
+    }
 }

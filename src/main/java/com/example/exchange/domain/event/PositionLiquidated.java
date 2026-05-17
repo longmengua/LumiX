@@ -14,6 +14,15 @@ import java.time.Instant;
 public record PositionLiquidated(
         long uid,
         Symbol symbol,
-        BigDecimal bankruptedPrice,
+        BigDecimal liquidationPrice,
+        BigDecimal markPrice,
+        BigDecimal closedQty,
+        BigDecimal realizedPnl,
+        BigDecimal insuranceFundCovered,
+        BigDecimal adlCovered,
         Instant ts
-) {}
+) {
+    public PositionLiquidated(long uid, Symbol symbol, BigDecimal bankruptedPrice, Instant ts) {
+        this(uid, symbol, bankruptedPrice, bankruptedPrice, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, ts);
+    }
+}

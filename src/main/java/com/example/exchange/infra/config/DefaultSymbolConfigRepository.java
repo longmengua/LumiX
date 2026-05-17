@@ -64,6 +64,7 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
                 .makerRebateRate(BigDecimal.ZERO)
                 .referralRebateRate(new BigDecimal("0.00005"))
                 .priceBandRate(new BigDecimal("0.10"))
+                .maintenanceMarginRate(new BigDecimal("0.005"))
                 .tradingEnabled(true)
                 .build();
     }

@@ -93,6 +93,7 @@ public class OrderService {
     private final FeeService feeService;
     private final RiskService riskService;
     private final MarketDataService marketDataService;
+    private final IdempotencyService idempotencyService;
 
     /**
      * 處理新訂單
@@ -129,6 +130,9 @@ public class OrderService {
 
             // 回填 seq，作為往外發布或後續 replay 用事件
             TradeExecuted withSeq = trade.withSeq(seq);
+            if (!idempotencyService.markProcessed(withSeq.idempotencyKey())) {
+                continue;
+            }
             Order relatedOrder = trade.orderId() == null ? null : affectedById.get(trade.orderId());
             SymbolConfig config = symbolConfigRepository.findBySymbol(trade.symbol().code())
                     .orElseThrow(() -> new IllegalArgumentException("missing symbol config: " + trade.symbol().code()));
@@ -226,18 +230,7 @@ public class OrderService {
                 matchingEngine.top(order.getSymbol().code())
         );
 
-        // 4) 資金費計提與結算（出入點）
-        // -------------------------------------------------
-        // TODO: 若到資金費結算瞬間（fundingSvc.shouldSettle(symbol, now)）：
-        //       - 根據標記價格 / 指數價計算 funding
-        //       - 對多空雙邊倉位做轉移（多 → 空 或 空 → 多）
-        //       - 若資金不足，從可用 / 保證金扣減；不足則進一步風控處理
-        //       - 記錄 funding 流水與事件（FundingSettled）
-
-        // 5) 保險基金 / 強平清算（出入點）
-        // -------------------------------------------------
-        // TODO: 若強平導致負資產 → 由保險基金 / ADL 處理
-        // TODO: 記錄保險基金入出帳流水，確保事件可回放、可審計
+        // 資金費與強平由 FundingRateService / LiquidationService 根據標記價獨立觸發。
     }
 
     private void reconcileOrderReserve(Order order) {

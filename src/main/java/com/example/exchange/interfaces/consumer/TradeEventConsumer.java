@@ -1,6 +1,8 @@
 package com.example.exchange.interfaces.consumer;
 
+import com.example.exchange.application.service.PushGatewayService;
 import com.example.exchange.domain.event.TradeExecuted;
+import lombok.RequiredArgsConstructor;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -9,10 +11,14 @@ import org.springframework.stereotype.Component;
  * - 用於對外推播、審計、指標統計等副作用
  */
 @Component
+@RequiredArgsConstructor
 public class TradeEventConsumer {
+
+    private final PushGatewayService pushGatewayService;
 
     @KafkaListener(topics = "trade.executed", groupId = "trade-consumer")
     public void onTrade(TradeExecuted e) {
-        // TODO: 推播到 WebSocket、記錄審計、指標上報…
+        pushGatewayService.publishMarket(e.symbol().code(), "trade", e);
+        pushGatewayService.publishUser(e.uid(), "trade", e);
     }
 }

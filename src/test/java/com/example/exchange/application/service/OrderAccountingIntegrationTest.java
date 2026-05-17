@@ -12,6 +12,7 @@ import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.EventStore;
+import com.example.exchange.domain.repository.IdempotencyRepository;
 import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
@@ -20,7 +21,9 @@ import com.example.exchange.infra.matching.InMemoryMatchingEngine;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +49,7 @@ class OrderAccountingIntegrationTest {
         WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
         RiskService riskService = new RiskService(accountRepo, positionRepo, matchingEngine, walletLedgerService);
         MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
         OrderService orderService = new OrderService(
                 matchingEngine,
                 positionRepo,
@@ -56,7 +60,8 @@ class OrderAccountingIntegrationTest {
                 walletLedgerService,
                 new FeeService(),
                 riskService,
-                marketDataService
+                marketDataService,
+                idempotencyService
         );
         PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo);
 
@@ -221,6 +226,20 @@ class OrderAccountingIntegrationTest {
         @Override
         public long lastSeq(long uid) {
             return seq.get();
+        }
+    }
+
+    private static class MemIdempotencyRepository implements IdempotencyRepository {
+        private final HashSet<String> keys = new HashSet<>();
+
+        @Override
+        public boolean insertIfAbsent(String key, Instant expiresAt) {
+            return keys.add(key);
+        }
+
+        @Override
+        public boolean exists(String key) {
+            return keys.contains(key);
         }
     }
 }

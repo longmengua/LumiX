@@ -5,6 +5,11 @@ import com.example.exchange.domain.repository.EventStore;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -17,6 +22,7 @@ public class KafkaEventStore implements EventStore {
 
     private final KafkaTemplate<String, Object> kafka;
     private final AtomicLong seq = new AtomicLong(); // DEMO：請替換為真正的序號來源
+    private final Map<Long, CopyOnWriteArrayList<TradeExecuted>> replayIndex = new ConcurrentHashMap<>();
 
     public KafkaEventStore(KafkaTemplate<String, Object> kafka) {
         this.kafka = kafka;
@@ -25,13 +31,26 @@ public class KafkaEventStore implements EventStore {
     @Override
     public long append(TradeExecuted e) {
         long s = seq.incrementAndGet();
-        kafka.send("event.store.trade", e.withSeq(s));
+        TradeExecuted withSeq = e.withSeq(s);
+        replayIndex.computeIfAbsent(withSeq.uid(), ignored -> new CopyOnWriteArrayList<>()).add(withSeq);
+        kafka.send("event.store.trade", withSeq.symbol().code(), withSeq);
         return s;
     }
 
     @Override
     public long lastSeq(long uid) {
-        // DEMO：僅回傳目前計數；實務請查詢該 uid 的最新 seq
-        return seq.get();
+        return replayIndex.getOrDefault(uid, new CopyOnWriteArrayList<>()).stream()
+                .mapToLong(TradeExecuted::seq)
+                .max()
+                .orElse(0L);
+    }
+
+    @Override
+    public List<TradeExecuted> fetchAfter(long uid, long afterSeq, int limit) {
+        return replayIndex.getOrDefault(uid, new CopyOnWriteArrayList<>()).stream()
+                .filter(event -> event.seq() > afterSeq)
+                .sorted(Comparator.comparingLong(TradeExecuted::seq))
+                .limit(Math.max(1, limit))
+                .toList();
     }
 }

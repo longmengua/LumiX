@@ -1,18 +1,21 @@
 package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.LiquidateCommand;
+import com.example.exchange.application.service.LiquidationService;
+import com.example.exchange.domain.model.dto.LiquidationResult;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 /**
- * 強平用例（骨架）
- * - 真實會連動風控、撮合、保險基金結算
+ * 強平用例。
  */
 @Component
+@RequiredArgsConstructor
 public class LiquidateUseCase {
 
-    public void handle(LiquidateCommand cmd) {
-        // TODO: 1) 計算維持保證金 & 破產價
-        //       2) 產生清算訂單/成交事件
-        //       3) 減倉/平倉 & 發布 PositionLiquidated 事件
+    private final LiquidationService liquidationService;
+
+    public LiquidationResult handle(LiquidateCommand cmd) {
+        return liquidationService.liquidate(cmd.uid(), cmd.symbol(), cmd.markPrice());
     }
 }

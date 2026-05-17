@@ -140,6 +140,59 @@ public class WalletLedgerService {
         append(uid, asset, "realized_pnl_loss", refId, amount, account.crossBalance(), postings);
     }
 
+    public void applyFundingFee(long uid, String asset, BigDecimal cashflow, String refId) {
+        if (cashflow == null || cashflow.signum() == 0) return;
+        Account account = getOrCreate(uid);
+        BigDecimal amount = cashflow.abs();
+
+        if (cashflow.signum() > 0) {
+            account.credit(amount);
+            accountRepo.save(account);
+            append(uid, asset, "funding_fee_received", refId, amount, account.crossBalance(), List.of(
+                    debit("USER_AVAILABLE", asset, amount),
+                    credit("FUNDING_TRANSFER", asset, amount)
+            ));
+            return;
+        }
+
+        BigDecimal fromAvailable = account.crossAvailable().min(amount);
+        BigDecimal remaining = amount.subtract(fromAvailable);
+        BigDecimal fromOrderHold = account.crossOrderHold().min(remaining);
+        remaining = remaining.subtract(fromOrderHold);
+        BigDecimal fromPositionMargin = remaining;
+        account.debit(amount);
+        accountRepo.save(account);
+
+        List<WalletLedgerPosting> postings = new ArrayList<>();
+        postings.add(debit("FUNDING_FEE_EXPENSE", asset, amount));
+        if (fromAvailable.signum() > 0) postings.add(credit("USER_AVAILABLE", asset, fromAvailable));
+        if (fromOrderHold.signum() > 0) postings.add(credit("USER_ORDER_HOLD", asset, fromOrderHold));
+        if (fromPositionMargin.signum() > 0) postings.add(credit("USER_POSITION_MARGIN", asset, fromPositionMargin));
+        append(uid, asset, "funding_fee_paid", refId, amount, account.crossBalance(), postings);
+    }
+
+    public void applyInsurancePayout(long uid, String asset, BigDecimal amount, String refId) {
+        if (notPositive(amount)) return;
+        Account account = getOrCreate(uid);
+        account.credit(amount);
+        accountRepo.save(account);
+        append(uid, asset, "insurance_fund_payout", refId, amount, account.crossBalance(), List.of(
+                debit("USER_AVAILABLE", asset, amount),
+                credit("INSURANCE_FUND", asset, amount)
+        ));
+    }
+
+    public void applyAdlCompensation(long uid, String asset, BigDecimal amount, String refId) {
+        if (notPositive(amount)) return;
+        Account account = getOrCreate(uid);
+        account.credit(amount);
+        accountRepo.save(account);
+        append(uid, asset, "adl_socialized_loss", refId, amount, account.crossBalance(), List.of(
+                debit("USER_AVAILABLE", asset, amount),
+                credit("ADL_SOCIALIZED_LOSS", asset, amount)
+        ));
+    }
+
     public void creditRebate(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);

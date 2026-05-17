@@ -55,4 +55,10 @@ public record TradeExecuted(
         if (price == null) return BigDecimal.ZERO;
         return price.multiply(absQty());
     }
+
+    public String idempotencyKey() {
+        String stableMatchId = matchId == null || matchId.isBlank() ? "seq-" + seq : matchId;
+        String stableOrderId = orderId == null ? "unknown-order" : orderId.toString();
+        return "trade-accounting:" + stableMatchId + ":" + stableOrderId;
+    }
 }

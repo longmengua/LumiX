@@ -9,6 +9,7 @@ import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.dto.TradeTapeItem;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.service.OrderBookSnapshot;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -38,12 +39,22 @@ public class MarketDataService {
     private final Map<String, Deque<TradeTapeItem>> tradeTapes = new ConcurrentHashMap<>();
     private final Map<String, MarketTicker> tickers = new ConcurrentHashMap<>();
     private final Map<String, Map<Instant, MarketKline>> oneMinuteKlines = new ConcurrentHashMap<>();
+    private PushGatewayService pushGatewayService;
+
+    @Autowired(required = false)
+    public void setPushGatewayService(PushGatewayService pushGatewayService) {
+        this.pushGatewayService = pushGatewayService;
+    }
 
     public void onOrderBookChanged(String symbol, OrderBookSnapshot snapshot, Optional<TopOfBook> top) {
         String code = normalize(symbol);
         DepthDelta delta = computeDepthDelta(code, previousDepth.put(code, snapshot), snapshot);
         latestDepthDelta.put(code, delta);
         updateTop(code, top);
+        if (pushGatewayService != null) {
+            pushGatewayService.publishMarket(code, "depth-delta", delta);
+            ticker(code).ifPresent(ticker -> pushGatewayService.publishMarket(code, "ticker", ticker));
+        }
     }
 
     public void onTrades(
@@ -109,6 +120,9 @@ public class MarketDataService {
 
         updateTickerFromTrade(symbol, trade);
         updateKline(symbol, trade);
+        if (pushGatewayService != null) {
+            pushGatewayService.publishMarket(symbol, "trade", item);
+        }
     }
 
     private void updateTickerFromTrade(String symbol, TradeExecuted trade) {

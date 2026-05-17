@@ -38,16 +38,32 @@ public class SnapshotScheduler {
         for (long uid : List.of(1L, 2L)) {
             accRepo.findByUid(uid).ifPresent(acc -> {
                 Map<String, Object> map = new HashMap<>();
-                map.put("account", Map.of("uid", acc.uid()));
+                map.put("account", Map.of(
+                        "uid", acc.uid(),
+                        "crossBalance", acc.crossBalance(),
+                        "crossAvailable", acc.crossAvailable(),
+                        "crossOrderHold", acc.crossOrderHold(),
+                        "crossPositionMargin", acc.crossPositionMargin()
+                ));
 
-                var positions = posRepo.findAllByUid(uid).stream().map(p -> Map.of(
-                        "base", p.getSymbol().getBase(),
-                        "quote", p.getSymbol().getQuote(),
-                        "priceScale", p.getSymbol().getPriceScale(),
-                        "qtyScale", p.getSymbol().getQtyScale(),
-                        "mode", p.getMode().name(),
-                        "lev", p.getLeverage()
-                )).toList();
+                var positions = posRepo.findAllByUid(uid).stream().map(p -> {
+                    Map<String, Object> position = new HashMap<>();
+                    position.put("base", p.getSymbol().getBase());
+                    position.put("quote", p.getSymbol().getQuote());
+                    position.put("priceScale", p.getSymbol().getPriceScale());
+                    position.put("qtyScale", p.getSymbol().getQtyScale());
+                    position.put("mode", p.getMode().name());
+                    position.put("lev", p.getLeverage());
+                    position.put("qty", p.getQty());
+                    position.put("entryPrice", p.getEntryPrice());
+                    position.put("margin", p.getMargin());
+                    position.put("realizedPnl", p.getRealizedPnl());
+                    position.put("feePaid", p.getFeePaid());
+                    position.put("rebateEarned", p.getRebateEarned());
+                    position.put("fundingPaid", p.getFundingPaid());
+                    position.put("fundingReceived", p.getFundingReceived());
+                    return position;
+                }).toList();
 
                 map.put("positions", positions);
 

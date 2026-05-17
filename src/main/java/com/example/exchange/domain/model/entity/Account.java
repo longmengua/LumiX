@@ -188,9 +188,30 @@ public class Account {
         updatedAt = Instant.now();
     }
 
+    public void restoreCross(
+            BigDecimal balance,
+            BigDecimal available,
+            BigDecimal orderHold,
+            BigDecimal positionMargin
+    ) {
+        crossBalance = nonNegative(balance, "cross balance");
+        crossAvailable = nonNegative(available, "cross available");
+        crossOrderHold = nonNegative(orderHold, "cross order hold");
+        crossPositionMargin = nonNegative(positionMargin, "cross position margin");
+        updatedAt = Instant.now();
+    }
+
     private static void requirePositive(BigDecimal amt, String label) {
         if (amt == null || amt.signum() <= 0) {
             throw new IllegalArgumentException(label + " must be positive");
         }
+    }
+
+    private static BigDecimal nonNegative(BigDecimal amt, String label) {
+        if (amt == null) return BigDecimal.ZERO;
+        if (amt.signum() < 0) {
+            throw new IllegalArgumentException(label + " must be non-negative");
+        }
+        return amt;
     }
 }

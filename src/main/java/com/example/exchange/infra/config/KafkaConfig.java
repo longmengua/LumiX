@@ -23,6 +23,21 @@ public class KafkaConfig {
         return new NewTopic("event.store.trade", 3, (short) 1);
     }
 
+    @Bean
+    NewTopic fundingSettledTopic() {
+        return new NewTopic("funding.settled", 3, (short) 1);
+    }
+
+    @Bean
+    NewTopic positionLiquidatedTopic() {
+        return new NewTopic("position.liquidated", 3, (short) 1);
+    }
+
+    @Bean
+    NewTopic domainEventsTopic() {
+        return new NewTopic("domain.events", 3, (short) 1);
+    }
+
     /** Polymarket user channel 私有 order/trade/settlement lifecycle */
     @Bean
     NewTopic polymarketUserEventsTopic() {

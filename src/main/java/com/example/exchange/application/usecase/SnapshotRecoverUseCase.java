@@ -2,6 +2,7 @@ package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.SnapshotRecoverCommand;
 import com.example.exchange.application.service.RecoveryService;
+import com.example.exchange.domain.model.dto.RecoveryResult;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -12,7 +13,7 @@ public class SnapshotRecoverUseCase {
 
     private final RecoveryService svc;
 
-    public void handle(SnapshotRecoverCommand cmd) {
-        svc.recover(cmd.uid());
+    public RecoveryResult handle(SnapshotRecoverCommand cmd) {
+        return svc.recover(cmd.uid(), cmd.fromSeq());
     }
 }
