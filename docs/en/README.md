@@ -319,6 +319,19 @@ Secret-related environment variables:
 - `POLYMARKET_RELAYER_API_KEY`
 - `WEB3_POLYGON_RPC_URL`
 
+Protected trading, funds, and admin APIs are covered by the `security-controls` interceptor. It applies rate limiting, optional IP allowlist checks, and `SECURITY_AUDIT` logs.
+
+Security control environment variables:
+
+- `SECURITY_CONTROLS_ENABLED`
+- `SECURITY_CONTROLS_AUDIT_ENABLED`
+- `SECURITY_CONTROLS_RATE_LIMIT_ENABLED`
+- `SECURITY_CONTROLS_REQUESTS_PER_MINUTE`
+- `SECURITY_CONTROLS_MAX_TRACKED_KEYS`
+- `SECURITY_CONTROLS_IP_ALLOWLIST_ENABLED`
+- `SECURITY_CONTROLS_IP_ALLOWLIST`
+- `SECURITY_CONTROLS_CLIENT_IP_HEADER`
+
 ## Tests
 
 ```bash

@@ -44,7 +44,6 @@
 
 - API authentication / authorization：JWT、API key、scope、角色權限、admin 權限隔離。
 - Session signer lifecycle 要有過期、撤銷、審計、異常使用檢測。
-- 所有交易、資金、admin API 加上 rate limit、IP allowlist、審計日誌。
 
 ## P1 強烈建議
 

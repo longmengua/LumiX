@@ -42,7 +42,6 @@ This checklist focuses on the work needed to move the current MVP toward product
 
 - Add API authentication and authorization: JWT, API keys, scopes, roles, and admin isolation.
 - Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
-- Add rate limit, IP allowlist, and audit logs for trading, funds, and admin APIs.
 
 ## P1 Strongly Recommended
 

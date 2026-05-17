@@ -44,7 +44,6 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 - Add API authentication and authorization: JWT, API keys, scopes, roles, and admin isolation.
 - Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
-- Add rate limit, IP allowlist, and audit logs for trading, funds, and admin APIs.
 
 ## P1 Strongly Recommended
 

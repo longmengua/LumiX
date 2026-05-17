@@ -319,6 +319,19 @@ Polymarket 的 `private-key`、CLOB `api-key/api-secret/api-passphrase`、relaye
 - `POLYMARKET_RELAYER_API_KEY`
 - `WEB3_POLYGON_RPC_URL`
 
+交易、資金、admin 類 API 會經過 `security-controls` interceptor。它會套用 rate limit、可選的 IP allowlist 檢查，並輸出 `SECURITY_AUDIT` log。
+
+安全控制相關環境變數：
+
+- `SECURITY_CONTROLS_ENABLED`
+- `SECURITY_CONTROLS_AUDIT_ENABLED`
+- `SECURITY_CONTROLS_RATE_LIMIT_ENABLED`
+- `SECURITY_CONTROLS_REQUESTS_PER_MINUTE`
+- `SECURITY_CONTROLS_MAX_TRACKED_KEYS`
+- `SECURITY_CONTROLS_IP_ALLOWLIST_ENABLED`
+- `SECURITY_CONTROLS_IP_ALLOWLIST`
+- `SECURITY_CONTROLS_CLIENT_IP_HEADER`
+
 ## 測試
 
 ```bash

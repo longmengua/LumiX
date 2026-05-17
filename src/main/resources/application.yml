@@ -4,3 +4,30 @@ spring:
     name: java21-exchange
   profiles:
     active: dev
+
+security-controls:
+  # 受保護 API 的安全控制基線：rate limit、IP allowlist、audit log。
+  enabled: ${SECURITY_CONTROLS_ENABLED:true}
+  audit-enabled: ${SECURITY_CONTROLS_AUDIT_ENABLED:true}
+  rate-limit-enabled: ${SECURITY_CONTROLS_RATE_LIMIT_ENABLED:true}
+  requests-per-minute: ${SECURITY_CONTROLS_REQUESTS_PER_MINUTE:120}
+  max-tracked-keys: ${SECURITY_CONTROLS_MAX_TRACKED_KEYS:10000}
+  ip-allowlist-enabled: ${SECURITY_CONTROLS_IP_ALLOWLIST_ENABLED:false}
+  ip-allowlist: ${SECURITY_CONTROLS_IP_ALLOWLIST:}
+  client-ip-header: ${SECURITY_CONTROLS_CLIENT_IP_HEADER:X-Forwarded-For}
+  protected-path-patterns:
+    - /api/order/**
+    - /api/margin/**
+    - /api/risk/**
+    - /api/recovery/**
+    - /api/prediction/session/**
+    - /api/prediction/orders/**
+    - /api/prediction/clob/**
+    - /api/prediction/markets/discover
+    - /api/prediction/markets/sync
+    - /api/prediction/markets/sync-reset
+    - /api/prediction/markets/sync-progress
+    - /api/prediction/markets/retry/**
+    - /api/prediction/markets/price-refresh
+    - /api/prediction/ws/**
+    - /api/prediction/approve/**
