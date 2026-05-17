@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：Redis Repository 實作，用 Redis 保存低延遲交易狀態與快照資料。
+ */
 package com.example.exchange.infra.redis; // 套件名稱，放在 infra.redis 命名空間下
 
 import com.example.exchange.domain.model.entity.Order; // 匯入網域模型：訂單

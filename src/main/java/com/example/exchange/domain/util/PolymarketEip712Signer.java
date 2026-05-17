@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：領域工具，封裝簽名、JSON 處理或文字解析等純技術細節。
+ */
 package com.example.exchange.domain.util;
 
 import com.example.exchange.domain.model.dto.PolymarketClobOrderRequest;

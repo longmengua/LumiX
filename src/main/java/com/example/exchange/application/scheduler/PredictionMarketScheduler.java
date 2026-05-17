@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：應用層排程任務，定期驅動快照、資金費、對帳或 Polymarket 同步。
+ */
 package com.example.exchange.application.scheduler;
 
 import com.example.exchange.domain.service.PolymarketSyncService;

@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：Kafka 基礎設施 adapter，負責 domain event 的路由、發布與保存。
+ */
 package com.example.exchange.infra.kafka;
 
 import com.example.exchange.application.event.DomainEventPublisher;

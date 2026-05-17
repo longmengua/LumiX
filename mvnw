@@ -1,4 +1,5 @@
 #!/bin/sh
+# 檔案用途：Unix/macOS Maven Wrapper 啟動腳本，用來執行本專案 Maven build。
 # ----------------------------------------------------------------------------
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file

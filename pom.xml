@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- 檔案用途：Maven 專案設定，管理 Java 21/Spring Boot 相依套件與建置流程。 -->
 <!--
   專案：java21-exchange
   說明：

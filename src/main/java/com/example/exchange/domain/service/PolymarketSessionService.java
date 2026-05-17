@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：領域服務，封裝撮合、風控、Polymarket 同步與交易規則。
+ */
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.entity.PredictionSessionRecord;

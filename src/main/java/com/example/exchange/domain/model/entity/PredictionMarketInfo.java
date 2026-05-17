@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：領域模型或持久化實體，承載交易、帳戶、持倉與預測市場狀態。
+ */
 package com.example.exchange.domain.model.entity;
 
 import jakarta.persistence.*;

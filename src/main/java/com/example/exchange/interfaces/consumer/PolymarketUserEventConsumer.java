@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：事件 Consumer，接收 Kafka 訊息並銜接後續業務處理。
+ */
 package com.example.exchange.interfaces.consumer;
 
 import com.example.exchange.domain.model.dto.PolymarketUserWsEvent;

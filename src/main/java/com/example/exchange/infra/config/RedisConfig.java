@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：基礎設施設定，建立 Spring Bean 並連接 Kafka、Redis、Web3j 或 HTTP client。
+ */
 package com.example.exchange.infra.config;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;

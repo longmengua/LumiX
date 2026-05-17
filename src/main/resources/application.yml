@@ -1,5 +1,6 @@
+# 檔案用途：專案設定檔，說明 src/main/resources/application.yml 的用途與本機開發設定。
 spring:
   application:
     name: java21-exchange
   profiles:
-    active: test
+    active: dev

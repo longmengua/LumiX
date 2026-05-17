@@ -1,3 +1,4 @@
+-- 檔案用途：SQL migration，建立交易可靠性相關資料表與索引。
 CREATE TABLE IF NOT EXISTS outbox_events (
     id CHAR(36) PRIMARY KEY,
     topic VARCHAR(128) NOT NULL,

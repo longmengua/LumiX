@@ -1,4 +1,5 @@
 <# : batch portion
+@REM 檔案用途：Windows Maven Wrapper 啟動腳本，用來執行本專案 Maven build。
 @REM ----------------------------------------------------------------------------
 @REM Licensed to the Apache Software Foundation (ASF) under one
 @REM or more contributor license agreements.  See the NOTICE file

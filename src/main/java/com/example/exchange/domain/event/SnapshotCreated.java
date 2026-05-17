@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：領域事件，描述交易、快照、資金費或強平等已發生的業務事實。
+ */
 package com.example.exchange.domain.event;
 
 import java.time.Instant;

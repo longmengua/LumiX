@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：Web 攔截器，處理 HTTP 請求層的橫切邏輯。
+ */
 package com.example.exchange.interfaces.web.interceptor;
 
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,2 +1,3 @@
+# 檔案用途：專案設定檔，說明 .gitattributes 的用途與本機開發設定。
 /mvnw text eol=lf
 *.cmd text eol=crlf

@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：應用層事件發布抽象，隔離 domain event 與實際訊息基礎設施。
+ */
 package com.example.exchange.application.event;
 
 /**

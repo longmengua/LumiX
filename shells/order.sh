@@ -1,3 +1,4 @@
+# 檔案用途：Shell 腳本，提供本機操作或 API curl 範例：shells/order.sh。
 # LIMIT 買單
 curl -X POST http://localhost:8080/api/order/place \
   -H "Content-Type: application/json" \

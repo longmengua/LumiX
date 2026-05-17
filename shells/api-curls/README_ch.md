@@ -1,3 +1,4 @@
+<!-- 檔案用途：Markdown 文件，記錄 java21-match-hub 的設計、操作或背景說明。 -->
 # API curl scripts
 
 每個 shell 只對應一個 API path。沒有環境變數與聚合流程；要改 host、wallet、session、market slug 或 body，直接打開該 `.sh` 手動修改。

@@ -1,3 +1,4 @@
+# 檔案用途：專案設定檔，說明 src/main/resources/application-dev.yml 的用途與本機開發設定。
 # ---------------------------------------------------------------------------
 # Profile: dev (本機開發模式)
 # - Spring Boot 在本機跑，連接 docker-compose 暴露的 MySQL:3306、Kafka:9092、Redis:6379

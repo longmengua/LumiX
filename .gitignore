@@ -1,3 +1,4 @@
+# 檔案用途：專案設定檔，說明 .gitignore 的用途與本機開發設定。
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar

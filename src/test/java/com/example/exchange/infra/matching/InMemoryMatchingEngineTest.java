@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：撮合基礎設施，提供目前的 in-memory matching engine 實作。
+ */
 package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.event.TradeExecuted;

@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：Spring Boot 應用程式入口，負責啟動交易所核心與 Polymarket 整合服務。
+ */
 package com.example.exchange;
 
 import com.example.exchange.infra.config.PolymarketConfigs;

@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：REST Controller，暴露 HTTP API 並委派給應用或領域服務。
+ */
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.TransferMarginCommand;

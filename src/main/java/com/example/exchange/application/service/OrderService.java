@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：應用服務，編排領域模型、Repository 與外部基礎設施完成業務流程。
+ */
 package com.example.exchange.application.service;
 
 import com.example.exchange.application.event.DomainEventPublisher;

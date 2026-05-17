@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：Web 驗證器，封裝 API request 的自訂驗證規則。
+ */
 package com.example.exchange.interfaces.web.validator;
 
 import jakarta.validation.Constraint;

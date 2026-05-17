@@ -1,3 +1,6 @@
+/*
+ * 檔案用途：外部 API client 抽象，隔離 Polymarket Gamma/CLOB 等遠端服務呼叫。
+ */
 package com.example.exchange.domain.repository.client;
 
 import com.example.exchange.domain.model.dto.PredictionGammaEventDto;
