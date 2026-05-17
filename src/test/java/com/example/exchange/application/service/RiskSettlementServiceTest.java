@@ -18,6 +18,7 @@ import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
 import com.example.exchange.infra.config.FundingRateProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -29,6 +30,12 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 測試 funding、liquidation 與 reconciliation 的風控結算流程。
+ *
+ * <p>這裡用 in-memory repository 驗證帳戶餘額、持倉、ledger、
+ * domain event 與 reconciliation 結果是否一致。</p>
+ */
 class RiskSettlementServiceTest {
 
     private final Symbol symbol = Symbol.builder()
@@ -39,6 +46,7 @@ class RiskSettlementServiceTest {
             .build();
 
     @Test
+    @DisplayName("單一 funding settlement 會更新 ledger、position 並保持可對帳")
     void fundingSettlementUpdatesLedgerPositionAndStillReconciles() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -86,6 +94,7 @@ class RiskSettlementServiceTest {
     }
 
     @Test
+    @DisplayName("configured funding settlement 會掃描 open positions 並分別結算多空")
     void configuredFundingSettlementScansOpenPositions() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -133,6 +142,7 @@ class RiskSettlementServiceTest {
     }
 
     @Test
+    @DisplayName("強平會關閉倉位並用保險基金承接帳戶不足的缺口")
     void liquidationClosesPositionAndUsesInsuranceFundForShortfall() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -142,6 +152,7 @@ class RiskSettlementServiceTest {
         InsuranceFundService insuranceFundService = new InsuranceFundService();
         List<PositionLiquidated> published = new ArrayList<>();
 
+        // mark price 從 100 跌到 1，製造遠超帳戶餘額的虧損缺口。
         walletLedgerService.deposit(7, "USDT", new BigDecimal("10"), "deposit");
         walletLedgerService.increasePositionMargin(7, "USDT", new BigDecimal("5"), "margin");
         positionRepo.save(Position.builder()
@@ -183,6 +194,7 @@ class RiskSettlementServiceTest {
     }
 
     @Test
+    @DisplayName("全帳戶對帳會掃 account index 與 open-position index 找出不一致")
     void reconciliationCanScanKnownAccountsAndOpenPositionAccounts() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -197,6 +209,7 @@ class RiskSettlementServiceTest {
         missingPositionMargin.reservePositionMargin(new BigDecimal("10"));
         accountRepo.save(missingPositionMargin);
 
+        // uid=33 故意只有 open position 沒有 account，驗證掃 open-position index 能抓到缺帳戶。
         positionRepo.save(Position.builder()
                 .uid(33)
                 .symbol(symbol)

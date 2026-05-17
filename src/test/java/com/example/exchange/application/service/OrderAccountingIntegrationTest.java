@@ -29,6 +29,7 @@ import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import com.example.exchange.infra.matching.InMemoryMatchingEngine;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -45,9 +46,17 @@ import java.util.concurrent.atomic.AtomicLong;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+/**
+ * 訂單、撮合、帳務、持倉、market data 與 lifecycle event 的整合測試。
+ *
+ * <p>這個 test class 使用 in-memory repository stub，把下單流程從 UseCase
+ * 跑到 MatchingEngine / RiskService / WalletLedgerService，確認核心 MVP 行為
+ * 在不啟動 Redis、Kafka、DB 的情況下仍可驗證。</p>
+ */
 class OrderAccountingIntegrationTest {
 
     @Test
+    @DisplayName("成交後更新雙方持倉、費用、ledger、market data 與 lifecycle event")
     void fillUpdatesPositionsFeesLedgerAndMarketData() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -77,6 +86,7 @@ class OrderAccountingIntegrationTest {
         );
         PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
 
+        // 先掛賣再掛買，讓第二筆訂單主動吃掉第一筆掛單。
         walletLedgerService.deposit(1, "USDT", new BigDecimal("10000"), "deposit-1");
         walletLedgerService.deposit(2, "USDT", new BigDecimal("10000"), "deposit-2");
 
@@ -131,6 +141,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("風控預檢拒單時發布 CREATED 和 REJECTED lifecycle event")
     void rejectedPreCheckPublishesOrderLifecycleEvent() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -177,6 +188,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("超過 max open orders 時拒絕新單且不寫 ledger")
     void maxOpenOrdersPreCheckRejectsNewOrder() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -240,6 +252,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("重複 clientOrderId 會被 pre-trade risk check 拒絕")
     void duplicateClientOrderIdPreCheckRejectsNewOrder() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -285,6 +298,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("全站風控開關會拒絕下單、非 reduce-only 單與停牌 symbol")
     void riskSwitchesRejectOrderEntryReduceOnlyAndSuspendedSymbol() {
         SymbolConfig symbolConfig = btcConfigWithMaxOpenOrders(10);
 
@@ -305,6 +319,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("批量撤單會釋放 reserve 並發布取消事件")
     void bulkCancelOpenOrdersReleasesReserveAndPublishesLifecycleEvents() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -365,6 +380,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("改單會更新 order book、reserve 與 UPDATED lifecycle event")
     void amendOrderUpdatesBookReserveAndLifecycleEvent() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -406,6 +422,7 @@ class OrderAccountingIntegrationTest {
         Order order = placeOrderUseCase.place(command(21, OrderSide.BUY, "100.00", "1.000"));
         BigDecimal initialReserve = order.getReservedAmount();
 
+        // 將買單價格調低、剩餘量縮小，預期 reserve 也同步下降。
         amendOrderUseCase.handle(new AmendOrderCommand(
                 order.getId(),
                 21,
@@ -435,6 +452,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("cancel-replace 會取消原單並建立 replacement order")
     void cancelReplaceCancelsOriginalAndPlacesReplacement() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -511,6 +529,7 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("cancel-on-disconnect 會撤掉該 WebSocket 註冊範圍內的 open orders")
     void cancelOnDisconnectCancelsRegisteredOpenOrders() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();

@@ -3,9 +3,10 @@
 In-memory matching engine tests。
 
 目前內容：
-- LIMIT/MARKET matching。
-- IOC/FOK/post-only/self-match 行為。
-- cancel/amend/snapshot 行為。
+
+| 測試類別 | 主要案例 |
+| --- | --- |
+| `InMemoryMatchingEngineTest` | 同價位 FIFO、post-only taker 拒絕、自成交拒絕、FOK 無法全成、IOC 未成交、市價單流動性不足。 |
 
 注意：
 - matching engine 仍是 MVP in-memory core；新增撮合規則時要先補這裡的 deterministic tests。

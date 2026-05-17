@@ -4,6 +4,7 @@
 package com.example.exchange.interfaces.web.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.crypto.Mac;
@@ -16,11 +17,15 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 覆蓋 HS256 JWT authenticator：簽章驗證、roles/scope 轉 principal，以及 exp 過期拒絕。
+ */
 class JwtAuthenticatorTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @DisplayName("有效 HS256 JWT 會建立 JWT principal 並解析 roles/scopes")
     void authenticatesHs256Jwt() throws Exception {
         String secret = "jwt-test-secret";
         String token = jwt(
@@ -46,6 +51,7 @@ class JwtAuthenticatorTest {
     }
 
     @Test
+    @DisplayName("exp 已過期的 JWT 會被拒絕")
     void rejectsExpiredJwt() throws Exception {
         String secret = "jwt-test-secret";
         String token = jwt(
@@ -64,6 +70,7 @@ class JwtAuthenticatorTest {
     }
 
     private String jwt(String secret, Map<String, Object> claims) throws Exception {
+        // 測試直接產生最小 HS256 token，避免把測試行為綁到外部 JWT builder。
         String header =
                 base64Url(objectMapper.writeValueAsBytes(Map.of(
                         "alg", "HS256",

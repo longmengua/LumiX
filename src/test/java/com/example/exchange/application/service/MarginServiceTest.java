@@ -7,6 +7,7 @@ import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.domain.repository.WalletTransferRepository;
 import com.example.exchange.infra.config.RiskControlsProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -19,9 +20,16 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 測試 MarginService 的入金/出金狀態機與 ledger side effect。
+ *
+ * <p>這裡不測 HTTP controller；只驗證 service 在成功、風控暫停、
+ * 餘額不足三種核心情境下的 transfer 狀態與帳務是否一致。</p>
+ */
 class MarginServiceTest {
 
     @Test
+    @DisplayName("入金與成功出金會建立 transfer 並寫入 ledger")
     void depositAndWithdrawCreateTransfersAndLedgerEntries() {
         Fixtures fixtures = fixtures(new RiskControlsProperties());
 
@@ -42,6 +50,7 @@ class MarginServiceTest {
     }
 
     @Test
+    @DisplayName("出金暫停時進入人工覆核且不扣款")
     void withdrawalHaltRoutesToManualReviewWithoutDebiting() {
         RiskControlsProperties riskControls = new RiskControlsProperties();
         Fixtures fixtures = fixtures(riskControls);
@@ -60,6 +69,7 @@ class MarginServiceTest {
     }
 
     @Test
+    @DisplayName("餘額不足時出金失敗且不建立 ledger entry")
     void insufficientBalanceCreatesFailedWithdrawalWithoutLedgerEntry() {
         Fixtures fixtures = fixtures(new RiskControlsProperties());
 

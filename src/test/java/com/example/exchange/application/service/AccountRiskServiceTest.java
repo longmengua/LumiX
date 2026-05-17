@@ -10,6 +10,7 @@ import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import com.example.exchange.domain.service.OrderBookSnapshot;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -21,9 +22,16 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 測試 AccountRiskService 的即時帳戶風險快照。
+ *
+ * <p>重點是確認沒有帳戶時安全回零，以及有持倉/行情時會正確計算
+ * frozen funds、未實現盈虧、equity、維持保證金與風險率。</p>
+ */
 class AccountRiskServiceTest {
 
     @Test
+    @DisplayName("帳戶不存在時回傳零值風險快照")
     void missingAccountReturnsZeroRiskSnapshot() {
         AccountRiskService service = service(new MemAccountRepository(), new MemPositionRepository(), new MarketDataService());
 
@@ -38,12 +46,14 @@ class AccountRiskServiceTest {
     }
 
     @Test
+    @DisplayName("使用 mark price 計算 equity、maintenance margin 與 risk ratio")
     void snapshotUsesMarkPriceForEquityMaintenanceMarginAndRiskRatio() {
         MemAccountRepository accountRepository = new MemAccountRepository();
         MemPositionRepository positionRepository = new MemPositionRepository();
         MarketDataService marketDataService = new MarketDataService();
         Symbol symbol = Symbol.builder().base("BTC").quote("USDT").priceScale(2).qtyScale(3).build();
 
+        // 1000 餘額中，30 被訂單凍結，100 被持倉保證金凍結。
         Account account = new Account(22);
         account.deposit(new BigDecimal("1000.00"));
         account.reserveOrder(new BigDecimal("30.00"));
@@ -56,6 +66,7 @@ class AccountRiskServiceTest {
                 .entryPrice(new BigDecimal("100.00"))
                 .margin(new BigDecimal("100.00"))
                 .build());
+        // 製造 last price = 110，讓 risk snapshot 不必 fallback 到 entry price。
         marketDataService.onTrades(
                 "BTCUSDT",
                 List.of(new TradeExecuted(22, symbol, new BigDecimal("1.000"), new BigDecimal("110.00"), 1, Instant.now())),

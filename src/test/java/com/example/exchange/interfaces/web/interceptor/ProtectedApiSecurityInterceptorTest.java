@@ -4,6 +4,7 @@
 package com.example.exchange.interfaces.web.interceptor;
 
 import com.example.exchange.infra.config.SecurityControlsProperties;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -12,9 +13,13 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 覆蓋受保護 API 的安全前置檢查：IP allowlist、允許分支與 per-IP rate limit。
+ */
 class ProtectedApiSecurityInterceptorTest {
 
     @Test
+    @DisplayName("來源 IP 不在 allowlist 時拒絕請求")
     void rejectsIpOutsideAllowlist() throws Exception {
         SecurityControlsProperties properties = new SecurityControlsProperties();
         properties.setIpAllowlistEnabled(true);
@@ -36,6 +41,7 @@ class ProtectedApiSecurityInterceptorTest {
     }
 
     @Test
+    @DisplayName("來源 IP 落在 allowlist CIDR 內時放行")
     void allowsIpInsideAllowlist() throws Exception {
         SecurityControlsProperties properties = new SecurityControlsProperties();
         properties.setIpAllowlistEnabled(true);
@@ -56,6 +62,7 @@ class ProtectedApiSecurityInterceptorTest {
     }
 
     @Test
+    @DisplayName("同一 IP 超過每分鐘限制時回 429 與 Retry-After")
     void rejectsWhenRateLimitExceeded() throws Exception {
         SecurityControlsProperties properties = new SecurityControlsProperties();
         properties.setRequestsPerMinute(1);
@@ -64,6 +71,7 @@ class ProtectedApiSecurityInterceptorTest {
         ProtectedApiSecurityInterceptor interceptor =
                 new ProtectedApiSecurityInterceptor(properties);
 
+        // 第一個請求消耗掉唯一可用額度，第二個請求應觸發 rate limit。
         assertThat(interceptor.preHandle(
                 request("POST", "/api/order/place", "10.1.2.3"),
                 new MockHttpServletResponse(),

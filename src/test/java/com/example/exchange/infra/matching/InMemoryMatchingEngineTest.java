@@ -10,6 +10,7 @@ import com.example.exchange.domain.model.entity.Symbol;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.model.enums.TimeInForce;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -18,6 +19,12 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 測試 in-memory matching engine 的核心撮合規則。
+ *
+ * <p>覆蓋價格時間優先、post-only、自成交防護、FOK/IOC、市價單流動性不足等
+ * exchange matching semantics。</p>
+ */
 class InMemoryMatchingEngineTest {
 
     private final Symbol symbol = Symbol.builder()
@@ -28,6 +35,7 @@ class InMemoryMatchingEngineTest {
             .build();
 
     @Test
+    @DisplayName("同價位掛單依 FIFO 順序成交")
     void matchesSamePriceByFifoOrderId() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         Order firstAsk = limit(1, OrderSide.SELL, "100", "1");
@@ -48,6 +56,7 @@ class InMemoryMatchingEngineTest {
     }
 
     @Test
+    @DisplayName("post-only 訂單若會吃單就拒絕")
     void postOnlyRejectsOrderThatWouldTakeLiquidity() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -63,6 +72,7 @@ class InMemoryMatchingEngineTest {
     }
 
     @Test
+    @DisplayName("同 uid 自成交會拒絕 incoming order")
     void selfMatchPreventionRejectsIncomingOrder() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(7, OrderSide.SELL, "100", "1"));
@@ -77,6 +87,7 @@ class InMemoryMatchingEngineTest {
     }
 
     @Test
+    @DisplayName("FOK 無法完全成交時失效並帶明確原因")
     void fokExpiresWithExplicitReasonWhenNotFullyFillable() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -92,6 +103,7 @@ class InMemoryMatchingEngineTest {
     }
 
     @Test
+    @DisplayName("IOC 完全未成交時失效並帶明確原因")
     void iocExpiresWithExplicitReasonWhenUnfilled() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -107,6 +119,7 @@ class InMemoryMatchingEngineTest {
     }
 
     @Test
+    @DisplayName("市價單流動性不足時部分成交後失效")
     void marketOrderExpiresWithExplicitReasonWhenLiquidityIsInsufficient() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));

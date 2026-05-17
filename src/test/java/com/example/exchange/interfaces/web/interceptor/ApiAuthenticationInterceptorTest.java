@@ -7,17 +7,23 @@ import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.interfaces.web.security.ApiKeyAuthenticator;
 import com.example.exchange.interfaces.web.security.ApiPrincipal;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 覆蓋 API 認證攔截器的核心決策：關閉 auth 時放行、缺 credentials 時拒絕、
+ * 以及不同 role/scope 對管理 API 與交易 API 的授權結果。
+ */
 class ApiAuthenticationInterceptorTest {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Test
+    @DisplayName("auth 關閉時不檢查 credentials 並直接放行")
     void allowsWhenAuthDisabled() throws Exception {
         ApiAuthProperties properties =
                 new ApiAuthProperties();
@@ -36,6 +42,7 @@ class ApiAuthenticationInterceptorTest {
     }
 
     @Test
+    @DisplayName("auth 開啟但未帶 credentials 時回 401")
     void rejectsMissingCredentialsWhenEnabled() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("admin-key", "ROLE_ADMIN", "admin"), objectMapper);
@@ -51,6 +58,7 @@ class ApiAuthenticationInterceptorTest {
     }
 
     @Test
+    @DisplayName("管理員 API key 可呼叫管理端 risk API")
     void allowsAdminApiForAdminApiKey() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("admin-key", "ROLE_ADMIN", "admin"), objectMapper);
@@ -70,6 +78,7 @@ class ApiAuthenticationInterceptorTest {
     }
 
     @Test
+    @DisplayName("交易員 API key 呼叫管理端 risk API 會回 403")
     void rejectsAdminApiForTraderApiKey() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("trader-key", "ROLE_TRADER", "trade:write"), objectMapper);
@@ -85,6 +94,7 @@ class ApiAuthenticationInterceptorTest {
     }
 
     @Test
+    @DisplayName("交易員 API key 可呼叫下單 API 並寫入 principal")
     void allowsTradingApiForTraderApiKey() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("trader-key", "ROLE_TRADER", "trade:write"), objectMapper);
@@ -108,6 +118,7 @@ class ApiAuthenticationInterceptorTest {
                 new ApiAuthProperties();
         properties.setEnabled(true);
         properties.setJwtEnabled(false);
+        // 測試設定格式為 subject:sha256(apiKey):roles:scopes。
         properties.setApiKeys(
                 "test-key:"
                         + ApiKeyAuthenticator.sha256Hex(apiKey)

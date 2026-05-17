@@ -3,15 +3,21 @@
  */
 package com.example.exchange.interfaces.web.security;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+/**
+ * 覆蓋 API key authenticator 對 sha256 hash、subject、roles、scopes 的解析與拒絕分支。
+ */
 class ApiKeyAuthenticatorTest {
 
     @Test
+    @DisplayName("sha256 hash 相符時建立 API_KEY principal 並解析 roles/scopes")
     void authenticatesSha256HashedApiKey() {
         String rawApiKey = "prod-secret-key";
+        // 設定格式為 subject:sha256(apiKey):roles:scopes，roles/scopes 以 | 分隔。
         String configuredKeys =
                 "ops:" + ApiKeyAuthenticator.sha256Hex(rawApiKey) + ":ROLE_ADMIN|ROLE_TRADER:admin|trade:write";
 
@@ -28,6 +34,7 @@ class ApiKeyAuthenticatorTest {
     }
 
     @Test
+    @DisplayName("api key hash 不相符時不回傳 principal")
     void rejectsUnknownApiKey() {
         String configuredKeys =
                 "ops:" + ApiKeyAuthenticator.sha256Hex("expected") + ":ROLE_ADMIN:admin";
