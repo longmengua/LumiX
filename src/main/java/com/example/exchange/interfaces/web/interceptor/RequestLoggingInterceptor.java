@@ -3,6 +3,7 @@
  */
 package com.example.exchange.interfaces.web.interceptor;
 
+import com.example.exchange.domain.util.SensitiveLogSanitizer;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         response.setHeader("X-Request-Id", requestId);
 
         log.info("[{}] 請求開始 => Method: {}, URI: {}",
-                requestId, request.getMethod(), request.getRequestURI());
+                requestId, request.getMethod(), safeRequestUri(request));
 
         return true;
     }
@@ -64,7 +65,21 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
         }
 
         if (ex != null) {
-            log.error("[{}] 請求發生例外: {}", requestId, ex.getMessage(), ex);
+            log.error(
+                    "[{}] 請求發生例外: type={}, message={}",
+                    requestId,
+                    ex.getClass().getName(),
+                    SensitiveLogSanitizer.sanitize(ex.getMessage())
+            );
         }
+    }
+
+    private String safeRequestUri(HttpServletRequest request) {
+        String queryString = request.getQueryString();
+        String uri = queryString == null || queryString.isBlank()
+                ? request.getRequestURI()
+                : request.getRequestURI() + "?" + queryString;
+
+        return SensitiveLogSanitizer.sanitize(uri);
     }
 }

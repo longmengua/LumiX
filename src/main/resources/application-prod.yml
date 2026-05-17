@@ -1,4 +1,4 @@
-# 檔案用途：專案設定檔，說明 src/main/resources/application-prod.yml 的用途與本機開發設定。
+# 檔案用途：專案設定檔，說明 src/main/resources/application-prod.yml 的用途與生產環境設定。
 spring:
   jpa:
     hibernate:
@@ -7,3 +7,52 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
+
+polymarket:
+  key-sync-ms: ${POLYMARKET_KEY_SYNC_MS:600000}
+  price-refresh-ms: ${POLYMARKET_PRICE_REFRESH_MS:5000}
+
+  gamma:
+    base-url: ${POLYMARKET_GAMMA_BASE_URL:https://gamma-api.polymarket.com}
+
+  clob:
+    base-url: ${POLYMARKET_CLOB_BASE_URL:https://clob.polymarket.com}
+    # CLOB API credentials 必須由環境變數或 secret manager 注入。
+    api-key: ${POLYMARKET_CLOB_API_KEY:}
+    api-secret: ${POLYMARKET_CLOB_API_SECRET:}
+    api-passphrase: ${POLYMARKET_CLOB_API_PASSPHRASE:}
+
+  ws:
+    user-url: ${POLYMARKET_WS_USER_URL:wss://ws-subscriptions-clob.polymarket.com/ws/user}
+    user-enabled: ${POLYMARKET_WS_USER_ENABLED:false}
+    user-market-condition-ids: []
+    ping-interval-ms: ${POLYMARKET_WS_PING_INTERVAL_MS:10000}
+    reconnect-delay-ms: ${POLYMARKET_WS_RECONNECT_DELAY_MS:5000}
+
+  relayer:
+    base-url: ${POLYMARKET_RELAYER_BASE_URL:https://relayer-v2.polymarket.com}
+    api-key: ${POLYMARKET_RELAYER_API_KEY:}
+
+  wallet:
+    # 平台 signer private key 必須由環境變數或 secret manager 注入。
+    private-key: ${POLYMARKET_WALLET_PRIVATE_KEY:}
+    funder-address: ${POLYMARKET_WALLET_FUNDER_ADDRESS:}
+    signature-type: ${POLYMARKET_WALLET_SIGNATURE_TYPE:3}
+
+  chain:
+    chain-id: ${POLYMARKET_CHAIN_ID:137}
+    exchange-v2: ${POLYMARKET_EXCHANGE_V2:0xE111180000d2663C0091e4f400237545B87B996B}
+    neg-risk-exchange-v2: ${POLYMARKET_NEG_RISK_EXCHANGE_V2:0xe2222d279d744050d28e00520010520000310F59}
+    neg-risk-adapter: ${POLYMARKET_NEG_RISK_ADAPTER:0xd91E80cF2E7be2e162c6513ceD06f1dD0dA35296}
+    collateral-token: ${POLYMARKET_COLLATERAL_TOKEN:0xC011a7E12a19f7B1f670d46F03B03f3342E82DFB}
+    conditional-tokens: ${POLYMARKET_CONDITIONAL_TOKENS:0x4D97DCd97eC945f40cF65F87097ACe5EA0476045}
+
+  trading:
+    buy-markup-rate: ${POLYMARKET_BUY_MARKUP_RATE:0.10}
+    sell-profit-fee-rate: ${POLYMARKET_SELL_PROFIT_FEE_RATE:0.005}
+    max-slippage-rate: ${POLYMARKET_MAX_SLIPPAGE_RATE:0.02}
+    min-order-usdt: ${POLYMARKET_MIN_ORDER_USDT:1}
+    max-order-usdt: ${POLYMARKET_MAX_ORDER_USDT:1000}
+
+web3:
+  polygon-rpc-url: ${WEB3_POLYGON_RPC_URL:https://polygon-bor-rpc.publicnode.com}

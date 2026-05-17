@@ -6,6 +6,7 @@ package com.example.exchange.domain.service;
 import com.example.exchange.domain.model.dto.PolymarketClobOrderRequest;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
 import com.example.exchange.domain.util.PolymarketL2AuthSigner;
+import com.example.exchange.domain.util.SensitiveLogSanitizer;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -77,12 +78,14 @@ public class PolymarketClobTradingClient {
                 String responseBody = response.body() == null
                         ? ""
                         : response.body().string();
+                String safeResponseBody =
+                        SensitiveLogSanitizer.sanitize(responseBody);
 
                 log.info(
                         "[PolymarketCLOB] Post order response. httpCode={}, successful={}, body={}",
                         response.code(),
                         response.isSuccessful(),
-                        responseBody
+                        safeResponseBody
                 );
 
                 Map<String, Object> raw = parseJsonToMap(responseBody);
@@ -98,13 +101,13 @@ public class PolymarketClobTradingClient {
                             safeGetSide(clobOrderRequest),
                             safeGetMakerAmount(clobOrderRequest),
                             safeGetTakerAmount(clobOrderRequest),
-                            responseBody
+                            safeResponseBody
                     );
 
                     return PolymarketPlaceOrderResponse.builder()
                             .success(false)
                             .status("FAILED")
-                            .errorMsg(readableError + " | raw=" + responseBody)
+                            .errorMsg(readableError + " | raw=" + safeResponseBody)
                             .build();
                 }
 
@@ -134,20 +137,24 @@ public class PolymarketClobTradingClient {
                         .build();
             }
         } catch (Exception e) {
+            String safeExceptionMessage =
+                    safeExceptionMessage(e);
+
             log.error(
-                    "[PolymarketCLOB] Post order exception. url={}, tokenId={}, side={}, makerAmount={}, takerAmount={}",
+                    "[PolymarketCLOB] Post order exception. url={}, tokenId={}, side={}, makerAmount={}, takerAmount={}, type={}, message={}",
                     url,
                     safeGetTokenId(clobOrderRequest),
                     safeGetSide(clobOrderRequest),
                     safeGetMakerAmount(clobOrderRequest),
                     safeGetTakerAmount(clobOrderRequest),
-                    e
+                    e.getClass().getName(),
+                    safeExceptionMessage
             );
 
             return PolymarketPlaceOrderResponse.builder()
                     .success(false)
                     .status("EXCEPTION")
-                    .errorMsg(e.getMessage())
+                    .errorMsg(safeExceptionMessage)
                     .build();
         }
     }
@@ -231,6 +238,8 @@ public class PolymarketClobTradingClient {
                         response.body() == null
                                 ? ""
                                 : response.body().string();
+                String safeResponseBody =
+                        SensitiveLogSanitizer.sanitize(responseBody);
 
                 Map<String, Object> raw =
                         parseJsonToMap(responseBody);
@@ -240,7 +249,7 @@ public class PolymarketClobTradingClient {
                             "success", false,
                             "httpCode", response.code(),
                             "errorMsg", classifyClobError(responseBody),
-                            "raw", responseBody
+                            "raw", safeResponseBody
                     );
                 }
 
@@ -256,17 +265,21 @@ public class PolymarketClobTradingClient {
                 return raw;
             }
         } catch (Exception e) {
+            String safeExceptionMessage =
+                    safeExceptionMessage(e);
+
             log.warn(
-                    "[PolymarketCLOB] Authenticated request exception. method={}, path={}",
+                    "[PolymarketCLOB] Authenticated request exception. method={}, path={}, type={}, message={}",
                     method,
                     path,
-                    e
+                    e.getClass().getName(),
+                    safeExceptionMessage
             );
 
             return Map.of(
                     "success", false,
                     "status", "EXCEPTION",
-                    "errorMsg", e.getMessage()
+                    "errorMsg", safeExceptionMessage
             );
         }
     }
@@ -285,7 +298,7 @@ public class PolymarketClobTradingClient {
         } catch (Exception e) {
             log.warn(
                     "[PolymarketCLOB] Response body is not valid JSON. body={}",
-                    responseBody
+                    SensitiveLogSanitizer.sanitize(responseBody)
             );
             return Map.of();
         }
@@ -351,6 +364,14 @@ public class PolymarketClobTradingClient {
         }
 
         return "UNKNOWN_CLOB_ERROR";
+    }
+
+    private String safeExceptionMessage(Exception e) {
+        String message = e.getMessage();
+        if (message == null || message.isBlank()) {
+            return e.getClass().getSimpleName();
+        }
+        return SensitiveLogSanitizer.sanitize(message);
     }
 
     private String firstNonNullAsString(Object... values) {

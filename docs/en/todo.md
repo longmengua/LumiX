@@ -43,10 +43,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Security
 
 - Add API authentication and authorization: JWT, API keys, scopes, roles, and admin isolation.
-- Move private keys, CLOB secrets, and relayer keys out of YAML into environment variables or a secret manager.
 - Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
 - Add rate limit, IP allowlist, and audit logs for trading, funds, and admin APIs.
-- Prevent sensitive fields from entering logs: private key, API secret, passphrase, signature, authorization header.
 
 ## P1 Strongly Recommended
 

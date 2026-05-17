@@ -308,6 +308,17 @@ Main configuration files:
 
 Polymarket `private-key`, CLOB `api-key/api-secret/api-passphrase`, and relayer keys must not be committed to Git. Production should inject them through environment variables or a secret manager.
 
+Secret-related environment variables:
+
+- `POLYMARKET_WALLET_PRIVATE_KEY`
+- `POLYMARKET_WALLET_FUNDER_ADDRESS`
+- `POLYMARKET_WALLET_SIGNATURE_TYPE`
+- `POLYMARKET_CLOB_API_KEY`
+- `POLYMARKET_CLOB_API_SECRET`
+- `POLYMARKET_CLOB_API_PASSPHRASE`
+- `POLYMARKET_RELAYER_API_KEY`
+- `WEB3_POLYGON_RPC_URL`
+
 ## Tests
 
 ```bash

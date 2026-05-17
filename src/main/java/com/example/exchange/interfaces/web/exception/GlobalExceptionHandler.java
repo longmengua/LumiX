@@ -3,6 +3,7 @@
  */
 package com.example.exchange.interfaces.web.exception;
 
+import com.example.exchange.domain.util.SensitiveLogSanitizer;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -84,7 +85,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, MethodArgumentNotValidException.class})
     public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
-        log.warn("Bad request: {}", ex.getMessage());
+        log.warn("Bad request: {}", SensitiveLogSanitizer.sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(
@@ -112,7 +113,11 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleUnknown(Exception ex) {
 
         // 不要把 ex.getMessage() 回傳給前端
-        log.error("Unexpected error", ex);
+        log.error(
+                "Unexpected error. type={}, message={}",
+                ex.getClass().getName(),
+                SensitiveLogSanitizer.sanitize(ex.getMessage())
+        );
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)

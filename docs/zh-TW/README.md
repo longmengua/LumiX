@@ -308,6 +308,17 @@ src/main/java/com/example/exchange
 
 Polymarket 的 `private-key`、CLOB `api-key/api-secret/api-passphrase`、relayer key 不應提交到 Git。正式環境應改用環境變數或 secret manager 注入。
 
+敏感設定相關環境變數：
+
+- `POLYMARKET_WALLET_PRIVATE_KEY`
+- `POLYMARKET_WALLET_FUNDER_ADDRESS`
+- `POLYMARKET_WALLET_SIGNATURE_TYPE`
+- `POLYMARKET_CLOB_API_KEY`
+- `POLYMARKET_CLOB_API_SECRET`
+- `POLYMARKET_CLOB_API_PASSPHRASE`
+- `POLYMARKET_RELAYER_API_KEY`
+- `WEB3_POLYGON_RPC_URL`
+
 ## 測試
 
 ```bash

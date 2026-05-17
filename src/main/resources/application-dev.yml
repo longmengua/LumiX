@@ -147,9 +147,10 @@ polymarket:
     # Polymarket CLOB API credentials。
     # 用於後端呼叫 CLOB API，例如 POST /order。
     # 注意：這不是 wallet private key。
-    api-key:
-    api-secret:
-    api-passphrase:
+    # 從環境變數注入，避免 secret 進入 YAML / Git。
+    api-key: ${POLYMARKET_CLOB_API_KEY:}
+    api-secret: ${POLYMARKET_CLOB_API_SECRET:}
+    api-passphrase: ${POLYMARKET_CLOB_API_PASSPHRASE:}
 
   ws:
     # Polymarket user channel，只推這組 CLOB API key 對應錢包的 order / trade 更新。
@@ -169,25 +170,26 @@ polymarket:
     # 目前 placeOrder 主流程暫時沒用到。
     # 後續如果接 Polymarket Builder / Relayer 才會用。
     base-url: https://relayer-v2.polymarket.com
-    api-key:
+    api-key: ${POLYMARKET_RELAYER_API_KEY:}
 
   wallet:
     # 後端平台 signer private key。
     # 不用 SDK 時，後端用這把 key 做 CLOB order EIP-712 signing。
     # polymarket.clob.api-* 必須由同一把 private key create/derive。
-    private-key:
+    # 從環境變數注入，避免 secret 進入 YAML / Git。
+    private-key: ${POLYMARKET_WALLET_PRIVATE_KEY:}
 
     # Polymarket funder / deposit wallet address。
     # TODO:
     # 目前先保留。
     # 後續若 maker/signer/funder 拆分，需要用這個欄位。
-    funder-address:
+    funder-address: ${POLYMARKET_WALLET_FUNDER_ADDRESS:}
 
     # Polymarket signature type。
     # 官方新 API deposit wallet flow 建議：
     # 3 = POLY_1271，funder-address 填 deposit wallet。
     # 0 = EOA，funder-address 必須是同一個 EOA。
-    signature-type: 3
+    signature-type: ${POLYMARKET_WALLET_SIGNATURE_TYPE:3}
 
   chain:
     chain-id: 137
@@ -216,4 +218,4 @@ polymarket:
 web3:
   # 後端查 allowance / approval 用。
   # 如果遇到 401 / rate limit，換成自己的 Alchemy / Infura / QuickNode。
-  polygon-rpc-url: https://polygon-bor-rpc.publicnode.com
+  polygon-rpc-url: ${WEB3_POLYGON_RPC_URL:https://polygon-bor-rpc.publicnode.com}

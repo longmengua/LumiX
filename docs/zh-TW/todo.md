@@ -43,10 +43,8 @@
 ### 安全
 
 - API authentication / authorization：JWT、API key、scope、角色權限、admin 權限隔離。
-- 將 private key、CLOB secret、relayer key 移出 YAML，改由 secret manager 或環境變數注入。
 - Session signer lifecycle 要有過期、撤銷、審計、異常使用檢測。
 - 所有交易、資金、admin API 加上 rate limit、IP allowlist、審計日誌。
-- 敏感欄位禁止進 log：private key、api secret、passphrase、signature、authorization header。
 
 ## P1 強烈建議
 

@@ -5,6 +5,7 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PolymarketApiCredentialsResponse;
 import com.example.exchange.domain.util.PolymarketClobAuthSigner;
+import com.example.exchange.domain.util.SensitiveLogSanitizer;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -98,6 +99,8 @@ public class PolymarketClobAuthService {
                     response.body() == null
                             ? ""
                             : response.body().string();
+            String safeBody =
+                    SensitiveLogSanitizer.sanitize(body);
 
             if (!response.isSuccessful()) {
                 log.warn(
@@ -105,14 +108,14 @@ public class PolymarketClobAuthService {
                         method,
                         path,
                         response.code(),
-                        body
+                        safeBody
                 );
 
                 return PolymarketApiCredentialsResponse.builder()
                         .success(false)
                         .signerAddress(credentials.getAddress())
                         .nonce(safeNonce.toString())
-                        .errorMsg(body)
+                        .errorMsg(safeBody)
                         .build();
             }
 
@@ -132,18 +135,22 @@ public class PolymarketClobAuthService {
                     .nonce(safeNonce.toString())
                     .build();
         } catch (Exception e) {
+            String safeExceptionMessage =
+                    safeExceptionMessage(e);
+
             log.warn(
-                    "[PolymarketCLOBAuth] API credential request exception. method={}, path={}",
+                    "[PolymarketCLOBAuth] API credential request exception. method={}, path={}, type={}, message={}",
                     method,
                     path,
-                    e
+                    e.getClass().getName(),
+                    safeExceptionMessage
             );
 
             return PolymarketApiCredentialsResponse.builder()
                     .success(false)
                     .signerAddress(credentials.getAddress())
                     .nonce(safeNonce.toString())
-                    .errorMsg(e.getMessage())
+                    .errorMsg(safeExceptionMessage)
                     .build();
         }
     }
@@ -161,6 +168,14 @@ public class PolymarketClobAuthService {
         }
 
         return privateKey;
+    }
+
+    private String safeExceptionMessage(Exception e) {
+        String message = e.getMessage();
+        if (message == null || message.isBlank()) {
+            return e.getClass().getSimpleName();
+        }
+        return SensitiveLogSanitizer.sanitize(message);
     }
 
     private String firstNonBlank(Object... values) {
