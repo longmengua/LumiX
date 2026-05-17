@@ -171,6 +171,7 @@ OrderService.processOrder()
   v
 Kafka / Consumer / Push
   - trade.executed: trade events
+  - order.lifecycle: order lifecycle audit events
   - event.store.trade: replayable events
   - TradeEventConsumer pushes market/user events
 ```
@@ -279,6 +280,7 @@ src/main/java/com/example/exchange
 `docker-compose.yml` creates the topics currently used by the application:
 
 - `trade.executed`
+- `order.lifecycle`
 - `event.store.trade`
 - `funding.settled`
 - `position.liquidated`

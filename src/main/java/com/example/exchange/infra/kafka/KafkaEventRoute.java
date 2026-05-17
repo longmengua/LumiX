@@ -4,6 +4,7 @@
 package com.example.exchange.infra.kafka;
 
 import com.example.exchange.domain.event.FundingSettled;
+import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.event.PositionLiquidated;
 import com.example.exchange.domain.event.TradeExecuted;
 
@@ -12,6 +13,11 @@ record KafkaEventRoute(String topic, String key) {
     static KafkaEventRoute from(Object event) {
         if (event instanceof TradeExecuted trade) {
             return new KafkaEventRoute("trade.executed", trade.symbol().code());
+        }
+        if (event instanceof OrderLifecycleEvent order) {
+            String symbol = order.symbol() == null ? "UNKNOWN" : order.symbol().code();
+            String orderId = order.orderId() == null ? "unknown-order" : order.orderId().toString();
+            return new KafkaEventRoute("order.lifecycle", symbol + ":" + orderId);
         }
         if (event instanceof FundingSettled funding) {
             return new KafkaEventRoute("funding.settled", funding.symbol().code());

@@ -9,7 +9,7 @@
 
 - 將 in-memory matching engine 演進為可 replay 的撮合核心，至少要有 command log、event log、snapshot、offset checkpoint。
 - 定義單 symbol sequencer 的部署與 failover 策略，避免多實例同時處理同一 symbol 造成狀態分裂。
-- 補齊 order lifecycle event：created、accepted、rejected、partially filled、filled、canceled、expired。
+- 將 order lifecycle event 持久化並產品化。目前已具備 Kafka 發布基線，涵蓋 created、accepted、updated、rejected、canceled、expired、filled；production 仍需補 durable storage、schema version、replay 與查詢 projection。
 - 補齊 amend order、cancel replace、bulk cancel、cancel on disconnect 等交易所常見指令。
 - 嚴格落實 tick size、lot size、min notional、price band、max order size、max open orders。
 - 明確處理 MARKET 流動性不足、IOC/FOK 未完全成交、POST_ONLY 會吃單、REDUCE_ONLY 超過可減倉量等拒單原因。
@@ -87,7 +87,7 @@
 
 ## 近期落地順序建議
 
-1. 先補 order lifecycle event 與持久化 order/ledger/event schema。
+1. 先補 order/ledger/event 持久化 schema 與 order lifecycle projection。
 2. 再把 matching engine 加上 command log、snapshot、replay。
 3. 接 mark price / index price，完成 production 級 pre-trade risk 與 liquidation。
 4. 建立 reconciliation job 與 observability baseline。

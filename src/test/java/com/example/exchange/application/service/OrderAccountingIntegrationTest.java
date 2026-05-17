@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
+import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Order;
@@ -35,6 +36,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class OrderAccountingIntegrationTest {
 
@@ -45,7 +47,7 @@ class OrderAccountingIntegrationTest {
         MemPositionRepository positionRepo = new MemPositionRepository();
         MemOrderRepository orderRepo = new MemOrderRepository();
         MemEventStore eventStore = new MemEventStore();
-        List<TradeExecuted> published = new ArrayList<>();
+        List<Object> published = new ArrayList<>();
 
         DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
         InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
@@ -66,7 +68,7 @@ class OrderAccountingIntegrationTest {
                 marketDataService,
                 idempotencyService
         );
-        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo);
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
 
         walletLedgerService.deposit(1, "USDT", new BigDecimal("10000"), "deposit-1");
         walletLedgerService.deposit(2, "USDT", new BigDecimal("10000"), "deposit-2");
@@ -99,9 +101,70 @@ class OrderAccountingIntegrationTest {
         assertThat(orderRepo.findAllOrders(2L, "BTCUSDT")).allMatch(o -> o.getStatus() == Order.Status.FILLED);
         assertThat(ledgerRepo.findByUid(1)).extracting(WalletLedgerEntry::getReason)
                 .contains("order_reserve", "position_margin_increase", "trade_fee");
-        assertThat(published).hasSize(2);
+        List<TradeExecuted> publishedTrades = published.stream()
+                .filter(TradeExecuted.class::isInstance)
+                .map(TradeExecuted.class::cast)
+                .toList();
+        List<OrderLifecycleEvent> orderEvents = published.stream()
+                .filter(OrderLifecycleEvent.class::isInstance)
+                .map(OrderLifecycleEvent.class::cast)
+                .toList();
+        assertThat(publishedTrades).hasSize(2);
+        assertThat(orderEvents).extracting(OrderLifecycleEvent::stage)
+                .contains(
+                        OrderLifecycleEvent.Stage.CREATED,
+                        OrderLifecycleEvent.Stage.ACCEPTED,
+                        OrderLifecycleEvent.Stage.UPDATED,
+                        OrderLifecycleEvent.Stage.FILLED
+                );
         assertThat(marketDataService.ticker("BTCUSDT")).isPresent();
         assertThat(marketDataService.trades("BTCUSDT", 10)).hasSize(1);
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    void rejectedPreCheckPublishesOrderLifecycleEvent() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, matchingEngine, walletLedgerService);
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+
+        assertThatThrownBy(() -> placeOrderUseCase.handle(command(9, OrderSide.BUY, "100.00", "1.000")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("insufficient available balance");
+
+        List<OrderLifecycleEvent> orderEvents = published.stream()
+                .filter(OrderLifecycleEvent.class::isInstance)
+                .map(OrderLifecycleEvent.class::cast)
+                .toList();
+        assertThat(orderEvents).extracting(OrderLifecycleEvent::stage)
+                .containsExactly(OrderLifecycleEvent.Stage.CREATED, OrderLifecycleEvent.Stage.REJECTED);
+        assertThat(orderEvents.getLast().reasonCode()).isEqualTo("INSUFFICIENT_BALANCE");
+        assertThat(orderRepo.findAllOrders(9L, "BTCUSDT")).isEmpty();
 
         matchingEngine.shutdown();
     }

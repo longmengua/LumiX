@@ -3,8 +3,10 @@
  */
 package com.example.exchange.application.usecase;
 
+import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.MarketDataService;
 import com.example.exchange.application.service.WalletLedgerService;
+import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.OrderRepository;
@@ -26,6 +28,7 @@ public class CancelOrderUseCase {
     private final MatchingEngine matchingEngine;
     private final WalletLedgerService walletLedgerService;
     private final MarketDataService marketDataService;
+    private final DomainEventPublisher<Object> publisher;
 
     public boolean handle(UUID orderId) {
         Order order = orderRepository.findById(orderId)
@@ -40,6 +43,7 @@ public class CancelOrderUseCase {
         order.cancel();
         releaseReserve(order);
         orderRepository.save(order);
+        publisher.publish(OrderLifecycleEvent.canceled(order));
 
         OrderBookSnapshot snapshot = matchingEngine.snapshot(order.getSymbol().code(), 50);
         marketDataService.onOrderBookChanged(

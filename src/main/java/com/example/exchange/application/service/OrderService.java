@@ -4,6 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.application.event.DomainEventPublisher;
+import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.FeeCalculation;
 import com.example.exchange.domain.model.enums.MarginMode;
@@ -84,7 +85,7 @@ public class OrderService {
      * 領域事件發布器
      * - 目前主要把成交事件往外送（例如 Kafka）
      */
-    private final DomainEventPublisher<TradeExecuted> publisher;
+    private final DomainEventPublisher<Object> publisher;
 
     /**
      * 訂單儲存庫
@@ -114,6 +115,8 @@ public class OrderService {
      * @param order 新訂單
      */
     public void processOrder(Order order) {
+        publisher.publish(OrderLifecycleEvent.accepted(order));
+
         // 1) 送入撮合引擎，取得撮合結果
         MatchingResult result = matchingEngine.submit(order);
 
@@ -223,6 +226,7 @@ public class OrderService {
         // - 對手單若狀態已變更（PARTIALLY_FILLED / FILLED），也必須保存
         for (Order affectedOrder : affectedOrders) {
             orderRepo.save(affectedOrder);
+            publisher.publish(OrderLifecycleEvent.updated(affectedOrder));
         }
 
         OrderBookSnapshot snapshot = matchingEngine.snapshot(order.getSymbol().code(), 50);

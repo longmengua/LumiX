@@ -171,6 +171,7 @@ OrderService.processOrder()
   v
 Kafka / Consumer / Push
   - trade.executed：成交事件
+  - order.lifecycle：訂單生命週期審計事件
   - event.store.trade：可回放事件
   - TradeEventConsumer 推送 market/user event
 ```
@@ -279,6 +280,7 @@ src/main/java/com/example/exchange
 `docker-compose.yml` 會建立目前程式使用的 topics：
 
 - `trade.executed`
+- `order.lifecycle`
 - `event.store.trade`
 - `funding.settled`
 - `position.liquidated`

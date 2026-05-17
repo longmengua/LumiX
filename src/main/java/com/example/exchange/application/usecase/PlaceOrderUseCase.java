@@ -4,8 +4,10 @@
 package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
+import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.OrderService;
 import com.example.exchange.application.service.RiskService;
+import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.model.enums.OrderType;
@@ -60,6 +62,7 @@ public class PlaceOrderUseCase {
     private final OrderService orderService;
     private final RiskService riskService;
     private final SymbolConfigRepository symbolConfigRepository;
+    private final DomainEventPublisher<Object> publisher;
 
     /**
      * 處理下單請求
@@ -118,11 +121,20 @@ public class PlaceOrderUseCase {
                 .clientOrderId(cmd.clientOrderId())
                 .build();
 
-        // 送入撮合前完成 symbol config、槓桿/倉位/價格偏離與可用餘額檢查，並寫入委託凍結流水。
-        riskService.preCheckAndReserve(order, symbolConfig);
+        publisher.publish(OrderLifecycleEvent.created(order));
 
-        // 5) 交由訂單服務處理
-        orderService.processOrder(order);
+        try {
+            // 送入撮合前完成 symbol config、槓桿/倉位/價格偏離與可用餘額檢查，並寫入委託凍結流水。
+            riskService.preCheckAndReserve(order, symbolConfig);
+
+            // 5) 交由訂單服務處理
+            orderService.processOrder(order);
+        } catch (RuntimeException e) {
+            if (order.getStatus() == Order.Status.REJECTED) {
+                publisher.publish(OrderLifecycleEvent.rejected(order));
+            }
+            throw e;
+        }
     }
 
     /**

@@ -20,6 +20,12 @@ public class KafkaConfig {
         return new NewTopic("trade.executed", 3, (short) 1);
     }
 
+    /** 訂單生命週期事件，用於審計、查詢 projection 與使用者推送 */
+    @Bean
+    NewTopic orderLifecycleTopic() {
+        return new NewTopic("order.lifecycle", 3, (short) 1);
+    }
+
     /** 事件儲存（可做 compacted topic 或落 DB） */
     @Bean
     NewTopic eventStoreTopic() {

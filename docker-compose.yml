@@ -48,6 +48,7 @@ services:
       - -lc
       - |
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic trade.executed --partitions 3 --replication-factor 1
+        kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic order.lifecycle --partitions 3 --replication-factor 1
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic event.store.trade --partitions 3 --replication-factor 1
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic funding.settled --partitions 3 --replication-factor 1
         kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic position.liquidated --partitions 3 --replication-factor 1

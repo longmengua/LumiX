@@ -9,7 +9,7 @@ This checklist focuses on the work needed to move the current MVP toward product
 
 - Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
 - Define deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
-- Add full order lifecycle events: created, accepted, rejected, partially filled, filled, canceled, expired.
+- Persist and operationalize order lifecycle events. A Kafka publishing baseline exists for created, accepted, updated, rejected, canceled, expired, and filled states; production still needs durable storage, schema versioning, replay, and projections.
 - Add exchange-standard commands such as amend order, cancel replace, bulk cancel, and cancel on disconnect.
 - Enforce tick size, lot size, min notional, price band, max order size, and max open orders.
 - Make rejection semantics explicit for insufficient MARKET liquidity, unfilled IOC/FOK, POST_ONLY taking liquidity, and REDUCE_ONLY exceeding reducible position size.
@@ -87,7 +87,7 @@ This checklist focuses on the work needed to move the current MVP toward product
 
 ## Suggested Near-Term Order
 
-1. Add order lifecycle events and durable order/ledger/event schemas.
+1. Add durable order/ledger/event schemas and projections for the order lifecycle events.
 2. Add command log, snapshot, and replay to the matching engine.
 3. Integrate mark price / index price and complete production-grade pre-trade risk and liquidation.
 4. Build reconciliation jobs and an observability baseline.
