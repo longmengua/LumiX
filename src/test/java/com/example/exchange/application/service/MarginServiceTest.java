@@ -30,6 +30,9 @@ class MarginServiceTest {
 
     @Test
     @DisplayName("入金與成功出金會建立 transfer 並寫入 ledger")
+    /**
+     * 流程：建立未暫停風控 -> deposit 再 withdraw -> 驗證 transfer、帳戶餘額與 ledger 順序。
+     */
     void depositAndWithdrawCreateTransfersAndLedgerEntries() {
         Fixtures fixtures = fixtures(new RiskControlsProperties());
 
@@ -51,6 +54,9 @@ class MarginServiceTest {
 
     @Test
     @DisplayName("出金暫停時進入人工覆核且不扣款")
+    /**
+     * 流程：先入金建立餘額 -> 開啟 withdrawal halt -> withdraw 進人工覆核且帳戶不扣款。
+     */
     void withdrawalHaltRoutesToManualReviewWithoutDebiting() {
         RiskControlsProperties riskControls = new RiskControlsProperties();
         Fixtures fixtures = fixtures(riskControls);
@@ -70,6 +76,9 @@ class MarginServiceTest {
 
     @Test
     @DisplayName("餘額不足時出金失敗且不建立 ledger entry")
+    /**
+     * 流程：不先建立帳戶餘額 -> 直接 withdraw -> 驗證 transfer failed 且沒有 account/ledger side effect。
+     */
     void insufficientBalanceCreatesFailedWithdrawalWithoutLedgerEntry() {
         Fixtures fixtures = fixtures(new RiskControlsProperties());
 
@@ -82,6 +91,9 @@ class MarginServiceTest {
         assertThat(fixtures.transferRepository.findByUid(13)).containsExactly(withdrawal);
     }
 
+    /**
+     * 建立 MarginService 的測試鏈路，串起 account repository、ledger service、transfer repository 與風控設定。
+     */
     private static Fixtures fixtures(RiskControlsProperties riskControlsProperties) {
         MemAccountRepository accountRepository = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepository = new MemWalletLedgerRepository();
@@ -109,11 +121,17 @@ class MarginServiceTest {
         private final Map<Long, Account> accounts = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 uid 讀帳戶，讓 deposit/withdraw 能取得現有資金狀態。
+         */
         public Optional<Account> findByUid(long uid) {
             return Optional.ofNullable(accounts.get(uid));
         }
 
         @Override
+        /**
+         * 寫回帳戶餘額變化，供後續 assertion 檢查 cross balance/available。
+         */
         public void save(Account account) {
             accounts.put(account.uid(), account);
         }
@@ -123,12 +141,18 @@ class MarginServiceTest {
         private final List<WalletLedgerEntry> entries = new ArrayList<>();
 
         @Override
+        /**
+         * 接收 ledger entry，並在測試 stub 內先確認每筆分錄都是 balanced。
+         */
         public void append(WalletLedgerEntry entry) {
             assertThat(entry.isBalanced()).isTrue();
             entries.add(entry);
         }
 
         @Override
+        /**
+         * 依 uid 查 ledger，驗證 deposit/withdraw 是否產生預期帳務原因。
+         */
         public List<WalletLedgerEntry> findByUid(long uid) {
             return entries.stream()
                     .filter(entry -> entry.getUid() == uid)
@@ -136,6 +160,9 @@ class MarginServiceTest {
         }
 
         @Override
+        /**
+         * 依 refId 查 ledger；目前測試不主查 refId，但保留 repository contract。
+         */
         public List<WalletLedgerEntry> findByRefId(String refId) {
             return entries.stream()
                     .filter(entry -> refId.equals(entry.getRefId()))
@@ -147,16 +174,25 @@ class MarginServiceTest {
         private final Map<UUID, WalletTransfer> transfers = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 保存每筆 transfer，讓測試能確認入金/出金狀態機的落點。
+         */
         public void save(WalletTransfer transfer) {
             transfers.put(transfer.getId(), transfer);
         }
 
         @Override
+        /**
+         * 依 transfer id 查單筆資料，保留 service 可能使用的查詢入口。
+         */
         public Optional<WalletTransfer> findById(UUID id) {
             return Optional.ofNullable(transfers.get(id));
         }
 
         @Override
+        /**
+         * 依 uid 回傳 transfer 歷史，用來驗證 deposit 與 withdrawal 建立順序。
+         */
         public List<WalletTransfer> findByUid(long uid) {
             return transfers.values().stream()
                     .filter(transfer -> transfer.getUid() == uid)

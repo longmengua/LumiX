@@ -19,6 +19,9 @@ class RequestLoggingInterceptorTest {
 
     @Test
     @DisplayName("沿用 incoming trace headers，回寫 response，完成後清掉 MDC")
+    /**
+     * 流程：request 帶 request/correlation headers -> preHandle 寫 response 與 MDC -> afterCompletion 清 MDC。
+     */
     void usesIncomingTraceHeadersAndClearsMdcAfterCompletion() {
         RequestLoggingInterceptor interceptor = new RequestLoggingInterceptor();
         MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/order/place");
@@ -45,6 +48,9 @@ class RequestLoggingInterceptorTest {
 
     @Test
     @DisplayName("缺少 headers 時自動產生 request id 並作為 correlation id")
+    /**
+     * 流程：request 不帶 trace headers -> preHandle 自動產生 request id -> 驗證 correlation id fallback 相同。
+     */
     void createsCorrelationIdFromGeneratedRequestIdWhenMissing() {
         RequestLoggingInterceptor interceptor = new RequestLoggingInterceptor();
         MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/order/open");

@@ -15,6 +15,9 @@ class ApiKeyAuthenticatorTest {
 
     @Test
     @DisplayName("sha256 hash 相符時建立 API_KEY principal 並解析 roles/scopes")
+    /**
+     * 流程：建立 subject/hash/roles/scopes 設定 -> 用 raw key authenticate -> 驗證 principal 欄位。
+     */
     void authenticatesSha256HashedApiKey() {
         String rawApiKey = "prod-secret-key";
         // 設定格式為 subject:sha256(apiKey):roles:scopes，roles/scopes 以 | 分隔。
@@ -35,6 +38,9 @@ class ApiKeyAuthenticatorTest {
 
     @Test
     @DisplayName("api key hash 不相符時不回傳 principal")
+    /**
+     * 流程：設定 expected key hash -> 用不同 raw key authenticate -> 驗證 Optional empty。
+     */
     void rejectsUnknownApiKey() {
         String configuredKeys =
                 "ops:" + ApiKeyAuthenticator.sha256Hex("expected") + ":ROLE_ADMIN:admin";

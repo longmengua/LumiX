@@ -17,6 +17,9 @@ class ExchangeApplicationTests {
 
 	@Test
 	@DisplayName("ExchangeApplication class 可載入")
+	/**
+	 * 流程：直接引用 Spring Boot application class -> 驗證 classpath 與 package 掃描入口沒有破裂。
+	 */
 	void applicationClassIsLoadable() {
 		assertNotNull(ExchangeApplication.class);
 	}

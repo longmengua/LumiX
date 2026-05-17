@@ -17,6 +17,9 @@ class IpAllowlistTest {
 
     @Test
     @DisplayName("精確 IP 與萬用字元規則會放行")
+    /**
+     * 流程：分別測精確 IP 與 * 規則 -> 驗證兩種 allowlist 寫法都能放行。
+     */
     void allowsExactIpAndWildcard() {
         assertThat(IpAllowlist.allows("127.0.0.1", List.of("127.0.0.1")))
                 .isTrue();
@@ -26,6 +29,9 @@ class IpAllowlistTest {
 
     @Test
     @DisplayName("IPv4 CIDR 規則會放行網段內 IP")
+    /**
+     * 流程：準備 /8 與 /24 CIDR -> 輸入網段內 IP -> 驗證 CIDR matching 成功。
+     */
     void allowsIpv4Cidr() {
         assertThat(IpAllowlist.allows("10.8.1.3", List.of("10.0.0.0/8")))
                 .isTrue();
@@ -35,6 +41,9 @@ class IpAllowlistTest {
 
     @Test
     @DisplayName("網段外、無效規則、空規則與空 IP 都拒絕")
+    /**
+     * 流程：依序測網段外、非法 CIDR、空規則、空 IP -> 驗證 helper 全部保守拒絕。
+     */
     void rejectsOutsideRules() {
         assertThat(IpAllowlist.allows("172.16.0.1", List.of("10.0.0.0/8")))
                 .isFalse();

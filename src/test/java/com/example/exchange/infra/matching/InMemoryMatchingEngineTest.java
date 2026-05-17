@@ -36,6 +36,9 @@ class InMemoryMatchingEngineTest {
 
     @Test
     @DisplayName("同價位掛單依 FIFO 順序成交")
+    /**
+     * 流程：先送兩筆同價賣單進 book -> 再送可全吃的買單 -> 驗證 maker 成交順序符合 FIFO。
+     */
     void matchesSamePriceByFifoOrderId() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         Order firstAsk = limit(1, OrderSide.SELL, "100", "1");
@@ -57,6 +60,9 @@ class InMemoryMatchingEngineTest {
 
     @Test
     @DisplayName("post-only 訂單若會吃單就拒絕")
+    /**
+     * 流程：先放一筆可成交賣單 -> 送 post-only 買單 -> 驗證不成交且 incoming order 被拒絕。
+     */
     void postOnlyRejectsOrderThatWouldTakeLiquidity() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -73,6 +79,9 @@ class InMemoryMatchingEngineTest {
 
     @Test
     @DisplayName("同 uid 自成交會拒絕 incoming order")
+    /**
+     * 流程：同 uid 先掛賣 -> 再送買單會與自己成交 -> 驗證 self-match prevention 拒絕 incoming。
+     */
     void selfMatchPreventionRejectsIncomingOrder() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(7, OrderSide.SELL, "100", "1"));
@@ -88,6 +97,9 @@ class InMemoryMatchingEngineTest {
 
     @Test
     @DisplayName("FOK 無法完全成交時失效並帶明確原因")
+    /**
+     * 流程：book 只有 1 單位流動性 -> FOK 買 2 單位 -> 驗證未全成時整筆過期且無成交。
+     */
     void fokExpiresWithExplicitReasonWhenNotFullyFillable() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -104,6 +116,9 @@ class InMemoryMatchingEngineTest {
 
     @Test
     @DisplayName("IOC 完全未成交時失效並帶明確原因")
+    /**
+     * 流程：book 最佳賣價高於 IOC 買價 -> 送 IOC -> 驗證未成交即過期並保留拒絕原因。
+     */
     void iocExpiresWithExplicitReasonWhenUnfilled() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -120,6 +135,9 @@ class InMemoryMatchingEngineTest {
 
     @Test
     @DisplayName("市價單流動性不足時部分成交後失效")
+    /**
+     * 流程：book 只有 1 單位賣單 -> 市價買 2 單位 -> 驗證先吃可用流動性，再因不足而過期。
+     */
     void marketOrderExpiresWithExplicitReasonWhenLiquidityIsInsufficient() {
         InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
         engine.submit(limit(1, OrderSide.SELL, "100", "1"));
@@ -134,6 +152,9 @@ class InMemoryMatchingEngineTest {
         engine.shutdown();
     }
 
+    /**
+     * 建立 LIMIT 測試訂單，統一 symbol、price、qty 與 origQty，讓各案例只聚焦撮合規則。
+     */
     private Order limit(long uid, OrderSide side, String price, String qty) {
         return Order.builder()
                 .uid(uid)
@@ -146,6 +167,9 @@ class InMemoryMatchingEngineTest {
                 .build();
     }
 
+    /**
+     * 建立 MARKET 測試訂單；市價單沒有 price，專門用來驗證流動性不足與剩餘量處理。
+     */
     private Order market(long uid, OrderSide side, String qty) {
         return Order.builder()
                 .uid(uid)

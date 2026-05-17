@@ -19,6 +19,9 @@ class OrderBookChecksumTest {
 
     @Test
     @DisplayName("等價 BigDecimal scale 不會造成 checksum 不同")
+    /**
+     * 流程：用不同 BigDecimal scale 建立等價 order book -> 計算 CRC32 -> 驗證 checksum 穩定相同。
+     */
     void crc32IsStableAcrossEquivalentDecimalScales() {
         long left = OrderBookChecksum.crc32(
                 List.of(new PriceLevel(new BigDecimal("100.00"), new BigDecimal("1.000"))),

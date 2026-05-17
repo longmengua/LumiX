@@ -32,6 +32,9 @@ class AccountRiskServiceTest {
 
     @Test
     @DisplayName("帳戶不存在時回傳零值風險快照")
+    /**
+     * 流程：建立空 repository -> 查詢不存在 uid 的風險快照 -> 驗證所有資產與風險欄位安全回零。
+     */
     void missingAccountReturnsZeroRiskSnapshot() {
         AccountRiskService service = service(new MemAccountRepository(), new MemPositionRepository(), new MarketDataService());
 
@@ -47,6 +50,9 @@ class AccountRiskServiceTest {
 
     @Test
     @DisplayName("使用 mark price 計算 equity、maintenance margin 與 risk ratio")
+    /**
+     * 流程：準備帳戶凍結資金、持倉與最新成交價 -> 呼叫 snapshot -> 驗證 available、PNL、equity 與 risk ratio。
+     */
     void snapshotUsesMarkPriceForEquityMaintenanceMarginAndRiskRatio() {
         MemAccountRepository accountRepository = new MemAccountRepository();
         MemPositionRepository positionRepository = new MemPositionRepository();
@@ -86,6 +92,9 @@ class AccountRiskServiceTest {
         assertThat(snapshot.openPositionCount()).isOne();
     }
 
+    /**
+     * 建立 AccountRiskService 測試鏈路，把 account、position、market data 與固定維持保證金率接起來。
+     */
     private static AccountRiskService service(
             AccountRepository accountRepository,
             PositionRepository positionRepository,
@@ -102,11 +111,17 @@ class AccountRiskServiceTest {
         private final Map<Long, Account> accounts = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 模擬依 uid 查帳戶；不存在時回 empty，讓 missing-account 分支可被驗證。
+         */
         public Optional<Account> findByUid(long uid) {
             return Optional.ofNullable(accounts.get(uid));
         }
 
         @Override
+        /**
+         * 保存帳戶目前狀態，供 snapshot 後續讀取 balance、hold 與 margin。
+         */
         public void save(Account account) {
             accounts.put(account.uid(), account);
         }
@@ -116,16 +131,25 @@ class AccountRiskServiceTest {
         private final Map<String, Position> positions = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 uid + symbol 查單一持倉，支援 service 讀取指定 market 的風險資料。
+         */
         public Optional<Position> find(long uid, Symbol symbol) {
             return Optional.ofNullable(positions.get(key(uid, symbol.code())));
         }
 
         @Override
+        /**
+         * 保存持倉狀態，讓測試可先建立 open position 再計算風險快照。
+         */
         public void save(Position position) {
             positions.put(key(position.getUid(), position.getSymbol().code()), position);
         }
 
         @Override
+        /**
+         * 回傳某 uid 的全部持倉，AccountRiskService 會用它彙總 open position 風險。
+         */
         public List<Position> findAllByUid(long uid) {
             return positions.values().stream()
                     .filter(position -> position.getUid() == uid)
@@ -133,12 +157,18 @@ class AccountRiskServiceTest {
         }
 
         @Override
+        /**
+         * 回傳所有未平倉部位；此檔主要測 uid snapshot，仍保留介面行為避免 stub 不完整。
+         */
         public List<Position> findOpenPositions() {
             return positions.values().stream()
                     .filter(position -> position.getQty() != null && position.getQty().signum() != 0)
                     .toList();
         }
 
+        /**
+         * 建立 map key，避免同一 uid 在不同 symbol 的持倉互相覆蓋。
+         */
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
         }

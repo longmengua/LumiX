@@ -17,6 +17,9 @@ class OperationalMetricsServiceTest {
 
     @Test
     @DisplayName("記錄下單結果、取消數、成交事件數與延遲統計")
+    /**
+     * 流程：啟動 service timer -> 記錄 filled order、cancel、trade events -> 讀 snapshot 驗證各 counter。
+     */
     void recordsOrderStatusLatencyCancellationAndTrades() {
         OperationalMetricsService service = new OperationalMetricsService();
         // timer 必須由 service 產生，才能測到 snapshot 的 latency count/max。

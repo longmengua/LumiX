@@ -47,6 +47,9 @@ class RiskSettlementServiceTest {
 
     @Test
     @DisplayName("單一 funding settlement 會更新 ledger、position 並保持可對帳")
+    /**
+     * 流程：準備多單、帳戶與保證金 -> 單筆 settle funding -> 驗證 cashflow、ledger、event 與 reconciliation。
+     */
     void fundingSettlementUpdatesLedgerPositionAndStillReconciles() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -95,6 +98,9 @@ class RiskSettlementServiceTest {
 
     @Test
     @DisplayName("configured funding settlement 會掃描 open positions 並分別結算多空")
+    /**
+     * 流程：建立同 symbol 一多一空 -> 使用設定檔 settleConfiguredSymbols -> 驗證多方付費、空方收費。
+     */
     void configuredFundingSettlementScansOpenPositions() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -143,6 +149,9 @@ class RiskSettlementServiceTest {
 
     @Test
     @DisplayName("強平會關閉倉位並用保險基金承接帳戶不足的缺口")
+    /**
+     * 流程：建立高虧損多單 -> 用極低 mark price 強平 -> 驗證倉位歸零、帳戶歸零與保險基金補缺口。
+     */
     void liquidationClosesPositionAndUsesInsuranceFundForShortfall() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -195,6 +204,9 @@ class RiskSettlementServiceTest {
 
     @Test
     @DisplayName("全帳戶對帳會掃 account index 與 open-position index 找出不一致")
+    /**
+     * 流程：準備正常帳戶、margin 不一致帳戶、缺 account 的 open position -> validateAllAccounts 找出兩種問題。
+     */
     void reconciliationCanScanKnownAccountsAndOpenPositionAccounts() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -231,16 +243,25 @@ class RiskSettlementServiceTest {
         private final Map<Long, Account> accounts = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 uid 找帳戶，支援 funding、liquidation 與 reconciliation 讀取帳戶狀態。
+         */
         public Optional<Account> findByUid(long uid) {
             return Optional.ofNullable(accounts.get(uid));
         }
 
         @Override
+        /**
+         * 回傳全部已知帳戶，讓全帳戶對帳能掃 account index。
+         */
         public List<Account> findAll() {
             return new ArrayList<>(accounts.values());
         }
 
         @Override
+        /**
+         * 保存帳戶餘額與保證金狀態，模擬 repository 寫回。
+         */
         public void save(Account account) {
             accounts.put(account.uid(), account);
         }
@@ -250,17 +271,26 @@ class RiskSettlementServiceTest {
         private final List<WalletLedgerEntry> entries = new ArrayList<>();
 
         @Override
+        /**
+         * 追加 ledger entry，並在 stub 層先驗證雙分錄平衡。
+         */
         public void append(WalletLedgerEntry entry) {
             assertThat(entry.isBalanced()).isTrue();
             entries.add(entry);
         }
 
         @Override
+        /**
+         * 依 uid 查 ledger，用於驗證 funding、liquidation 是否寫入正確 reason。
+         */
         public List<WalletLedgerEntry> findByUid(long uid) {
             return entries.stream().filter(entry -> entry.getUid() == uid).toList();
         }
 
         @Override
+        /**
+         * 依 refId 查 ledger；reconciliation path 保留此 contract 以避免 stub 行為缺口。
+         */
         public List<WalletLedgerEntry> findByRefId(String refId) {
             return entries.stream().filter(entry -> refId.equals(entry.getRefId())).toList();
         }
@@ -270,32 +300,50 @@ class RiskSettlementServiceTest {
         private final Map<String, Position> positions = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 uid + symbol 查單一持倉，funding 與 liquidation 都從這裡取得目標部位。
+         */
         public Optional<Position> find(long uid, Symbol symbol) {
             return Optional.ofNullable(positions.get(key(uid, symbol.code())));
         }
 
         @Override
+        /**
+         * 保存持倉變化，包含 funding paid/received、強平後 qty 與 margin 更新。
+         */
         public void save(Position position) {
             positions.put(key(position.getUid(), position.getSymbol().code()), position);
         }
 
         @Override
+        /**
+         * 回傳指定 uid 的持倉集合，reconciliation 用來比對帳戶保證金與 position margin。
+         */
         public List<Position> findAllByUid(long uid) {
             return positions.values().stream().filter(position -> position.getUid() == uid).toList();
         }
 
         @Override
+        /**
+         * 回傳所有 open positions，configured funding 與全帳戶對帳都會掃這個集合。
+         */
         public List<Position> findOpenPositions() {
             return positions.values().stream()
                     .filter(position -> position.getQty() != null && position.getQty().signum() != 0)
                     .toList();
         }
 
+        /**
+         * 建立 uid + symbol 複合 key，避免不同帳戶或不同市場的 position 覆蓋。
+         */
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
         }
     }
 
+    /**
+     * 建立 funding rate 設定物件，讓 configured settlement 測試可走與 production 相同的配置入口。
+     */
     private static FundingRateProperties fundingRateProperties(String symbol, String markPrice, String fundingRate) {
         FundingRateProperties properties = new FundingRateProperties();
         FundingRateProperties.Settlement settlement = new FundingRateProperties.Settlement();

@@ -57,6 +57,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("成交後更新雙方持倉、費用、ledger、market data 與 lifecycle event")
+    /**
+     * 流程：建立完整下單服務鏈路 -> 賣單先掛簿、買單吃單 -> 驗證 position、fee、ledger、market data 與事件。
+     */
     void fillUpdatesPositionsFeesLedgerAndMarketData() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -142,6 +145,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("風控預檢拒單時發布 CREATED 和 REJECTED lifecycle event")
+    /**
+     * 流程：不給帳戶入金 -> 直接下買單觸發 balance pre-check -> 驗證 CREATED 後接 REJECTED 且不落訂單。
+     */
     void rejectedPreCheckPublishesOrderLifecycleEvent() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -189,6 +195,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("超過 max open orders 時拒絕新單且不寫 ledger")
+    /**
+     * 流程：symbol 設 max open orders = 1 -> 先放一筆 open order -> 第二筆下單被拒且沒有 ledger side effect。
+     */
     void maxOpenOrdersPreCheckRejectsNewOrder() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -253,6 +262,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("重複 clientOrderId 會被 pre-trade risk check 拒絕")
+    /**
+     * 流程：repository 已有同 uid/clientOrderId 的 open order -> incoming trim 後相同 -> pre-check 拒絕重複 id。
+     */
     void duplicateClientOrderIdPreCheckRejectsNewOrder() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -299,6 +311,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("全站風控開關會拒絕下單、非 reduce-only 單與停牌 symbol")
+    /**
+     * 流程：分別開啟 order-entry halt、reduce-only mode、symbol suspension -> 共用 helper 驗證拒單 code。
+     */
     void riskSwitchesRejectOrderEntryReduceOnlyAndSuspendedSymbol() {
         SymbolConfig symbolConfig = btcConfigWithMaxOpenOrders(10);
 
@@ -320,6 +335,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("批量撤單會釋放 reserve 並發布取消事件")
+    /**
+     * 流程：入金後掛買單產生 reserve -> cancelOpenOrders -> 驗證 hold 釋放、訂單取消、事件發布。
+     */
     void bulkCancelOpenOrdersReleasesReserveAndPublishesLifecycleEvents() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -381,6 +399,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("改單會更新 order book、reserve 與 UPDATED lifecycle event")
+    /**
+     * 流程：先掛買單並記錄 reserve -> amend 降價降量 -> 驗證 order、帳戶 hold、book top 與 UPDATED event。
+     */
     void amendOrderUpdatesBookReserveAndLifecycleEvent() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -453,6 +474,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("cancel-replace 會取消原單並建立 replacement order")
+    /**
+     * 流程：先掛原買單 -> cancelReplace 取消原單再建立新單 -> 驗證兩筆訂單狀態、reserve 與 lifecycle events。
+     */
     void cancelReplaceCancelsOriginalAndPlacesReplacement() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -530,6 +554,9 @@ class OrderAccountingIntegrationTest {
 
     @Test
     @DisplayName("cancel-on-disconnect 會撤掉該 WebSocket 註冊範圍內的 open orders")
+    /**
+     * 流程：掛單後註冊 connection/symbol -> 模擬連線斷開 -> 驗證註冊清除、訂單取消與 reserve 釋放。
+     */
     void cancelOnDisconnectCancelsRegisteredOpenOrders() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
@@ -584,6 +611,9 @@ class OrderAccountingIntegrationTest {
         matchingEngine.shutdown();
     }
 
+    /**
+     * 建立標準 BTCUSDT LIMIT 下單 command，讓各整合測試只改 uid、side、price、qty。
+     */
     private static PlaceOrderCommand command(long uid, OrderSide side, String price, String qty) {
         return new PlaceOrderCommand(
                 uid,
@@ -601,6 +631,9 @@ class OrderAccountingIntegrationTest {
         );
     }
 
+    /**
+     * 建立 BTCUSDT symbol config，重點可調 maxOpenOrders 以測 pre-trade risk 上限。
+     */
     private static SymbolConfig btcConfigWithMaxOpenOrders(int maxOpenOrders) {
         return SymbolConfig.builder()
                 .symbol("BTCUSDT")
@@ -624,10 +657,16 @@ class OrderAccountingIntegrationTest {
                 .build();
     }
 
+    /**
+     * 建立預設風控設定，測試可在個別案例中只開啟需要的 risk switch。
+     */
     private static RiskControlsProperties riskControls() {
         return new RiskControlsProperties();
     }
 
+    /**
+     * 建立 pre-trade risk 測試用 limit order，支援切換 reduceOnly 來測全站 reduce-only mode。
+     */
     private static Order limitOrder(long uid, Symbol symbol, OrderSide side, String price, boolean reduceOnly) {
         return Order.builder()
                 .uid(uid)
@@ -641,6 +680,9 @@ class OrderAccountingIntegrationTest {
                 .build();
     }
 
+    /**
+     * 共用風控開關拒單驗證鏈路：建立最小 RiskService -> preCheckAndReserve -> 檢查 rejectCode 與無 ledger。
+     */
     private static void assertRiskSwitchRejects(
             Order order,
             SymbolConfig symbolConfig,
@@ -675,11 +717,17 @@ class OrderAccountingIntegrationTest {
         private final Map<Long, Account> accounts = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 uid 查帳戶；RiskService 與 WalletLedgerService 都透過它取得資金狀態。
+         */
         public Optional<Account> findByUid(long uid) {
             return Optional.ofNullable(accounts.get(uid));
         }
 
         @Override
+        /**
+         * 寫回帳戶餘額、order hold 與 position margin，支援後續副作用驗證。
+         */
         public void save(Account account) {
             accounts.put(account.uid(), account);
         }
@@ -689,17 +737,26 @@ class OrderAccountingIntegrationTest {
         private final List<WalletLedgerEntry> entries = new ArrayList<>();
 
         @Override
+        /**
+         * 追加帳務分錄，同時確認每筆 entry 都符合 balanced ledger baseline。
+         */
         public void append(WalletLedgerEntry entry) {
             assertThat(entry.isBalanced()).isTrue();
             entries.add(entry);
         }
 
         @Override
+        /**
+         * 依 uid 讀取帳務分錄，用於驗證 reserve、fee、position margin release/increase。
+         */
         public List<WalletLedgerEntry> findByUid(long uid) {
             return entries.stream().filter(entry -> entry.getUid() == uid).toList();
         }
 
         @Override
+        /**
+         * 依 refId 查帳務分錄，保留 WalletLedgerRepository contract 給 service 使用。
+         */
         public List<WalletLedgerEntry> findByRefId(String refId) {
             return entries.stream().filter(entry -> refId.equals(entry.getRefId())).toList();
         }
@@ -709,27 +766,42 @@ class OrderAccountingIntegrationTest {
         private final Map<String, Position> positions = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 uid + symbol 找持倉，OrderService 成交後會讀它來累加 position。
+         */
         public Optional<Position> find(long uid, Symbol symbol) {
             return Optional.ofNullable(positions.get(key(uid, symbol.code())));
         }
 
         @Override
+        /**
+         * 保存成交或結算後的持倉狀態，供後續 assertion 檢查 qty、margin、fee。
+         */
         public void save(Position position) {
             positions.put(key(position.getUid(), position.getSymbol().code()), position);
         }
 
         @Override
+        /**
+         * 回傳指定 uid 的全部持倉，支援 risk/reconciliation 類服務的 repository contract。
+         */
         public List<Position> findAllByUid(long uid) {
             return positions.values().stream().filter(position -> position.getUid() == uid).toList();
         }
 
         @Override
+        /**
+         * 回傳所有 open positions；此整合測試主要保留 contract，讓 stub 接近真實 repository。
+         */
         public List<Position> findOpenPositions() {
             return positions.values().stream()
                     .filter(position -> position.getQty() != null && position.getQty().signum() != 0)
                     .toList();
         }
 
+        /**
+         * 建立 uid + symbol 複合 key，避免同 uid 多市場或多 uid 同市場互相覆蓋。
+         */
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
         }
@@ -739,16 +811,25 @@ class OrderAccountingIntegrationTest {
         private final Map<UUID, Order> orders = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 依 order id 查訂單，改單、撤單、cancel-replace 都從這裡定位原單。
+         */
         public Optional<Order> findById(UUID id) {
             return Optional.ofNullable(orders.get(id));
         }
 
         @Override
+        /**
+         * 保存訂單狀態，包含 NEW、FILLED、CANCELED、REJECTED 等 lifecycle 變化。
+         */
         public void save(Order order) {
             orders.put(order.getId(), order);
         }
 
         @Override
+        /**
+         * 查 uid 下全部 open orders，pre-trade risk 用它計算 maxOpenOrders 與 clientOrderId dedupe。
+         */
         public List<Order> openOrders(long uid) {
             return orders.values().stream()
                     .filter(order -> order.getUid() == uid)
@@ -758,6 +839,9 @@ class OrderAccountingIntegrationTest {
         }
 
         @Override
+        /**
+         * 查指定 uid/symbol 的 open orders，bulk cancel 與 cancel-on-disconnect 會走這個入口。
+         */
         public List<Order> findOpenOrders(Long uid, String symbol) {
             return openOrders(uid).stream()
                     .filter(order -> order.getSymbol().code().equalsIgnoreCase(symbol))
@@ -765,6 +849,9 @@ class OrderAccountingIntegrationTest {
         }
 
         @Override
+        /**
+         * 查指定 uid/symbol 的全部訂單，用於測試確認原單與 replacement order 的最終狀態。
+         */
         public List<Order> findAllOrders(Long uid, String symbol) {
             return orders.values().stream()
                     .filter(order -> order.getUid() == uid)
@@ -777,11 +864,17 @@ class OrderAccountingIntegrationTest {
         private final AtomicLong seq = new AtomicLong();
 
         @Override
+        /**
+         * 模擬 trade event append，回傳遞增 sequence 讓 OrderService 可完成事件落點。
+         */
         public long append(TradeExecuted event) {
             return seq.incrementAndGet();
         }
 
         @Override
+        /**
+         * 回傳目前最後 sequence，維持 EventStore contract 以支援 market/order event chain。
+         */
         public long lastSeq(long uid) {
             return seq.get();
         }
@@ -791,11 +884,17 @@ class OrderAccountingIntegrationTest {
         private final HashSet<String> keys = new HashSet<>();
 
         @Override
+        /**
+         * 插入 idempotency key；首次成功、重複失敗，模擬 production 去重語意。
+         */
         public boolean insertIfAbsent(String key, Instant expiresAt) {
             return keys.add(key);
         }
 
         @Override
+        /**
+         * 查 key 是否存在，支援 service 在同一測試流程中確認重複請求。
+         */
         public boolean exists(String key) {
             return keys.contains(key);
         }

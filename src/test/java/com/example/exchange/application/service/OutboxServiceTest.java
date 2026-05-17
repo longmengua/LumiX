@@ -29,6 +29,9 @@ class OutboxServiceTest {
 
     @Test
     @DisplayName("發布連續失敗會進 DLQ，replay 後可重新發布成功")
+    /**
+     * 流程：publish 失敗 -> relay 重試到 max attempts -> 進 DLQ -> replay dead event -> 再 relay 成功。
+     */
     void failedEventMovesToDlqAndCanBeReplayed() {
         MemOutboxRepository outboxRepository = new MemOutboxRepository();
         MemDlqRepository dlqRepository = new MemDlqRepository();
@@ -77,6 +80,9 @@ class OutboxServiceTest {
 
     @Test
     @DisplayName("死信事件可被標記為人工補償完成")
+    /**
+     * 流程：先放入 DEAD outbox event -> markCompensated -> 驗證狀態改為 COMPENSATED 且 relay 不再送出。
+     */
     void deadEventCanBeMarkedCompensated() {
         MemOutboxRepository outboxRepository = new MemOutboxRepository();
         MemDlqRepository dlqRepository = new MemDlqRepository();
@@ -103,6 +109,9 @@ class OutboxServiceTest {
 
     @Test
     @DisplayName("trace headers 會跟 outbox event 一起保存並在 replay 時帶出")
+    /**
+     * 流程：publish 時帶 trace headers -> 首次失敗仍保存 headers -> relay replay 時再次帶出同一組 headers。
+     */
     void traceHeadersAreStoredAndReplayedWithOutboxEvent() {
         MemOutboxRepository outboxRepository = new MemOutboxRepository();
         MemDlqRepository dlqRepository = new MemDlqRepository();
@@ -140,16 +149,25 @@ class OutboxServiceTest {
         private final Map<UUID, OutboxEvent> events = new LinkedHashMap<>();
 
         @Override
+        /**
+         * 保存 outbox event；同 id 覆寫可模擬狀態從 PENDING -> DEAD -> PUBLISHED 的變化。
+         */
         public void save(OutboxEvent event) {
             events.put(event.getId(), event);
         }
 
         @Override
+        /**
+         * 依 id 查回事件，replayDead 會用這個入口找到 dead event。
+         */
         public Optional<OutboxEvent> findById(UUID id) {
             return Optional.ofNullable(events.get(id));
         }
 
         @Override
+        /**
+         * 找出到期的 PENDING event，讓 relayDue 只處理可以重送的事件。
+         */
         public List<OutboxEvent> findDue(Instant now, int limit) {
             return events.values().stream()
                     .filter(event -> event.getStatus() == OutboxEvent.Status.PENDING)
@@ -158,6 +176,9 @@ class OutboxServiceTest {
                     .toList();
         }
 
+        /**
+         * 測試輔助方法：確保目前只有一筆 outbox event，方便直接檢查狀態轉換。
+         */
         private OutboxEvent onlyEvent() {
             assertThat(events).hasSize(1);
             return events.values().iterator().next();
@@ -171,11 +192,17 @@ class OutboxServiceTest {
         private final List<DlqEvent> events = new ArrayList<>();
 
         @Override
+        /**
+         * 追加 dead-letter event；放到 list 前端以符合 latest 先回最新的語意。
+         */
         public void append(DlqEvent event) {
             events.add(0, event);
         }
 
         @Override
+        /**
+         * 回傳最新 DLQ events，供測試確認失敗事件真的進入 dead-letter queue。
+         */
         public List<DlqEvent> latest(int limit) {
             return events.stream().limit(Math.max(1, limit)).toList();
         }

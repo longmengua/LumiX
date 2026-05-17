@@ -24,6 +24,9 @@ class ApiAuthenticationInterceptorTest {
 
     @Test
     @DisplayName("auth 關閉時不檢查 credentials 並直接放行")
+    /**
+     * 流程：關閉 auth 設定 -> 呼叫 protected path -> 驗證 interceptor 不檢查 header 並放行。
+     */
     void allowsWhenAuthDisabled() throws Exception {
         ApiAuthProperties properties =
                 new ApiAuthProperties();
@@ -43,6 +46,9 @@ class ApiAuthenticationInterceptorTest {
 
     @Test
     @DisplayName("auth 開啟但未帶 credentials 時回 401")
+    /**
+     * 流程：開啟 API key auth -> request 不帶 X-API-Key -> 驗證 preHandle 回 false 與 401 body。
+     */
     void rejectsMissingCredentialsWhenEnabled() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("admin-key", "ROLE_ADMIN", "admin"), objectMapper);
@@ -59,6 +65,9 @@ class ApiAuthenticationInterceptorTest {
 
     @Test
     @DisplayName("管理員 API key 可呼叫管理端 risk API")
+    /**
+     * 流程：設定 admin role/scope -> 呼叫管理端 risk API -> 驗證放行並把 principal 寫進 request。
+     */
     void allowsAdminApiForAdminApiKey() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("admin-key", "ROLE_ADMIN", "admin"), objectMapper);
@@ -79,6 +88,9 @@ class ApiAuthenticationInterceptorTest {
 
     @Test
     @DisplayName("交易員 API key 呼叫管理端 risk API 會回 403")
+    /**
+     * 流程：設定 trader role/scope -> 呼叫 admin-only API -> 驗證授權失敗且 response 為 403。
+     */
     void rejectsAdminApiForTraderApiKey() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("trader-key", "ROLE_TRADER", "trade:write"), objectMapper);
@@ -95,6 +107,9 @@ class ApiAuthenticationInterceptorTest {
 
     @Test
     @DisplayName("交易員 API key 可呼叫下單 API 並寫入 principal")
+    /**
+     * 流程：設定 trader trade:write scope -> 呼叫下單 API -> 驗證放行並留下 principal subject。
+     */
     void allowsTradingApiForTraderApiKey() throws Exception {
         ApiAuthenticationInterceptor interceptor =
                 new ApiAuthenticationInterceptor(enabledProperties("trader-key", "ROLE_TRADER", "trade:write"), objectMapper);
@@ -113,6 +128,9 @@ class ApiAuthenticationInterceptorTest {
                 .isEqualTo("test-key");
     }
 
+    /**
+     * 建立啟用狀態的 auth 設定，把 raw key 轉成 sha256 設定格式並注入 roles/scopes。
+     */
     private ApiAuthProperties enabledProperties(String apiKey, String roles, String scopes) {
         ApiAuthProperties properties =
                 new ApiAuthProperties();
@@ -130,6 +148,9 @@ class ApiAuthenticationInterceptorTest {
         return properties;
     }
 
+    /**
+     * 建立 mock request；apiKey 為 null 時刻意不加 header，用來測 401 分支。
+     */
     private MockHttpServletRequest request(String method, String path, String apiKey) {
         MockHttpServletRequest request =
                 new MockHttpServletRequest(method, path);
