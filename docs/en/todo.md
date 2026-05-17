@@ -3,6 +3,8 @@
 
 This checklist focuses on the work needed to move the current MVP toward production. Priority can be adjusted by product stage, but P0/P1 items should be completed before real funds or real trading volume are introduced.
 
+Documentation categories: [Product Documentation](README.md) / [Technical Documentation](technical.md) / TODO Documentation
+
 ## P0 Required
 
 ### Trading and Matching

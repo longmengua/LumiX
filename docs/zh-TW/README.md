@@ -7,6 +7,16 @@ Java 21 + Spring Boot 3.5 的交易與預測市場整合後端。專案目前同
 
 其他語言：[根目錄語言目錄](../../README.md) / [English](../en/)
 
+## 文件分類
+
+本頁是繁體中文 **產品文件** 入口。
+
+| 分類 | 說明 | 連結 |
+| --- | --- | --- |
+| 產品文件 | 業務總覽、功能、模塊、API 與下單鏈路。 | 目前頁面 |
+| 技術文件 | 架構、實作筆記、API curl 腳本與撮合引擎說明。 | [technical.md](technical.md) |
+| 待辦清單文件 | 依優先級與領域整理的 production readiness roadmap。 | [todo.md](todo.md) |
+
 ## 技術棧
 
 - Java 21

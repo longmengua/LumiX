@@ -1,21 +1,15 @@
-<!-- File purpose: Repository landing page and language directory for java21-match-hub. -->
-# Java21 Match Hub
+<!-- File purpose: Repository documentation catalog grouped by product docs, technical docs, and TODO docs. -->
+# Java21 Match Hub Documentation
 
 Java21 Match Hub is a Java 21 + Spring Boot backend for an exchange core and Polymarket integration.
 
-Choose a language:
+## Documentation Categories
 
-| Language | Documentation |
-| --- | --- |
-| English | [docs/en/](docs/en/) |
-| 繁體中文 | [docs/zh-TW/](docs/zh-TW/) |
-
-## Quick Links
-
-- English overview: [docs/en/README.md](docs/en/README.md)
-- 繁體中文說明：[docs/zh-TW/README.md](docs/zh-TW/README.md)
-- English production TODO: [docs/en/todo.md](docs/en/todo.md)
-- 繁體中文 production TODO：[docs/zh-TW/todo.md](docs/zh-TW/todo.md)
+| Category | English Description | 中文說明 | English | 繁體中文 |
+| --- | --- | --- | --- | --- |
+| Product Documentation | Business-facing overview: product scope, business features, business modules, APIs, and the order placement journey. | 面向產品與業務的總覽：產品範圍、業務功能、業務模塊、API 與下單鏈路。 | [docs/en/README.md](docs/en/README.md) | [docs/zh-TW/README.md](docs/zh-TW/README.md) |
+| Technical Documentation | Engineering-facing notes: architecture review, module structure, API curl scripts, matching engine notes, local infrastructure, and implementation details. | 面向工程的說明：架構分析、模塊結構、API curl 腳本、撮合引擎說明、本機基礎設施與實作細節。 | [docs/en/technical.md](docs/en/technical.md) | [docs/zh-TW/technical.md](docs/zh-TW/technical.md) |
+| TODO Documentation | Production-readiness roadmap: required work before real funds or production traffic, grouped by priority and domain. | 正式環境待辦清單：真實資金或正式流量前需要補齊的工作，依優先級與領域分類。 | [docs/en/todo.md](docs/en/todo.md) | [docs/zh-TW/todo.md](docs/zh-TW/todo.md) |
 
 ## Local Startup
 

@@ -7,6 +7,16 @@ This is a runnable trading-core MVP, not a production-grade exchange. The matchi
 
 Other languages: [repository language directory](../../README.md) / [繁體中文](../zh-TW/)
 
+## Documentation Category
+
+This page is the English **Product Documentation** entry.
+
+| Category | Description | Link |
+| --- | --- | --- |
+| Product Documentation | Business-facing overview, features, modules, APIs, and order placement flow. | Current page |
+| Technical Documentation | Architecture, implementation notes, API curl scripts, and matching engine notes. | [technical.md](technical.md) |
+| TODO Documentation | Production-readiness roadmap grouped by priority and domain. | [todo.md](todo.md) |
+
 ## Tech Stack
 
 - Java 21
