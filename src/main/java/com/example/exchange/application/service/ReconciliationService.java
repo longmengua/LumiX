@@ -27,6 +27,12 @@ public class ReconciliationService {
     private final PositionRepository positionRepository;
     private final WalletLedgerRepository ledgerRepository;
 
+    /**
+     * 掃描目前可發現的帳戶集合。
+     *
+     * <p>來源包含 account repository 的 maintained index，以及 open-position index。
+     * 後者可抓出「有倉位但帳戶缺失」這類高風險不一致。</p>
+     */
     public List<ValidationIssue> validateAllAccounts() {
         Set<Long> uids = new LinkedHashSet<>();
         accountRepository.findAll().stream()
@@ -45,6 +51,12 @@ public class ReconciliationService {
         return issues;
     }
 
+    /**
+     * 驗證單一使用者的 Account、Position 與 Ledger 基本一致性。
+     *
+     * <p>這是輕量 baseline：檢查 crossBalance 分量、position margin 加總、
+     * 以及每筆 ledger 是否借貸平衡。event-store coverage 仍留給 production 對帳。</p>
+     */
     public List<ValidationIssue> validateUid(long uid) {
         List<ValidationIssue> issues = new ArrayList<>();
         Account account = accountRepository.findByUid(uid).orElse(null);
@@ -53,6 +65,7 @@ public class ReconciliationService {
             return issues;
         }
 
+        // Account 的 cross balance 必須能被可用、委託凍結、持倉保證金完全拆解。
         BigDecimal componentTotal = account.crossAvailable()
                 .add(account.crossOrderHold())
                 .add(account.crossPositionMargin());
@@ -64,6 +77,7 @@ public class ReconciliationService {
             ));
         }
 
+        // Position margin 是帳務與持倉之間最容易漂移的欄位，先做加總比對。
         BigDecimal positionMargin = positionRepository.findAllByUid(uid).stream()
                 .map(Position::getMargin)
                 .map(value -> value == null ? BigDecimal.ZERO : value)
@@ -76,6 +90,7 @@ public class ReconciliationService {
             ));
         }
 
+        // 每筆 ledger entry 本身必須借貸平衡，否則後續 replay / reconciliation 都不可信。
         for (WalletLedgerEntry entry : ledgerRepository.findByUid(uid)) {
             if (!entry.isBalanced()) {
                 issues.add(new ValidationIssue(

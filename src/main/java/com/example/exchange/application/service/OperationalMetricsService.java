@@ -14,6 +14,7 @@ import java.util.concurrent.atomic.LongAdder;
 @Service
 public class OperationalMetricsService {
 
+    // 使用 LongAdder 降低高併發下的 CAS 競爭；這些 counters 是 in-process baseline。
     private final LongAdder orderRequests = new LongAdder();
     private final LongAdder orderNew = new LongAdder();
     private final LongAdder orderPartiallyFilled = new LongAdder();
@@ -26,10 +27,12 @@ public class OperationalMetricsService {
     private final LongAdder orderLatencyTotalMs = new LongAdder();
     private final AtomicLong orderLatencyMaxMs = new AtomicLong();
 
+    /** 回傳 monotonic timer 起點，呼叫方應在同一流程完成後交給 recordOrderResult。 */
     public long startTimer() {
         return System.nanoTime();
     }
 
+    /** 記錄單筆下單流程的最終狀態與端到端延遲。 */
     public void recordOrderResult(Order order, long startedAtNanos) {
         if (order == null) {
             return;
@@ -39,6 +42,7 @@ public class OperationalMetricsService {
         recordOrderLatency(startedAtNanos);
     }
 
+    /** 批量撤單或 cancel-on-disconnect 會一次增加多筆取消計數。 */
     public void recordCanceledOrders(int count) {
         if (count <= 0) {
             return;
@@ -46,6 +50,7 @@ public class OperationalMetricsService {
         orderCanceled.add(count);
     }
 
+    /** tradeEvents 記錄 domain trade event 數量，不代表唯一 match 數。 */
     public void recordTradeEvents(int count) {
         if (count <= 0) {
             return;
@@ -53,6 +58,7 @@ public class OperationalMetricsService {
         tradeEvents.add(count);
     }
 
+    /** 建立即時快照；不會重置 counters。 */
     public OperationalMetricsSnapshot snapshot() {
         long latencyCount = orderLatencyCount.sum();
         long latencyTotal = orderLatencyTotalMs.sum();

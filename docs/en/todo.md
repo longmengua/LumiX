@@ -9,84 +9,103 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Trading and Matching
 
-- Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
-- Define deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
-- Persist and operationalize order lifecycle events. A Kafka publishing baseline exists for created, accepted, updated, rejected, canceled, expired, and filled states; production still needs durable storage, schema versioning, replay, and projections.
-- Add exchange-standard commands such as amend order, cancel replace, bulk cancel, and cancel on disconnect. A REST/WebSocket baseline exists for all four; production still needs durable command logs, stronger atomicity modes, and reconnect/session semantics.
-- Enforce tick size, lot size, min notional, price band, max order size, and max open orders.
-- Make rejection semantics explicit for insufficient MARKET liquidity, unfilled IOC/FOK, POST_ONLY taking liquidity, and REDUCE_ONLY exceeding reducible position size.
+- [ ] Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
+- [x] Add an in-process per-symbol sequencer baseline so matching operations for the same symbol are serialized.
+- [ ] Define production deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
+- [x] Publish order lifecycle events for created, accepted, updated, rejected, canceled, expired, and filled states.
+- [ ] Persist and operationalize order lifecycle events with durable storage, schema versioning, replay, and query projections.
+- [x] Add REST/WebSocket baselines for amend order, cancel replace, bulk cancel, and cancel on disconnect.
+- [ ] Add durable command logs, stronger cancel-replace atomicity modes, and reconnect/session semantics for exchange-standard commands.
+- [x] Enforce tick size, lot size, min notional, price band, max order size, and max open orders in pre-trade checks.
+- [x] Make rejection semantics explicit for insufficient MARKET liquidity, unfilled IOC/FOK, POST_ONLY taking liquidity, and REDUCE_ONLY exceeding reducible position size.
 
 ### Accounting and Funds
 
-- Build a complete double-entry ledger schema so every balance change is traceable, replayable, and reconcilable.
-- Split order reserve, position margin, fee, rebate, realized PnL, funding, and liquidation loss into explicit accounting entries.
-- Add immutable account calculations for frozen funds, released funds, available balance, total equity, maintenance margin, and risk ratio. A lightweight `/api/margin/risk` snapshot now calculates available balance, holds, equity, maintenance margin, and risk ratio from account, position, symbol config, and market data; production still needs persisted daily snapshots and independent mark/index oracle inputs.
-- Add end-of-day and near-real-time reconciliation jobs across accounts, positions, ledger, and event store. A lightweight all-account reconciliation entry point now scans the maintained account index plus open-position index and reports account, position margin, and ledger-balance issues; production still needs persisted reports, scheduling policy, alert routing, and event-store coverage.
-- Add deposit/withdrawal state machines. A Redis-backed baseline now records pending, confirmed, failed, reversed, and manual review transfer states; production still needs chain/bank callbacks, review workflow ownership, and reconciliation projections.
+- [x] Add a balanced wallet-ledger posting baseline so balance changes are traceable and reconcilable in the MVP.
+- [ ] Build the complete production double-entry ledger schema and replay path.
+- [x] Split order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal into explicit accounting entries.
+- [ ] Harden accounting entries with production database constraints, audit retention, and replay validation.
+- [x] Add `/api/margin/risk` for frozen funds, available balance, total equity, maintenance margin, and risk ratio snapshots.
+- [ ] Persist daily account risk snapshots and replace trade/ticker fallback marks with independent mark/index oracle inputs.
+- [x] Add an all-account reconciliation baseline that scans the maintained account index plus open-position index and reports account, position margin, and ledger-balance issues.
+- [ ] Add persisted reconciliation reports, scheduling policy, alert routing, and event-store coverage.
+- [x] Add a Redis-backed deposit/withdrawal state-machine baseline for pending, confirmed, failed, reversed, and manual review transfer states.
+- [ ] Add chain/bank callbacks, manual-review workflow ownership, and transfer reconciliation projections.
 
 ### Risk
 
-- Integrate mark price / index price oracles so liquidation and funding do not depend on trade price or arbitrary input.
-- Add symbol risk tiers: max leverage, maintenance margin rate, initial margin rate, and stepped position limits.
-- Complete pre-trade risk checks for balance, leverage, position, exposure, price deviation, frequency, and client order id deduplication.
-- Complete the liquidation engine: scan, trigger, execute, insurance fund, ADL, and audit events.
-- Add global risk switches: reduce-only mode, order-entry halt, withdrawal halt, and per-symbol suspension.
+- [ ] Integrate mark price / index price oracles so liquidation and funding do not depend on trade price or arbitrary input.
+- [x] Add symbol risk baseline settings for max leverage, maintenance margin rate, max position notional, and max open orders.
+- [ ] Add full risk tiers with initial margin rate and stepped position limits.
+- [x] Add pre-trade risk checks for balance, leverage, position, exposure, price deviation, and client order id deduplication.
+- [ ] Add production frequency limits and broader abuse controls to pre-trade risk checks.
+- [x] Add a liquidation MVP with trigger, close, insurance fund, ADL, and audit event coverage.
+- [ ] Add production liquidation scanning, execution routing, and operational controls.
+- [x] Add global risk switches for reduce-only mode, order-entry halt, withdrawal halt, and per-symbol suspension.
 
 ### Reliability and Consistency
 
-- Make outbox durable and add retry backoff, max retry count, DLQ replay, and manual compensation workflow.
-- Define Kafka partition keys, retention, compaction, schema versions, and consumer-group strategy.
-- Add timeout, retry, circuit breaker, rate limit, and idempotency key to every external API call.
-- Define transaction boundaries for core writes; MySQL, Redis, and Kafka must not be assumed to be automatically consistent.
-- Build disaster recovery from snapshot + event log for matching, orders, accounts, and positions.
+- [x] Add outbox retry backoff, max retry count, DLQ replay, and manual compensation workflow baseline.
+- [ ] Move outbox to production durable storage and add manual compensation runbooks.
+- [x] Document Kafka topic partition keys, retention, compaction, schema versions, and consumer-group strategy.
+- [x] Add shared HTTP timeout, retry, circuit breaker, and rate-limit baseline for external API calls.
+- [ ] Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage for every external API call.
+- [ ] Define transaction boundaries for core writes; MySQL, Redis, and Kafka must not be assumed to be automatically consistent.
+- [x] Add MVP snapshot + event replay recovery entry points.
+- [ ] Build production disaster recovery for matching, orders, accounts, and positions.
 
 ### Security
 
-- Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
+- [ ] Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
 
 ## P1 Strongly Recommended
 
 ### Market Data
 
-- Add incremental order book streams with sequence number, checksum, and snapshot + delta reconstruction. REST/SSE depth delta now includes a monotonic version and CRC32 checksum; production still needs durable sequence checkpoints and reconnect backfill.
-- Persist ticker, kline, and trade tape so market data survives service restarts.
-- Deploy WebSocket/SSE gateway independently with horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
-- Add market-maker / liquidity-provider APIs and rate-limit policies.
+- [x] Add REST/SSE depth delta with monotonic version and CRC32 checksum for snapshot + delta validation.
+- [ ] Add durable sequence checkpoints and reconnect backfill for incremental order book streams.
+- [ ] Persist ticker, kline, and trade tape so market data survives service restarts.
+- [ ] Deploy WebSocket/SSE gateway independently with horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
+- [ ] Add market-maker / liquidity-provider APIs and rate-limit policies.
 
 ### Polymarket Integration
 
-- Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
-- Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
-- Make CLOB place, cancel, sync, and reconcile commands idempotent.
-- Deploy the user WebSocket service independently with reconnect, checkpoint, event deduplication, persistence, and replay.
-- Add cache and expiry policy for allowance / approval checks to avoid overloading RPC endpoints.
+- [ ] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
+- [ ] Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
+- [ ] Make CLOB place, cancel, sync, and reconcile commands idempotent.
+- [ ] Deploy the user WebSocket service independently with reconnect, checkpoint, event deduplication, persistence, and replay.
+- [ ] Add cache and expiry policy for allowance / approval checks to avoid overloading RPC endpoints.
 
 ### Database and Storage
 
-- Add production indexes for orders, positions, ledger, events, and prediction orders.
-- Document Redis key schema and add TTL, namespace, versioning, and migration strategy.
-- Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
-- Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
+- [ ] Add production indexes for orders, positions, ledger, events, and prediction orders.
+- [x] Document Redis key schema, namespace prefix, versioning, and migration strategy.
+- [ ] Add final TTL/archive rules for Redis hot-state keys.
+- [ ] Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
+- [ ] Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
 
 ### Observability
 
-- Add metrics for order latency, matching latency, Kafka lag, DB latency, Redis latency, rejection rate, and fill rate. A lightweight `/api/ops/metrics` baseline exists for order status, order latency, cancel count, and trade-event count; production still needs a metrics backend and infra latency/lag collectors.
-- Add tracing with request id / correlation id across API, UseCase, Kafka, and external APIs. A header/MDC/outbox baseline exists; production still needs distributed tracing export, dashboards, and sampling policy.
-- Add structured logging so core events can be searched by uid, orderId, clientOrderId, and symbol.
-- Add alerts for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
+- [x] Add `/api/ops/metrics` baseline for order status, order latency, cancel count, and trade-event count.
+- [ ] Add metrics backend plus matching, Kafka lag, DB latency, Redis latency, rejection-rate, and fill-rate collectors.
+- [x] Add request id / correlation id propagation through headers, MDC, outbox, Kafka, and external API clients.
+- [ ] Add distributed tracing export, dashboards, and sampling policy.
+- [x] Add request/security audit structured logging baseline.
+- [ ] Add structured core-event logging searchable by uid, orderId, clientOrderId, and symbol.
+- [ ] Add alerts for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
 
 ## P2 Incremental Evolution
 
-- Admin console: market config, risk parameters, manual suspension, DLQ replay, reconciliation reports.
-- Reporting: user asset reports, trade reports, fee reports, operations and finance daily reports.
-- Load testing tools: order-entry TPS, matching TPS, market-data fanout, Polymarket sync pressure.
-- Gradual rollout and rollback: feature flags, canary deployment, schema backward compatibility.
-- Compliance hooks: KYC/AML integration, sanctions screening, trade surveillance, suspicious-activity reports.
+- [ ] Admin console: market config, risk parameters, manual suspension, DLQ replay, reconciliation reports.
+- [ ] Reporting: user asset reports, trade reports, fee reports, operations and finance daily reports.
+- [ ] Load testing tools: order-entry TPS, matching TPS, market-data fanout, Polymarket sync pressure.
+- [ ] Gradual rollout and rollback: feature flags, canary deployment, schema backward compatibility.
+- [ ] Compliance hooks: KYC/AML integration, sanctions screening, trade surveillance, suspicious-activity reports.
 
 ## Suggested Near-Term Order
 
-1. Add durable order/ledger/event schemas and projections for the order lifecycle events.
-2. Add command log, snapshot, and replay to the matching engine.
-3. Integrate mark price / index price and complete production-grade pre-trade risk and liquidation.
-4. Build reconciliation jobs and an observability baseline.
-5. Split WebSocket gateway, Polymarket WS worker, and matching worker.
+1. [ ] Add durable order/ledger/event schemas and projections for the order lifecycle events.
+2. [ ] Add command log, snapshot, and replay to the matching engine.
+3. [ ] Integrate mark price / index price and complete production-grade pre-trade risk and liquidation.
+4. [x] Build reconciliation jobs and an observability baseline for the MVP.
+5. [ ] Split WebSocket gateway, Polymarket WS worker, and matching worker.

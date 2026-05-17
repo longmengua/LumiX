@@ -19,7 +19,8 @@ import java.util.Optional;
 
 /**
  * 保證金相關服務
- * - 封裝 Cross/Isolated 劃轉
+ * - 封裝入金、出金狀態機與 Cross/Isolated 劃轉
+ * - 入金/出金會先寫 WalletTransfer，再更新帳務 ledger，最後轉成終態
  */
 @Service
 @RequiredArgsConstructor
@@ -33,6 +34,12 @@ public class MarginService {
     private final WalletTransferRepository walletTransferRepository;
     private final RiskControlsProperties riskControlsProperties;
 
+    /**
+     * 建立入金 transfer 並立即確認。
+     *
+     * <p>MVP 使用人工入金語意，呼叫成功代表可用餘額已增加並寫入 ledger。
+     * 日後接鏈上或銀行 callback 時，這裡可改成 pending -> confirmed 的非同步流程。</p>
+     */
     public WalletTransfer deposit(long uid, BigDecimal amount) {
         requirePositive(amount, "deposit amount");
         WalletTransfer transfer = WalletTransfer.builder()
@@ -49,6 +56,12 @@ public class MarginService {
         return transfer;
     }
 
+    /**
+     * 建立出金 transfer。
+     *
+     * <p>若 withdrawal halt 開啟，transfer 會進入 MANUAL_REVIEW 且不扣款；
+     * 若餘額不足，transfer 會進入 FAILED 且不寫 ledger。</p>
+     */
     public WalletTransfer withdraw(long uid, BigDecimal amount) {
         requirePositive(amount, "withdrawal amount");
         WalletTransfer transfer = WalletTransfer.builder()
@@ -78,14 +91,17 @@ public class MarginService {
         return transfer;
     }
 
+    /** 查詢帳戶熱狀態；不存在時回傳 Optional.empty()。 */
     public Optional<Account> findAccount(long uid) {
         return accountRepo.findByUid(uid);
     }
 
+    /** 查詢使用者 ledger entries，供 API 與對帳工具檢視。 */
     public List<WalletLedgerEntry> findLedger(long uid) {
         return walletLedgerRepository.findByUid(uid);
     }
 
+    /** 查詢入金/出金 transfer state machine 歷史。 */
     public List<WalletTransfer> findTransfers(long uid) {
         return walletTransferRepository.findByUid(uid);
     }

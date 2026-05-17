@@ -15,6 +15,11 @@ public final class OrderBookChecksum {
     private OrderBookChecksum() {
     }
 
+    /**
+     * 依 Binance 類型的交錯 bid/ask level 表示法產生 CRC32。
+     *
+     * <p>呼叫端必須先確保 bids 由高到低、asks 由低到高排序。</p>
+     */
     public static long crc32(List<PriceLevel> bids, List<PriceLevel> asks) {
         CRC32 crc32 = new CRC32();
         byte[] bytes = canonical(bids, asks).getBytes(StandardCharsets.UTF_8);
@@ -22,6 +27,7 @@ public final class OrderBookChecksum {
         return crc32.getValue();
     }
 
+    /** 建立穩定字串：bid0:qty0:ask0:qty0:bid1:qty1...。 */
     private static String canonical(List<PriceLevel> bids, List<PriceLevel> asks) {
         StringBuilder builder = new StringBuilder();
         int max = Math.max(size(bids), size(asks));
@@ -45,6 +51,7 @@ public final class OrderBookChecksum {
                 .append(format(level.qty()));
     }
 
+    /** 去掉 BigDecimal 多餘尾零，避免 1.0 與 1.00 產生不同 checksum。 */
     private static String format(BigDecimal value) {
         if (value == null) return "0";
         return value.stripTrailingZeros().toPlainString();

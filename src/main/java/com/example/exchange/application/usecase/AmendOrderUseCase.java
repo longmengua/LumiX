@@ -35,6 +35,12 @@ public class AmendOrderUseCase {
     private final MarketDataService marketDataService;
     private final DomainEventPublisher<Object> publisher;
 
+    /**
+     * 修改仍在簿內的 LIMIT 掛單。
+     *
+     * <p>amend 保持 maker-only 語意：若新價格會立即吃單，要求呼叫端改用 cancel-replace。
+     * 成功後會重新計算剩餘委託的 reserve，並推送 order lifecycle / depth delta。</p>
+     */
     public OrderInfoResponse handle(AmendOrderCommand command) {
         validateCommand(command);
 
@@ -58,6 +64,7 @@ public class AmendOrderUseCase {
 
         SymbolConfig config = symbolConfigRepository.findBySymbol(order.getSymbol().code())
                 .orElseThrow(() -> new IllegalArgumentException("missing symbol config: " + order.getSymbol().code()));
+        // 先用候選訂單跑風控，避免真正修改 book 後才發現 reserve 或交易規則不合法。
         Order candidate = amendedCandidate(order, newPrice, newQty, newClientOrderId);
         if (wouldTakeLiquidity(candidate)) {
             throw new IllegalArgumentException("amend would take liquidity; use cancel-replace instead");
@@ -85,6 +92,7 @@ public class AmendOrderUseCase {
         return order.toOrderInfoResponse();
     }
 
+    /** 驗證 amend 至少有一個可變欄位，並擋掉非正數價格或數量。 */
     private void validateCommand(AmendOrderCommand command) {
         if (command == null) {
             throw new IllegalArgumentException("amend order command cannot be null");
@@ -103,6 +111,7 @@ public class AmendOrderUseCase {
         }
     }
 
+    /** 判斷新價格是否會穿過對手方 best price；amend 不允許主動吃單。 */
     private boolean wouldTakeLiquidity(Order candidate) {
         Optional<TopOfBook> top = matchingEngine.top(candidate.getSymbol().code());
         if (top.isEmpty()) return false;
@@ -115,6 +124,7 @@ public class AmendOrderUseCase {
                 : candidate.getPrice().compareTo(opposite) <= 0;
     }
 
+    /** 建立不入庫的候選訂單，供風控與 reserve 計算使用。 */
     private static Order amendedCandidate(
             Order order,
             BigDecimal newPrice,

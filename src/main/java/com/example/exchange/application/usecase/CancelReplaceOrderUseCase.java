@@ -21,6 +21,12 @@ public class CancelReplaceOrderUseCase {
     private final CancelOrderUseCase cancelOrderUseCase;
     private final PlaceOrderUseCase placeOrderUseCase;
 
+    /**
+     * 先撤原單，再用原單參數加上 request override 建立新單。
+     *
+     * <p>MVP 版本沒有跨 Redis / matching engine 的強交易邊界，因此文件中仍將 stronger
+     * atomicity mode 保留為 production TODO。</p>
+     */
     public OrderInfoResponse handle(CancelReplaceOrderCommand command) {
         validateCommand(command);
 
@@ -37,6 +43,7 @@ public class CancelReplaceOrderUseCase {
         BigDecimal replacementQty = command.qty() == null ? original.getQty() : command.qty();
         String clientOrderId = command.clientOrderId() == null ? original.getClientOrderId() : command.clientOrderId();
 
+        // Cancel-replace 的第一步一定要撤掉原單並釋放 reserve，避免 replacement 重複占用資金。
         boolean canceled = cancelOrderUseCase.handle(original.getId());
         if (!canceled) {
             throw new IllegalStateException("cancel-replace failed to cancel original order");
@@ -59,6 +66,7 @@ public class CancelReplaceOrderUseCase {
         return replacement.toOrderInfoResponse();
     }
 
+    /** 驗證 cancel-replace 至少覆寫 price、qty 或 clientOrderId 其中一項。 */
     private void validateCommand(CancelReplaceOrderCommand command) {
         if (command == null) {
             throw new IllegalArgumentException("cancel-replace command cannot be null");

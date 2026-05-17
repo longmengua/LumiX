@@ -11,9 +11,12 @@ import java.util.UUID;
 
 public interface WalletTransferRepository {
 
+    /** 新增或更新 transfer state。 */
     void save(WalletTransfer transfer);
 
+    /** 依 transfer id 查詢單筆入金/出金狀態。 */
     Optional<WalletTransfer> findById(UUID id);
 
+    /** 依使用者查詢 transfer 歷史，順序由 repository 實作維持。 */
     List<WalletTransfer> findByUid(long uid);
 }

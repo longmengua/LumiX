@@ -28,6 +28,10 @@ public class RedisWalletTransferRepository implements WalletTransferRepository {
         this.keys = keys;
     }
 
+    /**
+     * 保存 transfer 本體，並維護 uid -> transfer ids 的 list/set 索引。
+     * set 用於去重，list 用於保留第一次寫入的查詢順序。
+     */
     @Override
     public void save(WalletTransfer transfer) {
         String id = transfer.getId().toString();
@@ -38,12 +42,14 @@ public class RedisWalletTransferRepository implements WalletTransferRepository {
         }
     }
 
+    /** 直接透過 transfer key 查詢單筆狀態。 */
     @Override
     public Optional<WalletTransfer> findById(UUID id) {
         Object value = redis.opsForValue().get(transferKey(id));
         return value instanceof WalletTransfer transfer ? Optional.of(transfer) : Optional.empty();
     }
 
+    /** 透過 uid list index 批量載入 transfer，避免使用 Redis KEYS 掃描。 */
     @Override
     public List<WalletTransfer> findByUid(long uid) {
         List<Object> rawIds = redis.opsForList().range(uidListKey(uid), 0, -1);
