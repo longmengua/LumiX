@@ -9,6 +9,7 @@ import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.Symbol;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.enums.TimeInForce;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -75,6 +76,51 @@ class InMemoryMatchingEngineTest {
         engine.shutdown();
     }
 
+    @Test
+    void fokExpiresWithExplicitReasonWhenNotFullyFillable() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+
+        Order fokBuy = limit(2, OrderSide.BUY, "100", "2");
+        fokBuy.setTimeInForce(TimeInForce.FOK);
+        MatchingResult result = engine.submit(fokBuy);
+
+        assertThat(result.getTrades()).isEmpty();
+        assertThat(fokBuy.getStatus()).isEqualTo(Order.Status.EXPIRED);
+        assertThat(fokBuy.getRejectCode()).isEqualTo("FOK_NOT_FULLY_FILLABLE");
+        engine.shutdown();
+    }
+
+    @Test
+    void iocExpiresWithExplicitReasonWhenUnfilled() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+
+        Order iocBuy = limit(2, OrderSide.BUY, "99", "1");
+        iocBuy.setTimeInForce(TimeInForce.IOC);
+        MatchingResult result = engine.submit(iocBuy);
+
+        assertThat(result.getTrades()).isEmpty();
+        assertThat(iocBuy.getStatus()).isEqualTo(Order.Status.EXPIRED);
+        assertThat(iocBuy.getRejectCode()).isEqualTo("IOC_NOT_FILLED");
+        engine.shutdown();
+    }
+
+    @Test
+    void marketOrderExpiresWithExplicitReasonWhenLiquidityIsInsufficient() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+
+        Order marketBuy = market(2, OrderSide.BUY, "2");
+        MatchingResult result = engine.submit(marketBuy);
+
+        assertThat(result.getTrades()).hasSize(2);
+        assertThat(marketBuy.getStatus()).isEqualTo(Order.Status.EXPIRED);
+        assertThat(marketBuy.getQty()).isEqualByComparingTo("1");
+        assertThat(marketBuy.getRejectCode()).isEqualTo("MARKET_LIQUIDITY_INSUFFICIENT");
+        engine.shutdown();
+    }
+
     private Order limit(long uid, OrderSide side, String price, String qty) {
         return Order.builder()
                 .uid(uid)
@@ -82,6 +128,17 @@ class InMemoryMatchingEngineTest {
                 .side(side)
                 .type(OrderType.LIMIT)
                 .price(new BigDecimal(price))
+                .qty(new BigDecimal(qty))
+                .origQty(new BigDecimal(qty))
+                .build();
+    }
+
+    private Order market(long uid, OrderSide side, String qty) {
+        return Order.builder()
+                .uid(uid)
+                .symbol(symbol)
+                .side(side)
+                .type(OrderType.MARKET)
                 .qty(new BigDecimal(qty))
                 .origQty(new BigDecimal(qty))
                 .build();

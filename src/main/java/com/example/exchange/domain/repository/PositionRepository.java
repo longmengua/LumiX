@@ -22,4 +22,7 @@ public interface PositionRepository {
 
     /** 列出某使用者所有倉位 */
     List<Position> findAllByUid(long uid);
+
+    /** 列出所有非零倉位，用於資金費、強平掃描與對帳。 */
+    List<Position> findOpenPositions();
 }

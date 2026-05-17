@@ -12,7 +12,7 @@
 - 將 in-memory matching engine 演進為可 replay 的撮合核心，至少要有 command log、event log、snapshot、offset checkpoint。
 - 定義單 symbol sequencer 的部署與 failover 策略，避免多實例同時處理同一 symbol 造成狀態分裂。
 - 將 order lifecycle event 持久化並產品化。目前已具備 Kafka 發布基線，涵蓋 created、accepted、updated、rejected、canceled、expired、filled；production 仍需補 durable storage、schema version、replay 與查詢 projection。
-- 補齊 amend order、cancel replace、bulk cancel、cancel on disconnect 等交易所常見指令。
+- 補齊 amend order、cancel replace、bulk cancel、cancel on disconnect 等交易所常見指令。目前四項已有 REST/WebSocket 基線；production 仍需 durable command log、更強的 atomicity mode 與 reconnect/session 語意。
 - 嚴格落實 tick size、lot size、min notional、price band、max order size、max open orders。
 - 明確處理 MARKET 流動性不足、IOC/FOK 未完全成交、POST_ONLY 會吃單、REDUCE_ONLY 超過可減倉量等拒單原因。
 
@@ -20,9 +20,9 @@
 
 - 建立完整雙分錄 ledger schema，所有資金變動必須可追溯、可重放、可對帳。
 - 將 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation loss 拆成明確 accounting entries。
-- 補齊帳戶資產凍結、解凍、可用餘額、總權益、維持保證金、風險率的不可變計算規則。
-- 建立日終對帳與即時對帳任務，檢查 account、position、ledger、event store 是否一致。
-- 補齊入金/出金狀態機：pending、confirmed、failed、reversed、manual review。
+- 補齊帳戶資產凍結、解凍、可用餘額、總權益、維持保證金、風險率的不可變計算規則。目前已有輕量 `/api/margin/risk` snapshot，會從 account、position、symbol config、market data 計算可用餘額、holds、equity、維持保證金與風險率；production 仍需 persisted daily snapshot 與獨立 mark/index oracle input。
+- 建立日終對帳與即時對帳任務，檢查 account、position、ledger、event store 是否一致。目前已有輕量全帳戶對帳入口，會掃 maintained account index 與 open-position index，回報 account、position margin、ledger balance 問題；production 仍需 persisted reports、排程策略、alert routing 與 event-store coverage。
+- 補齊入金/出金狀態機。目前已有 Redis-backed baseline，會記錄 pending、confirmed、failed、reversed、manual review transfer 狀態；production 仍需補鏈上/銀行 callback、人工覆核流程 owner 與對帳 projection。
 
 ### 風控
 
@@ -48,7 +48,7 @@
 
 ### Market Data
 
-- 建立增量 order book stream，支援 sequence number、checksum、snapshot + delta 重建。
+- 建立增量 order book stream，支援 sequence number、checksum、snapshot + delta 重建。目前 REST/SSE depth delta 已帶 monotonic version 與 CRC32 checksum；production 仍需 durable sequence checkpoint 與 reconnect backfill。
 - 將 ticker、kline、trade tape 持久化，避免服務重啟後行情資料消失。
 - WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
 - 補齊 market maker / liquidity provider 專用 API 與節流策略。
@@ -70,8 +70,8 @@
 
 ### 可觀測性
 
-- 加入 metrics：下單延遲、撮合延遲、Kafka lag、DB latency、Redis latency、拒單率、成交率。
-- 加入 tracing：request id / correlation id 貫穿 API、UseCase、Kafka、外部 API。
+- 加入 metrics：下單延遲、撮合延遲、Kafka lag、DB latency、Redis latency、拒單率、成交率。目前已有輕量 `/api/ops/metrics` 基線，涵蓋訂單狀態、下單延遲、撤單數與成交事件數；production 仍需 metrics backend 與 infra latency/lag collectors。
+- 加入 tracing：request id / correlation id 貫穿 API、UseCase、Kafka、外部 API。目前已有 header/MDC/outbox 基線；production 仍需 distributed tracing export、dashboard 與 sampling policy。
 - 加入 structured logging，核心事件要能按 uid、orderId、clientOrderId、symbol 搜尋。
 - 建立 alert：撮合停止、Kafka lag、DLQ 堆積、對帳失敗、外部 API 錯誤率、資產不平。
 

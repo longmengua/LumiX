@@ -46,8 +46,6 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class PolymarketApprovalService {
 
-    private static final long CACHE_TTL_SECONDS = 30;
-
     private final Web3j web3j;
 
     private final PolymarketConfigs polymarketConfigs;
@@ -67,8 +65,14 @@ public class PolymarketApprovalService {
             String owner
     ) {
         try {
+            String token =
+                    polymarketConfigs.getChain().getCollateralToken();
+
+            String spender =
+                    polymarketConfigs.getChain().getNegRiskExchangeV2();
+
             String cacheKey =
-                    owner.toLowerCase();
+                    cacheKey("erc20", token, owner, spender);
 
             CacheValue<BigInteger> cached =
                     allowanceCache.get(cacheKey);
@@ -76,12 +80,6 @@ public class PolymarketApprovalService {
             if (cached != null && !cached.isExpired()) {
                 return cached.value();
             }
-
-            String token =
-                    polymarketConfigs.getChain().getCollateralToken();
-
-            String spender =
-                    polymarketConfigs.getChain().getNegRiskExchangeV2();
 
             log.info(
                     "[Approval] Query ERC20 allowance. token={}, owner={}, spender={}",
@@ -99,7 +97,7 @@ public class PolymarketApprovalService {
 
             allowanceCache.put(
                     cacheKey,
-                    CacheValue.of(allowance)
+                    CacheValue.of(allowance, cacheTtlSeconds())
             );
 
             return allowance;
@@ -128,8 +126,14 @@ public class PolymarketApprovalService {
             String owner
     ) {
         try {
+            String token =
+                    polymarketConfigs.getChain().getConditionalTokens();
+
+            String operator =
+                    polymarketConfigs.getChain().getNegRiskExchangeV2();
+
             String cacheKey =
-                    owner.toLowerCase();
+                    cacheKey("erc1155", token, owner, operator);
 
             CacheValue<Boolean> cached =
                     approvalCache.get(cacheKey);
@@ -137,12 +141,6 @@ public class PolymarketApprovalService {
             if (cached != null && !cached.isExpired()) {
                 return cached.value();
             }
-
-            String token =
-                    polymarketConfigs.getChain().getConditionalTokens();
-
-            String operator =
-                    polymarketConfigs.getChain().getNegRiskExchangeV2();
 
             log.info(
                     "[Approval] Query ERC1155 approval. token={}, owner={}, operator={}",
@@ -160,7 +158,7 @@ public class PolymarketApprovalService {
 
             approvalCache.put(
                     cacheKey,
-                    CacheValue.of(approved)
+                    CacheValue.of(approved, cacheTtlSeconds())
             );
 
             return approved;
@@ -219,6 +217,18 @@ public class PolymarketApprovalService {
                             + ". Please approve conditional tokens from deposit wallet first."
             );
         }
+    }
+
+    public void clearApprovalCache(String owner) {
+        if (owner == null || owner.isBlank()) {
+            allowanceCache.clear();
+            approvalCache.clear();
+            return;
+        }
+
+        String normalizedOwner = ":" + owner.trim().toLowerCase() + ":";
+        allowanceCache.keySet().removeIf(key -> key.contains(normalizedOwner));
+        approvalCache.keySet().removeIf(key -> key.contains(normalizedOwner));
     }
 
     /**
@@ -389,14 +399,33 @@ public class PolymarketApprovalService {
         ).send();
     }
 
+    private long cacheTtlSeconds() {
+        Long configured = polymarketConfigs.getApprovalCacheTtlSeconds();
+        return configured == null || configured <= 0 ? 30L : configured;
+    }
+
+    private static String cacheKey(String type, String contract, String owner, String spenderOrOperator) {
+        return String.join(
+                ":",
+                type,
+                normalize(contract),
+                normalize(owner),
+                normalize(spenderOrOperator)
+        );
+    }
+
+    private static String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase();
+    }
+
     private record CacheValue<T>(
             T value,
             long expiresAt
     ) {
-        static <T> CacheValue<T> of(T value) {
+        static <T> CacheValue<T> of(T value, long ttlSeconds) {
             return new CacheValue<>(
                     value,
-                    Instant.now().getEpochSecond() + CACHE_TTL_SECONDS
+                    Instant.now().getEpochSecond() + Math.max(1, ttlSeconds)
             );
         }
 

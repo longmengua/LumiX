@@ -4,6 +4,11 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
+import com.example.exchange.application.command.AmendOrderCommand;
+import com.example.exchange.application.command.CancelReplaceOrderCommand;
+import com.example.exchange.application.usecase.AmendOrderUseCase;
+import com.example.exchange.application.usecase.CancelOrderUseCase;
+import com.example.exchange.application.usecase.CancelReplaceOrderUseCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.event.TradeExecuted;
@@ -11,6 +16,7 @@ import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.Symbol;
+import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
@@ -21,6 +27,7 @@ import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
+import com.example.exchange.infra.config.RiskControlsProperties;
 import com.example.exchange.infra.matching.InMemoryMatchingEngine;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +59,7 @@ class OrderAccountingIntegrationTest {
         DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
         InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
         WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
-        RiskService riskService = new RiskService(accountRepo, positionRepo, matchingEngine, walletLedgerService);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
         MarketDataService marketDataService = new MarketDataService();
         IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
         OrderService orderService = new OrderService(
@@ -135,7 +142,7 @@ class OrderAccountingIntegrationTest {
         DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
         InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
         WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
-        RiskService riskService = new RiskService(accountRepo, positionRepo, matchingEngine, walletLedgerService);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
         MarketDataService marketDataService = new MarketDataService();
         IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
         OrderService orderService = new OrderService(
@@ -169,6 +176,395 @@ class OrderAccountingIntegrationTest {
         matchingEngine.shutdown();
     }
 
+    @Test
+    void maxOpenOrdersPreCheckRejectsNewOrder() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        Symbol symbol = Symbol.builder().base("BTC").quote("USDT").priceScale(2).qtyScale(3).build();
+        var symbolConfig = btcConfigWithMaxOpenOrders(1);
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                raw -> "BTCUSDT".equalsIgnoreCase(raw) ? Optional.of(symbolConfig) : Optional.empty(),
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(
+                orderService,
+                riskService,
+                raw -> "BTCUSDT".equalsIgnoreCase(raw) ? Optional.of(symbolConfig) : Optional.empty(),
+                published::add
+        );
+
+        orderRepo.save(Order.builder()
+                .uid(3)
+                .symbol(symbol)
+                .side(OrderSide.BUY)
+                .type(OrderType.LIMIT)
+                .price(new BigDecimal("100.00"))
+                .qty(new BigDecimal("1.000"))
+                .origQty(new BigDecimal("1.000"))
+                .build());
+
+        assertThatThrownBy(() -> placeOrderUseCase.handle(command(3, OrderSide.BUY, "101.00", "1.000")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("max open orders exceeded");
+
+        List<OrderLifecycleEvent> orderEvents = published.stream()
+                .filter(OrderLifecycleEvent.class::isInstance)
+                .map(OrderLifecycleEvent.class::cast)
+                .toList();
+        assertThat(orderEvents).extracting(OrderLifecycleEvent::stage)
+                .containsExactly(OrderLifecycleEvent.Stage.CREATED, OrderLifecycleEvent.Stage.REJECTED);
+        assertThat(orderEvents.getLast().reasonCode()).isEqualTo("MAX_OPEN_ORDERS");
+        assertThat(orderRepo.findAllOrders(3L, "BTCUSDT")).hasSize(1);
+        assertThat(ledgerRepo.findByUid(3)).isEmpty();
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    void duplicateClientOrderIdPreCheckRejectsNewOrder() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+
+        SymbolConfig symbolConfig = btcConfigWithMaxOpenOrders(10);
+        Symbol symbol = symbolConfig.toSymbol();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+
+        orderRepo.save(Order.builder()
+                .uid(4)
+                .symbol(symbol)
+                .side(OrderSide.BUY)
+                .type(OrderType.LIMIT)
+                .price(new BigDecimal("100.00"))
+                .qty(new BigDecimal("1.000"))
+                .origQty(new BigDecimal("1.000"))
+                .clientOrderId("strategy-4-1")
+                .build());
+
+        Order incoming = Order.builder()
+                .uid(4)
+                .symbol(symbol)
+                .side(OrderSide.SELL)
+                .type(OrderType.LIMIT)
+                .price(new BigDecimal("101.00"))
+                .qty(new BigDecimal("1.000"))
+                .origQty(new BigDecimal("1.000"))
+                .clientOrderId(" strategy-4-1 ")
+                .build();
+
+        assertThatThrownBy(() -> riskService.preCheckAndReserve(incoming, symbolConfig))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("duplicate clientOrderId");
+        assertThat(incoming.getStatus()).isEqualTo(Order.Status.REJECTED);
+        assertThat(incoming.getRejectCode()).isEqualTo("DUPLICATE_CLIENT_ORDER_ID");
+        assertThat(ledgerRepo.findByUid(4)).isEmpty();
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    void riskSwitchesRejectOrderEntryReduceOnlyAndSuspendedSymbol() {
+        SymbolConfig symbolConfig = btcConfigWithMaxOpenOrders(10);
+
+        RiskControlsProperties orderEntryHalt = riskControls();
+        orderEntryHalt.setOrderEntryHalt(true);
+        Order haltedOrder = limitOrder(5, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", false);
+        assertRiskSwitchRejects(haltedOrder, symbolConfig, orderEntryHalt, "ORDER_ENTRY_HALTED");
+
+        RiskControlsProperties reduceOnlyMode = riskControls();
+        reduceOnlyMode.setReduceOnlyMode(true);
+        Order nonReduceOnlyOrder = limitOrder(5, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", false);
+        assertRiskSwitchRejects(nonReduceOnlyOrder, symbolConfig, reduceOnlyMode, "GLOBAL_REDUCE_ONLY");
+
+        RiskControlsProperties suspendedSymbol = riskControls();
+        suspendedSymbol.setSuspendedSymbols(List.of(" btcusdt "));
+        Order suspendedOrder = limitOrder(5, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", true);
+        assertRiskSwitchRejects(suspendedOrder, symbolConfig, suspendedSymbol, "SYMBOL_SUSPENDED");
+    }
+
+    @Test
+    void bulkCancelOpenOrdersReleasesReserveAndPublishesLifecycleEvents() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+        CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(
+                orderRepo,
+                symbolRepo,
+                matchingEngine,
+                walletLedgerService,
+                marketDataService,
+                published::add
+        );
+
+        walletLedgerService.deposit(11, "USDT", new BigDecimal("1000"), "deposit-11");
+        placeOrderUseCase.handle(command(11, OrderSide.BUY, "100.00", "1.000"));
+        Account accountAfterPlace = accountRepo.findByUid(11).orElseThrow();
+        assertThat(accountAfterPlace.crossOrderHold()).isGreaterThan(BigDecimal.ZERO);
+
+        int canceled = cancelOrderUseCase.cancelOpenOrders(11, "BTCUSDT");
+
+        assertThat(canceled).isEqualTo(1);
+        assertThat(accountRepo.findByUid(11).orElseThrow().crossOrderHold()).isEqualByComparingTo("0");
+        assertThat(accountRepo.findByUid(11).orElseThrow().crossAvailable()).isEqualByComparingTo("1000");
+        assertThat(orderRepo.findAllOrders(11L, "BTCUSDT")).singleElement()
+                .extracting(Order::getStatus)
+                .isEqualTo(Order.Status.CANCELED);
+        assertThat(published.stream()
+                .filter(OrderLifecycleEvent.class::isInstance)
+                .map(OrderLifecycleEvent.class::cast)
+                .map(OrderLifecycleEvent::stage)
+                .toList()).contains(OrderLifecycleEvent.Stage.CANCELED);
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    void amendOrderUpdatesBookReserveAndLifecycleEvent() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+        AmendOrderUseCase amendOrderUseCase = new AmendOrderUseCase(
+                orderRepo,
+                symbolRepo,
+                matchingEngine,
+                riskService,
+                marketDataService,
+                published::add
+        );
+
+        walletLedgerService.deposit(21, "USDT", new BigDecimal("1000"), "deposit-21");
+        Order order = placeOrderUseCase.place(command(21, OrderSide.BUY, "100.00", "1.000"));
+        BigDecimal initialReserve = order.getReservedAmount();
+
+        amendOrderUseCase.handle(new AmendOrderCommand(
+                order.getId(),
+                21,
+                new BigDecimal("99.00"),
+                new BigDecimal("0.500"),
+                "amended-21"
+        ));
+
+        Order amended = orderRepo.findById(order.getId()).orElseThrow();
+        assertThat(amended.getStatus()).isEqualTo(Order.Status.NEW);
+        assertThat(amended.getPrice()).isEqualByComparingTo("99.00");
+        assertThat(amended.getQty()).isEqualByComparingTo("0.500");
+        assertThat(amended.getOrigQty()).isEqualByComparingTo("0.500");
+        assertThat(amended.getClientOrderId()).isEqualTo("amended-21");
+        assertThat(amended.getReservedAmount()).isLessThan(initialReserve);
+        assertThat(accountRepo.findByUid(21).orElseThrow().crossOrderHold())
+                .isEqualByComparingTo(amended.getReservedAmount());
+        assertThat(matchingEngine.top("BTCUSDT").orElseThrow().getBestBid())
+                .isEqualByComparingTo("99.00");
+        assertThat(published.stream()
+                .filter(OrderLifecycleEvent.class::isInstance)
+                .map(OrderLifecycleEvent.class::cast)
+                .map(OrderLifecycleEvent::stage)
+                .toList()).contains(OrderLifecycleEvent.Stage.UPDATED);
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    void cancelReplaceCancelsOriginalAndPlacesReplacement() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+        CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(
+                orderRepo,
+                symbolRepo,
+                matchingEngine,
+                walletLedgerService,
+                marketDataService,
+                published::add
+        );
+        CancelReplaceOrderUseCase cancelReplaceOrderUseCase = new CancelReplaceOrderUseCase(
+                orderRepo,
+                cancelOrderUseCase,
+                placeOrderUseCase
+        );
+
+        walletLedgerService.deposit(22, "USDT", new BigDecimal("1000"), "deposit-22");
+        Order original = placeOrderUseCase.place(command(22, OrderSide.BUY, "100.00", "1.000"));
+
+        cancelReplaceOrderUseCase.handle(new CancelReplaceOrderCommand(
+                original.getId(),
+                22,
+                new BigDecimal("101.00"),
+                new BigDecimal("0.750"),
+                "replace-22"
+        ));
+
+        List<Order> orders = orderRepo.findAllOrders(22L, "BTCUSDT");
+        assertThat(orders).hasSize(2);
+        assertThat(orderRepo.findById(original.getId()).orElseThrow().getStatus()).isEqualTo(Order.Status.CANCELED);
+        Order replacement = orders.stream()
+                .filter(order -> !order.getId().equals(original.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(replacement.getStatus()).isEqualTo(Order.Status.NEW);
+        assertThat(replacement.getPrice()).isEqualByComparingTo("101.00");
+        assertThat(replacement.getQty()).isEqualByComparingTo("0.750");
+        assertThat(replacement.getClientOrderId()).isEqualTo("replace-22");
+        assertThat(accountRepo.findByUid(22).orElseThrow().crossOrderHold())
+                .isEqualByComparingTo(replacement.getReservedAmount());
+        assertThat(published.stream()
+                .filter(OrderLifecycleEvent.class::isInstance)
+                .map(OrderLifecycleEvent.class::cast)
+                .map(OrderLifecycleEvent::stage)
+                .toList()).contains(OrderLifecycleEvent.Stage.CANCELED, OrderLifecycleEvent.Stage.CREATED);
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    void cancelOnDisconnectCancelsRegisteredOpenOrders() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+        CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(
+                orderRepo,
+                symbolRepo,
+                matchingEngine,
+                walletLedgerService,
+                marketDataService,
+                published::add
+        );
+        CancelOnDisconnectService cancelOnDisconnectService = new CancelOnDisconnectService(cancelOrderUseCase);
+
+        walletLedgerService.deposit(31, "USDT", new BigDecimal("1000"), "deposit-31");
+        placeOrderUseCase.place(command(31, OrderSide.BUY, "100.00", "1.000"));
+        cancelOnDisconnectService.register("ws-31", 31, "btcusdt");
+
+        int canceled = cancelOnDisconnectService.cancelForConnection("ws-31");
+
+        assertThat(canceled).isEqualTo(1);
+        assertThat(cancelOnDisconnectService.registeredCount()).isZero();
+        assertThat(orderRepo.findAllOrders(31L, "BTCUSDT")).singleElement()
+                .extracting(Order::getStatus)
+                .isEqualTo(Order.Status.CANCELED);
+        assertThat(accountRepo.findByUid(31).orElseThrow().crossOrderHold()).isEqualByComparingTo("0");
+
+        matchingEngine.shutdown();
+    }
+
     private static PlaceOrderCommand command(long uid, OrderSide side, String price, String qty) {
         return new PlaceOrderCommand(
                 uid,
@@ -184,6 +580,76 @@ class OrderAccountingIntegrationTest {
                 false,
                 false
         );
+    }
+
+    private static SymbolConfig btcConfigWithMaxOpenOrders(int maxOpenOrders) {
+        return SymbolConfig.builder()
+                .symbol("BTCUSDT")
+                .baseAsset("BTC")
+                .quoteAsset("USDT")
+                .priceTick(new BigDecimal("0.01"))
+                .lotSize(new BigDecimal("0.001"))
+                .minQty(new BigDecimal("0.001"))
+                .minNotional(new BigDecimal("5"))
+                .maxOrderNotional(new BigDecimal("1000000"))
+                .maxPositionNotional(new BigDecimal("5000000"))
+                .maxOpenOrders(maxOpenOrders)
+                .maxLeverage(125)
+                .makerFeeRate(new BigDecimal("0.0002"))
+                .takerFeeRate(new BigDecimal("0.0005"))
+                .makerRebateRate(BigDecimal.ZERO)
+                .referralRebateRate(new BigDecimal("0.00005"))
+                .priceBandRate(new BigDecimal("0.10"))
+                .maintenanceMarginRate(new BigDecimal("0.005"))
+                .tradingEnabled(true)
+                .build();
+    }
+
+    private static RiskControlsProperties riskControls() {
+        return new RiskControlsProperties();
+    }
+
+    private static Order limitOrder(long uid, Symbol symbol, OrderSide side, String price, boolean reduceOnly) {
+        return Order.builder()
+                .uid(uid)
+                .symbol(symbol)
+                .side(side)
+                .type(OrderType.LIMIT)
+                .price(new BigDecimal(price))
+                .qty(new BigDecimal("1.000"))
+                .origQty(new BigDecimal("1.000"))
+                .reduceOnly(reduceOnly)
+                .build();
+    }
+
+    private static void assertRiskSwitchRejects(
+            Order order,
+            SymbolConfig symbolConfig,
+            RiskControlsProperties riskControlsProperties,
+            String rejectCode
+    ) {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(
+                accountRepo,
+                positionRepo,
+                orderRepo,
+                matchingEngine,
+                walletLedgerService,
+                riskControlsProperties
+        );
+
+        assertThatThrownBy(() -> riskService.preCheckAndReserve(order, symbolConfig))
+                .isInstanceOf(IllegalStateException.class);
+        assertThat(order.getStatus()).isEqualTo(Order.Status.REJECTED);
+        assertThat(order.getRejectCode()).isEqualTo(rejectCode);
+        assertThat(ledgerRepo.findByUid(order.getUid())).isEmpty();
+
+        matchingEngine.shutdown();
     }
 
     private static class MemAccountRepository implements AccountRepository {
@@ -236,6 +702,13 @@ class OrderAccountingIntegrationTest {
         @Override
         public List<Position> findAllByUid(long uid) {
             return positions.values().stream().filter(position -> position.getUid() == uid).toList();
+        }
+
+        @Override
+        public List<Position> findOpenPositions() {
+            return positions.values().stream()
+                    .filter(position -> position.getQty() != null && position.getQty().signum() != 0)
+                    .toList();
         }
 
         private static String key(long uid, String symbol) {

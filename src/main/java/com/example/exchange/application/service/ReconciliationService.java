@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +26,24 @@ public class ReconciliationService {
     private final AccountRepository accountRepository;
     private final PositionRepository positionRepository;
     private final WalletLedgerRepository ledgerRepository;
+
+    public List<ValidationIssue> validateAllAccounts() {
+        Set<Long> uids = new LinkedHashSet<>();
+        accountRepository.findAll().stream()
+                .filter(account -> account != null)
+                .map(Account::uid)
+                .forEach(uids::add);
+        positionRepository.findOpenPositions().stream()
+                .filter(position -> position != null)
+                .map(Position::getUid)
+                .forEach(uids::add);
+
+        List<ValidationIssue> issues = new ArrayList<>();
+        for (Long uid : uids) {
+            issues.addAll(validateUid(uid));
+        }
+        return issues;
+    }
 
     public List<ValidationIssue> validateUid(long uid) {
         List<ValidationIssue> issues = new ArrayList<>();

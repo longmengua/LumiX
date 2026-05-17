@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.extern.jackson.Jacksonized;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Data
@@ -20,7 +21,8 @@ public class OutboxEvent {
     public enum Status {
         PENDING,
         PUBLISHED,
-        DEAD
+        DEAD,
+        COMPENSATED
     }
 
     @Builder.Default
@@ -30,6 +32,8 @@ public class OutboxEvent {
     private String eventKey;
     private String eventType;
     private Object payload;
+    @Builder.Default
+    private Map<String, String> headers = Map.of();
 
     @Builder.Default
     private Status status = Status.PENDING;

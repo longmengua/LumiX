@@ -5,6 +5,7 @@ package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
 import com.example.exchange.application.event.DomainEventPublisher;
+import com.example.exchange.application.service.OperationalMetricsService;
 import com.example.exchange.application.service.OrderService;
 import com.example.exchange.application.service.RiskService;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
@@ -16,6 +17,7 @@ import com.example.exchange.domain.model.enums.MarginMode;
 import com.example.exchange.domain.model.enums.TimeInForce;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -63,6 +65,12 @@ public class PlaceOrderUseCase {
     private final RiskService riskService;
     private final SymbolConfigRepository symbolConfigRepository;
     private final DomainEventPublisher<Object> publisher;
+    private OperationalMetricsService operationalMetricsService;
+
+    @Autowired(required = false)
+    public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
+        this.operationalMetricsService = operationalMetricsService;
+    }
 
     /**
      * 處理下單請求
@@ -78,6 +86,12 @@ public class PlaceOrderUseCase {
      * @param cmd 下單指令
      */
     public void handle(PlaceOrderCommand cmd) {
+        place(cmd);
+    }
+
+    public Order place(PlaceOrderCommand cmd) {
+        long startedAt = operationalMetricsService == null ? 0 : operationalMetricsService.startTimer();
+        Order order = null;
         // 1) 基本欄位檢查
         validateCommand(cmd);
 
@@ -103,7 +117,7 @@ public class PlaceOrderUseCase {
          * - executedQty = 初始為 0
          * - avgPrice    = 初始為 0
          */
-        Order order = Order.builder()
+        order = Order.builder()
                 .uid(cmd.uid())
                 .symbol(symbol)
                 .side(cmd.side())
@@ -134,7 +148,12 @@ public class PlaceOrderUseCase {
                 publisher.publish(OrderLifecycleEvent.rejected(order));
             }
             throw e;
+        } finally {
+            if (operationalMetricsService != null) {
+                operationalMetricsService.recordOrderResult(order, startedAt);
+            }
         }
+        return order;
     }
 
     /**

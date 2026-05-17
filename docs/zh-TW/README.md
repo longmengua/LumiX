@@ -70,15 +70,16 @@ docker compose down -v
 
 ### 內部交易所核心
 
-- 下單、撤單、查詢掛單、查詢歷史訂單。
+- 下單、改單、cancel-replace、批量撤單、查詢掛單與歷史訂單。
 - 撮合引擎支援 LIMIT / MARKET、GTC / IOC / FOK、部分成交、價格時間優先、self match prevention。
 - 訂單簿深度、成交帶、ticker、kline、depth delta。
-- 保證金入金、全倉/逐倉劃轉、帳戶與流水查詢。
+- 保證金入金/出金狀態機、全倉/逐倉劃轉、帳戶、風險快照、資金狀態與流水查詢。
 - 持倉更新、maker/taker fee、referral rebate、realized PnL。
 - 資金費結算、強平、保險基金與 ADL queue MVP。
 - 快照、事件回放與 recovery/validation 入口。
 - Domain event 發布、outbox retry、DLQ、Kafka event store。
-- SSE / WebSocket 推送市場與使用者私有事件。
+- 輕量 operations metrics endpoint，提供訂單狀態計數、下單延遲、撤單數與成交事件數。
+- SSE / WebSocket 推送市場與使用者私有事件，使用者 WebSocket 可 opt-in 啟用 cancel-on-disconnect。
 
 ### Polymarket 整合
 
@@ -193,6 +194,14 @@ Kafka / Consumer / Push
 - 若風控或帳務預檢失敗，請求會在送入撮合前被拒絕。
 - 當前 API 回傳 `accepted`，實際最終狀態要查 `GET /api/order/open`、`GET /api/order/all` 或消費事件流。
 
+訂單管理端點：
+
+- `PATCH /api/order/{orderId}` 修改仍在簿內的 LIMIT 掛單，不會主動吃單。Request 可調整 `price`、剩餘 `qty` 與 `clientOrderId`，系統會同步調整剩餘委託預凍。
+- `POST /api/order/{orderId}/replace` 先取消原本的 open order，再用提供的 `price`、`qty` 或 `clientOrderId` 建立 replacement order。
+- `DELETE /api/order/open?uid=...&symbol=...` 批量取消 open orders 並釋放剩餘委託預凍；不帶 `symbol` 時會取消該使用者所有 open orders。
+- `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` 會為該 user WebSocket 連線 opt-in 啟用 cancel-on-disconnect；不帶 `symbol` 時，斷線會取消該使用者所有 open orders。
+- `GET /api/depth/{symbol}` 會回傳完整簿檔 levels、`version` 與 CRC32 `checksum`。`GET /api/market-data/{symbol}/depth-delta` 也會回傳同一條 monotonic depth `version` 與 checksum，供 client 做 snapshot + delta 校驗。
+
 Polymarket 資料流：
 
 ```text
@@ -235,11 +244,17 @@ src/main/java/com/example/exchange
 ### Exchange
 
 - `POST /api/margin/deposit`
+- `POST /api/margin/withdraw`
 - `POST /api/margin/transfer`
 - `GET /api/margin/account?uid=1`
 - `GET /api/margin/ledger?uid=1`
+- `GET /api/margin/transfers?uid=1`
+- `GET /api/margin/risk?uid=1`
 - `POST /api/order/place`
+- `PATCH /api/order/{orderId}`
+- `POST /api/order/{orderId}/replace`
 - `DELETE /api/order/{orderId}`
+- `DELETE /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/all?uid=1&symbol=BTCUSDT`
 - `GET /api/depth/{symbol}?depth=10`
@@ -250,8 +265,10 @@ src/main/java/com/example/exchange
 - `GET /api/market-data/{symbol}/stream`
 - `GET /api/market-data/user/{uid}/stream`
 - `POST /api/risk/funding/settle`
+- `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`
 - `GET /api/risk/insurance-fund`
+- `GET /api/recovery/reconcile/accounts`
 - `GET /api/risk/adl-queue`
 - `POST /api/recovery/recover/{uid}?fromSeq=0`
 - `GET /api/recovery/validate/{uid}`

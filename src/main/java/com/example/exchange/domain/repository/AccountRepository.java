@@ -5,6 +5,7 @@ package com.example.exchange.domain.repository;
 
 import com.example.exchange.domain.model.entity.Account;
 
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -17,6 +18,11 @@ public interface AccountRepository {
 
     /** 依 uid 取得帳戶，若不存在則回傳 Optional.empty() */
     Optional<Account> findByUid(long uid);
+
+    /** 查詢已知帳戶；不支援掃描的實作可回傳空清單。 */
+    default List<Account> findAll() {
+        return List.of();
+    }
 
     /** 儲存（新增或更新）帳戶狀態 */
     void save(Account account);

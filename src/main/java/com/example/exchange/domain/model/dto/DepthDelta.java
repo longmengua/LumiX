@@ -9,6 +9,7 @@ import java.util.List;
 public record DepthDelta(
         String symbol,
         long version,
+        long checksum,
         List<PriceLevel> bids,
         List<PriceLevel> asks,
         Instant ts

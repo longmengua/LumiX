@@ -30,6 +30,7 @@ security-controls:
     - /api/margin/**
     - /api/risk/**
     - /api/recovery/**
+    - /api/ops/**
     - /api/prediction/session/**
     - /api/prediction/orders/**
     - /api/prediction/clob/**
@@ -41,3 +42,23 @@ security-controls:
     - /api/prediction/markets/price-refresh
     - /api/prediction/ws/**
     - /api/prediction/approve/**
+
+risk-controls:
+  order-entry-halt: ${RISK_CONTROLS_ORDER_ENTRY_HALT:false}
+  reduce-only-mode: ${RISK_CONTROLS_REDUCE_ONLY_MODE:false}
+  withdrawal-halt: ${RISK_CONTROLS_WITHDRAWAL_HALT:false}
+  suspended-symbols: ${RISK_CONTROLS_SUSPENDED_SYMBOLS:}
+
+funding-rate:
+  settlements: []
+
+external-api:
+  retry-max-attempts: ${EXTERNAL_API_RETRY_MAX_ATTEMPTS:3}
+  retry-backoff-ms: ${EXTERNAL_API_RETRY_BACKOFF_MS:200}
+  min-interval-ms: ${EXTERNAL_API_MIN_INTERVAL_MS:0}
+  circuit-breaker-enabled: ${EXTERNAL_API_CIRCUIT_BREAKER_ENABLED:true}
+  circuit-breaker-failure-threshold: ${EXTERNAL_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD:5}
+  circuit-breaker-open-ms: ${EXTERNAL_API_CIRCUIT_BREAKER_OPEN_MS:30000}
+
+redis-key:
+  prefix: ${REDIS_KEY_PREFIX:}

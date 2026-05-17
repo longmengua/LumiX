@@ -26,6 +26,7 @@ public class SymbolConfig {
     private BigDecimal minNotional;
     private BigDecimal maxOrderNotional;
     private BigDecimal maxPositionNotional;
+    private Integer maxOpenOrders;
     private int maxLeverage;
     private BigDecimal makerFeeRate;
     private BigDecimal takerFeeRate;
@@ -66,6 +67,10 @@ public class SymbolConfig {
 
     public BigDecimal maxPositionNotionalOrDefault() {
         return defaultIfNull(maxPositionNotional, new BigDecimal("5000000"));
+    }
+
+    public int maxOpenOrdersOrDefault() {
+        return maxOpenOrders == null || maxOpenOrders <= 0 ? 200 : maxOpenOrders;
     }
 
     public BigDecimal makerFeeRateOrDefault() {

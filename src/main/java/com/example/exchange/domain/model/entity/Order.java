@@ -337,6 +337,11 @@ public class Order {
         this.status = Status.EXPIRED;
     }
 
+    public void expire(String code) {
+        this.status = Status.EXPIRED;
+        this.rejectCode = code;
+    }
+
     /**
      * 將訂單標記為拒絕
      * -------------------------------------------------

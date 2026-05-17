@@ -55,6 +55,13 @@ public class InMemoryMatchingEngine implements MatchingEngine {
     }
 
     @Override
+    public boolean amendOrder(Order order, BigDecimal newPrice, BigDecimal newQty) {
+        SymbolRuntime runtime = runtimes.get(order.getSymbol().code());
+        if (runtime == null) return false;
+        return runtime.call(() -> runtime.book.amend(order, newPrice, newQty));
+    }
+
+    @Override
     public OrderBookSnapshot snapshot(String symbolCode, int depth) {
         SymbolRuntime runtime = runtimes.get(normalize(symbolCode));
         if (runtime == null) return new OrderBookSnapshot(List.of(), List.of());
@@ -94,7 +101,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         if (tif == TimeInForce.FOK) {
             BigDecimal matchable = orderBook.matchableQty(order);
             if (matchable.compareTo(order.getQty()) < 0) {
-                order.expire();
+                order.expire("FOK_NOT_FULLY_FILLABLE");
                 return result(trades, affectedOrders);
             }
         }
@@ -107,7 +114,8 @@ public class InMemoryMatchingEngine implements MatchingEngine {
 
         if (order.getQty().signum() > 0 && order.getStatus() != Order.Status.REJECTED) {
             switch (tif) {
-                case IOC, FOK -> order.expire();
+                case IOC -> order.expire(iocExpireReason(order));
+                case FOK -> order.expire("FOK_NOT_FULLY_FILLABLE");
                 case GTC -> handleGtcRemainder(orderBook, order);
             }
         }
@@ -177,7 +185,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
 
     private void handleGtcRemainder(OrderBook orderBook, Order order) {
         if (order.getType() == OrderType.MARKET) {
-            order.expire();
+            order.expire("MARKET_LIQUIDITY_INSUFFICIENT");
             return;
         }
         orderBook.add(order);
@@ -232,10 +240,17 @@ public class InMemoryMatchingEngine implements MatchingEngine {
 
     private static void stopForSelfMatch(Order order) {
         if (order.getExecutedQty() != null && order.getExecutedQty().signum() > 0) {
-            order.expire();
+            order.expire("SELF_MATCH_REMAINDER_EXPIRED");
         } else {
             order.reject("SELF_MATCH_PREVENTED");
         }
+    }
+
+    private static String iocExpireReason(Order order) {
+        if (order.getExecutedQty() != null && order.getExecutedQty().signum() > 0) {
+            return "IOC_REMAINDER_EXPIRED";
+        }
+        return "IOC_NOT_FILLED";
     }
 
     private static MatchingResult result(List<TradeExecuted> trades, LinkedHashSet<Order> affectedOrders) {

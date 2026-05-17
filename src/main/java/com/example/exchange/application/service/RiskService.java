@@ -11,14 +11,17 @@ import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.repository.AccountRepository;
+import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.service.MatchingEngine;
+import com.example.exchange.infra.config.RiskControlsProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -28,11 +31,16 @@ public class RiskService {
 
     private final AccountRepository accountRepo;
     private final PositionRepository positionRepo;
+    private final OrderRepository orderRepo;
     private final MatchingEngine matchingEngine;
     private final WalletLedgerService walletLedgerService;
+    private final RiskControlsProperties riskControlsProperties;
 
     public void preCheckAndReserve(Order order, SymbolConfig config) {
         validateTradable(order, config);
+        validateRiskSwitches(order);
+        validateMaxOpenOrders(order, config);
+        validateClientOrderIdDeduplication(order, null);
         BigDecimal referencePrice = resolveReferencePrice(order);
         validateTickAndLot(order, config);
         validateNotional(order, config, referencePrice);
@@ -57,6 +65,47 @@ public class RiskService {
                 order.getId().toString()
         );
         order.setReservedAmount(reserve);
+    }
+
+    public BigDecimal validateAmend(Order order, SymbolConfig config) {
+        validateTradable(order, config);
+        validateRiskSwitches(order);
+        validateClientOrderIdDeduplication(order, order.getId());
+        BigDecimal referencePrice = resolveReferencePrice(order);
+        validateTickAndLot(order, config);
+        validateNotional(order, config, referencePrice);
+        validatePriceBand(order, config);
+        validateLeverage(order, config);
+        validateReduceOnly(order);
+        validatePositionLimit(order, config, referencePrice);
+        return requiredOrderReserve(order, config, referencePrice);
+    }
+
+    public void reconcileOrderReserve(Order order, SymbolConfig config, BigDecimal targetReserve) {
+        BigDecimal target = targetReserve == null ? BigDecimal.ZERO : targetReserve;
+        BigDecimal current = order.getReservedAmount() == null ? BigDecimal.ZERO : order.getReservedAmount();
+        BigDecimal diff = target.subtract(current);
+        if (diff.signum() > 0) {
+            Account account = accountRepo.findByUid(order.getUid()).orElseGet(() -> new Account(order.getUid()));
+            if (account.crossAvailable().compareTo(diff) < 0) {
+                order.reject("INSUFFICIENT_BALANCE");
+                throw new IllegalStateException("insufficient available balance");
+            }
+            walletLedgerService.reserveOrder(
+                    order.getUid(),
+                    config.getQuoteAsset(),
+                    diff,
+                    order.getId().toString()
+            );
+        } else if (diff.signum() < 0) {
+            walletLedgerService.releaseOrderReserve(
+                    order.getUid(),
+                    config.getQuoteAsset(),
+                    diff.abs(),
+                    order.getId().toString()
+            );
+        }
+        order.setReservedAmount(target);
     }
 
     public BigDecimal requiredOrderReserve(Order order, SymbolConfig config, BigDecimal referencePrice) {
@@ -99,6 +148,27 @@ public class RiskService {
         if (config == null || !config.isTradingEnabled()) {
             order.reject("SYMBOL_NOT_TRADABLE");
             throw new IllegalArgumentException("symbol is not tradable");
+        }
+    }
+
+    private void validateRiskSwitches(Order order) {
+        if (riskControlsProperties.isOrderEntryHalt()) {
+            order.reject("ORDER_ENTRY_HALTED");
+            throw new IllegalStateException("order entry halted");
+        }
+
+        if (riskControlsProperties.isReduceOnlyMode() && !order.isReduceOnly()) {
+            order.reject("GLOBAL_REDUCE_ONLY");
+            throw new IllegalStateException("global reduce-only mode enabled");
+        }
+
+        String symbol = order.getSymbol() == null ? "" : order.getSymbol().code();
+        boolean suspended = riskControlsProperties.getSuspendedSymbols().stream()
+                .map(RiskService::normalizeSymbol)
+                .anyMatch(normalizeSymbol(symbol)::equals);
+        if (suspended) {
+            order.reject("SYMBOL_SUSPENDED");
+            throw new IllegalStateException("symbol suspended");
         }
     }
 
@@ -153,6 +223,28 @@ public class RiskService {
         }
     }
 
+    private void validateMaxOpenOrders(Order order, SymbolConfig config) {
+        int openOrderCount = orderRepo.findOpenOrders(order.getUid(), order.getSymbol().code()).size();
+        if (openOrderCount >= config.maxOpenOrdersOrDefault()) {
+            order.reject("MAX_OPEN_ORDERS");
+            throw new IllegalStateException("max open orders exceeded");
+        }
+    }
+
+    private void validateClientOrderIdDeduplication(Order order, UUID excludeOrderId) {
+        String clientOrderId = normalizeClientOrderId(order.getClientOrderId());
+        if (clientOrderId == null) return;
+
+        boolean duplicated = orderRepo.findOpenOrders(order.getUid(), order.getSymbol().code()).stream()
+                .filter(existing -> excludeOrderId == null || !excludeOrderId.equals(existing.getId()))
+                .map(existing -> normalizeClientOrderId(existing.getClientOrderId()))
+                .anyMatch(clientOrderId::equals);
+        if (duplicated) {
+            order.reject("DUPLICATE_CLIENT_ORDER_ID");
+            throw new IllegalStateException("duplicate clientOrderId");
+        }
+    }
+
     private void validateReduceOnly(Order order) {
         if (!order.isReduceOnly()) return;
         Position position = positionRepo.find(order.getUid(), order.getSymbol()).orElse(null);
@@ -194,5 +286,14 @@ public class RiskService {
     private static boolean isMultiple(BigDecimal value, BigDecimal step) {
         if (value == null || step == null || step.signum() <= 0) return false;
         return value.divideAndRemainder(step)[1].compareTo(BigDecimal.ZERO) == 0;
+    }
+
+    private static String normalizeClientOrderId(String clientOrderId) {
+        if (clientOrderId == null || clientOrderId.isBlank()) return null;
+        return clientOrderId.trim();
+    }
+
+    private static String normalizeSymbol(String symbol) {
+        return symbol == null ? "" : symbol.trim().toUpperCase();
     }
 }

@@ -12,7 +12,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
 - Define deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
 - Persist and operationalize order lifecycle events. A Kafka publishing baseline exists for created, accepted, updated, rejected, canceled, expired, and filled states; production still needs durable storage, schema versioning, replay, and projections.
-- Add exchange-standard commands such as amend order, cancel replace, bulk cancel, and cancel on disconnect.
+- Add exchange-standard commands such as amend order, cancel replace, bulk cancel, and cancel on disconnect. A REST/WebSocket baseline exists for all four; production still needs durable command logs, stronger atomicity modes, and reconnect/session semantics.
 - Enforce tick size, lot size, min notional, price band, max order size, and max open orders.
 - Make rejection semantics explicit for insufficient MARKET liquidity, unfilled IOC/FOK, POST_ONLY taking liquidity, and REDUCE_ONLY exceeding reducible position size.
 
@@ -20,9 +20,9 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 - Build a complete double-entry ledger schema so every balance change is traceable, replayable, and reconcilable.
 - Split order reserve, position margin, fee, rebate, realized PnL, funding, and liquidation loss into explicit accounting entries.
-- Add immutable account calculations for frozen funds, released funds, available balance, total equity, maintenance margin, and risk ratio.
-- Add end-of-day and near-real-time reconciliation jobs across accounts, positions, ledger, and event store.
-- Add deposit/withdrawal state machines: pending, confirmed, failed, reversed, manual review.
+- Add immutable account calculations for frozen funds, released funds, available balance, total equity, maintenance margin, and risk ratio. A lightweight `/api/margin/risk` snapshot now calculates available balance, holds, equity, maintenance margin, and risk ratio from account, position, symbol config, and market data; production still needs persisted daily snapshots and independent mark/index oracle inputs.
+- Add end-of-day and near-real-time reconciliation jobs across accounts, positions, ledger, and event store. A lightweight all-account reconciliation entry point now scans the maintained account index plus open-position index and reports account, position margin, and ledger-balance issues; production still needs persisted reports, scheduling policy, alert routing, and event-store coverage.
+- Add deposit/withdrawal state machines. A Redis-backed baseline now records pending, confirmed, failed, reversed, and manual review transfer states; production still needs chain/bank callbacks, review workflow ownership, and reconciliation projections.
 
 ### Risk
 
@@ -48,7 +48,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Market Data
 
-- Add incremental order book streams with sequence number, checksum, and snapshot + delta reconstruction.
+- Add incremental order book streams with sequence number, checksum, and snapshot + delta reconstruction. REST/SSE depth delta now includes a monotonic version and CRC32 checksum; production still needs durable sequence checkpoints and reconnect backfill.
 - Persist ticker, kline, and trade tape so market data survives service restarts.
 - Deploy WebSocket/SSE gateway independently with horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
 - Add market-maker / liquidity-provider APIs and rate-limit policies.
@@ -70,8 +70,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Observability
 
-- Add metrics for order latency, matching latency, Kafka lag, DB latency, Redis latency, rejection rate, and fill rate.
-- Add tracing with request id / correlation id across API, UseCase, Kafka, and external APIs.
+- Add metrics for order latency, matching latency, Kafka lag, DB latency, Redis latency, rejection rate, and fill rate. A lightweight `/api/ops/metrics` baseline exists for order status, order latency, cancel count, and trade-event count; production still needs a metrics backend and infra latency/lag collectors.
+- Add tracing with request id / correlation id across API, UseCase, Kafka, and external APIs. A header/MDC/outbox baseline exists; production still needs distributed tracing export, dashboards, and sampling policy.
 - Add structured logging so core events can be searched by uid, orderId, clientOrderId, and symbol.
 - Add alerts for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
 

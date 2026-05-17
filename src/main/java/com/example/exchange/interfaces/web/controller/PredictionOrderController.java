@@ -220,6 +220,16 @@ public class PredictionOrderController {
     }
 
     /**
+     * 將已過期 ACTIVE sessions 標記為 EXPIRED。
+     *
+     * POST /api/prediction/session/expire
+     */
+    @PostMapping("/session/expire")
+    public Integer expireSessions() {
+        return polymarketSessionService.expireSessions();
+    }
+
+    /**
      * 真實下單。
      *
      * POST /api/prediction/orders
@@ -352,5 +362,19 @@ public class PredictionOrderController {
             @RequestParam String owner
     ) {
         return polymarketApprovalService.isConditionalTokensApproved(owner);
+    }
+
+    /**
+     * 清除 approval cache。
+     *
+     * DELETE /api/prediction/approve/cache?owner=0x...
+     * owner 不填時清除全部 cache。
+     */
+    @DeleteMapping("/approve/cache")
+    public String clearApprovalCache(
+            @RequestParam(required = false) String owner
+    ) {
+        polymarketApprovalService.clearApprovalCache(owner);
+        return "approval cache cleared";
     }
 }

@@ -1,0 +1,80 @@
+/*
+ * 檔案用途：Redis Repository 實作，用 Redis 保存低延遲交易狀態與快照資料。
+ */
+package com.example.exchange.infra.redis;
+
+import com.example.exchange.domain.model.entity.WalletTransfer;
+import com.example.exchange.domain.repository.WalletTransferRepository;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.stereotype.Repository;
+
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
+@Repository
+public class RedisWalletTransferRepository implements WalletTransferRepository {
+
+    private final RedisTemplate<String, Object> redis;
+    private final RedisKeyNamespace keys;
+
+    public RedisWalletTransferRepository(RedisTemplate<String, Object> redis, RedisKeyNamespace keys) {
+        this.redis = redis;
+        this.keys = keys;
+    }
+
+    @Override
+    public void save(WalletTransfer transfer) {
+        String id = transfer.getId().toString();
+        redis.opsForValue().set(transferKey(transfer.getId()), transfer);
+        Long added = redis.opsForSet().add(uidSetKey(transfer.getUid()), id);
+        if (added != null && added > 0) {
+            redis.opsForList().rightPush(uidListKey(transfer.getUid()), id);
+        }
+    }
+
+    @Override
+    public Optional<WalletTransfer> findById(UUID id) {
+        Object value = redis.opsForValue().get(transferKey(id));
+        return value instanceof WalletTransfer transfer ? Optional.of(transfer) : Optional.empty();
+    }
+
+    @Override
+    public List<WalletTransfer> findByUid(long uid) {
+        List<Object> rawIds = redis.opsForList().range(uidListKey(uid), 0, -1);
+        if (rawIds == null || rawIds.isEmpty()) return List.of();
+        List<String> ids = rawIds.stream().map(String::valueOf).toList();
+        List<String> redisKeys = ids.stream()
+                .map(id -> keys.key("wallet:transfer:" + id))
+                .collect(Collectors.toList());
+        ValueOperations<String, Object> ops = redis.opsForValue();
+        List<Object> values = ops.multiGet(redisKeys);
+        if (values == null) return List.of();
+
+        Map<String, WalletTransfer> transfers = new LinkedHashMap<>();
+        for (int index = 0; index < ids.size(); index++) {
+            Object value = values.size() > index ? values.get(index) : null;
+            if (value instanceof WalletTransfer transfer) {
+                transfers.put(ids.get(index), transfer);
+            }
+        }
+        return new ArrayList<>(transfers.values());
+    }
+
+    private String transferKey(UUID id) {
+        return keys.key("wallet:transfer:" + id);
+    }
+
+    private String uidListKey(long uid) {
+        return keys.key("wallet:transfer:list:" + uid);
+    }
+
+    private String uidSetKey(long uid) {
+        return keys.key("wallet:transfer:set:" + uid);
+    }
+}

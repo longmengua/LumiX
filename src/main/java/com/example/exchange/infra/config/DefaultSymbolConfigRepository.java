@@ -61,6 +61,7 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
                 .minNotional(new BigDecimal(minNotional))
                 .maxOrderNotional(new BigDecimal(maxOrderNotional))
                 .maxPositionNotional(new BigDecimal(maxPositionNotional))
+                .maxOpenOrders(200)
                 .maxLeverage(maxLeverage)
                 .makerFeeRate(new BigDecimal("0.0002"))
                 .takerFeeRate(new BigDecimal("0.0005"))

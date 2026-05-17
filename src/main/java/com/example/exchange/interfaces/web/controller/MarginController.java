@@ -4,13 +4,17 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.TransferMarginCommand;
+import com.example.exchange.application.service.AccountRiskService;
 import com.example.exchange.application.service.MarginService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
+import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
+import com.example.exchange.domain.model.entity.WalletTransfer;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.DepositRequest;
 import com.example.exchange.interfaces.web.dto.TransferRequest;
+import com.example.exchange.interfaces.web.dto.WithdrawalRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,16 +27,26 @@ public class MarginController {
 
     private final TransferMarginUseCase usecase;
     private final MarginService marginService;
+    private final AccountRiskService accountRiskService;
 
-    public MarginController(TransferMarginUseCase usecase, MarginService marginService) {
+    public MarginController(
+            TransferMarginUseCase usecase,
+            MarginService marginService,
+            AccountRiskService accountRiskService
+    ) {
         this.usecase = usecase;
         this.marginService = marginService;
+        this.accountRiskService = accountRiskService;
     }
 
     @PostMapping("/deposit")
-    public ApiResponse<String> deposit(@Valid @RequestBody DepositRequest request) {
-        marginService.deposit(request.uid(), request.amount());
-        return ApiResponse.ok("ok");
+    public ApiResponse<WalletTransfer> deposit(@Valid @RequestBody DepositRequest request) {
+        return ApiResponse.ok(marginService.deposit(request.uid(), request.amount()));
+    }
+
+    @PostMapping("/withdraw")
+    public ApiResponse<WalletTransfer> withdraw(@Valid @RequestBody WithdrawalRequest request) {
+        return ApiResponse.ok(marginService.withdraw(request.uid(), request.amount()));
     }
 
     @PostMapping("/transfer")
@@ -49,5 +63,15 @@ public class MarginController {
     @GetMapping("/ledger")
     public ApiResponse<List<WalletLedgerEntry>> ledger(@RequestParam Long uid) {
         return ApiResponse.ok(marginService.findLedger(uid));
+    }
+
+    @GetMapping("/transfers")
+    public ApiResponse<List<WalletTransfer>> transfers(@RequestParam Long uid) {
+        return ApiResponse.ok(marginService.findTransfers(uid));
+    }
+
+    @GetMapping("/risk")
+    public ApiResponse<AccountRiskSnapshot> risk(@RequestParam Long uid) {
+        return ApiResponse.ok(accountRiskService.snapshot(uid));
     }
 }

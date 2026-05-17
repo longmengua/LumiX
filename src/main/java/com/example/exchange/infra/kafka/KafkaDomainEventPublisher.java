@@ -5,9 +5,13 @@ package com.example.exchange.infra.kafka;
 
 import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.OutboxService;
+import com.example.exchange.infra.tracing.TraceContext;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -28,7 +32,20 @@ public class KafkaDomainEventPublisher<T> implements DomainEventPublisher<T> {
     @Override
     public void publish(T event) {
         KafkaEventRoute route = KafkaEventRoute.from(event);
-        outboxService.publish(route.topic(), route.key(), event, (topic, key, payload) ->
-                kafka.send(topic, key, payload).get(3, TimeUnit.SECONDS));
+        outboxService.publish(route.topic(), route.key(), event, TraceContext.currentHeaders(), this::send);
+    }
+
+    private void send(String topic, String key, Object payload, Map<String, String> headers) throws Exception {
+        ProducerRecord<String, Object> record = new ProducerRecord<>(topic, key, payload);
+        addHeaders(record, headers);
+        kafka.send(record).get(3, TimeUnit.SECONDS);
+    }
+
+    private static void addHeaders(ProducerRecord<String, Object> record, Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) return;
+        headers.forEach((name, value) -> {
+            if (name == null || name.isBlank() || value == null || value.isBlank()) return;
+            record.headers().add(name, value.getBytes(StandardCharsets.UTF_8));
+        });
     }
 }

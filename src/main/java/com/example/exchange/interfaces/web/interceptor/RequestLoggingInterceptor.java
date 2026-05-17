@@ -4,13 +4,12 @@
 package com.example.exchange.interfaces.web.interceptor;
 
 import com.example.exchange.domain.util.SensitiveLogSanitizer;
+import com.example.exchange.infra.tracing.TraceContext;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-
-import java.util.UUID;
 
 /**
  * RequestLoggingInterceptor
@@ -26,22 +25,32 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
 
     private static final String START_TIME = "requestStartTime";
     private static final String REQUEST_ID = "requestUUID";
+    private static final String CORRELATION_ID = "correlationId";
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
-        // 產生唯一的 Request UUID
-        String requestId = UUID.randomUUID().toString();
+        String requestId = firstPresent(
+                TraceContext.normalize(request.getHeader(TraceContext.REQUEST_ID_HEADER)),
+                TraceContext.newRequestId()
+        );
+        String correlationId = firstPresent(
+                TraceContext.normalize(request.getHeader(TraceContext.CORRELATION_ID_HEADER)),
+                requestId
+        );
         request.setAttribute(REQUEST_ID, requestId);
+        request.setAttribute(CORRELATION_ID, correlationId);
+        TraceContext.put(requestId, correlationId);
 
         // 紀錄開始時間
         long startTime = System.currentTimeMillis();
         request.setAttribute(START_TIME, startTime);
 
         // 加到 Response Header，方便前端或其他服務追蹤
-        response.setHeader("X-Request-Id", requestId);
+        response.setHeader(TraceContext.REQUEST_ID_HEADER, requestId);
+        response.setHeader(TraceContext.CORRELATION_ID_HEADER, correlationId);
 
-        log.info("[{}] 請求開始 => Method: {}, URI: {}",
-                requestId, request.getMethod(), safeRequestUri(request));
+        log.info("[{}] 請求開始 => correlationId={}, Method: {}, URI: {}",
+                requestId, correlationId, request.getMethod(), safeRequestUri(request));
 
         return true;
     }
@@ -57,11 +66,12 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
         String requestId = (String) request.getAttribute(REQUEST_ID);
+        String correlationId = (String) request.getAttribute(CORRELATION_ID);
         Long startTime = (Long) request.getAttribute(START_TIME);
 
         if (startTime != null) {
             long duration = System.currentTimeMillis() - startTime;
-            log.info("[{}] 請求完成 => 耗時 {} ms", requestId, duration);
+            log.info("[{}] 請求完成 => correlationId={}, 耗時 {} ms", requestId, correlationId, duration);
         }
 
         if (ex != null) {
@@ -72,6 +82,7 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
                     SensitiveLogSanitizer.sanitize(ex.getMessage())
             );
         }
+        TraceContext.clear();
     }
 
     private String safeRequestUri(HttpServletRequest request) {
@@ -81,5 +92,9 @@ public class RequestLoggingInterceptor implements HandlerInterceptor {
                 : request.getRequestURI() + "?" + queryString;
 
         return SensitiveLogSanitizer.sanitize(uri);
+    }
+
+    private static String firstPresent(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value;
     }
 }

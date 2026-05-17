@@ -3,9 +3,11 @@
  */
 package com.example.exchange.interfaces.web.controller;
 
+import com.example.exchange.application.service.MarketDataService;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBookSnapshot;
+import com.example.exchange.domain.util.OrderBookChecksum;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.DepthResponse;
 import org.springframework.web.bind.annotation.*;
@@ -20,9 +22,11 @@ import org.springframework.web.bind.annotation.*;
 public class DepthController {
 
     private final MatchingEngine matchingEngine;
+    private final MarketDataService marketDataService;
 
-    public DepthController(MatchingEngine matchingEngine) {
+    public DepthController(MatchingEngine matchingEngine, MarketDataService marketDataService) {
         this.matchingEngine = matchingEngine;
+        this.marketDataService = marketDataService;
     }
 
     @GetMapping("/{symbol}")
@@ -39,6 +43,8 @@ public class DepthController {
         // 轉成回應 DTO
         DepthResponse res = new DepthResponse(
                 symbol,
+                marketDataService.depthVersion(symbol),
+                OrderBookChecksum.crc32(snap.bids(), snap.asks()),
                 top.getBestBid(),
                 top.getBestAsk(),
                 snap.bids().stream()

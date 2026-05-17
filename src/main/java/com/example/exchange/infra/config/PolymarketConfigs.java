@@ -5,6 +5,7 @@ package com.example.exchange.infra.config;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
@@ -24,6 +25,10 @@ import java.util.List;
 @Validated
 @ConfigurationProperties(prefix = "polymarket")
 public class PolymarketConfigs {
+    @NotNull
+    @Min(1)
+    private Long approvalCacheTtlSeconds = 30L;
+
     @Valid
     @NotNull
     private Chain chain = new Chain();

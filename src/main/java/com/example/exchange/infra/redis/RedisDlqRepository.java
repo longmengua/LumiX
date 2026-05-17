@@ -16,20 +16,22 @@ public class RedisDlqRepository implements DlqRepository {
     private static final String INDEX_KEY = "dlq:index";
 
     private final RedisTemplate<String, Object> redis;
+    private final RedisKeyNamespace keys;
 
-    public RedisDlqRepository(RedisTemplate<String, Object> redis) {
+    public RedisDlqRepository(RedisTemplate<String, Object> redis, RedisKeyNamespace keys) {
         this.redis = redis;
+        this.keys = keys;
     }
 
     @Override
     public void append(DlqEvent event) {
         redis.opsForValue().set(eventKey(event.getId().toString()), event);
-        redis.opsForList().leftPush(INDEX_KEY, event.getId().toString());
+        redis.opsForList().leftPush(keys.key(INDEX_KEY), event.getId().toString());
     }
 
     @Override
     public List<DlqEvent> latest(int limit) {
-        List<Object> ids = redis.opsForList().range(INDEX_KEY, 0, Math.max(1, limit) - 1L);
+        List<Object> ids = redis.opsForList().range(keys.key(INDEX_KEY), 0, Math.max(1, limit) - 1L);
         if (ids == null || ids.isEmpty()) return List.of();
         return ids.stream()
                 .map(String::valueOf)
@@ -39,7 +41,7 @@ public class RedisDlqRepository implements DlqRepository {
                 .toList();
     }
 
-    private static String eventKey(String id) {
-        return "dlq:event:" + id;
+    private String eventKey(String id) {
+        return keys.key("dlq:event:" + id);
     }
 }

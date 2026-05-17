@@ -11,6 +11,8 @@ import java.util.List;
  */
 public record DepthResponse(
         String symbol,
+        long version,
+        long checksum,
         BigDecimal bestBid,
         BigDecimal bestAsk,
         List<Level> bids,   // 由高到低

@@ -12,9 +12,30 @@ api-auth:
   # Production 預設啟用 authentication / authorization。
   enabled: ${API_AUTH_ENABLED:true}
 
+risk-controls:
+  order-entry-halt: ${RISK_CONTROLS_ORDER_ENTRY_HALT:false}
+  reduce-only-mode: ${RISK_CONTROLS_REDUCE_ONLY_MODE:false}
+  withdrawal-halt: ${RISK_CONTROLS_WITHDRAWAL_HALT:false}
+  suspended-symbols: ${RISK_CONTROLS_SUSPENDED_SYMBOLS:}
+
+funding-rate:
+  settlements: []
+
+external-api:
+  retry-max-attempts: ${EXTERNAL_API_RETRY_MAX_ATTEMPTS:3}
+  retry-backoff-ms: ${EXTERNAL_API_RETRY_BACKOFF_MS:200}
+  min-interval-ms: ${EXTERNAL_API_MIN_INTERVAL_MS:0}
+  circuit-breaker-enabled: ${EXTERNAL_API_CIRCUIT_BREAKER_ENABLED:true}
+  circuit-breaker-failure-threshold: ${EXTERNAL_API_CIRCUIT_BREAKER_FAILURE_THRESHOLD:5}
+  circuit-breaker-open-ms: ${EXTERNAL_API_CIRCUIT_BREAKER_OPEN_MS:30000}
+
+redis-key:
+  prefix: ${REDIS_KEY_PREFIX:}
+
 polymarket:
   key-sync-ms: ${POLYMARKET_KEY_SYNC_MS:600000}
   price-refresh-ms: ${POLYMARKET_PRICE_REFRESH_MS:5000}
+  approval-cache-ttl-seconds: ${POLYMARKET_APPROVAL_CACHE_TTL_SECONDS:30}
 
   gamma:
     base-url: ${POLYMARKET_GAMMA_BASE_URL:https://gamma-api.polymarket.com}

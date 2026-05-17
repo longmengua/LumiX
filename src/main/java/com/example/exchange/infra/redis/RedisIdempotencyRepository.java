@@ -14,9 +14,11 @@ import java.time.Instant;
 public class RedisIdempotencyRepository implements IdempotencyRepository {
 
     private final RedisTemplate<String, Object> redis;
+    private final RedisKeyNamespace keys;
 
-    public RedisIdempotencyRepository(RedisTemplate<String, Object> redis) {
+    public RedisIdempotencyRepository(RedisTemplate<String, Object> redis, RedisKeyNamespace keys) {
         this.redis = redis;
+        this.keys = keys;
     }
 
     @Override
@@ -37,7 +39,7 @@ public class RedisIdempotencyRepository implements IdempotencyRepository {
         return Boolean.TRUE.equals(redis.hasKey(key(key)));
     }
 
-    private static String key(String key) {
-        return "idempotency:" + key;
+    private String key(String key) {
+        return keys.key("idempotency:" + key);
     }
 }

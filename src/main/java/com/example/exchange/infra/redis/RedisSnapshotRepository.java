@@ -18,12 +18,14 @@ import java.util.Optional;
 public class RedisSnapshotRepository implements SnapshotRepository {
 
     private final RedisTemplate<String, Object> redis;
+    private final RedisKeyNamespace keys;
 
-    public RedisSnapshotRepository(RedisTemplate<String, Object> redis) {
+    public RedisSnapshotRepository(RedisTemplate<String, Object> redis, RedisKeyNamespace keys) {
         this.redis = redis;
+        this.keys = keys;
     }
 
-    private String key(long uid) { return "snap:" + uid; }
+    private String key(long uid) { return keys.key("snap:" + uid); }
 
     @Override
     public void save(Snapshot snapshot) {

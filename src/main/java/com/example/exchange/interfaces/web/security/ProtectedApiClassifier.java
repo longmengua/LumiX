@@ -26,6 +26,7 @@ public final class ProtectedApiClassifier {
 
         if (path.startsWith("/api/risk")
                 || path.startsWith("/api/recovery")
+                || path.startsWith("/api/ops")
                 || path.startsWith("/api/prediction/clob")
                 || path.startsWith("/api/prediction/markets")
                 || path.startsWith("/api/prediction/ws")) {

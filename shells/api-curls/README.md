@@ -72,8 +72,13 @@ User WebSocket:
 ./shells/api-curls/exchange/order-open-get.sh
 ./shells/api-curls/exchange/order-all-get.sh
 ./shells/api-curls/exchange/depth-get.sh
+./shells/api-curls/exchange/margin-deposit-post.sh
+./shells/api-curls/exchange/margin-withdraw-post.sh
 ./shells/api-curls/exchange/margin-transfer-post.sh
+./shells/api-curls/exchange/margin-transfers-get.sh
+./shells/api-curls/exchange/margin-risk-get.sh
 ./shells/api-curls/exchange/recovery-recover-post.sh
+./shells/api-curls/exchange/recovery-reconcile-accounts-get.sh
 ```
 
 ## Suggested Polymarket Flow

@@ -7,6 +7,7 @@ import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.dto.TopOfBook;
 
+import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
@@ -40,6 +41,16 @@ public interface MatchingEngine {
      * @return 是否成功取消
      */
     boolean cancelOrder(Order order);
+
+    /**
+     * 修改仍在簿內的掛單價格或剩餘數量。
+     *
+     * @param order    欲修改的訂單
+     * @param newPrice 新價格
+     * @param newQty   新剩餘數量
+     * @return 是否成功修改
+     */
+    boolean amendOrder(Order order, BigDecimal newPrice, BigDecimal newQty);
 
     /**
      * 取得某交易對的訂單簿快照

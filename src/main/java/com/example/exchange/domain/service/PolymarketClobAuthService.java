@@ -28,12 +28,7 @@ public class PolymarketClobAuthService {
 
     private final ObjectMapper objectMapper;
     private final PolymarketConfigs polymarketConfigs;
-
-    private final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-            .connectTimeout(java.time.Duration.ofSeconds(10))
-            .readTimeout(java.time.Duration.ofSeconds(30))
-            .writeTimeout(java.time.Duration.ofSeconds(30))
-            .build();
+    private final OkHttpClient okHttpClient;
 
     public PolymarketApiCredentialsResponse createApiKey(
             BigInteger nonce

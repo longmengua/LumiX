@@ -70,15 +70,16 @@ docker compose down -v
 
 ### Internal Exchange Core
 
-- Place orders, cancel orders, query open orders, and query historical orders.
+- Place orders, amend resting orders, cancel-replace orders, bulk-cancel open orders, and query open or historical orders.
 - Matching engine support for LIMIT / MARKET, GTC / IOC / FOK, partial fills, price-time priority, and self-match prevention.
 - Order book depth, trade tape, ticker, kline, and depth delta.
-- Margin deposit, cross/isolated margin transfer, account query, and ledger query.
+- Margin deposit/withdrawal state machine, cross/isolated margin transfer, account query, risk snapshot, transfer query, and ledger query.
 - Position updates, maker/taker fees, referral rebates, and realized PnL.
 - Funding settlement, liquidation, insurance fund, and ADL queue MVP.
 - Snapshot, event replay, recovery, and validation entry points.
 - Domain event publishing, outbox retry, DLQ, and Kafka event store.
-- SSE / WebSocket push for market events and private user events.
+- Lightweight operations metrics endpoint for order status counts, order latency, cancel counts, and trade event counts.
+- SSE / WebSocket push for market events and private user events, including opt-in cancel-on-disconnect for user WebSocket sessions.
 
 ### Polymarket Integration
 
@@ -193,6 +194,14 @@ A successful order request does not always mean the order is filled:
 - If risk or accounting pre-check fails, the order is rejected before entering the matching engine.
 - The API currently returns `accepted`; use `GET /api/order/open`, `GET /api/order/all`, or the event stream to observe the final state.
 
+Order management endpoints:
+
+- `PATCH /api/order/{orderId}` amends a resting LIMIT order without taking liquidity. The request can change `price`, remaining `qty`, and `clientOrderId`; reserve is reconciled to the new remaining order.
+- `POST /api/order/{orderId}/replace` cancels the original open order first, then submits a replacement order with the provided `price`, `qty`, or `clientOrderId`.
+- `DELETE /api/order/open?uid=...&symbol=...` bulk-cancels open orders and releases remaining order reserve. Omitting `symbol` cancels all open orders for the user.
+- `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` enables opt-in cancel-on-disconnect for that user WebSocket connection. Omitting `symbol` cancels all open orders for the user when the connection closes.
+- `GET /api/depth/{symbol}` returns full book levels with `version` and CRC32 `checksum`. `GET /api/market-data/{symbol}/depth-delta` returns the same monotonic depth `version` and checksum for client-side snapshot + delta validation.
+
 Polymarket data flow:
 
 ```text
@@ -235,11 +244,17 @@ src/main/java/com/example/exchange
 ### Exchange
 
 - `POST /api/margin/deposit`
+- `POST /api/margin/withdraw`
 - `POST /api/margin/transfer`
 - `GET /api/margin/account?uid=1`
 - `GET /api/margin/ledger?uid=1`
+- `GET /api/margin/transfers?uid=1`
+- `GET /api/margin/risk?uid=1`
 - `POST /api/order/place`
+- `PATCH /api/order/{orderId}`
+- `POST /api/order/{orderId}/replace`
 - `DELETE /api/order/{orderId}`
+- `DELETE /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/all?uid=1&symbol=BTCUSDT`
 - `GET /api/depth/{symbol}?depth=10`
@@ -250,8 +265,10 @@ src/main/java/com/example/exchange
 - `GET /api/market-data/{symbol}/stream`
 - `GET /api/market-data/user/{uid}/stream`
 - `POST /api/risk/funding/settle`
+- `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`
 - `GET /api/risk/insurance-fund`
+- `GET /api/recovery/reconcile/accounts`
 - `GET /api/risk/adl-queue`
 - `POST /api/recovery/recover/{uid}?fromSeq=0`
 - `GET /api/recovery/validate/{uid}`

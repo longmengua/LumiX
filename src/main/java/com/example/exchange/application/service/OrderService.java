@@ -20,6 +20,7 @@ import com.example.exchange.domain.repository.SymbolConfigRepository;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBookSnapshot;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -98,6 +99,12 @@ public class OrderService {
     private final RiskService riskService;
     private final MarketDataService marketDataService;
     private final IdempotencyService idempotencyService;
+    private OperationalMetricsService operationalMetricsService;
+
+    @Autowired(required = false)
+    public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
+        this.operationalMetricsService = operationalMetricsService;
+    }
 
     /**
      * 處理新訂單
@@ -122,6 +129,9 @@ public class OrderService {
 
         // 本次撮合產生的成交事件
         List<TradeExecuted> trades = result.getTrades();
+        if (operationalMetricsService != null) {
+            operationalMetricsService.recordTradeEvents(trades == null ? 0 : trades.size());
+        }
 
         // 本次撮合中所有受影響的訂單（新單 + 對手單）
         List<Order> affectedOrders = result.getAffectedOrders();

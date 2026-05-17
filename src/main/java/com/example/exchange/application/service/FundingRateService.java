@@ -10,12 +10,15 @@ import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
+import com.example.exchange.infra.config.FundingRateProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,6 +29,7 @@ public class FundingRateService {
     private final SymbolConfigRepository symbolConfigRepository;
     private final WalletLedgerService walletLedgerService;
     private final DomainEventPublisher<FundingSettled> publisher;
+    private final FundingRateProperties fundingRateProperties;
 
     public FundingSettlementResult settle(
             long uid,
@@ -84,6 +88,45 @@ public class FundingRateService {
     }
 
     public List<FundingSettlementResult> settleConfiguredSymbols() {
-        return List.of();
+        Map<String, FundingRateProperties.Settlement> settlements = configuredSettlementsBySymbol();
+        if (settlements.isEmpty()) return List.of();
+
+        return positionRepository.findOpenPositions().stream()
+                .filter(position -> position.getSymbol() != null)
+                .map(position -> {
+                    FundingRateProperties.Settlement settlement =
+                            settlements.get(normalize(position.getSymbol().code()));
+                    if (!isValidSettlement(settlement)) return null;
+                    return settle(
+                            position.getUid(),
+                            position.getSymbol().code(),
+                            settlement.getMarkPrice(),
+                            settlement.getFundingRate()
+                    );
+                })
+                .filter(result -> result != null)
+                .toList();
+    }
+
+    private Map<String, FundingRateProperties.Settlement> configuredSettlementsBySymbol() {
+        Map<String, FundingRateProperties.Settlement> settlements = new LinkedHashMap<>();
+        for (FundingRateProperties.Settlement settlement : fundingRateProperties.getSettlements()) {
+            String symbol = settlement == null ? "" : normalize(settlement.getSymbol());
+            if (!symbol.isBlank()) {
+                settlements.put(symbol, settlement);
+            }
+        }
+        return settlements;
+    }
+
+    private static boolean isValidSettlement(FundingRateProperties.Settlement settlement) {
+        return settlement != null
+                && settlement.getMarkPrice() != null
+                && settlement.getMarkPrice().signum() > 0
+                && settlement.getFundingRate() != null;
+    }
+
+    private static String normalize(String symbol) {
+        return symbol == null ? "" : symbol.trim().toUpperCase();
     }
 }

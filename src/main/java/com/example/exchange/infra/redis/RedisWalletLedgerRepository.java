@@ -15,9 +15,11 @@ import java.util.Objects;
 public class RedisWalletLedgerRepository implements WalletLedgerRepository {
 
     private final RedisTemplate<String, Object> redis;
+    private final RedisKeyNamespace keys;
 
-    public RedisWalletLedgerRepository(RedisTemplate<String, Object> redis) {
+    public RedisWalletLedgerRepository(RedisTemplate<String, Object> redis, RedisKeyNamespace keys) {
         this.redis = redis;
+        this.keys = keys;
     }
 
     @Override
@@ -56,15 +58,15 @@ public class RedisWalletLedgerRepository implements WalletLedgerRepository {
                 .toList();
     }
 
-    private static String entryKey(String id) {
-        return "wallet:ledger:" + id;
+    private String entryKey(String id) {
+        return keys.key("wallet:ledger:" + id);
     }
 
-    private static String uidKey(long uid) {
-        return "wallet:ledger:uid:" + uid;
+    private String uidKey(long uid) {
+        return keys.key("wallet:ledger:uid:" + uid);
     }
 
-    private static String refKey(String refId) {
-        return "wallet:ledger:ref:" + refId;
+    private String refKey(String refId) {
+        return keys.key("wallet:ledger:ref:" + refId);
     }
 }

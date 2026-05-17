@@ -43,6 +43,18 @@ public class WalletLedgerService {
         ));
     }
 
+    public void withdraw(long uid, String asset, BigDecimal amount, String refId) {
+        if (notPositive(amount)) return;
+        Account account = accountRepo.findByUid(uid)
+                .orElseThrow(() -> new IllegalStateException("account not found"));
+        account.withdraw(amount);
+        accountRepo.save(account);
+        append(uid, asset, "withdrawal", refId, amount, account.crossBalance(), List.of(
+                debit("EXTERNAL_CASH", asset, amount),
+                credit("USER_AVAILABLE", asset, amount)
+        ));
+    }
+
     public void reserveOrder(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);

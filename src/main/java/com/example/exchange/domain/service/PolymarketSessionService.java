@@ -473,7 +473,7 @@ public class PolymarketSessionService {
      * TODO:
      * 正式環境建議 scheduler 定時執行。
      */
-    public void expireSessions() {
+    public int expireSessions() {
 
         long now =
                 Instant.now().getEpochSecond();
@@ -491,6 +491,7 @@ public class PolymarketSessionService {
         }
 
         sessionRecordRepository.saveAll(expired);
+        return expired.size();
     }
 
     public void assertAndConsumeLimit(

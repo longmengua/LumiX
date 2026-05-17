@@ -12,6 +12,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -24,11 +28,16 @@ public class OutboxService {
     private final DlqRepository dlqRepository;
 
     public void publish(String topic, String key, Object payload, CheckedPublisher publisher) {
+        publish(topic, key, payload, Map.of(), publisher);
+    }
+
+    public void publish(String topic, String key, Object payload, Map<String, String> headers, CheckedPublisher publisher) {
         OutboxEvent event = OutboxEvent.builder()
                 .topic(topic)
                 .eventKey(key)
                 .eventType(payload == null ? "null" : payload.getClass().getName())
                 .payload(payload)
+                .headers(normalizeHeaders(headers))
                 .build();
         outboxRepository.save(event);
         publishExisting(event, publisher);
@@ -44,9 +53,43 @@ public class OutboxService {
         return count;
     }
 
+    public List<DlqEvent> latestDlq(int limit) {
+        return dlqRepository.latest(limit);
+    }
+
+    public OutboxEvent replayDead(UUID outboxId) {
+        OutboxEvent event = outboxRepository.findById(outboxId)
+                .orElseThrow(() -> new IllegalArgumentException("outbox event not found"));
+        if (event.getStatus() != OutboxEvent.Status.DEAD) {
+            throw new IllegalStateException("outbox event is not dead");
+        }
+
+        event.setStatus(OutboxEvent.Status.PENDING);
+        event.setAttempts(0);
+        event.setLastError(null);
+        event.setNextAttemptAt(Instant.now());
+        event.setPublishedAt(null);
+        outboxRepository.save(event);
+        return event;
+    }
+
+    public OutboxEvent markCompensated(UUID outboxId, String reason) {
+        OutboxEvent event = outboxRepository.findById(outboxId)
+                .orElseThrow(() -> new IllegalArgumentException("outbox event not found"));
+        if (event.getStatus() != OutboxEvent.Status.DEAD) {
+            throw new IllegalStateException("only dead outbox events can be compensated");
+        }
+
+        event.setStatus(OutboxEvent.Status.COMPENSATED);
+        event.setLastError("COMPENSATED: " + normalizeReason(reason));
+        event.setNextAttemptAt(null);
+        outboxRepository.save(event);
+        return event;
+    }
+
     private boolean publishExisting(OutboxEvent event, CheckedPublisher publisher) {
         try {
-            publisher.publish(event.getTopic(), event.getEventKey(), event.getPayload());
+            publisher.publish(event.getTopic(), event.getEventKey(), event.getPayload(), event.getHeaders());
             event.setStatus(OutboxEvent.Status.PUBLISHED);
             event.setPublishedAt(Instant.now());
             outboxRepository.save(event);
@@ -78,8 +121,23 @@ public class OutboxService {
         outboxRepository.save(event);
     }
 
+    private static String normalizeReason(String reason) {
+        if (reason == null || reason.isBlank()) return "manual";
+        return reason.trim();
+    }
+
+    private static Map<String, String> normalizeHeaders(Map<String, String> headers) {
+        if (headers == null || headers.isEmpty()) return Map.of();
+        Map<String, String> normalized = new LinkedHashMap<>();
+        headers.forEach((name, value) -> {
+            if (name == null || name.isBlank() || value == null || value.isBlank()) return;
+            normalized.put(name, value);
+        });
+        return Map.copyOf(normalized);
+    }
+
     @FunctionalInterface
     public interface CheckedPublisher {
-        void publish(String topic, String key, Object payload) throws Exception;
+        void publish(String topic, String key, Object payload, Map<String, String> headers) throws Exception;
     }
 }

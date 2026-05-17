@@ -11,6 +11,7 @@ import com.example.exchange.domain.model.dto.PriceLevel;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.dto.TradeTapeItem;
 import com.example.exchange.domain.model.enums.OrderSide;
+import com.example.exchange.domain.util.OrderBookChecksum;
 import com.example.exchange.domain.service.OrderBookSnapshot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -77,6 +78,11 @@ public class MarketDataService {
 
     public Optional<DepthDelta> latestDepthDelta(String symbol) {
         return Optional.ofNullable(latestDepthDelta.get(normalize(symbol)));
+    }
+
+    public long depthVersion(String symbol) {
+        AtomicLong version = depthVersions.get(normalize(symbol));
+        return version == null ? 0L : version.get();
     }
 
     public Optional<MarketTicker> ticker(String symbol) {
@@ -198,7 +204,8 @@ public class MarketDataService {
         List<PriceLevel> bidDelta = diff(previous == null ? List.of() : previous.bids(), current.bids());
         List<PriceLevel> askDelta = diff(previous == null ? List.of() : previous.asks(), current.asks());
         long version = depthVersions.computeIfAbsent(symbol, ignored -> new AtomicLong()).incrementAndGet();
-        return new DepthDelta(symbol, version, bidDelta, askDelta, Instant.now());
+        long checksum = OrderBookChecksum.crc32(current.bids(), current.asks());
+        return new DepthDelta(symbol, version, checksum, bidDelta, askDelta, Instant.now());
     }
 
     private static List<PriceLevel> diff(List<PriceLevel> previous, List<PriceLevel> current) {

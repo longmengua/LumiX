@@ -137,6 +137,7 @@ logging:
 polymarket:
   key-sync-ms: 600000
   price-refresh-ms: 5000
+  approval-cache-ttl-seconds: ${POLYMARKET_APPROVAL_CACHE_TTL_SECONDS:30}
 
   gamma:
     base-url: https://gamma-api.polymarket.com

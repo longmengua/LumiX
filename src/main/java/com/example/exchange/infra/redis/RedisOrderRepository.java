@@ -29,18 +29,20 @@ import java.util.stream.Collectors; // 匯入串流工具
 public class RedisOrderRepository implements OrderRepository {
 
     private final RedisTemplate<String, Object> redis; // 注入的 RedisTemplate，用來與 Redis 互動（key=String, value=Object）
+    private final RedisKeyNamespace keys;
 
-    public RedisOrderRepository(RedisTemplate<String, Object> redis) { // 建構子，透過依賴注入取得 RedisTemplate
+    public RedisOrderRepository(RedisTemplate<String, Object> redis, RedisKeyNamespace keys) { // 建構子，透過依賴注入取得 RedisTemplate
         this.redis = redis; // 指派成員變數
+        this.keys = keys;
     }
 
     // ========================= Key 規範 =========================
 
-    private String listKey(long uid) { return "ord:list:" + uid; } // 取得用戶訂單清單(List)的 key，例如 ord:list:1001
+    private String listKey(long uid) { return keys.key("ord:list:" + uid); } // 取得用戶訂單清單(List)的 key，例如 ord:list:1001
 
-    private String setKey(long uid) { return "ord:set:" + uid; } // 取得用戶訂單集合(Set)的 key，例如 ord:set:1001
+    private String setKey(long uid) { return keys.key("ord:set:" + uid); } // 取得用戶訂單集合(Set)的 key，例如 ord:set:1001
 
-    private String orderKey(UUID id) { return "order:" + id; } // 取得單筆訂單本體的 key，例如 order:550e8400-e29b-41d4-a716-446655440000
+    private String orderKey(UUID id) { return keys.key("order:" + id); } // 取得單筆訂單本體的 key，例如 order:550e8400-e29b-41d4-a716-446655440000
 
     // ========================= 介面實作 =========================
 
@@ -129,9 +131,9 @@ public class RedisOrderRepository implements OrderRepository {
     private Map<String, Order> batchGetOrders(List<String> ids) { // 批量查詢訂單本體
         if (ids.isEmpty()) return Collections.emptyMap();
 
-        List<String> keys = ids.stream().map(id -> "order:" + id).collect(Collectors.toList()); // 轉成 order key
+        List<String> redisKeys = ids.stream().map(id -> keys.key("order:" + id)).collect(Collectors.toList()); // 轉成 order key
         ValueOperations<String, Object> vo = redis.opsForValue();
-        List<Object> values = vo.multiGet(keys); // MGET
+        List<Object> values = vo.multiGet(redisKeys); // MGET
 
         Map<String, Order> map = new LinkedHashMap<>(ids.size());
         if (values == null) {

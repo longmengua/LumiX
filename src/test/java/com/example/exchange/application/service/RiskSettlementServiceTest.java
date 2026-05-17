@@ -5,7 +5,9 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.event.FundingSettled;
 import com.example.exchange.domain.event.PositionLiquidated;
+import com.example.exchange.domain.model.dto.FundingSettlementResult;
 import com.example.exchange.domain.model.dto.LiquidationResult;
+import com.example.exchange.domain.model.dto.ValidationIssue;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.Symbol;
@@ -15,6 +17,7 @@ import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
+import com.example.exchange.infra.config.FundingRateProperties;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -60,7 +63,8 @@ class RiskSettlementServiceTest {
                 positionRepo,
                 symbolRepo,
                 walletLedgerService,
-                published::add
+                published::add,
+                new FundingRateProperties()
         );
 
         var result = fundingRateService.settle(
@@ -79,6 +83,53 @@ class RiskSettlementServiceTest {
 
         ReconciliationService reconciliationService = new ReconciliationService(accountRepo, positionRepo, ledgerRepo);
         assertThat(reconciliationService.validateUid(1)).isEmpty();
+    }
+
+    @Test
+    void configuredFundingSettlementScansOpenPositions() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        List<FundingSettled> published = new ArrayList<>();
+
+        walletLedgerService.deposit(1, "USDT", new BigDecimal("1000"), "deposit-1");
+        walletLedgerService.deposit(2, "USDT", new BigDecimal("1000"), "deposit-2");
+        positionRepo.save(Position.builder()
+                .uid(1)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .leverage(new BigDecimal("20"))
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("100"))
+                .build());
+        positionRepo.save(Position.builder()
+                .uid(2)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .leverage(new BigDecimal("20"))
+                .qty(new BigDecimal("-2"))
+                .entryPrice(new BigDecimal("100"))
+                .build());
+
+        FundingRateService fundingRateService = new FundingRateService(
+                positionRepo,
+                symbolRepo,
+                walletLedgerService,
+                published::add,
+                fundingRateProperties("BTCUSDT", "100", "0.01")
+        );
+
+        var results = fundingRateService.settleConfiguredSymbols();
+
+        assertThat(results).hasSize(2);
+        assertThat(results).extracting(FundingSettlementResult::cashflow)
+                .usingComparatorForType(BigDecimal::compareTo, BigDecimal.class)
+                .containsExactly(new BigDecimal("-1.00"), new BigDecimal("2.00"));
+        assertThat(published).hasSize(2);
+        assertThat(positionRepo.find(1, symbol).orElseThrow().getFundingPaid()).isEqualByComparingTo("1.00");
+        assertThat(positionRepo.find(2, symbol).orElseThrow().getFundingReceived()).isEqualByComparingTo("2.00");
     }
 
     @Test
@@ -131,12 +182,49 @@ class RiskSettlementServiceTest {
         assertThat(insuranceFundService.adlQueue()).isEmpty();
     }
 
+    @Test
+    void reconciliationCanScanKnownAccountsAndOpenPositionAccounts() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+
+        Account balanced = new Account(31);
+        balanced.deposit(new BigDecimal("100"));
+        accountRepo.save(balanced);
+
+        Account missingPositionMargin = new Account(32);
+        missingPositionMargin.deposit(new BigDecimal("100"));
+        missingPositionMargin.reservePositionMargin(new BigDecimal("10"));
+        accountRepo.save(missingPositionMargin);
+
+        positionRepo.save(Position.builder()
+                .uid(33)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .leverage(new BigDecimal("20"))
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("100"))
+                .margin(new BigDecimal("5"))
+                .build());
+
+        List<ValidationIssue> issues = new ReconciliationService(accountRepo, positionRepo, ledgerRepo)
+                .validateAllAccounts();
+
+        assertThat(issues).extracting(ValidationIssue::code)
+                .containsExactly("POSITION_MARGIN_MISMATCH", "ACCOUNT_MISSING");
+    }
+
     private static class MemAccountRepository implements AccountRepository {
         private final Map<Long, Account> accounts = new LinkedHashMap<>();
 
         @Override
         public Optional<Account> findByUid(long uid) {
             return Optional.ofNullable(accounts.get(uid));
+        }
+
+        @Override
+        public List<Account> findAll() {
+            return new ArrayList<>(accounts.values());
         }
 
         @Override
@@ -183,8 +271,25 @@ class RiskSettlementServiceTest {
             return positions.values().stream().filter(position -> position.getUid() == uid).toList();
         }
 
+        @Override
+        public List<Position> findOpenPositions() {
+            return positions.values().stream()
+                    .filter(position -> position.getQty() != null && position.getQty().signum() != 0)
+                    .toList();
+        }
+
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
         }
+    }
+
+    private static FundingRateProperties fundingRateProperties(String symbol, String markPrice, String fundingRate) {
+        FundingRateProperties properties = new FundingRateProperties();
+        FundingRateProperties.Settlement settlement = new FundingRateProperties.Settlement();
+        settlement.setSymbol(symbol);
+        settlement.setMarkPrice(new BigDecimal(markPrice));
+        settlement.setFundingRate(new BigDecimal(fundingRate));
+        properties.setSettlements(List.of(settlement));
+        return properties;
     }
 }

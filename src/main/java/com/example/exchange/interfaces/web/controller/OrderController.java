@@ -4,10 +4,14 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.usecase.OrderUserCase;
+import com.example.exchange.application.usecase.AmendOrderUseCase;
 import com.example.exchange.application.usecase.CancelOrderUseCase;
+import com.example.exchange.application.usecase.CancelReplaceOrderUseCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
 import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.interfaces.web.dto.AmendOrderRequest;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.CancelReplaceOrderRequest;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import com.example.exchange.interfaces.web.dto.PlaceOrderRequest;
 import jakarta.validation.Valid;
@@ -36,6 +40,8 @@ public class OrderController {
     // Order Case：查詢訂單（DDD：領域層）
     private final OrderUserCase orderUserCase;
     private final CancelOrderUseCase cancelOrderUseCase;
+    private final AmendOrderUseCase amendOrderUseCase;
+    private final CancelReplaceOrderUseCase cancelReplaceOrderUseCase;
 
     /**
      * 下單 API
@@ -109,5 +115,29 @@ public class OrderController {
     @DeleteMapping("/{orderId}")
     public ApiResponse<Boolean> cancelOrder(@PathVariable UUID orderId) {
         return ApiResponse.ok(cancelOrderUseCase.handle(orderId));
+    }
+
+    @PatchMapping("/{orderId}")
+    public ApiResponse<OrderInfoResponse> amendOrder(
+            @PathVariable UUID orderId,
+            @Valid @RequestBody AmendOrderRequest request
+    ) {
+        return ApiResponse.ok(amendOrderUseCase.handle(request.toCommand(orderId)));
+    }
+
+    @PostMapping("/{orderId}/replace")
+    public ApiResponse<OrderInfoResponse> cancelReplaceOrder(
+            @PathVariable UUID orderId,
+            @Valid @RequestBody CancelReplaceOrderRequest request
+    ) {
+        return ApiResponse.ok(cancelReplaceOrderUseCase.handle(request.toCommand(orderId)));
+    }
+
+    @DeleteMapping("/open")
+    public ApiResponse<Integer> cancelOpenOrders(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol
+    ) {
+        return ApiResponse.ok(cancelOrderUseCase.cancelOpenOrders(uid, symbol));
     }
 }

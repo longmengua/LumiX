@@ -1,0 +1,43 @@
+<!-- File purpose: Redis key schema, ownership, TTL, and migration notes. Chinese version: ../zh-TW/redis-key-schema.md. -->
+# Redis Key Schema
+
+This document records the current Redis keys used by the low-latency exchange repositories. Production deployments should treat these names as a versioned contract.
+
+中文版本：[../zh-TW/redis-key-schema.md](../zh-TW/redis-key-schema.md)
+
+## Current Keys
+
+| Key pattern | Type | Owner | Value | TTL |
+| --- | --- | --- | --- | --- |
+| `acc:{uid}` | String | `RedisAccountRepository` | `Account` object | None |
+| `acc:index` | Set | `RedisAccountRepository` | Known account uids for reconciliation scans | None |
+| `pos:{uid}` | Hash | `RedisPositionRepository` | field `symbolCode` -> `Position` object | None |
+| `pos:open:index` | Set | `RedisPositionRepository` | members `{uid}:{symbolCode}` for non-zero positions | None |
+| `order:{uuid}` | String | `RedisOrderRepository` | `Order` object | None |
+| `ord:list:{uid}` | List | `RedisOrderRepository` | Ordered order ids | None |
+| `ord:set:{uid}` | Set | `RedisOrderRepository` | Dedup set for order ids | None |
+| `snap:{uid}` | String | `RedisSnapshotRepository` | Latest `Snapshot` object | None |
+| `wallet:ledger:{uuid}` | String | `RedisWalletLedgerRepository` | `WalletLedgerEntry` object | None |
+| `wallet:ledger:uid:{uid}` | List | `RedisWalletLedgerRepository` | Ledger entry ids by user | None |
+| `wallet:ledger:ref:{refId}` | List | `RedisWalletLedgerRepository` | Ledger entry ids by reference | None |
+| `outbox:index` | List | `RedisOutboxRepository` | Outbox event ids | None |
+| `outbox:event:{uuid}` | String | `RedisOutboxRepository` | `OutboxEvent` object | None |
+| `dlq:index` | List | `RedisDlqRepository` | DLQ event ids, newest first | None |
+| `dlq:event:{uuid}` | String | `RedisDlqRepository` | `DlqEvent` object | None |
+| `idempotency:{key}` | String | `RedisIdempotencyRepository` | Marker value `1` | Request-defined expiry when available |
+
+## Production Rules
+
+- Use `REDIS_KEY_PREFIX` before production traffic, for example `mh:v1`, which yields keys such as `mh:v1:acc:{uid}`. The default is empty for backward compatibility.
+- Treat account, position, order, ledger, outbox, DLQ, and snapshot keys as durable operational state. They should not expire automatically unless an archive and replay path already exists.
+- Idempotency keys are the exception: they should always have a bounded TTL for command deduplication windows.
+- Open-position scans should read `pos:open:index`. Do not use `KEYS pos:*` in production-size environments except for one-time migration tooling.
+- Keep list and set indexes consistent with object keys. If a repository deletes or archives `order:{uuid}`, it must also clean `ord:list:{uid}` and `ord:set:{uid}`.
+- For schema changes, introduce a new namespace version (`mh:v2:*`) or dual-read/dual-write migration. Do not silently change serialized object shape under the same key pattern.
+
+## Migration Backlog
+
+- Enable `REDIS_KEY_PREFIX` in each environment and plan a one-time migration for existing un-prefixed data.
+- Keep the maintained account and open-position indexes healthy; add repair tooling that can rebuild them from durable storage.
+- Add archive jobs for historical orders, wallet ledger entries, outbox events, DLQ events, and snapshots.
+- Move long-lived financial records to the production database ledger schema, keeping Redis as a serving cache or hot-state store.

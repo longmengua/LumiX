@@ -12,6 +12,9 @@ English version: [../en/technical.md](../en/technical.md)
 | [技術筆記](../../NOTES_ch.md) | 架構與實作審查，涵蓋分層、已完成能力、風險與 production 優先事項。 |
 | [API curl 腳本](../../shells/api-curls/README_ch.md) | 本機 exchange 與 Polymarket API curl 腳本使用說明。 |
 | [撮合引擎](../../src/main/java/com/example/exchange/infra/matching/README_ch.md) | 目前 in-memory matching engine 說明與 production 演進方向。 |
+| [Redis Key Schema](redis-key-schema.md) | Redis key 歸屬、TTL 規則、namespace policy 與 migration backlog。 |
+| [Kafka Topics](kafka-topics.md) | Topic matrix、partition key policy、consumer groups、schema versioning 與正式環境建立規則。 |
+| [Observability Baseline](observability.md) | Request/correlation ID 在 HTTP、OkHttp、Kafka outbox 與 audit logs 的傳遞基線。 |
 | [產品總覽](README.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |
 | [待辦清單](todo.md) | Production readiness 的工程待辦路線圖。 |
 
