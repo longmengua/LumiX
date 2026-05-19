@@ -17,13 +17,17 @@ import java.util.List;
 public class FundingRateProperties {
 
     /**
-     * 批次資金費結算設定；每個 symbol 一筆 mark price 與 funding rate。
+     * 批次資金費結算設定；mark price 由 MarkPriceOracleService 提供。
      */
     private List<Settlement> settlements = new ArrayList<>();
 
     @Data
     public static class Settlement {
         private String symbol;
+        /**
+         * 舊設定欄位保留給設定相容性；結算路徑不再使用任意輸入 mark price。
+         */
+        @Deprecated
         private BigDecimal markPrice;
         private BigDecimal fundingRate;
     }

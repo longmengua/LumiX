@@ -13,7 +13,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add an in-process per-symbol sequencer baseline so matching operations for the same symbol are serialized.
 - [ ] Define production deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
 - [x] Publish order lifecycle events for created, accepted, updated, rejected, canceled, expired, and filled states.
-- [ ] Persist and operationalize order lifecycle events with durable storage, schema versioning, replay, and query projections.
+- [x] Persist and operationalize order lifecycle events with durable storage, schema versioning, replay, and query projections.
 - [x] Add REST/WebSocket baselines for amend order, cancel replace, bulk cancel, and cancel on disconnect.
 - [ ] Add durable command logs, stronger cancel-replace atomicity modes, and reconnect/session semantics for exchange-standard commands.
 - [x] Enforce tick size, lot size, min notional, price band, max order size, and max open orders in pre-trade checks.
@@ -22,21 +22,21 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Accounting and Funds
 
 - [x] Add a balanced wallet-ledger posting baseline so balance changes are traceable and reconcilable in the MVP.
-- [ ] Build the complete production double-entry ledger schema and replay path.
+- [x] Build the complete production double-entry ledger schema and replay path.
 - [x] Split order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal into explicit accounting entries.
 - [ ] Harden accounting entries with production database constraints, audit retention, and replay validation.
 - [x] Add `/api/margin/risk` for frozen funds, available balance, total equity, maintenance margin, and risk ratio snapshots.
-- [ ] Persist daily account risk snapshots and replace trade/ticker fallback marks with independent mark/index oracle inputs.
+- [x] Persist daily account risk snapshots and fully replace trade/ticker fallback marks with independent mark/index oracle inputs.
 - [x] Add an all-account reconciliation baseline that scans the maintained account index plus open-position index and reports account, position margin, and ledger-balance issues.
-- [ ] Add persisted reconciliation reports, scheduling policy, alert routing, and event-store coverage.
+- [x] Add persisted reconciliation reports, scheduling policy, alert routing, and event-store coverage.
 - [x] Add a Redis-backed deposit/withdrawal state-machine baseline for pending, confirmed, failed, reversed, and manual review transfer states.
 - [ ] Add chain/bank callbacks, manual-review workflow ownership, and transfer reconciliation projections.
 
 ### Risk
 
-- [ ] Integrate mark price / index price oracles so liquidation and funding do not depend on trade price or arbitrary input.
+- [x] Integrate mark price / index price oracles so liquidation and funding do not depend on trade price or arbitrary input.
 - [x] Add symbol risk baseline settings for max leverage, maintenance margin rate, max position notional, and max open orders.
-- [ ] Add full risk tiers with initial margin rate and stepped position limits.
+- [x] Add full risk tiers with initial margin rate and stepped position limits.
 - [x] Add pre-trade risk checks for balance, leverage, position, exposure, price deviation, and client order id deduplication.
 - [ ] Add production frequency limits and broader abuse controls to pre-trade risk checks.
 - [x] Add a liquidation MVP with trigger, close, insurance fund, ADL, and audit event coverage.
@@ -46,7 +46,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Reliability and Consistency
 
 - [x] Add outbox retry backoff, max retry count, DLQ replay, and manual compensation workflow baseline.
-- [ ] Move outbox to production durable storage and add manual compensation runbooks.
+- [x] Move outbox to production durable storage and add manual compensation runbooks.
 - [x] Document Kafka topic partition keys, retention, compaction, schema versions, and consumer-group strategy.
 - [x] Add shared HTTP timeout, retry, circuit breaker, and rate-limit baseline for external API calls.
 - [ ] Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage for every external API call.

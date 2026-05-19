@@ -1,6 +1,5 @@
 package com.example.exchange.application.service;
 
-import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Position;
@@ -9,23 +8,23 @@ import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
-import com.example.exchange.domain.service.OrderBookSnapshot;
+import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * 測試 AccountRiskService 的即時帳戶風險快照。
  *
- * <p>重點是確認沒有帳戶時安全回零，以及有持倉/行情時會正確計算
+ * <p>重點是確認沒有帳戶時安全回零，以及有持倉/oracle mark price 時會正確計算
  * frozen funds、未實現盈虧、equity、維持保證金與風險率。</p>
  */
 class AccountRiskServiceTest {
@@ -36,7 +35,7 @@ class AccountRiskServiceTest {
      * 流程：建立空 repository -> 查詢不存在 uid 的風險快照 -> 驗證所有資產與風險欄位安全回零。
      */
     void missingAccountReturnsZeroRiskSnapshot() {
-        AccountRiskService service = service(new MemAccountRepository(), new MemPositionRepository(), new MarketDataService());
+        AccountRiskService service = service(new MemAccountRepository(), new MemPositionRepository());
 
         AccountRiskSnapshot snapshot = service.snapshot(21);
 
@@ -51,12 +50,11 @@ class AccountRiskServiceTest {
     @Test
     @DisplayName("使用 mark price 計算 equity、maintenance margin 與 risk ratio")
     /**
-     * 流程：準備帳戶凍結資金、持倉與最新成交價 -> 呼叫 snapshot -> 驗證 available、PNL、equity 與 risk ratio。
+     * 流程：準備帳戶凍結資金、持倉與 oracle mark price -> 呼叫 snapshot -> 驗證 available、PNL、equity 與 risk ratio。
      */
     void snapshotUsesMarkPriceForEquityMaintenanceMarginAndRiskRatio() {
         MemAccountRepository accountRepository = new MemAccountRepository();
         MemPositionRepository positionRepository = new MemPositionRepository();
-        MarketDataService marketDataService = new MarketDataService();
         Symbol symbol = Symbol.builder().base("BTC").quote("USDT").priceScale(2).qtyScale(3).build();
 
         // 1000 餘額中，30 被訂單凍結，100 被持倉保證金凍結。
@@ -72,15 +70,10 @@ class AccountRiskServiceTest {
                 .entryPrice(new BigDecimal("100.00"))
                 .margin(new BigDecimal("100.00"))
                 .build());
-        // 製造 last price = 110，讓 risk snapshot 不必 fallback 到 entry price。
-        marketDataService.onTrades(
-                "BTCUSDT",
-                List.of(new TradeExecuted(22, symbol, new BigDecimal("1.000"), new BigDecimal("110.00"), 1, Instant.now())),
-                new OrderBookSnapshot(List.of(), List.of()),
-                Optional.empty()
-        );
+        AccountRiskService service = service(accountRepository, positionRepository);
+        service.setMarkPriceOracleService(oracle("BTCUSDT", "110", "109"));
 
-        AccountRiskSnapshot snapshot = service(accountRepository, positionRepository, marketDataService).snapshot(22);
+        AccountRiskSnapshot snapshot = service.snapshot(22);
 
         assertThat(snapshot.crossBalance()).isEqualByComparingTo("1000.00");
         assertThat(snapshot.availableBalance()).isEqualByComparingTo("870.00");
@@ -92,19 +85,50 @@ class AccountRiskServiceTest {
         assertThat(snapshot.openPositionCount()).isOne();
     }
 
+    @Test
+    @DisplayName("有未平倉部位但缺 oracle mark price 時拒絕風險快照")
     /**
-     * 建立 AccountRiskService 測試鏈路，把 account、position、market data 與固定維持保證金率接起來。
+     * 流程：準備 open position 但不設定 oracle quote -> 呼叫 snapshot -> 驗證不會 fallback 到 entry/ticker price。
+     */
+    void snapshotRejectsOpenPositionWithoutOracleMarkPrice() {
+        MemAccountRepository accountRepository = new MemAccountRepository();
+        MemPositionRepository positionRepository = new MemPositionRepository();
+        Symbol symbol = Symbol.builder().base("BTC").quote("USDT").priceScale(2).qtyScale(3).build();
+
+        Account account = new Account(23);
+        account.deposit(new BigDecimal("1000.00"));
+        accountRepository.save(account);
+        positionRepository.save(Position.builder()
+                .uid(23)
+                .symbol(symbol)
+                .qty(new BigDecimal("2.000"))
+                .entryPrice(new BigDecimal("100.00"))
+                .build());
+
+        AccountRiskService service = service(accountRepository, positionRepository);
+
+        assertThatThrownBy(() -> service.snapshot(23))
+                .isInstanceOf(IllegalStateException.class);
+    }
+
+    /**
+     * 建立 AccountRiskService 測試鏈路，把 account、position 與固定維持保證金率接起來。
      */
     private static AccountRiskService service(
             AccountRepository accountRepository,
-            PositionRepository positionRepository,
-            MarketDataService marketDataService
+            PositionRepository positionRepository
     ) {
         SymbolConfigRepository symbolConfigRepository = symbol -> Optional.of(SymbolConfig.builder()
                 .symbol(symbol)
                 .maintenanceMarginRate(new BigDecimal("0.005"))
                 .build());
-        return new AccountRiskService(accountRepository, positionRepository, symbolConfigRepository, marketDataService);
+        return new AccountRiskService(accountRepository, positionRepository, symbolConfigRepository);
+    }
+
+    private static MarkPriceOracleService oracle(String symbol, String markPrice, String indexPrice) {
+        MarkPriceOracleService oracle = new MarkPriceOracleService(new MarkPriceOracleProperties());
+        oracle.update(symbol, new BigDecimal(markPrice), new BigDecimal(indexPrice), "test");
+        return oracle;
     }
 
     private static class MemAccountRepository implements AccountRepository {

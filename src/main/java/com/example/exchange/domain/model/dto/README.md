@@ -4,7 +4,8 @@
 
 目前重點：
 - Market data：`DepthDelta`、`MarketTicker`、`MarketKline`、`TradeTapeItem`。
-- 風控/帳務：`AccountRiskSnapshot`、`FundingSettlementResult`、`LiquidationResult`。
+- 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`。
+- Snapshot read model：account risk snapshots、reconciliation reports、wallet ledger replay。
 - Recovery / validation：`Snapshot`、`RecoveryResult`、`ValidationIssue`。
 - Polymarket：Gamma/CLOB/user WS 相關 request/response DTO。
 

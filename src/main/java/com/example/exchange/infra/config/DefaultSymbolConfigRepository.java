@@ -8,6 +8,8 @@ import com.example.exchange.domain.repository.SymbolConfigRepository;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -63,13 +65,54 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
                 .maxPositionNotional(new BigDecimal(maxPositionNotional))
                 .maxOpenOrders(200)
                 .maxLeverage(maxLeverage)
+                .initialMarginRate(initialMarginRate(maxLeverage))
                 .makerFeeRate(new BigDecimal("0.0002"))
                 .takerFeeRate(new BigDecimal("0.0005"))
                 .makerRebateRate(BigDecimal.ZERO)
                 .referralRebateRate(new BigDecimal("0.00005"))
                 .priceBandRate(new BigDecimal("0.10"))
                 .maintenanceMarginRate(new BigDecimal("0.005"))
+                .riskTiers(defaultRiskTiers(maxPositionNotional, maxLeverage))
                 .tradingEnabled(true)
                 .build();
+    }
+
+    private static List<SymbolConfig.RiskTier> defaultRiskTiers(String maxPositionNotional, int maxLeverage) {
+        BigDecimal cap = new BigDecimal(maxPositionNotional);
+        return List.of(
+                riskTier(1, cap.min(new BigDecimal("50000")), initialMarginRate(maxLeverage), "0.005", maxLeverage),
+                riskTier(2, cap.min(new BigDecimal("250000")), "0.020", "0.010", Math.min(maxLeverage, 50)),
+                riskTier(3, cap, "0.050", "0.025", Math.min(maxLeverage, 20))
+        );
+    }
+
+    private static SymbolConfig.RiskTier riskTier(
+            int tier,
+            BigDecimal maxPositionNotional,
+            BigDecimal initialMarginRate,
+            String maintenanceMarginRate,
+            int maxLeverage
+    ) {
+        return riskTier(tier, maxPositionNotional, initialMarginRate.toPlainString(), maintenanceMarginRate, maxLeverage);
+    }
+
+    private static SymbolConfig.RiskTier riskTier(
+            int tier,
+            BigDecimal maxPositionNotional,
+            String initialMarginRate,
+            String maintenanceMarginRate,
+            int maxLeverage
+    ) {
+        return SymbolConfig.RiskTier.builder()
+                .tier(tier)
+                .maxPositionNotional(maxPositionNotional)
+                .initialMarginRate(new BigDecimal(initialMarginRate))
+                .maintenanceMarginRate(new BigDecimal(maintenanceMarginRate))
+                .maxLeverage(maxLeverage)
+                .build();
+    }
+
+    private static BigDecimal initialMarginRate(int maxLeverage) {
+        return BigDecimal.ONE.divide(BigDecimal.valueOf(Math.max(1, maxLeverage)), 18, RoundingMode.HALF_UP);
     }
 }

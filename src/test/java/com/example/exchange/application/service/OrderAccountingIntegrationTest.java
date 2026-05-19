@@ -334,6 +334,53 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("risk tiers 會套用初始保證金率、槓桿上限與階梯倉位上限")
+    /**
+     * 流程：建立兩階 risk tiers -> 送入 tier2 名義金額 -> 驗證 reserve 使用 tier2 初始保證金率，並拒絕超槓桿與超階梯上限。
+     */
+    void riskTiersApplyInitialMarginLeverageAndSteppedPositionLimit() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(
+                accountRepo,
+                positionRepo,
+                orderRepo,
+                matchingEngine,
+                walletLedgerService,
+                riskControls()
+        );
+        SymbolConfig symbolConfig = btcConfigWithRiskTiers();
+        Account account = new Account(61);
+        account.deposit(new BigDecimal("10000"));
+        accountRepo.save(account);
+
+        Order tierTwoOrder = limitOrder(61, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", "15.000", 5);
+        riskService.preCheckAndReserve(tierTwoOrder, symbolConfig);
+
+        assertThat(tierTwoOrder.getReservedAmount()).isEqualByComparingTo("300.750000000000000000");
+        assertThat(accountRepo.findByUid(61).orElseThrow().crossOrderHold())
+                .isEqualByComparingTo("300.750000000000000000");
+
+        Order overLeverage = limitOrder(61, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", "15.000", 10);
+        assertThatThrownBy(() -> riskService.preCheckAndReserve(overLeverage, symbolConfig))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("leverage exceeds symbol limit");
+        assertThat(overLeverage.getRejectCode()).isEqualTo("INVALID_LEVERAGE");
+
+        Order overLimit = limitOrder(61, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", "25.000", 5);
+        assertThatThrownBy(() -> riskService.preCheckAndReserve(overLimit, symbolConfig))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("position notional exceeds risk limit");
+        assertThat(overLimit.getRejectCode()).isEqualTo("MAX_POSITION_NOTIONAL");
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
     @DisplayName("批量撤單會釋放 reserve 並發布取消事件")
     /**
      * 流程：入金後掛買單產生 reserve -> cancelOpenOrders -> 驗證 hold 釋放、訂單取消、事件發布。
@@ -658,6 +705,47 @@ class OrderAccountingIntegrationTest {
     }
 
     /**
+     * 建立兩階 BTCUSDT risk tiers：tier2 要求 20% 初始保證金且最多 5 倍槓桿，總 notional 上限 2000。
+     */
+    private static SymbolConfig btcConfigWithRiskTiers() {
+        return SymbolConfig.builder()
+                .symbol("BTCUSDT")
+                .baseAsset("BTC")
+                .quoteAsset("USDT")
+                .priceTick(new BigDecimal("0.01"))
+                .lotSize(new BigDecimal("0.001"))
+                .minQty(new BigDecimal("0.001"))
+                .minNotional(new BigDecimal("5"))
+                .maxOrderNotional(new BigDecimal("1000000"))
+                .maxPositionNotional(new BigDecimal("2000"))
+                .maxOpenOrders(200)
+                .maxLeverage(20)
+                .makerFeeRate(new BigDecimal("0.0002"))
+                .takerFeeRate(new BigDecimal("0.0005"))
+                .priceBandRate(new BigDecimal("0.10"))
+                .initialMarginRate(new BigDecimal("0.05"))
+                .maintenanceMarginRate(new BigDecimal("0.005"))
+                .riskTiers(List.of(
+                        SymbolConfig.RiskTier.builder()
+                                .tier(1)
+                                .maxPositionNotional(new BigDecimal("1000"))
+                                .initialMarginRate(new BigDecimal("0.05"))
+                                .maintenanceMarginRate(new BigDecimal("0.005"))
+                                .maxLeverage(20)
+                                .build(),
+                        SymbolConfig.RiskTier.builder()
+                                .tier(2)
+                                .maxPositionNotional(new BigDecimal("2000"))
+                                .initialMarginRate(new BigDecimal("0.20"))
+                                .maintenanceMarginRate(new BigDecimal("0.010"))
+                                .maxLeverage(5)
+                                .build()
+                ))
+                .tradingEnabled(true)
+                .build();
+    }
+
+    /**
      * 建立預設風控設定，測試可在個別案例中只開啟需要的 risk switch。
      */
     private static RiskControlsProperties riskControls() {
@@ -668,14 +756,31 @@ class OrderAccountingIntegrationTest {
      * 建立 pre-trade risk 測試用 limit order，支援切換 reduceOnly 來測全站 reduce-only mode。
      */
     private static Order limitOrder(long uid, Symbol symbol, OrderSide side, String price, boolean reduceOnly) {
+        return limitOrder(uid, symbol, side, price, "1.000", 20, reduceOnly);
+    }
+
+    private static Order limitOrder(long uid, Symbol symbol, OrderSide side, String price, String qty, int leverage) {
+        return limitOrder(uid, symbol, side, price, qty, leverage, false);
+    }
+
+    private static Order limitOrder(
+            long uid,
+            Symbol symbol,
+            OrderSide side,
+            String price,
+            String qty,
+            int leverage,
+            boolean reduceOnly
+    ) {
         return Order.builder()
                 .uid(uid)
                 .symbol(symbol)
                 .side(side)
                 .type(OrderType.LIMIT)
                 .price(new BigDecimal(price))
-                .qty(new BigDecimal("1.000"))
-                .origQty(new BigDecimal("1.000"))
+                .qty(new BigDecimal(qty))
+                .origQty(new BigDecimal(qty))
+                .leverage(leverage)
                 .reduceOnly(reduceOnly)
                 .build();
     }

@@ -6,17 +6,22 @@ package com.example.exchange.interfaces.web.controller;
 import com.example.exchange.application.command.LiquidateCommand;
 import com.example.exchange.application.service.FundingRateService;
 import com.example.exchange.application.service.InsuranceFundService;
+import com.example.exchange.application.service.MarkPriceOracleService;
 import com.example.exchange.application.usecase.LiquidateUseCase;
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
 import com.example.exchange.domain.model.dto.FundingSettlementResult;
 import com.example.exchange.domain.model.dto.LiquidationResult;
+import com.example.exchange.domain.model.dto.MarkPriceSnapshot;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.FundingSettlementRequest;
 import com.example.exchange.interfaces.web.dto.LiquidationRequest;
+import com.example.exchange.interfaces.web.dto.MarkPriceUpdateRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -33,6 +38,7 @@ public class RiskController {
     private final FundingRateService fundingRateService;
     private final LiquidateUseCase liquidateUseCase;
     private final InsuranceFundService insuranceFundService;
+    private final MarkPriceOracleService markPriceOracleService;
 
     @PostMapping("/funding/settle")
     public ApiResponse<FundingSettlementResult> settleFunding(
@@ -41,7 +47,6 @@ public class RiskController {
         return ApiResponse.ok(fundingRateService.settle(
                 request.uid(),
                 request.symbol(),
-                request.markPrice(),
                 request.fundingRate()
         ));
     }
@@ -51,8 +56,25 @@ public class RiskController {
         return ApiResponse.ok(liquidateUseCase.handle(new LiquidateCommand(
                 request.uid(),
                 request.symbol(),
-                request.markPrice()
+                null
         )));
+    }
+
+    @PutMapping("/price-oracle")
+    public ApiResponse<MarkPriceSnapshot> updatePriceOracle(
+            @Valid @RequestBody MarkPriceUpdateRequest request
+    ) {
+        return ApiResponse.ok(markPriceOracleService.update(
+                request.symbol(),
+                request.markPrice(),
+                request.indexPrice(),
+                request.source()
+        ));
+    }
+
+    @GetMapping("/price-oracle/{symbol}")
+    public ApiResponse<MarkPriceSnapshot> priceOracle(@PathVariable String symbol) {
+        return ApiResponse.ok(markPriceOracleService.snapshot(symbol).orElse(null));
     }
 
     @GetMapping("/insurance-fund")

@@ -19,6 +19,9 @@ public class LiquidateUseCase {
     private final LiquidationService liquidationService;
 
     public LiquidationResult handle(LiquidateCommand cmd) {
+        if (cmd.markPrice() == null) {
+            return liquidationService.liquidate(cmd.uid(), cmd.symbol());
+        }
         return liquidationService.liquidate(cmd.uid(), cmd.symbol(), cmd.markPrice());
     }
 }

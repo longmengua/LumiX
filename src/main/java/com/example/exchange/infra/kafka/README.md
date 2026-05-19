@@ -8,7 +8,7 @@ Kafka infrastructure adapters。
 - `KafkaEventRoute`：topic / key routing helper。
 
 目前狀態：
-- outbox baseline 已存在，但 production durable outbox 仍待補。
+- outbox/DLQ 已有 MySQL durable repository；Redis adapter 保留為 legacy hot-state 實作。
 - topic 設計文件在 `docs/*/kafka-topics.md`。
 
 注意：

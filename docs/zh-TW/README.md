@@ -144,7 +144,7 @@ POST /api/order/place
 
 ## 下單鏈路
 
-目前內部交易所下單入口是 `POST /api/order/place`，同步完成基本驗證、風控預檢、撮合、帳務與事件發布後回傳 `accepted`。這條鏈路仍是 MVP 實作，production 前建議參考 `todo.md` 補齊持久化撮合、完整 order lifecycle 與更嚴格的帳務一致性。
+目前內部交易所下單入口是 `POST /api/order/place`，同步完成基本驗證、風控預檢、撮合、帳務與事件發布後回傳 `accepted`。這條鏈路仍是 MVP 實作，production 前建議參考 `todo.md` 補齊持久化撮合、更完整 replay 與更嚴格的帳務一致性。
 
 ```text
 HTTP POST /api/order/place
@@ -200,6 +200,7 @@ Kafka / Consumer / Push
 - `PATCH /api/order/{orderId}` 修改仍在簿內的 LIMIT 掛單，不會主動吃單。Request 可調整 `price`、剩餘 `qty` 與 `clientOrderId`，系統會同步調整剩餘委託預凍。
 - `POST /api/order/{orderId}/replace` 先取消原本的 open order，再用提供的 `price`、`qty` 或 `clientOrderId` 建立 replacement order。
 - `DELETE /api/order/open?uid=...&symbol=...` 批量取消 open orders 並釋放剩餘委託預凍；不帶 `symbol` 時會取消該使用者所有 open orders。
+- `GET /api/order/{orderId}/lifecycle` 查 durable order lifecycle event log；`GET /api/order/{orderId}/projection` 查最新狀態 projection；`POST /api/order/{orderId}/projection/rebuild` 會用 event log 重建 projection。
 - `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` 會為該 user WebSocket 連線 opt-in 啟用 cancel-on-disconnect；不帶 `symbol` 時，斷線會取消該使用者所有 open orders。
 - `GET /api/depth/{symbol}` 會回傳完整簿檔 levels、`version` 與 CRC32 `checksum`。`GET /api/market-data/{symbol}/depth-delta` 也會回傳同一條 monotonic depth `version` 與 checksum，供 client 做 snapshot + delta 校驗。
 
@@ -249,8 +250,14 @@ src/main/java/com/example/exchange
 - `POST /api/margin/transfer`
 - `GET /api/margin/account?uid=1`
 - `GET /api/margin/ledger?uid=1`
+- `GET /api/margin/ledger/replay?uid=1&asset=USDT`
+- `GET /api/margin/ledger/replay/compare?uid=1&asset=USDT`
 - `GET /api/margin/transfers?uid=1`
 - `GET /api/margin/risk?uid=1`
+- `POST /api/margin/risk/snapshot?uid=1`
+- `POST /api/margin/risk/snapshots`
+- `GET /api/margin/risk/snapshot/latest?uid=1`
+- `GET /api/margin/risk/snapshots?uid=1&limit=30`
 - `POST /api/order/place`
 - `PATCH /api/order/{orderId}`
 - `POST /api/order/{orderId}/replace`
@@ -258,6 +265,10 @@ src/main/java/com/example/exchange
 - `DELETE /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/all?uid=1&symbol=BTCUSDT`
+- `GET /api/order/{orderId}/lifecycle`
+- `GET /api/order/{orderId}/projection`
+- `POST /api/order/{orderId}/projection/rebuild`
+- `GET /api/order/projections?uid=1&symbol=BTCUSDT`
 - `GET /api/depth/{symbol}?depth=10`
 - `GET /api/market-data/{symbol}/ticker`
 - `GET /api/market-data/{symbol}/trades`
@@ -265,14 +276,22 @@ src/main/java/com/example/exchange
 - `GET /api/market-data/{symbol}/depth-delta`
 - `GET /api/market-data/{symbol}/stream`
 - `GET /api/market-data/user/{uid}/stream`
+- `PUT /api/risk/price-oracle`
+- `GET /api/risk/price-oracle/{symbol}`
 - `POST /api/risk/funding/settle`
 - `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`
 - `GET /api/risk/insurance-fund`
 - `GET /api/recovery/reconcile/accounts`
+- `POST /api/recovery/reconcile/accounts/report`
+- `GET /api/recovery/reconcile/reports?limit=20`
+- `GET /api/recovery/reconcile/reports/{reportId}`
 - `GET /api/risk/adl-queue`
 - `POST /api/recovery/recover/{uid}?fromSeq=0`
 - `GET /api/recovery/validate/{uid}`
+- `GET /api/recovery/outbox/dlq?limit=50`
+- `POST /api/recovery/outbox/dead/{outboxId}/replay`
+- `POST /api/recovery/outbox/dead/{outboxId}/compensate`
 
 ### Prediction / Polymarket
 
@@ -378,7 +397,7 @@ keyId:sha256Hex:ROLE_ADMIN|ROLE_TRADER:admin|trade:write;trader:sha256Hex:ROLE_T
 
 - in-memory matching engine FIFO、post-only、self match prevention。
 - 下單後持倉、手續費、流水、市場資料與事件發布。
-- funding settlement、liquidation、insurance fund 與 reconciliation。
+- mark/index price oracle、risk tiers、funding settlement、liquidation、insurance fund 與 reconciliation。
 
 ## 參考文件
 

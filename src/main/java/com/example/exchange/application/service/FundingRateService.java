@@ -12,6 +12,7 @@ import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import com.example.exchange.infra.config.FundingRateProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -30,6 +31,20 @@ public class FundingRateService {
     private final WalletLedgerService walletLedgerService;
     private final DomainEventPublisher<FundingSettled> publisher;
     private final FundingRateProperties fundingRateProperties;
+    private MarkPriceOracleService markPriceOracleService;
+
+    @Autowired(required = false)
+    public void setMarkPriceOracleService(MarkPriceOracleService markPriceOracleService) {
+        this.markPriceOracleService = markPriceOracleService;
+    }
+
+    public FundingSettlementResult settle(
+            long uid,
+            String symbol,
+            BigDecimal fundingRate
+    ) {
+        return settle(uid, symbol, requireOracleMarkPrice(symbol), fundingRate);
+    }
 
     public FundingSettlementResult settle(
             long uid,
@@ -100,7 +115,6 @@ public class FundingRateService {
                     return settle(
                             position.getUid(),
                             position.getSymbol().code(),
-                            settlement.getMarkPrice(),
                             settlement.getFundingRate()
                     );
                 })
@@ -121,9 +135,14 @@ public class FundingRateService {
 
     private static boolean isValidSettlement(FundingRateProperties.Settlement settlement) {
         return settlement != null
-                && settlement.getMarkPrice() != null
-                && settlement.getMarkPrice().signum() > 0
                 && settlement.getFundingRate() != null;
+    }
+
+    private BigDecimal requireOracleMarkPrice(String symbol) {
+        if (markPriceOracleService == null) {
+            throw new IllegalStateException("mark price oracle is not configured");
+        }
+        return markPriceOracleService.requireMarkPrice(symbol);
     }
 
     private static String normalize(String symbol) {

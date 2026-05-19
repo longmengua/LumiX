@@ -71,14 +71,31 @@ User WebSocket：
 ./shells/api-curls/exchange/order-place-market-sell-post.sh
 ./shells/api-curls/exchange/order-open-get.sh
 ./shells/api-curls/exchange/order-all-get.sh
+./shells/api-curls/exchange/order-lifecycle-get.sh
+./shells/api-curls/exchange/order-projection-get.sh
+./shells/api-curls/exchange/order-projection-rebuild-post.sh
+./shells/api-curls/exchange/order-projections-get.sh
 ./shells/api-curls/exchange/depth-get.sh
 ./shells/api-curls/exchange/margin-deposit-post.sh
 ./shells/api-curls/exchange/margin-withdraw-post.sh
 ./shells/api-curls/exchange/margin-transfer-post.sh
 ./shells/api-curls/exchange/margin-transfers-get.sh
 ./shells/api-curls/exchange/margin-risk-get.sh
+./shells/api-curls/exchange/margin-risk-snapshot-post.sh
+./shells/api-curls/exchange/margin-risk-snapshots-post.sh
+./shells/api-curls/exchange/margin-risk-snapshot-latest-get.sh
+./shells/api-curls/exchange/margin-risk-snapshots-get.sh
+./shells/api-curls/exchange/margin-ledger-replay-get.sh
+./shells/api-curls/exchange/margin-ledger-replay-compare-get.sh
+./shells/api-curls/exchange/risk-price-oracle-put.sh
+./shells/api-curls/exchange/risk-price-oracle-get.sh
 ./shells/api-curls/exchange/recovery-recover-post.sh
 ./shells/api-curls/exchange/recovery-reconcile-accounts-get.sh
+./shells/api-curls/exchange/recovery-reconcile-report-post.sh
+./shells/api-curls/exchange/recovery-reconcile-reports-get.sh
+./shells/api-curls/exchange/recovery-outbox-dlq-get.sh
+./shells/api-curls/exchange/recovery-outbox-dead-replay-post.sh
+./shells/api-curls/exchange/recovery-outbox-dead-compensate-post.sh
 ```
 
 ## Suggested Polymarket Flow

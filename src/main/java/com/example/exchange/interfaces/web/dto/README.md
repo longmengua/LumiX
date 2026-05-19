@@ -3,7 +3,7 @@
 REST API request/response DTO。
 
 目前狀態：
-- 內部交易所：下單、改單、cancel-replace、margin deposit/withdraw/transfer、order info。
+- 內部交易所：下單、改單、cancel-replace、margin deposit/withdraw/transfer、order info、risk price oracle。
 - Polymarket：session、market、outcome、order、approval、WS status。
 - 共用：`ApiResponse`。
 

@@ -8,9 +8,11 @@ import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.repository.AccountRepository;
+import com.example.exchange.domain.repository.EventStore;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -26,6 +28,12 @@ public class ReconciliationService {
     private final AccountRepository accountRepository;
     private final PositionRepository positionRepository;
     private final WalletLedgerRepository ledgerRepository;
+    private EventStore eventStore;
+
+    @Autowired(required = false)
+    public void setEventStore(EventStore eventStore) {
+        this.eventStore = eventStore;
+    }
 
     /**
      * 掃描目前可發現的帳戶集合。
@@ -34,6 +42,14 @@ public class ReconciliationService {
      * 後者可抓出「有倉位但帳戶缺失」這類高風險不一致。</p>
      */
     public List<ValidationIssue> validateAllAccounts() {
+        List<ValidationIssue> issues = new ArrayList<>();
+        for (Long uid : discoverAccountUids()) {
+            issues.addAll(validateUid(uid));
+        }
+        return issues;
+    }
+
+    public Set<Long> discoverAccountUids() {
         Set<Long> uids = new LinkedHashSet<>();
         accountRepository.findAll().stream()
                 .filter(account -> account != null)
@@ -43,12 +59,7 @@ public class ReconciliationService {
                 .filter(position -> position != null)
                 .map(Position::getUid)
                 .forEach(uids::add);
-
-        List<ValidationIssue> issues = new ArrayList<>();
-        for (Long uid : uids) {
-            issues.addAll(validateUid(uid));
-        }
-        return issues;
+        return uids;
     }
 
     /**
@@ -100,6 +111,19 @@ public class ReconciliationService {
                 ));
             }
         }
+
+        if (eventStore != null && hasOpenPosition(uid) && eventStore.lastSeq(uid) == 0) {
+            issues.add(new ValidationIssue(
+                    "WARN",
+                    "EVENT_STORE_COVERAGE_MISSING",
+                    "open position exists but event store has no replay checkpoint for uid: " + uid
+            ));
+        }
         return issues;
+    }
+
+    private boolean hasOpenPosition(long uid) {
+        return positionRepository.findAllByUid(uid).stream()
+                .anyMatch(position -> position.getQty() != null && position.getQty().signum() != 0);
     }
 }

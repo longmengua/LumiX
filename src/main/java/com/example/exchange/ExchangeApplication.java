@@ -5,8 +5,11 @@ package com.example.exchange;
 
 import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.FundingRateProperties;
+import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import com.example.exchange.infra.config.PolymarketConfigs;
+import com.example.exchange.infra.config.ReconciliationProperties;
 import com.example.exchange.infra.config.RiskControlsProperties;
+import com.example.exchange.infra.config.RiskSnapshotProperties;
 import com.example.exchange.infra.config.SecurityControlsProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -26,8 +29,11 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties({
         ApiAuthProperties.class,
         FundingRateProperties.class,
+        MarkPriceOracleProperties.class,
         PolymarketConfigs.class,
+        ReconciliationProperties.class,
         RiskControlsProperties.class,
+        RiskSnapshotProperties.class,
         SecurityControlsProperties.class
 })
 public class ExchangeApplication {

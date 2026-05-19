@@ -5,8 +5,10 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.SnapshotRecoverCommand;
 import com.example.exchange.application.service.OutboxService;
+import com.example.exchange.application.service.ReconciliationReportService;
 import com.example.exchange.application.service.ReconciliationService;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
+import com.example.exchange.domain.model.dto.ReconciliationReportResult;
 import com.example.exchange.domain.model.dto.RecoveryResult;
 import com.example.exchange.domain.model.dto.ValidationIssue;
 import com.example.exchange.domain.model.entity.DlqEvent;
@@ -27,15 +29,18 @@ public class RecoveryController {
 
     private final SnapshotRecoverUseCase usecase;
     private final ReconciliationService reconciliationService;
+    private final ReconciliationReportService reconciliationReportService;
     private final OutboxService outboxService;
 
     public RecoveryController(
             SnapshotRecoverUseCase usecase,
             ReconciliationService reconciliationService,
+            ReconciliationReportService reconciliationReportService,
             OutboxService outboxService
     ) {
         this.usecase = usecase;
         this.reconciliationService = reconciliationService;
+        this.reconciliationReportService = reconciliationReportService;
         this.outboxService = outboxService;
     }
 
@@ -55,6 +60,25 @@ public class RecoveryController {
     @GetMapping("/reconcile/accounts")
     public ApiResponse<List<ValidationIssue>> validateAllAccounts() {
         return ApiResponse.ok(reconciliationService.validateAllAccounts());
+    }
+
+    @PostMapping("/reconcile/accounts/report")
+    public ApiResponse<ReconciliationReportResult> createReconciliationReport(
+            @RequestParam(defaultValue = "MANUAL") String triggeredBy
+    ) {
+        return ApiResponse.ok(reconciliationReportService.runAndPersist(triggeredBy));
+    }
+
+    @GetMapping("/reconcile/reports")
+    public ApiResponse<List<ReconciliationReportResult>> latestReconciliationReports(
+            @RequestParam(defaultValue = "20") int limit
+    ) {
+        return ApiResponse.ok(reconciliationReportService.latest(limit));
+    }
+
+    @GetMapping("/reconcile/reports/{reportId}")
+    public ApiResponse<ReconciliationReportResult> reconciliationReport(@PathVariable String reportId) {
+        return ApiResponse.ok(reconciliationReportService.findById(reportId).orElse(null));
     }
 
     @GetMapping("/outbox/dlq")

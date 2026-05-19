@@ -45,9 +45,9 @@ public class RiskService {
         validateTickAndLot(order, config);
         validateNotional(order, config, referencePrice);
         validatePriceBand(order, config);
-        validateLeverage(order, config);
         validateReduceOnly(order);
         validatePositionLimit(order, config, referencePrice);
+        validateLeverage(order, config, referencePrice);
 
         BigDecimal reserve = requiredOrderReserve(order, config, referencePrice);
         if (reserve.signum() <= 0) return;
@@ -75,9 +75,9 @@ public class RiskService {
         validateTickAndLot(order, config);
         validateNotional(order, config, referencePrice);
         validatePriceBand(order, config);
-        validateLeverage(order, config);
         validateReduceOnly(order);
         validatePositionLimit(order, config, referencePrice);
+        validateLeverage(order, config, referencePrice);
         return requiredOrderReserve(order, config, referencePrice);
     }
 
@@ -119,10 +119,17 @@ public class RiskService {
         }
 
         BigDecimal notional = px.multiply(order.getQty());
+        BigDecimal worstNotional = worstPositionNotional(order, px);
+        BigDecimal leverageMarginRate = BigDecimal.ONE.divide(
+                BigDecimal.valueOf(Math.max(1, order.getLeverage())),
+                MONEY_SCALE,
+                RoundingMode.HALF_UP
+        );
+        BigDecimal tierInitialMarginRate = config.initialMarginRateForNotional(worstNotional);
         BigDecimal feeReserve = notional.multiply(config.takerFeeRateOrDefault());
         BigDecimal marginReserve = order.isReduceOnly()
                 ? BigDecimal.ZERO
-                : notional.divide(BigDecimal.valueOf(Math.max(1, order.getLeverage())), MONEY_SCALE, RoundingMode.HALF_UP);
+                : notional.multiply(leverageMarginRate.max(tierInitialMarginRate));
         return marginReserve.add(feeReserve).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
     }
 
@@ -216,8 +223,10 @@ public class RiskService {
         }
     }
 
-    private void validateLeverage(Order order, SymbolConfig config) {
-        if (order.getLeverage() <= 0 || order.getLeverage() > config.getMaxLeverage()) {
+    private void validateLeverage(Order order, SymbolConfig config, BigDecimal referencePrice) {
+        BigDecimal worstNotional = worstPositionNotional(order, referencePrice);
+        int maxLeverage = Math.min(config.maxLeverageOrDefault(), config.maxLeverageForNotional(worstNotional));
+        if (order.getLeverage() <= 0 || order.getLeverage() > maxLeverage) {
             order.reject("INVALID_LEVERAGE");
             throw new IllegalArgumentException("leverage exceeds symbol limit");
         }
@@ -268,15 +277,20 @@ public class RiskService {
 
     private void validatePositionLimit(Order order, SymbolConfig config, BigDecimal referencePrice) {
         if (order.isReduceOnly()) return;
-        Position position = positionRepo.find(order.getUid(), order.getSymbol()).orElse(null);
-        BigDecimal currentQty = position == null || position.getQty() == null ? BigDecimal.ZERO : position.getQty();
-        BigDecimal signedOrderQty = order.getSide() == OrderSide.BUY ? order.getQty() : order.getQty().negate();
-        BigDecimal worstQty = currentQty.add(signedOrderQty).abs();
-        BigDecimal worstNotional = worstQty.multiply(referencePrice);
-        if (worstNotional.compareTo(config.maxPositionNotionalOrDefault()) > 0) {
+        BigDecimal worstNotional = worstPositionNotional(order, referencePrice);
+        if (config.riskTierForNotional(worstNotional) == null
+                || worstNotional.compareTo(config.maxPositionNotionalOrDefault()) > 0) {
             order.reject("MAX_POSITION_NOTIONAL");
             throw new IllegalArgumentException("position notional exceeds risk limit");
         }
+    }
+
+    private BigDecimal worstPositionNotional(Order order, BigDecimal referencePrice) {
+        if (order.isReduceOnly()) return BigDecimal.ZERO;
+        Position position = positionRepo.find(order.getUid(), order.getSymbol()).orElse(null);
+        BigDecimal currentQty = position == null || position.getQty() == null ? BigDecimal.ZERO : position.getQty();
+        BigDecimal signedOrderQty = order.getSide() == OrderSide.BUY ? order.getQty() : order.getQty().negate();
+        return currentQty.add(signedOrderQty).abs().multiply(referencePrice);
     }
 
     private static boolean isOpen(Order order) {

@@ -144,7 +144,7 @@ POST /api/order/place
 
 ## Order Placement Flow
 
-The internal exchange order entry point is `POST /api/order/place`. The current implementation synchronously performs basic validation, risk pre-check, matching, accounting updates, event publication, and then returns `accepted`. This is still MVP behavior. See [todo.md](todo.md) for the production work needed around durable matching, full order lifecycle events, and stronger accounting consistency.
+The internal exchange order entry point is `POST /api/order/place`. The current implementation synchronously performs basic validation, risk pre-check, matching, accounting updates, event publication, and then returns `accepted`. This is still MVP behavior. See [todo.md](todo.md) for the remaining production work around durable matching, broader replay, and stronger accounting consistency.
 
 ```text
 HTTP POST /api/order/place
@@ -200,6 +200,7 @@ Order management endpoints:
 - `PATCH /api/order/{orderId}` amends a resting LIMIT order without taking liquidity. The request can change `price`, remaining `qty`, and `clientOrderId`; reserve is reconciled to the new remaining order.
 - `POST /api/order/{orderId}/replace` cancels the original open order first, then submits a replacement order with the provided `price`, `qty`, or `clientOrderId`.
 - `DELETE /api/order/open?uid=...&symbol=...` bulk-cancels open orders and releases remaining order reserve. Omitting `symbol` cancels all open orders for the user.
+- `GET /api/order/{orderId}/lifecycle` reads the durable order lifecycle event log; `GET /api/order/{orderId}/projection` reads the latest-state projection; `POST /api/order/{orderId}/projection/rebuild` rebuilds that projection from the event log.
 - `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` enables opt-in cancel-on-disconnect for that user WebSocket connection. Omitting `symbol` cancels all open orders for the user when the connection closes.
 - `GET /api/depth/{symbol}` returns full book levels with `version` and CRC32 `checksum`. `GET /api/market-data/{symbol}/depth-delta` returns the same monotonic depth `version` and checksum for client-side snapshot + delta validation.
 
@@ -249,8 +250,14 @@ src/main/java/com/example/exchange
 - `POST /api/margin/transfer`
 - `GET /api/margin/account?uid=1`
 - `GET /api/margin/ledger?uid=1`
+- `GET /api/margin/ledger/replay?uid=1&asset=USDT`
+- `GET /api/margin/ledger/replay/compare?uid=1&asset=USDT`
 - `GET /api/margin/transfers?uid=1`
 - `GET /api/margin/risk?uid=1`
+- `POST /api/margin/risk/snapshot?uid=1`
+- `POST /api/margin/risk/snapshots`
+- `GET /api/margin/risk/snapshot/latest?uid=1`
+- `GET /api/margin/risk/snapshots?uid=1&limit=30`
 - `POST /api/order/place`
 - `PATCH /api/order/{orderId}`
 - `POST /api/order/{orderId}/replace`
@@ -258,6 +265,10 @@ src/main/java/com/example/exchange
 - `DELETE /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/open?uid=1&symbol=BTCUSDT`
 - `GET /api/order/all?uid=1&symbol=BTCUSDT`
+- `GET /api/order/{orderId}/lifecycle`
+- `GET /api/order/{orderId}/projection`
+- `POST /api/order/{orderId}/projection/rebuild`
+- `GET /api/order/projections?uid=1&symbol=BTCUSDT`
 - `GET /api/depth/{symbol}?depth=10`
 - `GET /api/market-data/{symbol}/ticker`
 - `GET /api/market-data/{symbol}/trades`
@@ -265,14 +276,22 @@ src/main/java/com/example/exchange
 - `GET /api/market-data/{symbol}/depth-delta`
 - `GET /api/market-data/{symbol}/stream`
 - `GET /api/market-data/user/{uid}/stream`
+- `PUT /api/risk/price-oracle`
+- `GET /api/risk/price-oracle/{symbol}`
 - `POST /api/risk/funding/settle`
 - `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`
 - `GET /api/risk/insurance-fund`
 - `GET /api/recovery/reconcile/accounts`
+- `POST /api/recovery/reconcile/accounts/report`
+- `GET /api/recovery/reconcile/reports?limit=20`
+- `GET /api/recovery/reconcile/reports/{reportId}`
 - `GET /api/risk/adl-queue`
 - `POST /api/recovery/recover/{uid}?fromSeq=0`
 - `GET /api/recovery/validate/{uid}`
+- `GET /api/recovery/outbox/dlq?limit=50`
+- `POST /api/recovery/outbox/dead/{outboxId}/replay`
+- `POST /api/recovery/outbox/dead/{outboxId}/compensate`
 
 ### Prediction / Polymarket
 
@@ -378,7 +397,7 @@ Current test coverage includes:
 
 - In-memory matching engine FIFO, post-only, and self-match prevention.
 - Position, fee, ledger, market-data, and event publishing after fills.
-- Funding settlement, liquidation, insurance fund, and reconciliation.
+- Mark/index price oracle, risk tiers, funding settlement, liquidation, insurance fund, and reconciliation.
 
 ## Related Documents
 

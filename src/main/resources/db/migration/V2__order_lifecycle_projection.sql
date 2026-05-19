@@ -1,0 +1,45 @@
+-- 檔案用途：SQL migration，建立 order lifecycle durable event log 與查詢 projection。
+CREATE TABLE IF NOT EXISTS order_lifecycle_events (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    schema_version INT NOT NULL,
+    order_id CHAR(36) NOT NULL,
+    uid BIGINT NOT NULL,
+    symbol VARCHAR(64) NOT NULL,
+    client_order_id VARCHAR(128) NULL,
+    stage VARCHAR(32) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    reason_code VARCHAR(128) NULL,
+    price DECIMAL(38, 18) NULL,
+    orig_qty DECIMAL(38, 18) NULL,
+    remaining_qty DECIMAL(38, 18) NULL,
+    executed_qty DECIMAL(38, 18) NULL,
+    avg_price DECIMAL(38, 18) NULL,
+    event_ts DATETIME(6) NOT NULL,
+    recorded_at DATETIME(6) NOT NULL,
+    KEY idx_order_lifecycle_order (order_id, event_ts),
+    KEY idx_order_lifecycle_uid_symbol (uid, symbol, event_ts),
+    KEY idx_order_lifecycle_stage_ts (stage, event_ts),
+    KEY idx_order_lifecycle_client_order (client_order_id)
+);
+
+CREATE TABLE IF NOT EXISTS order_lifecycle_projection (
+    order_id CHAR(36) PRIMARY KEY,
+    schema_version INT NOT NULL,
+    uid BIGINT NOT NULL,
+    symbol VARCHAR(64) NOT NULL,
+    client_order_id VARCHAR(128) NULL,
+    latest_stage VARCHAR(32) NOT NULL,
+    status VARCHAR(32) NOT NULL,
+    reason_code VARCHAR(128) NULL,
+    price DECIMAL(38, 18) NULL,
+    orig_qty DECIMAL(38, 18) NULL,
+    remaining_qty DECIMAL(38, 18) NULL,
+    executed_qty DECIMAL(38, 18) NULL,
+    avg_price DECIMAL(38, 18) NULL,
+    first_event_at DATETIME(6) NOT NULL,
+    last_event_at DATETIME(6) NOT NULL,
+    updated_at DATETIME(6) NOT NULL,
+    KEY idx_order_lifecycle_projection_uid_symbol (uid, symbol, last_event_at),
+    KEY idx_order_lifecycle_projection_status (status, last_event_at),
+    KEY idx_order_lifecycle_projection_client_order (client_order_id)
+);

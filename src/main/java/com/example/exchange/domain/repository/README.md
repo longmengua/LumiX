@@ -3,7 +3,7 @@
 Repository contracts，domain/application 只依賴這裡的介面。
 
 目前重點：
-- 內部交易所：`OrderRepository`、`AccountRepository`、`PositionRepository`、`WalletLedgerRepository`。
+- 內部交易所：`OrderRepository`、`AccountRepository`、`PositionRepository`、`WalletLedgerRepository`、`AccountRiskSnapshotStore`。
 - Reliability：`OutboxRepository`、`DlqRepository`、`EventStore`、`SnapshotRepository`。
 - Polymarket：JPA repository 位於 `jpa/`，Gamma client contract 位於 `client/`。
 

@@ -18,6 +18,7 @@ import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
 import com.example.exchange.infra.config.FundingRateProperties;
+import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -133,8 +134,9 @@ class RiskSettlementServiceTest {
                 symbolRepo,
                 walletLedgerService,
                 published::add,
-                fundingRateProperties("BTCUSDT", "100", "0.01")
+                fundingRateProperties("BTCUSDT", "0.01")
         );
+        fundingRateService.setMarkPriceOracleService(oracle("BTCUSDT", "100", "100"));
 
         var results = fundingRateService.settleConfiguredSymbols();
 
@@ -182,8 +184,9 @@ class RiskSettlementServiceTest {
                 insuranceFundService,
                 published::add
         );
+        liquidationService.setMarkPriceOracleService(oracle("BTCUSDT", "1", "1"));
 
-        LiquidationResult result = liquidationService.liquidate(7, "BTCUSDT", new BigDecimal("1"));
+        LiquidationResult result = liquidationService.liquidate(7, "BTCUSDT");
 
         assertThat(result.liquidated()).isTrue();
         assertThat(result.closedQty()).isEqualByComparingTo("-1");
@@ -344,13 +347,22 @@ class RiskSettlementServiceTest {
     /**
      * 建立 funding rate 設定物件，讓 configured settlement 測試可走與 production 相同的配置入口。
      */
-    private static FundingRateProperties fundingRateProperties(String symbol, String markPrice, String fundingRate) {
+    private static FundingRateProperties fundingRateProperties(String symbol, String fundingRate) {
         FundingRateProperties properties = new FundingRateProperties();
         FundingRateProperties.Settlement settlement = new FundingRateProperties.Settlement();
         settlement.setSymbol(symbol);
-        settlement.setMarkPrice(new BigDecimal(markPrice));
         settlement.setFundingRate(new BigDecimal(fundingRate));
         properties.setSettlements(List.of(settlement));
         return properties;
+    }
+
+    /**
+     * 建立測試用 mark/index price oracle，模擬 production 由獨立價格來源餵價。
+     */
+    private static MarkPriceOracleService oracle(String symbol, String markPrice, String indexPrice) {
+        MarkPriceOracleProperties properties = new MarkPriceOracleProperties();
+        MarkPriceOracleService oracle = new MarkPriceOracleService(properties);
+        oracle.update(symbol, new BigDecimal(markPrice), new BigDecimal(indexPrice), "test");
+        return oracle;
     }
 }

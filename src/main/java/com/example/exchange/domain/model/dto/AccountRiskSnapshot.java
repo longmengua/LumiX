@@ -10,8 +10,7 @@ import java.time.Instant;
  * 帳戶風險快照。
  *
  * <p>這個 DTO 是讀模型，不是帳務來源；用來讓 API / ops 快速觀察帳戶可用餘額、
- * frozen funds、維持保證金與風險率。正式環境仍應把日終快照與 mark/index price
- * 來源獨立持久化。</p>
+ * frozen funds、維持保證金與風險率。持久化版本由 account risk snapshot store 保存。</p>
  *
  * @param uid 使用者 ID
  * @param crossBalance cross 總餘額

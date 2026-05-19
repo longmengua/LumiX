@@ -4,7 +4,7 @@ Spring Boot configuration 與 properties。
 
 目前重點：
 - `SecurityControlsProperties` / `ApiAuthProperties`：API security baseline。
-- `RiskControlsProperties` / `FundingRateProperties`：風控開關與 funding config。
+- `RiskControlsProperties` / `RiskSnapshotProperties` / `FundingRateProperties` / `MarkPriceOracleProperties`：風控開關、risk snapshot 排程、funding config 與 mark/index price baseline。
 - `OkHttpConfig`：外部 API timeout/retry/circuit breaker/rate limit baseline。
 - `KafkaConfig`、`RedisConfig`、`Web3jConfig`、`PolymarketConfigs`。
 - `DefaultSymbolConfigRepository`：MVP symbol config source。

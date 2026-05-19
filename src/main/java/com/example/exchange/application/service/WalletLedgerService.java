@@ -7,8 +7,10 @@ import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerPosting;
 import com.example.exchange.domain.repository.AccountRepository;
+import com.example.exchange.domain.repository.WalletLedgerJournal;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -23,6 +25,12 @@ public class WalletLedgerService {
 
     private final AccountRepository accountRepo;
     private final WalletLedgerRepository ledgerRepo;
+    private WalletLedgerJournal ledgerJournal;
+
+    @Autowired(required = false)
+    public void setLedgerJournal(WalletLedgerJournal ledgerJournal) {
+        this.ledgerJournal = ledgerJournal;
+    }
 
     public Account getOrCreate(long uid) {
         return accountRepo.findByUid(uid).orElseGet(() -> {
@@ -237,6 +245,9 @@ public class WalletLedgerService {
                 .balanceAfter(balanceAfter)
                 .postings(postings)
                 .build();
+        if (ledgerJournal != null) {
+            ledgerJournal.append(entry);
+        }
         ledgerRepo.append(entry);
     }
 

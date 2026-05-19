@@ -4,7 +4,6 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
-import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.SymbolConfig;
@@ -12,6 +11,7 @@ import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -29,12 +29,17 @@ public class AccountRiskService {
     private final AccountRepository accountRepository;
     private final PositionRepository positionRepository;
     private final SymbolConfigRepository symbolConfigRepository;
-    private final MarketDataService marketDataService;
+    private MarkPriceOracleService markPriceOracleService;
+
+    @Autowired(required = false)
+    public void setMarkPriceOracleService(MarkPriceOracleService markPriceOracleService) {
+        this.markPriceOracleService = markPriceOracleService;
+    }
 
     /**
      * 建立指定使用者的即時計算快照。
      *
-     * <p>此方法不寫入狀態，只讀取 Account、Position、SymbolConfig 與 MarketData。
+     * <p>此方法不寫入狀態，只讀取 Account、Position、SymbolConfig 與 mark price oracle。
      * 沒有帳戶時回傳零值快照，讓前端或營運工具可以安全查詢新使用者。</p>
      */
     public AccountRiskSnapshot snapshot(long uid) {
@@ -82,7 +87,7 @@ public class AccountRiskService {
         BigDecimal qty = safe(position.getQty()).abs();
         if (qty.signum() == 0) return BigDecimal.ZERO;
         BigDecimal notional = markPrice(position).multiply(qty);
-        BigDecimal maintenanceRate = symbolConfig(position).maintenanceMarginRateOrDefault();
+        BigDecimal maintenanceRate = symbolConfig(position).maintenanceMarginRateForNotional(notional);
         return notional.multiply(maintenanceRate);
     }
 
@@ -93,13 +98,13 @@ public class AccountRiskService {
                 .orElseGet(() -> SymbolConfig.builder().symbol(symbol).build());
     }
 
-    /** MVP 使用 ticker last price 當 mark price；無行情時退回 entry price。 */
+    /** 有未平倉部位時必須使用 fresh oracle mark price，避免成交價或 ticker fallback 影響風控。 */
     private BigDecimal markPrice(Position position) {
         String symbol = position.getSymbol() == null ? "" : position.getSymbol().code();
-        return marketDataService.ticker(symbol)
-                .map(MarketTicker::lastPrice)
-                .filter(price -> price != null && price.signum() > 0)
-                .orElse(safe(position.getEntryPrice()));
+        if (markPriceOracleService == null) {
+            throw new IllegalStateException("mark price oracle is not configured");
+        }
+        return markPriceOracleService.requireMarkPrice(symbol);
     }
 
     /** equity 非正且仍有維持保證金時視為 100% 風險，避免除零。 */

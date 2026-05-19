@@ -170,7 +170,7 @@ public class OrderService {
 
             BigDecimal oldMargin = safe(position.getMargin());
             PositionChange change = position.applyTradeWithPnl(trade.qty(), trade.price());
-            BigDecimal newMargin = requiredPositionMargin(position);
+            BigDecimal newMargin = requiredPositionMargin(position, config);
             BigDecimal marginDelta = newMargin.subtract(oldMargin);
             String refId = withSeq.matchId() == null ? String.valueOf(withSeq.seq()) : withSeq.matchId();
 
@@ -276,16 +276,18 @@ public class OrderService {
         order.setReservedAmount(target);
     }
 
-    private static BigDecimal requiredPositionMargin(Position position) {
+    private static BigDecimal requiredPositionMargin(Position position, SymbolConfig config) {
         if (position == null || position.getQty() == null || position.getQty().signum() == 0) {
             return BigDecimal.ZERO;
         }
         BigDecimal leverage = position.getLeverage() == null || position.getLeverage().signum() <= 0
                 ? BigDecimal.ONE
                 : position.getLeverage();
-        return position.getEntryPrice()
-                .multiply(position.getQty().abs())
-                .divide(leverage, 18, RoundingMode.HALF_UP);
+        BigDecimal notional = position.getEntryPrice().multiply(position.getQty().abs());
+        BigDecimal leverageMarginRate = BigDecimal.ONE.divide(leverage, 18, RoundingMode.HALF_UP);
+        BigDecimal tierInitialMarginRate = config.initialMarginRateForNotional(notional);
+        return notional.multiply(leverageMarginRate.max(tierInitialMarginRate))
+                .setScale(18, RoundingMode.HALF_UP);
     }
 
     private static void consumeOrderReserve(Order order, BigDecimal amount) {

@@ -14,6 +14,7 @@ import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -34,6 +35,16 @@ public class LiquidationService {
     private final WalletLedgerService walletLedgerService;
     private final InsuranceFundService insuranceFundService;
     private final DomainEventPublisher<PositionLiquidated> publisher;
+    private MarkPriceOracleService markPriceOracleService;
+
+    @Autowired(required = false)
+    public void setMarkPriceOracleService(MarkPriceOracleService markPriceOracleService) {
+        this.markPriceOracleService = markPriceOracleService;
+    }
+
+    public LiquidationResult liquidate(long uid, String symbol) {
+        return liquidate(uid, symbol, requireOracleMarkPrice(symbol));
+    }
 
     public LiquidationResult liquidate(long uid, String symbol, BigDecimal markPrice) {
         SymbolConfig config = symbolConfigRepository.findBySymbol(symbol)
@@ -48,7 +59,8 @@ public class LiquidationService {
 
         Account account = accountRepository.findByUid(uid).orElseGet(() -> new Account(uid));
         BigDecimal notional = position.getQty().abs().multiply(markPrice);
-        BigDecimal maintenanceMargin = notional.multiply(config.maintenanceMarginRateOrDefault());
+        BigDecimal maintenanceMarginRate = config.maintenanceMarginRateForNotional(notional);
+        BigDecimal maintenanceMargin = notional.multiply(maintenanceMarginRate);
         BigDecimal equity = account.crossBalance().add(unrealizedPnl(position, markPrice));
         if (equity.compareTo(maintenanceMargin) >= 0) {
             return notLiquidated(uid, config, markPrice, liquidationId, now, maintenanceMargin, equity);
@@ -56,7 +68,7 @@ public class LiquidationService {
 
         BigDecimal oldQty = position.getQty();
         BigDecimal oldMargin = safe(position.getMargin());
-        BigDecimal closedQty = closeQty(oldQty, markPrice, config.maintenanceMarginRateOrDefault(), equity);
+        BigDecimal closedQty = closeQty(oldQty, markPrice, maintenanceMarginRate, equity);
         BigDecimal closeRatio = closedQty.abs().divide(oldQty.abs(), MONEY_SCALE, RoundingMode.HALF_UP);
         BigDecimal marginToRelease = oldMargin.multiply(closeRatio);
         PositionChange change = position.applyTradeWithPnl(closedQty, markPrice);
@@ -173,5 +185,12 @@ public class LiquidationService {
 
     private static BigDecimal safe(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private BigDecimal requireOracleMarkPrice(String symbol) {
+        if (markPriceOracleService == null) {
+            throw new IllegalStateException("mark price oracle is not configured");
+        }
+        return markPriceOracleService.requireMarkPrice(symbol);
     }
 }

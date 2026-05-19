@@ -4,10 +4,13 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.TransferMarginCommand;
+import com.example.exchange.application.service.AccountRiskSnapshotService;
 import com.example.exchange.application.service.AccountRiskService;
 import com.example.exchange.application.service.MarginService;
+import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
+import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
@@ -28,15 +31,21 @@ public class MarginController {
     private final TransferMarginUseCase usecase;
     private final MarginService marginService;
     private final AccountRiskService accountRiskService;
+    private final AccountRiskSnapshotService accountRiskSnapshotService;
+    private final WalletLedgerReplayService walletLedgerReplayService;
 
     public MarginController(
             TransferMarginUseCase usecase,
             MarginService marginService,
-            AccountRiskService accountRiskService
+            AccountRiskService accountRiskService,
+            AccountRiskSnapshotService accountRiskSnapshotService,
+            WalletLedgerReplayService walletLedgerReplayService
     ) {
         this.usecase = usecase;
         this.marginService = marginService;
         this.accountRiskService = accountRiskService;
+        this.accountRiskSnapshotService = accountRiskSnapshotService;
+        this.walletLedgerReplayService = walletLedgerReplayService;
     }
 
     @PostMapping("/deposit")
@@ -65,6 +74,22 @@ public class MarginController {
         return ApiResponse.ok(marginService.findLedger(uid));
     }
 
+    @GetMapping("/ledger/replay")
+    public ApiResponse<WalletLedgerReplayResult> replayLedger(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String asset
+    ) {
+        return ApiResponse.ok(walletLedgerReplayService.replay(uid, asset));
+    }
+
+    @GetMapping("/ledger/replay/compare")
+    public ApiResponse<WalletLedgerReplayResult> compareLedgerReplay(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String asset
+    ) {
+        return ApiResponse.ok(walletLedgerReplayService.replayAndCompareAccount(uid, asset));
+    }
+
     @GetMapping("/transfers")
     public ApiResponse<List<WalletTransfer>> transfers(@RequestParam Long uid) {
         return ApiResponse.ok(marginService.findTransfers(uid));
@@ -73,5 +98,28 @@ public class MarginController {
     @GetMapping("/risk")
     public ApiResponse<AccountRiskSnapshot> risk(@RequestParam Long uid) {
         return ApiResponse.ok(accountRiskService.snapshot(uid));
+    }
+
+    @PostMapping("/risk/snapshot")
+    public ApiResponse<AccountRiskSnapshot> persistRiskSnapshot(@RequestParam Long uid) {
+        return ApiResponse.ok(accountRiskSnapshotService.persist(uid));
+    }
+
+    @PostMapping("/risk/snapshots")
+    public ApiResponse<List<AccountRiskSnapshot>> persistKnownRiskSnapshots() {
+        return ApiResponse.ok(accountRiskSnapshotService.persistKnownAccounts());
+    }
+
+    @GetMapping("/risk/snapshot/latest")
+    public ApiResponse<AccountRiskSnapshot> latestRiskSnapshot(@RequestParam Long uid) {
+        return ApiResponse.ok(accountRiskSnapshotService.latest(uid).orElse(null));
+    }
+
+    @GetMapping("/risk/snapshots")
+    public ApiResponse<List<AccountRiskSnapshot>> riskSnapshotHistory(
+            @RequestParam Long uid,
+            @RequestParam(defaultValue = "30") int limit
+    ) {
+        return ApiResponse.ok(accountRiskSnapshotService.history(uid, limit));
     }
 }

@@ -6,7 +6,7 @@
 - `OrderService`：下單後撮合、持倉、ledger、market data、事件發布。
 - `RiskService`：pre-trade checks、reserve、amend reserve reconciliation。
 - `WalletLedgerService` / `MarginService`：帳務 posting、入出金狀態機、margin transfer。
-- `AccountRiskService` / `ReconciliationService`：帳戶風險快照與對帳 baseline。
+- `AccountRiskService` / `AccountRiskSnapshotService` / `MarkPriceOracleService` / `ReconciliationService`：帳戶風險快照、snapshot 持久化、mark/index price baseline 與對帳 baseline。
 - `OutboxService`：retry、DLQ replay、manual compensation baseline。
 - `MarketDataService`：ticker、trade tape、kline、depth delta。
 

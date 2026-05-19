@@ -16,6 +16,7 @@ English version: [../en/technical.md](../en/technical.md)
 | [Redis Key Schema](redis-key-schema.md) | Redis key 歸屬、TTL 規則、namespace policy 與 migration backlog。 |
 | [Kafka Topics](kafka-topics.md) | Topic matrix、partition key policy、consumer groups、schema versioning 與正式環境建立規則。 |
 | [Observability Baseline](observability.md) | Request/correlation ID 在 HTTP、OkHttp、Kafka outbox 與 audit logs 的傳遞基線。 |
+| [Outbox Runbook](outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
 | [產品總覽](README.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |
 | [待辦清單](todo.md) | Production readiness 的工程待辦路線圖。 |
 

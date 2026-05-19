@@ -3,10 +3,13 @@
  */
 package com.example.exchange.application.scheduler;
 
+import com.example.exchange.application.service.ReconciliationReportService;
 import com.example.exchange.application.service.ReconciliationService;
 import com.example.exchange.domain.model.dto.ValidationIssue;
+import com.example.exchange.infra.config.ReconciliationProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,6 +20,8 @@ import java.util.List;
 public class ReconciliationScheduler {
 
     private final ReconciliationService reconciliationService;
+    private final ReconciliationReportService reconciliationReportService;
+    private final ReconciliationProperties reconciliationProperties;
 
 //    @Scheduled(fixedDelay = 60_000)
     public void validateHotAccounts() {
@@ -29,5 +34,13 @@ public class ReconciliationScheduler {
                     issue.message()
             );
         }
+    }
+
+    @Scheduled(fixedDelayString = "${reconciliation.fixed-delay-ms:300000}")
+    public void persistReport() {
+        if (!reconciliationProperties.isEnabled()) {
+            return;
+        }
+        reconciliationReportService.runAndPersist("SCHEDULED");
     }
 }

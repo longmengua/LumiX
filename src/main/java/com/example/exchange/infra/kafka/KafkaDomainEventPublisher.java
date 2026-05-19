@@ -4,7 +4,9 @@
 package com.example.exchange.infra.kafka;
 
 import com.example.exchange.application.event.DomainEventPublisher;
+import com.example.exchange.application.service.OrderLifecycleProjectionService;
 import com.example.exchange.application.service.OutboxService;
+import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.infra.tracing.TraceContext;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -23,14 +25,23 @@ public class KafkaDomainEventPublisher<T> implements DomainEventPublisher<T> {
 
     private final KafkaTemplate<String, Object> kafka;
     private final OutboxService outboxService;
+    private final OrderLifecycleProjectionService orderLifecycleProjectionService;
 
-    public KafkaDomainEventPublisher(KafkaTemplate<String, Object> kafka, OutboxService outboxService) {
+    public KafkaDomainEventPublisher(
+            KafkaTemplate<String, Object> kafka,
+            OutboxService outboxService,
+            OrderLifecycleProjectionService orderLifecycleProjectionService
+    ) {
         this.kafka = kafka;
         this.outboxService = outboxService;
+        this.orderLifecycleProjectionService = orderLifecycleProjectionService;
     }
 
     @Override
     public void publish(T event) {
+        if (event instanceof OrderLifecycleEvent orderLifecycleEvent) {
+            orderLifecycleProjectionService.record(orderLifecycleEvent);
+        }
         KafkaEventRoute route = KafkaEventRoute.from(event);
         outboxService.publish(route.topic(), route.key(), event, TraceContext.currentHeaders(), this::send);
     }

@@ -13,7 +13,7 @@
 - [x] 補上 in-process 單 symbol sequencer baseline，讓同一 symbol 的撮合操作序列化。
 - [ ] 定義 production 單 symbol sequencer 的部署與 failover 策略，避免多實例同時處理同一 symbol 造成狀態分裂。
 - [x] 發布 order lifecycle events，涵蓋 created、accepted、updated、rejected、canceled、expired、filled。
-- [ ] 將 order lifecycle events 產品化，補 durable storage、schema version、replay 與查詢 projection。
+- [x] 將 order lifecycle events 產品化，補 durable storage、schema version、replay 與查詢 projection。
 - [x] 補上 amend order、cancel replace、bulk cancel、cancel on disconnect 的 REST/WebSocket baseline。
 - [ ] 為交易所常見指令補 durable command log、更強 atomicity mode 與 reconnect/session 語意。
 - [x] 在 pre-trade checks 落實 tick size、lot size、min notional、price band、max order size、max open orders。
@@ -22,21 +22,21 @@
 ### 帳務與資金
 
 - [x] 建立 wallet ledger balanced posting baseline，讓 MVP 資金變動可追溯、可對帳。
-- [ ] 建立完整 production 雙分錄 ledger schema 與 replay path。
+- [x] 建立完整 production 雙分錄 ledger schema 與 replay path。
 - [x] 將 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 拆成明確 accounting entries。
 - [ ] 用 production database constraints、audit retention 與 replay validation 強化 accounting entries。
 - [x] 補上 `/api/margin/risk`，計算凍結資金、可用餘額、總權益、維持保證金與風險率 snapshot。
-- [ ] 持久化每日 account risk snapshots，並用獨立 mark/index oracle inputs 取代 trade/ticker fallback marks。
+- [x] 持久化每日 account risk snapshots，並完整用獨立 mark/index oracle inputs 取代 trade/ticker fallback marks。
 - [x] 補上全帳戶對帳 baseline，掃 maintained account index 與 open-position index，回報 account、position margin、ledger balance 問題。
-- [ ] 補 persisted reconciliation reports、排程策略、alert routing 與 event-store coverage。
+- [x] 補 persisted reconciliation reports、排程策略、alert routing 與 event-store coverage。
 - [x] 補上 Redis-backed 入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review transfer states。
 - [ ] 補鏈上/銀行 callbacks、人工覆核流程 owner 與 transfer reconciliation projections。
 
 ### 風控
 
-- [ ] 接入 mark price / index price oracle，避免 liquidation 與 funding 使用成交價或任意輸入價。
+- [x] 接入 mark price / index price oracle，避免 liquidation 與 funding 使用成交價或任意輸入價。
 - [x] 建立 symbol risk baseline 設定：最大槓桿、維持保證金率、最大倉位名義金額、最大 open orders。
-- [ ] 補完整 risk tier：初始保證金率與階梯倉位上限。
+- [x] 補完整 risk tier：初始保證金率與階梯倉位上限。
 - [x] 補上 pre-trade risk checks：餘額、槓桿、倉位、敞口、價格偏離、client order id 去重。
 - [ ] 為 pre-trade risk checks 補 production frequency limits 與更完整 abuse controls。
 - [x] 補上 liquidation MVP，涵蓋觸發、平倉、保險基金、ADL 與 audit event。
@@ -46,7 +46,7 @@
 ### 可靠性與一致性
 
 - [x] 補上 outbox retry backoff、最大重試、DLQ replay 與人工補償流程 baseline。
-- [ ] 將 outbox 移到 production durable storage，並補人工補償 runbook。
+- [x] 將 outbox 移到 production durable storage，並補人工補償 runbook。
 - [x] 文件化 Kafka topic partition key、retention、compaction、schema version 與 consumer group 策略。
 - [x] 補上外部 API 共用 HTTP timeout、retry、circuit breaker 與 rate-limit baseline。
 - [ ] 逐一確認所有外部 API 都具備 timeout、retry、circuit breaker、rate limit 與 idempotency coverage。

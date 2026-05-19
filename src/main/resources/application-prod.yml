@@ -21,6 +21,21 @@ risk-controls:
 funding-rate:
   settlements: []
 
+mark-price-oracle:
+  max-staleness-ms: ${MARK_PRICE_ORACLE_MAX_STALENESS_MS:30000}
+  prices: []
+
+risk-snapshots:
+  enabled: ${RISK_SNAPSHOTS_ENABLED:false}
+  cron: "${RISK_SNAPSHOTS_CRON:0 0 0 * * *}"
+  zone: ${RISK_SNAPSHOTS_ZONE:UTC}
+
+reconciliation:
+  enabled: ${RECONCILIATION_ENABLED:false}
+  fixed-delay-ms: ${RECONCILIATION_FIXED_DELAY_MS:300000}
+  alert-on-error: ${RECONCILIATION_ALERT_ON_ERROR:true}
+  alert-route: ${RECONCILIATION_ALERT_ROUTE:ops.reconciliation}
+
 external-api:
   retry-max-attempts: ${EXTERNAL_API_RETRY_MAX_ATTEMPTS:3}
   retry-backoff-ms: ${EXTERNAL_API_RETRY_BACKOFF_MS:200}

@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 18 | 18 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 25 | 11 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 5 | 17 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 23 | 40 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 30 | 33 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前可合理依賴的能力
 
@@ -27,7 +27,7 @@ English version: [../en/current-state.md](../en/current-state.md)
 - 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
 - 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review。
-- 已有 account risk snapshot、pre-trade risk checks、global risk switches、liquidation MVP、funding settlement MVP、reconciliation baseline。
+- 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
 - 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
 - 測試資料夾已有 README 索引，測試案例也用註解和 `@DisplayName` 說明測試鏈路。
@@ -36,11 +36,11 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 - 撮合引擎仍是 in-memory，還沒有 durable command log、event log、snapshot、offset checkpoint 與 replay。
 - 單 symbol sequencer 只有 in-process baseline，還沒有 production deployment / failover 規則。
-- order lifecycle event 還缺 durable storage、schema version、replay 與 query projection。
-- ledger 還不是完整 production double-entry schema，也沒有完整 replay validation、DB constraints、audit retention。
-- liquidation / funding 還沒有接獨立 mark price / index price oracle。
-- reconciliation 還缺 persisted reports、排程策略、alert routing 與 event-store coverage。
-- outbox 還沒有搬到 production durable storage，也缺正式 manual compensation runbook。
+- order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
+- ledger 已有 durable double-entry journal 與 replay path；audit retention、更深入 replay validation 與營運控制仍未完成。
+- funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。production feed redundancy、price clamp 與 liquidation scanning 仍未完成。
+- reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline 與 event-store coverage checks。
+- outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。
 - MySQL、Redis、Kafka 之間的 transaction boundary 還沒有完整定義。
 - market data 還缺 durable sequence checkpoint、reconnect backfill、ticker/kline/trade tape persistence。
 - WebSocket/SSE gateway 還沒有獨立部署、水平擴展、訂閱授權、心跳、限流與斷線補償。
@@ -52,7 +52,7 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 1. 建立 durable order / ledger / event schemas 與 lifecycle projections。
 2. 把 matching engine 演進成可 replay 的核心：command log、event log、snapshot、offset checkpoint。
-3. 接 mark price / index price oracle，補完整 risk tier、production pre-trade risk 與 liquidation scanning。
+3. 強化 mark/index price oracle 的 production feed，再補 production pre-trade abuse controls 與 liquidation scanning。
 4. 補 reconciliation reports、排程、alert routing，並定義 MySQL / Redis / Kafka transaction boundary。
 5. 將 outbox、market data、WebSocket gateway、Polymarket worker 從 MVP baseline 推向可營運版本。
 

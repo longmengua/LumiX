@@ -3,6 +3,7 @@
  */
 package com.example.exchange.interfaces.web.controller;
 
+import com.example.exchange.application.service.OrderLifecycleProjectionService;
 import com.example.exchange.application.usecase.OrderUserCase;
 import com.example.exchange.application.usecase.AmendOrderUseCase;
 import com.example.exchange.application.usecase.CancelOrderUseCase;
@@ -13,6 +14,8 @@ import com.example.exchange.interfaces.web.dto.AmendOrderRequest;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.CancelReplaceOrderRequest;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
+import com.example.exchange.interfaces.web.dto.OrderLifecycleEventResponse;
+import com.example.exchange.interfaces.web.dto.OrderLifecycleProjectionResponse;
 import com.example.exchange.interfaces.web.dto.PlaceOrderRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +45,7 @@ public class OrderController {
     private final CancelOrderUseCase cancelOrderUseCase;
     private final AmendOrderUseCase amendOrderUseCase;
     private final CancelReplaceOrderUseCase cancelReplaceOrderUseCase;
+    private final OrderLifecycleProjectionService orderLifecycleProjectionService;
 
     /**
      * 下單 API
@@ -109,6 +113,47 @@ public class OrderController {
                 .map(Order::toOrderInfoResponse)
                 .collect(Collectors.toList());
 
+        return ApiResponse.ok(result);
+    }
+
+    @GetMapping("/{orderId}/lifecycle")
+    public ApiResponse<List<OrderLifecycleEventResponse>> orderLifecycle(
+            @PathVariable UUID orderId
+    ) {
+        List<OrderLifecycleEventResponse> result = orderLifecycleProjectionService.history(orderId)
+                .stream()
+                .map(OrderLifecycleEventResponse::from)
+                .toList();
+        return ApiResponse.ok(result);
+    }
+
+    @GetMapping("/{orderId}/projection")
+    public ApiResponse<OrderLifecycleProjectionResponse> orderProjection(
+            @PathVariable UUID orderId
+    ) {
+        return ApiResponse.ok(orderLifecycleProjectionService.projection(orderId)
+                .map(OrderLifecycleProjectionResponse::from)
+                .orElse(null));
+    }
+
+    @PostMapping("/{orderId}/projection/rebuild")
+    public ApiResponse<OrderLifecycleProjectionResponse> rebuildOrderProjection(
+            @PathVariable UUID orderId
+    ) {
+        return ApiResponse.ok(orderLifecycleProjectionService.rebuildProjection(orderId)
+                .map(OrderLifecycleProjectionResponse::from)
+                .orElse(null));
+    }
+
+    @GetMapping("/projections")
+    public ApiResponse<List<OrderLifecycleProjectionResponse>> orderProjections(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol
+    ) {
+        List<OrderLifecycleProjectionResponse> result = orderLifecycleProjectionService.projections(uid, symbol)
+                .stream()
+                .map(OrderLifecycleProjectionResponse::from)
+                .toList();
         return ApiResponse.ok(result);
     }
 
