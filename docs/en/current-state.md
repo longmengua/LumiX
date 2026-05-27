@@ -38,6 +38,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - An in-process per-symbol sequencer baseline serializes same-symbol matching operations within one process.
 - Production deployment and failover rules for per-symbol sequencer ownership are documented.
 - Matching state has an in-memory snapshot export/restore baseline that preserves resting order FIFO and match sequence.
+- Matching has an in-memory command log and replay baseline that can rebuild state from a snapshot checkpoint in deterministic tests.
 - A wallet-ledger balanced posting baseline makes MVP fund movements traceable and testable.
 - Accounting entries are split for order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal.
 - Deposit and withdrawal have a state-machine baseline covering pending, confirmed, failed, reversed, and manual review.
@@ -48,7 +49,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 ## What Is Not Production Complete
 
-- The matching engine is still in-memory and does not yet have a durable command log, event log, offset checkpoint, or full replay path.
+- The matching engine still lacks durable command log/event log storage, production offset checkpoints, and full replay validation reports.
 - The per-symbol sequencer is only implemented as an in-process baseline; production distributed lease, epoch fencing, and worker routing are still missing.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
 - The ledger now has a durable double-entry journal and replay path; audit retention, deeper replay validation, and operational controls are still incomplete.

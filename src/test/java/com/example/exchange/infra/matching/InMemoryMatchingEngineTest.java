@@ -184,6 +184,35 @@ class InMemoryMatchingEngineTest {
         restored.shutdown();
     }
 
+    @Test
+    @DisplayName("可從 snapshot checkpoint 後的 command log replay 撮合狀態")
+    /**
+     * 流程：先匯出含 command offset 的 snapshot -> 原 engine 繼續處理新掛單與成交 ->
+     * 新 engine 用 snapshot + 全量 command log replay -> 驗證 book 與 match sequence 延續。
+     */
+    void replayFromSnapshotCheckpointRebuildsBookAndMatchSequence() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+        engine.submit(limit(2, OrderSide.SELL, "101", "1"));
+        MatchingEngineSnapshot snapshot = engine.exportSnapshot("BTCUSDT");
+
+        engine.submit(limit(3, OrderSide.SELL, "102", "1"));
+        engine.submit(limit(4, OrderSide.BUY, "102", "3"));
+
+        InMemoryMatchingEngine restored = new InMemoryMatchingEngine();
+        restored.replay(snapshot, engine.commandLog("BTCUSDT"));
+
+        assertThat(restored.snapshot("BTCUSDT", 10).asks()).isEmpty();
+        MatchingResult result = restored.submit(limit(5, OrderSide.SELL, "103", "1"));
+        result = restored.submit(limit(6, OrderSide.BUY, "103", "1"));
+
+        assertThat(result.getTrades()).extracting(TradeExecuted::matchId)
+                .contains("BTCUSDT-4");
+        assertThat(restored.snapshot("BTCUSDT", 10).asks()).isEmpty();
+        engine.shutdown();
+        restored.shutdown();
+    }
+
     /**
      * 建立 LIMIT 測試訂單，統一 symbol、price、qty 與 origQty，讓各案例只聚焦撮合規則。
      */

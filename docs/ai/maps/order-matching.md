@@ -38,10 +38,12 @@ Current behavior:
 - Per-symbol operations are serialized by an in-process sequencer.
 - LIMIT/MARKET, GTC/IOC/FOK, post-only rejection, self-match prevention, amend, cancel, top-of-book, and depth snapshot are covered.
 - Snapshot export/restore preserves resting order FIFO and match sequence baseline.
+- In-memory command log and replay API preserve snapshot checkpoint replay and match sequence continuation in tests.
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Durable command log, event log, snapshots, offset checkpoints.
+- Move command log/event log, snapshots, and offset checkpoints from in-memory baseline to durable production storage.
+- Add deterministic replay validation reports for production recovery.
 - Stronger cancel-replace atomicity and reconnect/session semantics.
 - Keep this area first in the roadmap until replayable matching is complete.
 

@@ -17,6 +17,12 @@ Use a Markdown file as the task entry point:
 
 Codex should read that file first, open the relevant map under `docs/ai/maps/`, and either start the clear next task or ask which task to start if the file leaves multiple good options.
 
+## Code Comment Standard
+
+AI-generated or AI-modified code should include helpful comments in both production and test code. Prefer comments that explain business intent, state transitions, replay/recovery behavior, accounting effects, risk decisions, invariants, and edge cases. Tests should make setup, action, and expected result clear through comments or `@DisplayName`.
+
+Do not add noisy comments that only restate syntax.
+
 For interrupt work, ask Codex to create a task file first:
 
 ```text

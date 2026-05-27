@@ -12,6 +12,12 @@ English version：[../en/ai.md](../en/ai.md)
 | [AI README](../ai/README.md) | 說明如何用 Markdown 文件當 Codex 任務入口。 |
 | [Code Map Index](../ai/code-map.md) | 依任務分類的 code map 目錄。 |
 
+## 程式註解標準
+
+AI 產生或修改的程式碼都應加入有助於理解的註解，讓讀者能快速看懂業務意圖與測試流程。註解應優先說明狀態轉換、replay / recovery 行為、帳務影響、風控判斷、不變量與邊界情境。測試程式應透過註解或 `@DisplayName` 說清楚 setup、action、expected result。
+
+避免只重複語法本身的雜訊註解。
+
 ## Code Maps
 
 | 範圍 | 連結 |

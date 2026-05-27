@@ -108,6 +108,9 @@ Important packages:
 - New API endpoints need docs, curl script coverage when practical, and security classifier review.
 - Secrets must come from environment variables or a secret manager, not committed config.
 - Keep docs concise; update the relevant `docs/ai/maps/*.md` file when changing core flows or ownership.
+- AI-generated or AI-modified code must include clear comments where they help a reader understand intent, state transitions, replay/recovery behavior, accounting effects, risk decisions, or test flow.
+- Test code should explain the scenario in comments or `@DisplayName`, so a reader can understand setup, action, and expected result without reverse-engineering the assertions.
+- Avoid noisy comments that restate obvious syntax; prefer comments that clarify business rules, invariants, edge cases, and why the test exists.
 
 ## Current High-Value TODO Areas
 

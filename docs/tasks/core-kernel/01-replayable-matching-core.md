@@ -1,6 +1,6 @@
 # Task: Replayable Matching Core
 
-Status: `todo`
+Status: `doing`
 
 ## Goal
 
@@ -16,10 +16,24 @@ Evolve the current in-memory matching core toward replayability with durable com
 
 ## First Implementation Slice
 
-1. Add domain DTOs for matching command log entries and checkpoints.
-2. Add in-memory command log adapter for tests.
-3. Add replay API on the matching engine or a matching recovery service.
-4. Extend matching tests to rebuild a book from command log plus snapshot.
+1. [x] Add domain DTOs for matching command log entries and checkpoints.
+2. [x] Add in-memory command log adapter for tests.
+3. [x] Add replay API on the matching engine or a matching recovery service.
+4. [x] Extend matching tests to rebuild a book from command log plus snapshot.
+
+## Progress
+
+- Added `MatchingCommandLogEntry`, `MatchingCommandType`, and `MatchingCommandLog`.
+- Added `InMemoryMatchingCommandLog` for deterministic tests.
+- `MatchingEngineSnapshot` now carries `commandOffset`.
+- `InMemoryMatchingEngine` records submit/cancel/amend commands and can replay entries after the snapshot checkpoint.
+- `InMemoryMatchingEngineTest` covers snapshot checkpoint replay, FIFO preservation, top-of-book rebuild, and match sequence continuation.
+
+Remaining work:
+- Move command log/event log to durable storage.
+- Add explicit event log checkpointing and replay validation reports.
+- Add cancel-replace command semantics and stronger atomicity.
+- Add production worker recovery around durable logs.
 
 ## Acceptance Criteria
 

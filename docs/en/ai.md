@@ -12,6 +12,12 @@ This page links to compact agent-facing maps. The shared source files live under
 | [AI README](../ai/README.md) | How to ask Codex to use Markdown files as task entry points. |
 | [Code Map Index](../ai/code-map.md) | Map directory for task-specific code maps. |
 
+## Code Comment Standard
+
+AI-generated or AI-modified code should include comments that make business intent and test flow clear. Comments should explain state transitions, replay/recovery behavior, accounting effects, risk decisions, invariants, and edge cases. Test code should use comments or `@DisplayName` so setup, action, and expected result are easy to understand.
+
+Avoid comments that only repeat syntax.
+
 ## Code Maps
 
 | Area | Link |

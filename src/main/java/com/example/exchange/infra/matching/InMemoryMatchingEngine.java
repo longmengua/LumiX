@@ -4,13 +4,16 @@
 package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.event.TradeExecuted;
+import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.model.enums.TimeInForce;
+import com.example.exchange.domain.repository.MatchingCommandLog;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBook;
 import com.example.exchange.domain.service.OrderBookSnapshot;
@@ -41,15 +44,34 @@ import java.util.concurrent.atomic.AtomicLong;
 public class InMemoryMatchingEngine implements MatchingEngine {
 
     private final Map<String, SymbolRuntime> runtimes = new ConcurrentHashMap<>();
+    private final MatchingCommandLog commandLog;
+
+    public InMemoryMatchingEngine() {
+        this(new InMemoryMatchingCommandLog());
+    }
+
+    InMemoryMatchingEngine(MatchingCommandLog commandLog) {
+        this.commandLog = commandLog;
+    }
 
     @Override
     public MatchingResult submit(Order order) {
+        appendCommand(MatchingCommandType.SUBMIT, order, null, null);
+        return submitWithoutLogging(order);
+    }
+
+    private MatchingResult submitWithoutLogging(Order order) {
         SymbolRuntime runtime = runtime(order.getSymbol().code());
         return runtime.call(() -> submitOnSequencer(runtime, order));
     }
 
     @Override
     public boolean cancelOrder(Order order) {
+        appendCommand(MatchingCommandType.CANCEL, order, null, null);
+        return cancelOrderWithoutLogging(order);
+    }
+
+    private boolean cancelOrderWithoutLogging(Order order) {
         SymbolRuntime runtime = runtimes.get(order.getSymbol().code());
         if (runtime == null) return false;
         return runtime.call(() -> runtime.book.cancel(order));
@@ -57,6 +79,11 @@ public class InMemoryMatchingEngine implements MatchingEngine {
 
     @Override
     public boolean amendOrder(Order order, BigDecimal newPrice, BigDecimal newQty) {
+        appendCommand(MatchingCommandType.AMEND, order, newPrice, newQty);
+        return amendOrderWithoutLogging(order, newPrice, newQty);
+    }
+
+    private boolean amendOrderWithoutLogging(Order order, BigDecimal newPrice, BigDecimal newQty) {
         SymbolRuntime runtime = runtimes.get(order.getSymbol().code());
         if (runtime == null) return false;
         return runtime.call(() -> runtime.book.amend(order, newPrice, newQty));
@@ -86,13 +113,14 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         String symbol = normalize(symbolCode);
         SymbolRuntime runtime = runtimes.get(symbol);
         if (runtime == null) {
-            return new MatchingEngineSnapshot(symbol, 0L, List.of(), List.of(), Instant.now());
+            return new MatchingEngineSnapshot(symbol, 0L, commandLog.lastOffset(symbol), List.of(), List.of(), Instant.now());
         }
         return runtime.call(() -> new MatchingEngineSnapshot(
                 symbol,
                 runtime.matchSeq.get(),
-                List.copyOf(runtime.book.restingOrders(OrderSide.BUY)),
-                List.copyOf(runtime.book.restingOrders(OrderSide.SELL)),
+                commandLog.lastOffset(symbol),
+                runtime.book.restingOrders(OrderSide.BUY).stream().map(InMemoryMatchingEngine::copyOrder).toList(),
+                runtime.book.restingOrders(OrderSide.SELL).stream().map(InMemoryMatchingEngine::copyOrder).toList(),
                 Instant.now()
         ));
     }
@@ -110,6 +138,25 @@ public class InMemoryMatchingEngine implements MatchingEngine {
             restoreOrders(runtime.book, snapshot.asks());
             return null;
         });
+    }
+
+    @Override
+    public List<MatchingCommandLogEntry> commandLog(String symbolCode) {
+        return commandLog.listAll(symbolCode);
+    }
+
+    @Override
+    public void replay(MatchingEngineSnapshot snapshot, List<MatchingCommandLogEntry> commands) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("snapshot must not be null");
+        }
+        restoreSnapshot(snapshot);
+        if (commands == null || commands.isEmpty()) return;
+        commands.stream()
+                .filter(command -> normalize(command.symbolCode()).equals(normalize(snapshot.symbolCode())))
+                .filter(command -> command.offset() > snapshot.commandOffset())
+                .sorted((left, right) -> Long.compare(left.offset(), right.offset()))
+                .forEach(this::applyReplayCommand);
     }
 
     @PreDestroy
@@ -305,6 +352,20 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         return symbolCode == null ? "" : symbolCode.trim().toUpperCase();
     }
 
+    private void appendCommand(MatchingCommandType type, Order order, BigDecimal newPrice, BigDecimal newQty) {
+        if (order == null || order.getSymbol() == null) return;
+        commandLog.append(order.getSymbol().code(), type, copyOrder(order), newPrice, newQty);
+    }
+
+    private void applyReplayCommand(MatchingCommandLogEntry command) {
+        Order order = copyOrder(command.order());
+        switch (command.type()) {
+            case SUBMIT -> submitWithoutLogging(order);
+            case CANCEL -> cancelOrderWithoutLogging(order);
+            case AMEND -> amendOrderWithoutLogging(order, command.newPrice(), command.newQty());
+        }
+    }
+
     private static void restoreOrders(OrderBook book, List<Order> orders) {
         if (orders == null) return;
         for (Order order : orders) {
@@ -315,8 +376,34 @@ public class InMemoryMatchingEngine implements MatchingEngine {
                     || order.getQty().signum() <= 0) {
                 continue;
             }
-            book.add(order);
+            book.add(copyOrder(order));
         }
+    }
+
+    private static Order copyOrder(Order order) {
+        if (order == null) return null;
+        return Order.builder()
+                .id(order.getId())
+                .uid(order.getUid())
+                .symbol(order.getSymbol())
+                .side(order.getSide())
+                .type(order.getType())
+                .price(order.getPrice())
+                .qty(order.getQty())
+                .origQty(order.getOrigQty())
+                .executedQty(order.getExecutedQty())
+                .avgPrice(order.getAvgPrice())
+                .timeInForce(order.getTimeInForce())
+                .reduceOnly(order.isReduceOnly())
+                .postOnly(order.isPostOnly())
+                .leverage(order.getLeverage())
+                .marginMode(order.getMarginMode())
+                .reservedAmount(order.getReservedAmount())
+                .clientOrderId(order.getClientOrderId())
+                .rejectCode(order.getRejectCode())
+                .status(order.getStatus())
+                .ctime(order.getCtime())
+                .build();
     }
 
     private static final class SymbolRuntime {

@@ -4,11 +4,13 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.MatchingResult;
+import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.dto.TopOfBook;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -84,4 +86,20 @@ public interface MatchingEngine {
      * @param snapshot 先前匯出的撮合快照
      */
     void restoreSnapshot(MatchingEngineSnapshot snapshot);
+
+    /**
+     * 取得單一交易對的 command log。
+     *
+     * @param symbolCode 交易對代碼
+     * @return per-symbol command log entries
+     */
+    List<MatchingCommandLogEntry> commandLog(String symbolCode);
+
+    /**
+     * 從 snapshot 與 command log replay 撮合狀態。
+     *
+     * @param snapshot 快照，包含 command offset checkpoint
+     * @param commands command log entries；只會 replay snapshot offset 之後的 entries
+     */
+    void replay(MatchingEngineSnapshot snapshot, List<MatchingCommandLogEntry> commands);
 }
