@@ -4,6 +4,7 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.MatchingResult;
+import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.dto.TopOfBook;
 
@@ -68,4 +69,19 @@ public interface MatchingEngine {
      * @return Top of Book；若無資料則 empty
      */
     Optional<TopOfBook> top(String symbolCode);
+
+    /**
+     * 匯出單一交易對的撮合狀態快照。
+     *
+     * @param symbolCode 交易對代碼
+     * @return 可用於 restore 的 in-memory snapshot
+     */
+    MatchingEngineSnapshot exportSnapshot(String symbolCode);
+
+    /**
+     * 還原單一交易對的撮合狀態快照。
+     *
+     * @param snapshot 先前匯出的撮合快照
+     */
+    void restoreSnapshot(MatchingEngineSnapshot snapshot);
 }

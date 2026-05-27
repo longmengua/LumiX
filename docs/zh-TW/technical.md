@@ -10,13 +10,17 @@ English version: [../en/technical.md](../en/technical.md)
 | 文件 | 說明 |
 | --- | --- |
 | [目前狀態](current-state.md) | 快速判斷目前是 MVP baseline，並列出已完成能力、production blocker 與近期優先順序。 |
-| [技術筆記](../../NOTES_ch.md) | 架構與實作審查，涵蓋分層、已完成能力、風險與 production 優先事項。 |
+| [技術筆記](NOTES_ch.md) | 架構與實作審查，涵蓋分層、已完成能力、風險與 production 優先事項。 |
+| [AI Code Map](../ai/code-map.md) | 給 Codex/代理使用的精簡程式碼責任與流程地圖。 |
+| [AI 文件](ai.md) | Agent maps 與任務入口流程的繁中索引。 |
+| [任務文件](tasks.md) | 可點名 task md 的繁中索引。 |
 | [API curl 腳本](../../shells/api-curls/README_ch.md) | 本機 exchange 與 Polymarket API curl 腳本使用說明。 |
 | [撮合引擎](../../src/main/java/com/example/exchange/infra/matching/README_ch.md) | 目前 in-memory matching engine 說明與 production 演進方向。 |
 | [Redis Key Schema](redis-key-schema.md) | Redis key 歸屬、TTL 規則、namespace policy 與 migration backlog。 |
 | [Kafka Topics](kafka-topics.md) | Topic matrix、partition key policy、consumer groups、schema versioning 與正式環境建立規則。 |
 | [Observability Baseline](observability.md) | Request/correlation ID 在 HTTP、OkHttp、Kafka outbox 與 audit logs 的傳遞基線。 |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
+| [Matching Sequencer Runbook](matching-sequencer-runbook.md) | 單 symbol sequencer 的 production ownership、partition、啟動與 failover 規則。 |
 | [產品總覽](README.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |
 | [待辦清單](todo.md) | Production readiness 的工程待辦路線圖。 |
 

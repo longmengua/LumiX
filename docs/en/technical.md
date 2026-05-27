@@ -10,13 +10,17 @@ Technical documentation is for engineers who need to understand how the system i
 | Document | Description |
 | --- | --- |
 | [Current State](current-state.md) | Quick status dashboard for MVP baseline, completed capabilities, production blockers, and near-term priorities. |
-| [Technical Notes](../../NOTES.md) | Architecture and implementation review covering layers, strengths, risks, and production priorities. |
+| [Technical Notes](NOTES.md) | Architecture and implementation review covering layers, strengths, risks, and production priorities. |
+| [AI Code Map](../ai/code-map.md) | Compact code ownership and flow map for coding agents. |
+| [AI Documentation](ai.md) | English index for agent maps and task-entry workflow. |
+| [Task Documentation](tasks.md) | English index for selectable task files. |
 | [API curl scripts](../../shells/api-curls/README.md) | Local curl-script guide for exchange and Polymarket API endpoints. |
 | [Matching Engine](../../src/main/java/com/example/exchange/infra/matching/README.md) | Notes for the current in-memory matching engine and its production evolution path. |
 | [Redis Key Schema](redis-key-schema.md) | Redis key ownership, TTL rules, namespace policy, and migration backlog. |
 | [Kafka Topics](kafka-topics.md) | Topic matrix, partition key policy, consumer groups, schema versioning, and production creation rules. |
 | [Observability Baseline](observability.md) | Request/correlation ID propagation across HTTP, OkHttp, Kafka outbox, and audit logs. |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox, DLQ replay, and manual compensation operations. |
+| [Matching Sequencer Runbook](matching-sequencer-runbook.md) | Production ownership, partitioning, startup, and failover rules for per-symbol sequencers. |
 | [Product overview](README.md) | Business features, modules, order placement flow, APIs, and Kafka topics. |
 | [Production TODO](todo.md) | Engineering roadmap for production readiness. |
 

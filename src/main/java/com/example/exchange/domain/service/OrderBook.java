@@ -91,6 +91,23 @@ public class OrderBook {
         return true;
     }
 
+    public void clear() {
+        bids.clear();
+        asks.clear();
+        orderIndex.clear();
+    }
+
+    public List<Order> restingOrders(OrderSide side) {
+        NavigableMap<BigDecimal, LinkedHashSet<Order>> book = side == OrderSide.BUY
+                ? bids.descendingMap()
+                : asks;
+        List<Order> orders = new ArrayList<>();
+        for (LinkedHashSet<Order> level : book.values()) {
+            orders.addAll(level);
+        }
+        return orders;
+    }
+
     public void removeFilled(Order order) {
         if (order != null && order.getQty() != null && order.getQty().signum() <= 0) {
             remove(order);

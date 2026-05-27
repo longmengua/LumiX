@@ -1,17 +1,27 @@
 <!-- File purpose: English production-readiness checklist. Other languages are listed in the repository root README.md. -->
 # Production TODO
 
-This checklist focuses on the work needed to move the current MVP toward production. Priority can be adjusted by product stage, but P0/P1 items should be completed before real funds or real trading volume are introduced.
+This checklist focuses on the work needed to move the current MVP toward production. The current product priority is to finish the core exchange/matching kernel first, including matching durability, ADL, bonus credit, turnover, ledger reconciliation, and market-maker hedging interfaces/strategies.
 
 Documentation categories: [Product Documentation](README.md) / [Technical Documentation](technical.md) / TODO Documentation
 
 ## P0 Required
 
+### Core Exchange Kernel Priority Lane
+
+- [ ] Finish the replayable matching core: durable command log, event log, snapshots, offset checkpoints, and deterministic replay validation.
+- [ ] Complete production ADL: queue ranking, forced deleveraging execution, audit events, insurance-fund interaction, and operator controls.
+- [ ] Add bonus-credit / experience-fund accounting with separate ledger accounts, eligibility rules, consumption priority, expiry, clawback, and reporting.
+- [ ] Add turnover tracking for user, account, symbol, strategy, and market-maker dimensions, with ledger/trade reconciliation.
+- [ ] Harden ledger reconciliation into an auditable accounting book: immutable journals, trial balance, replay comparison, exception workflow, and finance reports.
+- [ ] Build market-maker interfaces for quoting, inventory, risk limits, kill switch, and hedging order routing.
+- [ ] Build market-maker hedging strategy baseline: exposure aggregation, hedge venue adapter interface, execution policy, slippage controls, and hedge audit trail.
+
 ### Trading and Matching
 
 - [ ] Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
 - [x] Add an in-process per-symbol sequencer baseline so matching operations for the same symbol are serialized.
-- [ ] Define production deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
+- [x] Define production deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
 - [x] Publish order lifecycle events for created, accepted, updated, rejected, canceled, expired, and filled states.
 - [x] Persist and operationalize order lifecycle events with durable storage, schema versioning, replay, and query projections.
 - [x] Add REST/WebSocket baselines for amend order, cancel replace, bulk cancel, and cancel on disconnect.
@@ -66,7 +76,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Add durable sequence checkpoints and reconnect backfill for incremental order book streams.
 - [ ] Persist ticker, kline, and trade tape so market data survives service restarts.
 - [ ] Deploy WebSocket/SSE gateway independently with horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
-- [ ] Add market-maker / liquidity-provider APIs and rate-limit policies.
+- [ ] Add market-maker / liquidity-provider API hardening and rate-limit policies after the P0 market-maker interface baseline is complete.
 
 ### Polymarket Integration
 
@@ -81,7 +91,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Add production indexes for orders, positions, ledger, events, and prediction orders.
 - [x] Document Redis key schema, namespace prefix, versioning, and migration strategy.
 - [ ] Add final TTL/archive rules for Redis hot-state keys.
-- [ ] Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
+- [x] Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
 - [ ] Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
 
 ### Observability
@@ -104,8 +114,9 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ## Suggested Near-Term Order
 
-1. [ ] Add durable order/ledger/event schemas and projections for the order lifecycle events.
-2. [ ] Add command log, snapshot, and replay to the matching engine.
-3. [ ] Integrate mark price / index price and complete production-grade pre-trade risk and liquidation.
-4. [x] Build reconciliation jobs and an observability baseline for the MVP.
-5. [ ] Split WebSocket gateway, Polymarket WS worker, and matching worker.
+1. [ ] Finish replayable matching core: durable command log, event log, snapshot, offset checkpoint, and replay validation.
+2. [ ] Complete liquidation/ADL execution path and operator controls.
+3. [ ] Add bonus-credit / experience-fund ledger treatment and turnover tracking.
+4. [ ] Harden ledger reconciliation into an auditable accounting book with exception workflow.
+5. [ ] Build market-maker quoting, inventory, kill-switch, hedging interface, and hedging strategy baseline.
+6. [ ] Split matching worker first; defer WebSocket gateway and Polymarket worker split until the core kernel is stable.

@@ -1,7 +1,7 @@
-<!-- File purpose: English technical notes for java21-match-hub. Chinese version: NOTES_ch.md. -->
+<!-- File purpose: English technical notes for java21-match-hub. Chinese version: ../zh-TW/NOTES_ch.md. -->
 # Technical Notes
 
-This file is the English companion to `NOTES_ch.md`. The Chinese file contains the longer original review notes. This English version summarizes the main engineering points so the original filename remains available for English readers.
+This file is the English companion to `../zh-TW/NOTES_ch.md`. The Chinese file contains the longer original review notes. This English version summarizes the main engineering points so the original filename remains available for English readers.
 
 ## Current Direction
 

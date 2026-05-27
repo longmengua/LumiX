@@ -4,6 +4,7 @@
 package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.event.TradeExecuted;
+import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.Symbol;
@@ -150,6 +151,37 @@ class InMemoryMatchingEngineTest {
         assertThat(marketBuy.getQty()).isEqualByComparingTo("1");
         assertThat(marketBuy.getRejectCode()).isEqualTo("MARKET_LIQUIDITY_INSUFFICIENT");
         engine.shutdown();
+    }
+
+    @Test
+    @DisplayName("撮合快照可還原訂單簿 FIFO 與 match sequence")
+    /**
+     * 流程：先產生一筆成交推進 match sequence -> 匯出兩筆同價賣單快照 -> 新 engine 還原後成交。
+     */
+    void snapshotRestorePreservesFifoAndMatchSequence() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "99", "1"));
+        engine.submit(limit(2, OrderSide.BUY, "99", "1"));
+        Order firstAsk = limit(3, OrderSide.SELL, "100", "1");
+        Order secondAsk = limit(4, OrderSide.SELL, "100", "1");
+        engine.submit(firstAsk);
+        engine.submit(secondAsk);
+
+        MatchingEngineSnapshot snapshot = engine.exportSnapshot("btcusdt");
+        InMemoryMatchingEngine restored = new InMemoryMatchingEngine();
+        restored.restoreSnapshot(snapshot);
+
+        MatchingResult result = restored.submit(limit(5, OrderSide.BUY, "100", "2"));
+
+        List<UUID> makerOrderIds = result.getTrades().stream()
+                .filter(TradeExecuted::maker)
+                .map(TradeExecuted::orderId)
+                .toList();
+        assertThat(makerOrderIds).containsExactly(firstAsk.getId(), secondAsk.getId());
+        assertThat(result.getTrades()).extracting(TradeExecuted::matchId)
+                .contains("BTCUSDT-2", "BTCUSDT-3");
+        engine.shutdown();
+        restored.shutdown();
     }
 
     /**

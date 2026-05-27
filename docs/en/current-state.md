@@ -3,7 +3,7 @@
 
 This document answers one question: how complete is this repository right now?
 
-Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The core baselines exist, but real funds and real traffic still require durable state, replay, reconciliation, monitoring, and operational controls.
+Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The active roadmap now prioritizes the core exchange/matching kernel first: replayable matching, ADL, bonus credit, turnover, auditable books/reconciliation, and market-maker hedging.
 
 中文版本：[../zh-TW/current-state.md](../zh-TW/current-state.md)
 
@@ -13,10 +13,22 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
-| P0 Required | 25 | 11 | Core MVP capability exists, but many production blockers remain. |
-| P1 Strongly Recommended | 5 | 17 | Operations, market data, Polymarket, and data governance are still early. |
+| P0 Required | 26 | 17 | Core MVP capability exists, but many production blockers remain. |
+| P1 Strongly Recommended | 6 | 16 | Operations, market data, Polymarket, and data governance are still early. |
 | P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
-| Total | 30 | 33 | The project has a baseline, but production hardening is still the main body of work. |
+| Total | 32 | 38 | The project has a baseline, but production hardening is still the main body of work. |
+
+## Current Priority Override
+
+The next work should stay on the core exchange kernel until it is complete enough for production-style trading tests:
+
+1. Replayable matching command/event log, snapshots, checkpoints, and replay validation.
+2. Liquidation and ADL execution, including operator controls and audit events.
+3. Bonus-credit / experience-fund accounting and turnover tracking.
+4. Auditable ledger book and reconciliation exception workflow.
+5. Market-maker quoting, inventory, kill switch, hedge interface, and hedge strategy baseline.
+
+Polymarket worker split, WebSocket gateway scaling, and broader observability work remain important, but they should not outrank this core-kernel lane.
 
 ## Capabilities You Can Reasonably Rely On
 
@@ -24,6 +36,8 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 - Internal exchange order entry has an MVP chain: validation, pre-trade risk, in-memory matching, accounting updates, and event publishing.
 - Matching behavior has deterministic tests for FIFO, post-only, self-match prevention, IOC/FOK, and insufficient market-order liquidity.
 - An in-process per-symbol sequencer baseline serializes same-symbol matching operations within one process.
+- Production deployment and failover rules for per-symbol sequencer ownership are documented.
+- Matching state has an in-memory snapshot export/restore baseline that preserves resting order FIFO and match sequence.
 - A wallet-ledger balanced posting baseline makes MVP fund movements traceable and testable.
 - Accounting entries are split for order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal.
 - Deposit and withdrawal have a state-machine baseline covering pending, confirmed, failed, reversed, and manual review.
@@ -34,8 +48,8 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 ## What Is Not Production Complete
 
-- The matching engine is still in-memory and does not yet have a durable command log, event log, snapshot, offset checkpoint, or replay.
-- The per-symbol sequencer is only an in-process baseline; production deployment and failover rules are still missing.
+- The matching engine is still in-memory and does not yet have a durable command log, event log, offset checkpoint, or full replay path.
+- The per-symbol sequencer is only implemented as an in-process baseline; production distributed lease, epoch fencing, and worker routing are still missing.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
 - The ledger now has a durable double-entry journal and replay path; audit retention, deeper replay validation, and operational controls are still incomplete.
 - Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, and liquidation scanning are still incomplete.
@@ -46,15 +60,15 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 - The WebSocket/SSE gateway still needs independent deployment, horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
 - Polymarket order lifecycle, schema versioning, idempotent commands, and the user WebSocket worker are mostly still TODO.
 - Metrics backend, distributed tracing export, dashboards, and alerting are incomplete.
-- Production indexes, Flyway-only schema policy, archive policy, admin console, reporting, load testing, and compliance are not complete.
+- Production indexes, archive policy, admin console, reporting, load testing, and compliance are not complete.
 
 ## Recommended Next Work
 
-1. Build durable order / ledger / event schemas and lifecycle projections.
-2. Evolve the matching engine into a replayable core with command log, event log, snapshot, and offset checkpoint.
-3. Harden the mark/index price oracle with production feeds, then complete production pre-trade abuse controls and liquidation scanning.
-4. Add reconciliation reports, scheduling, alert routing, and explicit MySQL / Redis / Kafka transaction boundaries.
-5. Move outbox, market data, WebSocket gateway, and Polymarket workers from MVP baseline toward operable services.
+1. Evolve the matching engine into a replayable core with command log, event log, snapshot, offset checkpoint, and replay validation.
+2. Complete liquidation and ADL execution paths with operator controls.
+3. Add bonus-credit / experience-fund accounting and turnover tracking.
+4. Harden ledger reconciliation into an auditable book with exception workflow.
+5. Build market-maker interfaces and hedging strategy baseline.
 
 ## Reading Order
 
@@ -63,4 +77,5 @@ For a quick status read, start here, then read:
 1. [todo.md](todo.md): full production-readiness checklist.
 2. [technical.md](technical.md): technical documentation index.
 3. [README.md](README.md): product and API overview.
-4. [../../src/main/java/com/example/exchange/infra/matching/README.md](../../src/main/java/com/example/exchange/infra/matching/README.md): matching engine status.
+4. [../ai/code-map.md](../ai/code-map.md): compact agent code-map index.
+5. [../../src/main/java/com/example/exchange/infra/matching/README.md](../../src/main/java/com/example/exchange/infra/matching/README.md): matching engine status.

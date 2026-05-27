@@ -1,17 +1,27 @@
 <!-- 檔案用途：繁體中文 production TODO；其他語言請見根目錄 README.md。 -->
 # Production TODO
 
-這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。優先順序可依產品階段調整，但 P0/P1 建議在真實資金或真實交易量進來前完成。
+這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前產品優先順序改為先把核心交易所 / 撮合內核做完整，包含撮合持久化、ADL、體驗金、流水、帳本對賬、做市商對沖 interface 與對沖策略。
 
 文件分類：[產品文件](README.md) / [技術文件](technical.md) / 待辦清單文件
 
 ## P0 必做
 
+### 核心交易內核優先線
+
+- [ ] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
+- [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
+- [ ] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
+- [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
+- [ ] 將 ledger reconciliation 強化成可審計帳本：immutable journal、trial balance、replay comparison、exception workflow 與財務報表。
+- [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
+- [ ] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。
+
 ### 交易與撮合
 
 - [ ] 將 in-memory matching engine 演進為可 replay 的撮合核心，至少要有 command log、event log、snapshot、offset checkpoint。
 - [x] 補上 in-process 單 symbol sequencer baseline，讓同一 symbol 的撮合操作序列化。
-- [ ] 定義 production 單 symbol sequencer 的部署與 failover 策略，避免多實例同時處理同一 symbol 造成狀態分裂。
+- [x] 定義 production 單 symbol sequencer 的部署與 failover 策略，避免多實例同時處理同一 symbol 造成狀態分裂。
 - [x] 發布 order lifecycle events，涵蓋 created、accepted、updated、rejected、canceled、expired、filled。
 - [x] 將 order lifecycle events 產品化，補 durable storage、schema version、replay 與查詢 projection。
 - [x] 補上 amend order、cancel replace、bulk cancel、cancel on disconnect 的 REST/WebSocket baseline。
@@ -66,7 +76,7 @@
 - [ ] 補 durable sequence checkpoint 與 reconnect backfill。
 - [ ] 將 ticker、kline、trade tape 持久化，避免服務重啟後行情資料消失。
 - [ ] WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
-- [ ] 補齊 market maker / liquidity provider 專用 API 與節流策略。
+- [ ] 在 P0 做市商 interface baseline 完成後，補齊 market maker / liquidity provider API hardening 與節流策略。
 
 ### Polymarket 整合
 
@@ -81,7 +91,7 @@
 - [ ] 為 orders、positions、ledger、events、prediction orders 補齊 production index。
 - [x] 文件化 Redis key schema、namespace prefix、版本與 migration 策略。
 - [ ] 補 Redis hot-state key 的最終 TTL / archive rules。
-- [ ] Flyway migration 改為正式唯一 schema 管理，不再依賴 Hibernate `ddl-auto=update`。
+- [x] Flyway migration 改為正式唯一 schema 管理，不再依賴 Hibernate `ddl-auto=update`。
 - [ ] 補齊資料歸檔策略：歷史訂單、成交、ledger、Kafka event、audit log。
 
 ### 可觀測性
@@ -104,8 +114,9 @@
 
 ## 近期落地順序建議
 
-1. [ ] 先補 order/ledger/event 持久化 schema 與 order lifecycle projection。
-2. [ ] 再把 matching engine 加上 command log、snapshot、replay。
-3. [ ] 接 mark price / index price，完成 production 級 pre-trade risk 與 liquidation。
-4. [x] 建立 MVP reconciliation job 與 observability baseline。
-5. [ ] 最後拆分 WebSocket gateway、Polymarket WS worker、matching worker。
+1. [ ] 先完成可 replay 撮合核心：durable command log、event log、snapshot、offset checkpoint 與 replay validation。
+2. [ ] 完成 liquidation / ADL 執行鏈路與營運控制。
+3. [ ] 補體驗金 / bonus credit 帳務與流水 tracking。
+4. [ ] 將 ledger reconciliation 強化成可審計帳本與 exception workflow。
+5. [ ] 建立做市商報價、inventory、kill-switch、對沖 interface 與對沖策略 baseline。
+6. [ ] 先拆 matching worker；WebSocket gateway 與 Polymarket worker 拆分延後到核心內核穩定後。

@@ -12,4 +12,5 @@ Flyway migration scripts。
 
 注意：
 - migration 檔案不可修改已發布版本；新增變更應建立下一個 `V{n}__*.sql`。
+- Flyway 是 schema 唯一管理入口；Hibernate 只做 `validate`，不得用 `ddl-auto=update` 漂移 schema。
 - production index、ledger schema、event projection schema 都應在這裡落地。

@@ -4,6 +4,7 @@
 package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.event.TradeExecuted;
+import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.entity.Order;
@@ -77,6 +78,37 @@ public class InMemoryMatchingEngine implements MatchingEngine {
             BigDecimal bestAsk = runtime.book.peekBestAsk() == null ? null : runtime.book.peekBestAsk().getPrice();
             if (bestBid == null && bestAsk == null) return Optional.empty();
             return Optional.of(TopOfBook.builder().bestBid(bestBid).bestAsk(bestAsk).build());
+        });
+    }
+
+    @Override
+    public MatchingEngineSnapshot exportSnapshot(String symbolCode) {
+        String symbol = normalize(symbolCode);
+        SymbolRuntime runtime = runtimes.get(symbol);
+        if (runtime == null) {
+            return new MatchingEngineSnapshot(symbol, 0L, List.of(), List.of(), Instant.now());
+        }
+        return runtime.call(() -> new MatchingEngineSnapshot(
+                symbol,
+                runtime.matchSeq.get(),
+                List.copyOf(runtime.book.restingOrders(OrderSide.BUY)),
+                List.copyOf(runtime.book.restingOrders(OrderSide.SELL)),
+                Instant.now()
+        ));
+    }
+
+    @Override
+    public void restoreSnapshot(MatchingEngineSnapshot snapshot) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("snapshot must not be null");
+        }
+        SymbolRuntime runtime = runtime(snapshot.symbolCode());
+        runtime.call(() -> {
+            runtime.book.clear();
+            runtime.matchSeq.set(Math.max(0L, snapshot.matchSequence()));
+            restoreOrders(runtime.book, snapshot.bids());
+            restoreOrders(runtime.book, snapshot.asks());
+            return null;
         });
     }
 
@@ -271,6 +303,20 @@ public class InMemoryMatchingEngine implements MatchingEngine {
 
     private static String normalize(String symbolCode) {
         return symbolCode == null ? "" : symbolCode.trim().toUpperCase();
+    }
+
+    private static void restoreOrders(OrderBook book, List<Order> orders) {
+        if (orders == null) return;
+        for (Order order : orders) {
+            if (order == null
+                    || order.getId() == null
+                    || order.getPrice() == null
+                    || order.getQty() == null
+                    || order.getQty().signum() <= 0) {
+                continue;
+            }
+            book.add(order);
+        }
     }
 
     private static final class SymbolRuntime {
