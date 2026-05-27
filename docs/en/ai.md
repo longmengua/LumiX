@@ -27,4 +27,5 @@ Avoid comments that only repeat syntax.
 | Reliability and market data | [../ai/maps/reliability-market-data.md](../ai/maps/reliability-market-data.md) |
 | Polymarket and security | [../ai/maps/polymarket-security.md](../ai/maps/polymarket-security.md) |
 | Market-maker and hedging | [../ai/maps/market-maker-hedging.md](../ai/maps/market-maker-hedging.md) |
+| Web applications | [../ai/maps/web-apps.md](../ai/maps/web-apps.md) |
 | Persistence and tests | [../ai/maps/persistence-tests.md](../ai/maps/persistence-tests.md) |

@@ -11,6 +11,7 @@ This file is only the directory for agent-facing code maps. Keep detailed maps s
 | Reliability and market data | [maps/reliability-market-data.md](maps/reliability-market-data.md) | Outbox, DLQ, recovery, Kafka event store, depth/ticker/trade/kline, push streams. |
 | Polymarket and security | [maps/polymarket-security.md](maps/polymarket-security.md) | Polymarket market/order/session flows, signing, user WebSocket, API auth, tracing. |
 | Market-maker and hedging | [maps/market-maker-hedging.md](maps/market-maker-hedging.md) | Market-maker quoting, inventory, hedge interfaces, hedge strategy, and hedge audit trail. |
+| Web applications | [maps/web-apps.md](maps/web-apps.md) | Client web, admin web, frontend scope, and backend API areas. |
 | Persistence and tests | [maps/persistence-tests.md](maps/persistence-tests.md) | Flyway migrations, Redis/Kafka contracts, focused test selection. |
 
 ## Update Rule

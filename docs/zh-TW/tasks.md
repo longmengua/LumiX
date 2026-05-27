@@ -21,3 +21,10 @@ English version：[../en/tasks.md](../en/tasks.md)
 | 3 | [體驗金與流水](../tasks/core-kernel/03-bonus-credit-turnover.md) | 體驗金帳務與流水 tracking。 |
 | 4 | [可審計帳本對賬](../tasks/core-kernel/04-auditable-ledger-reconciliation.md) | Trial balance、immutable journals、exception workflow。 |
 | 5 | [做市商對沖](../tasks/core-kernel/05-market-maker-hedging.md) | 報價、inventory、hedge interface、hedge strategy、audit trail。 |
+
+## Web 任務
+
+| 順序 | 任務 | 目的 |
+| ---: | --- | --- |
+| 1 | [客戶端 Web](../tasks/web/01-client-web.md) | 交易、帳戶、行情、持倉、訂單、資金與使用者通知。 |
+| 2 | [管理端 Web](../tasks/web/02-admin-web.md) | 管理 dashboard、風控控制、對賬、DLQ/recovery、ADL 與做市商營運。 |

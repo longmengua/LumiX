@@ -20,7 +20,7 @@ printf 'docs/en/current-state.md\n'
 printf 'docs/en/todo.md\n'
 printf 'docs/zh-TW/todo.md\n'
 printf 'docs/tasks/README.md\n'
-find docs/tasks -mindepth 2 -maxdepth 2 -type f -name '*.md' | sort
+find docs/tasks -mindepth 2 -type f -name '*.md' | sort
 
 section "TODO Progress"
 awk '

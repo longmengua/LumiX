@@ -21,3 +21,10 @@ Task files turn roadmap work into selectable Markdown files. When an interrupt r
 | 3 | [Bonus Credit And Turnover](../tasks/core-kernel/03-bonus-credit-turnover.md) | Experience fund accounting and turnover tracking. |
 | 4 | [Auditable Ledger Reconciliation](../tasks/core-kernel/04-auditable-ledger-reconciliation.md) | Trial balance, immutable journals, exception workflow. |
 | 5 | [Market Maker Hedging](../tasks/core-kernel/05-market-maker-hedging.md) | Quoting, inventory, hedge interface, hedge strategy, audit trail. |
+
+## Web Tasks
+
+| Order | Task | Purpose |
+| ---: | --- | --- |
+| 1 | [Client Web](../tasks/web/01-client-web.md) | Trading, account, market data, positions, orders, transfers, and user notifications. |
+| 2 | [Admin Web](../tasks/web/02-admin-web.md) | Admin dashboard, risk controls, reconciliation, DLQ/recovery, ADL, and market-maker operations. |

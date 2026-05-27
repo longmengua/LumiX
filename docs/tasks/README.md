@@ -21,6 +21,7 @@ This directory turns roadmap items into executable task files. Use it when the u
 | Group | Directory | Purpose |
 | --- | --- | --- |
 | Core exchange kernel | [core-kernel](core-kernel) | Replayable matching, ADL, bonus credit, turnover, accounting book, market-maker hedging. |
+| Web applications | [web](web) | Client web and admin web task breakdown. |
 
 ## How To Ask Codex
 
