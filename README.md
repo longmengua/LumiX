@@ -1,7 +1,10 @@
-<!-- File purpose: Repository documentation catalog grouped by product docs, technical docs, and TODO docs. -->
+<!-- File purpose: bilingual repository documentation catalog grouped by product docs, technical docs, TODO docs, AI docs, and task docs. -->
 # Java21 Match Hub Documentation
 
-Java21 Match Hub is a Java 21 + Spring Boot backend for an exchange core and Polymarket integration.
+| Language | Project Summary |
+| --- | --- |
+| English | Java21 Match Hub is a Java 21 + Spring Boot backend for an exchange core and Polymarket integration. |
+| 繁體中文 | Java21 Match Hub 是 Java 21 + Spring Boot 後端，涵蓋交易所核心與 Polymarket 整合。 |
 
 ## Documentation Categories
 
@@ -16,30 +19,61 @@ Java21 Match Hub is a Java 21 + Spring Boot backend for an exchange core and Pol
 
 ## Local Startup
 
+| Language | Description |
+| --- | --- |
+| English | Start local infrastructure, then run the Spring Boot application. |
+| 繁體中文 | 先啟動本機基礎設施，再啟動 Spring Boot 應用程式。 |
+
 ```bash
 docker compose up -d
 ./mvnw spring-boot:run
 ```
 
-The default API endpoint is `http://localhost:8080`.
+| Language | API Endpoint |
+| --- | --- |
+| English | The default API endpoint is `http://localhost:8080`. |
+| 繁體中文 | 預設 API endpoint 是 `http://localhost:8080`。 |
 
 ## AI Usage
 
-Use these prompts when asking Codex to work from the maintained documentation:
+| Language | How To Use |
+| --- | --- |
+| English | Use these prompts when asking Codex to work from the maintained documentation. |
+| 繁體中文 | 跟 Codex 協作時，可以直接使用下列表格中的指令。 |
 
-```text
-讀一下 docs/en/tasks.md，告訴我目前可以先做哪些 task，先不要改 code。
-讀一下 docs/tasks/core-kernel/01-replayable-matching-core.md，開始做。
-把這個插單需求轉成 task md：先做做市商對沖。
-讀一下 AGENTS.md 和 docs/en/ai.md，然後繼續 production TODO。
-```
+### English Prompts
 
-For a quick machine-readable context summary:
+| Purpose | Prompt |
+| --- | --- |
+| Ask what can be started next without changing code | `Read docs/en/tasks.md and tell me which tasks can be started first. Do not change code yet.` |
+| Start the first core-kernel task | `Read docs/tasks/core-kernel/01-replayable-matching-core.md and start implementation.` |
+| Convert an interrupt request into task files | `Convert this interrupt request into task md: build the market-maker hedging work first.` |
+| Continue production TODO from the AI docs | `Read AGENTS.md and docs/en/ai.md, then continue the production TODO.` |
+
+### 繁體中文指令
+
+| 用途 | 指令 |
+| --- | --- |
+| 先看有哪些任務可做，不改 code | `讀一下 docs/zh-TW/tasks.md，告訴我目前可以先做哪些 task，先不要改 code。` |
+| 開始第一個核心內核任務 | `讀一下 docs/tasks/core-kernel/01-replayable-matching-core.md，開始做。` |
+| 把插單需求轉成任務檔 | `把這個插單需求轉成 task md：先做做市商對沖。` |
+| 依 AI 文件繼續 production TODO | `讀一下 AGENTS.md 和 docs/zh-TW/ai.md，然後繼續 production TODO。` |
+
+### Context Summary
+
+| Language | Description |
+| --- | --- |
+| English | Run this command for a quick machine-readable context summary before broad exploration. |
+| 繁體中文 | 在大範圍探索前，可先用這個指令產生 Codex 開工摘要。 |
 
 ```bash
 ./shells/ai-context.sh
 ```
 
-AI documentation: [docs/en/ai.md](docs/en/ai.md) / [docs/zh-TW/ai.md](docs/zh-TW/ai.md)
+## Direct Links
 
-Task documentation: [docs/en/tasks.md](docs/en/tasks.md) / [docs/zh-TW/tasks.md](docs/zh-TW/tasks.md)
+| Category | English | 繁體中文 |
+| --- | --- | --- |
+| AI Documentation | [docs/en/ai.md](docs/en/ai.md) | [docs/zh-TW/ai.md](docs/zh-TW/ai.md) |
+| Task Documentation | [docs/en/tasks.md](docs/en/tasks.md) | [docs/zh-TW/tasks.md](docs/zh-TW/tasks.md) |
+| Agent Startup Guide | [AGENTS.md](AGENTS.md) | [AGENTS.md](AGENTS.md) |
