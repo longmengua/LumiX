@@ -6,7 +6,10 @@ package com.example.exchange.infra.matching;
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
+import com.example.exchange.domain.model.dto.MatchingEventLogEntry;
+import com.example.exchange.domain.model.dto.MatchingReplayValidationReport;
 import com.example.exchange.domain.model.dto.MatchingResult;
+import com.example.exchange.domain.model.dto.PriceLevel;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
@@ -14,10 +17,12 @@ import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.model.enums.TimeInForce;
 import com.example.exchange.domain.repository.MatchingCommandLog;
+import com.example.exchange.domain.repository.MatchingEventLog;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBook;
 import com.example.exchange.domain.service.OrderBookSnapshot;
 import jakarta.annotation.PreDestroy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -45,33 +50,39 @@ public class InMemoryMatchingEngine implements MatchingEngine {
 
     private final Map<String, SymbolRuntime> runtimes = new ConcurrentHashMap<>();
     private final MatchingCommandLog commandLog;
+    private final MatchingEventLog eventLog;
 
     public InMemoryMatchingEngine() {
-        this(new InMemoryMatchingCommandLog());
+        this(new InMemoryMatchingCommandLog(), new InMemoryMatchingEventLog());
     }
 
-    InMemoryMatchingEngine(MatchingCommandLog commandLog) {
+    @Autowired
+    public InMemoryMatchingEngine(MatchingCommandLog commandLog, MatchingEventLog eventLog) {
         this.commandLog = commandLog;
+        this.eventLog = eventLog;
     }
 
     @Override
     public MatchingResult submit(Order order) {
         appendCommand(MatchingCommandType.SUBMIT, order, null, null);
-        return submitWithoutLogging(order);
+        return submitWithoutCommandLogging(order);
     }
 
-    private MatchingResult submitWithoutLogging(Order order) {
+    private MatchingResult submitWithoutCommandLogging(Order order) {
         SymbolRuntime runtime = runtime(order.getSymbol().code());
-        return runtime.call(() -> submitOnSequencer(runtime, order));
+        MatchingResult result = runtime.call(() -> submitOnSequencer(runtime, order));
+        // submit path 不重寫 command log，但仍保留成交 event log，讓 replay validation 能比對 event checkpoint。
+        appendEvents(order.getSymbol().code(), runtime.commandOffset.get(), result);
+        return result;
     }
 
     @Override
     public boolean cancelOrder(Order order) {
         appendCommand(MatchingCommandType.CANCEL, order, null, null);
-        return cancelOrderWithoutLogging(order);
+        return cancelOrderWithoutCommandLogging(order);
     }
 
-    private boolean cancelOrderWithoutLogging(Order order) {
+    private boolean cancelOrderWithoutCommandLogging(Order order) {
         SymbolRuntime runtime = runtimes.get(order.getSymbol().code());
         if (runtime == null) return false;
         return runtime.call(() -> runtime.book.cancel(order));
@@ -80,10 +91,10 @@ public class InMemoryMatchingEngine implements MatchingEngine {
     @Override
     public boolean amendOrder(Order order, BigDecimal newPrice, BigDecimal newQty) {
         appendCommand(MatchingCommandType.AMEND, order, newPrice, newQty);
-        return amendOrderWithoutLogging(order, newPrice, newQty);
+        return amendOrderWithoutCommandLogging(order, newPrice, newQty);
     }
 
-    private boolean amendOrderWithoutLogging(Order order, BigDecimal newPrice, BigDecimal newQty) {
+    private boolean amendOrderWithoutCommandLogging(Order order, BigDecimal newPrice, BigDecimal newQty) {
         SymbolRuntime runtime = runtimes.get(order.getSymbol().code());
         if (runtime == null) return false;
         return runtime.call(() -> runtime.book.amend(order, newPrice, newQty));
@@ -113,12 +124,21 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         String symbol = normalize(symbolCode);
         SymbolRuntime runtime = runtimes.get(symbol);
         if (runtime == null) {
-            return new MatchingEngineSnapshot(symbol, 0L, commandLog.lastOffset(symbol), List.of(), List.of(), Instant.now());
+            return new MatchingEngineSnapshot(
+                    symbol,
+                    0L,
+                    commandLog.lastOffset(symbol),
+                    eventLog.lastOffset(symbol),
+                    List.of(),
+                    List.of(),
+                    Instant.now()
+            );
         }
         return runtime.call(() -> new MatchingEngineSnapshot(
                 symbol,
                 runtime.matchSeq.get(),
-                commandLog.lastOffset(symbol),
+                runtime.commandOffset.get(),
+                runtime.eventOffset.get(),
                 runtime.book.restingOrders(OrderSide.BUY).stream().map(InMemoryMatchingEngine::copyOrder).toList(),
                 runtime.book.restingOrders(OrderSide.SELL).stream().map(InMemoryMatchingEngine::copyOrder).toList(),
                 Instant.now()
@@ -134,6 +154,8 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         runtime.call(() -> {
             runtime.book.clear();
             runtime.matchSeq.set(Math.max(0L, snapshot.matchSequence()));
+            runtime.commandOffset.set(Math.max(0L, snapshot.commandOffset()));
+            runtime.eventOffset.set(Math.max(0L, snapshot.eventOffset()));
             restoreOrders(runtime.book, snapshot.bids());
             restoreOrders(runtime.book, snapshot.asks());
             return null;
@@ -143,6 +165,11 @@ public class InMemoryMatchingEngine implements MatchingEngine {
     @Override
     public List<MatchingCommandLogEntry> commandLog(String symbolCode) {
         return commandLog.listAll(symbolCode);
+    }
+
+    @Override
+    public List<MatchingEventLogEntry> eventLog(String symbolCode) {
+        return eventLog.listAll(symbolCode);
     }
 
     @Override
@@ -157,6 +184,47 @@ public class InMemoryMatchingEngine implements MatchingEngine {
                 .filter(command -> command.offset() > snapshot.commandOffset())
                 .sorted((left, right) -> Long.compare(left.offset(), right.offset()))
                 .forEach(this::applyReplayCommand);
+    }
+
+    @Override
+    public MatchingReplayValidationReport validateReplay(
+            MatchingEngineSnapshot startSnapshot,
+            List<MatchingCommandLogEntry> commands,
+            MatchingEngineSnapshot expectedSnapshot
+    ) {
+        if (startSnapshot == null || expectedSnapshot == null) {
+            throw new IllegalArgumentException("startSnapshot and expectedSnapshot must not be null");
+        }
+
+        // 用一個乾淨 engine 執行 replay，避免目前執行中 book 污染 validation 結果。
+        InMemoryMatchingEngine replayEngine = new InMemoryMatchingEngine(
+                new InMemoryMatchingCommandLog(),
+                new InMemoryMatchingEventLog()
+        );
+        replayEngine.replay(startSnapshot, commands);
+        MatchingEngineSnapshot actual = replayEngine.exportSnapshot(startSnapshot.symbolCode());
+        replayEngine.shutdown();
+
+        List<String> issues = new ArrayList<>();
+        compareScalar("commandOffset", expectedSnapshot.commandOffset(), actual.commandOffset(), issues);
+        compareScalar("eventOffset", expectedSnapshot.eventOffset(), actual.eventOffset(), issues);
+        compareScalar("matchSequence", expectedSnapshot.matchSequence(), actual.matchSequence(), issues);
+        compareLevels("bids", expectedSnapshot.bids(), actual.bids(), issues);
+        compareLevels("asks", expectedSnapshot.asks(), actual.asks(), issues);
+
+        return new MatchingReplayValidationReport(
+                normalize(startSnapshot.symbolCode()),
+                issues.isEmpty(),
+                startSnapshot.commandOffset(),
+                expectedSnapshot.commandOffset(),
+                actual.commandOffset(),
+                expectedSnapshot.eventOffset(),
+                actual.eventOffset(),
+                expectedSnapshot.matchSequence(),
+                actual.matchSequence(),
+                List.copyOf(issues),
+                Instant.now()
+        );
     }
 
     @PreDestroy
@@ -352,17 +420,72 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         return symbolCode == null ? "" : symbolCode.trim().toUpperCase();
     }
 
+    private static void compareScalar(String field, long expected, long actual, List<String> issues) {
+        if (expected != actual) {
+            issues.add(field + " expected=" + expected + " actual=" + actual);
+        }
+    }
+
+    private static void compareLevels(
+            String side,
+            List<Order> expectedOrders,
+            List<Order> actualOrders,
+            List<String> issues
+    ) {
+        List<PriceLevel> expected = aggregateForValidation(expectedOrders);
+        List<PriceLevel> actual = aggregateForValidation(actualOrders);
+        if (expected.size() != actual.size()) {
+            issues.add(side + " level count expected=" + expected.size() + " actual=" + actual.size());
+            return;
+        }
+        for (int i = 0; i < expected.size(); i++) {
+            PriceLevel expectedLevel = expected.get(i);
+            PriceLevel actualLevel = actual.get(i);
+            if (expectedLevel.price().compareTo(actualLevel.price()) != 0
+                    || expectedLevel.qty().compareTo(actualLevel.qty()) != 0) {
+                issues.add(side + "[" + i + "] expected=" + expectedLevel + " actual=" + actualLevel);
+            }
+        }
+    }
+
+    private static List<PriceLevel> aggregateForValidation(List<Order> orders) {
+        if (orders == null || orders.isEmpty()) return List.of();
+        return orders.stream()
+                .filter(order -> order.getQty() != null && order.getQty().signum() > 0)
+                .collect(java.util.stream.Collectors.groupingBy(
+                        Order::getPrice,
+                        java.util.LinkedHashMap::new,
+                        java.util.stream.Collectors.reducing(BigDecimal.ZERO, Order::getQty, BigDecimal::add)
+                ))
+                .entrySet()
+                .stream()
+                .map(entry -> new PriceLevel(entry.getKey(), entry.getValue()))
+                .toList();
+    }
+
     private void appendCommand(MatchingCommandType type, Order order, BigDecimal newPrice, BigDecimal newQty) {
         if (order == null || order.getSymbol() == null) return;
-        commandLog.append(order.getSymbol().code(), type, copyOrder(order), newPrice, newQty);
+        MatchingCommandLogEntry entry = commandLog.append(order.getSymbol().code(), type, copyOrder(order), newPrice, newQty);
+        runtime(entry.symbolCode()).commandOffset.set(entry.offset());
+    }
+
+    private void appendEvents(String symbolCode, long commandOffset, MatchingResult result) {
+        if (result == null || result.getTrades() == null || result.getTrades().isEmpty()) return;
+        SymbolRuntime runtime = runtime(symbolCode);
+        for (TradeExecuted trade : result.getTrades()) {
+            MatchingEventLogEntry entry = eventLog.append(symbolCode, commandOffset, trade);
+            runtime.eventOffset.set(entry.offset());
+        }
     }
 
     private void applyReplayCommand(MatchingCommandLogEntry command) {
         Order order = copyOrder(command.order());
+        // replay 時先推進 command offset，讓 submit 產生的 event log 能標記正確 checkpoint。
+        runtime(command.symbolCode()).commandOffset.set(Math.max(0L, command.offset()));
         switch (command.type()) {
-            case SUBMIT -> submitWithoutLogging(order);
-            case CANCEL -> cancelOrderWithoutLogging(order);
-            case AMEND -> amendOrderWithoutLogging(order, command.newPrice(), command.newQty());
+            case SUBMIT -> submitWithoutCommandLogging(order);
+            case CANCEL -> cancelOrderWithoutCommandLogging(order);
+            case AMEND -> amendOrderWithoutCommandLogging(order, command.newPrice(), command.newQty());
         }
     }
 
@@ -409,6 +532,8 @@ public class InMemoryMatchingEngine implements MatchingEngine {
     private static final class SymbolRuntime {
         private final OrderBook book = new OrderBook();
         private final AtomicLong matchSeq = new AtomicLong();
+        private final AtomicLong commandOffset = new AtomicLong();
+        private final AtomicLong eventOffset = new AtomicLong();
         private final ExecutorService executor;
 
         private SymbolRuntime(String symbol) {

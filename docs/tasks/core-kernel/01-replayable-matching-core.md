@@ -12,7 +12,7 @@ Evolve the current in-memory matching core toward replayability with durable com
 - Add command sequence / offset identity per symbol.
 - Persist or model a durable command log boundary.
 - Ensure snapshots carry enough checkpoint metadata to replay from the next command.
-- Add deterministic replay validation for book state, match sequence, and emitted trades.
+- Add deterministic replay validation for book state, command/event offsets, match sequence, and emitted trades.
 
 ## First Implementation Slice
 
@@ -25,13 +25,18 @@ Evolve the current in-memory matching core toward replayability with durable com
 
 - Added `MatchingCommandLogEntry`, `MatchingCommandType`, and `MatchingCommandLog`.
 - Added `InMemoryMatchingCommandLog` for deterministic tests.
-- `MatchingEngineSnapshot` now carries `commandOffset`.
-- `InMemoryMatchingEngine` records submit/cancel/amend commands and can replay entries after the snapshot checkpoint.
+- `MatchingEngineSnapshot` now carries `commandOffset` and `eventOffset`.
+- `InMemoryMatchingEngine` records submit/cancel/amend commands, records trade events into an in-memory event log, and can replay entries after the snapshot checkpoint.
 - `InMemoryMatchingEngineTest` covers snapshot checkpoint replay, FIFO preservation, top-of-book rebuild, and match sequence continuation.
+- Added `MatchingReplayValidationReport` and validation API to compare replay output against an expected snapshot.
+- Replay validation reports command offset, event offset, match sequence, book-level mismatches, and validation timestamp.
+- Added Flyway migration `V7__matching_replay_logs.sql` for durable matching command/event logs and offset checkpoints.
+- Added JPA record repositories and adapters (`JpaMatchingCommandLog`, `JpaMatchingEventLog`) so Spring can use durable log storage.
+- Durable command/event offsets are allocated through a per-symbol checkpoint row with pessimistic locking.
+- Added `MatchingSnapshotStore` and `JpaMatchingSnapshotStore` for durable matching snapshot persistence.
+- Added `MatchingReplayValidationReportStore` and JPA adapter for durable recovery audit reports.
 
 Remaining work:
-- Move command log/event log to durable storage.
-- Add explicit event log checkpointing and replay validation reports.
 - Add cancel-replace command semantics and stronger atomicity.
 - Add production worker recovery around durable logs.
 
@@ -39,6 +44,7 @@ Remaining work:
 
 - Tests prove a new engine can restore from snapshot and replay subsequent commands.
 - Replay preserves FIFO, match sequence, and resulting top-of-book.
+- Replay validation detects command offset, event offset, match sequence, and book-level mismatches.
 - Task docs and AI maps are updated after implementation.
 
 ## Read First

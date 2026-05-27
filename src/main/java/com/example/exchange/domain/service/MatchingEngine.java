@@ -6,6 +6,8 @@ package com.example.exchange.domain.service;
 import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
+import com.example.exchange.domain.model.dto.MatchingEventLogEntry;
+import com.example.exchange.domain.model.dto.MatchingReplayValidationReport;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.dto.TopOfBook;
 
@@ -96,10 +98,32 @@ public interface MatchingEngine {
     List<MatchingCommandLogEntry> commandLog(String symbolCode);
 
     /**
+     * 取得單一交易對的 matching event log。
+     *
+     * @param symbolCode 交易對代碼
+     * @return per-symbol event log entries
+     */
+    List<MatchingEventLogEntry> eventLog(String symbolCode);
+
+    /**
      * 從 snapshot 與 command log replay 撮合狀態。
      *
      * @param snapshot 快照，包含 command offset checkpoint
      * @param commands command log entries；只會 replay snapshot offset 之後的 entries
      */
     void replay(MatchingEngineSnapshot snapshot, List<MatchingCommandLogEntry> commands);
+
+    /**
+     * 驗證 snapshot + command log replay 後是否能得到期望狀態。
+     *
+     * @param startSnapshot    replay 起點
+     * @param commands         command log entries
+     * @param expectedSnapshot 期望 replay 後狀態
+     * @return replay validation report
+     */
+    MatchingReplayValidationReport validateReplay(
+            MatchingEngineSnapshot startSnapshot,
+            List<MatchingCommandLogEntry> commands,
+            MatchingEngineSnapshot expectedSnapshot
+    );
 }

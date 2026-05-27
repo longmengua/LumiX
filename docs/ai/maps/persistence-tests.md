@@ -11,6 +11,7 @@ Migrations:
 - `V4__reconciliation_reports.sql`: persisted reconciliation report and issue detail.
 - `V5__durable_outbox_headers.sql`: durable outbox headers and compensation compatibility.
 - `V6__account_risk_snapshots.sql`: account risk snapshot records.
+- `V7__matching_replay_logs.sql`: durable matching command/event log, offset checkpoint, engine snapshot, and replay validation report baseline.
 
 Config:
 - `src/main/resources/application-dev.yml`

@@ -37,8 +37,10 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 撮合核心已覆蓋 FIFO、post-only、自成交防護、IOC/FOK、市價單流動性不足等 deterministic tests。
 - 已有 in-process 單 symbol sequencer baseline，避免同一 symbol 在單進程內並行改狀態。
 - 已文件化單 symbol sequencer ownership 的 production 部署與 failover 規則。
-- 撮合狀態已有 in-memory snapshot export/restore baseline，可保留掛單 FIFO 與 match sequence。
-- 撮合已有 in-memory command log 與 replay baseline，可在 deterministic tests 中從 snapshot checkpoint 重建狀態。
+- 撮合狀態已有 in-memory snapshot export/restore baseline，可保留掛單 FIFO、command offset、event offset 與 match sequence。
+- 撮合已有 in-memory command/event log 與 replay baseline，可在 deterministic tests 中從 snapshot checkpoint 重建狀態。
+- 撮合 command/event log、engine snapshot 與 replay validation report 也已有 Flyway schema、JPA durable adapter baseline 與 per-symbol offset checkpoint。
+- 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence 與 book-level 差異。
 - 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
 - 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review。
@@ -49,7 +51,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 ## 目前不能當作 production 完成的地方
 
-- 撮合引擎仍缺 durable command log / event log storage、production offset checkpoint 與完整 replay validation reports。
+- 撮合引擎仍缺 startup / worker-takeover recovery orchestration 與 distributed sequencer lease / epoch fencing。
 - 單 symbol sequencer 目前仍只是 in-process 實作，還沒有 production distributed lease、epoch fencing 與 worker routing。
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
 - ledger 已有 durable double-entry journal 與 replay path；audit retention、更深入 replay validation 與營運控制仍未完成。

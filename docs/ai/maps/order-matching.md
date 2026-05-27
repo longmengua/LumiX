@@ -33,17 +33,28 @@ OrderController
 - Enums: `OrderSide`, `OrderType`, `TimeInForce`
 - Events: `domain.event.TradeExecuted`
 - Tests: `infra.matching.InMemoryMatchingEngineTest`
+- Durable log adapters: `JpaMatchingCommandLog`, `JpaMatchingEventLog`
+- Durable snapshot store: `MatchingSnapshotStore`, `JpaMatchingSnapshotStore`
+- Durable replay report store: `MatchingReplayValidationReportStore`, `JpaMatchingReplayValidationReportStore`
+- Durable log/checkpoint migration: `V7__matching_replay_logs.sql`
 
 Current behavior:
 - Per-symbol operations are serialized by an in-process sequencer.
 - LIMIT/MARKET, GTC/IOC/FOK, post-only rejection, self-match prevention, amend, cancel, top-of-book, and depth snapshot are covered.
 - Snapshot export/restore preserves resting order FIFO and match sequence baseline.
 - In-memory command log and replay API preserve snapshot checkpoint replay and match sequence continuation in tests.
+- In-memory event log records emitted trade events with event offsets and their source command offset.
+- Replay validation report compares command offset, event offset, match sequence, and book levels against expected snapshots.
+- Spring wiring can use durable JPA command/event log adapters with per-symbol checkpoint rows and pessimistic offset locking.
+- Matching snapshots have a durable JPA store; recovery orchestration still needs to wire latest snapshot + command replay into startup/worker takeover.
+- Replay validation reports have a durable JPA store for recovery audit history.
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Move command log/event log, snapshots, and offset checkpoints from in-memory baseline to durable production storage.
-- Add deterministic replay validation reports for production recovery.
+- Wire durable snapshots into startup/worker takeover recovery.
+- Wire replay validation report persistence into startup/worker takeover recovery.
+- Persist deterministic replay validation reports for production recovery.
+- Add distributed sequencer lease / epoch fencing around worker ownership.
 - Stronger cancel-replace atomicity and reconnect/session semantics.
 - Keep this area first in the roadmap until replayable matching is complete.
 

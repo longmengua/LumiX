@@ -5,6 +5,7 @@ package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
+import com.example.exchange.domain.model.dto.MatchingReplayValidationReport;
 import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.Symbol;
@@ -211,6 +212,37 @@ class InMemoryMatchingEngineTest {
         assertThat(restored.snapshot("BTCUSDT", 10).asks()).isEmpty();
         engine.shutdown();
         restored.shutdown();
+    }
+
+    @Test
+    @DisplayName("replay validation report 會回報 offset、match sequence 與 book 差異")
+    /**
+     * 流程：用 snapshot checkpoint + command log 產生 validation report ->
+     * 先驗證正確 expected snapshot 通過，再確認 event log checkpoint 與舊 snapshot 差異會被列出。
+     */
+    void replayValidationReportShowsSuccessAndMismatchIssues() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+        MatchingEngineSnapshot start = engine.exportSnapshot("BTCUSDT");
+        engine.submit(limit(2, OrderSide.SELL, "101", "1"));
+        engine.submit(limit(3, OrderSide.BUY, "101", "2"));
+        MatchingEngineSnapshot expected = engine.exportSnapshot("BTCUSDT");
+
+        MatchingReplayValidationReport valid = engine.validateReplay(start, engine.commandLog("BTCUSDT"), expected);
+        MatchingReplayValidationReport invalid = engine.validateReplay(start, engine.commandLog("BTCUSDT"), start);
+
+        assertThat(valid.valid()).isTrue();
+        assertThat(valid.issues()).isEmpty();
+        assertThat(valid.actualCommandOffset()).isEqualTo(expected.commandOffset());
+        assertThat(valid.actualEventOffset()).isEqualTo(expected.eventOffset());
+        assertThat(valid.actualMatchSequence()).isEqualTo(expected.matchSequence());
+        assertThat(engine.eventLog("BTCUSDT"))
+                .hasSize(4)
+                .allSatisfy(entry -> assertThat(entry.commandOffset()).isEqualTo(expected.commandOffset()));
+        assertThat(invalid.valid()).isFalse();
+        assertThat(invalid.issues()).anySatisfy(issue -> assertThat(issue).contains("commandOffset"));
+        assertThat(invalid.issues()).anySatisfy(issue -> assertThat(issue).contains("eventOffset"));
+        engine.shutdown();
     }
 
     /**
