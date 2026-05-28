@@ -31,6 +31,10 @@ Production worker 應從強一致儲存取得 per-symbol lease。
 - `lastCheckpoint`
 
 規則：
+- recovery 前先使用 `MatchingSequencerLeaseService.acquire(symbol, ownerId)` 取得 ownership。
+- 使用 `MatchingSequencerLeaseService.renew(...)` 延長 ownership，並保存 owner 觀察到的 command/event checkpoint。
+- planned handoff 時使用 `MatchingSequencerLeaseService.release(...)` 釋放 ownership。
+- live command write 前使用 `MatchingSequencerLeaseService.requireWritable(symbol, ownerId, epoch)` 驗證 owner 仍可寫。
 - 每次 command write 都必須帶目前 `epoch`。
 - storage 必須拒絕 stale epoch 的寫入。
 - backing store 不可用時，worker 必須停止續租，並且不能再接受新 command。
@@ -39,11 +43,10 @@ Production worker 應從強一致儲存取得 per-symbol lease。
 ## 啟動流程
 
 1. 取得 symbol lease，拿到新的 `epoch`。
-2. 載入該 symbol 最新 matching snapshot。
-3. 讀取 snapshot 內的 checkpoint。
-4. replay checkpoint 之後的 command/event log。
-5. replay 完成後才發布該 symbol readiness。
-6. 開始接 live command。
+2. 對該 symbol 呼叫 `MatchingRecoveryService.recoverSymbol(symbol)`。
+3. recovery service 會載入最新 matching snapshot、replay checkpoint 之後的 command log、執行 replay validation，並保存恢復後 snapshot 與 validation report。
+4. recovery 回傳 valid report 後，才發布該 symbol readiness。
+5. 開始接 live command。
 
 ## Planned Failover
 
@@ -72,4 +75,4 @@ Production worker 應從強一致儲存取得 per-symbol lease。
 
 ## 目前缺口
 
-目前 `InMemoryMatchingEngine` 只有 in-process sequencer 與 snapshot export/restore baseline。它還沒有 durable command log、durable event log、epoch-fenced writes、distributed lease 或 production worker routing。
+目前 matching core 已有 durable command/event log、offset checkpoint、snapshot、validation report、recovery orchestration、lease lifecycle、service-level write guard 與 owner epoch audit 欄位。Production worker routing 仍需呼叫 guard。

@@ -21,4 +21,9 @@
 - Replay 可用 snapshot checkpoint 加後續 command log 重建單一 symbol 狀態。
 - Replay validation 會比對 command offset、event offset、match sequence 與聚合後的 book levels。
 - Command/event log、snapshot 與 replay validation report 已有 durable schema、JPA adapter baseline 與 per-symbol offset checkpoint。
-- Startup / worker-takeover recovery orchestration 仍是 TODO。
+- `MatchingRecoveryService` 可 replay startup / worker-takeover 狀態，並保存恢復後 snapshot 與 validation report。
+- `MatchingSequencerLeaseService` 提供 per-symbol owner acquire/renew/release 與 takeover epoch baseline。
+- `CANCEL_REPLACE` command replay 會保存 replacement order payload，並在 sequencer 上 replay cancel + replacement submit。
+- `MatchingSequencerLeaseService.requireWritable(...)` 會在 live command write 前拒絕 missing lease、wrong owner、stale epoch 與 expired lease。
+- Command/event log entries 可保存 sequencer owner id 與 epoch，供 fencing audit。
+- Production worker routing 仍需呼叫 guard。

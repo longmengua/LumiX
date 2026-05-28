@@ -12,6 +12,15 @@ Migrations:
 - `V5__durable_outbox_headers.sql`: durable outbox headers and compensation compatibility.
 - `V6__account_risk_snapshots.sql`: account risk snapshot records.
 - `V7__matching_replay_logs.sql`: durable matching command/event log, offset checkpoint, engine snapshot, and replay validation report baseline.
+- `V8__matching_sequencer_leases.sql`: durable matching sequencer lease / epoch baseline.
+- `V9__matching_cancel_replace_commands.sql`: matching cancel-replace replacement order payload.
+- `V10__matching_owner_epoch_logs.sql`: matching command/event log owner epoch audit fields.
+- `V11__turnover_records.sql`: durable turnover read model with user, symbol, strategy, market-maker, order, match, and sequence dimensions.
+- `V12__bonus_credit_grants.sql`: durable bonus credit grant batches with remaining amount and expiry status.
+- `V13__reconciliation_issue_workflow.sql`: reconciliation issue status, owner, and resolved timestamp columns.
+- `V14__market_maker_profiles.sql`: durable market-maker profile and per-symbol risk limits.
+- `V15__hedge_decision_audits.sql`: durable hedge decision audit trail by market-maker, symbol, ref id, and venue order id.
+- `V16__hedge_fills.sql`: durable hedge fill audit trail by venue order/fill id, ref id, quantity, price, and fee.
 
 Config:
 - `src/main/resources/application-dev.yml`
@@ -36,11 +45,25 @@ Targeted tests:
 
 ```bash
 ./mvnw -Dtest=InMemoryMatchingEngineTest test
+./mvnw -Dtest=MatchingLogOwnerEpochTest test
+./mvnw -Dtest=MatchingRecoveryServiceTest test
+./mvnw -Dtest=MatchingSequencerLeaseServiceTest test
+./mvnw -Dtest=AdlRankingServiceTest test
+./mvnw -Dtest=AdlDeleveragingPlannerTest test
+./mvnw -Dtest=WalletLedgerServiceTest test
+./mvnw -Dtest=BonusCreditServiceTest test
+./mvnw -Dtest=TurnoverServiceTest test
+./mvnw -Dtest=MarketMakerHedgingServiceTest test
+./mvnw -Dtest=MarketMakerQuoteServiceTest test
+./mvnw -Dtest=MarketMakerProfileServiceTest test
+./mvnw -Dtest=MarketMakerHedgeFillServiceTest test
 ./mvnw -Dtest=OrderAccountingIntegrationTest test
 ./mvnw -Dtest=RiskSettlementServiceTest test
+./mvnw -Dtest=TrialBalanceServiceTest test
 ./mvnw -Dtest=OutboxServiceTest test
 ./mvnw -Dtest=MarginServiceTest test
 ./mvnw -Dtest=AccountRiskServiceTest test
+./mvnw -Dtest=WalletLedgerReplayServiceTest test
 ./mvnw -Dtest=ApiAuthenticationInterceptorTest test
 ```
 

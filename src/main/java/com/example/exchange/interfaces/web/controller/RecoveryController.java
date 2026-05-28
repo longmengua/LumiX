@@ -5,15 +5,21 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.SnapshotRecoverCommand;
 import com.example.exchange.application.service.OutboxService;
+import com.example.exchange.application.service.ReconciliationIssueWorkflowService;
 import com.example.exchange.application.service.ReconciliationReportService;
 import com.example.exchange.application.service.ReconciliationService;
+import com.example.exchange.application.service.WalletLedgerReplayService;
+import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
 import com.example.exchange.domain.model.dto.ReconciliationReportResult;
 import com.example.exchange.domain.model.dto.RecoveryResult;
 import com.example.exchange.domain.model.dto.ValidationIssue;
 import com.example.exchange.domain.model.entity.DlqEvent;
 import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.entity.ReconciliationReportIssue;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.ReconciliationIssueActionRequest;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -30,17 +36,23 @@ public class RecoveryController {
     private final SnapshotRecoverUseCase usecase;
     private final ReconciliationService reconciliationService;
     private final ReconciliationReportService reconciliationReportService;
+    private final ReconciliationIssueWorkflowService reconciliationIssueWorkflowService;
+    private final WalletLedgerReplayService walletLedgerReplayService;
     private final OutboxService outboxService;
 
     public RecoveryController(
             SnapshotRecoverUseCase usecase,
             ReconciliationService reconciliationService,
             ReconciliationReportService reconciliationReportService,
+            ReconciliationIssueWorkflowService reconciliationIssueWorkflowService,
+            WalletLedgerReplayService walletLedgerReplayService,
             OutboxService outboxService
     ) {
         this.usecase = usecase;
         this.reconciliationService = reconciliationService;
         this.reconciliationReportService = reconciliationReportService;
+        this.reconciliationIssueWorkflowService = reconciliationIssueWorkflowService;
+        this.walletLedgerReplayService = walletLedgerReplayService;
         this.outboxService = outboxService;
     }
 
@@ -79,6 +91,45 @@ public class RecoveryController {
     @GetMapping("/reconcile/reports/{reportId}")
     public ApiResponse<ReconciliationReportResult> reconciliationReport(@PathVariable String reportId) {
         return ApiResponse.ok(reconciliationReportService.findById(reportId).orElse(null));
+    }
+
+    @GetMapping("/reconcile/ledger/{uid}/compare")
+    public ApiResponse<LedgerReplayComparisonReport> compareLedgerReplay(
+            @PathVariable long uid,
+            @RequestParam(defaultValue = "USDT") String asset
+    ) {
+        return ApiResponse.ok(walletLedgerReplayService.compareAccountDetails(uid, asset));
+    }
+
+    @GetMapping("/reconcile/issues/open")
+    public ApiResponse<List<ReconciliationReportIssue>> openReconciliationIssues(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(reconciliationIssueWorkflowService.openIssues(limit));
+    }
+
+    @PostMapping("/reconcile/issues/{issueId}/claim")
+    public ApiResponse<ReconciliationReportIssue> claimReconciliationIssue(
+            @PathVariable long issueId,
+            @Valid @RequestBody ReconciliationIssueActionRequest request
+    ) {
+        return ApiResponse.ok(reconciliationIssueWorkflowService.claim(issueId, request.owner()));
+    }
+
+    @PostMapping("/reconcile/issues/{issueId}/resolve")
+    public ApiResponse<ReconciliationReportIssue> resolveReconciliationIssue(
+            @PathVariable long issueId,
+            @Valid @RequestBody ReconciliationIssueActionRequest request
+    ) {
+        return ApiResponse.ok(reconciliationIssueWorkflowService.resolve(issueId, request.owner()));
+    }
+
+    @PostMapping("/reconcile/issues/{issueId}/reopen")
+    public ApiResponse<ReconciliationReportIssue> reopenReconciliationIssue(
+            @PathVariable long issueId,
+            @Valid @RequestBody ReconciliationIssueActionRequest request
+    ) {
+        return ApiResponse.ok(reconciliationIssueWorkflowService.reopen(issueId, request.owner()));
     }
 
     @GetMapping("/outbox/dlq")

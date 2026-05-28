@@ -59,6 +59,8 @@ class ReconciliationReportServiceTest {
         assertThat(result.warnCount()).isZero();
         assertThat(result.issues()).extracting(issue -> issue.code())
                 .containsExactly("POSITION_MARGIN_MISMATCH");
+        assertThat(reportStore.findIssues(result.id()).getFirst().getStatus()).isEqualTo("OPEN");
+        assertThat(reportStore.findIssues(result.id()).getFirst().getOwner()).isNull();
         assertThat(service.findById(result.id())).isPresent();
         assertThat(service.latest(10)).extracting(ReconciliationReportResult::id)
                 .containsExactly(result.id());
@@ -118,6 +120,30 @@ class ReconciliationReportServiceTest {
         @Override
         public List<ReconciliationReportIssue> findIssues(String reportId) {
             return issues.getOrDefault(reportId, List.of());
+        }
+
+        @Override
+        public Optional<ReconciliationReportIssue> findIssue(long issueId) {
+            return issues.values().stream()
+                    .flatMap(List::stream)
+                    .filter(issue -> issue.getId() != null && issue.getId() == issueId)
+                    .findFirst();
+        }
+
+        @Override
+        public void saveIssue(ReconciliationReportIssue issue) {
+            issues.computeIfAbsent(issue.getReportId(), ignored -> new ArrayList<>())
+                    .removeIf(existing -> existing.getId() != null && existing.getId().equals(issue.getId()));
+            issues.computeIfAbsent(issue.getReportId(), ignored -> new ArrayList<>()).add(issue);
+        }
+
+        @Override
+        public List<ReconciliationReportIssue> findIssuesByStatus(String status, int limit) {
+            return issues.values().stream()
+                    .flatMap(List::stream)
+                    .filter(issue -> status.equals(issue.getStatus()))
+                    .limit(limit)
+                    .toList();
         }
 
         @Override

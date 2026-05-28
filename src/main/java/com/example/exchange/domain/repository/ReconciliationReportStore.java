@@ -17,5 +17,11 @@ public interface ReconciliationReportStore {
 
     List<ReconciliationReportIssue> findIssues(String reportId);
 
+    Optional<ReconciliationReportIssue> findIssue(long issueId);
+
+    void saveIssue(ReconciliationReportIssue issue);
+
+    List<ReconciliationReportIssue> findIssuesByStatus(String status, int limit);
+
     List<ReconciliationReport> latest(int limit);
 }

@@ -40,23 +40,35 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Matching state has an in-memory snapshot export/restore baseline that preserves resting order FIFO, command offset, event offset, and match sequence.
 - Matching has in-memory command/event log and replay baselines that can rebuild state from a snapshot checkpoint in deterministic tests.
 - Matching command/event logs, engine snapshots, and replay validation reports now have Flyway schema, JPA durable adapter baselines, and per-symbol offset checkpoints.
+- Matching recovery orchestration can restore a symbol from latest snapshot plus command log, then persist the recovered snapshot and replay validation report.
+- Matching sequencer lease service can acquire, renew, release, and increment per-symbol owner epochs on takeover.
+- Matching sequencer write guard rejects missing lease, wrong owner, stale epoch, and expired lease before command writes.
+- Matching command replay supports cancel-replace with a replacement order payload.
+- Matching command/event log entries can persist sequencer owner id and epoch for fencing audit.
 - Matching replay validation can compare replay output against an expected snapshot and report command-offset, event-offset, match-sequence, and book-level differences.
 - A wallet-ledger balanced posting baseline makes MVP fund movements traceable and testable.
 - Accounting entries are split for order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal.
+- Bonus credit now has separate ledger postings for grant, consume, expiry, and clawback under `USER_BONUS_AVAILABLE`, does not change real cash account balance, and has grant-batch expiry/remaining tracking.
+- Turnover has a durable read-model baseline derived from processed trade events with user, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
+- Trial balance can be calculated from wallet ledger postings by asset/account code.
 - Deposit and withdrawal have a state-machine baseline covering pending, confirmed, failed, reversed, and manual review.
 - Account risk snapshot, persisted risk snapshot, pre-trade risk checks, risk tiers, global risk switches, mark/index price oracle baseline, liquidation MVP, funding settlement MVP, and reconciliation baseline exist.
+- Liquidation decisions now publish audit data, and operator controls can halt liquidation or route it to manual review.
+- Liquidation scanning can iterate open positions and trigger oracle-based liquidation decisions.
+- ADL now has deterministic ranking and deleveraging-plan baselines; actual forced position/accounting execution is still pending.
 - Outbox retry, max retry, DLQ replay, and manual compensation baselines exist.
 - Kafka topic, Redis key schema, request/correlation id, audit log, and ops metrics baseline documents exist.
 - Test folders have README indexes, and test cases use comments plus `@DisplayName` to explain test flow.
 
 ## What Is Not Production Complete
 
-- The matching engine still lacks startup/worker-takeover recovery orchestration and distributed sequencer lease / epoch fencing.
+- Production worker command routing still needs to call the lease write guard.
 - The per-symbol sequencer is only implemented as an in-process baseline; production distributed lease, epoch fencing, and worker routing are still missing.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
-- The ledger now has a durable double-entry journal and replay path; audit retention, deeper replay validation, and operational controls are still incomplete.
-- Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, and liquidation scanning are still incomplete.
-- Reconciliation now has persisted reports, a configurable scheduler policy, alert-route baseline, and event-store coverage checks.
+- The ledger now has a durable double-entry journal, bonus-credit account separation, bonus expiry scanner baseline, turnover facts, and replay path; audit retention, deeper replay validation, bonus eligibility/reporting, turnover reconciliation, and operational controls are still incomplete.
+- Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, scanner scheduling/routing, and forced ADL position/accounting execution are still incomplete.
+- Reconciliation now has persisted reports, a configurable scheduler policy, alert-route baseline, event-store coverage checks, trial-balance calculation, structured ledger replay comparison, issue workflow fields, admin issue workflow APIs, and workflow audit events. Daily finance reports remain incomplete.
+- Market-maker hedging now has durable profile/risk-limit storage, admin profile APIs, hedge fill query APIs, venue fill callback ingestion, manual and default-disabled scheduled hedge execution APIs, exposure aggregation, inventory-aware reduce-only hedge planning/execution, global hedge execution halt, quote command validation, hedge venue adapter contract, retryable venue result classification, retry/backoff/throttle decorator baselines, standardized venue fill mapping, safe rejecting default adapter, hedging risk checks, slippage rejection, quote/hedge decision audit events, durable hedge decision/fill audit trails, and decision-vs-fill hedge reconciliation. Real venue adapters, quote lifecycle integration, production callback authentication/verification, trade/ledger hedge reconciliation, production execution policy, scheduler/worker locking, and global limits remain incomplete.
 - Outbox now uses a production durable MySQL store for outbox/DLQ records and has an operational replay/compensation runbook.
 - MySQL, Redis, and Kafka transaction boundaries are not fully defined.
 - Market data still needs durable sequence checkpoints, reconnect backfill, ticker/kline/trade-tape persistence.

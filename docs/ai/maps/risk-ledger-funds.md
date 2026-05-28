@@ -24,20 +24,31 @@ Remaining production TODO:
 
 - API: `interfaces.web.controller.MarginController`
 - Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`
+- Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`
+- Bonus expiry scheduler: `application.scheduler.BonusCreditExpiryScheduler`
+- Turnover: `TurnoverService`, `TurnoverStore`
 - Hot state: `infra.redis.RedisAccountRepository`, `RedisWalletLedgerRepository`, `RedisWalletTransferRepository`
 - Durable journal: `domain.repository.jpa.JpaWalletLedgerJournal`
+- Turnover store: `domain.repository.jpa.JpaTurnoverStore`
+- Bonus grant store: `domain.repository.jpa.JpaBonusCreditGrantStore`
 - Models: `Account`, `WalletLedgerEntry`, `WalletLedgerPosting`, `WalletTransfer`
-- Migrations: `V3__wallet_ledger_journal.sql`
-- Tests: `MarginServiceTest`, `WalletLedgerReplayServiceTest`
+- Turnover model: `TurnoverRecord`, `TurnoverSummary`, `TurnoverRecordEntity`
+- Bonus grant model: `BonusCreditGrant`, `BonusCreditGrantRecord`
+- Migrations: `V3__wallet_ledger_journal.sql`, `V11__turnover_records.sql`, `V12__bonus_credit_grants.sql`
+- Tests: `MarginServiceTest`, `WalletLedgerReplayServiceTest`, `WalletLedgerServiceTest`, `BonusCreditServiceTest`, `TurnoverServiceTest`
 
 Ledger concerns:
 - Order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, withdrawal are explicit accounting entries.
+- Bonus credit grant, consume, expiry, and clawback are explicit ledger entries under `USER_BONUS_AVAILABLE`.
+- Bonus credit is not added to `Account.crossBalance`, so promotional funds cannot silently mix with real cash.
+- Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.
+- Turnover facts are derived from processed `TradeExecuted` events and keep uid, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
 
 Remaining production TODO:
 - Stronger database constraints, audit retention, replay validation.
-- Bonus-credit / experience-fund ledger accounts, consumption priority, expiry, clawback, and reporting.
-- Turnover tracking by user, account, symbol, strategy, and market-maker dimensions.
+- Bonus-credit eligibility rules, automated clawback workflow, and reporting APIs.
+- Turnover reconciliation against trade tape and ledger refs.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - Chain/bank callbacks, manual-review ownership, transfer reconciliation projections.
 
@@ -45,19 +56,46 @@ Remaining production TODO:
 
 - Account risk: `AccountRiskService`, `AccountRiskSnapshotService`
 - Funding: `FundingRateService`
-- Liquidation: `LiquidationService`
+- Liquidation: `LiquidationService`, `LiquidationScanService`
 - Insurance fund: `InsuranceFundService`
+- ADL ranking/planning: `AdlRankingService`, `AdlDeleveragingPlanner`
 - Reconciliation: `ReconciliationService`, `ReconciliationReportService`
+- Trial balance: `TrialBalanceService`, `TrialBalanceReport`, `TrialBalanceLine`
+- Liquidation audit event: `LiquidationDecisionRecorded`
 - Migrations:
   - `V4__reconciliation_reports.sql`
   - `V6__account_risk_snapshots.sql`
+  - `V13__reconciliation_issue_workflow.sql`
 - Tests:
   - `AccountRiskServiceTest`
   - `AccountRiskSnapshotServiceTest`
   - `RiskSettlementServiceTest`
+  - `AdlRankingServiceTest`
+  - `AdlDeleveragingPlannerTest`
   - `ReconciliationReportServiceTest`
+  - `TrialBalanceServiceTest`
+
+Current liquidation/ADL behavior:
+- `LiquidationService` publishes `LiquidationDecisionRecorded` for liquidation decisions and `PositionLiquidated` when a position is closed.
+- `LiquidationScanService` scans open positions and delegates oracle-based liquidation decisions.
+- `AdlRankingService` provides deterministic ranking by profit rate, effective leverage, notional, and uid.
+- `AdlDeleveragingPlanner` converts ranked candidates and ADL shortfall into deterministic reduce steps.
+- `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:
-- Liquidation scanning, execution routing, operational controls.
-- Production ADL queue ranking, forced deleveraging execution, insurance-fund interaction, and audit events.
+- Production scheduling/routing for liquidation scanners.
+- Wire ADL deleveraging plans into actual position/accounting execution.
+- Insurance-fund interaction hardening and operator retry/ownership workflow.
 - Alerts for reconciliation failure and unbalanced assets.
+
+## Trial Balance And Reconciliation Issues
+
+- `TrialBalanceService` aggregates wallet ledger postings by asset/account code and returns total debit, total credit, balanced flag, and net debit/credit lines.
+- `ReconciliationReportIssue` now has `status`, `owner`, and `resolvedAt` fields for an operator workflow baseline.
+- `ReconciliationIssueWorkflowService` and `/api/recovery/reconcile/issues/...` expose claim, resolve, reopen, and open-issue queue operations.
+- `WalletLedgerReplayService.compareAccountDetails` and `/api/recovery/reconcile/ledger/{uid}/compare` return structured account/replay/delta mismatches.
+- `ReconciliationIssueWorkflowChanged` is published for claim, resolve, and reopen audit trails.
+- New issues created by `ReconciliationReportService` default to `OPEN`.
+
+Remaining production TODO:
+- Persist daily trial-balance snapshots and finance reports.

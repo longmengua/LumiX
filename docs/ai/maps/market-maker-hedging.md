@@ -20,11 +20,43 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Market data: `application.service.MarketDataService`
 - Ledger/reconciliation: `WalletLedgerService`, `ReconciliationService`
 - Future market-maker package should stay behind application/domain contracts before adding infra adapters.
+- Market-maker DTOs: `MarketMakerProfile`, `MarketMakerRiskLimit`, `MarketMakerExposure`, `HedgeOrderRequest`, `HedgeOrderResult`, `HedgeDecision`.
+- Quote DTOs: `MarketMakerQuoteCommand`, `MarketMakerQuoteDecision`.
+- Durable profile store: `MarketMakerProfileStore`, `JpaMarketMakerProfileStore`, `MarketMakerProfileRecord`, `MarketMakerRiskLimitRecord`.
+- Hedge audit store: `HedgeDecisionAuditStore`, `JpaHedgeDecisionAuditStore`, `HedgeDecisionAuditRecord`, `HedgeDecisionAuditRecordEntity`.
+- Hedge fill store: `HedgeFillStore`, `JpaHedgeFillStore`, `HedgeFillRecord`, `HedgeFillRecordEntity`.
+- Profile service: `MarketMakerProfileService`.
+- Admin API: `interfaces.web.controller.MarketMakerController`, request DTOs `MarketMakerProfileRequest`, `MarketMakerRiskLimitRequest`.
+- Hedge fill/reconciliation admin queries: `/api/market-maker/profiles/{marketMakerId}/hedge-fills`, `/api/market-maker/hedge-fills/venue-orders/{venueOrderId}`, `/api/market-maker/hedge-fills/ref/{refId}`, `/api/market-maker/profiles/{marketMakerId}/hedge-reconciliation`.
+- Venue fill callback ingestion: `POST /api/market-maker/hedge-fills/venue-callback`, request DTO `HedgeVenueFillCallbackRequest`.
+- Manual hedge execution admin commands: `POST /api/market-maker/profiles/{marketMakerId}/hedge-execution`, `POST /api/market-maker/hedge-execution/enabled`.
+- Scheduled hedge execution: `MarketMakerHedgeExecutionScheduler`, default disabled by `market-maker.hedge-execution.enabled=false`.
+- Exposure aggregation: `MarketMakerExposureService`.
+- Quote validation: `MarketMakerQuoteService`.
+- Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
+- Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
+- Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`.
+- Hedge decision/routing: `MarketMakerHedgingService`.
+- Hedge fill recording: `MarketMakerHedgeFillService`.
+- Hedge decision-vs-fill reconciliation: `MarketMakerHedgeReconciliationService`, `HedgeReconciliationReport`, `HedgeReconciliationIssue`.
+- Venue fill mapping: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`.
+- Hedge venue contract: `domain.service.HedgeVenueAdapter`.
+- Default safe adapter: `infra.hedging.RejectingHedgeVenueAdapter`.
+- Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
+- Audit events: `HedgeDecisionRecorded`, `MarketMakerQuoteDecisionRecorded`.
+- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
+- Migrations: `V14__market_maker_profiles.sql`, `V15__hedge_decision_audits.sql`, `V16__hedge_fills.sql`.
 
 ## First Implementation Slice
 
-1. Define market-maker account/profile model and risk limits.
-2. Define hedge venue adapter interface with a fake/in-memory adapter for tests.
-3. Add a quote/hedge command model and service boundary.
-4. Add audit events for hedge decision, hedge order submitted, hedge fill, hedge failure.
-5. Add tests covering exposure aggregation, kill switch, and slippage rejection.
+1. [x] Define market-maker account/profile model and risk limits.
+2. [x] Define hedge venue adapter interface with a fake/in-memory adapter for tests.
+3. [x] Add quote/hedge command models and service boundaries.
+4. [x] Add audit events for quote decisions, hedge decisions, and venue order id.
+5. [x] Add tests covering exposure aggregation, quote kill switch, crossed quote, hedge kill switch, slippage rejection, and accepted venue routing.
+
+Remaining:
+- Quote lifecycle integration with actual order placement/cancel-replace.
+- Profile/fill API authorization and validation hardening.
+- Real hedge venue adapter, venue callback ingestion endpoint, and trade/ledger reconciliation refs.
+- Production execution policy, global limits, scheduler/worker locking, and operator approval flow.

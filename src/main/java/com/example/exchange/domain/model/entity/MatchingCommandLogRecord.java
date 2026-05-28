@@ -48,11 +48,20 @@ public class MatchingCommandLogRecord {
     @Column(name = "order_payload", nullable = false, columnDefinition = "JSON")
     private String orderPayload;
 
+    @Column(name = "replacement_order_payload", columnDefinition = "JSON")
+    private String replacementOrderPayload;
+
     @Column(name = "new_price", precision = 38, scale = 18)
     private BigDecimal newPrice;
 
     @Column(name = "new_qty", precision = 38, scale = 18)
     private BigDecimal newQty;
+
+    @Column(name = "owner_id", length = 128)
+    private String ownerId;
+
+    @Column(name = "owner_epoch", nullable = false)
+    private Long ownerEpoch;
 
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
     private Instant createdAt;

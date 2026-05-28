@@ -3,6 +3,8 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.domain.model.dto.LedgerReplayComparisonIssue;
+import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
@@ -61,6 +63,30 @@ public class WalletLedgerReplayService {
                 result.balanced() && issues.isEmpty(),
                 List.copyOf(issues),
                 result.replayedAt()
+        );
+    }
+
+    @Transactional(readOnly = true)
+    public LedgerReplayComparisonReport compareAccountDetails(long uid, String asset) {
+        String normalizedAsset = normalizeAsset(asset);
+        WalletLedgerReplayResult result = replay(uid, normalizedAsset);
+        List<LedgerReplayComparisonIssue> issues = new ArrayList<>();
+        accountRepository.findByUid(uid).ifPresentOrElse(
+                account -> collectComparisonIssues(account, result, issues),
+                () -> issues.add(new LedgerReplayComparisonIssue(
+                        "ACCOUNT",
+                        null,
+                        result.balance(),
+                        result.balance()
+                ))
+        );
+        return new LedgerReplayComparisonReport(
+                uid,
+                normalizedAsset,
+                result.balanced() && issues.isEmpty(),
+                result,
+                List.copyOf(issues),
+                Instant.now()
         );
     }
 
@@ -137,6 +163,34 @@ public class WalletLedgerReplayService {
             issues.add("CROSS_POSITION_MARGIN_MISMATCH:account="
                     + account.crossPositionMargin() + ",replay=" + result.positionMargin());
         }
+    }
+
+    private static void collectComparisonIssues(
+            Account account,
+            WalletLedgerReplayResult result,
+            List<LedgerReplayComparisonIssue> issues
+    ) {
+        addComparisonIssue("crossBalance", account.crossBalance(), result.balance(), issues);
+        addComparisonIssue("crossAvailable", account.crossAvailable(), result.available(), issues);
+        addComparisonIssue("crossOrderHold", account.crossOrderHold(), result.orderHold(), issues);
+        addComparisonIssue("crossPositionMargin", account.crossPositionMargin(), result.positionMargin(), issues);
+    }
+
+    private static void addComparisonIssue(
+            String component,
+            BigDecimal accountValue,
+            BigDecimal replayValue,
+            List<LedgerReplayComparisonIssue> issues
+    ) {
+        if (accountValue.compareTo(replayValue) == 0) {
+            return;
+        }
+        issues.add(new LedgerReplayComparisonIssue(
+                component,
+                accountValue,
+                replayValue,
+                accountValue.subtract(replayValue)
+        ));
     }
 
     private static boolean hasNegative(BigDecimal available, BigDecimal orderHold, BigDecimal positionMargin) {

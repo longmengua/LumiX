@@ -245,6 +245,39 @@ class InMemoryMatchingEngineTest {
         engine.shutdown();
     }
 
+    @Test
+    @DisplayName("cancel-replace command 可在 replay 後重建 replacement 成交")
+    /**
+     * 流程：先保存含原掛單的 snapshot -> 用 cancel-replace 把買單改成可成交價格 ->
+     * 新 engine replay CANCEL_REPLACE command -> 驗證原單移除、replacement 成交與 match sequence 一致。
+     */
+    void cancelReplaceCommandReplaysReplacementMatch() {
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine();
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+        Order originalBid = limit(2, OrderSide.BUY, "99", "1");
+        engine.submit(originalBid);
+        MatchingEngineSnapshot snapshot = engine.exportSnapshot("BTCUSDT");
+
+        Order replacementBid = limit(2, OrderSide.BUY, "100", "1");
+        MatchingResult cancelReplaceResult = engine.cancelReplace(originalBid, replacementBid);
+
+        InMemoryMatchingEngine restored = new InMemoryMatchingEngine();
+        restored.replay(snapshot, engine.commandLog("BTCUSDT"));
+
+        assertThat(cancelReplaceResult.getTrades()).hasSize(2);
+        assertThat(engine.commandLog("BTCUSDT")).last()
+                .extracting(entry -> entry.type().name())
+                .isEqualTo("CANCEL_REPLACE");
+        assertThat(restored.snapshot("BTCUSDT", 10).bids()).isEmpty();
+        assertThat(restored.snapshot("BTCUSDT", 10).asks()).isEmpty();
+        MatchingResult next = restored.submit(limit(3, OrderSide.SELL, "101", "1"));
+        next = restored.submit(limit(4, OrderSide.BUY, "101", "1"));
+        assertThat(next.getTrades()).extracting(TradeExecuted::matchId)
+                .contains("BTCUSDT-2");
+        engine.shutdown();
+        restored.shutdown();
+    }
+
     /**
      * 建立 LIMIT 測試訂單，統一 symbol、price、qty 與 origQty，讓各案例只聚焦撮合規則。
      */

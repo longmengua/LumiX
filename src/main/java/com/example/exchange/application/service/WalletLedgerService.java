@@ -22,6 +22,10 @@ import java.util.List;
 public class WalletLedgerService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
+    public static final String USER_BONUS_AVAILABLE = "USER_BONUS_AVAILABLE";
+    public static final String BONUS_PROMOTION_POOL = "BONUS_PROMOTION_POOL";
+    public static final String BONUS_EXPIRY_EXPENSE = "BONUS_EXPIRY_EXPENSE";
+    public static final String BONUS_CLAWBACK_RECEIVABLE = "BONUS_CLAWBACK_RECEIVABLE";
 
     private final AccountRepository accountRepo;
     private final WalletLedgerRepository ledgerRepo;
@@ -227,6 +231,53 @@ public class WalletLedgerService {
         ));
     }
 
+    public void grantBonusCredit(long uid, String asset, BigDecimal amount, String refId) {
+        if (notPositive(amount)) return;
+        // Bonus credit is intentionally excluded from Account.crossBalance so it cannot mix with real cash.
+        append(uid, asset, "bonus_credit_grant", refId, amount, bonusCreditBalance(uid, asset).add(amount), List.of(
+                debit(USER_BONUS_AVAILABLE, asset, amount),
+                credit(BONUS_PROMOTION_POOL, asset, amount)
+        ));
+    }
+
+    public BigDecimal consumeBonusCredit(long uid, String asset, BigDecimal amount, String refId, String expenseAccount) {
+        if (notPositive(amount)) return BigDecimal.ZERO;
+        BigDecimal available = bonusCreditBalance(uid, asset);
+        BigDecimal consumed = available.min(amount);
+        if (consumed.signum() <= 0) return BigDecimal.ZERO;
+        String debitAccount = expenseAccount == null || expenseAccount.isBlank()
+                ? "USER_FEE_EXPENSE"
+                : expenseAccount.trim();
+        append(uid, asset, "bonus_credit_consume", refId, consumed, available.subtract(consumed), List.of(
+                debit(debitAccount, asset, consumed),
+                credit(USER_BONUS_AVAILABLE, asset, consumed)
+        ));
+        return consumed;
+    }
+
+    public BigDecimal expireBonusCredit(long uid, String asset, BigDecimal amount, String refId) {
+        return removeBonusCredit(uid, asset, amount, refId, "bonus_credit_expire", BONUS_EXPIRY_EXPENSE);
+    }
+
+    public BigDecimal clawbackBonusCredit(long uid, String asset, BigDecimal amount, String refId) {
+        return removeBonusCredit(uid, asset, amount, refId, "bonus_credit_clawback", BONUS_CLAWBACK_RECEIVABLE);
+    }
+
+    public BigDecimal bonusCreditBalance(long uid, String asset) {
+        List<WalletLedgerEntry> entries = ledgerJournal == null
+                ? ledgerRepo.findByUid(uid)
+                : ledgerJournal.findByUidAndAsset(uid, asset);
+        BigDecimal balance = BigDecimal.ZERO;
+        for (WalletLedgerEntry entry : entries) {
+            if (!asset.equals(entry.getAsset()) || entry.getPostings() == null) continue;
+            for (WalletLedgerPosting posting : entry.getPostings()) {
+                if (!USER_BONUS_AVAILABLE.equals(posting.accountCode())) continue;
+                balance = balance.add(posting.debit()).subtract(posting.credit());
+            }
+        }
+        return balance;
+    }
+
     private void append(
             long uid,
             String asset,
@@ -249,6 +300,25 @@ public class WalletLedgerService {
             ledgerJournal.append(entry);
         }
         ledgerRepo.append(entry);
+    }
+
+    private BigDecimal removeBonusCredit(
+            long uid,
+            String asset,
+            BigDecimal amount,
+            String refId,
+            String reason,
+            String debitAccount
+    ) {
+        if (notPositive(amount)) return BigDecimal.ZERO;
+        BigDecimal available = bonusCreditBalance(uid, asset);
+        BigDecimal removed = available.min(amount);
+        if (removed.signum() <= 0) return BigDecimal.ZERO;
+        append(uid, asset, reason, refId, removed, available.subtract(removed), List.of(
+                debit(debitAccount, asset, removed),
+                credit(USER_BONUS_AVAILABLE, asset, removed)
+        ));
+        return removed;
     }
 
     private static boolean notPositive(BigDecimal amount) {

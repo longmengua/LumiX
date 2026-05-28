@@ -36,7 +36,12 @@ OrderController
 - Durable log adapters: `JpaMatchingCommandLog`, `JpaMatchingEventLog`
 - Durable snapshot store: `MatchingSnapshotStore`, `JpaMatchingSnapshotStore`
 - Durable replay report store: `MatchingReplayValidationReportStore`, `JpaMatchingReplayValidationReportStore`
+- Recovery orchestration: `application.service.MatchingRecoveryService`
+- Sequencer lease: `MatchingSequencerLeaseStore`, `JpaMatchingSequencerLeaseStore`, `MatchingSequencerLeaseService`
 - Durable log/checkpoint migration: `V7__matching_replay_logs.sql`
+- Durable lease migration: `V8__matching_sequencer_leases.sql`
+- Cancel-replace migration: `V9__matching_cancel_replace_commands.sql`
+- Owner epoch log migration: `V10__matching_owner_epoch_logs.sql`
 
 Current behavior:
 - Per-symbol operations are serialized by an in-process sequencer.
@@ -46,16 +51,17 @@ Current behavior:
 - In-memory event log records emitted trade events with event offsets and their source command offset.
 - Replay validation report compares command offset, event offset, match sequence, and book levels against expected snapshots.
 - Spring wiring can use durable JPA command/event log adapters with per-symbol checkpoint rows and pessimistic offset locking.
-- Matching snapshots have a durable JPA store; recovery orchestration still needs to wire latest snapshot + command replay into startup/worker takeover.
+- Matching recovery orchestration can rebuild a symbol from latest snapshot plus later command log entries, then save the recovered snapshot.
 - Replay validation reports have a durable JPA store for recovery audit history.
+- Sequencer lease service manages per-symbol owner acquire/renew/release and increments epoch on takeover.
+- Sequencer lease service exposes `requireWritable(...)` to reject missing lease, wrong owner, stale epoch, and expired lease before command writes.
+- Matching command replay supports `CANCEL_REPLACE` with replacement order payload.
+- Command/event log entries can persist sequencer `ownerId` and `ownerEpoch` for fencing audit.
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Wire durable snapshots into startup/worker takeover recovery.
-- Wire replay validation report persistence into startup/worker takeover recovery.
-- Persist deterministic replay validation reports for production recovery.
-- Add distributed sequencer lease / epoch fencing around worker ownership.
-- Stronger cancel-replace atomicity and reconnect/session semantics.
+- Wire lease write guard into the production worker command pipeline.
+- Stronger application/accounting cancel-replace atomicity and reconnect/session semantics.
 - Keep this area first in the roadmap until replayable matching is complete.
 
 ## Order Management

@@ -9,5 +9,6 @@ package com.example.exchange.domain.model.enums;
 public enum MatchingCommandType {
     SUBMIT,
     CANCEL,
-    AMEND
+    AMEND,
+    CANCEL_REPLACE
 }

@@ -3,6 +3,7 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
@@ -105,6 +106,34 @@ class WalletLedgerReplayServiceTest {
 
         assertThat(result.balanced()).isFalse();
         assertThat(result.issues()).anyMatch(issue -> issue.startsWith("UNBALANCED_ENTRY:"));
+    }
+
+    @Test
+    @DisplayName("compareAccountDetails 會回傳 account/replay/delta 的結構化 mismatch")
+    /**
+     * 流程：journal replay available=100，但 account restore 成 90，驗證 comparison issue 有 component 與差額。
+     */
+    void compareAccountDetailsReturnsStructuredMismatches() {
+        MemWalletLedgerJournal journal = new MemWalletLedgerJournal();
+        journal.append(entry("deposit", new BigDecimal("100"), List.of(
+                debit("USER_AVAILABLE", "USDT", "100"),
+                credit("EXTERNAL_CASH", "USDT", "100")
+        )));
+        Account account = new Account(7);
+        account.restoreCross(new BigDecimal("90"), new BigDecimal("90"), BigDecimal.ZERO, BigDecimal.ZERO);
+
+        LedgerReplayComparisonReport report = new WalletLedgerReplayService(
+                journal,
+                new MemAccountRepository(account)
+        ).compareAccountDetails(7, "USDT");
+
+        assertThat(report.matched()).isFalse();
+        assertThat(report.issues()).anySatisfy(issue -> {
+            assertThat(issue.component()).isEqualTo("crossBalance");
+            assertThat(issue.accountValue()).isEqualByComparingTo("90");
+            assertThat(issue.replayValue()).isEqualByComparingTo("100");
+            assertThat(issue.delta()).isEqualByComparingTo("-10");
+        });
     }
 
     private static WalletLedgerEntry entry(String reason, BigDecimal amount, List<WalletLedgerPosting> postings) {

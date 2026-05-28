@@ -12,4 +12,6 @@ public interface ReconciliationReportIssueJpaRepository
         extends JpaRepository<ReconciliationReportIssue, Long> {
 
     List<ReconciliationReportIssue> findByReportIdOrderByLineNoAsc(String reportId);
+
+    List<ReconciliationReportIssue> findByStatusOrderByCreatedAtAscIdAsc(String status);
 }

@@ -31,6 +31,10 @@ Required lease fields:
 - `lastCheckpoint`
 
 Rules:
+- Use `MatchingSequencerLeaseService.acquire(symbol, ownerId)` before recovery.
+- Use `MatchingSequencerLeaseService.renew(...)` to extend ownership and persist observed command/event checkpoints.
+- Use `MatchingSequencerLeaseService.release(...)` during planned handoff.
+- Use `MatchingSequencerLeaseService.requireWritable(symbol, ownerId, epoch)` before live command writes.
 - Every command write must include the current `epoch`.
 - Storage must reject writes from stale epochs.
 - Lease renewal must stop before the worker accepts new commands if the backing store is unreachable.
@@ -39,11 +43,10 @@ Rules:
 ## Startup
 
 1. Acquire the symbol lease and receive a new `epoch`.
-2. Load the latest matching snapshot for the symbol.
-3. Read the checkpoint included in that snapshot.
-4. Replay command/event log entries after the checkpoint.
-5. Publish a readiness signal for that symbol only after replay completes.
-6. Start accepting live commands for the symbol.
+2. Call `MatchingRecoveryService.recoverSymbol(symbol)` for that symbol.
+3. The recovery service loads the latest matching snapshot, replays command log entries after the checkpoint, validates the replay, and persists the recovered snapshot plus validation report.
+4. Publish a readiness signal for that symbol only after recovery returns a valid report.
+5. Start accepting live commands for the symbol.
 
 ## Planned Failover
 
@@ -72,4 +75,4 @@ Rules:
 
 ## Current Gap
 
-The current `InMemoryMatchingEngine` provides only an in-process sequencer and snapshot export/restore baseline. It does not yet provide durable command logs, durable event logs, epoch-fenced writes, distributed leases, or production worker routing.
+The current matching core now has durable command/event log, offset checkpoint, snapshot, validation report, recovery orchestration, lease lifecycle, service-level write guard, and owner epoch audit fields. Production worker routing still needs to call the guard.

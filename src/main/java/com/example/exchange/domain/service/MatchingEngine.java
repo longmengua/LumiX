@@ -58,6 +58,15 @@ public interface MatchingEngine {
     boolean amendOrder(Order order, BigDecimal newPrice, BigDecimal newQty);
 
     /**
+     * 在同一個 symbol sequencer 內先撤原單，再送 replacement order。
+     *
+     * @param originalOrder    欲取消的原訂單
+     * @param replacementOrder 替換的新訂單
+     * @return replacement order 的撮合結果；若原單不存在，replacement 會被拒絕
+     */
+    MatchingResult cancelReplace(Order originalOrder, Order replacementOrder);
+
+    /**
      * 取得某交易對的訂單簿快照
      *
      * @param symbolCode 交易對代碼

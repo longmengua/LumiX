@@ -48,6 +48,12 @@ public class MatchingEventLogRecord {
     @Column(name = "trade_payload", nullable = false, columnDefinition = "JSON")
     private String tradePayload;
 
+    @Column(name = "owner_id", length = 128)
+    private String ownerId;
+
+    @Column(name = "owner_epoch", nullable = false)
+    private Long ownerEpoch;
+
     @Column(name = "created_at", nullable = false, columnDefinition = "TIMESTAMP(6)")
     private Instant createdAt;
 }

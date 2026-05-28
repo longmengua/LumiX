@@ -29,12 +29,26 @@ public class JpaMatchingEventLog implements MatchingEventLog {
     @Override
     @Transactional
     public MatchingEventLogEntry append(String symbolCode, long commandOffset, TradeExecuted trade) {
+        return append(symbolCode, commandOffset, trade, null, 0L);
+    }
+
+    @Override
+    @Transactional
+    public MatchingEventLogEntry append(
+            String symbolCode,
+            long commandOffset,
+            TradeExecuted trade,
+            String ownerId,
+            long ownerEpoch
+    ) {
         String symbol = normalize(symbolCode);
         MatchingEventLogRecord record = new MatchingEventLogRecord();
         record.setSymbolCode(symbol);
         record.setOffsetValue(nextEventOffset(symbol));
         record.setCommandOffset(commandOffset);
         record.setTradePayload(writeTrade(trade));
+        record.setOwnerId(ownerId);
+        record.setOwnerEpoch(Math.max(0L, ownerEpoch));
         record.setCreatedAt(Instant.now());
         return toEntry(repository.save(record));
     }
@@ -69,6 +83,8 @@ public class JpaMatchingEventLog implements MatchingEventLog {
                 record.getOffsetValue(),
                 record.getCommandOffset(),
                 readTrade(record.getTradePayload()),
+                record.getOwnerId(),
+                record.getOwnerEpoch() == null ? 0L : record.getOwnerEpoch(),
                 record.getCreatedAt()
         );
     }

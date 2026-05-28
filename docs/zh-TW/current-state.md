@@ -40,23 +40,35 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 撮合狀態已有 in-memory snapshot export/restore baseline，可保留掛單 FIFO、command offset、event offset 與 match sequence。
 - 撮合已有 in-memory command/event log 與 replay baseline，可在 deterministic tests 中從 snapshot checkpoint 重建狀態。
 - 撮合 command/event log、engine snapshot 與 replay validation report 也已有 Flyway schema、JPA durable adapter baseline 與 per-symbol offset checkpoint。
+- 撮合 recovery orchestration 可從 latest snapshot 加 command log 恢復單一 symbol，並保存恢復後 snapshot 與 replay validation report。
+- 撮合 sequencer lease service 可 acquire、renew、release，並在 symbol owner takeover 時遞增 epoch。
+- 撮合 sequencer write guard 會在 command write 前拒絕 missing lease、wrong owner、stale epoch 與 expired lease。
+- 撮合 command replay 支援帶 replacement order payload 的 cancel-replace。
+- 撮合 command/event log entries 可保存 sequencer owner id 與 epoch，供 fencing audit。
 - 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence 與 book-level 差異。
 - 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
+- 體驗金已用 `USER_BONUS_AVAILABLE` 拆出 grant、consume、expire、clawback ledger postings，且不會改動真實現金帳戶餘額；目前也有 grant 批次 expiry/remaining tracking。
+- 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、strategy、market-maker、order、match、sequence、quantity、price、notional 維度。
+- Trial balance 已可從 wallet ledger postings 依 asset/account code 計算。
 - 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review。
 - 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
+- liquidation decision 已會發布 audit data，營運控制可 halt liquidation 或導入 manual review。
+- liquidation scanning 可掃描 open positions 並觸發 oracle-based liquidation decisions。
+- ADL 已有 deterministic ranking 與 deleveraging-plan baseline；實際 forced position/accounting execution 仍待補。
 - 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
 - 測試資料夾已有 README 索引，測試案例也用註解和 `@DisplayName` 說明測試鏈路。
 
 ## 目前不能當作 production 完成的地方
 
-- 撮合引擎仍缺 startup / worker-takeover recovery orchestration 與 distributed sequencer lease / epoch fencing。
+- Production worker command routing 仍需接入 lease write guard。
 - 單 symbol sequencer 目前仍只是 in-process 實作，還沒有 production distributed lease、epoch fencing 與 worker routing。
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
-- ledger 已有 durable double-entry journal 與 replay path；audit retention、更深入 replay validation 與營運控制仍未完成。
-- funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。production feed redundancy、price clamp 與 liquidation scanning 仍未完成。
-- reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline 與 event-store coverage checks。
+- ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金到期 scanner baseline、流水 facts 與 replay path；audit retention、更深入 replay validation、體驗金資格/報表、流水對帳與營運控制仍未完成。
+- funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。production feed redundancy、price clamp、scanner scheduling/routing 與 forced ADL position/accounting execution 仍未完成。
+- reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、trial-balance 計算、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API 與 workflow audit events；daily finance reports 仍未完成。
+- 做市商對沖已有 durable profile/risk-limit storage、profile admin API、hedge fill query API、venue fill callback ingestion、manual 與預設關閉的 scheduled hedge execution API、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、quote command validation、hedge venue adapter contract、retryable venue result classification、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、durable hedge decision/fill audit trails 與 decision-vs-fill hedge reconciliation；真實 venue adapter、quote lifecycle integration、production callback authentication/verification、trade/ledger hedge reconciliation、production execution policy、scheduler/worker locking 與 global limits 仍未完成。
 - outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。
 - MySQL、Redis、Kafka 之間的 transaction boundary 還沒有完整定義。
 - market data 還缺 durable sequence checkpoint、reconnect backfill、ticker/kline/trade tape persistence。

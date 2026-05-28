@@ -7,7 +7,8 @@ REST controllers。
 - `MarginController`：入金、出金、margin transfer、account、ledger、transfer、risk snapshot。
 - `MarketDataController` / `DepthController`：ticker、trades、klines、depth、depth delta。
 - `RiskController`：funding、liquidation、insurance fund、ADL。
-- `RecoveryController`：snapshot recovery、reconciliation、outbox DLQ replay/compensation。
+- `MarketMakerController`：做市商 profile、risk limit 後台管理、hedge fill 查詢/venue callback、hedge reconciliation 與手動 hedge execution。
+- `RecoveryController`：snapshot recovery、reconciliation、ledger replay comparison、reconciliation issue workflow、outbox DLQ replay/compensation。
 - `PredictionOrderController`：Polymarket order/session/market operations。
 - `OperationsController`：輕量 metrics。
 

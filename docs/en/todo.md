@@ -12,10 +12,15 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Finish the replayable matching core: durable command log, event log, snapshots, offset checkpoints, and deterministic replay validation.
 - [ ] Complete production ADL: queue ranking, forced deleveraging execution, audit events, insurance-fund interaction, and operator controls.
 - [ ] Add bonus-credit / experience-fund accounting with separate ledger accounts, eligibility rules, consumption priority, expiry, clawback, and reporting.
+  - Baseline done: separate bonus ledger account, grant/consume/expiry/clawback postings, cash-balance isolation, grant-batch remaining tracking, and disabled-by-default expiry scanner.
 - [ ] Add turnover tracking for user, account, symbol, strategy, and market-maker dimensions, with ledger/trade reconciliation.
+  - Baseline done: durable turnover records emitted from processed trades; reconciliation job and first-class strategy/market-maker order fields remain.
 - [ ] Harden ledger reconciliation into an auditable accounting book: immutable journals, trial balance, replay comparison, exception workflow, and finance reports.
+  - Baseline done: trial-balance calculation, structured replay comparison, reconciliation issue workflow fields/admin APIs, and workflow audit events; daily reports remain.
 - [ ] Build market-maker interfaces for quoting, inventory, risk limits, kill switch, and hedging order routing.
+  - Baseline done: durable profile/risk-limit storage, admin profile APIs, exposure aggregation, quote command validation, kill switch, slippage control, hedge venue contract, safe rejecting adapter, quote/hedge decision audit events, durable hedge decision audit trails, and hedge fill audit persistence.
 - [ ] Build market-maker hedging strategy baseline: exposure aggregation, hedge venue adapter interface, execution policy, slippage controls, and hedge audit trail.
+  - Baseline done: exposure aggregation, hedge venue adapter interface, slippage controls, durable hedge decision audit trail, and fill audit persistence; execution policy and fill integration remain.
 
 ### Trading and Matching
 
@@ -116,7 +121,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 1. [ ] Finish replayable matching core: durable command log, event log, snapshot, offset checkpoint, and replay validation.
 2. [ ] Complete liquidation/ADL execution path and operator controls.
-3. [ ] Add bonus-credit / experience-fund ledger treatment and turnover tracking.
+3. [ ] Continue bonus-credit / experience-fund ledger treatment and turnover tracking: add eligibility, expiry scanner, reconciliation, and reporting.
 4. [ ] Harden ledger reconciliation into an auditable accounting book with exception workflow.
 5. [ ] Build market-maker quoting, inventory, kill-switch, hedging interface, and hedging strategy baseline.
 6. [ ] Split matching worker first; defer WebSocket gateway and Polymarket worker split until the core kernel is stable.

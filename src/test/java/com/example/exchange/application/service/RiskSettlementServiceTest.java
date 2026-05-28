@@ -4,9 +4,11 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.event.FundingSettled;
+import com.example.exchange.domain.event.LiquidationDecisionRecorded;
 import com.example.exchange.domain.event.PositionLiquidated;
 import com.example.exchange.domain.model.dto.FundingSettlementResult;
 import com.example.exchange.domain.model.dto.LiquidationResult;
+import com.example.exchange.domain.model.dto.LiquidationScanResult;
 import com.example.exchange.domain.model.dto.ValidationIssue;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Position;
@@ -19,6 +21,7 @@ import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
 import com.example.exchange.infra.config.FundingRateProperties;
 import com.example.exchange.infra.config.MarkPriceOracleProperties;
+import com.example.exchange.infra.config.RiskControlsProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -161,7 +164,7 @@ class RiskSettlementServiceTest {
         WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
         DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
         InsuranceFundService insuranceFundService = new InsuranceFundService();
-        List<PositionLiquidated> published = new ArrayList<>();
+        List<Object> published = new ArrayList<>();
 
         // mark price 從 100 跌到 1，製造遠超帳戶餘額的虧損缺口。
         walletLedgerService.deposit(7, "USDT", new BigDecimal("10"), "deposit");
@@ -201,8 +204,134 @@ class RiskSettlementServiceTest {
         assertThat(accountRepo.findByUid(7).orElseThrow().crossBalance()).isEqualByComparingTo("0");
         assertThat(ledgerRepo.findByUid(7)).extracting(WalletLedgerEntry::getReason)
                 .contains("insurance_fund_payout", "realized_pnl_loss", "position_margin_release");
-        assertThat(published).hasSize(1);
+        assertThat(published).filteredOn(PositionLiquidated.class::isInstance).hasSize(1);
+        assertThat(published).filteredOn(LiquidationDecisionRecorded.class::isInstance)
+                .singleElement()
+                .satisfies(event -> {
+                    LiquidationDecisionRecorded decision = (LiquidationDecisionRecorded) event;
+                    assertThat(decision.liquidated()).isTrue();
+                    assertThat(decision.reason()).isEqualTo("EQUITY_BELOW_MAINTENANCE");
+                    assertThat(decision.insuranceCovered()).isEqualByComparingTo("89");
+                    assertThat(decision.adlCovered()).isEqualByComparingTo("0");
+                });
         assertThat(insuranceFundService.adlQueue()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("liquidation manual review 只記錄 audit decision 不執行平倉")
+    /**
+     * 流程：建立會觸發強平的虧損倉位 -> 開啟 manual review ->
+     * 驗證 liquidation 不平倉、不寫 ledger，只發布人工覆核 decision audit。
+     */
+    void liquidationManualReviewRecordsDecisionWithoutClosingPosition() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InsuranceFundService insuranceFundService = new InsuranceFundService();
+        List<Object> published = new ArrayList<>();
+        RiskControlsProperties controls = new RiskControlsProperties();
+        controls.setLiquidationManualReview(true);
+
+        walletLedgerService.deposit(8, "USDT", new BigDecimal("10"), "deposit");
+        walletLedgerService.increasePositionMargin(8, "USDT", new BigDecimal("5"), "margin");
+        positionRepo.save(Position.builder()
+                .uid(8)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .leverage(new BigDecimal("20"))
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("100"))
+                .margin(new BigDecimal("5"))
+                .build());
+
+        LiquidationService liquidationService = new LiquidationService(
+                accountRepo,
+                positionRepo,
+                symbolRepo,
+                walletLedgerService,
+                insuranceFundService,
+                published::add
+        );
+        liquidationService.setRiskControlsProperties(controls);
+        liquidationService.setMarkPriceOracleService(oracle("BTCUSDT", "1", "1"));
+
+        LiquidationResult result = liquidationService.liquidate(8, "BTCUSDT");
+
+        assertThat(result.liquidated()).isFalse();
+        assertThat(positionRepo.find(8, symbol).orElseThrow().getQty()).isEqualByComparingTo("1");
+        assertThat(ledgerRepo.findByUid(8)).extracting(WalletLedgerEntry::getReason)
+                .doesNotContain("insurance_fund_payout", "realized_pnl_loss", "position_margin_release");
+        assertThat(published).filteredOn(PositionLiquidated.class::isInstance).isEmpty();
+        assertThat(published).filteredOn(LiquidationDecisionRecorded.class::isInstance)
+                .singleElement()
+                .satisfies(event -> {
+                    LiquidationDecisionRecorded decision = (LiquidationDecisionRecorded) event;
+                    assertThat(decision.liquidated()).isFalse();
+                    assertThat(decision.reason()).isEqualTo("LIQUIDATION_MANUAL_REVIEW");
+                });
+    }
+
+    @Test
+    @DisplayName("liquidation scanner 會掃描 open positions 並觸發 oracle-based liquidation")
+    /**
+     * 流程：準備一筆會強平與一筆安全倉位 -> scanner 掃 open positions ->
+     * 驗證只強平高風險倉位，安全倉位只留下 decision audit。
+     */
+    void liquidationScannerScansOpenPositionsAndTriggersLiquidation() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InsuranceFundService insuranceFundService = new InsuranceFundService();
+        List<Object> published = new ArrayList<>();
+
+        walletLedgerService.deposit(41, "USDT", new BigDecimal("10"), "deposit-41");
+        walletLedgerService.increasePositionMargin(41, "USDT", new BigDecimal("5"), "margin-41");
+        positionRepo.save(Position.builder()
+                .uid(41)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .leverage(new BigDecimal("20"))
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("100"))
+                .margin(new BigDecimal("5"))
+                .build());
+
+        walletLedgerService.deposit(42, "USDT", new BigDecimal("1000"), "deposit-42");
+        walletLedgerService.increasePositionMargin(42, "USDT", new BigDecimal("5"), "margin-42");
+        positionRepo.save(Position.builder()
+                .uid(42)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .leverage(new BigDecimal("2"))
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("1"))
+                .margin(new BigDecimal("5"))
+                .build());
+
+        LiquidationService liquidationService = new LiquidationService(
+                accountRepo,
+                positionRepo,
+                symbolRepo,
+                walletLedgerService,
+                insuranceFundService,
+                published::add
+        );
+        liquidationService.setMarkPriceOracleService(oracle("BTCUSDT", "1", "1"));
+        LiquidationScanService scanService = new LiquidationScanService(positionRepo, liquidationService);
+
+        LiquidationScanResult scan = scanService.scanOpenPositions();
+
+        assertThat(scan.scannedPositions()).isEqualTo(2);
+        assertThat(scan.liquidationCount()).isEqualTo(1);
+        assertThat(scan.reviewedCount()).isEqualTo(1);
+        assertThat(positionRepo.find(41, symbol).orElseThrow().getQty()).isEqualByComparingTo("0");
+        assertThat(positionRepo.find(42, symbol).orElseThrow().getQty()).isEqualByComparingTo("1");
+        assertThat(published).filteredOn(LiquidationDecisionRecorded.class::isInstance).hasSize(2);
+        assertThat(published).filteredOn(PositionLiquidated.class::isInstance).hasSize(1);
     }
 
     @Test

@@ -35,10 +35,16 @@ Evolve the current in-memory matching core toward replayability with durable com
 - Durable command/event offsets are allocated through a per-symbol checkpoint row with pessimistic locking.
 - Added `MatchingSnapshotStore` and `JpaMatchingSnapshotStore` for durable matching snapshot persistence.
 - Added `MatchingReplayValidationReportStore` and JPA adapter for durable recovery audit reports.
+- Added `MatchingRecoveryService` to orchestrate worker startup/takeover recovery from latest snapshot plus command log replay.
+- Recovery service saves the recovered snapshot and durable replay validation report after deterministic validation.
+- Added `MatchingSequencerLeaseStore`, durable lease schema, and `MatchingSequencerLeaseService` for per-symbol owner / epoch lifecycle.
+- Added `CANCEL_REPLACE` matching command semantics with replacement order payload and replay coverage.
+- Added `MatchingSequencerLeaseService.requireWritable(...)` guard to reject missing lease, wrong owner, stale epoch, and expired lease before command writes.
+- Added owner epoch audit fields to matching command/event logs and append APIs.
 
 Remaining work:
-- Add cancel-replace command semantics and stronger atomicity.
-- Add production worker recovery around durable logs.
+- Add stronger application/accounting atomicity around cancel-replace reserve release and replacement reserve.
+- Wire lease write guard into the production worker command pipeline.
 
 ## Acceptance Criteria
 

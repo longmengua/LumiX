@@ -26,6 +26,30 @@ public interface MatchingCommandLog {
             BigDecimal newQty
     );
 
+    MatchingCommandLogEntry append(
+            String symbolCode,
+            MatchingCommandType type,
+            Order order,
+            BigDecimal newPrice,
+            BigDecimal newQty,
+            String ownerId,
+            long ownerEpoch
+    );
+
+    MatchingCommandLogEntry appendCancelReplace(
+            String symbolCode,
+            Order originalOrder,
+            Order replacementOrder
+    );
+
+    MatchingCommandLogEntry appendCancelReplace(
+            String symbolCode,
+            Order originalOrder,
+            Order replacementOrder,
+            String ownerId,
+            long ownerEpoch
+    );
+
     List<MatchingCommandLogEntry> listAfter(String symbolCode, long offset);
 
     List<MatchingCommandLogEntry> listAll(String symbolCode);

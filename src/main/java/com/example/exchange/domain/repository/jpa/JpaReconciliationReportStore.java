@@ -41,6 +41,27 @@ public class JpaReconciliationReportStore implements ReconciliationReportStore {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<ReconciliationReportIssue> findIssue(long issueId) {
+        return issueRepository.findById(issueId);
+    }
+
+    @Override
+    @Transactional
+    public void saveIssue(ReconciliationReportIssue issue) {
+        issueRepository.save(issue);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<ReconciliationReportIssue> findIssuesByStatus(String status, int limit) {
+        return issueRepository.findByStatusOrderByCreatedAtAscIdAsc(status)
+                .stream()
+                .limit(Math.max(1, limit))
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ReconciliationReport> latest(int limit) {
         return reportRepository.findTop50ByOrderByCompletedAtDesc()
                 .stream()

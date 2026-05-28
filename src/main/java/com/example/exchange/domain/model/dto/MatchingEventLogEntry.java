@@ -14,6 +14,8 @@ import java.time.Instant;
  * @param offset        per-symbol event offset
  * @param commandOffset 產生此 event 時對應的 command offset
  * @param trade         撮合產生的成交事件
+ * @param ownerId       寫入 event 時的 sequencer owner；in-memory baseline 可為 null
+ * @param ownerEpoch    寫入 event 時的 sequencer epoch；未接 fencing 時為 0
  * @param createdAt     event log 建立時間
  */
 public record MatchingEventLogEntry(
@@ -21,6 +23,8 @@ public record MatchingEventLogEntry(
         long offset,
         long commandOffset,
         TradeExecuted trade,
+        String ownerId,
+        long ownerEpoch,
         Instant createdAt
 ) {
 }

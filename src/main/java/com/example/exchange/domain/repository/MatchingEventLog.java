@@ -18,6 +18,14 @@ public interface MatchingEventLog {
 
     MatchingEventLogEntry append(String symbolCode, long commandOffset, TradeExecuted trade);
 
+    MatchingEventLogEntry append(
+            String symbolCode,
+            long commandOffset,
+            TradeExecuted trade,
+            String ownerId,
+            long ownerEpoch
+    );
+
     List<MatchingEventLogEntry> listAfter(String symbolCode, long offset);
 
     List<MatchingEventLogEntry> listAll(String symbolCode);

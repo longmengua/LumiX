@@ -100,10 +100,16 @@ public class OrderService {
     private final MarketDataService marketDataService;
     private final IdempotencyService idempotencyService;
     private OperationalMetricsService operationalMetricsService;
+    private TurnoverService turnoverService;
 
     @Autowired(required = false)
     public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
         this.operationalMetricsService = operationalMetricsService;
+    }
+
+    @Autowired(required = false)
+    public void setTurnoverService(TurnoverService turnoverService) {
+        this.turnoverService = turnoverService;
     }
 
     /**
@@ -150,6 +156,9 @@ public class OrderService {
                 continue;
             }
             Order relatedOrder = trade.orderId() == null ? null : affectedById.get(trade.orderId());
+            if (turnoverService != null) {
+                turnoverService.recordTrade(withSeq, relatedOrder);
+            }
             SymbolConfig config = symbolConfigRepository.findBySymbol(trade.symbol().code())
                     .orElseThrow(() -> new IllegalArgumentException("missing symbol config: " + trade.symbol().code()));
 

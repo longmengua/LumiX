@@ -4,6 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.application.event.DomainEventPublisher;
+import com.example.exchange.domain.event.LiquidationDecisionRecorded;
 import com.example.exchange.domain.event.PositionLiquidated;
 import com.example.exchange.domain.model.dto.LiquidationResult;
 import com.example.exchange.domain.model.dto.PositionChange;
@@ -13,6 +14,7 @@ import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
+import com.example.exchange.infra.config.RiskControlsProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,12 +36,18 @@ public class LiquidationService {
     private final SymbolConfigRepository symbolConfigRepository;
     private final WalletLedgerService walletLedgerService;
     private final InsuranceFundService insuranceFundService;
-    private final DomainEventPublisher<PositionLiquidated> publisher;
+    private final DomainEventPublisher<Object> publisher;
     private MarkPriceOracleService markPriceOracleService;
+    private RiskControlsProperties riskControlsProperties;
 
     @Autowired(required = false)
     public void setMarkPriceOracleService(MarkPriceOracleService markPriceOracleService) {
         this.markPriceOracleService = markPriceOracleService;
+    }
+
+    @Autowired(required = false)
+    public void setRiskControlsProperties(RiskControlsProperties riskControlsProperties) {
+        this.riskControlsProperties = riskControlsProperties;
     }
 
     public LiquidationResult liquidate(long uid, String symbol) {
@@ -53,7 +61,13 @@ public class LiquidationService {
         Instant now = Instant.now();
         String liquidationId = "liq-" + UUID.randomUUID();
 
+        if (riskControlsProperties != null && riskControlsProperties.isLiquidationHalt()) {
+            publishDecision(uid, config, liquidationId, false, "LIQUIDATION_HALTED", markPrice, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, now);
+            throw new IllegalStateException("liquidation is halted");
+        }
+
         if (position == null || position.getQty() == null || position.getQty().signum() == 0) {
+            publishDecision(uid, config, liquidationId, false, "NO_POSITION", markPrice, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, now);
             return notLiquidated(uid, config, markPrice, liquidationId, now, BigDecimal.ZERO, BigDecimal.ZERO);
         }
 
@@ -63,6 +77,11 @@ public class LiquidationService {
         BigDecimal maintenanceMargin = notional.multiply(maintenanceMarginRate);
         BigDecimal equity = account.crossBalance().add(unrealizedPnl(position, markPrice));
         if (equity.compareTo(maintenanceMargin) >= 0) {
+            publishDecision(uid, config, liquidationId, false, "EQUITY_ABOVE_MAINTENANCE", markPrice, maintenanceMargin, equity, BigDecimal.ZERO, BigDecimal.ZERO, now);
+            return notLiquidated(uid, config, markPrice, liquidationId, now, maintenanceMargin, equity);
+        }
+        if (riskControlsProperties != null && riskControlsProperties.isLiquidationManualReview()) {
+            publishDecision(uid, config, liquidationId, false, "LIQUIDATION_MANUAL_REVIEW", markPrice, maintenanceMargin, equity, BigDecimal.ZERO, BigDecimal.ZERO, now);
             return notLiquidated(uid, config, markPrice, liquidationId, now, maintenanceMargin, equity);
         }
 
@@ -106,6 +125,7 @@ public class LiquidationService {
         position.addAdlCovered(adlCovered);
         positionRepository.save(position);
 
+        publishDecision(uid, config, liquidationId, true, "EQUITY_BELOW_MAINTENANCE", markPrice, maintenanceMargin, equity, insuranceCovered, adlCovered, now);
         publisher.publish(new PositionLiquidated(
                 uid,
                 config.toSymbol(),
@@ -132,6 +152,34 @@ public class LiquidationService {
                 liquidationId,
                 now
         );
+    }
+
+    private void publishDecision(
+            long uid,
+            SymbolConfig config,
+            String liquidationId,
+            boolean liquidated,
+            String reason,
+            BigDecimal markPrice,
+            BigDecimal maintenanceMargin,
+            BigDecimal equity,
+            BigDecimal insuranceCovered,
+            BigDecimal adlCovered,
+            Instant decidedAt
+    ) {
+        publisher.publish(new LiquidationDecisionRecorded(
+                uid,
+                config.toSymbol(),
+                liquidationId,
+                liquidated,
+                reason,
+                markPrice,
+                maintenanceMargin,
+                equity,
+                insuranceCovered,
+                adlCovered,
+                decidedAt
+        ));
     }
 
     private static LiquidationResult notLiquidated(

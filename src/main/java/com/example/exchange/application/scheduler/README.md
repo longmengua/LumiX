@@ -3,8 +3,10 @@
 排程任務層。
 
 目前狀態：
-- Funding settlement、snapshot、reconciliation、outbox relay、prediction market sync 都有 scheduler baseline。
+- Funding settlement、snapshot、reconciliation、outbox relay、prediction market sync、bonus credit expiry、market-maker hedge execution 都有 scheduler baseline。
 - 部分 scheduler 在 MVP 階段可能保留註解掉的 `@Scheduled`，避免本機啟動後自動改動狀態。
+- `BonusCreditExpiryScheduler` 預設 `bonus-credit.expiry-enabled=false`，啟用前要確認 ledger/retry/告警策略。
+- `MarketMakerHedgeExecutionScheduler` 預設 `market-maker.hedge-execution.enabled=false`，啟用前要確認 venue adapter、global halt、worker lock、告警與對帳策略。
 
 注意：
 - production 啟用前要確認 idempotency、分散式鎖、重試策略與監控告警。

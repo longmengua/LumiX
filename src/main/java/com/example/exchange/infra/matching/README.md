@@ -21,4 +21,9 @@ Current status:
 - Replay can rebuild a symbol from a snapshot checkpoint plus later command log entries.
 - Replay validation compares command offset, event offset, match sequence, and aggregated book levels.
 - Command/event logs, snapshots, and replay validation reports have durable schema, JPA adapter baselines, and per-symbol offset checkpoints.
-- Startup / worker-takeover recovery orchestration is still TODO.
+- `MatchingRecoveryService` can replay startup / worker-takeover state and persist recovered snapshots plus validation reports.
+- `MatchingSequencerLeaseService` provides per-symbol owner acquire/renew/release and takeover epoch baseline.
+- `CANCEL_REPLACE` command replay stores a replacement order payload and replays cancel + replacement submit on the sequencer.
+- `MatchingSequencerLeaseService.requireWritable(...)` rejects missing lease, wrong owner, stale epoch, and expired lease before live command writes.
+- Command/event log entries can store sequencer owner id and epoch for fencing audit.
+- Production worker routing still needs to call the guard.

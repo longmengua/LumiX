@@ -1,6 +1,6 @@
 # Task: Liquidation And ADL
 
-Status: `todo`
+Status: `doing`
 
 ## Goal
 
@@ -16,10 +16,26 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 
 ## First Implementation Slice
 
-1. Review current `LiquidationService`, `InsuranceFundService`, and risk tests.
-2. Add deterministic ADL ranking model and tests.
-3. Add audit event coverage for liquidation/ADL decisions.
-4. Add operator-control hooks before routing execution.
+1. [x] Review current `LiquidationService`, `InsuranceFundService`, and risk tests.
+2. [x] Add deterministic ADL ranking model and tests.
+3. [x] Add audit event coverage for liquidation/ADL decisions.
+4. [x] Add operator-control hooks before routing execution.
+
+## Progress
+
+- Current `LiquidationService` closes under-margined positions, releases position margin, applies realized PnL, covers shortfall through insurance fund, and enqueues ADL residual shortfall.
+- Added `AdlRankingCandidate`, `AdlRankedPosition`, and `AdlRankingService`.
+- ADL ranking is deterministic: higher profit rate, higher effective leverage, larger notional, then lower uid.
+- Added `AdlRankingServiceTest` for ranking order and exclusion of loss/zero/invalid candidates.
+- Added `LiquidationDecisionRecorded` audit event and test coverage for liquidation decision reason and insurance/ADL coverage.
+- Added `risk-controls.liquidation-halt` and `risk-controls.liquidation-manual-review` operator hooks.
+- Manual review mode records a decision audit event without closing the position or writing liquidation ledger entries.
+- Added `LiquidationScanService` to scan open positions and trigger oracle-based liquidation decisions.
+- Added `AdlDeleveragingPlanner` to turn ranked ADL candidates into deterministic forced-deleveraging steps.
+
+Remaining work:
+- Wire ADL deleveraging plans into actual position/accounting execution.
+- Add retry/ownership workflow for operator-reviewed liquidation decisions.
 
 ## Acceptance Criteria
 

@@ -37,14 +37,61 @@ public class JpaMatchingCommandLog implements MatchingCommandLog {
             BigDecimal newPrice,
             BigDecimal newQty
     ) {
+        return append(symbolCode, type, order, newPrice, newQty, null, 0L);
+    }
+
+    @Override
+    @Transactional
+    public MatchingCommandLogEntry append(
+            String symbolCode,
+            MatchingCommandType type,
+            Order order,
+            BigDecimal newPrice,
+            BigDecimal newQty,
+            String ownerId,
+            long ownerEpoch
+    ) {
         String symbol = normalize(symbolCode);
         MatchingCommandLogRecord record = new MatchingCommandLogRecord();
         record.setSymbolCode(symbol);
         record.setOffsetValue(nextCommandOffset(symbol));
         record.setCommandType(type.name());
         record.setOrderPayload(writeOrder(order));
+        record.setReplacementOrderPayload(null);
         record.setNewPrice(newPrice);
         record.setNewQty(newQty);
+        record.setOwnerId(ownerId);
+        record.setOwnerEpoch(Math.max(0L, ownerEpoch));
+        record.setCreatedAt(Instant.now());
+        return toEntry(repository.save(record));
+    }
+
+    @Override
+    @Transactional
+    public MatchingCommandLogEntry appendCancelReplace(String symbolCode, Order originalOrder, Order replacementOrder) {
+        return appendCancelReplace(symbolCode, originalOrder, replacementOrder, null, 0L);
+    }
+
+    @Override
+    @Transactional
+    public MatchingCommandLogEntry appendCancelReplace(
+            String symbolCode,
+            Order originalOrder,
+            Order replacementOrder,
+            String ownerId,
+            long ownerEpoch
+    ) {
+        String symbol = normalize(symbolCode);
+        MatchingCommandLogRecord record = new MatchingCommandLogRecord();
+        record.setSymbolCode(symbol);
+        record.setOffsetValue(nextCommandOffset(symbol));
+        record.setCommandType(MatchingCommandType.CANCEL_REPLACE.name());
+        record.setOrderPayload(writeOrder(originalOrder));
+        record.setReplacementOrderPayload(writeOrder(replacementOrder));
+        record.setNewPrice(null);
+        record.setNewQty(null);
+        record.setOwnerId(ownerId);
+        record.setOwnerEpoch(Math.max(0L, ownerEpoch));
         record.setCreatedAt(Instant.now());
         return toEntry(repository.save(record));
     }
@@ -79,8 +126,11 @@ public class JpaMatchingCommandLog implements MatchingCommandLog {
                 record.getOffsetValue(),
                 MatchingCommandType.valueOf(record.getCommandType()),
                 readOrder(record.getOrderPayload()),
+                readNullableOrder(record.getReplacementOrderPayload()),
                 record.getNewPrice(),
                 record.getNewQty(),
+                record.getOwnerId(),
+                record.getOwnerEpoch() == null ? 0L : record.getOwnerEpoch(),
                 record.getCreatedAt()
         );
     }
@@ -99,6 +149,11 @@ public class JpaMatchingCommandLog implements MatchingCommandLog {
         } catch (Exception e) {
             throw new IllegalStateException("deserialize matching command order failed", e);
         }
+    }
+
+    private Order readNullableOrder(String json) {
+        if (json == null || json.isBlank()) return null;
+        return readOrder(json);
     }
 
     private long nextCommandOffset(String symbolCode) {

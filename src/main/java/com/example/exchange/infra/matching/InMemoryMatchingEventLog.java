@@ -28,9 +28,28 @@ public class InMemoryMatchingEventLog implements MatchingEventLog {
 
     @Override
     public MatchingEventLogEntry append(String symbolCode, long commandOffset, TradeExecuted trade) {
+        return append(symbolCode, commandOffset, trade, null, 0L);
+    }
+
+    @Override
+    public MatchingEventLogEntry append(
+            String symbolCode,
+            long commandOffset,
+            TradeExecuted trade,
+            String ownerId,
+            long ownerEpoch
+    ) {
         String symbol = normalize(symbolCode);
         long offset = offsets.computeIfAbsent(symbol, ignored -> new AtomicLong()).incrementAndGet();
-        MatchingEventLogEntry entry = new MatchingEventLogEntry(symbol, offset, commandOffset, trade, Instant.now());
+        MatchingEventLogEntry entry = new MatchingEventLogEntry(
+                symbol,
+                offset,
+                commandOffset,
+                trade,
+                ownerId,
+                Math.max(0L, ownerEpoch),
+                Instant.now()
+        );
         entries.computeIfAbsent(symbol, ignored -> new ArrayList<>()).add(entry);
         return entry;
     }

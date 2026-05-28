@@ -48,6 +48,15 @@ public class ReconciliationReportIssue {
     @Column(name = "message", nullable = false, columnDefinition = "TEXT")
     private String message;
 
+    @Column(name = "status", nullable = false, length = 32)
+    private String status;
+
+    @Column(name = "owner", length = 128)
+    private String owner;
+
+    @Column(name = "resolved_at", columnDefinition = "DATETIME(6)")
+    private Instant resolvedAt;
+
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(6)")
     private Instant createdAt;
 
@@ -58,6 +67,7 @@ public class ReconciliationReportIssue {
         record.setSeverity(issue.severity());
         record.setCode(issue.code());
         record.setMessage(issue.message());
+        record.setStatus("OPEN");
         record.setCreatedAt(Instant.now());
         return record;
     }

@@ -12,10 +12,15 @@
 - [ ] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
 - [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
 - [ ] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
+  - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking 與預設關閉的 expiry scanner。
 - [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
+  - Baseline 已完成：已處理成交會寫 durable turnover records；reconciliation job 與正式 strategy/market-maker 下單欄位仍待補。
 - [ ] 將 ledger reconciliation 強化成可審計帳本：immutable journal、trial balance、replay comparison、exception workflow 與財務報表。
+  - Baseline 已完成：trial-balance 計算、結構化 replay comparison、reconciliation issue workflow 欄位/後台 API 與 workflow audit events；daily reports 仍待補。
 - [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
+  - Baseline 已完成：durable profile/risk-limit storage、admin profile API、exposure aggregation、quote command validation、kill switch、slippage control、hedge venue contract、預設安全拒絕 adapter、quote/hedge decision audit events、durable hedge decision audit trails 與 hedge fill audit persistence。
 - [ ] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。
+  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、slippage controls、durable hedge decision audit trail 與 fill audit persistence；execution policy 與 fill integration 仍待補。
 
 ### 交易與撮合
 
@@ -116,7 +121,7 @@
 
 1. [ ] 先完成可 replay 撮合核心：durable command log、event log、snapshot、offset checkpoint 與 replay validation。
 2. [ ] 完成 liquidation / ADL 執行鏈路與營運控制。
-3. [ ] 補體驗金 / bonus credit 帳務與流水 tracking。
+3. [ ] 繼續補體驗金 / bonus credit 帳務與流水 tracking：資格、到期掃描、對帳與報表。
 4. [ ] 將 ledger reconciliation 強化成可審計帳本與 exception workflow。
 5. [ ] 建立做市商報價、inventory、kill-switch、對沖 interface 與對沖策略 baseline。
 6. [ ] 先拆 matching worker；WebSocket gateway 與 Polymarket worker 拆分延後到核心內核穩定後。

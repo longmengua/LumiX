@@ -1,0 +1,108 @@
+/*
+ * 檔案用途：REST Controller，提供做市商 profile/risk-limit、hedge fill 與 execution 後台 API。
+ */
+package com.example.exchange.interfaces.web.controller;
+
+import com.example.exchange.application.service.MarketMakerHedgeFillService;
+import com.example.exchange.application.service.MarketMakerHedgeExecutionService;
+import com.example.exchange.application.service.MarketMakerHedgeReconciliationService;
+import com.example.exchange.application.service.MarketMakerProfileService;
+import com.example.exchange.domain.model.dto.HedgeFillRecord;
+import com.example.exchange.domain.model.dto.HedgeExecutionReport;
+import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
+import com.example.exchange.domain.model.dto.MarketMakerProfile;
+import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
+import com.example.exchange.interfaces.web.dto.MarketMakerProfileRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/api/market-maker")
+@RequiredArgsConstructor
+public class MarketMakerController {
+
+    private final MarketMakerProfileService profileService;
+    private final MarketMakerHedgeFillService hedgeFillService;
+    private final MarketMakerHedgeReconciliationService hedgeReconciliationService;
+    private final MarketMakerHedgeExecutionService hedgeExecutionService;
+
+    @PostMapping("/profiles")
+    public ApiResponse<MarketMakerProfile> saveProfile(
+            @Valid @RequestBody MarketMakerProfileRequest request
+    ) {
+        return ApiResponse.ok(profileService.save(request.toProfile()));
+    }
+
+    @GetMapping("/profiles/enabled")
+    public ApiResponse<List<MarketMakerProfile>> enabledProfiles() {
+        return ApiResponse.ok(profileService.enabledProfiles());
+    }
+
+    @GetMapping("/profiles/{marketMakerId}")
+    public ApiResponse<MarketMakerProfile> profile(@PathVariable String marketMakerId) {
+        return ApiResponse.ok(profileService.findByMarketMakerId(marketMakerId).orElse(null));
+    }
+
+    @GetMapping("/uids/{uid}/profile")
+    public ApiResponse<MarketMakerProfile> profileByUid(@PathVariable long uid) {
+        return ApiResponse.ok(profileService.findByUid(uid).orElse(null));
+    }
+
+    @GetMapping("/profiles/{marketMakerId}/hedge-fills")
+    public ApiResponse<List<HedgeFillRecord>> hedgeFillsByMarketMaker(
+            @PathVariable String marketMakerId,
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(hedgeFillService.fillsByMarketMaker(marketMakerId, limit));
+    }
+
+    @GetMapping("/hedge-fills/venue-orders/{venueOrderId}")
+    public ApiResponse<List<HedgeFillRecord>> hedgeFillsByVenueOrder(@PathVariable String venueOrderId) {
+        return ApiResponse.ok(hedgeFillService.fillsByVenueOrder(venueOrderId));
+    }
+
+    @GetMapping("/hedge-fills/ref/{refId}")
+    public ApiResponse<List<HedgeFillRecord>> hedgeFillsByRefId(@PathVariable String refId) {
+        return ApiResponse.ok(hedgeFillService.fillsByRefId(refId));
+    }
+
+    @PostMapping("/hedge-fills/venue-callback")
+    public ApiResponse<HedgeFillRecord> recordHedgeFillCallback(
+            @Valid @RequestBody HedgeVenueFillCallbackRequest request
+    ) {
+        return ApiResponse.ok(hedgeFillService.recordVenueFill(request.toMessage()));
+    }
+
+    @GetMapping("/profiles/{marketMakerId}/hedge-reconciliation")
+    public ApiResponse<HedgeReconciliationReport> hedgeReconciliationByMarketMaker(
+            @PathVariable String marketMakerId,
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(hedgeReconciliationService.reconcileMarketMaker(marketMakerId, limit));
+    }
+
+    @PostMapping("/profiles/{marketMakerId}/hedge-execution")
+    public ApiResponse<HedgeExecutionReport> executeHedgeByMarketMaker(
+            @PathVariable String marketMakerId,
+            @RequestParam(defaultValue = "manual") String refPrefix
+    ) {
+        return ApiResponse.ok(hedgeExecutionService.executeForMarketMaker(marketMakerId, refPrefix));
+    }
+
+    @PostMapping("/hedge-execution/enabled")
+    public ApiResponse<List<HedgeExecutionReport>> executeHedgeForEnabledMarketMakers(
+            @RequestParam(defaultValue = "manual") String refPrefix
+    ) {
+        return ApiResponse.ok(hedgeExecutionService.executeForEnabledMarketMakers(refPrefix));
+    }
+}

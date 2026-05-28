@@ -7,13 +7,27 @@ Application service tests。
 | 測試類別 | 主要案例 |
 | --- | --- |
 | `OrderAccountingIntegrationTest` | 成交後帳務與持倉、風控拒單、risk tiers、max open orders、重複 client order id、kill switch、批量撤單、改單、cancel-replace、cancel-on-disconnect。 |
-| `RiskSettlementServiceTest` | 單一 funding、批次 funding、強平與保險基金、全帳戶 reconciliation。 |
+| `RiskSettlementServiceTest` | 單一 funding、批次 funding、強平/decision audit/營運控制、保險基金、全帳戶 reconciliation。 |
+| `TrialBalanceServiceTest` | Wallet ledger postings 產生 trial balance 與不平衡分類。 |
+| `ReconciliationIssueWorkflowServiceTest` | 對帳 issue claim、resolve、reopen、open queue 過濾與 workflow audit event。 |
+| `AdlRankingServiceTest` | ADL queue deterministic ranking 與候選排除規則。 |
+| `AdlDeleveragingPlannerTest` | ADL forced deleveraging plan 分配與剩餘缺口計算。 |
+| `WalletLedgerServiceTest` | 體驗金 grant、consume、expire、clawback 與 real cash 隔離。 |
+| `BonusCreditServiceTest` | 體驗金批次 remaining、到期 FIFO consume 與 expiry scanner。 |
+| `TurnoverServiceTest` | 成交事件寫入 turnover fact 與 match-level summary。 |
 | `MarkPriceOracleServiceTest` | oracle 設定載入、手動更新、stale quote 拒絕。 |
 | `AccountRiskSnapshotServiceTest` | 單一帳戶 risk snapshot 持久化、account/open-position index 掃描。 |
+| `MatchingRecoveryServiceTest` | 撮合 worker startup/takeover recovery，從 snapshot + command log replay 並保存 validation report。 |
+| `MatchingSequencerLeaseServiceTest` | 撮合 worker lease owner 互斥、續租 checkpoint、release 與過期 takeover epoch。 |
 | `OutboxServiceTest` | publish 失敗 retry、DLQ、replay、manual compensation、trace header 傳遞。 |
 | `MarginServiceTest` | 入金、成功出金、出金暫停進人工覆核、餘額不足拒絕。 |
+| `WalletLedgerReplayServiceTest` | Durable ledger replay、account comparison 與結構化 mismatch details。 |
 | `AccountRiskServiceTest` | 帳戶不存在零值快照、oracle mark price 下的 equity/maintenance/risk ratio、缺 oracle 拒絕。 |
 | `OperationalMetricsServiceTest` | 下單結果 counters、取消數、成交事件數、latency 統計。 |
+| `MarketMakerHedgingServiceTest` | 做市商 exposure aggregation、kill switch、slippage rejection 與 venue routing。 |
+| `MarketMakerQuoteServiceTest` | 做市商 quote kill switch、crossed quote rejection 與 quote audit event。 |
+| `MarketMakerProfileServiceTest` | 做市商 profile/risk limit 保存、查詢與 validation。 |
+| `MarketMakerHedgeFillServiceTest` | 做市商 hedge fill 保存、查詢與 validation。 |
 
 注意：
 - 測試使用 in-memory repository stub；行為重點是 business flow，不是 Redis/JPA。

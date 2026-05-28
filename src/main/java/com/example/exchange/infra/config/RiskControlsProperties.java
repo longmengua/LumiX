@@ -31,6 +31,21 @@ public class RiskControlsProperties {
     private boolean withdrawalHalt = false;
 
     /**
+     * true 時拒絕 liquidation execution，供營運緊急暫停強平。
+     */
+    private boolean liquidationHalt = false;
+
+    /**
+     * true 時 liquidation 只記錄 decision audit，不執行平倉，交由人工覆核。
+     */
+    private boolean liquidationManualReview = false;
+
+    /**
+     * true 時拒絕 market-maker hedge execution，供營運緊急暫停對外對沖。
+     */
+    private boolean marketMakerHedgeExecutionHalt = false;
+
+    /**
      * 停牌 symbol 清單，例如 BTCUSDT、ETHUSDT。
      */
     private List<String> suspendedSymbols = new ArrayList<>();

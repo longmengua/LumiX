@@ -106,6 +106,25 @@ class ApiAuthenticationInterceptorTest {
     }
 
     @Test
+    @DisplayName("做市商後台 API 也歸類為管理員 API")
+    /**
+     * 流程：trader key 呼叫 /api/market-maker/profiles -> classifier 應視為 admin-only 並拒絕。
+     */
+    void rejectsMarketMakerAdminApiForTraderApiKey() throws Exception {
+        ApiAuthenticationInterceptor interceptor =
+                new ApiAuthenticationInterceptor(enabledProperties("trader-key", "ROLE_TRADER", "trade:write"), objectMapper);
+        MockHttpServletResponse response =
+                new MockHttpServletResponse();
+
+        boolean allowed =
+                interceptor.preHandle(request("POST", "/api/market-maker/profiles", "trader-key"), response, new Object());
+
+        assertThat(allowed).isFalse();
+        assertThat(response.getStatus()).isEqualTo(403);
+        assertThat(response.getContentAsString()).contains("Permission denied");
+    }
+
+    @Test
     @DisplayName("交易員 API key 可呼叫下單 API 並寫入 principal")
     /**
      * 流程：設定 trader trade:write scope -> 呼叫下單 API -> 驗證放行並留下 principal subject。

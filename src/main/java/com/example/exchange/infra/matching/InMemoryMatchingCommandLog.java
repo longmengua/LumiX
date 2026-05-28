@@ -36,6 +36,19 @@ public class InMemoryMatchingCommandLog implements MatchingCommandLog {
             BigDecimal newPrice,
             BigDecimal newQty
     ) {
+        return append(symbolCode, type, order, newPrice, newQty, null, 0L);
+    }
+
+    @Override
+    public MatchingCommandLogEntry append(
+            String symbolCode,
+            MatchingCommandType type,
+            Order order,
+            BigDecimal newPrice,
+            BigDecimal newQty,
+            String ownerId,
+            long ownerEpoch
+    ) {
         String symbol = normalize(symbolCode);
         long offset = offsets.computeIfAbsent(symbol, ignored -> new AtomicLong()).incrementAndGet();
         MatchingCommandLogEntry entry = new MatchingCommandLogEntry(
@@ -43,8 +56,42 @@ public class InMemoryMatchingCommandLog implements MatchingCommandLog {
                 offset,
                 type,
                 order,
+                null,
                 newPrice,
                 newQty,
+                ownerId,
+                Math.max(0L, ownerEpoch),
+                Instant.now()
+        );
+        entries.computeIfAbsent(symbol, ignored -> new ArrayList<>()).add(entry);
+        return entry;
+    }
+
+    @Override
+    public MatchingCommandLogEntry appendCancelReplace(String symbolCode, Order originalOrder, Order replacementOrder) {
+        return appendCancelReplace(symbolCode, originalOrder, replacementOrder, null, 0L);
+    }
+
+    @Override
+    public MatchingCommandLogEntry appendCancelReplace(
+            String symbolCode,
+            Order originalOrder,
+            Order replacementOrder,
+            String ownerId,
+            long ownerEpoch
+    ) {
+        String symbol = normalize(symbolCode);
+        long offset = offsets.computeIfAbsent(symbol, ignored -> new AtomicLong()).incrementAndGet();
+        MatchingCommandLogEntry entry = new MatchingCommandLogEntry(
+                symbol,
+                offset,
+                MatchingCommandType.CANCEL_REPLACE,
+                originalOrder,
+                replacementOrder,
+                null,
+                null,
+                ownerId,
+                Math.max(0L, ownerEpoch),
                 Instant.now()
         );
         entries.computeIfAbsent(symbol, ignored -> new ArrayList<>()).add(entry);

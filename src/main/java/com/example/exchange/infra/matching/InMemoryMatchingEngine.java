@@ -101,6 +101,33 @@ public class InMemoryMatchingEngine implements MatchingEngine {
     }
 
     @Override
+    public MatchingResult cancelReplace(Order originalOrder, Order replacementOrder) {
+        appendCancelReplaceCommand(originalOrder, replacementOrder);
+        return cancelReplaceWithoutCommandLogging(originalOrder, replacementOrder);
+    }
+
+    private MatchingResult cancelReplaceWithoutCommandLogging(Order originalOrder, Order replacementOrder) {
+        if (originalOrder == null || replacementOrder == null) {
+            throw new IllegalArgumentException("originalOrder and replacementOrder must not be null");
+        }
+        SymbolRuntime runtime = runtime(originalOrder.getSymbol().code());
+        MatchingResult result = runtime.call(() -> {
+            boolean canceled = runtime.book.cancel(originalOrder);
+            if (!canceled) {
+                replacementOrder.reject("CANCEL_REPLACE_ORIGINAL_NOT_FOUND");
+                LinkedHashSet<Order> affectedOrders = new LinkedHashSet<>();
+                affectedOrders.add(originalOrder);
+                affectedOrders.add(replacementOrder);
+                return result(List.of(), affectedOrders);
+            }
+            return submitOnSequencer(runtime, replacementOrder);
+        });
+        // cancel-replace 是單一 command；replacement 產生的 trades 必須掛在同一 command offset 下。
+        appendEvents(originalOrder.getSymbol().code(), runtime.commandOffset.get(), result);
+        return result;
+    }
+
+    @Override
     public OrderBookSnapshot snapshot(String symbolCode, int depth) {
         SymbolRuntime runtime = runtimes.get(normalize(symbolCode));
         if (runtime == null) return new OrderBookSnapshot(List.of(), List.of());
@@ -469,6 +496,16 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         runtime(entry.symbolCode()).commandOffset.set(entry.offset());
     }
 
+    private void appendCancelReplaceCommand(Order originalOrder, Order replacementOrder) {
+        if (originalOrder == null || originalOrder.getSymbol() == null || replacementOrder == null) return;
+        MatchingCommandLogEntry entry = commandLog.appendCancelReplace(
+                originalOrder.getSymbol().code(),
+                copyOrder(originalOrder),
+                copyOrder(replacementOrder)
+        );
+        runtime(entry.symbolCode()).commandOffset.set(entry.offset());
+    }
+
     private void appendEvents(String symbolCode, long commandOffset, MatchingResult result) {
         if (result == null || result.getTrades() == null || result.getTrades().isEmpty()) return;
         SymbolRuntime runtime = runtime(symbolCode);
@@ -486,6 +523,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
             case SUBMIT -> submitWithoutCommandLogging(order);
             case CANCEL -> cancelOrderWithoutCommandLogging(order);
             case AMEND -> amendOrderWithoutCommandLogging(order, command.newPrice(), command.newQty());
+            case CANCEL_REPLACE -> cancelReplaceWithoutCommandLogging(order, copyOrder(command.replacementOrder()));
         }
     }
 
