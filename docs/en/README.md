@@ -15,6 +15,7 @@ This page is the English **Product Documentation** entry.
 | --- | --- | --- |
 | Product Documentation | Business-facing overview, features, modules, APIs, and order placement flow. | Current page |
 | Current State | Quick snapshot of completion level, MVP baseline, production blockers, and near-term priorities. | [current-state.md](current-state.md) |
+| Core V1 Release | Freeze scope, release gate, smoke runbook, and verification commands for the bounded core-v1 baseline. | [core-v1-release-checklist.md](core-v1-release-checklist.md) / [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md) |
 | Technical Documentation | Architecture, implementation notes, API curl scripts, and matching engine notes. | [technical.md](technical.md) |
 | TODO Documentation | Production-readiness roadmap grouped by priority and domain. | [todo.md](todo.md) |
 | AI Documentation | Compact Codex/agent maps and task-entry workflow. | [ai.md](ai.md) |

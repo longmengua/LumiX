@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.MatchingSequencerLease;
 import com.example.exchange.domain.repository.MatchingSequencerLeaseStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.Clock;
@@ -26,6 +27,7 @@ public class MatchingSequencerLeaseService {
     private final MatchingSequencerLeaseStore leaseStore;
     private final Clock clock;
 
+    @Autowired
     public MatchingSequencerLeaseService(MatchingSequencerLeaseStore leaseStore) {
         this(leaseStore, Clock.systemUTC());
     }

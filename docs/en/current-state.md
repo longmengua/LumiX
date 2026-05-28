@@ -3,7 +3,7 @@
 
 This document answers one question: how complete is this repository right now?
 
-Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The active roadmap now prioritizes the core exchange/matching kernel first: replayable matching, ADL, bonus credit, turnover, auditable books/reconciliation, and market-maker hedging.
+Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The active roadmap is now in core-v1 freeze mode: keep the existing core baseline bounded, verify it, and defer broader feature expansion.
 
 中文版本：[../zh-TW/current-state.md](../zh-TW/current-state.md)
 
@@ -20,7 +20,9 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 ## Current Priority Override
 
-The next work should stay on the core exchange kernel until it is complete enough for production-style trading tests:
+The next work should follow [core-v1-release-checklist.md](core-v1-release-checklist.md) and [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md). Do not expand web, Polymarket, reporting, compliance, or observability scope until the freeze checklist is closed.
+
+The frozen core-v1 baseline includes:
 
 1. Replayable matching command/event log, snapshots, checkpoints, and replay validation.
 2. Liquidation and ADL execution, including operator controls and audit events.
@@ -28,7 +30,7 @@ The next work should stay on the core exchange kernel until it is complete enoug
 4. Auditable ledger book and reconciliation exception workflow.
 5. Market-maker quoting, inventory, kill switch, hedge interface, and hedge strategy baseline.
 
-Polymarket worker split, WebSocket gateway scaling, and broader observability work remain important, but they should not outrank this core-kernel lane.
+Polymarket worker split, WebSocket gateway scaling, and broader observability work remain important, but they are deferred for core v1.
 
 ## Capabilities You Can Reasonably Rely On
 
@@ -79,18 +81,17 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 ## Recommended Next Work
 
-1. Evolve the matching engine into a replayable core with command log, event log, snapshot, offset checkpoint, and replay validation.
-2. Complete liquidation and ADL execution paths with operator controls.
-3. Add bonus-credit / experience-fund accounting and turnover tracking.
-4. Harden ledger reconciliation into an auditable book with exception workflow.
-5. Build market-maker interfaces and hedging strategy baseline.
+1. Close [core-v1-release-checklist.md](core-v1-release-checklist.md).
+2. Run [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md).
+3. Fix only compile/test/checklist gaps discovered during freeze verification.
+4. Defer new product surfaces until core-v1 is tagged.
 
 ## Reading Order
 
 For a quick status read, start here, then read:
 
-1. [todo.md](todo.md): full production-readiness checklist.
-2. [technical.md](technical.md): technical documentation index.
-3. [README.md](README.md): product and API overview.
-4. [../ai/code-map.md](../ai/code-map.md): compact agent code-map index.
-5. [../../src/main/java/com/example/exchange/infra/matching/README.md](../../src/main/java/com/example/exchange/infra/matching/README.md): matching engine status.
+1. [core-v1-release-checklist.md](core-v1-release-checklist.md): release freeze boundary and gates.
+2. [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md): smoke verification flow.
+3. [todo.md](todo.md): full production-readiness checklist.
+4. [technical.md](technical.md): technical documentation index.
+5. [../ai/code-map.md](../ai/code-map.md): compact agent code-map index.

@@ -1,9 +1,16 @@
 <!-- File purpose: English production-readiness checklist. Other languages are listed in the repository root README.md. -->
 # Production TODO
 
-This checklist focuses on the work needed to move the current MVP toward production. The current product priority is to finish the core exchange/matching kernel first, including matching durability, ADL, bonus credit, turnover, ledger reconciliation, and market-maker hedging interfaces/strategies.
+This checklist focuses on the work needed to move the current MVP toward production. The current product priority is core-v1 freeze: stop expanding feature surface, verify the current core exchange baseline, and document what is deferred.
 
 Documentation categories: [Product Documentation](README.md) / [Technical Documentation](technical.md) / TODO Documentation
+
+## Active Freeze Work
+
+- [ ] Close [core-v1-release-checklist.md](core-v1-release-checklist.md).
+- [x] Run [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md).
+- [x] Fix only compile/test/checklist gaps discovered during freeze verification.
+- [x] Defer web apps, Polymarket production worker split, broad reporting, compliance, and observability expansion until after core-v1 is tagged.
 
 ## P0 Required
 
@@ -119,9 +126,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ## Suggested Near-Term Order
 
-1. [ ] Finish replayable matching core: durable command log, event log, snapshot, offset checkpoint, and replay validation.
-2. [ ] Complete liquidation/ADL execution path and operator controls.
-3. [ ] Continue bonus-credit / experience-fund ledger treatment and turnover tracking: add eligibility, expiry scanner, reconciliation, and reporting.
-4. [ ] Harden ledger reconciliation into an auditable accounting book with exception workflow.
-5. [ ] Build market-maker quoting, inventory, kill-switch, hedging interface, and hedging strategy baseline.
-6. [ ] Split matching worker first; defer WebSocket gateway and Polymarket worker split until the core kernel is stable.
+1. [ ] Close the core-v1 freeze checklist.
+2. [x] Run the core-v1 smoke runbook.
+3. [x] Fix only release-blocking gaps found by tests/checklists.
+4. [ ] Tag or hand off the bounded core-v1 baseline.
+5. [ ] Re-plan post-v1 work separately instead of adding it to this freeze.

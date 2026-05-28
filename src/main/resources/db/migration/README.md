@@ -19,6 +19,10 @@ Flyway migration scripts。
 - `V14__market_maker_profiles.sql`：做市商 profile 與 per-symbol risk limit 持久化。
 - `V15__hedge_decision_audits.sql`：做市商 hedge decision audit trail 持久化。
 - `V16__hedge_fills.sql`：做市商 hedge fill audit trail 持久化。
+- `V17__align_account_risk_snapshot_id_type.sql`：對齊 account risk snapshot JPA entity 的 id 欄位型別。
+- `V18__align_uuid_string_column_types.sql`：對齊 UUID 字串欄位的 SQL 型別與 JPA `String length=36` 驗證。
+- `V19__prediction_market_baseline.sql`：補齊 prediction / Polymarket JPA entity 的 Flyway baseline schema。
+- `V20__extend_polymarket_session_limits.sql`：補齊 polymarket session revoke、last-used 與限額欄位。
 
 注意：
 - migration 檔案不可修改已發布版本；新增變更應建立下一個 `V{n}__*.sql`。

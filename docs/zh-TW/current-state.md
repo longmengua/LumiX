@@ -3,7 +3,7 @@
 
 這份文件回答一個問題：目前這個 repo 到底完成到哪裡？
 
-結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 roadmap 已改為優先完成核心交易所 / 撮合內核：可 replay 撮合、ADL、體驗金、流水、可審計帳本 / 對賬、做市商對沖。
+結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 roadmap 進入 core-v1 freeze mode：把現有核心 baseline 收斂、驗證並凍結，先不要繼續擴功能面。
 
 English version: [../en/current-state.md](../en/current-state.md)
 
@@ -20,7 +20,9 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 ## 目前插單優先順序
 
-接下來應集中在核心交易內核，直到它足以支撐 production-style trading tests：
+接下來應遵循 [core-v1-release-checklist.md](core-v1-release-checklist.md) 與 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。在 freeze checklist 關閉前，不擴 web、Polymarket、報表、合規或觀測範圍。
+
+凍結的 core-v1 baseline 包含：
 
 1. 可 replay 撮合 command/event log、snapshot、checkpoint 與 replay validation。
 2. Liquidation 與 ADL 執行鏈路，包含營運控制與 audit event。
@@ -28,7 +30,7 @@ English version: [../en/current-state.md](../en/current-state.md)
 4. 可審計 ledger book 與 reconciliation exception workflow。
 5. 做市商報價、inventory、kill switch、hedge interface 與 hedge strategy baseline。
 
-Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 仍重要，但不能排在這條核心內核優先線前面。
+Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 仍重要，但延後到 core v1 之後。
 
 ## 目前可合理依賴的能力
 
@@ -79,18 +81,17 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 ## 建議接下來先做什麼
 
-1. 把 matching engine 演進成可 replay 的核心：command log、event log、snapshot、offset checkpoint 與 replay validation。
-2. 完成 liquidation 與 ADL 執行鏈路與營運控制。
-3. 補體驗金 / bonus credit 帳務與流水 tracking。
-4. 將 ledger reconciliation 強化成可審計帳本與 exception workflow。
-5. 建立做市商 interface 與對沖策略 baseline。
+1. 關閉 [core-v1-release-checklist.md](core-v1-release-checklist.md)。
+2. 執行 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。
+3. 只修 freeze verification 發現的 compile/test/checklist 缺口。
+4. 新產品面延後到 core-v1 tag 之後。
 
 ## 閱讀順序
 
 快速掌握狀態請先看本文件，再看：
 
-1. [todo.md](todo.md)：完整 production readiness checklist。
-2. [technical.md](technical.md)：技術文件入口。
-3. [README.md](README.md)：產品與 API 總覽。
-4. [../ai/code-map.md](../ai/code-map.md)：給代理使用的精簡程式碼地圖索引。
-5. [../../src/main/java/com/example/exchange/infra/matching/README_ch.md](../../src/main/java/com/example/exchange/infra/matching/README_ch.md)：撮合引擎現況。
+1. [core-v1-release-checklist.md](core-v1-release-checklist.md)：release freeze boundary 與 gates。
+2. [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)：smoke verification flow。
+3. [todo.md](todo.md)：完整 production readiness checklist。
+4. [technical.md](technical.md)：技術文件入口。
+5. [../ai/code-map.md](../ai/code-map.md)：給代理使用的精簡程式碼地圖索引。

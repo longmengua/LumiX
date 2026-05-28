@@ -1,6 +1,8 @@
 # Core Kernel Tasks
 
-This task group is the current priority override. It should outrank Polymarket worker split, WebSocket gateway scaling, and broad observability work until the core exchange kernel is stable.
+This task group is the core-kernel implementation lane. After the current baseline, the active priority is to freeze a bounded core v1 release instead of expanding new feature surfaces.
+
+Release freeze task: [../release/core-v1-freeze.md](../release/core-v1-freeze.md)
 
 ## Task Order
 

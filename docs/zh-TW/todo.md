@@ -1,9 +1,16 @@
 <!-- 檔案用途：繁體中文 production TODO；其他語言請見根目錄 README.md。 -->
 # Production TODO
 
-這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前產品優先順序改為先把核心交易所 / 撮合內核做完整，包含撮合持久化、ADL、體驗金、流水、帳本對賬、做市商對沖 interface 與對沖策略。
+這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前產品優先順序是 core-v1 freeze：停止擴功能面，驗證目前核心交易 baseline，並明確記錄延後範圍。
 
 文件分類：[產品文件](README.md) / [技術文件](technical.md) / 待辦清單文件
+
+## 目前 Freeze 工作
+
+- [ ] 關閉 [core-v1-release-checklist.md](core-v1-release-checklist.md)。
+- [x] 執行 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。
+- [x] 只修 freeze verification 發現的 compile/test/checklist 缺口。
+- [x] Web app、Polymarket production worker split、完整報表、合規與觀測擴建延後到 core-v1 tag 之後。
 
 ## P0 必做
 
@@ -119,9 +126,8 @@
 
 ## 近期落地順序建議
 
-1. [ ] 先完成可 replay 撮合核心：durable command log、event log、snapshot、offset checkpoint 與 replay validation。
-2. [ ] 完成 liquidation / ADL 執行鏈路與營運控制。
-3. [ ] 繼續補體驗金 / bonus credit 帳務與流水 tracking：資格、到期掃描、對帳與報表。
-4. [ ] 將 ledger reconciliation 強化成可審計帳本與 exception workflow。
-5. [ ] 建立做市商報價、inventory、kill-switch、對沖 interface 與對沖策略 baseline。
-6. [ ] 先拆 matching worker；WebSocket gateway 與 Polymarket worker 拆分延後到核心內核穩定後。
+1. [ ] 關閉 core-v1 freeze checklist。
+2. [x] 執行 core-v1 smoke runbook。
+3. [x] 只修 tests/checklists 發現的 release-blocking gaps。
+4. [ ] tag 或 hand off 有邊界的 core-v1 baseline。
+5. [ ] v1 之後的工作重新規劃，不再塞進本次 freeze。
