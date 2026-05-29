@@ -28,10 +28,12 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added `IdempotentHedgeVenueAdapterTest` covering accepted duplicate replay, conflict, uncertain outcome, and missing ref id behavior.
 - Added optional `PolymarketPlaceOrderRequest.clientRequestId` so CLOB place can use the local order record as an idempotency boundary before session limit consumption, approval checks, signing, or `/order` calls.
 - Added `PolymarketOrderServiceTest` covering same-key duplicate replay, same-key payload conflict, and existing local order with uncertain CLOB outcome.
+- Added a CLOB cancel local idempotency baseline: once cancel records `CANCEL_REQUESTED` or a canceled terminal status, duplicate cancel requests return the local order without another CLOB DELETE.
+- Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay and the first successful cancel marker.
 
 Remaining work:
 - Add durable idempotency storage and venue lookup/reconciliation for real hedge adapters.
-- Add CLOB cancel/sync/reconcile idempotency and fuller local state-machine coverage.
+- Add CLOB sync/reconcile idempotency, uncertain cancel remote lookup, and fuller local state-machine coverage.
 - Add RPC approval cache/expiry and transaction idempotency tracking.
 
 ## Acceptance Criteria

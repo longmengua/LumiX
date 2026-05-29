@@ -6,7 +6,7 @@
 | Integration | Current client | Operation type | Retry/circuit/rate limit | Idempotency status |
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | Shared OkHttp timeout/retry/circuit/rate-limit baseline | Safe to retry as read-only; response schema versioning still TODO. |
-| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` | External effectful writes | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel/sync/reconcile idempotency still TODO. |
+| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | External effectful writes | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel baseline: recorded cancel statuses replay locally without another DELETE. Sync/reconcile idempotency still TODO. |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / Web3j config | External effectful writes and reads | Shared config partly applies; RPC-specific limits still TODO | Still TODO: approval cache, expiry, and idempotent transaction tracking. |
 | Hedge venue submit | `HedgeVenueAdapter` | External effectful write | `RetryingHedgeVenueAdapter`, `ThrottlingHedgeVenueAdapter` | Baseline: `IdempotentHedgeVenueAdapter` requires `refId`, returns cached terminal results, rejects refId conflicts, and blocks duplicate submits after uncertain timeout-like outcomes. |
 | Bank/chain callbacks | Future callback clients/controllers | External effectful reconciliation | Not implemented | Still TODO. |
@@ -30,3 +30,11 @@ Polymarket place order accepts optional `clientRequestId`. When present, `Polyma
 - Same `clientRequestId` with a different user/session/market/direction/amount/type returns `IDEMPOTENCY_CONFLICT`.
 - Existing local order without terminal CLOB result returns `CLOB_OUTCOME_UNCERTAIN` and does not call `/order` again.
 - Requests without `clientRequestId` keep the previous generated internal id behavior.
+
+## CLOB Cancel Baseline
+
+Polymarket cancel uses the local order status as the retry boundary. If a previous cancel already recorded `CANCEL_REQUESTED`, `CANCELED`, `CANCELLED`, or `ORDER_STATUS_CANCELED`, `PolymarketOrderTrackingService.cancelOrder` returns the local order without another CLOB DELETE.
+
+- First successful CLOB cancel stores the raw CLOB payload, `lastSyncedAt`, and `CANCEL_REQUESTED`.
+- Duplicate cancel requests after the local cancel marker do not send another external command.
+- This is still a local baseline; fuller CLOB state-machine transitions and remote lookup/reconcile for uncertain cancel outcomes remain TODO.

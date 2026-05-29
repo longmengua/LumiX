@@ -74,7 +74,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Document Kafka topic partition keys, retention, compaction, schema versions, and consumer-group strategy.
 - [x] Add shared HTTP timeout, retry, circuit breaker, and rate-limit baseline for external API calls.
 - [ ] Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage for every external API call.
-  - Baseline done: external API inventory, hedge venue submit idempotency envelope using `refId`, and CLOB place local idempotency using `clientRequestId`; CLOB cancel/sync/reconcile, RPC, and callback effectful idempotency remain.
+  - Baseline done: external API inventory, hedge venue submit idempotency envelope using `refId`, CLOB place local idempotency using `clientRequestId`, and CLOB cancel local replay for already-recorded cancel statuses; CLOB sync/reconcile, cancel uncertainty handling, RPC, and callback effectful idempotency remain.
 - [ ] Define transaction boundaries for core writes; MySQL, Redis, and Kafka must not be assumed to be automatically consistent.
 - [x] Add MVP snapshot + event replay recovery entry points.
 - [ ] Build production disaster recovery for matching, orders, accounts, and positions.
@@ -100,6 +100,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
 - [ ] Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
 - [ ] Make CLOB place, cancel, sync, and reconcile commands idempotent.
+  - Baseline done: place can use `clientRequestId`; cancel locally replays already-recorded cancel statuses. Remaining: durable command identity, uncertain cancel lookup, sync/reconcile idempotency, and full state-machine transitions.
   - Baseline done: place supports `clientRequestId` duplicate replay, payload conflict rejection, and uncertain local-order retry blocking.
 - [ ] Deploy the user WebSocket service independently with reconnect, checkpoint, event deduplication, persistence, and replay.
 - [ ] Add cache and expiry policy for allowance / approval checks to avoid overloading RPC endpoints.

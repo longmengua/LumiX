@@ -26,7 +26,7 @@
 Remaining production TODO:
 - Local/CLOB/trade/settlement order state machine.
 - Versioned Gamma/CLOB response schemas.
-- Idempotent cancel/sync/reconcile commands; place has a `clientRequestId` local idempotency baseline.
+- Idempotent sync/reconcile commands and fuller cancel uncertainty handling; place has a `clientRequestId` local idempotency baseline, and cancel replays already-recorded cancel statuses locally.
 - Independent user WebSocket worker with checkpoint, dedup, persistence, replay.
 - Allowance/approval cache and expiry policy.
 

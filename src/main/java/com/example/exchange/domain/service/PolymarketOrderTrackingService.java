@@ -26,6 +26,9 @@ public class PolymarketOrderTrackingService {
     private static final List<String> RECONCILE_STATUSES =
             List.of("CREATED", "ACCEPTED", "live", "matched", "ORDER_STATUS_LIVE", "ORDER_STATUS_MATCHED");
 
+    private static final List<String> CANCEL_IDEMPOTENT_STATUSES =
+            List.of("CANCEL_REQUESTED", "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED");
+
     private final ObjectMapper objectMapper;
     private final PolymarketConfigs polymarketConfigs;
     private final PolymarketClobTradingClient clobTradingClient;
@@ -65,6 +68,10 @@ public class PolymarketOrderTrackingService {
     public PredictionPolymarketOrder cancelOrder(String internalOrderId) {
         PredictionPolymarketOrder order =
                 getLocalOrder(internalOrderId);
+
+        if (isCancelAlreadyRecorded(order)) {
+            return order;
+        }
 
         if (order.getClobOrderId() == null || order.getClobOrderId().isBlank()) {
             throw new IllegalStateException("missing clobOrderId");
@@ -168,6 +175,16 @@ public class PolymarketOrderTrackingService {
         }
 
         return Credentials.create(privateKey).getAddress();
+    }
+
+    private boolean isCancelAlreadyRecorded(PredictionPolymarketOrder order) {
+        String status = order.getStatus();
+        if (status == null || status.isBlank()) {
+            return false;
+        }
+
+        return CANCEL_IDEMPOTENT_STATUSES.stream()
+                .anyMatch(value -> value.equalsIgnoreCase(status.trim()));
     }
 
     private String firstText(
