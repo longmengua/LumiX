@@ -9,7 +9,7 @@ REST controllers。
 - `RiskController`：funding、liquidation、insurance fund、ADL queue inspection、claim/release/execution。
 - `MarketMakerController`：做市商 profile、risk limit 後台管理、hedge fill 查詢/venue callback、hedge reconciliation 與手動 hedge execution。
 - `RecoveryController`：snapshot recovery、matching worker readiness、reconciliation、ledger replay comparison、reconciliation issue workflow、outbox DLQ replay/compensation。
-- `PredictionOrderController`：Polymarket order/session/market operations。
+- `PredictionOrderController`：Polymarket order/session/market operations、approval cache 與 RPC transaction unresolved report。
 - `OperationsController`：輕量 metrics。
 
 注意：

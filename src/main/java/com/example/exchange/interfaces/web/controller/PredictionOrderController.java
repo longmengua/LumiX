@@ -9,7 +9,9 @@ import com.example.exchange.domain.model.dto.PolymarketApiCredentialsResponse;
 import com.example.exchange.domain.model.dto.PolymarketUserWsStatusResponse;
 import com.example.exchange.domain.model.dto.PredictionPriceRefreshResult;
 import com.example.exchange.domain.model.dto.PredictionSyncResult;
+import com.example.exchange.domain.model.dto.RpcTransactionReport;
 import com.example.exchange.domain.model.entity.PredictionPolymarketOrder;
+import com.example.exchange.application.service.RpcTransactionTrackingService;
 import com.example.exchange.domain.service.PolymarketApprovalService;
 import com.example.exchange.domain.service.PolymarketClobAuthService;
 import com.example.exchange.domain.service.PolymarketDiscoveryService;
@@ -76,6 +78,8 @@ public class PredictionOrderController {
     private final PolymarketUserWebSocketService polymarketUserWebSocketService;
 
     private final PolymarketOrderTrackingService polymarketOrderTrackingService;
+
+    private final RpcTransactionTrackingService rpcTransactionTrackingService;
 
     /**
      * POST /api/prediction/markets/discover
@@ -377,5 +381,17 @@ public class PredictionOrderController {
     ) {
         polymarketApprovalService.clearApprovalCache(owner);
         return "approval cache cleared";
+    }
+
+    /**
+     * 查 backend-observed RPC transaction unresolved outcomes。
+     *
+     * GET /api/prediction/approve/rpc-transactions/unresolved?limit=100
+     */
+    @GetMapping("/approve/rpc-transactions/unresolved")
+    public RpcTransactionReport unresolvedRpcTransactions(
+            @RequestParam(defaultValue = "100") int limit
+    ) {
+        return rpcTransactionTrackingService.unresolved(limit);
     }
 }

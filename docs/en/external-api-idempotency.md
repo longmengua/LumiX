@@ -7,7 +7,7 @@
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | Shared OkHttp timeout/retry/circuit/rate-limit baseline | Safe to retry as read-only; response schema versioning still TODO. |
 | Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | External effectful writes plus read-only status sync | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel baseline: recorded cancel and uncertain statuses replay locally without another DELETE. Sync/reconcile baseline: unchanged CLOB payloads are no-op local writes. |
-| Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | External effectful writes and reads | Shared config partly applies; RPC-specific limits still TODO | Approval reads have a TTL cache and owner-scoped clear. Still TODO: idempotent approval transaction tracking for any backend-observed effectful flow. |
+| Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / `RpcTransactionTrackingService` / Web3j config | External effectful writes and reads | Shared config partly applies; RPC-specific limits still TODO | Approval reads have a TTL cache and owner-scoped clear. Backend-observed effectful RPC flows can use durable `commandId` + `txHash` tracking and unresolved outcome reporting. |
 | Hedge venue submit/callback | `HedgeVenueAdapter`, `MarketMakerHedgeFillService` | External effectful write plus callback reconciliation | `RetryingHedgeVenueAdapter`, `ThrottlingHedgeVenueAdapter` | Submit baseline: `IdempotentHedgeVenueAdapter` requires `refId`, claims before venue submit, stores terminal results durably, rejects refId conflicts, and blocks duplicate submits after pending/uncertain outcomes. Callback baseline: `venueOrderId + venueFillId` replays the existing hedge fill audit row. |
 | Bank/chain callbacks | Future callback clients/controllers | External effectful reconciliation | Not implemented | Still TODO. |
 
@@ -70,4 +70,14 @@ CLOB order sync and reconcile are read-only external calls, but they still updat
 - Repeated approval reads inside the TTL do not issue another `eth_call`.
 - `DELETE /api/prediction/approve/cache?owner=...` clears cache entries for one owner; omitting owner clears all approval caches.
 - Expired entries are refreshed from RPC before order validation uses them.
-- Backend-observed approval transaction idempotency remains TODO for future effectful relayer flows.
+
+## RPC Transaction Tracking Baseline
+
+Backend-observed effectful RPC transactions use `RpcTransactionTrackingService` before any future relayer or backend submit path treats a transaction as durable.
+
+- `commandId` is the idempotency key for the effectful RPC command.
+- `fingerprint` identifies the intended chain effect, such as owner/spender/token/amount for approval-like flows.
+- Same `commandId`, `fingerprint`, and `txHash` replays the existing transaction record.
+- Same `commandId` with a different `fingerprint` or `txHash` is rejected as an idempotency conflict.
+- `V10__rpc_transaction_records.sql` persists command, chain, wallet, transaction type, fingerprint, transaction hash, status, and completion state.
+- Operators can inspect unresolved submitted transactions with `GET /api/prediction/approve/rpc-transactions/unresolved?limit=100`.

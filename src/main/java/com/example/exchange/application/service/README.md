@@ -18,6 +18,7 @@
 - `MatchingSequencerLeaseService`：撮合 worker per-symbol lease、renew、release 與 takeover epoch baseline。
 - `MatchingWorkerCommandRouter` / `MatchingWorkerExecutionService` / `MatchingWorkerLifecycleService` / `MatchingWorkerStartupListener`：撮合 worker owner/epoch guard、fenced command append、已落 log command execution、lease acquire + recovery startup、runtime startup hook、renewal/readiness baseline。
 - `OutboxService`：retry、DLQ replay、manual compensation baseline。
+- `RpcTransactionTrackingService`：backend-observed RPC transaction 的 durable idempotency / lifecycle tracking 與 unresolved outcome report。
 - `MarketDataService` / `MarketDataSequenceCheckpointService` / `MarketDataRetentionService`：ticker、kline、depth delta、durable depth sequence checkpoint、reconnect backfill、durable trade tape、durable ticker latest-state、durable 1m kline 與 history retention baseline。
 
 目前狀態：

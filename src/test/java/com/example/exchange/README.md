@@ -19,6 +19,7 @@
 | `OperationalMetricsServiceTest` | 下單結果、撤單、成交事件、延遲統計。 |
 | `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event 的整合流程。 |
 | `OutboxServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers。 |
+| `RpcTransactionTrackingServiceTest` | RPC transaction commandId replay、fingerprint/txHash conflict 與 unresolved outcome report。 |
 | `PolymarketApprovalServiceTest` | RPC approval read cache、owner clear 與 TTL refresh。 |
 | `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |
 | `PolymarketOrderTrackingServiceTest` | CLOB cancel local idempotency replay、durable commandId replay/conflict、第一次 cancel 成功 marker、exception/5xx uncertain outcome、uncertain cancel reconcile resolution、sync/reconcile unchanged no-op replay、terminal status/matched-size downgrade guard。 |

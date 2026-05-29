@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 27 | 16 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 28 | 15 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 6 | 16 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 33 | 37 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 34 | 36 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -80,7 +80,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - MySQL、Redis、Kafka 之間已有 order commands、liquidation、ADL execution 與 hedge execution 的 command-boundary/outbox baseline，但仍需要 persistence-backed rollback tests 與更完整的 cross-store failure drills。
 - market data 已有 durable depth sequence checkpoints、reconnect backfill depth deltas、durable trade tape、durable ticker latest state、durable 1m klines，以及預設關閉的高流量 depth/trade/kline history DB retention windows。
 - WebSocket/SSE gateway 還沒有獨立部署、水平擴展、訂閱授權、心跳、限流與斷線補償。
-- Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，state-machine guard 會防止 stale active CLOB payload 降級 local filled/settled terminal order 或 matched size，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 也會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op；更完整的 trade/settlement lifecycle、schema versioning、approval transaction tracking、獨立部署的 user WebSocket worker 還大多是待辦。
+- Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，state-machine guard 會防止 stale active CLOB payload 降級 local filled/settled terminal order 或 matched size，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op，backend-observed RPC transaction 也已有 durable command / txHash tracking envelope 與 unresolved outcome report；更完整的 trade/settlement lifecycle、schema versioning、獨立部署的 user WebSocket worker 還大多是待辦。
 - metrics backend、distributed tracing export、dashboard、alerting 還不完整。
 - production index、archive policy、admin console、報表、壓測、合規能力都還沒完成。
 

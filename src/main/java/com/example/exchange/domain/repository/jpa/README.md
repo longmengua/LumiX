@@ -13,6 +13,7 @@ Spring Data JPA repositories。
 - `JpaMarketDataKlineStore` 保存 restart-safe kline records。
 - `JpaHedgeVenueIdempotencyStore` 保存 hedge venue submit claim/result records。
 - `JpaPolymarketClobCommandStore` 保存 Polymarket CLOB command claim/result records。
+- `JpaRpcTransactionStore` 保存 backend-observed RPC transaction command/txHash tracking records。
 
 注意：
 - JPA repository 是 infrastructure 依賴較重的例外；使用時要避免 domain service 直接被 persistence 細節綁死。

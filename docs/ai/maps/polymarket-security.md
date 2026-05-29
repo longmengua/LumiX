@@ -27,16 +27,17 @@ Implemented baselines:
 - Fuller CLOB trade/settlement state machine; `PolymarketOrderStateMachine` prevents stale active CLOB payloads from downgrading local filled/settled terminal orders or matched size, place has a `clientRequestId` local idempotency baseline, cancel can use durable `commandId` records, cancel replays already-recorded cancel/uncertain statuses locally, and reconcile can resolve uncertain cancel from remote CLOB status while sync/reconcile skip unchanged local writes.
 - `PolymarketUserEventService` persists user-channel events by `eventKey`, no-ops duplicate replays, and treats unique-key save races as duplicate replay before applying order side effects.
 - Approval reads already have TTL cache and owner-scoped clear.
+- `RpcTransactionTrackingService` persists backend-observed RPC transaction command/chain/wallet/fingerprint/txHash/status records, rejects command conflicts, and exposes unresolved outcome reporting.
 
 Remaining production TODO:
 - Local/CLOB/trade/settlement order state machine completion.
 - Versioned Gamma/CLOB response schemas.
 - Independent user WebSocket worker with checkpoint, dedup, persistence, replay.
-- Backend-observed approval transaction idempotency tracking for any future effectful relayer flow.
 
 ## Signing And External APIs
 
 - EIP-712 and CLOB signing: `domain.util.PolymarketEip712Signer`, `PolymarketClobOrderSigner`
+- RPC transaction tracking: `application.service.RpcTransactionTrackingService`
 - External API config: `infra.config.OkHttpConfig`
 - Gamma client contract: `domain.repository.client.PredictionGammaMarketClient`
 - External API idempotency inventory: `docs/en/external-api-idempotency.md`
