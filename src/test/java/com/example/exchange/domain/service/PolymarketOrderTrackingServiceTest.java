@@ -4,6 +4,8 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.entity.PredictionPolymarketOrder;
+import com.example.exchange.domain.model.dto.PolymarketClobCommandRecord;
+import com.example.exchange.domain.repository.PolymarketClobCommandStore;
 import com.example.exchange.domain.repository.jpa.PredictionPolymarketOrderRepository;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -17,6 +19,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -108,6 +111,47 @@ class PolymarketOrderTrackingServiceTest {
         assertThat(fx.clobClient.cancelCount).isEqualTo(1);
         assertThat(fx.orderRepository.saveCount).isEqualTo(1);
     }
+
+    @Test
+    @DisplayName("CLOB cancel 相同 commandId 重送會用 durable command record 擋下")
+    /**
+     * 流程：第一次 cancel 帶 commandId 並成功，client retry 同一 commandId。
+     * 期望：第二次直接回 local order，不再送 CLOB DELETE；command record 保存 terminal result。
+     */
+    void duplicateCancelCommandIdReturnsLocalOrderWithoutRemoteRetry() {
+        PredictionPolymarketOrder existing = order("ACCEPTED", "clob-1");
+        Fixture fx = new Fixture(existing);
+
+        PredictionPolymarketOrder first = fx.service.cancelOrder("internal-1", "cancel-command-1");
+        PredictionPolymarketOrder duplicate = fx.service.cancelOrder("internal-1", "cancel-command-1");
+
+        assertThat(first.getStatus()).isEqualTo("CANCEL_REQUESTED");
+        assertThat(duplicate).isSameAs(existing);
+        assertThat(fx.clobClient.cancelCount).isEqualTo(1);
+        assertThat(fx.commandStore.records.get("cancel-command-1").completed()).isTrue();
+        assertThat(fx.commandStore.records.get("cancel-command-1").resultStatus()).isEqualTo("CANCEL_REQUESTED");
+    }
+
+    @Test
+    @DisplayName("CLOB cancel commandId payload conflict 會拒絕且不呼叫 CLOB")
+    /**
+     * 流程：commandId 已 claim 給另一個 internal order，這次拿同一 commandId 取消目前 order。
+     * 期望：拒絕 command identity conflict，避免同一外部 command identity 指向不同 CLOB effect。
+     */
+    void cancelCommandIdConflictIsRejectedBeforeRemoteCall() {
+        PredictionPolymarketOrder existing = order("ACCEPTED", "clob-1");
+        Fixture fx = new Fixture(existing);
+        fx.commandStore.claim("cancel-command-1", "CANCEL", "other-order", "CANCEL|other-order|clob-2");
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(
+                        () -> fx.service.cancelOrder("internal-1", "cancel-command-1")
+                )
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("commandId");
+        assertThat(fx.clobClient.cancelCount).isZero();
+        assertThat(fx.orderRepository.saveCount).isZero();
+    }
+
 
 
     @Test
@@ -204,6 +248,7 @@ class PolymarketOrderTrackingServiceTest {
         private final PolymarketConfigs configs = configs();
         private final CountingClobClient clobClient = new CountingClobClient(configs);
         private final CountingOrderRepository orderRepository;
+        private final FakeClobCommandStore commandStore = new FakeClobCommandStore();
         private final PolymarketOrderTrackingService service;
 
         private Fixture(PredictionPolymarketOrder existing) {
@@ -212,7 +257,8 @@ class PolymarketOrderTrackingServiceTest {
                     new ObjectMapper(),
                     configs,
                     clobClient,
-                    orderRepository.proxy()
+                    orderRepository.proxy(),
+                    commandStore
             );
         }
 
@@ -220,6 +266,44 @@ class PolymarketOrderTrackingServiceTest {
             PolymarketConfigs configs = new PolymarketConfigs();
             configs.getWallet().setPrivateKey("0x0123456789012345678901234567890123456789012345678901234567890123");
             return configs;
+        }
+    }
+
+    private static class FakeClobCommandStore implements PolymarketClobCommandStore {
+        private final Map<String, PolymarketClobCommandRecord> records =
+                new ConcurrentHashMap<>();
+
+        @Override
+        public Optional<PolymarketClobCommandRecord> find(String commandId) {
+            return Optional.ofNullable(records.get(commandId));
+        }
+
+        @Override
+        public boolean claim(String commandId, String commandType, String internalOrderId, String fingerprint) {
+            PolymarketClobCommandRecord record =
+                    new PolymarketClobCommandRecord(
+                            commandId,
+                            commandType,
+                            internalOrderId,
+                            fingerprint,
+                            false,
+                            null,
+                            null
+                    );
+            return records.putIfAbsent(commandId, record) == null;
+        }
+
+        @Override
+        public PolymarketClobCommandRecord complete(String commandId, String resultStatus, String lastError) {
+            return records.compute(commandId, (key, existing) -> new PolymarketClobCommandRecord(
+                    existing.commandId(),
+                    existing.commandType(),
+                    existing.internalOrderId(),
+                    existing.fingerprint(),
+                    true,
+                    resultStatus,
+                    lastError
+            ));
         }
     }
 

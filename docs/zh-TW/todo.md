@@ -74,7 +74,7 @@
 - [x] 文件化 Kafka topic partition key、retention、compaction、schema version 與 consumer group 策略。
 - [x] 補上外部 API 共用 HTTP timeout、retry、circuit breaker 與 rate-limit baseline。
 - [ ] 逐一確認所有外部 API 都具備 timeout、retry、circuit breaker、rate limit 與 idempotency coverage。
-  - Baseline 已完成：external API inventory、使用 `refId` 的 durable hedge venue submit idempotency envelope、使用 `clientRequestId` 的 CLOB place local idempotency、CLOB cancel 對已記錄 cancel/uncertain 狀態的 local replay、uncertain cancel 的 reconcile resolution、CLOB sync/reconcile 對未變更 payload 的 no-op local replay，以及 approval read TTL cache coverage；durable CLOB command identity、RPC transaction tracking、callback effectful idempotency 仍待補。
+  - Baseline 已完成：external API inventory、使用 `refId` 的 durable hedge venue submit idempotency envelope、使用 `clientRequestId` 的 CLOB place local idempotency、durable CLOB cancel `commandId`、CLOB cancel 對已記錄 cancel/uncertain 狀態的 local replay、uncertain cancel 的 reconcile resolution、CLOB sync/reconcile 對未變更 payload 的 no-op local replay，以及 approval read TTL cache coverage；RPC transaction tracking、callback effectful idempotency 仍待補。
 - [ ] 所有核心寫入需要明確交易邊界；MySQL、Redis、Kafka 之間不能假設天然一致。
 - [x] 補上 MVP snapshot + event replay recovery 入口。
 - [ ] 建立 production 災難恢復流程：從 snapshot + event log 恢復 matching/order/account/position。
@@ -100,7 +100,7 @@
 - [ ] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
 - [ ] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
 - [ ] 對 CLOB 下單、取消、同步、reconcile 做 idempotent command 設計。
-  - Baseline 已完成：place 可用 `clientRequestId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes。Remaining：durable command identity 與完整 state-machine transitions。
+  - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes。Remaining：完整 state-machine transitions。
   - Baseline 已完成：place 支援 `clientRequestId` duplicate replay、payload conflict rejection 與 uncertain local-order retry blocking。
 - [ ] User WebSocket 服務獨立部署，支援自動重連、checkpoint、事件去重、落庫與 replay。
 - [ ] allowance / approval 查詢加入 cache 與過期策略，避免 RPC 被打爆。

@@ -80,7 +80,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - MySQL、Redis、Kafka 之間的 transaction boundary 還沒有完整定義。
 - market data 已有 durable depth sequence checkpoints、reconnect backfill depth deltas、durable trade tape、durable ticker latest state、durable 1m klines，以及預設關閉的高流量 depth/trade/kline history DB retention windows。
 - WebSocket/SSE gateway 還沒有獨立部署、水平擴展、訂閱授權、心跳、限流與斷線補償。
-- Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，approval reads 已有 TTL cache coverage；更完整的 order lifecycle、schema versioning、durable CLOB command identity、approval transaction tracking、user WebSocket worker 還大多是待辦。
+- Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，approval reads 已有 TTL cache coverage；更完整的 order lifecycle、schema versioning、approval transaction tracking、user WebSocket worker 還大多是待辦。
 - metrics backend、distributed tracing export、dashboard、alerting 還不完整。
 - production index、archive policy、admin console、報表、壓測、合規能力都還沒完成。
 

@@ -282,9 +282,10 @@ public class PredictionOrderController {
      */
     @PostMapping("/orders/local/{internalOrderId}/cancel")
     public PredictionPolymarketOrder cancelLocalOrder(
-            @PathVariable String internalOrderId
+            @PathVariable String internalOrderId,
+            @RequestParam(required = false) String commandId
     ) {
-        return polymarketOrderTrackingService.cancelOrder(internalOrderId);
+        return polymarketOrderTrackingService.cancelOrder(internalOrderId, commandId);
     }
 
     /**

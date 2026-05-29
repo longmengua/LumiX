@@ -316,7 +316,7 @@ src/main/java/com/example/exchange
 - `GET /api/prediction/orders/local`
 - `GET /api/prediction/orders/local/{internalOrderId}`
 - `POST /api/prediction/orders/local/{internalOrderId}/sync`
-- `POST /api/prediction/orders/local/{internalOrderId}/cancel`
+- `POST /api/prediction/orders/local/{internalOrderId}/cancel?commandId=...`
 - `POST /api/prediction/orders/reconcile`
 - `GET /api/prediction/orders/trades`
 - `POST /api/prediction/ws/user/start`

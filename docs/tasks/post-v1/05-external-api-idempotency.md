@@ -30,13 +30,14 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added optional `PolymarketPlaceOrderRequest.clientRequestId` so CLOB place can use the local order record as an idempotency boundary before session limit consumption, approval checks, signing, or `/order` calls.
 - Added `PolymarketOrderServiceTest` covering same-key duplicate replay, same-key payload conflict, and existing local order with uncertain CLOB outcome.
 - Added a CLOB cancel local idempotency baseline: once cancel records `CANCEL_REQUESTED`, `CANCEL_OUTCOME_UNCERTAIN`, or a canceled terminal status, duplicate cancel requests return the local order without another CLOB DELETE.
-- Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay, first successful cancel marker, exception/5xx uncertain outcomes, reconcile resolution for uncertain cancel, and unchanged sync/reconcile replay.
+- Added `PolymarketClobCommandStore`, `JpaPolymarketClobCommandStore`, and `V9__polymarket_clob_command_records.sql` so CLOB cancel can use a durable `commandId` claim/result record.
+- Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay, commandId replay/conflict, first successful cancel marker, exception/5xx uncertain outcomes, reconcile resolution for uncertain cancel, and unchanged sync/reconcile replay.
 - Added `PolymarketApprovalServiceTest` covering approval read cache hits, owner-scoped cache clear, and TTL refresh before order validation relies on RPC approval state.
 - Added CLOB sync/reconcile local no-op replay: unchanged CLOB payload/status/size/error does not save the local order row again, and reconcile reports unchanged rows separately.
 
 Remaining work:
 - Add venue lookup/reconciliation for real hedge adapters and operator handling for uncertain outcomes.
-- Add CLOB durable command identity and fuller local state-machine coverage.
+- Add fuller local state-machine coverage for CLOB/trade/settlement transitions.
 - Add RPC approval transaction idempotency tracking for any future backend-observed effectful approval/relayer flow.
 
 ## Acceptance Criteria

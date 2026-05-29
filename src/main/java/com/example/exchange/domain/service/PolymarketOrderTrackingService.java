@@ -4,6 +4,8 @@
 package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.entity.PredictionPolymarketOrder;
+import com.example.exchange.domain.model.dto.PolymarketClobCommandRecord;
+import com.example.exchange.domain.repository.PolymarketClobCommandStore;
 import com.example.exchange.domain.repository.jpa.PredictionPolymarketOrderRepository;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -42,6 +45,7 @@ public class PolymarketOrderTrackingService {
     private final PolymarketConfigs polymarketConfigs;
     private final PolymarketClobTradingClient clobTradingClient;
     private final PredictionPolymarketOrderRepository orderRepository;
+    private final PolymarketClobCommandStore clobCommandStore;
 
     public List<PredictionPolymarketOrder> listLocalOrders() {
         return orderRepository.findAll();
@@ -80,10 +84,25 @@ public class PolymarketOrderTrackingService {
 
     @Transactional
     public PredictionPolymarketOrder cancelOrder(String internalOrderId) {
+        return cancelOrder(internalOrderId, null);
+    }
+
+    @Transactional
+    public PredictionPolymarketOrder cancelOrder(String internalOrderId, String commandId) {
         PredictionPolymarketOrder order =
                 getLocalOrder(internalOrderId);
+        String normalizedCommandId =
+                normalizeCommandId(commandId);
+        String commandFingerprint =
+                normalizedCommandId == null ? null : cancelCommandFingerprint(order);
+
+        if (normalizedCommandId != null
+                && isDuplicateCommand(normalizedCommandId, commandFingerprint, order.getInternalOrderId())) {
+            return order;
+        }
 
         if (isCancelAlreadyRecorded(order)) {
+            completeCommandIfPresent(normalizedCommandId, order);
             return order;
         }
 
@@ -110,7 +129,10 @@ public class PolymarketOrderTrackingService {
             order.setLastError(firstText(raw, "errorMsg", "raw"));
         }
 
-        return orderRepository.save(order);
+        PredictionPolymarketOrder saved =
+                orderRepository.save(order);
+        completeCommandIfPresent(normalizedCommandId, saved);
+        return saved;
     }
 
     @Transactional
@@ -233,6 +255,70 @@ public class PolymarketOrderTrackingService {
                 .anyMatch(value -> value.equalsIgnoreCase(status.trim()));
     }
 
+    private boolean isDuplicateCommand(
+            String commandId,
+            String fingerprint,
+            String internalOrderId
+    ) {
+        Optional<PolymarketClobCommandRecord> existing =
+                clobCommandStore.find(commandId);
+        if (existing.isPresent()) {
+            PolymarketClobCommandRecord record =
+                    existing.get();
+            if (!Objects.equals(record.internalOrderId(), internalOrderId)
+                    || !"CANCEL".equals(record.commandType())
+                    || !Objects.equals(record.fingerprint(), fingerprint)) {
+                throw new IllegalArgumentException("polymarket CLOB commandId already used with different payload");
+            }
+            return true;
+        }
+
+        if (clobCommandStore.claim(commandId, "CANCEL", internalOrderId, fingerprint)) {
+            return false;
+        }
+
+        return clobCommandStore.find(commandId)
+                .map(record -> {
+                    if (!Objects.equals(record.internalOrderId(), internalOrderId)
+                            || !"CANCEL".equals(record.commandType())
+                            || !Objects.equals(record.fingerprint(), fingerprint)) {
+                        throw new IllegalArgumentException("polymarket CLOB commandId already used with different payload");
+                    }
+                    return true;
+                })
+                .orElse(true);
+    }
+
+    private void completeCommandIfPresent(String commandId, PredictionPolymarketOrder order) {
+        if (commandId == null) {
+            return;
+        }
+
+        clobCommandStore.complete(commandId, order.getStatus(), order.getLastError());
+    }
+
+    private String normalizeCommandId(String commandId) {
+        if (commandId == null || commandId.isBlank()) {
+            return null;
+        }
+
+        String normalized =
+                commandId.trim();
+        if (normalized.length() > 128) {
+            throw new IllegalArgumentException("polymarket CLOB commandId must be <= 128 chars");
+        }
+        return normalized;
+    }
+
+    private String cancelCommandFingerprint(PredictionPolymarketOrder order) {
+        return String.join(
+                "|",
+                "CANCEL",
+                normalize(order.getInternalOrderId()),
+                normalize(order.getClobOrderId())
+        );
+    }
+
     private boolean isUncertainCancelOutcome(Map<String, Object> raw) {
         String status =
                 firstText(raw, "status");
@@ -267,6 +353,10 @@ public class PolymarketOrderTrackingService {
         }
 
         return null;
+    }
+
+    private String normalize(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private BigDecimal decimal(String value) {

@@ -33,13 +33,15 @@ Polymarket place order accepts optional `clientRequestId`. When present, `Polyma
 
 ## CLOB Cancel Baseline
 
-Polymarket cancel uses the local order status as the retry boundary. If a previous cancel already recorded `CANCEL_REQUESTED`, `CANCEL_OUTCOME_UNCERTAIN`, `CANCELED`, `CANCELLED`, or `ORDER_STATUS_CANCELED`, `PolymarketOrderTrackingService.cancelOrder` returns the local order without another CLOB DELETE.
+Polymarket cancel uses an optional `commandId` plus local order status as retry boundaries. If `commandId` is present, `PolymarketOrderTrackingService` claims it in `PolymarketClobCommandStore` before CLOB DELETE and completes the record after the local result is saved. If a previous cancel already recorded `CANCEL_REQUESTED`, `CANCEL_OUTCOME_UNCERTAIN`, `CANCELED`, `CANCELLED`, or `ORDER_STATUS_CANCELED`, it returns the local order without another CLOB DELETE.
 
+- Same `commandId` and same cancel payload returns the local order without another CLOB call.
+- Same `commandId` with a different internal/CLOB order is rejected before any CLOB call.
 - First successful CLOB cancel stores the raw CLOB payload, `lastSyncedAt`, and `CANCEL_REQUESTED`.
 - CLOB cancel `EXCEPTION` or 5xx outcome stores the raw payload, `lastSyncedAt`, `lastError`, and `CANCEL_OUTCOME_UNCERTAIN`.
 - Duplicate cancel requests after the local cancel marker do not send another external command.
 - Reconcile includes `CANCEL_OUTCOME_UNCERTAIN` orders and can replace the uncertain local state with the remote CLOB status.
-- This is still a local baseline; fuller CLOB state-machine transitions and durable command identity remain TODO.
+- This is still a local baseline; fuller CLOB state-machine transitions remain TODO.
 
 ## CLOB Sync/Reconcile Baseline
 
@@ -48,7 +50,7 @@ CLOB order sync and reconcile are read-only external calls, but they still updat
 - Repeated sync of the same CLOB payload returns the local order without another database save.
 - Reconcile still counts the order as checked, but reports unchanged rows separately and avoids writing them.
 - Changed remote status, matched size, error, or raw payload is saved with a fresh `lastSyncedAt`.
-- Durable command identity and fuller local/CLOB/trade/settlement state-machine transitions remain TODO.
+- Fuller local/CLOB/trade/settlement state-machine transitions remain TODO.
 
 ## RPC Approval Read Baseline
 
