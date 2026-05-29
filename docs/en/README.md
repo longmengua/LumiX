@@ -204,7 +204,7 @@ Order management endpoints:
 - `POST /api/order/{orderId}/replace` cancels the original open order first, then submits a replacement order with the provided `price`, `qty`, or `clientOrderId`.
 - `DELETE /api/order/open?uid=...&symbol=...` bulk-cancels open orders and releases remaining order reserve. Omitting `symbol` cancels all open orders for the user.
 - `GET /api/order/{orderId}/lifecycle` reads the durable order lifecycle event log; `GET /api/order/{orderId}/projection` reads the latest-state projection; `POST /api/order/{orderId}/projection/rebuild` rebuilds that projection from the event log.
-- `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` enables opt-in cancel-on-disconnect for that user WebSocket connection. Omitting `symbol` cancels all open orders for the user when the connection closes.
+- `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` enables opt-in cancel-on-disconnect for that user WebSocket connection. Omitting `symbol` cancels all open orders for the user when the connection closes. A reconnecting client can pass `resumeConnectionId=<oldSessionId>` to move the cancel-on-disconnect registration to the new WebSocket session before the old close event is processed.
 - `GET /api/depth/{symbol}` returns full book levels with `version` and CRC32 `checksum`. `GET /api/market-data/{symbol}/depth-delta` returns the same monotonic depth `version` and checksum for client-side snapshot + delta validation.
 
 Polymarket data flow:

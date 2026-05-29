@@ -1,6 +1,6 @@
 # Task: ADL Forced Execution
 
-Status: `doing`
+Status: `done`
 
 ## Goal
 
@@ -29,12 +29,18 @@ Move ADL from ranking and planning into forced position/accounting execution wit
 - Added `WalletLedgerService.applyAdlForcedLoss(...)` so profitable ADL counterparties can have realized profit credited first and then charged through a balanced `adl_forced_loss` posting.
 - Added `AdlExecutionStore`, `AdlExecutionRecordEntity`, `JpaAdlExecutionStore`, and Flyway migration `V2__adl_execution_records.sql` for durable execution summary/idempotency records.
 - The service still falls back to a service-local command id cache when no durable store is configured, but Spring runtime can now use the JPA store.
+- Added `ExecuteAdlCommand` and `ExecuteAdlUseCase` so ADL forced execution can enter `CommandTransactionBoundary` in Spring runtime.
+- Added `AdlQueueExecutionService` to consume an ADL queue entry, filter opposite-side profitable candidates, rank/plan the forced reduction, execute through `ExecuteAdlUseCase`, and complete the queue entry after full coverage.
+- Added `POST /api/risk/adl-queue/{liquidationId}/claim`, `/execute`, and `/release` plus curl examples for operator-triggered queue ownership/execution with command idempotency.
+- Claimed queue entries now reject execution attempts from a different operator id.
+- Documented ADL hot-state repair rules for cases where DB execution commits but Redis/in-memory queue or account/position projections drift.
+- Partial ADL execution now updates the queue item to the remaining notional instead of retrying the original amount.
 - Added focused tests for full execution, repeated command id idempotency, durable-store idempotency across service instances, insufficient candidate quantity pre-mutation rejection, and operator halt audit.
 
-Remaining work:
-- Add command transaction boundary coverage and Redis hot-state repair rules after DB commit.
-- Add API/operator ownership workflow and wire ADL queue entries into plan/execution orchestration.
-- Harden insurance-fund interaction and retry semantics around partially covered liquidation shortfalls.
+Follow-up hardening:
+- Move ADL queue state from the in-memory insurance-fund service into durable storage before production use.
+- Add stronger operator assignment audit history and alerting for stuck claimed queue items.
+- Add production insurance-fund capital movement records beyond the current MVP balance service.
 
 ## Acceptance Criteria
 

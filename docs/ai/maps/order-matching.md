@@ -68,10 +68,11 @@ Current behavior:
 - Worker owner configuration is exposed through `matching-worker.*` / `MatchingWorkerProperties`; runbook documents `MATCHING_WORKER_ENABLED`, `MATCHING_WORKER_OWNER_ID`, `MATCHING_WORKER_SYMBOLS`, lease TTL, and renew interval.
 - Matching command replay supports `CANCEL_REPLACE` with replacement order payload.
 - Command/event log entries can persist sequencer `ownerId` and `ownerEpoch` for fencing audit.
+- Cancel-on-disconnect supports connection resume by moving a registration from `resumeConnectionId` to the new WebSocket session id, preventing late old-close events from canceling orders after reconnect.
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Stronger application/accounting cancel-replace atomicity and reconnect/session semantics.
+- Stronger application/accounting cancel-replace atomicity and broader authenticated session replay semantics.
 - Keep this area first in the roadmap until replayable matching is complete.
 
 ## Order Management

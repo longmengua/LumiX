@@ -22,6 +22,11 @@ Migrations:
 - `V15__hedge_decision_audits.sql`: durable hedge decision audit trail by market-maker, symbol, ref id, and venue order id.
 - `V16__hedge_fills.sql`: durable hedge fill audit trail by venue order/fill id, ref id, quantity, price, and fee.
 - `V2__adl_execution_records.sql`: post-core-v1 durable ADL forced execution summary and command idempotency records.
+- `V3__market_data_sequence_checkpoints.sql`: post-core-v1 durable market-data stream sequence/checksum checkpoints.
+- `V4__market_data_depth_deltas.sql`: post-core-v1 durable depth deltas for reconnect backfill.
+- `V5__market_data_trade_tape.sql`: post-core-v1 durable trade tape for restart-safe recent trades.
+- `V6__market_data_tickers.sql`: post-core-v1 durable ticker latest-state records.
+- `V7__market_data_klines.sql`: post-core-v1 durable kline records.
 
 Config:
 - `src/main/resources/application-dev.yml`
@@ -56,6 +61,8 @@ Targeted tests:
 ./mvnw -Dtest=AdlRankingServiceTest test
 ./mvnw -Dtest=AdlDeleveragingPlannerTest test
 ./mvnw -Dtest=AdlForcedExecutionServiceTest test
+./mvnw -Dtest=AdlQueueExecutionServiceTest test
+./mvnw -Dtest=MarketDataSequenceCheckpointServiceTest test
 ./mvnw -Dtest=WalletLedgerServiceTest test
 ./mvnw -Dtest=BonusCreditServiceTest test
 ./mvnw -Dtest=TurnoverServiceTest test
@@ -65,6 +72,7 @@ Targeted tests:
 ./mvnw -Dtest=MarketMakerHedgeFillServiceTest test
 ./mvnw -Dtest=MarketMakerHedgeExecutionServiceTest test
 ./mvnw -Dtest=LiquidateUseCaseTest test
+./mvnw -Dtest=ExecuteAdlUseCaseTest test
 ./mvnw -Dtest=OrderAccountingIntegrationTest test
 ./mvnw -Dtest=RiskSettlementServiceTest test
 ./mvnw -Dtest=TrialBalanceServiceTest test
@@ -85,7 +93,7 @@ Transaction boundary coverage:
 - `CommandTransactionBoundaryTest` proves successful command bodies commit and failed command bodies roll back without hidden retry.
 - `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
 - `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
-- `LiquidateUseCaseTest` and `MarketMakerHedgeExecutionServiceTest` prove manual liquidation and hedge execution enter the same command boundary when configured.
+- `LiquidateUseCaseTest`, `ExecuteAdlUseCaseTest`, and `MarketMakerHedgeExecutionServiceTest` prove manual liquidation, ADL forced execution, and hedge execution enter the same command boundary when configured.
 
 Production worker routing coverage:
 - `MatchingWorkerCommandRouterTest` proves a matching command/event append must pass the sequencer lease owner/epoch guard before the log write happens.

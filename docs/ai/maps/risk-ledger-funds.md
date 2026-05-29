@@ -47,6 +47,7 @@ Ledger concerns:
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
 - `CancelReplaceOrderUseCase` owns an outer boundary for cancel original plus replacement place, avoiding a database half-commit where original cancel succeeds but replacement order fails.
 - `LiquidateUseCase` now enters `CommandTransactionBoundary` in Spring runtime before liquidation mutates position, ledger, insurance/ADL coverage, and audit events.
+- `ExecuteAdlUseCase` now enters `CommandTransactionBoundary` in Spring runtime before ADL execution mutates position, ledger, execution records, and audit events.
 
 Remaining production TODO:
 - Stronger database constraints, audit retention, replay validation.
@@ -54,7 +55,7 @@ Remaining production TODO:
 - Turnover reconciliation against trade tape and ledger refs.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - Chain/bank callbacks, manual-review ownership, transfer reconciliation projections.
-- Add command transaction boundary coverage to ADL forced execution, then define Redis hot-state repair rules after DB commit.
+- ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
 
 ## Funding, Liquidation, Reconciliation
 
@@ -62,7 +63,7 @@ Remaining production TODO:
 - Funding: `FundingRateService`
 - Liquidation: `LiquidationService`, `LiquidationScanService`
 - Insurance fund: `InsuranceFundService`
-- ADL ranking/planning/execution: `AdlRankingService`, `AdlDeleveragingPlanner`, `AdlForcedExecutionService`, `AdlExecutionStore`, `JpaAdlExecutionStore`
+- ADL ranking/planning/execution: `AdlRankingService`, `AdlDeleveragingPlanner`, `AdlForcedExecutionService`, `AdlQueueExecutionService`, `AdlExecutionStore`, `JpaAdlExecutionStore`
 - Reconciliation: `ReconciliationService`, `ReconciliationReportService`
 - Trial balance: `TrialBalanceService`, `TrialBalanceReport`, `TrialBalanceLine`
 - Liquidation audit event: `LiquidationDecisionRecorded`
@@ -77,6 +78,7 @@ Remaining production TODO:
   - `AdlRankingServiceTest`
   - `AdlDeleveragingPlannerTest`
   - `AdlForcedExecutionServiceTest`
+  - `AdlQueueExecutionServiceTest`
   - `ReconciliationReportServiceTest`
   - `TrialBalanceServiceTest`
 
@@ -86,12 +88,13 @@ Current liquidation/ADL behavior:
 - `AdlRankingService` provides deterministic ranking by profit rate, effective leverage, notional, and uid.
 - `AdlDeleveragingPlanner` converts ranked candidates and ADL shortfall into deterministic reduce steps.
 - `AdlForcedExecutionService` consumes ADL plans, validates candidate quantities before mutation, force reduces selected positions, writes realized-PnL and `adl_forced_loss` ledger postings, publishes execution audit events, and uses durable execution records for command id idempotency when configured.
+- `AdlQueueExecutionService` consumes queued liquidation shortfalls, enforces queue owner guard when claimed, filters opposite-side candidates, ranks/plans ADL reduction, executes through `ExecuteAdlUseCase`, completes fully covered queue entries, and keeps remaining notional on partial execution.
 - `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:
 - Production scheduling/routing for liquidation scanners.
-- Wire ADL queue entries into plan/execution orchestration and add command transaction boundary coverage.
-- Insurance-fund interaction hardening and operator retry/ownership workflow.
+- Move ADL queue state from in-memory service into durable storage.
+- Add production insurance-fund capital movement records, stuck-claim alerts, and stronger operator assignment audit history.
 - Alerts for reconciliation failure and unbalanced assets.
 
 ## Trial Balance And Reconciliation Issues

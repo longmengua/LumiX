@@ -44,6 +44,14 @@ English version: [../en/redis-key-schema.md](../en/redis-key-schema.md)
 - Idempotency key 只保護 command retry window，不等於 replay。若 command outcome 不確定，營運應先比對 durable command/outbox/ledger state，再決定是否接受 duplicate retry。
 - Outbox/DLQ Redis keys 是 durable JPA repository 未啟用時的 legacy hot-state 實作。Production 應優先使用 MySQL outbox repository，讓 outbox rows 參與同一個 transaction boundary。
 
+## ADL Hot-State Repair 規則
+
+- ADL forced execution 在 commit 後必須以 `adl_execution_records`、wallet ledger journal rows、持久化 position/account state 作為 authoritative state。
+- Redis 或 in-memory ADL queue 只屬於營運 hot state。若 ADL execution 已 commit，但 queue completion 失敗，營運不應盲目重跑同一個 command；應先用 `commandId` 查 durable execution record，然後只移除或重建該 `liquidationId` 的 queue projection。
+- 若 ADL execution rollback 發生在 operator claim 之後，應保留或恢復 claim state；只有確認不存在 durable execution record 後，才用同一個 `commandId` retry。
+- 若 ADL execution 後 account、position 或 open-position Redis index 漂移，應從 durable position/account records 與 ledger replay 重建；不要用補打一筆 ADL ledger entry 的方式修 cache。
+- 若 queue item 只被部分覆蓋，應保留剩餘 shortfall 並用新的 command id 執行下一次；不要用已完成 command id 承接新的 amount。
+
 ## Migration Backlog
 
 - 各環境啟用 `REDIS_KEY_PREFIX`，並為既有未加 prefix 的資料規劃一次性 migration。

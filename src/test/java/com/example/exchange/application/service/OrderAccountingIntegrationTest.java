@@ -759,6 +759,70 @@ class OrderAccountingIntegrationTest {
         matchingEngine.shutdown();
     }
 
+    @Test
+    @DisplayName("cancel-on-disconnect 重連轉移後舊連線關閉不會誤撤單")
+    /**
+     * 流程：掛單後註冊舊 connection -> 新 connection resume 舊註冊 ->
+     * 舊 connection close event 晚到時不撤單，新 connection close 才真正撤單。
+     */
+    void cancelOnDisconnectResumeTransfersRegistrationToNewConnection() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+        CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(
+                orderRepo,
+                symbolRepo,
+                matchingEngine,
+                walletLedgerService,
+                marketDataService,
+                published::add
+        );
+        CancelOnDisconnectService cancelOnDisconnectService = new CancelOnDisconnectService(cancelOrderUseCase);
+
+        walletLedgerService.deposit(32, "USDT", new BigDecimal("1000"), "deposit-32");
+        placeOrderUseCase.place(command(32, OrderSide.BUY, "100.00", "1.000"));
+        cancelOnDisconnectService.register("ws-old-32", 32, "btcusdt");
+
+        boolean resumed = cancelOnDisconnectService.resume("ws-old-32", "ws-new-32", 32);
+        int oldCloseCanceled = cancelOnDisconnectService.cancelForConnection("ws-old-32");
+        int newCloseCanceled = cancelOnDisconnectService.cancelForConnection("ws-new-32");
+
+        assertThat(resumed).isTrue();
+        assertThat(oldCloseCanceled).isZero();
+        assertThat(newCloseCanceled).isEqualTo(1);
+        assertThat(cancelOnDisconnectService.registeredCount()).isZero();
+        assertThat(orderRepo.findAllOrders(32L, "BTCUSDT")).singleElement()
+                .extracting(Order::getStatus)
+                .isEqualTo(Order.Status.CANCELED);
+        assertThat(accountRepo.findByUid(32).orElseThrow().crossOrderHold()).isEqualByComparingTo("0");
+
+        matchingEngine.shutdown();
+    }
+
     /**
      * 建立標準 BTCUSDT LIMIT 下單 command，讓各整合測試只改 uid、side、price、qty。
      */

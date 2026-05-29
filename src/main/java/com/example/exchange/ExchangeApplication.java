@@ -7,6 +7,7 @@ import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.FundingRateProperties;
 import com.example.exchange.infra.config.MatchingWorkerProperties;
 import com.example.exchange.infra.config.MarkPriceOracleProperties;
+import com.example.exchange.infra.config.MarketDataRetentionProperties;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.example.exchange.infra.config.ReconciliationProperties;
 import com.example.exchange.infra.config.RiskControlsProperties;
@@ -32,6 +33,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         FundingRateProperties.class,
         MatchingWorkerProperties.class,
         MarkPriceOracleProperties.class,
+        MarketDataRetentionProperties.class,
         PolymarketConfigs.class,
         ReconciliationProperties.class,
         RiskControlsProperties.class,

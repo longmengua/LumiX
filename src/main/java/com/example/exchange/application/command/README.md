@@ -3,7 +3,7 @@
 Use case command DTO。
 
 目前狀態：
-- `PlaceOrderCommand`、`CancelOrderCommand`、`AmendOrderCommand`、`CancelReplaceOrderCommand` 等承載 controller 轉進 use case 的輸入。
+- `PlaceOrderCommand`、`CancelOrderCommand`、`AmendOrderCommand`、`CancelReplaceOrderCommand`、`ExecuteAdlCommand` 等承載 controller 轉進 use case 的輸入。
 - command 應保持薄模型，不放業務邏輯。
 
 新增規則：

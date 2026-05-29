@@ -110,7 +110,7 @@ public class LiquidationService {
 
                 adlCovered = shortfall.subtract(insuranceCovered);
                 if (adlCovered.signum() > 0) {
-                    insuranceFundService.enqueueAdl(liquidationId, uid, config.getSymbol(), adlCovered);
+                    insuranceFundService.enqueueAdl(liquidationId, uid, config.getSymbol(), side(oldQty), adlCovered);
                     walletLedgerService.applyAdlCompensation(uid, config.getQuoteAsset(), adlCovered, liquidationId);
                 }
             }
@@ -233,6 +233,10 @@ public class LiquidationService {
 
     private static BigDecimal safe(BigDecimal value) {
         return value == null ? BigDecimal.ZERO : value;
+    }
+
+    private static String side(BigDecimal qty) {
+        return qty != null && qty.signum() < 0 ? "SHORT" : "LONG";
     }
 
     private BigDecimal requireOracleMarkPrice(String symbol) {

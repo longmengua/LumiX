@@ -10,6 +10,10 @@ public record AdlQueueEntry(
         String liquidationId,
         long uid,
         String symbol,
+        String liquidatedSide,
         BigDecimal amount,
-        Instant ts
+        Instant ts,
+        String status,
+        String owner,
+        Instant claimedAt
 ) {}

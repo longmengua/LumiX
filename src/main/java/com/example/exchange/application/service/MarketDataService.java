@@ -11,8 +11,12 @@ import com.example.exchange.domain.model.dto.PriceLevel;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.dto.TradeTapeItem;
 import com.example.exchange.domain.model.enums.OrderSide;
-import com.example.exchange.domain.util.OrderBookChecksum;
+import com.example.exchange.domain.repository.MarketDataDepthDeltaStore;
+import com.example.exchange.domain.repository.MarketDataKlineStore;
+import com.example.exchange.domain.repository.MarketDataTickerStore;
+import com.example.exchange.domain.repository.MarketDataTradeTapeStore;
 import com.example.exchange.domain.service.OrderBookSnapshot;
+import com.example.exchange.domain.util.OrderBookChecksum;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -44,10 +48,40 @@ public class MarketDataService {
     private final Map<String, MarketTicker> tickers = new ConcurrentHashMap<>();
     private final Map<String, Map<Instant, MarketKline>> oneMinuteKlines = new ConcurrentHashMap<>();
     private PushGatewayService pushGatewayService;
+    private MarketDataSequenceCheckpointService sequenceCheckpointService;
+    private MarketDataDepthDeltaStore depthDeltaStore;
+    private MarketDataKlineStore klineStore;
+    private MarketDataTradeTapeStore tradeTapeStore;
+    private MarketDataTickerStore tickerStore;
 
     @Autowired(required = false)
     public void setPushGatewayService(PushGatewayService pushGatewayService) {
         this.pushGatewayService = pushGatewayService;
+    }
+
+    @Autowired(required = false)
+    public void setSequenceCheckpointService(MarketDataSequenceCheckpointService sequenceCheckpointService) {
+        this.sequenceCheckpointService = sequenceCheckpointService;
+    }
+
+    @Autowired(required = false)
+    public void setDepthDeltaStore(MarketDataDepthDeltaStore depthDeltaStore) {
+        this.depthDeltaStore = depthDeltaStore;
+    }
+
+    @Autowired(required = false)
+    public void setKlineStore(MarketDataKlineStore klineStore) {
+        this.klineStore = klineStore;
+    }
+
+    @Autowired(required = false)
+    public void setTradeTapeStore(MarketDataTradeTapeStore tradeTapeStore) {
+        this.tradeTapeStore = tradeTapeStore;
+    }
+
+    @Autowired(required = false)
+    public void setTickerStore(MarketDataTickerStore tickerStore) {
+        this.tickerStore = tickerStore;
     }
 
     public void onOrderBookChanged(String symbol, OrderBookSnapshot snapshot, Optional<TopOfBook> top) {
@@ -80,16 +114,39 @@ public class MarketDataService {
         return Optional.ofNullable(latestDepthDelta.get(normalize(symbol)));
     }
 
+    public List<DepthDelta> depthDeltasAfter(String symbol, long afterVersion, int limit) {
+        String code = normalize(symbol);
+        int normalizedLimit = Math.max(1, limit);
+        if (depthDeltaStore != null) {
+            return depthDeltaStore.findAfter(code, afterVersion, normalizedLimit);
+        }
+        return latestDepthDelta(code)
+                .filter(delta -> delta.version() > afterVersion)
+                .stream()
+                .limit(normalizedLimit)
+                .toList();
+    }
+
     public long depthVersion(String symbol) {
-        AtomicLong version = depthVersions.get(normalize(symbol));
+        String code = normalize(symbol);
+        AtomicLong version = depthVersions.computeIfAbsent(code, this::initialDepthVersion);
         return version == null ? 0L : version.get();
     }
 
     public Optional<MarketTicker> ticker(String symbol) {
-        return Optional.ofNullable(tickers.get(normalize(symbol)));
+        String code = normalize(symbol);
+        MarketTicker current = tickers.get(code);
+        if (current != null) return Optional.of(current);
+        if (tickerStore != null) {
+            return tickerStore.find(code);
+        }
+        return Optional.empty();
     }
 
     public List<TradeTapeItem> trades(String symbol, int limit) {
+        if (tradeTapeStore != null) {
+            return tradeTapeStore.findRecent(normalize(symbol), limit);
+        }
         Deque<TradeTapeItem> tape = tradeTapes.get(normalize(symbol));
         if (tape == null) return List.of();
         synchronized (tape) {
@@ -101,6 +158,9 @@ public class MarketDataService {
     }
 
     public List<MarketKline> klines(String symbol, int limit) {
+        if (klineStore != null) {
+            return klineStore.findRecent(normalize(symbol), "1m", limit);
+        }
         Map<Instant, MarketKline> klines = oneMinuteKlines.get(normalize(symbol));
         if (klines == null) return List.of();
         return klines.values().stream()
@@ -126,6 +186,9 @@ public class MarketDataService {
             tape.addLast(item);
             while (tape.size() > MAX_TAPE_SIZE) tape.removeFirst();
         }
+        if (tradeTapeStore != null) {
+            tradeTapeStore.append(item);
+        }
 
         updateTickerFromTrade(symbol, trade);
         updateKline(symbol, trade);
@@ -135,7 +198,7 @@ public class MarketDataService {
     }
 
     private void updateTickerFromTrade(String symbol, TradeExecuted trade) {
-        tickers.compute(symbol, (ignored, current) -> {
+        MarketTicker updated = tickers.compute(symbol, (ignored, current) -> {
             BigDecimal volume = (current == null ? BigDecimal.ZERO : current.volume24h()).add(trade.absQty());
             BigDecimal high = current == null || current.high24h() == null
                     ? trade.price()
@@ -154,12 +217,13 @@ public class MarketDataService {
                     trade.ts()
             );
         });
+        saveTicker(updated);
     }
 
     private void updateTop(String symbol, Optional<TopOfBook> top) {
         BigDecimal bestBid = top.map(TopOfBook::getBestBid).orElse(null);
         BigDecimal bestAsk = top.map(TopOfBook::getBestAsk).orElse(null);
-        tickers.compute(symbol, (ignored, current) -> new MarketTicker(
+        MarketTicker updated = tickers.compute(symbol, (ignored, current) -> new MarketTicker(
                 symbol,
                 current == null ? null : current.lastPrice(),
                 bestBid,
@@ -169,11 +233,18 @@ public class MarketDataService {
                 current == null ? null : current.low24h(),
                 Instant.now()
         ));
+        saveTicker(updated);
+    }
+
+    private void saveTicker(MarketTicker ticker) {
+        if (tickerStore != null && ticker != null) {
+            tickerStore.save(ticker);
+        }
     }
 
     private void updateKline(String symbol, TradeExecuted trade) {
         Instant openTime = trade.ts().truncatedTo(ChronoUnit.MINUTES);
-        oneMinuteKlines.computeIfAbsent(symbol, ignored -> new ConcurrentHashMap<>())
+        MarketKline updated = oneMinuteKlines.computeIfAbsent(symbol, ignored -> new ConcurrentHashMap<>())
                 .compute(openTime, (ignored, current) -> {
                     if (current == null) {
                         return new MarketKline(
@@ -198,14 +269,41 @@ public class MarketDataService {
                             current.volume().add(trade.absQty())
                     );
                 });
+        if (klineStore != null) {
+            klineStore.save(updated);
+        }
     }
 
     private DepthDelta computeDepthDelta(String symbol, OrderBookSnapshot previous, OrderBookSnapshot current) {
         List<PriceLevel> bidDelta = diff(previous == null ? List.of() : previous.bids(), current.bids());
         List<PriceLevel> askDelta = diff(previous == null ? List.of() : previous.asks(), current.asks());
-        long version = depthVersions.computeIfAbsent(symbol, ignored -> new AtomicLong()).incrementAndGet();
+        long version = depthVersions.computeIfAbsent(symbol, this::initialDepthVersion).incrementAndGet();
         long checksum = OrderBookChecksum.crc32(current.bids(), current.asks());
-        return new DepthDelta(symbol, version, checksum, bidDelta, askDelta, Instant.now());
+        Instant now = Instant.now();
+        if (sequenceCheckpointService != null) {
+            sequenceCheckpointService.advance(
+                    symbol,
+                    MarketDataSequenceCheckpointService.DEPTH_DELTA_STREAM,
+                    version,
+                    checksum,
+                    now
+            );
+        }
+        DepthDelta delta = new DepthDelta(symbol, version, checksum, bidDelta, askDelta, now);
+        if (depthDeltaStore != null) {
+            depthDeltaStore.append(delta);
+        }
+        return delta;
+    }
+
+    private AtomicLong initialDepthVersion(String symbol) {
+        long latest = sequenceCheckpointService == null
+                ? 0L
+                : sequenceCheckpointService.latestSequence(
+                        symbol,
+                        MarketDataSequenceCheckpointService.DEPTH_DELTA_STREAM
+                );
+        return new AtomicLong(latest);
     }
 
     private static List<PriceLevel> diff(List<PriceLevel> previous, List<PriceLevel> current) {

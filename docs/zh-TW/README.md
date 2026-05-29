@@ -204,7 +204,7 @@ Kafka / Consumer / Push
 - `POST /api/order/{orderId}/replace` 先取消原本的 open order，再用提供的 `price`、`qty` 或 `clientOrderId` 建立 replacement order。
 - `DELETE /api/order/open?uid=...&symbol=...` 批量取消 open orders 並釋放剩餘委託預凍；不帶 `symbol` 時會取消該使用者所有 open orders。
 - `GET /api/order/{orderId}/lifecycle` 查 durable order lifecycle event log；`GET /api/order/{orderId}/projection` 查最新狀態 projection；`POST /api/order/{orderId}/projection/rebuild` 會用 event log 重建 projection。
-- `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` 會為該 user WebSocket 連線 opt-in 啟用 cancel-on-disconnect；不帶 `symbol` 時，斷線會取消該使用者所有 open orders。
+- `/ws/user/{uid}?cancelOnDisconnect=true&symbol=BTCUSDT` 會為該 user WebSocket 連線 opt-in 啟用 cancel-on-disconnect；不帶 `symbol` 時，斷線會取消該使用者所有 open orders。重連 client 可帶 `resumeConnectionId=<oldSessionId>`，在舊 close event 被處理前把 cancel-on-disconnect 註冊轉移到新 WebSocket session。
 - `GET /api/depth/{symbol}` 會回傳完整簿檔 levels、`version` 與 CRC32 `checksum`。`GET /api/market-data/{symbol}/depth-delta` 也會回傳同一條 monotonic depth `version` 與 checksum，供 client 做 snapshot + delta 校驗。
 
 Polymarket 資料流：

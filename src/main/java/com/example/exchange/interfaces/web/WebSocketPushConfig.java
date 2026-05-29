@@ -52,6 +52,10 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
             public void afterConnectionEstablished(WebSocketSession session) {
                 long uid = Long.parseLong(lastPathSegment(session));
                 pushGatewayService.registerUserWebSocket(uid, session);
+                String resumeConnectionId = resumeConnectionId(session);
+                if (resumeConnectionId != null) {
+                    cancelOnDisconnectService.resume(resumeConnectionId, session.getId(), uid);
+                }
                 if (cancelOnDisconnectEnabled(session)) {
                     cancelOnDisconnectService.register(session.getId(), uid, cancelOnDisconnectSymbol(session));
                 }
@@ -77,6 +81,11 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
 
     private static String cancelOnDisconnectSymbol(WebSocketSession session) {
         return queryParams(session).getFirst("symbol");
+    }
+
+    private static String resumeConnectionId(WebSocketSession session) {
+        String value = queryParams(session).getFirst("resumeConnectionId");
+        return value == null || value.isBlank() ? null : value.trim();
     }
 
     private static MultiValueMap<String, String> queryParams(WebSocketSession session) {

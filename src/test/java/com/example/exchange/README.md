@@ -21,6 +21,10 @@
 | `OutboxServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers。 |
 | `RiskSettlementServiceTest` | funding、liquidation、insurance fund、account reconciliation。 |
 | `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
+| `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration。 |
+| `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、durable trade tape、ticker latest-state 與 1m kline baseline。 |
+| `MarketDataRetentionServiceTest` | Market-data high-volume history retention baseline。 |
+| `ExecuteAdlUseCaseTest` | ADL forced execution 入口的 transaction boundary commit/rollback。 |
 | `OrderBookChecksumTest` | order book checksum 的 BigDecimal scale normalization。 |
 | `SensitiveLogSanitizerTest` | query、JSON、Authorization header、known sensitive header 遮罩。 |
 | `InMemoryMatchingEngineTest` | FIFO、post-only、自成交拒絕、FOK/IOC、市價單流動性不足。 |

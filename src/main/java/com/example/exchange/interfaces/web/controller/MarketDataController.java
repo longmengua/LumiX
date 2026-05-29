@@ -34,6 +34,15 @@ public class MarketDataController {
         return ApiResponse.ok(marketDataService.latestDepthDelta(symbol).orElse(null));
     }
 
+    @GetMapping("/{symbol}/depth-deltas")
+    public ApiResponse<List<DepthDelta>> depthDeltas(
+            @PathVariable String symbol,
+            @RequestParam(defaultValue = "0") long afterVersion,
+            @RequestParam(defaultValue = "100") int limit
+    ) {
+        return ApiResponse.ok(marketDataService.depthDeltasAfter(symbol, afterVersion, limit));
+    }
+
     @GetMapping("/{symbol}/ticker")
     public ApiResponse<MarketTicker> ticker(@PathVariable String symbol) {
         return ApiResponse.ok(marketDataService.ticker(symbol).orElse(null));

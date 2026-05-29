@@ -44,6 +44,14 @@ This document records the current Redis keys used by the low-latency exchange re
 - Idempotency keys protect command retry windows, but they are not a substitute for replay. If a command outcome is uncertain, operators should compare durable command/outbox/ledger state before accepting a duplicate retry.
 - Outbox/DLQ Redis keys are legacy hot-state implementations when the durable JPA repository is not active. Production should prefer the MySQL outbox repository so outbox rows participate in the same transaction boundary.
 
+## ADL Hot-State Repair Rules
+
+- ADL forced execution must treat `adl_execution_records`, wallet ledger journal rows, and persisted position/account state as authoritative after commit.
+- ADL queue state in Redis or memory is operational hot state. If ADL execution commits but queue completion fails, operators should not re-run the same command blindly; they should read the durable execution record by `commandId` and remove or rebuild only the queue projection for the completed `liquidationId`.
+- If ADL execution rolls back after an operator claimed a queue item, keep or restore the claim state and retry with the same `commandId` only after confirming no durable execution record exists.
+- If account, position, or open-position Redis indexes drift after ADL execution, rebuild them from durable position/account records and ledger replay; do not compensate by posting another ADL ledger entry.
+- If a queue item remains partially uncovered, keep it queued with the remaining shortfall and a new command id for the next execution attempt; do not reuse a completed command id for a new amount.
+
 ## Migration Backlog
 
 - Enable `REDIS_KEY_PREFIX` in each environment and plan a one-time migration for existing un-prefixed data.

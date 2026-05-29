@@ -125,6 +125,14 @@ matching-worker:
   renew-interval-ms: ${MATCHING_WORKER_RENEW_INTERVAL_MS:10000}
   fence-legacy-routing: ${MATCHING_WORKER_FENCE_LEGACY_ROUTING:false}
 
+market-data:
+  retention:
+    enabled: false
+    fixed-delay-ms: 300000
+    depth-delta: PT24H
+    trade-tape: P7D
+    kline: P30D
+
 # --------------------------------
 # Actuator（健康檢查/觀測，dev 範例）
 # --------------------------------

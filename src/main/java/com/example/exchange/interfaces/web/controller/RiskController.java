@@ -4,14 +4,18 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.LiquidateCommand;
+import com.example.exchange.application.service.AdlQueueExecutionService;
 import com.example.exchange.application.service.FundingRateService;
 import com.example.exchange.application.service.InsuranceFundService;
 import com.example.exchange.application.service.MarkPriceOracleService;
 import com.example.exchange.application.usecase.LiquidateUseCase;
+import com.example.exchange.domain.model.dto.AdlExecutionResult;
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
 import com.example.exchange.domain.model.dto.FundingSettlementResult;
 import com.example.exchange.domain.model.dto.LiquidationResult;
 import com.example.exchange.domain.model.dto.MarkPriceSnapshot;
+import com.example.exchange.interfaces.web.dto.AdlQueueClaimRequest;
+import com.example.exchange.interfaces.web.dto.AdlQueueExecutionRequest;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.FundingSettlementRequest;
 import com.example.exchange.interfaces.web.dto.LiquidationRequest;
@@ -39,6 +43,7 @@ public class RiskController {
     private final LiquidateUseCase liquidateUseCase;
     private final InsuranceFundService insuranceFundService;
     private final MarkPriceOracleService markPriceOracleService;
+    private final AdlQueueExecutionService adlQueueExecutionService;
 
     @PostMapping("/funding/settle")
     public ApiResponse<FundingSettlementResult> settleFunding(
@@ -85,5 +90,29 @@ public class RiskController {
     @GetMapping("/adl-queue")
     public ApiResponse<List<AdlQueueEntry>> adlQueue() {
         return ApiResponse.ok(insuranceFundService.adlQueue());
+    }
+
+    @PostMapping("/adl-queue/{liquidationId}/execute")
+    public ApiResponse<AdlExecutionResult> executeAdlQueueEntry(
+            @PathVariable String liquidationId,
+            @Valid @RequestBody AdlQueueExecutionRequest request
+    ) {
+        return ApiResponse.ok(adlQueueExecutionService.execute(request.commandId(), liquidationId, request.operatorId()));
+    }
+
+    @PostMapping("/adl-queue/{liquidationId}/claim")
+    public ApiResponse<AdlQueueEntry> claimAdlQueueEntry(
+            @PathVariable String liquidationId,
+            @Valid @RequestBody AdlQueueClaimRequest request
+    ) {
+        return ApiResponse.ok(insuranceFundService.claimAdl(liquidationId, request.owner()));
+    }
+
+    @PostMapping("/adl-queue/{liquidationId}/release")
+    public ApiResponse<AdlQueueEntry> releaseAdlQueueEntry(
+            @PathVariable String liquidationId,
+            @Valid @RequestBody AdlQueueClaimRequest request
+    ) {
+        return ApiResponse.ok(insuranceFundService.releaseAdl(liquidationId, request.owner()));
     }
 }

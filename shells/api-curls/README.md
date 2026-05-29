@@ -76,6 +76,7 @@ User WebSocket:
 ./shells/api-curls/exchange/order-projection-rebuild-post.sh
 ./shells/api-curls/exchange/order-projections-get.sh
 ./shells/api-curls/exchange/depth-get.sh
+./shells/api-curls/exchange/market-data-depth-deltas-get.sh
 ./shells/api-curls/exchange/margin-deposit-post.sh
 ./shells/api-curls/exchange/margin-withdraw-post.sh
 ./shells/api-curls/exchange/margin-transfer-post.sh
@@ -89,6 +90,9 @@ User WebSocket:
 ./shells/api-curls/exchange/margin-ledger-replay-compare-get.sh
 ./shells/api-curls/exchange/risk-price-oracle-put.sh
 ./shells/api-curls/exchange/risk-price-oracle-get.sh
+./shells/api-curls/exchange/risk-adl-queue-claim-post.sh
+./shells/api-curls/exchange/risk-adl-queue-execute-post.sh
+./shells/api-curls/exchange/risk-adl-queue-release-post.sh
 ./shells/api-curls/exchange/recovery-recover-post.sh
 ./shells/api-curls/exchange/recovery-reconcile-accounts-get.sh
 ./shells/api-curls/exchange/recovery-reconcile-report-post.sh

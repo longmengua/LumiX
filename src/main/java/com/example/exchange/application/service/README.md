@@ -13,12 +13,12 @@
 - `TrialBalanceService`：由 wallet ledger postings 產生 asset/account-code trial balance。
 - `ReconciliationIssueWorkflowService`：reconciliation issue claim、resolve、reopen、open queue workflow 與 workflow audit event。
 - `MarketMakerProfileService` / `MarketMakerExposureService` / `MarketMakerQuoteService` / `MarketMakerHedgeStrategyService` / `MarketMakerHedgeExecutionService` / `MarketMakerHedgingService` / `MarketMakerHedgeFillService` / `MarketMakerHedgeReconciliationService`：做市商 profile、inventory exposure、quote checks、reduce-only hedge planning/execution、global execution halt、hedge risk checks、venue routing、audit event、venue fill message mapping、durable hedge decision/fill audit 與 decision-vs-fill reconciliation baseline。
-- `LiquidationService` / `LiquidationScanService` / `InsuranceFundService` / `AdlRankingService` / `AdlDeleveragingPlanner` / `AdlForcedExecutionService`：強平掃描、decision audit、營運控制、保險基金、deterministic ADL ranking/planning 與 forced execution baseline。
+- `LiquidationService` / `LiquidationScanService` / `InsuranceFundService` / `AdlRankingService` / `AdlDeleveragingPlanner` / `AdlForcedExecutionService` / `AdlQueueExecutionService`：強平掃描、decision audit、營運控制、保險基金、deterministic ADL ranking/planning、forced execution 與 queue-to-execution orchestration baseline。
 - `MatchingRecoveryService`：撮合 worker startup/takeover recovery，串接 matching snapshot、command log replay 與 validation report。
 - `MatchingSequencerLeaseService`：撮合 worker per-symbol lease、renew、release 與 takeover epoch baseline。
 - `MatchingWorkerCommandRouter` / `MatchingWorkerExecutionService` / `MatchingWorkerLifecycleService` / `MatchingWorkerStartupListener`：撮合 worker owner/epoch guard、fenced command append、已落 log command execution、lease acquire + recovery startup、runtime startup hook、renewal/readiness baseline。
 - `OutboxService`：retry、DLQ replay、manual compensation baseline。
-- `MarketDataService`：ticker、trade tape、kline、depth delta。
+- `MarketDataService` / `MarketDataSequenceCheckpointService` / `MarketDataRetentionService`：ticker、kline、depth delta、durable depth sequence checkpoint、reconnect backfill、durable trade tape、durable ticker latest-state、durable 1m kline 與 history retention baseline。
 
 目前狀態：
 - 這層承擔 MVP orchestration，尚未具備 production transaction boundary。

@@ -7,6 +7,7 @@
 - 帳務：`WalletLedgerEntry`、`WalletLedgerPosting`、`WalletTransfer`、`BonusCreditGrantRecord`、`TurnoverRecordEntity`。
 - 做市商：`MarketMakerProfileRecord`、`MarketMakerRiskLimitRecord`、`HedgeDecisionAuditRecordEntity`、`HedgeFillRecordEntity`。
 - 風控 read model：`AccountRiskSnapshotRecord`、`AdlExecutionRecordEntity`。
+- Market data：`MarketDataSequenceCheckpointRecord`、`MarketDataDepthDeltaRecord`、`MarketDataTradeTapeRecord`、`MarketDataTickerRecord`、`MarketDataKlineRecord`。
 - Reliability：`OutboxEvent`、`DlqEvent`。
 - Polymarket：market、session、local order、WS event、sync progress entities。
 

@@ -18,7 +18,7 @@
 
 - [ ] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
 - [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
-  - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks，以及第一版 forced-execution service，可執行持倉減倉、ledger postings、audit event 與 durable execution summary/idempotency records。
+  - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks、forced-execution service、持倉減倉、ledger postings、audit event、durable execution summary/idempotency records、queue-to-execution orchestration、operator claim/release guard 與 partial-execution retry semantics。
 - [ ] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
   - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking 與預設關閉的 expiry scanner。
 - [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
@@ -39,6 +39,7 @@
 - [x] 將 order lifecycle events 產品化，補 durable storage、schema version、replay 與查詢 projection。
 - [x] 補上 amend order、cancel replace、bulk cancel、cancel on disconnect 的 REST/WebSocket baseline。
 - [ ] 為交易所常見指令補 durable command log、更強 atomicity mode 與 reconnect/session 語意。
+  - Baseline 已完成：durable matching command/event logs、worker fencing、cancel-replace command replay，以及 cancel-on-disconnect connection resume semantics。
 - [x] 在 pre-trade checks 落實 tick size、lot size、min notional、price band、max order size、max open orders。
 - [x] 明確處理 MARKET 流動性不足、IOC/FOK 未完全成交、POST_ONLY 會吃單、REDUCE_ONLY 超過可減倉量等拒單原因。
 
@@ -86,8 +87,10 @@
 ### Market Data
 
 - [x] 補上 REST/SSE depth delta，帶 monotonic version 與 CRC32 checksum，支援 snapshot + delta 校驗。
-- [ ] 補 durable sequence checkpoint 與 reconnect backfill。
-- [ ] 將 ticker、kline、trade tape 持久化，避免服務重啟後行情資料消失。
+- [x] 補 durable sequence checkpoint 與 reconnect backfill。
+  - Baseline 已完成：durable depth-delta sequence/checksum checkpoints、duplicate/out-of-order checkpoint ignore、啟動時恢復最新 depth sequence、durable depth delta records、`GET /api/market-data/{symbol}/depth-deltas?afterVersion=...` reconnect backfill、durable trade tape records、durable ticker latest-state records、durable 1m kline records，以及預設關閉的 DB retention windows。
+- [x] 定義高流量 market-data depth、trade 與 kline history 的 retention/archive policy。
+  - Baseline 已完成：DB retention job 依獨立 window 清理 depth delta、trade tape 與 1m kline history；production archive export/storage 仍屬於後續營運任務。
 - [ ] WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
 - [ ] 在 P0 做市商 interface baseline 完成後，補齊 market maker / liquidity provider API hardening 與節流策略。
 

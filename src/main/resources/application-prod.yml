@@ -40,6 +40,14 @@ market-maker:
     fixed-delay-ms: ${MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS:300000}
     ref-prefix: ${MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX:scheduled}
 
+market-data:
+  retention:
+    enabled: ${MARKET_DATA_RETENTION_ENABLED:false}
+    fixed-delay-ms: ${MARKET_DATA_RETENTION_FIXED_DELAY_MS:300000}
+    depth-delta: ${MARKET_DATA_RETENTION_DEPTH_DELTA:PT24H}
+    trade-tape: ${MARKET_DATA_RETENTION_TRADE_TAPE:P7D}
+    kline: ${MARKET_DATA_RETENTION_KLINE:P30D}
+
 funding-rate:
   settlements: []
 

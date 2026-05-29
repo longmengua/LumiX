@@ -32,6 +32,23 @@ public class CancelOnDisconnectService {
         registrations.put(connectionId, new Registration(uid, normalizeSymbol(symbol)));
     }
 
+    /**
+     * 重連時將舊 connection 的 cancel-on-disconnect 註冊移到新 connection。
+     * 若舊連線 close event 晚於新連線建立抵達，此轉移可避免誤觸撤單。
+     */
+    public boolean resume(String oldConnectionId, String newConnectionId, long uid) {
+        if (oldConnectionId == null || oldConnectionId.isBlank()
+                || newConnectionId == null || newConnectionId.isBlank()) {
+            return false;
+        }
+        Registration registration = registrations.remove(oldConnectionId);
+        if (registration == null || registration.uid() != uid) {
+            return false;
+        }
+        registrations.put(newConnectionId, registration);
+        return true;
+    }
+
     /** WebSocket 關閉時觸發撤單，並移除一次性註冊。 */
     public int cancelForConnection(String connectionId) {
         if (connectionId == null || connectionId.isBlank()) {

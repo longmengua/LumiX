@@ -18,7 +18,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 - [ ] Finish the replayable matching core: durable command log, event log, snapshots, offset checkpoints, and deterministic replay validation.
 - [ ] Complete production ADL: queue ranking, forced deleveraging execution, audit events, insurance-fund interaction, and operator controls.
-  - Baseline done: deterministic ranking/planning, liquidation decision audit, operator halt/manual-review hooks, first forced-execution service for position reduction, ledger postings, audit events, and durable execution summary/idempotency records.
+  - Baseline done: deterministic ranking/planning, liquidation decision audit, operator halt/manual-review hooks, forced-execution service for position reduction, ledger postings, audit events, durable execution summary/idempotency records, queue-to-execution orchestration, operator claim/release guard, and partial-execution retry semantics.
 - [ ] Add bonus-credit / experience-fund accounting with separate ledger accounts, eligibility rules, consumption priority, expiry, clawback, and reporting.
   - Baseline done: separate bonus ledger account, grant/consume/expiry/clawback postings, cash-balance isolation, grant-batch remaining tracking, and disabled-by-default expiry scanner.
 - [ ] Add turnover tracking for user, account, symbol, strategy, and market-maker dimensions, with ledger/trade reconciliation.
@@ -39,6 +39,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Persist and operationalize order lifecycle events with durable storage, schema versioning, replay, and query projections.
 - [x] Add REST/WebSocket baselines for amend order, cancel replace, bulk cancel, and cancel on disconnect.
 - [ ] Add durable command logs, stronger cancel-replace atomicity modes, and reconnect/session semantics for exchange-standard commands.
+  - Baseline done: durable matching command/event logs, worker fencing, cancel-replace command replay, and cancel-on-disconnect connection resume semantics.
 - [x] Enforce tick size, lot size, min notional, price band, max order size, and max open orders in pre-trade checks.
 - [x] Make rejection semantics explicit for insufficient MARKET liquidity, unfilled IOC/FOK, POST_ONLY taking liquidity, and REDUCE_ONLY exceeding reducible position size.
 
@@ -86,8 +87,10 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Market Data
 
 - [x] Add REST/SSE depth delta with monotonic version and CRC32 checksum for snapshot + delta validation.
-- [ ] Add durable sequence checkpoints and reconnect backfill for incremental order book streams.
-- [ ] Persist ticker, kline, and trade tape so market data survives service restarts.
+- [x] Add durable sequence checkpoints and reconnect backfill for incremental order book streams.
+  - Baseline done: durable depth-delta sequence/checksum checkpoints, duplicate/out-of-order checkpoint ignoring, startup recovery of latest depth sequence, durable depth delta records, `GET /api/market-data/{symbol}/depth-deltas?afterVersion=...` reconnect backfill, durable trade tape records, durable ticker latest-state records, durable 1m kline records, and disabled-by-default DB retention windows.
+- [x] Define retention/archive policy for high-volume market-data depth, trade, and kline history.
+  - Baseline done: DB retention job purges depth delta, trade tape, and 1m kline history by independent windows; production archive export/storage remains a broader ops task.
 - [ ] Deploy WebSocket/SSE gateway independently with horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
 - [ ] Add market-maker / liquidity-provider API hardening and rate-limit policies after the P0 market-maker interface baseline is complete.
 

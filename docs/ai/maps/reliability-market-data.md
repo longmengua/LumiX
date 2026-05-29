@@ -41,18 +41,34 @@ Remaining production TODO:
 - Services:
   - `application.service.MarketDataService`
   - `application.service.PushGatewayService`
+  - `application.service.MarketDataRetentionService`
+- Scheduler:
+  - `application.scheduler.MarketDataRetentionScheduler`
 - DTOs:
   - `DepthDelta`
+  - `MarketDataSequenceCheckpoint`
   - `MarketTicker`
   - `TradeTapeItem`
   - `MarketKline`
+- Durable checkpoints/backfill/tape/ticker/kline: `MarketDataSequenceCheckpointService`, `MarketDataSequenceCheckpointStore`, `JpaMarketDataSequenceCheckpointStore`, `MarketDataDepthDeltaStore`, `JpaMarketDataDepthDeltaStore`, `MarketDataTradeTapeStore`, `JpaMarketDataTradeTapeStore`, `MarketDataTickerStore`, `JpaMarketDataTickerStore`, `MarketDataKlineStore`, `JpaMarketDataKlineStore`
 - Checksum: `domain.util.OrderBookChecksum`
 - Consumer: `interfaces.consumer.TradeEventConsumer`
 - Tests:
   - `domain.util.OrderBookChecksumTest`
+  - `application.service.MarketDataSequenceCheckpointServiceTest`
   - `application.service.OrderAccountingIntegrationTest`
 
+Current behavior:
+- `MarketDataService` emits monotonic depth delta versions and CRC32 checksums.
+- When `MarketDataSequenceCheckpointService` is configured, depth delta version initializes from the latest durable `DEPTH_DELTA` checkpoint.
+- Generated depth deltas advance the durable sequence/checksum checkpoint.
+- Duplicate or out-of-order checkpoint writes are ignored deterministically.
+- Depth deltas can be persisted and queried through `GET /api/market-data/{symbol}/depth-deltas?afterVersion=...` for reconnect backfill.
+- Trade tape can be persisted and read back after service restart when `MarketDataTradeTapeStore` is configured.
+- Ticker latest state can be persisted and read back after service restart when `MarketDataTickerStore` is configured.
+- 1m klines can be persisted and read back after service restart when `MarketDataKlineStore` is configured.
+- High-volume depth delta, trade tape, and 1m kline history can be purged through disabled-by-default market-data retention config; ticker latest state and sequence checkpoints are not purged by that job.
+
 Remaining production TODO:
-- Durable sequence checkpoints and reconnect backfill.
-- Ticker/kline/trade tape persistence.
+- Production archive export/storage for market-data history beyond local DB retention.
 - Independently deployable WebSocket/SSE gateway.
