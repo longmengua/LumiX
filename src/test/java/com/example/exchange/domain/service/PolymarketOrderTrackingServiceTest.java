@@ -61,6 +61,56 @@ class PolymarketOrderTrackingServiceTest {
     }
 
     @Test
+    @DisplayName("CLOB cancel exception outcome 會標記 uncertain 並阻止後續重送")
+    /**
+     * 流程：CLOB DELETE 發生 timeout/exception，遠端可能已收到 cancel。
+     * 期望：local order 標成 CANCEL_OUTCOME_UNCERTAIN；下一次 retry 不再送第二次 DELETE。
+     */
+    void cancelExceptionOutcomeIsMarkedUncertainAndReplayBlocksRemoteRetry() {
+        PredictionPolymarketOrder existing = order("ACCEPTED", "clob-1");
+        Fixture fx = new Fixture(existing);
+        fx.clobClient.nextCancelOrder = Map.of(
+                "success", false,
+                "status", "EXCEPTION",
+                "errorMsg", "network timeout"
+        );
+
+        PredictionPolymarketOrder first = fx.service.cancelOrder("internal-1");
+        PredictionPolymarketOrder duplicate = fx.service.cancelOrder("internal-1");
+
+        assertThat(first.getStatus()).isEqualTo("CANCEL_OUTCOME_UNCERTAIN");
+        assertThat(first.getLastError()).isEqualTo("network timeout");
+        assertThat(first.getLastClobPayload()).contains("\"status\":\"EXCEPTION\"");
+        assertThat(duplicate).isSameAs(existing);
+        assertThat(fx.clobClient.cancelCount).isEqualTo(1);
+        assertThat(fx.orderRepository.saveCount).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("CLOB cancel 5xx outcome 會標記 uncertain")
+    /**
+     * 流程：CLOB DELETE 回 5xx，無法判定遠端是否已處理 cancel。
+     * 期望：保存 uncertain 狀態，避免 retry path 直接產生第二次外部 effect。
+     */
+    void cancelServerErrorOutcomeIsMarkedUncertain() {
+        PredictionPolymarketOrder existing = order("ACCEPTED", "clob-1");
+        Fixture fx = new Fixture(existing);
+        fx.clobClient.nextCancelOrder = Map.of(
+                "success", false,
+                "httpCode", 502,
+                "errorMsg", "bad gateway"
+        );
+
+        PredictionPolymarketOrder result = fx.service.cancelOrder("internal-1");
+
+        assertThat(result.getStatus()).isEqualTo("CANCEL_OUTCOME_UNCERTAIN");
+        assertThat(result.getLastError()).isEqualTo("bad gateway");
+        assertThat(fx.clobClient.cancelCount).isEqualTo(1);
+        assertThat(fx.orderRepository.saveCount).isEqualTo(1);
+    }
+
+
+    @Test
     @DisplayName("CLOB sync 重送相同 payload 時不重複保存 local order")
     /**
      * 流程：local order 已套用過同一份 CLOB getOrder payload，retry sync 再取回相同內容。
@@ -151,6 +201,11 @@ class PolymarketOrderTrackingServiceTest {
     private static class CountingClobClient extends PolymarketClobTradingClient {
         private int cancelCount;
         private int getOrderCount;
+        private Map<String, Object> nextCancelOrder =
+                Map.of(
+                        "success", true,
+                        "orderID", "clob-1"
+                );
         private Map<String, Object> nextGetOrder =
                 successOrderPayload("live", "0");
 
@@ -161,10 +216,7 @@ class PolymarketOrderTrackingServiceTest {
         @Override
         public Map<String, Object> cancelOrder(String polygonSignerAddress, String clobOrderId) {
             cancelCount++;
-            return Map.of(
-                    "success", true,
-                    "orderID", clobOrderId
-            );
+            return nextCancelOrder;
         }
 
         @Override

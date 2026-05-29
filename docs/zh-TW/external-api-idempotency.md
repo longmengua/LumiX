@@ -6,7 +6,7 @@
 | Integration | Current client | Operation type | Retry/circuit/rate limit | Idempotency status |
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | 共用 OkHttp timeout/retry/circuit/rate-limit baseline | Read-only，可重試；response schema versioning 仍待補。 |
-| Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | 外部 effectful writes plus read-only status sync | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel baseline：已記錄 cancel 狀態時直接回 local order，不再重送 DELETE。Sync/reconcile baseline：未變更的 CLOB payload 不再重複寫 local row。 |
+| Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | 外部 effectful writes plus read-only status sync | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel baseline：已記錄 cancel/uncertain 狀態時直接回 local order，不再重送 DELETE。Sync/reconcile baseline：未變更的 CLOB payload 不再重複寫 local row。 |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | 外部 effectful writes and reads | 部分共用 config；RPC-specific limits 仍待補 | Approval reads 已有 TTL cache 與 owner-scoped clear。仍待補：backend-observed effectful flow 的 idempotent approval transaction tracking。 |
 | Hedge venue submit | `HedgeVenueAdapter` | 外部 effectful write | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，會先 claim 再送 venue、durably 保存 terminal results、拒絕 refId conflict，並在 pending/uncertain outcome 後阻止 duplicate submit。 |
 | Bank/chain callbacks | Future callback clients/controllers | 外部 effectful reconciliation | 尚未實作 | 仍待補。 |
@@ -33,11 +33,12 @@ Polymarket place order 支援可選 `clientRequestId`。有帶時，`PolymarketO
 
 ## CLOB Cancel Baseline
 
-Polymarket cancel 使用 local order status 作為 retry boundary。若前一次 cancel 已記錄 `CANCEL_REQUESTED`、`CANCELED`、`CANCELLED` 或 `ORDER_STATUS_CANCELED`，`PolymarketOrderTrackingService.cancelOrder` 會直接回傳 local order，不再呼叫第二次 CLOB DELETE。
+Polymarket cancel 使用 local order status 作為 retry boundary。若前一次 cancel 已記錄 `CANCEL_REQUESTED`、`CANCEL_OUTCOME_UNCERTAIN`、`CANCELED`、`CANCELLED` 或 `ORDER_STATUS_CANCELED`，`PolymarketOrderTrackingService.cancelOrder` 會直接回傳 local order，不再呼叫第二次 CLOB DELETE。
 
 - 第一次 CLOB cancel 成功後，會保存 raw CLOB payload、`lastSyncedAt` 與 `CANCEL_REQUESTED`。
+- CLOB cancel 回 `EXCEPTION` 或 5xx outcome 時，會保存 raw payload、`lastSyncedAt`、`lastError` 與 `CANCEL_OUTCOME_UNCERTAIN`。
 - local cancel marker 已存在時，duplicate cancel request 不會再送外部 command。
-- 這仍是 local baseline；更完整的 CLOB state-machine transitions，以及 uncertain cancel outcome 的 remote lookup/reconcile 還待補。
+- 這仍是 local baseline；更完整的 CLOB state-machine transitions，以及用 remote lookup/reconcile 解開 uncertain cancel outcome 還待補。
 
 ## CLOB Sync/Reconcile Baseline
 

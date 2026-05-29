@@ -29,14 +29,14 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added `HedgeVenueIdempotencyStore`, `JpaHedgeVenueIdempotencyStore`, and `V8__hedge_venue_idempotency_records.sql` so hedge venue claim/result records survive process restart.
 - Added optional `PolymarketPlaceOrderRequest.clientRequestId` so CLOB place can use the local order record as an idempotency boundary before session limit consumption, approval checks, signing, or `/order` calls.
 - Added `PolymarketOrderServiceTest` covering same-key duplicate replay, same-key payload conflict, and existing local order with uncertain CLOB outcome.
-- Added a CLOB cancel local idempotency baseline: once cancel records `CANCEL_REQUESTED` or a canceled terminal status, duplicate cancel requests return the local order without another CLOB DELETE.
-- Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay and the first successful cancel marker.
+- Added a CLOB cancel local idempotency baseline: once cancel records `CANCEL_REQUESTED`, `CANCEL_OUTCOME_UNCERTAIN`, or a canceled terminal status, duplicate cancel requests return the local order without another CLOB DELETE.
+- Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay, first successful cancel marker, exception/5xx uncertain outcomes, and unchanged sync/reconcile replay.
 - Added `PolymarketApprovalServiceTest` covering approval read cache hits, owner-scoped cache clear, and TTL refresh before order validation relies on RPC approval state.
 - Added CLOB sync/reconcile local no-op replay: unchanged CLOB payload/status/size/error does not save the local order row again, and reconcile reports unchanged rows separately.
 
 Remaining work:
 - Add venue lookup/reconciliation for real hedge adapters and operator handling for uncertain outcomes.
-- Add CLOB durable command identity, uncertain cancel remote lookup, and fuller local state-machine coverage.
+- Add CLOB durable command identity, remote lookup/reconcile to resolve uncertain cancel outcomes, and fuller local state-machine coverage.
 - Add RPC approval transaction idempotency tracking for any future backend-observed effectful approval/relayer flow.
 
 ## Acceptance Criteria

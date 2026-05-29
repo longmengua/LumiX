@@ -26,7 +26,7 @@
 Remaining production TODO:
 - Local/CLOB/trade/settlement order state machine.
 - Versioned Gamma/CLOB response schemas.
-- Durable CLOB command identity and fuller cancel uncertainty handling; place has a `clientRequestId` local idempotency baseline, cancel replays already-recorded cancel statuses locally, and sync/reconcile skip unchanged local writes.
+- Durable CLOB command identity and remote lookup/reconcile to resolve cancel uncertainty; place has a `clientRequestId` local idempotency baseline, cancel replays already-recorded cancel/uncertain statuses locally, and sync/reconcile skip unchanged local writes.
 - Independent user WebSocket worker with checkpoint, dedup, persistence, replay.
 - Backend-observed approval transaction idempotency tracking for any future effectful relayer flow; approval reads already have TTL cache and owner-scoped clear.
 

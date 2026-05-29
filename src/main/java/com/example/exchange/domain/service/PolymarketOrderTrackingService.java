@@ -28,7 +28,7 @@ public class PolymarketOrderTrackingService {
             List.of("CREATED", "ACCEPTED", "live", "matched", "ORDER_STATUS_LIVE", "ORDER_STATUS_MATCHED");
 
     private static final List<String> CANCEL_IDEMPOTENT_STATUSES =
-            List.of("CANCEL_REQUESTED", "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED");
+            List.of("CANCEL_REQUESTED", "CANCEL_OUTCOME_UNCERTAIN", "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED");
 
     private final ObjectMapper objectMapper;
     private final PolymarketConfigs polymarketConfigs;
@@ -95,6 +95,9 @@ public class PolymarketOrderTrackingService {
         if (Boolean.TRUE.equals(raw.get("success"))) {
             order.setStatus("CANCEL_REQUESTED");
             order.setLastError(null);
+        } else if (isUncertainCancelOutcome(raw)) {
+            order.setStatus("CANCEL_OUTCOME_UNCERTAIN");
+            order.setLastError(firstText(raw, "errorMsg", "raw", "status"));
         } else {
             order.setLastError(firstText(raw, "errorMsg", "raw"));
         }
@@ -220,6 +223,26 @@ public class PolymarketOrderTrackingService {
 
         return CANCEL_IDEMPOTENT_STATUSES.stream()
                 .anyMatch(value -> value.equalsIgnoreCase(status.trim()));
+    }
+
+    private boolean isUncertainCancelOutcome(Map<String, Object> raw) {
+        String status =
+                firstText(raw, "status");
+        if ("EXCEPTION".equalsIgnoreCase(status)) {
+            return true;
+        }
+
+        Object httpCode =
+                raw.get("httpCode");
+        if (httpCode == null) {
+            return false;
+        }
+
+        try {
+            return Integer.parseInt(httpCode.toString()) >= 500;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     private String firstText(
