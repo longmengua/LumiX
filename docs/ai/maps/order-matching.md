@@ -55,12 +55,23 @@ Current behavior:
 - Replay validation reports have a durable JPA store for recovery audit history.
 - Sequencer lease service manages per-symbol owner acquire/renew/release and increments epoch on takeover.
 - Sequencer lease service exposes `requireWritable(...)` to reject missing lease, wrong owner, stale epoch, and expired lease before command writes.
+- `MatchingWorkerCommandRouter` is the production-worker-facing append boundary; it calls `requireWritable(...)` before command/event append and writes owner id / epoch into matching logs.
+- `MatchingWorkerExecutionService` provides worker submit, cancel, amend, and cancel-replace paths: append a lease-fenced command first, then execute the already-logged command through `MatchingEngine.applyLoggedCommand(...)` without duplicate command append.
+- `MatchingWorkerLifecycleService` starts configured worker symbols by acquiring a lease, running recovery, validating replay, retaining owner/epoch readiness context, and renewing leases with command/event checkpoints.
+- `MatchingWorkerLeaseRenewalScheduler` is the scheduled renewal entry point; it is gated by `matching-worker.enabled` and relies on the lifecycle service to remove readiness when renewal fails.
+- `RecoveryController` exposes matching worker owner/readiness context under `/api/recovery/matching-worker/contexts` for routing and operations inspection.
+- `OrderService`, `CancelOrderUseCase`, and `AmendOrderUseCase` route submit/cancel/amend through `MatchingWorkerExecutionService` when a ready worker owner context exists for the symbol, otherwise they preserve the legacy in-process path.
+- `CancelReplaceOrderUseCase` remains an accounting-safe cancel + replacement-submit orchestration; when worker context is ready, both legs are fenced worker commands.
+- `matching-worker.fence-legacy-routing` rejects fallback to legacy in-process routing for configured symbols when worker readiness is missing.
+- `MatchingWorkerStartupListener` starts configured symbols on `ApplicationReadyEvent` when `matching-worker.enabled=true`.
+- `InMemoryMatchingEngine.applyLoggedCommand(...)` propagates command owner/epoch to matching event logs during worker execution.
+- Worker owner configuration is exposed through `matching-worker.*` / `MatchingWorkerProperties`; runbook documents `MATCHING_WORKER_ENABLED`, `MATCHING_WORKER_OWNER_ID`, `MATCHING_WORKER_SYMBOLS`, lease TTL, and renew interval.
 - Matching command replay supports `CANCEL_REPLACE` with replacement order payload.
 - Command/event log entries can persist sequencer `ownerId` and `ownerEpoch` for fencing audit.
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Wire lease write guard into the production worker command pipeline.
+- Document the production deployment switch sequence and decide whether production worker routing can close after smoke verification.
 - Stronger application/accounting cancel-replace atomicity and reconnect/session semantics.
 - Keep this area first in the roadmap until replayable matching is complete.
 

@@ -115,6 +115,17 @@ server:
     include-binding-errors: always
 
 # --------------------------------
+# Matching worker ownership (dev baseline)
+# --------------------------------
+matching-worker:
+  enabled: false
+  owner-id: ${MATCHING_WORKER_OWNER_ID:local-dev}
+  symbols: []
+  lease-ttl-ms: ${MATCHING_WORKER_LEASE_TTL_MS:30000}
+  renew-interval-ms: ${MATCHING_WORKER_RENEW_INTERVAL_MS:10000}
+  fence-legacy-routing: ${MATCHING_WORKER_FENCE_LEGACY_ROUTING:false}
+
+# --------------------------------
 # Actuator（健康檢查/觀測，dev 範例）
 # --------------------------------
 management:

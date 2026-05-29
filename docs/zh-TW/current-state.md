@@ -47,6 +47,11 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 撮合 sequencer write guard 會在 command write 前拒絕 missing lease、wrong owner、stale epoch 與 expired lease。
 - 撮合 command replay 支援帶 replacement order payload 的 cancel-replace。
 - 撮合 command/event log entries 可保存 sequencer owner id 與 epoch，供 fencing audit。
+- 撮合 worker startup / renewal lifecycle 已可取得 configured symbol lease、執行 recovery、驗證 replay、保存 owner/epoch readiness context、續租、在續租失敗時移除 readiness，並提供 readiness inspection endpoint。
+- 撮合 worker execution baseline 已可對 submit、cancel、amend、cancel-replace 先 append lease-fenced command，再套用到 engine，並保留 owner/epoch。
+- 既有 submit、cancel、amend、cancel-replace accounting-safe cancel + replacement-submit intake path 在該 symbol 有 ready owner context 時，已可使用 worker execution。
+- `matching-worker.fence-legacy-routing` 可在切流時拒絕 configured symbol fallback 到尚未 worker-ready 的舊 in-process path。
+- `MatchingWorkerStartupListener` 會在 `matching-worker.enabled=true` 時，於 application ready 後啟動 configured worker symbols。
 - 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence 與 book-level 差異。
 - 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
@@ -64,8 +69,8 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 ## 目前不能當作 production 完成的地方
 
-- Production worker command routing 仍需接入 lease write guard。
-- 單 symbol sequencer 目前仍只是 in-process 實作，還沒有 production distributed lease、epoch fencing 與 worker routing。
+- Production worker routing 還需要 production deployment switch sequence 文件與 smoke verification，才能關閉這個 post-v1 task。
+- 單 symbol sequencer 目前仍以 in-process engine 執行，production command intake、worker deployment 與 operational cutover 還未完成。
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
 - ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金到期 scanner baseline、流水 facts 與 replay path；audit retention、更深入 replay validation、體驗金資格/報表、流水對帳與營運控制仍未完成。
 - funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。production feed redundancy、price clamp、scanner scheduling/routing 與 forced ADL position/accounting execution 仍未完成。

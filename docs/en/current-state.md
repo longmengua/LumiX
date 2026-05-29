@@ -47,6 +47,11 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Matching sequencer write guard rejects missing lease, wrong owner, stale epoch, and expired lease before command writes.
 - Matching command replay supports cancel-replace with a replacement order payload.
 - Matching command/event log entries can persist sequencer owner id and epoch for fencing audit.
+- Matching worker startup/renewal lifecycle can acquire configured symbol leases, run recovery, validate replay, retain owner/epoch readiness context, renew leases, remove readiness when renewal fails, and expose readiness inspection endpoints.
+- Matching worker execution baseline can append lease-fenced commands for submit, cancel, amend, and cancel-replace before applying them to the engine, while preserving owner/epoch.
+- Existing submit, cancel, amend, and cancel-replace's accounting-safe cancel + replacement-submit intake paths can use worker execution when the symbol has a ready owner context.
+- `matching-worker.fence-legacy-routing` can reject old in-process fallback for configured symbols that are not worker-ready during cutover.
+- `MatchingWorkerStartupListener` starts configured worker symbols after application readiness when `matching-worker.enabled=true`.
 - Matching replay validation can compare replay output against an expected snapshot and report command-offset, event-offset, match-sequence, and book-level differences.
 - A wallet-ledger balanced posting baseline makes MVP fund movements traceable and testable.
 - Accounting entries are split for order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal.
@@ -64,8 +69,8 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 ## What Is Not Production Complete
 
-- Production worker command routing still needs to call the lease write guard.
-- The per-symbol sequencer is only implemented as an in-process baseline; production distributed lease, epoch fencing, and worker routing are still missing.
+- Production worker routing still needs a documented deployment switch sequence and smoke verification before this post-v1 task is closed.
+- The per-symbol sequencer still executes in an in-process engine; production command intake, worker deployment, and operational cutover remain.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
 - The ledger now has a durable double-entry journal, bonus-credit account separation, bonus expiry scanner baseline, turnover facts, and replay path; audit retention, deeper replay validation, bonus eligibility/reporting, turnover reconciliation, and operational controls are still incomplete.
 - Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, scanner scheduling/routing, and forced ADL position/accounting execution are still incomplete.

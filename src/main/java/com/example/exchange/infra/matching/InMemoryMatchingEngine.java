@@ -72,7 +72,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         SymbolRuntime runtime = runtime(order.getSymbol().code());
         MatchingResult result = runtime.call(() -> submitOnSequencer(runtime, order));
         // submit path 不重寫 command log，但仍保留成交 event log，讓 replay validation 能比對 event checkpoint。
-        appendEvents(order.getSymbol().code(), runtime.commandOffset.get(), result);
+        appendEvents(order.getSymbol().code(), runtime.commandOffset.get(), result, null, 0L);
         return result;
     }
 
@@ -123,7 +123,7 @@ public class InMemoryMatchingEngine implements MatchingEngine {
             return submitOnSequencer(runtime, replacementOrder);
         });
         // cancel-replace 是單一 command；replacement 產生的 trades 必須掛在同一 command offset 下。
-        appendEvents(originalOrder.getSymbol().code(), runtime.commandOffset.get(), result);
+        appendEvents(originalOrder.getSymbol().code(), runtime.commandOffset.get(), result, null, 0L);
         return result;
     }
 
@@ -211,6 +211,14 @@ public class InMemoryMatchingEngine implements MatchingEngine {
                 .filter(command -> command.offset() > snapshot.commandOffset())
                 .sorted((left, right) -> Long.compare(left.offset(), right.offset()))
                 .forEach(this::applyReplayCommand);
+    }
+
+    @Override
+    public MatchingResult applyLoggedCommand(MatchingCommandLogEntry command) {
+        if (command == null) {
+            throw new IllegalArgumentException("matching command must not be null");
+        }
+        return applyReplayCommand(command);
     }
 
     @Override
@@ -434,6 +442,14 @@ public class InMemoryMatchingEngine implements MatchingEngine {
                 .build();
     }
 
+    private static LinkedHashSet<Order> affected(boolean changed, Order order) {
+        LinkedHashSet<Order> affected = new LinkedHashSet<>();
+        if (changed && order != null) {
+            affected.add(order);
+        }
+        return affected;
+    }
+
     private SymbolRuntime runtime(String symbolCode) {
         String symbol = normalize(symbolCode);
         return runtimes.computeIfAbsent(symbol, SymbolRuntime::new);
@@ -506,25 +522,75 @@ public class InMemoryMatchingEngine implements MatchingEngine {
         runtime(entry.symbolCode()).commandOffset.set(entry.offset());
     }
 
-    private void appendEvents(String symbolCode, long commandOffset, MatchingResult result) {
+    private void appendEvents(
+            String symbolCode,
+            long commandOffset,
+            MatchingResult result,
+            String ownerId,
+            long ownerEpoch
+    ) {
         if (result == null || result.getTrades() == null || result.getTrades().isEmpty()) return;
         SymbolRuntime runtime = runtime(symbolCode);
         for (TradeExecuted trade : result.getTrades()) {
-            MatchingEventLogEntry entry = eventLog.append(symbolCode, commandOffset, trade);
+            MatchingEventLogEntry entry = eventLog.append(symbolCode, commandOffset, trade, ownerId, ownerEpoch);
             runtime.eventOffset.set(entry.offset());
         }
     }
 
-    private void applyReplayCommand(MatchingCommandLogEntry command) {
+    private MatchingResult applyReplayCommand(MatchingCommandLogEntry command) {
         Order order = copyOrder(command.order());
         // replay 時先推進 command offset，讓 submit 產生的 event log 能標記正確 checkpoint。
         runtime(command.symbolCode()).commandOffset.set(Math.max(0L, command.offset()));
-        switch (command.type()) {
-            case SUBMIT -> submitWithoutCommandLogging(order);
-            case CANCEL -> cancelOrderWithoutCommandLogging(order);
-            case AMEND -> amendOrderWithoutCommandLogging(order, command.newPrice(), command.newQty());
-            case CANCEL_REPLACE -> cancelReplaceWithoutCommandLogging(order, copyOrder(command.replacementOrder()));
+        MatchingResult result = switch (command.type()) {
+            case SUBMIT -> submitWithoutCommandLoggingAndOwner(order, command.ownerId(), command.ownerEpoch());
+            case CANCEL -> {
+                boolean canceled = cancelOrderWithoutCommandLogging(order);
+                yield result(List.of(), affected(canceled, order));
+            }
+            case AMEND -> {
+                boolean amended = amendOrderWithoutCommandLogging(order, command.newPrice(), command.newQty());
+                yield result(List.of(), affected(amended, order));
+            }
+            case CANCEL_REPLACE -> cancelReplaceWithoutCommandLoggingAndOwner(
+                    order,
+                    copyOrder(command.replacementOrder()),
+                    command.ownerId(),
+                    command.ownerEpoch()
+            );
+        };
+        return result;
+    }
+
+    private MatchingResult submitWithoutCommandLoggingAndOwner(Order order, String ownerId, long ownerEpoch) {
+        SymbolRuntime runtime = runtime(order.getSymbol().code());
+        MatchingResult result = runtime.call(() -> submitOnSequencer(runtime, order));
+        appendEvents(order.getSymbol().code(), runtime.commandOffset.get(), result, ownerId, ownerEpoch);
+        return result;
+    }
+
+    private MatchingResult cancelReplaceWithoutCommandLoggingAndOwner(
+            Order originalOrder,
+            Order replacementOrder,
+            String ownerId,
+            long ownerEpoch
+    ) {
+        if (originalOrder == null || replacementOrder == null) {
+            throw new IllegalArgumentException("originalOrder and replacementOrder must not be null");
         }
+        SymbolRuntime runtime = runtime(originalOrder.getSymbol().code());
+        MatchingResult result = runtime.call(() -> {
+            boolean canceled = runtime.book.cancel(originalOrder);
+            if (!canceled) {
+                replacementOrder.reject("CANCEL_REPLACE_ORIGINAL_NOT_FOUND");
+                LinkedHashSet<Order> affectedOrders = new LinkedHashSet<>();
+                affectedOrders.add(originalOrder);
+                affectedOrders.add(replacementOrder);
+                return result(List.of(), affectedOrders);
+            }
+            return submitOnSequencer(runtime, replacementOrder);
+        });
+        appendEvents(originalOrder.getSymbol().code(), runtime.commandOffset.get(), result, ownerId, ownerEpoch);
+        return result;
     }
 
     private static void restoreOrders(OrderBook book, List<Order> orders) {

@@ -123,6 +123,17 @@ public interface MatchingEngine {
     void replay(MatchingEngineSnapshot snapshot, List<MatchingCommandLogEntry> commands);
 
     /**
+     * 執行已寫入 command log 的單筆 command。
+     *
+     * <p>Production worker 會先經過 lease-fenced command router append durable command log，
+     * 再呼叫此方法套用該 command，避免 engine live path 重複 append command。</p>
+     *
+     * @param command 已通過 owner/epoch guard 並寫入 command log 的 command
+     * @return 執行結果；非成交類 command 可回傳空結果
+     */
+    MatchingResult applyLoggedCommand(MatchingCommandLogEntry command);
+
+    /**
      * 驗證 snapshot + command log replay 後是否能得到期望狀態。
      *
      * @param startSnapshot    replay 起點

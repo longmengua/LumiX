@@ -47,6 +47,9 @@ Targeted tests:
 ./mvnw -Dtest=CommandTransactionBoundaryTest,OutboxServiceTest test
 ./mvnw -Dtest=InMemoryMatchingEngineTest test
 ./mvnw -Dtest=MatchingLogOwnerEpochTest test
+./mvnw -Dtest=MatchingWorkerCommandRouterTest test
+./mvnw -Dtest=MatchingWorkerExecutionServiceTest test
+./mvnw -Dtest=MatchingWorkerLifecycleServiceTest test
 ./mvnw -Dtest=MatchingRecoveryServiceTest test
 ./mvnw -Dtest=MatchingSequencerLeaseServiceTest test
 ./mvnw -Dtest=AdlRankingServiceTest test
@@ -81,6 +84,14 @@ Transaction boundary coverage:
 - `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
 - `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
 - `LiquidateUseCaseTest` and `MarketMakerHedgeExecutionServiceTest` prove manual liquidation and hedge execution enter the same command boundary when configured.
+
+Production worker routing coverage:
+- `MatchingWorkerCommandRouterTest` proves a matching command/event append must pass the sequencer lease owner/epoch guard before the log write happens.
+- `MatchingWorkerExecutionServiceTest` proves worker submit/cancel/amend/cancel-replace append fenced commands before engine execution, avoid duplicate command append, update the book, and propagate owner/epoch to matching events.
+- `MatchingWorkerLifecycleServiceTest` proves configured worker startup acquires ownership, runs recovery, stores ready owner context, stays inert when disabled, rejects symbols owned by another worker, renews checkpoints, and removes readiness after renewal failure.
+- `OrderAccountingIntegrationTest` includes a worker-ready cancel-replace case proving the accounting-safe cancel + replacement-submit orchestration produces fenced worker commands while preserving reserve re-hold semantics.
+- `MatchingSequencerLeaseServiceTest` covers lease acquire, renew, release, takeover, missing lease, wrong owner, stale epoch, and expired lease behavior.
+- `matching-worker.*` configuration is bound by `MatchingWorkerProperties` and documented in the matching sequencer runbook.
 
 ## Agent Context Script
 

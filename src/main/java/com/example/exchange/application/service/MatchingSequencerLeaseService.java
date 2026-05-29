@@ -61,11 +61,25 @@ public class MatchingSequencerLeaseService {
             long commandOffset,
             long eventOffset
     ) {
+        return renew(symbolCode, ownerId, epoch, DEFAULT_TTL, commandOffset, eventOffset);
+    }
+
+    /**
+     * 續租現有 ownership；ttl 由 caller 指定，讓 worker 可使用 deployment 設定的 lease 期限。
+     */
+    public Optional<MatchingSequencerLease> renew(
+            String symbolCode,
+            String ownerId,
+            long epoch,
+            Duration ttl,
+            long commandOffset,
+            long eventOffset
+    ) {
         return leaseStore.renew(
                 symbolCode,
                 ownerId,
                 epoch,
-                DEFAULT_TTL,
+                ttl,
                 commandOffset,
                 eventOffset,
                 Instant.now(clock)

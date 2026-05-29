@@ -7,8 +7,11 @@ import com.example.exchange.application.command.AmendOrderCommand;
 import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.CommandTransactionBoundary;
 import com.example.exchange.application.service.MarketDataService;
+import com.example.exchange.application.service.MatchingWorkerExecutionService;
+import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.RiskService;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
+import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.SymbolConfig;
@@ -37,10 +40,22 @@ public class AmendOrderUseCase {
     private final MarketDataService marketDataService;
     private final DomainEventPublisher<Object> publisher;
     private CommandTransactionBoundary commandTransactionBoundary;
+    private MatchingWorkerLifecycleService matchingWorkerLifecycleService;
+    private MatchingWorkerExecutionService matchingWorkerExecutionService;
 
     @Autowired(required = false)
     public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
         this.commandTransactionBoundary = commandTransactionBoundary;
+    }
+
+    @Autowired(required = false)
+    public void setMatchingWorkerLifecycleService(MatchingWorkerLifecycleService matchingWorkerLifecycleService) {
+        this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
+    }
+
+    @Autowired(required = false)
+    public void setMatchingWorkerExecutionService(MatchingWorkerExecutionService matchingWorkerExecutionService) {
+        this.matchingWorkerExecutionService = matchingWorkerExecutionService;
     }
 
     /**
@@ -86,7 +101,7 @@ public class AmendOrderUseCase {
         }
 
         BigDecimal targetReserve = riskService.validateAmend(candidate, config);
-        boolean amended = matchingEngine.amendOrder(order, newPrice, newQty);
+        boolean amended = amendThroughConfiguredMatchingPath(order, newPrice, newQty);
         if (!amended) {
             throw new IllegalStateException("open order not found in matching book");
         }
@@ -172,5 +187,29 @@ public class AmendOrderUseCase {
     private static boolean isOpen(Order order) {
         return order.getStatus() == Order.Status.NEW
                 || order.getStatus() == Order.Status.PARTIALLY_FILLED;
+    }
+
+    private boolean amendThroughConfiguredMatchingPath(Order order, BigDecimal newPrice, BigDecimal newQty) {
+        Optional<MatchingWorkerLifecycleService.MatchingWorkerOwnerContext> context = workerContext(order);
+        if (context.isEmpty()) {
+            return matchingEngine.amendOrder(order, newPrice, newQty);
+        }
+        MatchingWorkerLifecycleService.MatchingWorkerOwnerContext owner = context.get();
+        MatchingResult result = matchingWorkerExecutionService.amend(
+                order,
+                newPrice,
+                newQty,
+                owner.ownerId(),
+                owner.ownerEpoch()
+        );
+        return result.getAffectedOrders() != null && !result.getAffectedOrders().isEmpty();
+    }
+
+    private Optional<MatchingWorkerLifecycleService.MatchingWorkerOwnerContext> workerContext(Order order) {
+        if (matchingWorkerLifecycleService == null || matchingWorkerExecutionService == null
+                || order == null || order.getSymbol() == null) {
+            return Optional.empty();
+        }
+        return matchingWorkerLifecycleService.routingOwnerContext(order.getSymbol().code());
     }
 }

@@ -6,9 +6,12 @@ package com.example.exchange.application.usecase;
 import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.CommandTransactionBoundary;
 import com.example.exchange.application.service.MarketDataService;
+import com.example.exchange.application.service.MatchingWorkerExecutionService;
+import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.OperationalMetricsService;
 import com.example.exchange.application.service.WalletLedgerService;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
+import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.OrderRepository;
@@ -22,6 +25,7 @@ import org.springframework.stereotype.Component;
 import java.math.BigDecimal;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -37,6 +41,8 @@ public class CancelOrderUseCase {
     private final DomainEventPublisher<Object> publisher;
     private OperationalMetricsService operationalMetricsService;
     private CommandTransactionBoundary commandTransactionBoundary;
+    private MatchingWorkerLifecycleService matchingWorkerLifecycleService;
+    private MatchingWorkerExecutionService matchingWorkerExecutionService;
 
     @Autowired(required = false)
     public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
@@ -46,6 +52,16 @@ public class CancelOrderUseCase {
     @Autowired(required = false)
     public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
         this.commandTransactionBoundary = commandTransactionBoundary;
+    }
+
+    @Autowired(required = false)
+    public void setMatchingWorkerLifecycleService(MatchingWorkerLifecycleService matchingWorkerLifecycleService) {
+        this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
+    }
+
+    @Autowired(required = false)
+    public void setMatchingWorkerExecutionService(MatchingWorkerExecutionService matchingWorkerExecutionService) {
+        this.matchingWorkerExecutionService = matchingWorkerExecutionService;
     }
 
     public boolean handle(UUID orderId) {
@@ -62,7 +78,7 @@ public class CancelOrderUseCase {
             return false;
         }
 
-        boolean removed = matchingEngine.cancelOrder(order);
+        boolean removed = cancelThroughConfiguredMatchingPath(order);
         if (!removed) return false;
 
         order.cancel();
@@ -100,7 +116,7 @@ public class CancelOrderUseCase {
             if (order.getStatus() != Order.Status.NEW && order.getStatus() != Order.Status.PARTIALLY_FILLED) {
                 continue;
             }
-            boolean removed = matchingEngine.cancelOrder(order);
+            boolean removed = cancelThroughConfiguredMatchingPath(order);
             if (!removed) continue;
 
             order.cancel();
@@ -137,5 +153,23 @@ public class CancelOrderUseCase {
                 order.getId().toString()
         );
         order.setReservedAmount(BigDecimal.ZERO);
+    }
+
+    private boolean cancelThroughConfiguredMatchingPath(Order order) {
+        Optional<MatchingWorkerLifecycleService.MatchingWorkerOwnerContext> context = workerContext(order);
+        if (context.isEmpty()) {
+            return matchingEngine.cancelOrder(order);
+        }
+        MatchingWorkerLifecycleService.MatchingWorkerOwnerContext owner = context.get();
+        MatchingResult result = matchingWorkerExecutionService.cancel(order, owner.ownerId(), owner.ownerEpoch());
+        return result.getAffectedOrders() != null && !result.getAffectedOrders().isEmpty();
+    }
+
+    private Optional<MatchingWorkerLifecycleService.MatchingWorkerOwnerContext> workerContext(Order order) {
+        if (matchingWorkerLifecycleService == null || matchingWorkerExecutionService == null
+                || order == null || order.getSymbol() == null) {
+            return Optional.empty();
+        }
+        return matchingWorkerLifecycleService.routingOwnerContext(order.getSymbol().code());
     }
 }

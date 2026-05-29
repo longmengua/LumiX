@@ -28,6 +28,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -101,6 +102,8 @@ public class OrderService {
     private final IdempotencyService idempotencyService;
     private OperationalMetricsService operationalMetricsService;
     private TurnoverService turnoverService;
+    private MatchingWorkerLifecycleService matchingWorkerLifecycleService;
+    private MatchingWorkerExecutionService matchingWorkerExecutionService;
 
     @Autowired(required = false)
     public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
@@ -110,6 +113,16 @@ public class OrderService {
     @Autowired(required = false)
     public void setTurnoverService(TurnoverService turnoverService) {
         this.turnoverService = turnoverService;
+    }
+
+    @Autowired(required = false)
+    public void setMatchingWorkerLifecycleService(MatchingWorkerLifecycleService matchingWorkerLifecycleService) {
+        this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
+    }
+
+    @Autowired(required = false)
+    public void setMatchingWorkerExecutionService(MatchingWorkerExecutionService matchingWorkerExecutionService) {
+        this.matchingWorkerExecutionService = matchingWorkerExecutionService;
     }
 
     /**
@@ -130,8 +143,8 @@ public class OrderService {
     public void processOrder(Order order) {
         publisher.publish(OrderLifecycleEvent.accepted(order));
 
-        // 1) 送入撮合引擎，取得撮合結果
-        MatchingResult result = matchingEngine.submit(order);
+        // 1) 送入撮合引擎，取得撮合結果。Worker ready 時改走 lease-fenced command path。
+        MatchingResult result = submitToConfiguredMatchingPath(order);
 
         // 本次撮合產生的成交事件
         List<TradeExecuted> trades = result.getTrades();
@@ -257,6 +270,23 @@ public class OrderService {
         );
 
         // 資金費與強平由 FundingRateService / LiquidationService 根據標記價獨立觸發。
+    }
+
+    private MatchingResult submitToConfiguredMatchingPath(Order order) {
+        Optional<MatchingWorkerLifecycleService.MatchingWorkerOwnerContext> context = workerContext(order);
+        if (context.isEmpty()) {
+            return matchingEngine.submit(order);
+        }
+        MatchingWorkerLifecycleService.MatchingWorkerOwnerContext owner = context.get();
+        return matchingWorkerExecutionService.submit(order, owner.ownerId(), owner.ownerEpoch());
+    }
+
+    private Optional<MatchingWorkerLifecycleService.MatchingWorkerOwnerContext> workerContext(Order order) {
+        if (matchingWorkerLifecycleService == null || matchingWorkerExecutionService == null
+                || order == null || order.getSymbol() == null) {
+            return Optional.empty();
+        }
+        return matchingWorkerLifecycleService.routingOwnerContext(order.getSymbol().code());
     }
 
     private void reconcileOrderReserve(Order order) {

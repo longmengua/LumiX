@@ -3,7 +3,7 @@
 應用服務層，放跨 use case 共用的業務協調。
 
 目前重點：
-- `OrderService`：下單後撮合、持倉、ledger、market data、事件發布。
+- `OrderService`：下單後撮合、持倉、ledger、market data、事件發布；symbol 有 ready worker context 時 submit 會走 matching worker execution path。
 - `RiskService`：pre-trade checks、reserve、amend reserve reconciliation。
 - `WalletLedgerService` / `MarginService`：帳務 posting、入出金狀態機、margin transfer。
 - `WalletLedgerReplayService`：由 durable ledger replay 帳戶狀態，並提供 account/replay/delta 結構化 comparison。
@@ -16,6 +16,7 @@
 - `LiquidationService` / `LiquidationScanService` / `InsuranceFundService` / `AdlRankingService` / `AdlDeleveragingPlanner`：強平掃描、decision audit、營運控制、保險基金與 deterministic ADL ranking/planning baseline。
 - `MatchingRecoveryService`：撮合 worker startup/takeover recovery，串接 matching snapshot、command log replay 與 validation report。
 - `MatchingSequencerLeaseService`：撮合 worker per-symbol lease、renew、release 與 takeover epoch baseline。
+- `MatchingWorkerCommandRouter` / `MatchingWorkerExecutionService` / `MatchingWorkerLifecycleService` / `MatchingWorkerStartupListener`：撮合 worker owner/epoch guard、fenced command append、已落 log command execution、lease acquire + recovery startup、runtime startup hook、renewal/readiness baseline。
 - `OutboxService`：retry、DLQ replay、manual compensation baseline。
 - `MarketDataService`：ticker、trade tape、kline、depth delta。
 

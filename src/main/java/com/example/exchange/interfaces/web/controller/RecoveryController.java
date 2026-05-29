@@ -8,6 +8,7 @@ import com.example.exchange.application.service.OutboxService;
 import com.example.exchange.application.service.ReconciliationIssueWorkflowService;
 import com.example.exchange.application.service.ReconciliationReportService;
 import com.example.exchange.application.service.ReconciliationService;
+import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
@@ -18,6 +19,7 @@ import com.example.exchange.domain.model.entity.DlqEvent;
 import com.example.exchange.domain.model.entity.OutboxEvent;
 import com.example.exchange.domain.model.entity.ReconciliationReportIssue;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.MatchingWorkerOwnerContextResponse;
 import com.example.exchange.interfaces.web.dto.ReconciliationIssueActionRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +39,7 @@ public class RecoveryController {
     private final ReconciliationService reconciliationService;
     private final ReconciliationReportService reconciliationReportService;
     private final ReconciliationIssueWorkflowService reconciliationIssueWorkflowService;
+    private final MatchingWorkerLifecycleService matchingWorkerLifecycleService;
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final OutboxService outboxService;
 
@@ -45,6 +48,7 @@ public class RecoveryController {
             ReconciliationService reconciliationService,
             ReconciliationReportService reconciliationReportService,
             ReconciliationIssueWorkflowService reconciliationIssueWorkflowService,
+            MatchingWorkerLifecycleService matchingWorkerLifecycleService,
             WalletLedgerReplayService walletLedgerReplayService,
             OutboxService outboxService
     ) {
@@ -52,6 +56,7 @@ public class RecoveryController {
         this.reconciliationService = reconciliationService;
         this.reconciliationReportService = reconciliationReportService;
         this.reconciliationIssueWorkflowService = reconciliationIssueWorkflowService;
+        this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.outboxService = outboxService;
     }
@@ -99,6 +104,20 @@ public class RecoveryController {
             @RequestParam(defaultValue = "USDT") String asset
     ) {
         return ApiResponse.ok(walletLedgerReplayService.compareAccountDetails(uid, asset));
+    }
+
+    @GetMapping("/matching-worker/contexts")
+    public ApiResponse<List<MatchingWorkerOwnerContextResponse>> matchingWorkerContexts() {
+        return ApiResponse.ok(matchingWorkerLifecycleService.ownerContexts().values().stream()
+                .map(MatchingWorkerOwnerContextResponse::from)
+                .toList());
+    }
+
+    @GetMapping("/matching-worker/contexts/{symbol}")
+    public ApiResponse<MatchingWorkerOwnerContextResponse> matchingWorkerContext(@PathVariable String symbol) {
+        return ApiResponse.ok(matchingWorkerLifecycleService.ownerContext(symbol)
+                .map(MatchingWorkerOwnerContextResponse::from)
+                .orElse(null));
     }
 
     @GetMapping("/reconcile/issues/open")

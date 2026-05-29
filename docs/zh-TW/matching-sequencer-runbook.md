@@ -35,18 +35,45 @@ Production worker 應從強一致儲存取得 per-symbol lease。
 - 使用 `MatchingSequencerLeaseService.renew(...)` 延長 ownership，並保存 owner 觀察到的 command/event checkpoint。
 - planned handoff 時使用 `MatchingSequencerLeaseService.release(...)` 釋放 ownership。
 - live command write 前使用 `MatchingSequencerLeaseService.requireWritable(symbol, ownerId, epoch)` 驗證 owner 仍可寫。
+- Worker startup 應使用 `MatchingWorkerLifecycleService.startConfiguredSymbols()`，取得 configured symbol lease、執行 recovery，並暴露 owner/epoch context。
+- Worker renewal 應使用 `MatchingWorkerLifecycleService.renewOwnedSymbols()` 延長 lease，並保存觀察到的 command/event offset。
+- Worker command intake 應導到 `MatchingWorkerExecutionService`，由它先 append lease-fenced command，再套用到 matching engine。
 - 每次 command write 都必須帶目前 `epoch`。
 - storage 必須拒絕 stale epoch 的寫入。
 - backing store 不可用時，worker 必須停止續租，並且不能再接受新 command。
 - lease TTL 應長於正常 command processing interval，且短於營運 failover target。
 
+## Worker 設定
+
+Production worker ownership 由 `matching-worker` properties 設定：
+
+| Property | 環境變數 | 意義 |
+| --- | --- | --- |
+| `matching-worker.enabled` | `MATCHING_WORKER_ENABLED` | 是否啟用獨立 worker command intake。預設 `false`。 |
+| `matching-worker.owner-id` | `MATCHING_WORKER_OWNER_ID` | 唯一 worker owner id，通常使用 pod / instance / process identity。 |
+| `matching-worker.symbols` | `MATCHING_WORKER_SYMBOLS` | 此 worker 應持有的 symbols，逗號分隔，例如 `BTCUSDT,ETHUSDT`。 |
+| `matching-worker.lease-ttl-ms` | `MATCHING_WORKER_LEASE_TTL_MS` | Lease TTL。預設 `30000`。 |
+| `matching-worker.renew-interval-ms` | `MATCHING_WORKER_RENEW_INTERVAL_MS` | Lease renew interval。預設 `10000`。 |
+| `matching-worker.fence-legacy-routing` | `MATCHING_WORKER_FENCE_LEGACY_ROUTING` | configured symbol 尚未 worker-ready 時，拒絕 fallback 到舊 in-process path。預設 `false`。 |
+
+在 command routing 指向 `MatchingWorkerExecutionService`，且舊 REST / in-process path 對同一批 symbol 已被 halt 或 fencing 前，不要啟用 worker command intake。
+
+Submit、cancel、amend 在 symbol 有 ready owner context 時已會走 worker execution path。Cancel-replace 保留 accounting-safe cancel + replacement-submit flow；ready worker context 下兩段都會是 fenced worker command。
+
+Readiness inspection：
+- `GET /api/recovery/matching-worker/contexts`
+- `GET /api/recovery/matching-worker/contexts/{symbol}`
+
 ## 啟動流程
 
-1. 取得 symbol lease，拿到新的 `epoch`。
-2. 對該 symbol 呼叫 `MatchingRecoveryService.recoverSymbol(symbol)`。
-3. recovery service 會載入最新 matching snapshot、replay checkpoint 之後的 command log、執行 replay validation，並保存恢復後 snapshot 與 validation report。
-4. recovery 回傳 valid report 後，才發布該 symbol readiness。
-5. 開始接 live command。
+1. 呼叫 `MatchingWorkerLifecycleService.startConfiguredSymbols()` 或 `startSymbol(symbol)`。
+2. 取得 symbol lease，拿到新的 `epoch`。
+3. 對該 symbol 呼叫 `MatchingRecoveryService.recoverSymbol(symbol)`。
+4. recovery service 會載入最新 matching snapshot、replay checkpoint 之後的 command log、執行 replay validation，並保存恢復後 snapshot 與 validation report。
+5. recovery 回傳 valid report 後，才發布該 symbol readiness。
+6. 開始接 live command。
+
+當 `matching-worker.enabled=true` 時，`MatchingWorkerStartupListener` 會在 Spring application ready 後呼叫 `startConfiguredSymbols()`。
 
 ## Planned Failover
 
@@ -55,6 +82,17 @@ Production worker 應從強一致儲存取得 per-symbol lease。
 3. 持久化最後 snapshot 與 checkpoint。
 4. 釋放 lease，或讓新 owner 取得更高 `epoch`。
 5. 新 owner 依啟動 recovery flow 接手。
+
+## Deployment Switch Sequence
+
+1. 先以 `MATCHING_WORKER_ENABLED=false` 部署，確認 legacy routing smoke tests 仍通過。
+2. 為小範圍 symbol 設定 `MATCHING_WORKER_OWNER_ID` 與 `MATCHING_WORKER_SYMBOLS`。
+3. 啟用 `MATCHING_WORKER_ENABLED=true`，但先維持 `MATCHING_WORKER_FENCE_LEGACY_ROUTING=false`。
+4. 查 `GET /api/recovery/matching-worker/contexts/{symbol}`，確認 owner id、epoch、lease expiry 都存在。
+5. 對該 symbol 執行 submit、cancel、amend、cancel-replace 測試單，確認 matching command log 都帶 worker owner/epoch。
+6. 對同一批 symbol 啟用 `MATCHING_WORKER_FENCE_LEGACY_ROUTING=true`，讓 missing readiness 直接拒絕，而不是 fallback 到舊 in-process writer。
+7. 監控 lease renewal、command/event offset 推進、replay validation report、order/accounting reconciliation。
+8. Rollback 時先設 `MATCHING_WORKER_FENCE_LEGACY_ROUTING=false`，再設 `MATCHING_WORKER_ENABLED=false`；確認沒有 active worker 持有 symbol 後，才把流量導回舊路徑。
 
 ## Unplanned Failover
 
@@ -75,4 +113,4 @@ Production worker 應從強一致儲存取得 per-symbol lease。
 
 ## 目前缺口
 
-目前 matching core 已有 durable command/event log、offset checkpoint、snapshot、validation report、recovery orchestration、lease lifecycle、service-level write guard 與 owner epoch audit 欄位。Production worker routing 仍需呼叫 guard。
+目前 matching core 已有 durable command/event log、offset checkpoint、snapshot、validation report、recovery orchestration、lease lifecycle、service-level write guard、owner epoch audit 欄位、worker startup / renewal readiness lifecycle、runtime startup hook、readiness inspection endpoints、submit、cancel、amend、cancel-replace accounting-safe cancel + replacement-submit orchestration 的 worker execution / routing，以及明確 legacy-routing fence。剩餘缺口是文件化 production deployment switch sequence 並執行 smoke verification。

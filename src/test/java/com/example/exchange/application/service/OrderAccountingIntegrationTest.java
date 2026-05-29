@@ -18,22 +18,30 @@ import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.Symbol;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
+import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.dto.MatchingSequencerLease;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.EventStore;
 import com.example.exchange.domain.repository.IdempotencyRepository;
 import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.PositionRepository;
+import com.example.exchange.domain.repository.MatchingSequencerLeaseStore;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
 import com.example.exchange.infra.config.RiskControlsProperties;
+import com.example.exchange.infra.matching.InMemoryMatchingCommandLog;
 import com.example.exchange.infra.matching.InMemoryMatchingEngine;
+import com.example.exchange.infra.matching.InMemoryMatchingEventLog;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -41,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -600,6 +609,98 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("worker ready 時 cancel-replace 會經由 fenced cancel + submit 完成帳務安全流程")
+    /**
+     * 流程：建立 ready worker owner context -> 原單與 cancel-replace 都走 worker execution ->
+     * 驗證 command log 保留 owner/epoch，且帳務仍是釋放原 reserve 後預凍 replacement。
+     */
+    void workerReadyCancelReplaceUsesFencedCancelAndSubmitAccountingFlow() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingCommandLog commandLog = new InMemoryMatchingCommandLog();
+        InMemoryMatchingEventLog eventLog = new InMemoryMatchingEventLog();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine(commandLog, eventLog);
+        MatchingSequencerLeaseService leaseService =
+                new MatchingSequencerLeaseService(new TestLeaseStore(), new MutableClock(Instant.parse("2026-05-29T00:00:00Z")));
+        MatchingSequencerLease lease = leaseService.acquire("BTCUSDT", "worker-a", Duration.ofSeconds(30)).orElseThrow();
+        MatchingWorkerCommandRouter router = new MatchingWorkerCommandRouter(leaseService, commandLog, eventLog);
+        MatchingWorkerExecutionService workerExecution = new MatchingWorkerExecutionService(router, matchingEngine);
+        MatchingWorkerLifecycleService workerLifecycle = readyWorkerLifecycle("BTCUSDT", lease);
+
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        orderService.setMatchingWorkerLifecycleService(workerLifecycle);
+        orderService.setMatchingWorkerExecutionService(workerExecution);
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+        CancelOrderUseCase cancelOrderUseCase = new CancelOrderUseCase(
+                orderRepo,
+                symbolRepo,
+                matchingEngine,
+                walletLedgerService,
+                marketDataService,
+                published::add
+        );
+        cancelOrderUseCase.setMatchingWorkerLifecycleService(workerLifecycle);
+        cancelOrderUseCase.setMatchingWorkerExecutionService(workerExecution);
+        CancelReplaceOrderUseCase cancelReplaceOrderUseCase = new CancelReplaceOrderUseCase(
+                orderRepo,
+                cancelOrderUseCase,
+                placeOrderUseCase
+        );
+
+        walletLedgerService.deposit(23, "USDT", new BigDecimal("1000"), "deposit-23");
+        Order original = placeOrderUseCase.place(command(23, OrderSide.BUY, "100.00", "1.000"));
+
+        cancelReplaceOrderUseCase.handle(new CancelReplaceOrderCommand(
+                original.getId(),
+                23,
+                new BigDecimal("101.00"),
+                new BigDecimal("0.750"),
+                "replace-worker-23"
+        ));
+
+        assertThat(commandLog.listAll("BTCUSDT"))
+                .extracting(entry -> entry.type())
+                .containsExactly(MatchingCommandType.SUBMIT, MatchingCommandType.CANCEL, MatchingCommandType.SUBMIT);
+        assertThat(commandLog.listAll("BTCUSDT"))
+                .allSatisfy(entry -> {
+                    assertThat(entry.ownerId()).isEqualTo("worker-a");
+                    assertThat(entry.ownerEpoch()).isEqualTo(lease.epoch());
+                });
+        Order replacement = orderRepo.findAllOrders(23L, "BTCUSDT").stream()
+                .filter(order -> !order.getId().equals(original.getId()))
+                .findFirst()
+                .orElseThrow();
+        assertThat(orderRepo.findById(original.getId()).orElseThrow().getStatus()).isEqualTo(Order.Status.CANCELED);
+        assertThat(replacement.getStatus()).isEqualTo(Order.Status.NEW);
+        assertThat(accountRepo.findByUid(23).orElseThrow().crossOrderHold())
+                .isEqualByComparingTo(replacement.getReservedAmount());
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
     @DisplayName("cancel-on-disconnect 會撤掉該 WebSocket 註冊範圍內的 open orders")
     /**
      * 流程：掛單後註冊 connection/symbol -> 模擬連線斷開 -> 驗證註冊清除、訂單取消與 reserve 釋放。
@@ -909,6 +1010,136 @@ class OrderAccountingIntegrationTest {
          */
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
+        }
+    }
+
+    private static MatchingWorkerLifecycleService readyWorkerLifecycle(String symbolCode, MatchingSequencerLease lease) {
+        return new MatchingWorkerLifecycleService(null, null, null, null, null) {
+            @Override
+            public Optional<MatchingWorkerOwnerContext> ownerContext(String requestedSymbol) {
+                if (!symbolCode.equalsIgnoreCase(requestedSymbol)) {
+                    return Optional.empty();
+                }
+                return Optional.of(new MatchingWorkerOwnerContext(
+                        symbolCode,
+                        lease.ownerId(),
+                        lease.epoch(),
+                        lease.expiresAt(),
+                        lease.commandOffset(),
+                        lease.eventOffset(),
+                        lease.updatedAt()
+                ));
+            }
+        };
+    }
+
+    private static final class TestLeaseStore implements MatchingSequencerLeaseStore {
+        private final Map<String, MatchingSequencerLease> leases = new ConcurrentHashMap<>();
+
+        @Override
+        /**
+         * 測試用 acquire：同 owner 沿用 epoch，其他 owner 只能在過期後 takeover。
+         */
+        public Optional<MatchingSequencerLease> acquire(String symbolCode, String ownerId, Duration ttl, Instant now) {
+            String symbol = normalize(symbolCode);
+            MatchingSequencerLease current = leases.get(symbol);
+            if (current != null && !current.ownerId().equals(ownerId) && current.expiresAt().isAfter(now)) {
+                return Optional.empty();
+            }
+            long nextEpoch = current == null
+                    ? 1L
+                    : current.ownerId().equals(ownerId) ? current.epoch() : current.epoch() + 1;
+            MatchingSequencerLease acquired = new MatchingSequencerLease(
+                    symbol,
+                    ownerId,
+                    nextEpoch,
+                    now.plus(ttl),
+                    current == null ? 0L : current.commandOffset(),
+                    current == null ? 0L : current.eventOffset(),
+                    now
+            );
+            leases.put(symbol, acquired);
+            return Optional.of(acquired);
+        }
+
+        @Override
+        /**
+         * 續租不是此測試重點；保留實作讓 store 符合 contract。
+         */
+        public Optional<MatchingSequencerLease> renew(
+                String symbolCode,
+                String ownerId,
+                long epoch,
+                Duration ttl,
+                long commandOffset,
+                long eventOffset,
+                Instant now
+        ) {
+            String symbol = normalize(symbolCode);
+            MatchingSequencerLease current = leases.get(symbol);
+            if (current == null || !current.ownerId().equals(ownerId) || current.epoch() != epoch) {
+                return Optional.empty();
+            }
+            MatchingSequencerLease renewed = new MatchingSequencerLease(
+                    symbol,
+                    ownerId,
+                    epoch,
+                    now.plus(ttl),
+                    commandOffset,
+                    eventOffset,
+                    now
+            );
+            leases.put(symbol, renewed);
+            return Optional.of(renewed);
+        }
+
+        @Override
+        /**
+         * release 成功時移除 lease，用於維持測試 store 的完整 contract。
+         */
+        public boolean release(String symbolCode, String ownerId, long epoch, Instant now) {
+            String symbol = normalize(symbolCode);
+            MatchingSequencerLease current = leases.get(symbol);
+            if (current == null || !current.ownerId().equals(ownerId) || current.epoch() != epoch) {
+                return false;
+            }
+            leases.remove(symbol);
+            return true;
+        }
+
+        @Override
+        /**
+         * 回傳目前 symbol lease，供 `requireWritable` 驗證 owner/epoch。
+         */
+        public Optional<MatchingSequencerLease> current(String symbolCode) {
+            return Optional.ofNullable(leases.get(normalize(symbolCode)));
+        }
+    }
+
+    private static String normalize(String symbolCode) {
+        return symbolCode == null ? "" : symbolCode.trim().toUpperCase();
+    }
+
+    private static final class MutableClock extends Clock {
+        private final Instant instant;
+
+        private MutableClock(Instant instant) {
+            this.instant = instant;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return ZoneId.of("UTC");
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return this;
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
         }
     }
 

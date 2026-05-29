@@ -35,18 +35,45 @@ Rules:
 - Use `MatchingSequencerLeaseService.renew(...)` to extend ownership and persist observed command/event checkpoints.
 - Use `MatchingSequencerLeaseService.release(...)` during planned handoff.
 - Use `MatchingSequencerLeaseService.requireWritable(symbol, ownerId, epoch)` before live command writes.
+- Worker startup should use `MatchingWorkerLifecycleService.startConfiguredSymbols()` to acquire configured leases, run recovery, and expose the owner/epoch context.
+- Worker renewal should use `MatchingWorkerLifecycleService.renewOwnedSymbols()` to extend leases and persist observed command/event offsets.
+- Worker command intake should route through `MatchingWorkerExecutionService`, which appends a lease-fenced command before applying it to the matching engine.
 - Every command write must include the current `epoch`.
 - Storage must reject writes from stale epochs.
 - Lease renewal must stop before the worker accepts new commands if the backing store is unreachable.
 - Lease TTL must be longer than the normal command processing interval and shorter than the operational failover target.
 
+## Worker Configuration
+
+Production worker ownership is configured by the `matching-worker` properties:
+
+| Property | Environment variable | Meaning |
+| --- | --- | --- |
+| `matching-worker.enabled` | `MATCHING_WORKER_ENABLED` | Enables independent worker command intake. Default is `false`. |
+| `matching-worker.owner-id` | `MATCHING_WORKER_OWNER_ID` | Unique worker owner id, usually pod / instance / process identity. |
+| `matching-worker.symbols` | `MATCHING_WORKER_SYMBOLS` | Comma-separated symbols this worker should own, for example `BTCUSDT,ETHUSDT`. |
+| `matching-worker.lease-ttl-ms` | `MATCHING_WORKER_LEASE_TTL_MS` | Lease TTL. Default `30000`. |
+| `matching-worker.renew-interval-ms` | `MATCHING_WORKER_RENEW_INTERVAL_MS` | Lease renewal interval. Default `10000`. |
+| `matching-worker.fence-legacy-routing` | `MATCHING_WORKER_FENCE_LEGACY_ROUTING` | Rejects fallback to the old in-process path for configured symbols that are not worker-ready. Default `false`. |
+
+Do not enable worker command intake until command routing is pointed at `MatchingWorkerExecutionService` and the old REST/in-process path is fenced or halted for the same symbols.
+
+Submit, cancel, and amend already use the worker execution path when a ready owner context exists for the symbol. Cancel-replace keeps the accounting-safe cancel + replacement-submit flow; under a ready worker context both legs are fenced worker commands.
+
+Readiness inspection:
+- `GET /api/recovery/matching-worker/contexts`
+- `GET /api/recovery/matching-worker/contexts/{symbol}`
+
 ## Startup
 
-1. Acquire the symbol lease and receive a new `epoch`.
-2. Call `MatchingRecoveryService.recoverSymbol(symbol)` for that symbol.
-3. The recovery service loads the latest matching snapshot, replays command log entries after the checkpoint, validates the replay, and persists the recovered snapshot plus validation report.
-4. Publish a readiness signal for that symbol only after recovery returns a valid report.
-5. Start accepting live commands for the symbol.
+1. Call `MatchingWorkerLifecycleService.startConfiguredSymbols()` or `startSymbol(symbol)`.
+2. Acquire the symbol lease and receive a new `epoch`.
+3. Call `MatchingRecoveryService.recoverSymbol(symbol)` for that symbol.
+4. The recovery service loads the latest matching snapshot, replays command log entries after the checkpoint, validates the replay, and persists the recovered snapshot plus validation report.
+5. Publish a readiness signal for that symbol only after recovery returns a valid report.
+6. Start accepting live commands for the symbol.
+
+When `matching-worker.enabled=true`, `MatchingWorkerStartupListener` calls `startConfiguredSymbols()` after Spring reports application readiness.
 
 ## Planned Failover
 
@@ -55,6 +82,17 @@ Rules:
 3. Persist a final snapshot and checkpoint.
 4. Release the lease or let the new owner acquire a higher `epoch`.
 5. Start the new owner with the startup recovery flow.
+
+## Deployment Switch Sequence
+
+1. Deploy with `MATCHING_WORKER_ENABLED=false` and confirm legacy routing still passes smoke tests.
+2. Configure `MATCHING_WORKER_OWNER_ID` and `MATCHING_WORKER_SYMBOLS` for a small symbol set.
+3. Enable `MATCHING_WORKER_ENABLED=true` while keeping `MATCHING_WORKER_FENCE_LEGACY_ROUTING=false`.
+4. Check `GET /api/recovery/matching-worker/contexts/{symbol}` and confirm owner id, epoch, and lease expiry are present.
+5. Submit, cancel, amend, and cancel-replace a test order for the symbol; verify matching command logs carry the worker owner/epoch.
+6. Enable `MATCHING_WORKER_FENCE_LEGACY_ROUTING=true` for the same symbols so missing readiness rejects instead of falling back to the legacy in-process writer.
+7. Monitor lease renewal, command/event offset movement, replay validation reports, and order/accounting reconciliation.
+8. Roll back by setting `MATCHING_WORKER_FENCE_LEGACY_ROUTING=false`, then `MATCHING_WORKER_ENABLED=false`, and route traffic back only after confirming no active worker owns the symbol.
 
 ## Unplanned Failover
 
@@ -75,4 +113,4 @@ Rules:
 
 ## Current Gap
 
-The current matching core now has durable command/event log, offset checkpoint, snapshot, validation report, recovery orchestration, lease lifecycle, service-level write guard, and owner epoch audit fields. Production worker routing still needs to call the guard.
+The current matching core now has durable command/event log, offset checkpoint, snapshot, validation report, recovery orchestration, lease lifecycle, service-level write guard, owner epoch audit fields, worker startup/renewal readiness lifecycle, runtime startup hook, readiness inspection endpoints, worker execution/routing for submit, cancel, amend, and cancel-replace's accounting-safe cancel + replacement-submit orchestration, plus an explicit legacy-routing fence. The remaining gap is documenting the production deployment switch sequence and running smoke verification.

@@ -20,6 +20,15 @@ risk-controls:
   liquidation-manual-review: ${RISK_CONTROLS_LIQUIDATION_MANUAL_REVIEW:false}
   market-maker-hedge-execution-halt: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT:false}
   suspended-symbols: ${RISK_CONTROLS_SUSPENDED_SYMBOLS:}
+
+matching-worker:
+  enabled: ${MATCHING_WORKER_ENABLED:false}
+  owner-id: ${MATCHING_WORKER_OWNER_ID:${HOSTNAME:unknown-worker}}
+  symbols: ${MATCHING_WORKER_SYMBOLS:}
+  lease-ttl-ms: ${MATCHING_WORKER_LEASE_TTL_MS:30000}
+  renew-interval-ms: ${MATCHING_WORKER_RENEW_INTERVAL_MS:10000}
+  fence-legacy-routing: ${MATCHING_WORKER_FENCE_LEGACY_ROUTING:false}
+
 bonus-credit:
   expiry-enabled: ${BONUS_CREDIT_EXPIRY_ENABLED:false}
   expiry-fixed-delay-ms: ${BONUS_CREDIT_EXPIRY_FIXED_DELAY_MS:300000}
