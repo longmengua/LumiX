@@ -87,6 +87,29 @@ class TurnoverServiceTest {
         assertThat(summary.notional()).isEqualByComparingTo("10.000");
     }
 
+    @Test
+    @DisplayName("summarize 可依 symbol/strategy/marketMaker/match 維度查詢營運流水")
+    void summarizeFiltersByOperationalDimensions() {
+        MemTurnoverStore store = new MemTurnoverStore();
+        TurnoverService service = new TurnoverService(store);
+
+        // 場景：同一 uid 有多個產品和策略，報表查詢只聚合指定活動維度。
+        store.append(record(61, "BTCUSDT", "campaign-a", "mm-1", "match-a", "1.5", "100"));
+        store.append(record(61, "BTCUSDT", "campaign-b", "mm-1", "match-a", "2", "200"));
+        store.append(record(61, "ETHUSDT", "campaign-a", "mm-2", "match-b", "3", "300"));
+        store.append(record(62, "BTCUSDT", "campaign-a", "mm-1", "match-a", "4", "400"));
+
+        TurnoverSummary summary = service.summarize(61, "BTCUSDT", "campaign-a", "mm-1", "match-a");
+
+        assertThat(summary.uid()).isEqualTo(61);
+        assertThat(summary.symbol()).isEqualTo("BTCUSDT");
+        assertThat(summary.strategyId()).isEqualTo("campaign-a");
+        assertThat(summary.marketMakerId()).isEqualTo("mm-1");
+        assertThat(summary.tradeCount()).isEqualTo(1);
+        assertThat(summary.quantity()).isEqualByComparingTo("1.5");
+        assertThat(summary.notional()).isEqualByComparingTo("150.0");
+    }
+
     private static TradeExecuted trade(long uid, Symbol symbol, UUID orderId, String matchId, String price) {
         return new TradeExecuted(
                 uid,
@@ -99,6 +122,35 @@ class TurnoverServiceTest {
                 UUID.randomUUID(),
                 matchId,
                 false
+        );
+    }
+
+    private static TurnoverRecord record(
+            long uid,
+            String symbol,
+            String strategyId,
+            String marketMakerId,
+            String matchId,
+            String quantity,
+            String price
+    ) {
+        BigDecimal qty = new BigDecimal(quantity);
+        BigDecimal px = new BigDecimal(price);
+        return new TurnoverRecord(
+                UUID.randomUUID(),
+                uid,
+                String.valueOf(uid),
+                symbol,
+                strategyId,
+                marketMakerId,
+                UUID.randomUUID(),
+                matchId,
+                Math.abs((uid + symbol + strategyId + matchId).hashCode()),
+                qty,
+                px,
+                qty.multiply(px),
+                Instant.parse("2026-05-27T01:02:03Z"),
+                Instant.parse("2026-05-27T01:02:04Z")
         );
     }
 

@@ -8,11 +8,13 @@ import com.example.exchange.application.service.AccountRiskSnapshotService;
 import com.example.exchange.application.service.AccountRiskService;
 import com.example.exchange.application.service.BonusCreditService;
 import com.example.exchange.application.service.MarginService;
+import com.example.exchange.application.service.TurnoverService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
+import com.example.exchange.domain.model.dto.TurnoverSummary;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
@@ -41,6 +43,7 @@ public class MarginController {
     private final AccountRiskSnapshotService accountRiskSnapshotService;
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final BonusCreditService bonusCreditService;
+    private final TurnoverService turnoverService;
 
     public MarginController(
             TransferMarginUseCase usecase,
@@ -48,7 +51,8 @@ public class MarginController {
             AccountRiskService accountRiskService,
             AccountRiskSnapshotService accountRiskSnapshotService,
             WalletLedgerReplayService walletLedgerReplayService,
-            BonusCreditService bonusCreditService
+            BonusCreditService bonusCreditService,
+            TurnoverService turnoverService
     ) {
         this.usecase = usecase;
         this.marginService = marginService;
@@ -56,6 +60,7 @@ public class MarginController {
         this.accountRiskSnapshotService = accountRiskSnapshotService;
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.bonusCreditService = bonusCreditService;
+        this.turnoverService = turnoverService;
     }
 
     @PostMapping("/deposit")
@@ -111,6 +116,17 @@ public class MarginController {
                 request.amount(),
                 request.refId()
         ));
+    }
+
+    @GetMapping("/turnover/summary")
+    public ApiResponse<TurnoverSummary> turnoverSummary(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol,
+            @RequestParam(required = false) String strategyId,
+            @RequestParam(required = false) String marketMakerId,
+            @RequestParam(required = false) String matchId
+    ) {
+        return ApiResponse.ok(turnoverService.summarize(uid, symbol, strategyId, marketMakerId, matchId));
     }
 
     @GetMapping("/ledger/replay")

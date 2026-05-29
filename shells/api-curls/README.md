@@ -83,6 +83,7 @@ User WebSocket:
 ./shells/api-curls/exchange/margin-transfers-get.sh
 ./shells/api-curls/exchange/margin-bonus-credit-report-get.sh
 ./shells/api-curls/exchange/margin-bonus-credit-clawback-post.sh
+./shells/api-curls/exchange/margin-turnover-summary-get.sh
 ./shells/api-curls/exchange/margin-risk-get.sh
 ./shells/api-curls/exchange/margin-risk-snapshot-post.sh
 ./shells/api-curls/exchange/margin-risk-snapshots-post.sh

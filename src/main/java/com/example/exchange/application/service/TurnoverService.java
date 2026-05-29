@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +53,37 @@ public class TurnoverService {
         return summarize(uid, turnoverStore.findByMatchId(matchId));
     }
 
+    public TurnoverSummary summarize(
+            long uid,
+            String symbol,
+            String strategyId,
+            String marketMakerId,
+            String matchId
+    ) {
+        List<TurnoverRecord> records = normalize(matchId) == null
+                ? turnoverStore.findByUid(uid)
+                : turnoverStore.findByMatchId(matchId);
+        String normalizedSymbol = normalize(symbol);
+        String normalizedStrategyId = normalize(strategyId);
+        String normalizedMarketMakerId = normalize(marketMakerId);
+        List<TurnoverRecord> filtered = records.stream()
+                .filter(record -> record.uid() == uid)
+                .filter(record -> normalizedSymbol == null || Objects.equals(normalizedSymbol, normalize(record.symbol())))
+                .filter(record -> normalizedStrategyId == null || Objects.equals(normalizedStrategyId, normalize(record.strategyId())))
+                .filter(record -> normalizedMarketMakerId == null || Objects.equals(normalizedMarketMakerId, normalize(record.marketMakerId())))
+                .toList();
+        TurnoverSummary summary = summarize(uid, filtered);
+        return new TurnoverSummary(
+                uid,
+                normalizedSymbol,
+                normalizedStrategyId,
+                normalizedMarketMakerId,
+                summary.tradeCount(),
+                summary.quantity(),
+                summary.notional()
+        );
+    }
+
     private static TurnoverSummary summarize(long uid, List<TurnoverRecord> records) {
         BigDecimal quantity = BigDecimal.ZERO;
         BigDecimal notional = BigDecimal.ZERO;
@@ -63,5 +95,9 @@ public class TurnoverService {
             notional = notional.add(record.notional());
         }
         return new TurnoverSummary(uid, null, null, null, count, quantity, notional);
+    }
+
+    private static String normalize(String value) {
+        return value == null || value.isBlank() ? null : value.trim();
     }
 }
