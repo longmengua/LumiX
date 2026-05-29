@@ -51,6 +51,7 @@ public class InsuranceFundService {
             BigDecimal amount
     ) {
         if (amount == null || amount.signum() <= 0) return;
+        if (hasAdlEntry(liquidationId)) return;
         adlQueue.add(new AdlQueueEntry(
                 liquidationId,
                 uid,
@@ -137,6 +138,14 @@ public class InsuranceFundService {
             }
         }
         throw new IllegalArgumentException("ADL queue entry not found: " + liquidationId);
+    }
+
+    private boolean hasAdlEntry(String liquidationId) {
+        if (liquidationId == null || liquidationId.isBlank()) {
+            throw new IllegalArgumentException("liquidationId must not be blank");
+        }
+        return adlQueue.stream()
+                .anyMatch(entry -> liquidationId.trim().equals(entry.liquidationId()));
     }
 
     private static String requireOwner(String owner) {

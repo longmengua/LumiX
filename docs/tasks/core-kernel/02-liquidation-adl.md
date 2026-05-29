@@ -34,6 +34,7 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 - Added `AdlDeleveragingPlanner` to turn ranked ADL candidates into deterministic forced-deleveraging steps.
 - Added `AdlForcedExecutionService` first slice to consume ADL plans, force reduce selected positions, write realized-PnL and `adl_forced_loss` ledger postings, publish audit events, and persist durable execution summary/idempotency records.
 - Added `AdlQueueExecutionService` to consume queued liquidation shortfalls, filter opposite-side ADL candidates, plan reduction, execute through `ExecuteAdlUseCase`, enforce claimed-entry owner guard, and keep queue entries retryable when only partial coverage or no eligible candidates are available.
+- ADL queue enqueue is idempotent by `liquidationId`; duplicate liquidation retry/replay does not create another queue entry or clear an existing operator claim.
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary`, so ADL queue-to-execution routes through the same command transaction baseline as other core writes.
 
 Remaining work:

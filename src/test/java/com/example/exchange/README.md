@@ -23,6 +23,7 @@
 | `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |
 | `PolymarketOrderTrackingServiceTest` | CLOB cancel local idempotency replay、durable commandId replay/conflict、第一次 cancel 成功 marker、exception/5xx uncertain outcome、uncertain cancel reconcile resolution、sync/reconcile unchanged no-op replay、terminal status/matched-size downgrade guard。 |
 | `RiskSettlementServiceTest` | funding、liquidation、insurance fund、account reconciliation。 |
+| `InsuranceFundServiceTest` | ADL queue enqueue by liquidation id、duplicate replay、operator claim preservation。 |
 | `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
 | `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration。 |
 | `IdempotentHedgeVenueAdapterTest` | Hedge venue submit refId idempotency、payload conflict、pending/uncertain timeout duplicate blocking。 |
