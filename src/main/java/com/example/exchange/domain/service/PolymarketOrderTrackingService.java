@@ -46,6 +46,7 @@ public class PolymarketOrderTrackingService {
     private final PolymarketClobTradingClient clobTradingClient;
     private final PredictionPolymarketOrderRepository orderRepository;
     private final PolymarketClobCommandStore clobCommandStore;
+    private final PolymarketOrderStateMachine orderStateMachine;
 
     public List<PredictionPolymarketOrder> listLocalOrders() {
         return orderRepository.findAll();
@@ -204,7 +205,7 @@ public class PolymarketOrderTrackingService {
 
             if (status != null) {
                 nextStatus =
-                        status;
+                        orderStateMachine.resolveRemoteStatus(order.getStatus(), status);
             }
 
             BigDecimal sizeMatched =

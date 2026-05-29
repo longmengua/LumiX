@@ -100,7 +100,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
 - [ ] Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
 - [ ] Make CLOB place, cancel, sync, and reconcile commands idempotent.
-  - Baseline done: place can use `clientRequestId`; cancel can use durable `commandId`; cancel locally replays already-recorded cancel/uncertain statuses; reconcile can resolve uncertain cancel from remote CLOB status; sync/reconcile skip unchanged local writes. Remaining: full state-machine transitions.
+  - Baseline done: place can use `clientRequestId`; cancel can use durable `commandId`; cancel locally replays already-recorded cancel/uncertain statuses; reconcile can resolve uncertain cancel from remote CLOB status; sync/reconcile skip unchanged local writes; stale active CLOB payloads cannot downgrade local terminal orders. Remaining: full trade/settlement state-machine transitions.
   - Baseline done: place supports `clientRequestId` duplicate replay, payload conflict rejection, and uncertain local-order retry blocking.
 - [ ] Deploy the user WebSocket service independently with reconnect, checkpoint, event deduplication, persistence, and replay.
 - [ ] Add cache and expiry policy for allowance / approval checks to avoid overloading RPC endpoints.

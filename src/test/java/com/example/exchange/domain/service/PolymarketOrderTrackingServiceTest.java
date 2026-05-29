@@ -224,6 +224,25 @@ class PolymarketOrderTrackingServiceTest {
         assertThat(fx.orderRepository.saveCount).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("CLOB sync 不會用 stale active status 覆寫本地終態")
+    /**
+     * 流程：local order 已是 canceled terminal，但一次較舊的 CLOB getOrder 回 live。
+     * 期望：保存 raw payload 供稽核，但 local status 不降回 active，避免狀態機倒退。
+     */
+    void syncDoesNotDowngradeTerminalStatusWithStaleActiveRemotePayload() {
+        PredictionPolymarketOrder existing = order("ORDER_STATUS_CANCELED", "clob-1");
+        Fixture fx = new Fixture(existing);
+        fx.clobClient.nextGetOrder = successOrderPayload("live", "0");
+
+        PredictionPolymarketOrder result = fx.service.syncOrder("internal-1");
+
+        assertThat(result.getStatus()).isEqualTo("ORDER_STATUS_CANCELED");
+        assertThat(result.getLastClobPayload()).contains("\"status\":\"live\"");
+        assertThat(fx.orderRepository.saveCount).isEqualTo(1);
+    }
+
+
 
     private static PredictionPolymarketOrder order(String status, String clobOrderId) {
         PredictionPolymarketOrder order = new PredictionPolymarketOrder();
@@ -258,7 +277,8 @@ class PolymarketOrderTrackingServiceTest {
                     configs,
                     clobClient,
                     orderRepository.proxy(),
-                    commandStore
+                    commandStore,
+                    new PolymarketOrderStateMachine()
             );
         }
 
