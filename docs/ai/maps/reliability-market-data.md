@@ -30,7 +30,7 @@ Current behavior:
 - Snapshot scheduler: `application.scheduler.SnapshotScheduler`
 
 Remaining production TODO:
-- Extend explicit transaction boundaries beyond the place-order path to cancel/amend/cancel-replace, liquidation, ADL execution, hedge execution, and Redis hot-state recovery.
+- Add persistence-backed transaction boundary tests proving database state and outbox rows roll back together under MySQL.
 - Disaster recovery for matching, orders, accounts, and positions.
 
 ## Market Data And Push

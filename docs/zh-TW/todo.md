@@ -76,6 +76,7 @@
 - [ ] 逐一確認所有外部 API 都具備 timeout、retry、circuit breaker、rate limit 與 idempotency coverage。
   - Baseline 已完成：external API inventory、使用 `refId` 的 durable hedge venue submit idempotency envelope、使用 `venueOrderId + venueFillId` 的 hedge venue fill callback replay、未解 hedge venue idempotency 營運報告、使用 `clientRequestId` 的 CLOB place local idempotency、durable CLOB cancel `commandId`、CLOB cancel 對已記錄 cancel/uncertain 狀態的 local replay、uncertain cancel 的 reconcile resolution、CLOB sync/reconcile 對未變更 payload 的 no-op local replay，以及 approval read TTL cache coverage；RPC transaction tracking、非 hedge callback effectful idempotency 仍待補。
 - [ ] 所有核心寫入需要明確交易邊界；MySQL、Redis、Kafka 之間不能假設天然一致。
+  - Baseline 已完成：command transaction boundaries 已包住 order place/cancel/amend/cancel-replace、manual liquidation、ADL forced execution 與 hedge execution；outbox row 會在 command transaction 內保存，外部 publish 延到 `afterCommit`。Remaining：persistence-backed rollback tests 與更完整的 cross-store failure drills。
 - [x] 補上 MVP snapshot + event replay recovery 入口。
 - [ ] 建立 production 災難恢復流程：從 snapshot + event log 恢復 matching/order/account/position。
 

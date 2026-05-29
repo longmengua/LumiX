@@ -76,6 +76,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage for every external API call.
   - Baseline done: external API inventory, durable hedge venue submit idempotency envelope using `refId`, hedge venue fill callback replay using `venueOrderId + venueFillId`, unresolved hedge venue idempotency operator report, CLOB place local idempotency using `clientRequestId`, durable CLOB cancel `commandId`, CLOB cancel local replay for already-recorded cancel/uncertain statuses, reconcile resolution for uncertain cancel, CLOB sync/reconcile no-op local replay for unchanged payloads, and approval read TTL cache coverage; RPC transaction tracking and non-hedge callback effectful idempotency remain.
 - [ ] Define transaction boundaries for core writes; MySQL, Redis, and Kafka must not be assumed to be automatically consistent.
+  - Baseline done: command transaction boundaries now wrap order place/cancel/amend/cancel-replace, manual liquidation, ADL forced execution, and hedge execution; outbox rows are saved in the command transaction and external publish is deferred until `afterCommit`. Remaining: persistence-backed rollback tests and broader cross-store failure drills.
 - [x] Add MVP snapshot + event replay recovery entry points.
 - [ ] Build production disaster recovery for matching, orders, accounts, and positions.
 

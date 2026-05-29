@@ -27,12 +27,12 @@ Define and enforce explicit write boundaries for MySQL, Redis, Kafka, matching s
 - Wired `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` through the boundary when Spring provides it; direct unit tests can still instantiate the use cases without Spring transaction infrastructure.
 - `CancelReplaceOrderUseCase` now owns an outer boundary so cancel original and place replacement share one database transaction in Spring runtime.
 - Wired `LiquidateUseCase` through the same boundary so manual liquidation enters a command transaction before position, ledger, insurance/ADL queue, and audit event work.
+- Wired `ExecuteAdlUseCase` through the same boundary so ADL forced execution enters a command transaction before position, ledger, execution record, and audit event work.
 - Wired `MarketMakerHedgeExecutionService` manual and enabled-profile execution through the same boundary so profile lookup, exposure planning, hedge routing, and audit publish share one command entry.
 - Updated `OutboxService` so `publish(...)` saves the outbox row immediately but defers the external publisher call until Spring transaction `afterCommit` when a transaction is active.
-- Added tests proving successful command bodies commit, failed command bodies roll back without hidden retry, active transactions do not send outbox payloads before commit, and liquidation/hedge execution enter the boundary when configured.
+- Added tests proving successful command bodies commit, failed command bodies roll back without hidden retry, order command validation/missing-order failures roll back, active transactions do not send outbox payloads before commit, and liquidation/ADL/hedge execution enter the boundary when configured.
 
 Remaining work:
-- Apply the same boundary to ADL forced execution when that service exists.
 - Add persistence-backed integration tests that prove DB state and outbox rows roll back together under MySQL.
 - [x] Document Redis hot-state recovery rules for cases where DB commits but cache writes fail.
 

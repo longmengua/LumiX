@@ -29,6 +29,7 @@
 | `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、durable trade tape、ticker latest-state 與 1m kline baseline。 |
 | `MarketDataRetentionServiceTest` | Market-data high-volume history retention baseline。 |
 | `ExecuteAdlUseCaseTest` | ADL forced execution 入口的 transaction boundary commit/rollback。 |
+| `OrderCommandTransactionBoundaryTest` | place/cancel/amend/cancel-replace 指令入口失敗時 rollback command transaction。 |
 | `OrderBookChecksumTest` | order book checksum 的 BigDecimal scale normalization。 |
 | `SensitiveLogSanitizerTest` | query、JSON、Authorization header、known sensitive header 遮罩。 |
 | `InMemoryMatchingEngineTest` | FIFO、post-only、自成交拒絕、FOK/IOC、市價單流動性不足。 |
