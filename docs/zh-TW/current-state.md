@@ -66,6 +66,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、durable queue storage、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、stuck-claim operator reporting、partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。
 - 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
+- Redis hot-state keys 已補 final per-key-family TTL/archive rules、刪除前置條件與 authoritative rebuild source，供 production maintenance 使用。
 - 測試資料夾已有 README 索引，測試案例也用註解和 `@DisplayName` 說明測試鏈路。
 
 ## 目前不能當作 production 完成的地方

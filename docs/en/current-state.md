@@ -66,6 +66,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - ADL now has deterministic ranking, deleveraging-plan, forced-execution, durable queue storage, idempotent queue enqueue by `liquidationId`, queue-to-execution orchestration, operator claim/release, stuck-claim operator reporting, partial retry, and no-eligible-candidate retry baselines that reduce selected positions, write realized-PnL and socialized-loss ledger postings, publish audit events, and persist durable execution summary/idempotency records.
 - Outbox retry, max retry, DLQ replay, and manual compensation baselines exist.
 - Kafka topic, Redis key schema, request/correlation id, audit log, and ops metrics baseline documents exist.
+- Redis hot-state keys now have final per-key-family TTL/archive rules, deletion preconditions, and authoritative rebuild sources documented for production maintenance.
 - Test folders have README indexes, and test cases use comments plus `@DisplayName` to explain test flow.
 
 ## What Is Not Production Complete

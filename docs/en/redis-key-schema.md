@@ -35,6 +35,21 @@ This document records the current Redis keys used by the low-latency exchange re
 - Keep list and set indexes consistent with object keys. If a repository deletes or archives `order:{uuid}`, it must also clean `ord:list:{uid}` and `ord:set:{uid}`.
 - For schema changes, introduce a new namespace version (`mh:v2:*`) or dual-read/dual-write migration. Do not silently change serialized object shape under the same key pattern.
 
+## Final TTL And Archive Policy
+
+| Key family | Production TTL | Archive / deletion rule | Authoritative rebuild source |
+| --- | --- | --- | --- |
+| `acc:{uid}`, `acc:index` | No automatic TTL | Keep while account is active. Remove only after account closure, finance export, and ledger replay verification. | Wallet ledger journal, account snapshots, reconciliation reports |
+| `pos:{uid}`, `pos:open:index` | No automatic TTL | Keep open positions indefinitely. Closed zero-quantity positions may be removed from `pos:{uid}` after order/trade archive and risk snapshot export. | Matching event log, order lifecycle projection, ledger replay, risk snapshots |
+| `order:{uuid}` | No TTL for open orders; archive closed orders after the historical-order retention window. | Archive terminal orders before deleting object keys; always remove corresponding ids from `ord:list:{uid}` and `ord:set:{uid}` in the same maintenance job. | Order lifecycle events/projection and matching command/event logs |
+| `ord:list:{uid}`, `ord:set:{uid}` | No automatic TTL | Trim or rebuild only after terminal order archive; indexes must not reference deleted `order:{uuid}` keys. | Order lifecycle projection by `uid` |
+| `snap:{uid}` | No automatic TTL | Keep latest snapshot; replace atomically after successful snapshot generation. Historical snapshots belong in the SQL `snapshots` table or archive storage. | SQL snapshots table and replayable aggregate logs |
+| `wallet:ledger:*` | No Redis TTL until Redis ledger is fully replaced by SQL reads. | Once SQL ledger reads are authoritative, Redis ledger keys become cache and may use a bounded cache TTL such as 24h; finance/audit retention must stay in MySQL/archive. | Wallet ledger journal tables |
+| `outbox:*`, `dlq:*` | No production TTL while legacy Redis adapters are active. | Prefer MySQL outbox/DLQ. If Redis legacy keys exist, archive payloads and delete only terminal published/DLQ records after compensation review. | MySQL outbox/DLQ tables and Kafka/archive consumers |
+| `idempotency:{key}` | Required bounded TTL from the command dedupe window. | Let Redis expire naturally; never archive as business evidence. Durable command/outcome records must carry audit history. | Durable command logs, idempotency stores, ledger/outbox state |
+
+Maintenance jobs must delete object keys before or together with secondary indexes only when a rebuild source is available. If index cleanup fails, the repair action is to rebuild the index from the authoritative source, not to recreate archived objects in Redis.
+
 ## Transaction Boundary And Recovery Rules
 
 - MySQL is the authoritative store for command results that have a durable schema. Redis hot state is a serving cache or fast index unless a specific repository still lacks a MySQL replacement.
@@ -56,5 +71,5 @@ This document records the current Redis keys used by the low-latency exchange re
 
 - Enable `REDIS_KEY_PREFIX` in each environment and plan a one-time migration for existing un-prefixed data.
 - Keep the maintained account and open-position indexes healthy; add repair tooling that can rebuild them from durable storage.
-- Add archive jobs for historical orders, wallet ledger entries, outbox events, DLQ events, and snapshots.
+- Implement the maintenance jobs described in the final TTL/archive policy for historical orders, wallet ledger entries, outbox events, DLQ events, and snapshots.
 - Move long-lived financial records to the production database ledger schema, keeping Redis as a serving cache or hot-state store.

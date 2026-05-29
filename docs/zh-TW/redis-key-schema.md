@@ -35,6 +35,21 @@ English version: [../en/redis-key-schema.md](../en/redis-key-schema.md)
 - List / Set index 必須和 object key 保持一致。若刪除或歸檔 `order:{uuid}`，也必須清理 `ord:list:{uid}` 與 `ord:set:{uid}`。
 - schema 變更應使用新 namespace version，例如 `mh:v2:*`，或採 dual-read / dual-write migration。不要在相同 key pattern 下偷偷改 serialized object shape。
 
+## 最終 TTL 與 Archive Policy
+
+| Key family | Production TTL | Archive / deletion rule | Authoritative rebuild source |
+| --- | --- | --- | --- |
+| `acc:{uid}`, `acc:index` | 不自動過期 | account 活躍期間保留。只有完成 account closure、finance export 與 ledger replay 驗證後才能移除。 | Wallet ledger journal、account snapshots、reconciliation reports |
+| `pos:{uid}`, `pos:open:index` | 不自動過期 | open position 永久保留。零倉位 closed position 可在 order/trade archive 與 risk snapshot export 後從 `pos:{uid}` 移除。 | Matching event log、order lifecycle projection、ledger replay、risk snapshots |
+| `order:{uuid}` | open order 不設 TTL；terminal order 依 historical-order retention window 歸檔 | 刪 object key 前必須先歸檔 terminal order；同一個 maintenance job 必須同步清 `ord:list:{uid}` 與 `ord:set:{uid}`。 | Order lifecycle events/projection 與 matching command/event logs |
+| `ord:list:{uid}`, `ord:set:{uid}` | 不自動過期 | 只能在 terminal order archive 後 trim 或 rebuild；index 不得指向已刪除的 `order:{uuid}`。 | 依 `uid` 查 order lifecycle projection |
+| `snap:{uid}` | 不自動過期 | 保留 latest snapshot；成功產生新 snapshot 後原子替換。歷史 snapshot 應放 SQL `snapshots` table 或 archive storage。 | SQL snapshots table 與可 replay aggregate logs |
+| `wallet:ledger:*` | Redis ledger 完全改由 SQL read 前不設 TTL | SQL ledger read 成為 authoritative 後，Redis ledger key 只能作 cache，可設 24h 這類有限 cache TTL；finance/audit retention 必須留在 MySQL/archive。 | Wallet ledger journal tables |
+| `outbox:*`, `dlq:*` | legacy Redis adapter 啟用時不設 production TTL | Production 優先使用 MySQL outbox/DLQ。若仍有 Redis legacy keys，必須先 archive payload，且只在 compensation review 後刪 terminal published/DLQ records。 | MySQL outbox/DLQ tables 與 Kafka/archive consumers |
+| `idempotency:{key}` | 必須使用 command dedupe window 的有限 TTL | 讓 Redis 自然過期；不得當作 business evidence 歸檔。Audit history 應由 durable command/outcome records 保存。 | Durable command logs、idempotency stores、ledger/outbox state |
+
+Maintenance job 只有在有 authoritative rebuild source 時，才能刪除 object key 並同步清 secondary indexes。若 index cleanup 失敗，修復方式是從 authoritative source 重建 index，不是在 Redis 重新建立已歸檔 object。
+
 ## Transaction Boundary 與 Recovery 規則
 
 - 已有 durable schema 的 command 結果以 MySQL 為 authoritative store。Redis hot state 是 serving cache 或快速 index，除非某個 repository 尚未有 MySQL 替代實作。
@@ -56,5 +71,5 @@ English version: [../en/redis-key-schema.md](../en/redis-key-schema.md)
 
 - 各環境啟用 `REDIS_KEY_PREFIX`，並為既有未加 prefix 的資料規劃一次性 migration。
 - 持續維護 account 與 open-position indexes，並補可從 durable storage 重建 index 的 repair tooling。
-- 為歷史訂單、wallet ledger、outbox、DLQ、snapshot 補 archive job。
+- 依最終 TTL/archive policy 實作歷史訂單、wallet ledger、outbox、DLQ、snapshot maintenance jobs。
 - 將長期保存的金融紀錄移到正式 database ledger schema，Redis 保留為 serving cache 或 hot-state store。

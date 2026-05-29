@@ -116,7 +116,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Add production indexes for orders, positions, ledger, events, and prediction orders.
   - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. Remaining: first-class SQL indexes for live order/position hot-state once those Redis-owned models are moved or mirrored into durable tables.
 - [x] Document Redis key schema, namespace prefix, versioning, and migration strategy.
-- [ ] Add final TTL/archive rules for Redis hot-state keys.
+- [x] Add final TTL/archive rules for Redis hot-state keys.
+  - Baseline done: `docs/en/redis-key-schema.md` defines per-key-family production TTL, archive/delete rule, and authoritative rebuild source for account, position, order, snapshot, ledger, outbox/DLQ, and idempotency keys.
 - [x] Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
 - [ ] Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
 

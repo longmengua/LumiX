@@ -116,7 +116,8 @@
 - [ ] 為 orders、positions、ledger、events、prediction orders 補齊 production index。
   - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。Remaining：live order/position hot-state 從 Redis-owned model 搬移或 mirror 到 durable table 後，仍需補正式 SQL indexes。
 - [x] 文件化 Redis key schema、namespace prefix、版本與 migration 策略。
-- [ ] 補 Redis hot-state key 的最終 TTL / archive rules。
+- [x] 補 Redis hot-state key 的最終 TTL / archive rules。
+  - Baseline 已完成：`docs/zh-TW/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。
 - [x] Flyway migration 改為正式唯一 schema 管理，不再依賴 Hibernate `ddl-auto=update`。
 - [ ] 補齊資料歸檔策略：歷史訂單、成交、ledger、Kafka event、audit log。
 

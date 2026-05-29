@@ -39,7 +39,7 @@ Config:
 
 ## Redis And Kafka Docs
 
-- Redis key contract: `docs/en/redis-key-schema.md`
+- Redis key contract and hot-state TTL/archive policy: `docs/en/redis-key-schema.md`
 - Kafka topic contract: `docs/en/kafka-topics.md`
 - Observability baseline: `docs/en/observability.md`
 - Outbox runbook: `docs/en/outbox-runbook.md`
