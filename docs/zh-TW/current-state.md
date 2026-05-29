@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 29 | 14 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 30 | 13 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 8 | 14 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 37 | 33 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 38 | 32 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -60,7 +60,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、strategy、market-maker、order、match、sequence、quantity、price、notional 維度。
 - Trial balance 已可從 wallet ledger postings 依 asset/account code 計算。
 - 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review；入金 callback 可用 `externalRef` 冪等 replay，manual-review transfer 可被 owner claim，transfer reconciliation projection 可用 ledger ref 比對每筆 transfer。
-- 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
+- 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、uid+symbol order-entry frequency limits、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
 - liquidation decision 已會發布 audit data，營運控制可 halt liquidation 或導入 manual review。
 - liquidation scanning 可掃描 open positions 並觸發 oracle-based liquidation decisions。
 - ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。

@@ -17,7 +17,7 @@
 | `AccountRiskServiceTest` | risk snapshot 的 equity、PNL、maintenance margin、risk ratio。 |
 | `MarginServiceTest` | deposit/withdraw transfer state machine、callback idempotency、manual-review owner、transfer reconciliation projection 與 ledger side effect。 |
 | `OperationalMetricsServiceTest` | 下單結果、撤單、成交事件、延遲統計。 |
-| `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event 的整合流程。 |
+| `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event、pre-trade frequency limit 的整合流程。 |
 | `OutboxServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers。 |
 | `RpcTransactionTrackingServiceTest` | RPC transaction commandId replay、fingerprint/txHash conflict 與 unresolved outcome report。 |
 | `PolymarketApprovalServiceTest` | RPC approval read cache、owner clear 與 TTL refresh。 |

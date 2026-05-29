@@ -343,6 +343,51 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("pre-trade frequency limit 會拒絕同 uid/symbol 視窗內過量下單")
+    /**
+     * 流程：啟用 uid+symbol 固定視窗每分鐘最多 1 筆新單 -> 第一筆預檢成功 -> 第二筆同 uid/symbol 被拒。
+     * 期望：第二筆在 reserve 前被擋下，避免短時間濫送訂單消耗帳務與撮合資源。
+     */
+    void orderEntryFrequencyLimitRejectsBurstOrdersBeforeReserve() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskControlsProperties riskControls = riskControls();
+        riskControls.getOrderEntryFrequencyLimit().setEnabled(true);
+        riskControls.getOrderEntryFrequencyLimit().setMaxOrders(1);
+        riskControls.getOrderEntryFrequencyLimit().setWindowSeconds(60);
+        RiskService riskService = new RiskService(
+                accountRepo,
+                positionRepo,
+                orderRepo,
+                matchingEngine,
+                walletLedgerService,
+                riskControls
+        );
+        SymbolConfig symbolConfig = btcConfigWithMaxOpenOrders(10);
+        Account account = new Account(51);
+        account.deposit(new BigDecimal("10000"));
+        accountRepo.save(account);
+
+        Order first = limitOrder(51, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", false);
+        riskService.preCheckAndReserve(first, symbolConfig);
+        Order burst = limitOrder(51, symbolConfig.toSymbol(), OrderSide.BUY, "101.00", false);
+
+        assertThatThrownBy(() -> riskService.preCheckAndReserve(burst, symbolConfig))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("order entry frequency limit exceeded");
+        assertThat(burst.getRejectCode()).isEqualTo("ORDER_ENTRY_FREQUENCY_LIMIT");
+        assertThat(ledgerRepo.findByUid(51))
+                .extracting(WalletLedgerEntry::getReason)
+                .containsExactly("order_reserve");
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
     @DisplayName("risk tiers 會套用初始保證金率、槓桿上限與階梯倉位上限")
     /**
      * 流程：建立兩階 risk tiers -> 送入 tier2 名義金額 -> 驗證 reserve 使用 tier2 初始保證金率，並拒絕超槓桿與超階梯上限。

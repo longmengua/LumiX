@@ -49,4 +49,30 @@ public class RiskControlsProperties {
      * 停牌 symbol 清單，例如 BTCUSDT、ETHUSDT。
      */
     private List<String> suspendedSymbols = new ArrayList<>();
+
+    /**
+     * 下單頻率限制。預設關閉；production 可先用本機固定視窗 baseline，
+     * 多實例部署時再替換為 Redis / gateway 共用計數。
+     */
+    private OrderEntryFrequencyLimit orderEntryFrequencyLimit =
+            new OrderEntryFrequencyLimit();
+
+    @Data
+    public static class OrderEntryFrequencyLimit {
+
+        /**
+         * true 時啟用 uid + symbol 固定視窗下單頻率限制。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 單一 uid + symbol 在視窗內允許的最大新單數。
+         */
+        private int maxOrders = 0;
+
+        /**
+         * 固定視窗長度，單位秒。
+         */
+        private long windowSeconds = 60;
+    }
 }

@@ -6,7 +6,7 @@ Application service tests。
 
 | 測試類別 | 主要案例 |
 | --- | --- |
-| `OrderAccountingIntegrationTest` | 成交後帳務與持倉、風控拒單、risk tiers、max open orders、重複 client order id、kill switch、批量撤單、改單、cancel-replace、cancel-on-disconnect、connection resume。 |
+| `OrderAccountingIntegrationTest` | 成交後帳務與持倉、風控拒單、risk tiers、max open orders、pre-trade frequency limit、重複 client order id、kill switch、批量撤單、改單、cancel-replace、cancel-on-disconnect、connection resume。 |
 | `RiskSettlementServiceTest` | 單一 funding、批次 funding、強平/decision audit/營運控制、保險基金、全帳戶 reconciliation。 |
 | `TrialBalanceServiceTest` | Wallet ledger postings 產生 trial balance 與不平衡分類。 |
 | `ReconciliationIssueWorkflowServiceTest` | 對帳 issue claim、resolve、reopen、open queue 過濾與 workflow audit event。 |

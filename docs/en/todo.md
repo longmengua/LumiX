@@ -63,7 +63,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add symbol risk baseline settings for max leverage, maintenance margin rate, max position notional, and max open orders.
 - [x] Add full risk tiers with initial margin rate and stepped position limits.
 - [x] Add pre-trade risk checks for balance, leverage, position, exposure, price deviation, and client order id deduplication.
-- [ ] Add production frequency limits and broader abuse controls to pre-trade risk checks.
+- [x] Add production frequency limits and broader abuse controls to pre-trade risk checks.
+  - Baseline done: configurable uid+symbol fixed-window order-entry frequency limit rejects burst orders before reserve/matching side effects; default is disabled, and multi-instance production can replace the local counter with Redis/gateway shared counting.
 - [x] Add a liquidation MVP with trigger, close, insurance fund, ADL, and audit event coverage.
 - [ ] Add production liquidation scanning, execution routing, and operational controls.
 - [x] Add global risk switches for reduce-only mode, order-entry halt, withdrawal halt, and per-symbol suspension.

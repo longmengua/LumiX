@@ -63,7 +63,8 @@
 - [x] 建立 symbol risk baseline 設定：最大槓桿、維持保證金率、最大倉位名義金額、最大 open orders。
 - [x] 補完整 risk tier：初始保證金率與階梯倉位上限。
 - [x] 補上 pre-trade risk checks：餘額、槓桿、倉位、敞口、價格偏離、client order id 去重。
-- [ ] 為 pre-trade risk checks 補 production frequency limits 與更完整 abuse controls。
+- [x] 為 pre-trade risk checks 補 production frequency limits 與更完整 abuse controls。
+  - Baseline 已完成：可設定 uid+symbol fixed-window order-entry frequency limit，會在 reserve / matching side effect 前拒絕 burst orders；預設關閉，多實例 production 可替換為 Redis / gateway shared counting。
 - [x] 補上 liquidation MVP，涵蓋觸發、平倉、保險基金、ADL 與 audit event。
 - [ ] 補 production liquidation scanning、execution routing 與 operational controls。
 - [x] 加上全站風控開關：只減倉、禁止下單、禁止提現、指定 symbol 停牌。

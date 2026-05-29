@@ -12,13 +12,14 @@
 Checks include:
 - Global order-entry halt and reduce-only mode.
 - Symbol suspension.
+- Configurable uid+symbol order-entry fixed-window frequency limit, disabled by default.
 - Tick size, lot size, min notional, price band, max order size, max open orders.
 - Balance, leverage, exposure, position notional, client order id deduplication.
 - Reduce-only reducible quantity.
 
 Remaining production TODO:
-- Frequency limits and broader abuse controls.
 - External API idempotency coverage where risk depends on external systems.
+- Multi-instance deployments should replace the local pre-trade frequency counter with Redis or gateway shared counting.
 
 ## Funds And Ledger
 

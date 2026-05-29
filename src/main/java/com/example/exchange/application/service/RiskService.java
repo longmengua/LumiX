@@ -20,14 +20,23 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 @RequiredArgsConstructor
 public class RiskService {
 
     private static final int MONEY_SCALE = 18;
+
+    private final Map<String, FrequencyWindow> orderEntryFrequencyWindows =
+            new ConcurrentHashMap<>();
+
+    private final Clock clock =
+            Clock.systemUTC();
 
     private final AccountRepository accountRepo;
     private final PositionRepository positionRepo;
@@ -39,6 +48,7 @@ public class RiskService {
     public void preCheckAndReserve(Order order, SymbolConfig config) {
         validateTradable(order, config);
         validateRiskSwitches(order);
+        validateOrderEntryFrequency(order);
         validateMaxOpenOrders(order, config);
         validateClientOrderIdDeduplication(order, null);
         BigDecimal referencePrice = resolveReferencePrice(order);
@@ -179,6 +189,43 @@ public class RiskService {
         }
     }
 
+    private void validateOrderEntryFrequency(Order order) {
+        RiskControlsProperties.OrderEntryFrequencyLimit limit =
+                riskControlsProperties.getOrderEntryFrequencyLimit();
+        if (limit == null || !limit.isEnabled() || limit.getMaxOrders() <= 0) {
+            return;
+        }
+
+        long windowMillis =
+                Math.max(1L, limit.getWindowSeconds()) * 1000L;
+        long now =
+                clock.millis();
+        String key =
+                order.getUid() + ":" + normalizeSymbol(order.getSymbol().code());
+
+        FrequencyWindow window =
+                orderEntryFrequencyWindows.compute(key, (ignored, current) -> {
+                    if (current == null || now >= current.windowStartMillis + windowMillis) {
+                        return new FrequencyWindow(now, 1);
+                    }
+                    return new FrequencyWindow(current.windowStartMillis, current.count + 1);
+                });
+        cleanupFrequencyWindows(now, windowMillis);
+
+        if (window.count > limit.getMaxOrders()) {
+            order.reject("ORDER_ENTRY_FREQUENCY_LIMIT");
+            throw new IllegalStateException("order entry frequency limit exceeded");
+        }
+    }
+
+    private void cleanupFrequencyWindows(long now, long windowMillis) {
+        if (orderEntryFrequencyWindows.size() <= 10_000) {
+            return;
+        }
+        orderEntryFrequencyWindows.entrySet()
+                .removeIf(entry -> now >= entry.getValue().windowStartMillis + windowMillis);
+    }
+
     private void validateTickAndLot(Order order, SymbolConfig config) {
         if (order.getType() == OrderType.LIMIT && !isMultiple(order.getPrice(), config.priceTickOrDefault())) {
             order.reject("INVALID_PRICE_TICK");
@@ -309,5 +356,11 @@ public class RiskService {
 
     private static String normalizeSymbol(String symbol) {
         return symbol == null ? "" : symbol.trim().toUpperCase();
+    }
+
+    private record FrequencyWindow(
+            long windowStartMillis,
+            int count
+    ) {
     }
 }
