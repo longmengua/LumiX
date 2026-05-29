@@ -109,6 +109,30 @@ class AdlQueueExecutionServiceTest {
                 });
     }
 
+    @Test
+    @DisplayName("ADL queue 沒有合格對手方時會回 non-executed result 並保留 queue")
+    /**
+     * 流程：LONG 被清算但只有同方向或不獲利倉位 -> planner 產生空 plan ->
+     * executor 不呼叫 forced execution、不消耗 command id，queue 保留給後續候選出現後 retry。
+     */
+    void queueExecutionKeepsEntryWhenNoEligibleCandidates() {
+        Fixture fixture = fixture();
+        fixture.insuranceFundService.enqueueAdl("liq-4", 7, "BTCUSDT", "LONG", new BigDecimal("100"));
+        fixture.seedPosition(11, "2", "80", "10");
+
+        AdlExecutionResult result = fixture.queueExecutionService.execute("adl-queue-4", "liq-4");
+
+        assertThat(result.executed()).isFalse();
+        assertThat(result.reason()).isEqualTo("ADL_NO_ELIGIBLE_CANDIDATES");
+        assertThat(result.remainingNotional()).isEqualByComparingTo("100");
+        assertThat(result.steps()).isEmpty();
+        assertThat(fixture.insuranceFundService.adlQueue()).singleElement()
+                .satisfies(entry -> {
+                    assertThat(entry.liquidationId()).isEqualTo("liq-4");
+                    assertThat(entry.amount()).isEqualByComparingTo("100");
+                });
+    }
+
     private Fixture fixture() {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();

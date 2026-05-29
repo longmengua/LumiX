@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -46,6 +47,9 @@ public class AdlQueueExecutionService {
                 adlRankingService.rank(candidates),
                 Map.of(entry.symbol(), markPrice)
         );
+        if (plan.steps().isEmpty()) {
+            return noEligibleCandidates(commandId, plan);
+        }
         AdlExecutionResult result = executeAdlUseCase.handle(new ExecuteAdlCommand(commandId, plan));
         if (result.executed()) {
             insuranceFundService.updateAdlRemaining(entry.liquidationId(), result.remainingNotional());
@@ -85,6 +89,21 @@ public class AdlQueueExecutionService {
                 markPrice,
                 position.getMargin(),
                 position.getLeverage()
+        );
+    }
+
+    private static AdlExecutionResult noEligibleCandidates(String commandId, AdlDeleveragingPlan plan) {
+        return new AdlExecutionResult(
+                commandId,
+                false,
+                "ADL_NO_ELIGIBLE_CANDIDATES",
+                plan.requestedNotional(),
+                plan.plannedNotional(),
+                BigDecimal.ZERO,
+                plan.remainingNotional(),
+                BigDecimal.ZERO,
+                List.of(),
+                Instant.now()
         );
     }
 
