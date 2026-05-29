@@ -30,11 +30,12 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added `PolymarketOrderServiceTest` covering same-key duplicate replay, same-key payload conflict, and existing local order with uncertain CLOB outcome.
 - Added a CLOB cancel local idempotency baseline: once cancel records `CANCEL_REQUESTED` or a canceled terminal status, duplicate cancel requests return the local order without another CLOB DELETE.
 - Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay and the first successful cancel marker.
+- Added `PolymarketApprovalServiceTest` covering approval read cache hits, owner-scoped cache clear, and TTL refresh before order validation relies on RPC approval state.
 
 Remaining work:
 - Add durable idempotency storage and venue lookup/reconciliation for real hedge adapters.
 - Add CLOB sync/reconcile idempotency, uncertain cancel remote lookup, and fuller local state-machine coverage.
-- Add RPC approval cache/expiry and transaction idempotency tracking.
+- Add RPC approval transaction idempotency tracking for any future backend-observed effectful approval/relayer flow.
 
 ## Acceptance Criteria
 
