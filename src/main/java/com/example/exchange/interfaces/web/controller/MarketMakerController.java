@@ -6,10 +6,12 @@ package com.example.exchange.interfaces.web.controller;
 import com.example.exchange.application.service.MarketMakerHedgeFillService;
 import com.example.exchange.application.service.MarketMakerHedgeExecutionService;
 import com.example.exchange.application.service.MarketMakerHedgeReconciliationService;
+import com.example.exchange.application.service.MarketMakerHedgeVenueIdempotencyService;
 import com.example.exchange.application.service.MarketMakerProfileService;
 import com.example.exchange.domain.model.dto.HedgeFillRecord;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
+import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
@@ -35,6 +37,7 @@ public class MarketMakerController {
     private final MarketMakerHedgeFillService hedgeFillService;
     private final MarketMakerHedgeReconciliationService hedgeReconciliationService;
     private final MarketMakerHedgeExecutionService hedgeExecutionService;
+    private final MarketMakerHedgeVenueIdempotencyService hedgeVenueIdempotencyService;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -89,6 +92,13 @@ public class MarketMakerController {
             @RequestParam(defaultValue = "50") int limit
     ) {
         return ApiResponse.ok(hedgeReconciliationService.reconcileMarketMaker(marketMakerId, limit));
+    }
+
+    @GetMapping("/hedge-idempotency/unresolved")
+    public ApiResponse<HedgeVenueIdempotencyReport> unresolvedHedgeVenueIdempotency(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(hedgeVenueIdempotencyService.unresolved(limit));
     }
 
     @PostMapping("/profiles/{marketMakerId}/hedge-execution")

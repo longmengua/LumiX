@@ -9,9 +9,11 @@ import com.example.exchange.domain.model.entity.HedgeVenueIdempotencyRecordEntit
 import com.example.exchange.domain.repository.HedgeVenueIdempotencyStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -66,6 +68,16 @@ public class JpaHedgeVenueIdempotencyStore implements HedgeVenueIdempotencyStore
         entity.setRetryable(result.retryable());
         entity.setSubmittedAt(result.submittedAt());
         return toRecord(repository.save(entity));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<HedgeVenueIdempotencyRecord> findUnresolved(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 500));
+        return repository.findByCompletedFalseOrRetryableTrueOrderByUpdatedAtAsc(PageRequest.of(0, safeLimit))
+                .stream()
+                .map(this::toRecord)
+                .toList();
     }
 
     private HedgeVenueIdempotencyRecord toRecord(HedgeVenueIdempotencyRecordEntity entity) {

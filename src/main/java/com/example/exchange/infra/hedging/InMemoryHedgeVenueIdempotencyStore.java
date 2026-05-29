@@ -7,6 +7,7 @@ import com.example.exchange.domain.model.dto.HedgeOrderResult;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyRecord;
 import com.example.exchange.domain.repository.HedgeVenueIdempotencyStore;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,5 +37,15 @@ class InMemoryHedgeVenueIdempotencyStore implements HedgeVenueIdempotencyStore {
             }
             return new HedgeVenueIdempotencyRecord(refId, fingerprint, true, result);
         });
+    }
+
+    @Override
+    public List<HedgeVenueIdempotencyRecord> findUnresolved(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 500));
+        return records.values().stream()
+                .filter(record -> !record.completed()
+                        || (record.result() != null && record.result().retryable()))
+                .limit(safeLimit)
+                .toList();
     }
 }

@@ -35,9 +35,10 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added `PolymarketApprovalServiceTest` covering approval read cache hits, owner-scoped cache clear, and TTL refresh before order validation relies on RPC approval state.
 - Added CLOB sync/reconcile local no-op replay: unchanged CLOB payload/status/size/error does not save the local order row again, and reconcile reports unchanged rows separately.
 - Added `PolymarketOrderStateMachine` as a first local/CLOB state-machine guard so stale active CLOB payloads cannot downgrade a local terminal order or its matched size.
+- Added `GET /api/market-maker/hedge-idempotency/unresolved` so operators can list pending hedge venue idempotency claims and completed retryable outcomes without exposing payload fingerprints.
 
 Remaining work:
-- Add venue lookup/reconciliation for real hedge adapters and operator handling for uncertain outcomes.
+- Add venue lookup/reconciliation for real hedge adapters.
 - Add fuller local state-machine coverage for CLOB trade/settlement transitions.
 - Add RPC approval transaction idempotency tracking for any future backend-observed effectful approval/relayer flow.
 

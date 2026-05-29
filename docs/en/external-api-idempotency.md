@@ -20,7 +20,9 @@ Hedge venue submit uses `HedgeOrderRequest.refId` as the external idempotency ke
 - Same `refId` while the first claim is still pending, or after a retryable/timeout-like result, is blocked with `HEDGE_VENUE_OUTCOME_UNCERTAIN`, because the venue may have received the first request.
 - Missing `refId` is rejected before any venue call.
 
-The durable baseline still needs venue order lookup/reconciliation, operator handling for uncertain outcomes, and integration-specific rate limits before wiring a real venue adapter.
+Operators can inspect unresolved hedge venue idempotency outcomes with `GET /api/market-maker/hedge-idempotency/unresolved`. The report lists pending claims and completed retryable outcomes without exposing the stored payload fingerprint.
+
+The durable baseline still needs venue order lookup/reconciliation and integration-specific rate limits before wiring a real venue adapter.
 
 ## CLOB Place Baseline
 

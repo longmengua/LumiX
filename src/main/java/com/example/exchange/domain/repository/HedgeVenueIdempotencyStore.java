@@ -6,6 +6,7 @@ package com.example.exchange.domain.repository;
 import com.example.exchange.domain.model.dto.HedgeOrderResult;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyRecord;
 
+import java.util.List;
 import java.util.Optional;
 
 public interface HedgeVenueIdempotencyStore {
@@ -15,4 +16,6 @@ public interface HedgeVenueIdempotencyStore {
     boolean claim(String refId, String fingerprint);
 
     HedgeVenueIdempotencyRecord complete(String refId, String fingerprint, HedgeOrderResult result);
+
+    List<HedgeVenueIdempotencyRecord> findUnresolved(int limit);
 }
