@@ -4,6 +4,7 @@
 
 目前重點：
 - `OrderService`：下單後撮合、持倉、ledger、market data、事件發布；symbol 有 ready worker context 時 submit 會走 matching worker execution path。
+- `CoreEventStructuredLog`：產生 `CORE_EVENT` structured log line，讓核心事件可依 uid、orderId、clientOrderId、symbol 搜尋。
 - `RiskService`：pre-trade checks、uid+symbol order-entry frequency limit、reserve、amend reserve reconciliation。
 - `WalletLedgerService` / `MarginService`：帳務 posting、入出金狀態機、callback 冪等、manual-review owner、transfer reconciliation projection、margin transfer。
 - `WalletLedgerReplayService`：由 durable ledger replay 帳戶狀態，並提供 account/replay/delta 結構化 comparison。

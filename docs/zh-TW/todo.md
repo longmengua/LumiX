@@ -129,7 +129,8 @@
 - [x] 補上 request id / correlation id header、MDC、outbox、Kafka、外部 API 傳遞 baseline。
 - [ ] 補 distributed tracing export、dashboard 與 sampling policy。
 - [x] 補 request/security audit structured logging baseline。
-- [ ] 補核心事件 structured logging，能按 uid、orderId、clientOrderId、symbol 搜尋。
+- [x] 補核心事件 structured logging，能按 uid、orderId、clientOrderId、symbol 搜尋。
+  - Baseline 已完成：order lifecycle projection 會寫 `CORE_EVENT eventType=ORDER_LIFECYCLE` log line，包含穩定的 `uid`、`orderId`、`clientOrderId`、`symbol`、`stage`、`status`、`reasonCode`、`eventTs` 欄位。
 - [ ] 建立 alert：撮合停止、Kafka lag、DLQ 堆積、對帳失敗、外部 API 錯誤率、資產不平。
 
 ## P2 可逐步演進

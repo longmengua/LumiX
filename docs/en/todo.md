@@ -129,7 +129,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add request id / correlation id propagation through headers, MDC, outbox, Kafka, and external API clients.
 - [ ] Add distributed tracing export, dashboards, and sampling policy.
 - [x] Add request/security audit structured logging baseline.
-- [ ] Add structured core-event logging searchable by uid, orderId, clientOrderId, and symbol.
+- [x] Add structured core-event logging searchable by uid, orderId, clientOrderId, and symbol.
+  - Baseline done: order lifecycle projection writes `CORE_EVENT eventType=ORDER_LIFECYCLE` log lines with stable `uid`, `orderId`, `clientOrderId`, `symbol`, `stage`, `status`, `reasonCode`, and `eventTs` fields.
 - [ ] Add alerts for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
 
 ## P2 Incremental Evolution

@@ -18,9 +18,11 @@ HTTP request 入口使用：
 - Kafka domain event 發布會把 trace headers 存進 outbox event，並寫成 Kafka record headers。
 - Outbox relay 會重用儲存的 headers，因此延遲 retry 仍保留原始 request/correlation context。
 
-## Audit Logs
+## Audit And Core Event Logs
 
 Protected API security 與 authentication audit logs 在 request 通過 request logging interceptor 時會帶 `requestId`。Cancel-on-disconnect 核心事件會記錄 `uid`、`symbol` 與取消訂單數。
+
+Order lifecycle projection 會輸出 structured `CORE_EVENT eventType=ORDER_LIFECYCLE` log line，包含穩定的 `uid`、`orderId`、`clientOrderId`、`symbol`、`stage`、`status`、`reasonCode`、`eventTs` 欄位，讓營運能搜尋核心訂單狀態轉換而不用解析自由文字。
 
 ## Operations Metrics
 

@@ -68,6 +68,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
 - Redis hot-state keys 已補 final per-key-family TTL/archive rules、刪除前置條件與 authoritative rebuild source，供 production maintenance 使用。
 - 歷史訂單、成交、ledger entries、Kafka events 與 audit logs 已有 archive strategy，涵蓋 manifests、retention classes、刪除前置條件與 restore rules。
+- Order lifecycle projection 現在會輸出可用 uid、orderId、clientOrderId、symbol 搜尋的 `CORE_EVENT` structured log line。
 - 測試資料夾已有 README 索引，測試案例也用註解和 `@DisplayName` 說明測試鏈路。
 
 ## 目前不能當作 production 完成的地方

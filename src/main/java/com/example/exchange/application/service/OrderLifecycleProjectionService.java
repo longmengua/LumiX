@@ -9,6 +9,7 @@ import com.example.exchange.domain.model.entity.OrderLifecycleProjection;
 import com.example.exchange.domain.repository.OrderLifecycleEventStore;
 import com.example.exchange.domain.repository.OrderLifecycleProjectionStore;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderLifecycleProjectionService {
 
     public static final int SCHEMA_VERSION = 1;
@@ -34,6 +36,7 @@ public class OrderLifecycleProjectionService {
         OrderLifecycleEventRecord record = OrderLifecycleEventRecord.from(event, SCHEMA_VERSION);
         eventStore.append(record);
         applyToProjection(record);
+        log.info(CoreEventStructuredLog.orderLifecycle(record));
     }
 
     @Transactional

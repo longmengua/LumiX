@@ -68,6 +68,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Kafka topic, Redis key schema, request/correlation id, audit log, and ops metrics baseline documents exist.
 - Redis hot-state keys now have final per-key-family TTL/archive rules, deletion preconditions, and authoritative rebuild sources documented for production maintenance.
 - Historical orders, trades, ledger entries, Kafka events, and audit logs now have an archive strategy covering manifests, retention classes, delete preconditions, and restore rules.
+- Order lifecycle projection now emits searchable `CORE_EVENT` structured log lines keyed by uid, orderId, clientOrderId, and symbol.
 - Test folders have README indexes, and test cases use comments plus `@DisplayName` to explain test flow.
 
 ## What Is Not Production Complete

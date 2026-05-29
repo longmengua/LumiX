@@ -18,9 +18,11 @@ Inbound HTTP requests use:
 - Kafka domain event publishing stores trace headers on the outbox event and writes them as Kafka record headers.
 - Outbox relay reuses the stored headers, so delayed retries keep the original request/correlation context.
 
-## Audit Logs
+## Audit And Core Event Logs
 
 Protected API security and authentication audit logs include `requestId` when the request passed through the request logging interceptor. Core cancel-on-disconnect events are logged with `uid`, `symbol`, and canceled order count.
+
+Order lifecycle projection emits structured `CORE_EVENT eventType=ORDER_LIFECYCLE` log lines with stable `uid`, `orderId`, `clientOrderId`, `symbol`, `stage`, `status`, `reasonCode`, and `eventTs` fields so operators can search core order state transitions without parsing free-form text.
 
 ## Operations Metrics
 
