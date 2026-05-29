@@ -14,9 +14,9 @@ English version: [../en/current-state.md](../en/current-state.md)
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
 | P0 必做 | 29 | 14 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
-| P1 強烈建議 | 6 | 16 | 營運、market data、Polymarket、資料治理仍偏早期。 |
+| P1 強烈建議 | 8 | 14 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 35 | 35 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 37 | 33 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 

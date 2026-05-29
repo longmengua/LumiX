@@ -14,9 +14,9 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
 | P0 Required | 29 | 14 | Core MVP capability exists, but many production blockers remain. |
-| P1 Strongly Recommended | 6 | 16 | Operations, market data, Polymarket, and data governance are still early. |
+| P1 Strongly Recommended | 8 | 14 | Operations, market data, Polymarket, and data governance are still early. |
 | P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
-| Total | 35 | 35 | The project has a baseline, but production hardening is still the main body of work. |
+| Total | 37 | 33 | The project has a baseline, but production hardening is still the main body of work. |
 
 ## Current Priority Override
 
