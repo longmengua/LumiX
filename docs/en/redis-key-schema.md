@@ -35,6 +35,15 @@ This document records the current Redis keys used by the low-latency exchange re
 - Keep list and set indexes consistent with object keys. If a repository deletes or archives `order:{uuid}`, it must also clean `ord:list:{uid}` and `ord:set:{uid}`.
 - For schema changes, introduce a new namespace version (`mh:v2:*`) or dual-read/dual-write migration. Do not silently change serialized object shape under the same key pattern.
 
+## Transaction Boundary And Recovery Rules
+
+- MySQL is the authoritative store for command results that have a durable schema. Redis hot state is a serving cache or fast index unless a specific repository still lacks a MySQL replacement.
+- A command transaction must commit database state and outbox rows before external publish. If the database transaction rolls back, Redis updates and Kafka publish must be considered invalid and repaired from the authoritative database or replay log.
+- If MySQL commits but a Redis write fails, do not retry the whole command blindly. Retry or rebuild only the Redis hot-state projection from durable orders, positions, ledger journals, matching logs, or outbox events.
+- If Redis succeeds but MySQL rolls back, treat the Redis value as stale. Recovery tooling must be able to overwrite account, position, order, open-position index, and order indexes from durable storage.
+- Idempotency keys protect command retry windows, but they are not a substitute for replay. If a command outcome is uncertain, operators should compare durable command/outbox/ledger state before accepting a duplicate retry.
+- Outbox/DLQ Redis keys are legacy hot-state implementations when the durable JPA repository is not active. Production should prefer the MySQL outbox repository so outbox rows participate in the same transaction boundary.
+
 ## Migration Backlog
 
 - Enable `REDIS_KEY_PREFIX` in each environment and plan a one-time migration for existing un-prefixed data.

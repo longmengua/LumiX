@@ -20,6 +20,10 @@ import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.AbstractPlatformTransactionManager;
+import org.springframework.transaction.support.DefaultTransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -104,6 +108,26 @@ class MarketMakerHedgeExecutionServiceTest {
         assertThat(report.strategyDecisions().getFirst().reason()).isEqualTo("HEDGE_EXECUTION_HALTED");
         assertThat(fixture.venue.requests).isEmpty();
         assertThat(fixture.published).isEmpty();
+    }
+
+    @Test
+    @DisplayName("executeForMarketMaker 會進入 command transaction boundary")
+    void executeForMarketMakerUsesCommandTransactionBoundaryWhenConfigured() {
+        Fixture fixture = new Fixture();
+        RecordingTransactionManager transactionManager = new RecordingTransactionManager();
+        fixture.service.setCommandTransactionBoundary(
+                new CommandTransactionBoundary(new TransactionTemplate(transactionManager))
+        );
+        fixture.profileStore.save(profile("mm-1", 9001, true, false));
+        fixture.addPosition(9001, "BTCUSDT", "2.000");
+        fixture.oracle.update("BTCUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+
+        // 業務不變，但 profile lookup、strategy decision、venue routing 與 audit publish 都在同一個 command boundary 裡。
+        HedgeExecutionReport report = fixture.service.executeForMarketMaker("mm-1", "exec-test");
+
+        assertThat(report.routedCount()).isEqualTo(1);
+        assertThat(transactionManager.commits).isEqualTo(1);
+        assertThat(transactionManager.rollbacks).isZero();
     }
 
     private static MarketMakerProfile profile(String marketMakerId, long uid, boolean enabled, boolean killSwitch) {
@@ -222,6 +246,34 @@ class MarketMakerHedgeExecutionServiceTest {
 
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
+        }
+    }
+
+    /**
+     * 測試專用 transaction manager；用計數確認 hedge execution 入口確實走 command boundary。
+     */
+    private static final class RecordingTransactionManager extends AbstractPlatformTransactionManager {
+        private int commits;
+        private int rollbacks;
+
+        @Override
+        protected Object doGetTransaction() {
+            return new Object();
+        }
+
+        @Override
+        protected void doBegin(Object transaction, TransactionDefinition definition) {
+            // No database is needed; this test only verifies boundary lifecycle.
+        }
+
+        @Override
+        protected void doCommit(DefaultTransactionStatus status) {
+            commits++;
+        }
+
+        @Override
+        protected void doRollback(DefaultTransactionStatus status) {
+            rollbacks++;
         }
     }
 }

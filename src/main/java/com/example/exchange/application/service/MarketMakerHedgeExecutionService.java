@@ -10,6 +10,7 @@ import com.example.exchange.domain.model.dto.MarketMakerExposure;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,9 +27,25 @@ public class MarketMakerHedgeExecutionService {
     private final MarketMakerHedgeStrategyService strategyService;
     private final MarketMakerHedgingService hedgingService;
     private final RiskControlsProperties riskControlsProperties;
+    private CommandTransactionBoundary commandTransactionBoundary;
+
+    @Autowired(required = false)
+    public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
+        this.commandTransactionBoundary = commandTransactionBoundary;
+    }
 
     @Transactional
     public HedgeExecutionReport executeForMarketMaker(String marketMakerId, String refPrefix) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute(
+                    "market-maker-hedge-execution",
+                    () -> executeForMarketMakerInsideTransaction(marketMakerId, refPrefix)
+            );
+        }
+        return executeForMarketMakerInsideTransaction(marketMakerId, refPrefix);
+    }
+
+    private HedgeExecutionReport executeForMarketMakerInsideTransaction(String marketMakerId, String refPrefix) {
         MarketMakerProfile profile = profileService.findByMarketMakerId(marketMakerId)
                 .orElseThrow(() -> new IllegalArgumentException("market maker profile not found"));
         return execute(profile, refPrefix);
@@ -36,6 +53,16 @@ public class MarketMakerHedgeExecutionService {
 
     @Transactional
     public List<HedgeExecutionReport> executeForEnabledMarketMakers(String refPrefix) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute(
+                    "market-maker-enabled-hedge-execution",
+                    () -> executeForEnabledMarketMakersInsideTransaction(refPrefix)
+            );
+        }
+        return executeForEnabledMarketMakersInsideTransaction(refPrefix);
+    }
+
+    private List<HedgeExecutionReport> executeForEnabledMarketMakersInsideTransaction(String refPrefix) {
         return profileService.enabledProfiles().stream()
                 .map(profile -> execute(profile, refPrefix))
                 .toList();

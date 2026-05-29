@@ -46,6 +46,7 @@ Ledger concerns:
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
 - `CancelReplaceOrderUseCase` owns an outer boundary for cancel original plus replacement place, avoiding a database half-commit where original cancel succeeds but replacement order fails.
+- `LiquidateUseCase` now enters `CommandTransactionBoundary` in Spring runtime before liquidation mutates position, ledger, insurance/ADL coverage, and audit events.
 
 Remaining production TODO:
 - Stronger database constraints, audit retention, replay validation.
@@ -53,7 +54,7 @@ Remaining production TODO:
 - Turnover reconciliation against trade tape and ledger refs.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - Chain/bank callbacks, manual-review ownership, transfer reconciliation projections.
-- Apply the command transaction boundary to forced risk operations, then define Redis hot-state repair rules after DB commit.
+- Add command transaction boundary coverage to ADL forced execution after that service is implemented, then define Redis hot-state repair rules after DB commit.
 
 ## Funding, Liquidation, Reconciliation
 

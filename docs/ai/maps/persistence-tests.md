@@ -58,6 +58,8 @@ Targeted tests:
 ./mvnw -Dtest=MarketMakerQuoteServiceTest test
 ./mvnw -Dtest=MarketMakerProfileServiceTest test
 ./mvnw -Dtest=MarketMakerHedgeFillServiceTest test
+./mvnw -Dtest=MarketMakerHedgeExecutionServiceTest test
+./mvnw -Dtest=LiquidateUseCaseTest test
 ./mvnw -Dtest=OrderAccountingIntegrationTest test
 ./mvnw -Dtest=RiskSettlementServiceTest test
 ./mvnw -Dtest=TrialBalanceServiceTest test
@@ -78,6 +80,7 @@ Transaction boundary coverage:
 - `CommandTransactionBoundaryTest` proves successful command bodies commit and failed command bodies roll back without hidden retry.
 - `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
 - `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
+- `LiquidateUseCaseTest` and `MarketMakerHedgeExecutionServiceTest` prove manual liquidation and hedge execution enter the same command boundary when configured.
 
 ## Agent Context Script
 

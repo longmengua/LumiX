@@ -18,6 +18,7 @@ Current behavior:
 - Retry backoff, max retry count, replay, manual compensation.
 - Request/correlation headers retained through delayed publish.
 - When a Spring transaction is active, `OutboxService.publish(...)` saves the outbox row inside the transaction and defers the external publisher call until `afterCommit`.
+- Redis hot-state recovery rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`: MySQL/outbox rows are authoritative after commit; Redis projection failures should be rebuilt rather than blindly replaying the whole command.
 
 ## Event Store And Recovery
 
