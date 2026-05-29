@@ -20,6 +20,7 @@
 | `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event 的整合流程。 |
 | `OutboxServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers。 |
 | `RiskSettlementServiceTest` | funding、liquidation、insurance fund、account reconciliation。 |
+| `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
 | `OrderBookChecksumTest` | order book checksum 的 BigDecimal scale normalization。 |
 | `SensitiveLogSanitizerTest` | query、JSON、Authorization header、known sensitive header 遮罩。 |
 | `InMemoryMatchingEngineTest` | FIFO、post-only、自成交拒絕、FOK/IOC、市價單流動性不足。 |

@@ -18,6 +18,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 - [ ] Finish the replayable matching core: durable command log, event log, snapshots, offset checkpoints, and deterministic replay validation.
 - [ ] Complete production ADL: queue ranking, forced deleveraging execution, audit events, insurance-fund interaction, and operator controls.
+  - Baseline done: deterministic ranking/planning, liquidation decision audit, operator halt/manual-review hooks, first forced-execution service for position reduction, ledger postings, audit events, and durable execution summary/idempotency records.
 - [ ] Add bonus-credit / experience-fund accounting with separate ledger accounts, eligibility rules, consumption priority, expiry, clawback, and reporting.
   - Baseline done: separate bonus ledger account, grant/consume/expiry/clawback postings, cash-balance isolation, grant-batch remaining tracking, and disabled-by-default expiry scanner.
 - [ ] Add turnover tracking for user, account, symbol, strategy, and market-maker dimensions, with ledger/trade reconciliation.

@@ -32,9 +32,10 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 - Manual review mode records a decision audit event without closing the position or writing liquidation ledger entries.
 - Added `LiquidationScanService` to scan open positions and trigger oracle-based liquidation decisions.
 - Added `AdlDeleveragingPlanner` to turn ranked ADL candidates into deterministic forced-deleveraging steps.
+- Added `AdlForcedExecutionService` first slice to consume ADL plans, force reduce selected positions, write realized-PnL and `adl_forced_loss` ledger postings, publish audit events, and persist durable execution summary/idempotency records.
 
 Remaining work:
-- Wire ADL deleveraging plans into actual position/accounting execution.
+- Wire ADL queue entries into plan/execution orchestration and add command transaction boundary coverage.
 - Add retry/ownership workflow for operator-reviewed liquidation decisions.
 
 ## Acceptance Criteria

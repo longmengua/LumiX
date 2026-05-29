@@ -54,7 +54,7 @@ Remaining production TODO:
 - Turnover reconciliation against trade tape and ledger refs.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - Chain/bank callbacks, manual-review ownership, transfer reconciliation projections.
-- Add command transaction boundary coverage to ADL forced execution after that service is implemented, then define Redis hot-state repair rules after DB commit.
+- Add command transaction boundary coverage to ADL forced execution, then define Redis hot-state repair rules after DB commit.
 
 ## Funding, Liquidation, Reconciliation
 
@@ -62,7 +62,7 @@ Remaining production TODO:
 - Funding: `FundingRateService`
 - Liquidation: `LiquidationService`, `LiquidationScanService`
 - Insurance fund: `InsuranceFundService`
-- ADL ranking/planning: `AdlRankingService`, `AdlDeleveragingPlanner`
+- ADL ranking/planning/execution: `AdlRankingService`, `AdlDeleveragingPlanner`, `AdlForcedExecutionService`, `AdlExecutionStore`, `JpaAdlExecutionStore`
 - Reconciliation: `ReconciliationService`, `ReconciliationReportService`
 - Trial balance: `TrialBalanceService`, `TrialBalanceReport`, `TrialBalanceLine`
 - Liquidation audit event: `LiquidationDecisionRecorded`
@@ -76,6 +76,7 @@ Remaining production TODO:
   - `RiskSettlementServiceTest`
   - `AdlRankingServiceTest`
   - `AdlDeleveragingPlannerTest`
+  - `AdlForcedExecutionServiceTest`
   - `ReconciliationReportServiceTest`
   - `TrialBalanceServiceTest`
 
@@ -84,11 +85,12 @@ Current liquidation/ADL behavior:
 - `LiquidationScanService` scans open positions and delegates oracle-based liquidation decisions.
 - `AdlRankingService` provides deterministic ranking by profit rate, effective leverage, notional, and uid.
 - `AdlDeleveragingPlanner` converts ranked candidates and ADL shortfall into deterministic reduce steps.
+- `AdlForcedExecutionService` consumes ADL plans, validates candidate quantities before mutation, force reduces selected positions, writes realized-PnL and `adl_forced_loss` ledger postings, publishes execution audit events, and uses durable execution records for command id idempotency when configured.
 - `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:
 - Production scheduling/routing for liquidation scanners.
-- Wire ADL deleveraging plans into actual position/accounting execution.
+- Wire ADL queue entries into plan/execution orchestration and add command transaction boundary coverage.
 - Insurance-fund interaction hardening and operator retry/ownership workflow.
 - Alerts for reconciliation failure and unbalanced assets.
 

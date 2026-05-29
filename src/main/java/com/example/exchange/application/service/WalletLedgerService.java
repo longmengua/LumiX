@@ -220,6 +220,17 @@ public class WalletLedgerService {
         ));
     }
 
+    public void applyAdlForcedLoss(long uid, String asset, BigDecimal amount, String refId) {
+        if (notPositive(amount)) return;
+        Account account = getOrCreate(uid);
+        account.debit(amount);
+        accountRepo.save(account);
+        append(uid, asset, "adl_forced_loss", refId, amount, account.crossBalance(), List.of(
+                debit("ADL_SOCIALIZED_LOSS", asset, amount),
+                credit("USER_AVAILABLE", asset, amount)
+        ));
+    }
+
     public void creditRebate(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);

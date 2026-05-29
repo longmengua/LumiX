@@ -18,6 +18,7 @@
 
 - [ ] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
 - [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
+  - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks，以及第一版 forced-execution service，可執行持倉減倉、ledger postings、audit event 與 durable execution summary/idempotency records。
 - [ ] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
   - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking 與預設關閉的 expiry scanner。
 - [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。

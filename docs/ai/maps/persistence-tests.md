@@ -21,6 +21,7 @@ Migrations:
 - `V14__market_maker_profiles.sql`: durable market-maker profile and per-symbol risk limits.
 - `V15__hedge_decision_audits.sql`: durable hedge decision audit trail by market-maker, symbol, ref id, and venue order id.
 - `V16__hedge_fills.sql`: durable hedge fill audit trail by venue order/fill id, ref id, quantity, price, and fee.
+- `V2__adl_execution_records.sql`: post-core-v1 durable ADL forced execution summary and command idempotency records.
 
 Config:
 - `src/main/resources/application-dev.yml`
@@ -54,6 +55,7 @@ Targeted tests:
 ./mvnw -Dtest=MatchingSequencerLeaseServiceTest test
 ./mvnw -Dtest=AdlRankingServiceTest test
 ./mvnw -Dtest=AdlDeleveragingPlannerTest test
+./mvnw -Dtest=AdlForcedExecutionServiceTest test
 ./mvnw -Dtest=WalletLedgerServiceTest test
 ./mvnw -Dtest=BonusCreditServiceTest test
 ./mvnw -Dtest=TurnoverServiceTest test

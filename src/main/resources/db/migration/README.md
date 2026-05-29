@@ -4,6 +4,7 @@ Flyway migration scripts。
 
 目前內容：
 - `V1__core_v1_baseline.sql`：core-v1 乾淨 baseline schema，合併原 V1-V20 的可靠性、order lifecycle、ledger、reconciliation、matching replay/lease、turnover、bonus credit、market-maker、hedging、prediction / Polymarket tables。
+- `V2__adl_execution_records.sql`：post-core-v1 ADL forced execution summary / idempotency records。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。

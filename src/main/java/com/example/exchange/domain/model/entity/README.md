@@ -6,7 +6,7 @@
 - 內部交易所：`Order`、`Account`、`Position`、`Symbol`、`SymbolConfig`（含 risk tiers）。
 - 帳務：`WalletLedgerEntry`、`WalletLedgerPosting`、`WalletTransfer`、`BonusCreditGrantRecord`、`TurnoverRecordEntity`。
 - 做市商：`MarketMakerProfileRecord`、`MarketMakerRiskLimitRecord`、`HedgeDecisionAuditRecordEntity`、`HedgeFillRecordEntity`。
-- 風控 read model：`AccountRiskSnapshotRecord`。
+- 風控 read model：`AccountRiskSnapshotRecord`、`AdlExecutionRecordEntity`。
 - Reliability：`OutboxEvent`、`DlqEvent`。
 - Polymarket：market、session、local order、WS event、sync progress entities。
 

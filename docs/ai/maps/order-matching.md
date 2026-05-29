@@ -71,7 +71,6 @@ Current behavior:
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Document the production deployment switch sequence and decide whether production worker routing can close after smoke verification.
 - Stronger application/accounting cancel-replace atomicity and reconnect/session semantics.
 - Keep this area first in the roadmap until replayable matching is complete.
 

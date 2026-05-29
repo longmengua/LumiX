@@ -62,18 +62,17 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Account risk snapshot, persisted risk snapshot, pre-trade risk checks, risk tiers, global risk switches, mark/index price oracle baseline, liquidation MVP, funding settlement MVP, and reconciliation baseline exist.
 - Liquidation decisions now publish audit data, and operator controls can halt liquidation or route it to manual review.
 - Liquidation scanning can iterate open positions and trigger oracle-based liquidation decisions.
-- ADL now has deterministic ranking and deleveraging-plan baselines; actual forced position/accounting execution is still pending.
+- ADL now has deterministic ranking, deleveraging-plan, and first forced-execution baselines that reduce selected positions, write realized-PnL and socialized-loss ledger postings, publish audit events, and persist durable execution summary/idempotency records.
 - Outbox retry, max retry, DLQ replay, and manual compensation baselines exist.
 - Kafka topic, Redis key schema, request/correlation id, audit log, and ops metrics baseline documents exist.
 - Test folders have README indexes, and test cases use comments plus `@DisplayName` to explain test flow.
 
 ## What Is Not Production Complete
 
-- Production worker routing still needs a documented deployment switch sequence and smoke verification before this post-v1 task is closed.
-- The per-symbol sequencer still executes in an in-process engine; production command intake, worker deployment, and operational cutover remain.
+- Production worker routing has a documented deployment switch sequence, readiness inspection, rollback sequence, and focused smoke verification. The per-symbol sequencer still executes in an in-process engine, so broader disaster recovery and multi-process operational hardening remain.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
 - The ledger now has a durable double-entry journal, bonus-credit account separation, bonus expiry scanner baseline, turnover facts, and replay path; audit retention, deeper replay validation, bonus eligibility/reporting, turnover reconciliation, and operational controls are still incomplete.
-- Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, scanner scheduling/routing, and forced ADL position/accounting execution are still incomplete.
+- Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, scanner scheduling/routing, ADL transaction-boundary coverage, and ADL operator ownership workflow are still incomplete.
 - Reconciliation now has persisted reports, a configurable scheduler policy, alert-route baseline, event-store coverage checks, trial-balance calculation, structured ledger replay comparison, issue workflow fields, admin issue workflow APIs, and workflow audit events. Daily finance reports remain incomplete.
 - Market-maker hedging now has durable profile/risk-limit storage, admin profile APIs, hedge fill query APIs, venue fill callback ingestion, manual and default-disabled scheduled hedge execution APIs, exposure aggregation, inventory-aware reduce-only hedge planning/execution, global hedge execution halt, quote command validation, hedge venue adapter contract, retryable venue result classification, retry/backoff/throttle decorator baselines, standardized venue fill mapping, safe rejecting default adapter, hedging risk checks, slippage rejection, quote/hedge decision audit events, durable hedge decision/fill audit trails, and decision-vs-fill hedge reconciliation. Real venue adapters, quote lifecycle integration, production callback authentication/verification, trade/ledger hedge reconciliation, production execution policy, scheduler/worker locking, and global limits remain incomplete.
 - Outbox now uses a production durable MySQL store for outbox/DLQ records and has an operational replay/compensation runbook.
@@ -88,7 +87,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 1. Tag or hand off the bounded core-v1 baseline.
 2. Work through P0 production hardening via [post-v1 production hardening tasks](../tasks/post-v1/README.md).
-3. Prioritize transaction boundaries, production worker routing, ADL forced execution, market data durability, and external API idempotency.
+3. Prioritize transaction boundaries, ADL forced execution, market data durability, and external API idempotency.
 4. Defer new product surfaces until core-v1 is tagged.
 
 ## Reading Order

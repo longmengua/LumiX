@@ -1,6 +1,6 @@
 # Task: ADL Forced Execution
 
-Status: `todo`
+Status: `doing`
 
 ## Goal
 
@@ -16,10 +16,25 @@ Move ADL from ranking and planning into forced position/accounting execution wit
 
 ## First Implementation Slice
 
-1. Implement a deterministic service that consumes an ADL plan and emits account, position, ledger, and audit mutations.
-2. Guard execution behind risk controls and idempotency checks.
-3. Add tests for full execution, repeated request idempotency, insufficient counterparty quantity, and operator halt.
-4. Comment the accounting examples so each posting side is readable during review.
+1. [x] Implement a deterministic service that consumes an ADL plan and emits account, position, ledger, and audit mutations.
+2. [x] Guard execution behind risk controls and idempotency checks.
+3. [x] Add tests for full execution, repeated request idempotency, insufficient counterparty quantity, and operator halt.
+4. [x] Comment the accounting examples so each posting side is readable during review.
+
+## Progress
+
+- Added `AdlForcedExecutionService` to validate an `AdlDeleveragingPlan` before mutation, then force reduce selected positions at the plan-implied execution price.
+- Added `AdlExecutionResult` and `AdlExecutionStepResult` for deterministic execution summaries.
+- Added `AdlForcedDeleveragingRecorded` audit events for executed, halted, and manual-review decisions.
+- Added `WalletLedgerService.applyAdlForcedLoss(...)` so profitable ADL counterparties can have realized profit credited first and then charged through a balanced `adl_forced_loss` posting.
+- Added `AdlExecutionStore`, `AdlExecutionRecordEntity`, `JpaAdlExecutionStore`, and Flyway migration `V2__adl_execution_records.sql` for durable execution summary/idempotency records.
+- The service still falls back to a service-local command id cache when no durable store is configured, but Spring runtime can now use the JPA store.
+- Added focused tests for full execution, repeated command id idempotency, durable-store idempotency across service instances, insufficient candidate quantity pre-mutation rejection, and operator halt audit.
+
+Remaining work:
+- Add command transaction boundary coverage and Redis hot-state repair rules after DB commit.
+- Add API/operator ownership workflow and wire ADL queue entries into plan/execution orchestration.
+- Harden insurance-fund interaction and retry semantics around partially covered liquidation shortfalls.
 
 ## Acceptance Criteria
 

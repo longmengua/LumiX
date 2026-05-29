@@ -111,6 +111,14 @@ Readiness inspection：
 - replay 失敗或 snapshot age 超過 recovery target 時告警。
 - 暴露 per-symbol owner、epoch、checkpoint、replay lag、halted/running status。
 
-## 目前缺口
+## 目前狀態
 
-目前 matching core 已有 durable command/event log、offset checkpoint、snapshot、validation report、recovery orchestration、lease lifecycle、service-level write guard、owner epoch audit 欄位、worker startup / renewal readiness lifecycle、runtime startup hook、readiness inspection endpoints、submit、cancel、amend、cancel-replace accounting-safe cancel + replacement-submit orchestration 的 worker execution / routing，以及明確 legacy-routing fence。剩餘缺口是文件化 production deployment switch sequence 並執行 smoke verification。
+目前 matching core 已有 durable command/event log、offset checkpoint、snapshot、validation report、recovery orchestration、lease lifecycle、service-level write guard、owner epoch audit 欄位、worker startup / renewal readiness lifecycle、runtime startup hook、readiness inspection endpoints、submit、cancel、amend、cancel-replace accounting-safe cancel + replacement-submit orchestration 的 worker execution / routing，以及明確 legacy-routing fence。
+
+2026-05-29 已完成以下 smoke verification：
+
+```bash
+./mvnw -Dtest=MatchingWorkerCommandRouterTest,MatchingWorkerExecutionServiceTest,MatchingWorkerLifecycleServiceTest,OrderAccountingIntegrationTest test
+```
+
+剩餘 production hardening 屬於更完整的 disaster recovery 與多進程營運強化，不是 worker-routing acceptance criteria 本身。

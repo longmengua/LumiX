@@ -1,6 +1,6 @@
 # Task: Production Worker Routing
 
-Status: `doing`
+Status: `done`
 
 ## Goal
 
@@ -42,8 +42,9 @@ Route matching commands through the sequencer lease guard and owner epoch before
 - Added `MatchingWorkerStartupListener` so `matching-worker.enabled=true` starts configured symbols after Spring application readiness.
 - Updated the matching sequencer runbook with worker environment variables, readiness inspection, and deployment switch/rollback sequence.
 
-Remaining work:
-- Decide whether this task can close after smoke verification.
+Smoke verification:
+- 2026-05-29: `./mvnw -Dtest=MatchingWorkerCommandRouterTest,MatchingWorkerExecutionServiceTest,MatchingWorkerLifecycleServiceTest,OrderAccountingIntegrationTest test` passed with 25 tests, 0 failures.
+- The matching sequencer runbook now documents the deployment switch sequence, readiness inspection, command-log owner/epoch verification, and rollback order.
 
 ## Acceptance Criteria
 

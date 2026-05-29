@@ -12,6 +12,7 @@ Application service tests。
 | `ReconciliationIssueWorkflowServiceTest` | 對帳 issue claim、resolve、reopen、open queue 過濾與 workflow audit event。 |
 | `AdlRankingServiceTest` | ADL queue deterministic ranking 與候選排除規則。 |
 | `AdlDeleveragingPlannerTest` | ADL forced deleveraging plan 分配與剩餘缺口計算。 |
+| `AdlForcedExecutionServiceTest` | ADL forced execution 的減倉、ledger posting、service/durable idempotency、候選數量不足與 operator halt。 |
 | `WalletLedgerServiceTest` | 體驗金 grant、consume、expire、clawback 與 real cash 隔離。 |
 | `BonusCreditServiceTest` | 體驗金批次 remaining、到期 FIFO consume 與 expiry scanner。 |
 | `TurnoverServiceTest` | 成交事件寫入 turnover fact 與 match-level summary。 |

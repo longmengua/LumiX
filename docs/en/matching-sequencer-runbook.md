@@ -111,6 +111,14 @@ When `matching-worker.enabled=true`, `MatchingWorkerStartupListener` calls `star
 - Alert when replay fails or snapshot age exceeds the recovery target.
 - Expose per-symbol owner, epoch, checkpoint, replay lag, and halted/running status.
 
-## Current Gap
+## Current Status
 
-The current matching core now has durable command/event log, offset checkpoint, snapshot, validation report, recovery orchestration, lease lifecycle, service-level write guard, owner epoch audit fields, worker startup/renewal readiness lifecycle, runtime startup hook, readiness inspection endpoints, worker execution/routing for submit, cancel, amend, and cancel-replace's accounting-safe cancel + replacement-submit orchestration, plus an explicit legacy-routing fence. The remaining gap is documenting the production deployment switch sequence and running smoke verification.
+The current matching core now has durable command/event log, offset checkpoint, snapshot, validation report, recovery orchestration, lease lifecycle, service-level write guard, owner epoch audit fields, worker startup/renewal readiness lifecycle, runtime startup hook, readiness inspection endpoints, worker execution/routing for submit, cancel, amend, and cancel-replace's accounting-safe cancel + replacement-submit orchestration, plus an explicit legacy-routing fence.
+
+Smoke verification on 2026-05-29 passed with:
+
+```bash
+./mvnw -Dtest=MatchingWorkerCommandRouterTest,MatchingWorkerExecutionServiceTest,MatchingWorkerLifecycleServiceTest,OrderAccountingIntegrationTest test
+```
+
+The remaining production hardening is broader disaster recovery and multi-process operational hardening, not the worker-routing acceptance criteria itself.
