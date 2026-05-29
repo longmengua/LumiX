@@ -4,10 +4,13 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
+import com.example.exchange.domain.repository.InMemoryAdlQueueStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -55,5 +58,40 @@ class InsuranceFundServiceTest {
         assertThatThrownBy(() -> service.enqueueAdl(" ", 7, "BTCUSDT", "LONG", new BigDecimal("100")))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("liquidationId");
+    }
+
+    @Test
+    @DisplayName("stuckAdlClaims 只列出超過 claim 時間門檻的 CLAIMED queue entry")
+    void stuckAdlClaimsReturnsOnlyOldClaimedEntries() {
+        InMemoryAdlQueueStore store = new InMemoryAdlQueueStore();
+        InsuranceFundService service = new InsuranceFundService(store);
+        store.enqueueIfAbsent(new AdlQueueEntry(
+                "old-claim",
+                7,
+                "BTCUSDT",
+                "LONG",
+                new BigDecimal("100"),
+                Instant.now().minus(Duration.ofHours(1)),
+                "CLAIMED",
+                "ops-1",
+                Instant.now().minus(Duration.ofMinutes(30))
+        ));
+        store.enqueueIfAbsent(new AdlQueueEntry(
+                "fresh-claim",
+                7,
+                "BTCUSDT",
+                "LONG",
+                new BigDecimal("100"),
+                Instant.now(),
+                "CLAIMED",
+                "ops-2",
+                Instant.now()
+        ));
+        service.enqueueAdl("open-entry", 7, "BTCUSDT", "LONG", new BigDecimal("100"));
+
+        // 營運報表只應列出 claim 後卡住超過門檻的項目，不混入新 claim 或尚未 claim 的 queue。
+        assertThat(service.stuckAdlClaims(Duration.ofMinutes(10)))
+                .extracting(AdlQueueEntry::liquidationId)
+                .containsExactly("old-claim");
     }
 }

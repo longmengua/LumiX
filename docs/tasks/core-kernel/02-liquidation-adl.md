@@ -37,10 +37,11 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 - ADL queue enqueue is idempotent by `liquidationId`; duplicate liquidation retry/replay does not create another queue entry or clear an existing operator claim.
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary`, so ADL queue-to-execution routes through the same command transaction baseline as other core writes.
 - Added `AdlQueueStore` with in-memory and JPA adapters plus `adl_queue_entries` Flyway schema so queue state and operator claims survive process restarts.
+- Added `GET /api/risk/adl-queue/stuck-claims?minClaimAgeSeconds=...` to report claimed ADL entries that have exceeded the operator age threshold.
 
 Remaining work:
 - Add retry/ownership workflow for operator-reviewed liquidation decisions.
-- Add stuck-claim alerts, production insurance-fund capital movement records, and stronger operator assignment audit history.
+- Add alert-backend delivery for stuck claims, production insurance-fund capital movement records, and stronger operator assignment audit history.
 
 ## Acceptance Criteria
 

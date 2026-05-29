@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.util.List;
 
 @RestController
@@ -90,6 +91,14 @@ public class RiskController {
     @GetMapping("/adl-queue")
     public ApiResponse<List<AdlQueueEntry>> adlQueue() {
         return ApiResponse.ok(insuranceFundService.adlQueue());
+    }
+
+    @GetMapping("/adl-queue/stuck-claims")
+    public ApiResponse<List<AdlQueueEntry>> stuckAdlClaims(
+            @RequestParam(defaultValue = "900") long minClaimAgeSeconds
+    ) {
+        long safeSeconds = Math.max(0, minClaimAgeSeconds);
+        return ApiResponse.ok(insuranceFundService.stuckAdlClaims(Duration.ofSeconds(safeSeconds)));
     }
 
     @PostMapping("/adl-queue/{liquidationId}/execute")

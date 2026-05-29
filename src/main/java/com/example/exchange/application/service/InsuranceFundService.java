@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +78,17 @@ public class InsuranceFundService {
 
     public synchronized List<AdlQueueEntry> adlQueue() {
         return adlQueueStore.list();
+    }
+
+    public synchronized List<AdlQueueEntry> stuckAdlClaims(Duration minClaimAge) {
+        Duration threshold = minClaimAge == null || minClaimAge.isNegative()
+                ? Duration.ZERO
+                : minClaimAge;
+        Instant cutoff = Instant.now().minus(threshold);
+        return adlQueueStore.list().stream()
+                .filter(entry -> "CLAIMED".equals(entry.status()))
+                .filter(entry -> entry.claimedAt() != null && !entry.claimedAt().isAfter(cutoff))
+                .toList();
     }
 
     public synchronized boolean completeAdl(String liquidationId) {
