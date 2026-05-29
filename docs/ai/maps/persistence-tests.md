@@ -27,6 +27,11 @@ Migrations:
 - `V5__market_data_trade_tape.sql`: post-core-v1 durable trade tape for restart-safe recent trades.
 - `V6__market_data_tickers.sql`: post-core-v1 durable ticker latest-state records.
 - `V7__market_data_klines.sql`: post-core-v1 durable kline records.
+- `V8__hedge_venue_idempotency_records.sql`: post-core-v1 hedge venue submit idempotency records.
+- `V9__polymarket_clob_command_records.sql`: post-core-v1 Polymarket CLOB command idempotency records.
+- `V10__rpc_transaction_records.sql`: post-core-v1 backend-observed RPC transaction outcome tracking.
+- `V11__adl_queue_entries.sql`: post-core-v1 durable ADL queue and operator claim state.
+- `V12__production_query_indexes.sql`: post-core-v1 production query indexes for order projections, ledger, events, and prediction orders.
 
 Config:
 - `src/main/resources/application-dev.yml`
