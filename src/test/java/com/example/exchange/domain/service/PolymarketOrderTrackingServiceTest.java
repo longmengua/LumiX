@@ -232,12 +232,14 @@ class PolymarketOrderTrackingServiceTest {
      */
     void syncDoesNotDowngradeTerminalStatusWithStaleActiveRemotePayload() {
         PredictionPolymarketOrder existing = order("ORDER_STATUS_CANCELED", "clob-1");
+        existing.setSizeMatched(new BigDecimal("5.00"));
         Fixture fx = new Fixture(existing);
-        fx.clobClient.nextGetOrder = successOrderPayload("live", "0");
+        fx.clobClient.nextGetOrder = successOrderPayload("live", "1.00");
 
         PredictionPolymarketOrder result = fx.service.syncOrder("internal-1");
 
         assertThat(result.getStatus()).isEqualTo("ORDER_STATUS_CANCELED");
+        assertThat(result.getSizeMatched()).isEqualByComparingTo("5.00");
         assertThat(result.getLastClobPayload()).contains("\"status\":\"live\"");
         assertThat(fx.orderRepository.saveCount).isEqualTo(1);
     }

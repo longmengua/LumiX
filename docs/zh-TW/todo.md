@@ -100,7 +100,7 @@
 - [ ] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
 - [ ] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
 - [ ] 對 CLOB 下單、取消、同步、reconcile 做 idempotent command 設計。
-  - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes；stale active CLOB payload 不會降級 local terminal order。Remaining：完整 trade/settlement state-machine transitions。
+  - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes；stale active CLOB payload 不會降級 local terminal order 或 matched size。Remaining：完整 trade/settlement state-machine transitions。
   - Baseline 已完成：place 支援 `clientRequestId` duplicate replay、payload conflict rejection 與 uncertain local-order retry blocking。
 - [ ] User WebSocket 服務獨立部署，支援自動重連、checkpoint、事件去重、落庫與 replay。
 - [ ] allowance / approval 查詢加入 cache 與過期策略，避免 RPC 被打爆。

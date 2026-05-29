@@ -34,7 +34,7 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added `PolymarketOrderTrackingServiceTest` covering cancel duplicate replay, commandId replay/conflict, first successful cancel marker, exception/5xx uncertain outcomes, reconcile resolution for uncertain cancel, and unchanged sync/reconcile replay.
 - Added `PolymarketApprovalServiceTest` covering approval read cache hits, owner-scoped cache clear, and TTL refresh before order validation relies on RPC approval state.
 - Added CLOB sync/reconcile local no-op replay: unchanged CLOB payload/status/size/error does not save the local order row again, and reconcile reports unchanged rows separately.
-- Added `PolymarketOrderStateMachine` as a first local/CLOB state-machine guard so stale active CLOB payloads cannot downgrade a local terminal order.
+- Added `PolymarketOrderStateMachine` as a first local/CLOB state-machine guard so stale active CLOB payloads cannot downgrade a local terminal order or its matched size.
 
 Remaining work:
 - Add venue lookup/reconciliation for real hedge adapters and operator handling for uncertain outcomes.

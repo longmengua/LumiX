@@ -211,7 +211,8 @@ public class PolymarketOrderTrackingService {
             BigDecimal sizeMatched =
                     decimal(firstText(raw, "size_matched"));
 
-            if (sizeMatched != null) {
+            if (sizeMatched != null
+                    && orderStateMachine.shouldApplyRemoteMatchedSize(order.getStatus(), status)) {
                 nextSizeMatched =
                         sizeMatched;
             }

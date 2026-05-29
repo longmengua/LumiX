@@ -43,6 +43,17 @@ public class PolymarketOrderStateMachine {
         return remoteStatus;
     }
 
+    public boolean shouldApplyRemoteMatchedSize(String currentStatus, String remoteStatus) {
+        String normalizedCurrent =
+                normalize(currentStatus);
+        String normalizedRemote =
+                normalize(remoteStatus);
+        return normalizedCurrent == null
+                || normalizedRemote == null
+                || !TERMINAL_STATUSES.contains(normalizedCurrent)
+                || !ACTIVE_REMOTE_STATUSES.contains(normalizedRemote);
+    }
+
     private static String normalize(String status) {
         if (status == null || status.isBlank()) {
             return null;
