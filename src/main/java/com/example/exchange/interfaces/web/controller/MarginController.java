@@ -14,6 +14,7 @@ import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
+import com.example.exchange.domain.model.dto.TurnoverRecord;
 import com.example.exchange.domain.model.dto.TurnoverSummary;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
@@ -127,6 +128,18 @@ public class MarginController {
             @RequestParam(required = false) String matchId
     ) {
         return ApiResponse.ok(turnoverService.summarize(uid, symbol, strategyId, marketMakerId, matchId));
+    }
+
+    @GetMapping("/turnover/records")
+    public ApiResponse<List<TurnoverRecord>> turnoverRecords(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol,
+            @RequestParam(required = false) String strategyId,
+            @RequestParam(required = false) String marketMakerId,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(defaultValue = "100") int limit
+    ) {
+        return ApiResponse.ok(turnoverService.records(uid, symbol, strategyId, marketMakerId, matchId, limit));
     }
 
     @GetMapping("/ledger/replay")

@@ -32,8 +32,8 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 - `MarginController` exposes `GET /api/margin/bonus-credit/report` and `POST /api/margin/bonus-credit/clawback`; these inherit the existing `/api/margin/**` funds security classification.
 - `BonusCreditExpiryScheduler` provides a disabled-by-default scheduler entry via `bonus-credit.expiry-enabled`.
 - `TurnoverService` records `TradeExecuted` facts into `TurnoverRecord` with uid, account, symbol, strategy, order, match, sequence, quantity, price, and notional dimensions.
-- `TurnoverService` can summarize turnover by uid with optional symbol, strategy, market-maker, and match filters.
-- `MarginController` exposes `GET /api/margin/turnover/summary` for operations and campaign reporting baselines.
+- `TurnoverService` can summarize turnover and return limited drill-down records by uid with optional symbol, strategy, market-maker, and match filters.
+- `MarginController` exposes `GET /api/margin/turnover/summary` and `GET /api/margin/turnover/records` for operations and campaign reporting baselines.
 - `OrderService` can optionally write turnover facts after idempotent trade accounting.
 - `V11__turnover_records.sql` adds the durable turnover read model with indexes for uid, symbol, strategy, market-maker, and match lookups.
 - `V12__bonus_credit_grants.sql` adds the durable bonus grant read model with uid/asset/status/expiry indexes.
@@ -44,7 +44,7 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 - Add bonus eligibility rules per product/symbol/order type before bonus consumption is allowed.
 - Add first-class `strategyId` / `marketMakerId` fields to order entry instead of temporarily deriving strategy from `clientOrderId`.
 - Add turnover reconciliation job that compares turnover records against trade tape and ledger refs.
-- Expand bonus reporting into campaign/operator reports and add paged turnover drill-down APIs.
+- Expand bonus reporting into campaign/operator reports and add paged/exportable turnover reports.
 
 ## Acceptance Criteria
 

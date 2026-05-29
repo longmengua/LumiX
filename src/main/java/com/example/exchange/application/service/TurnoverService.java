@@ -84,6 +84,30 @@ public class TurnoverService {
         );
     }
 
+    public List<TurnoverRecord> records(
+            long uid,
+            String symbol,
+            String strategyId,
+            String marketMakerId,
+            String matchId,
+            int limit
+    ) {
+        List<TurnoverRecord> records = normalize(matchId) == null
+                ? turnoverStore.findByUid(uid)
+                : turnoverStore.findByMatchId(matchId);
+        int boundedLimit = Math.max(1, Math.min(limit, 500));
+        String normalizedSymbol = normalize(symbol);
+        String normalizedStrategyId = normalize(strategyId);
+        String normalizedMarketMakerId = normalize(marketMakerId);
+        return records.stream()
+                .filter(record -> record.uid() == uid)
+                .filter(record -> normalizedSymbol == null || Objects.equals(normalizedSymbol, normalize(record.symbol())))
+                .filter(record -> normalizedStrategyId == null || Objects.equals(normalizedStrategyId, normalize(record.strategyId())))
+                .filter(record -> normalizedMarketMakerId == null || Objects.equals(normalizedMarketMakerId, normalize(record.marketMakerId())))
+                .limit(boundedLimit)
+                .toList();
+    }
+
     private static TurnoverSummary summarize(long uid, List<TurnoverRecord> records) {
         BigDecimal quantity = BigDecimal.ZERO;
         BigDecimal notional = BigDecimal.ZERO;

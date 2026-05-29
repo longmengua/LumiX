@@ -43,9 +43,9 @@ Ledger concerns:
 - Bonus credit grant, consume, expiry, and clawback are explicit ledger entries under `USER_BONUS_AVAILABLE`.
 - Bonus credit is not added to `Account.crossBalance`, so promotional funds cannot silently mix with real cash.
 - Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.
-- `MarginController` exposes bonus-credit report/clawback and turnover summary APIs under `/api/margin/**`, which keeps them in the funds security classification.
+- `MarginController` exposes bonus-credit report/clawback and turnover summary/drill-down APIs under `/api/margin/**`, which keeps them in the funds security classification.
 - Turnover facts are derived from processed `TradeExecuted` events and keep uid, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
-- Turnover summaries can be queried by uid with optional symbol, strategy, market-maker, and match filters.
+- Turnover summaries and limited record drill-downs can be queried by uid with optional symbol, strategy, market-maker, and match filters.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
 - `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
@@ -57,7 +57,7 @@ Ledger concerns:
 Remaining production TODO:
 - Stronger database constraints, audit retention, replay validation.
 - Bonus-credit eligibility rules, automated clawback policy, and broader campaign/turnover reporting controls.
-- Turnover reconciliation against trade tape and ledger refs plus paged drill-down/report exports.
+- Turnover reconciliation against trade tape and ledger refs plus paged/exportable reports.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
 

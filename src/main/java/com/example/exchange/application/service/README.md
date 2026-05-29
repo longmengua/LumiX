@@ -9,7 +9,7 @@
 - `WalletLedgerService` / `MarginService`：帳務 posting、入出金狀態機、callback 冪等、manual-review owner、transfer reconciliation projection、margin transfer。
 - `WalletLedgerReplayService`：由 durable ledger replay 帳戶狀態，並提供 account/replay/delta 結構化 comparison。
 - `BonusCreditService`：體驗金 grant 批次、到期 FIFO 消耗、expiry scanner orchestration、grant state report 與營運 clawback。
-- `TurnoverService`：由已處理成交事件建立 turnover read model，並提供 uid/symbol/strategy/market-maker/match summary query，供活動門檻與 trade/ledger 對帳。
+- `TurnoverService`：由已處理成交事件建立 turnover read model，並提供 uid/symbol/strategy/market-maker/match summary 與 drill-down query，供活動門檻與 trade/ledger 對帳。
 - `AccountRiskService` / `AccountRiskSnapshotService` / `MarkPriceOracleService` / `ReconciliationService`：帳戶風險快照、snapshot 持久化、mark/index price baseline 與對帳 baseline。
 - `TrialBalanceService`：由 wallet ledger postings 產生 asset/account-code trial balance。
 - `ReconciliationIssueWorkflowService`：reconciliation issue claim、resolve、reopen、open queue workflow 與 workflow audit event。

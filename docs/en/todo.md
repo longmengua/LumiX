@@ -22,7 +22,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Add bonus-credit / experience-fund accounting with separate ledger accounts, eligibility rules, consumption priority, expiry, clawback, and reporting.
   - Baseline done: separate bonus ledger account, grant/consume/expiry/clawback postings, cash-balance isolation, grant-batch remaining tracking, disabled-by-default expiry scanner, bonus-credit report API, and operator clawback API. Remaining: eligibility rules, automated clawback policy, and broader campaign/turnover reporting.
 - [ ] Add turnover tracking for user, account, symbol, strategy, and market-maker dimensions, with ledger/trade reconciliation.
-  - Baseline done: durable turnover records emitted from processed trades and a turnover summary query API for uid/symbol/strategy/market-maker/match dimensions; reconciliation job and first-class strategy/market-maker order fields remain.
+  - Baseline done: durable turnover records emitted from processed trades plus turnover summary and limited drill-down query APIs for uid/symbol/strategy/market-maker/match dimensions; reconciliation job and first-class strategy/market-maker order fields remain.
 - [ ] Harden ledger reconciliation into an auditable accounting book: immutable journals, trial balance, replay comparison, exception workflow, and finance reports.
   - Baseline done: trial-balance calculation, structured replay comparison, reconciliation issue workflow fields/admin APIs, and workflow audit events; daily reports remain.
 - [ ] Build market-maker interfaces for quoting, inventory, risk limits, kill switch, and hedging order routing.

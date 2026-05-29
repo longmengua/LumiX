@@ -110,6 +110,22 @@ class TurnoverServiceTest {
         assertThat(summary.notional()).isEqualByComparingTo("150.0");
     }
 
+    @Test
+    @DisplayName("records 提供限量 drill-down，方便從 summary 追查 turnover facts")
+    void recordsFiltersAndBoundsLimit() {
+        MemTurnoverStore store = new MemTurnoverStore();
+        TurnoverService service = new TurnoverService(store);
+        store.append(record(71, "BTCUSDT", "campaign-a", "mm-1", "match-a", "1", "100"));
+        store.append(record(71, "BTCUSDT", "campaign-a", "mm-1", "match-b", "2", "100"));
+        store.append(record(71, "BTCUSDT", "campaign-b", "mm-1", "match-c", "3", "100"));
+
+        // 場景：營運頁先看 summary，再用相同維度限量拉回底層 facts。
+        List<TurnoverRecord> records = service.records(71, "BTCUSDT", "campaign-a", "mm-1", null, 1);
+
+        assertThat(records).hasSize(1);
+        assertThat(records.getFirst().matchId()).isEqualTo("match-a");
+    }
+
     private static TradeExecuted trade(long uid, Symbol symbol, UUID orderId, String matchId, String price) {
         return new TradeExecuted(
                 uid,
