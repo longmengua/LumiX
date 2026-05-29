@@ -11,6 +11,7 @@ import com.example.exchange.domain.repository.jpa.PredictionPolymarketWsEventRep
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -58,7 +59,15 @@ public class PolymarketUserEventService {
                         : LocalDateTime.ofInstant(event.getReceivedAt(), ZoneOffset.UTC)
         );
 
-        eventRepository.save(entity);
+        try {
+            eventRepository.save(entity);
+        } catch (DataIntegrityViolationException e) {
+            log.info(
+                    "[PolymarketUserEvent] Duplicate event replay ignored. eventKey={}",
+                    eventKey
+            );
+            return;
+        }
 
         applyToOrder(event);
     }
