@@ -6,6 +6,7 @@ Spring Data JPA repositories。
 - Polymarket market/session/order/user WS/sync progress 主要走 JPA。
 - 內部交易所核心熱狀態目前主要走 Redis repository。
 - `JpaAdlExecutionStore` 保存 ADL forced execution summary / idempotency records。
+- `JpaAdlQueueStore` 保存 ADL liquidation shortfall queue 與 operator claim 狀態。
 - `JpaMarketDataSequenceCheckpointStore` 保存 market-data stream sequence/checksum checkpoints。
 - `JpaMarketDataDepthDeltaStore` 保存 depth delta backfill records。
 - `JpaMarketDataTradeTapeStore` 保存 restart-safe recent trade tape records。

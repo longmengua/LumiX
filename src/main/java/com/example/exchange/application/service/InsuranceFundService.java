@@ -4,11 +4,13 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
+import com.example.exchange.domain.repository.AdlQueueStore;
+import com.example.exchange.domain.repository.InMemoryAdlQueueStore;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -19,7 +21,16 @@ public class InsuranceFundService {
     private static final BigDecimal DEFAULT_BALANCE = new BigDecimal("1000000");
 
     private final Map<String, BigDecimal> balances = new ConcurrentHashMap<>();
-    private final List<AdlQueueEntry> adlQueue = new ArrayList<>();
+    private final AdlQueueStore adlQueueStore;
+
+    public InsuranceFundService() {
+        this(new InMemoryAdlQueueStore());
+    }
+
+    @Autowired
+    public InsuranceFundService(AdlQueueStore adlQueueStore) {
+        this.adlQueueStore = adlQueueStore;
+    }
 
     public synchronized BigDecimal balance(String asset) {
         return balances.computeIfAbsent(normalize(asset), ignored -> DEFAULT_BALANCE);
@@ -51,9 +62,8 @@ public class InsuranceFundService {
             BigDecimal amount
     ) {
         if (amount == null || amount.signum() <= 0) return;
-        if (hasAdlEntry(liquidationId)) return;
-        adlQueue.add(new AdlQueueEntry(
-                liquidationId,
+        adlQueueStore.enqueueIfAbsent(new AdlQueueEntry(
+                requireLiquidationId(liquidationId),
                 uid,
                 normalize(symbol),
                 normalizeSide(liquidatedSide),
@@ -66,57 +76,23 @@ public class InsuranceFundService {
     }
 
     public synchronized List<AdlQueueEntry> adlQueue() {
-        return List.copyOf(adlQueue);
+        return adlQueueStore.list();
     }
 
     public synchronized boolean completeAdl(String liquidationId) {
-        return adlQueue.removeIf(entry -> entry.liquidationId().equals(liquidationId));
+        return adlQueueStore.complete(liquidationId);
     }
 
     public synchronized AdlQueueEntry updateAdlRemaining(String liquidationId, BigDecimal remainingAmount) {
-        if (remainingAmount == null || remainingAmount.signum() <= 0) {
-            completeAdl(liquidationId);
-            return null;
-        }
-        int index = indexOf(liquidationId);
-        AdlQueueEntry current = adlQueue.get(index);
-        AdlQueueEntry updated = new AdlQueueEntry(
-                current.liquidationId(),
-                current.uid(),
-                current.symbol(),
-                current.liquidatedSide(),
-                remainingAmount,
-                current.ts(),
-                current.status(),
-                current.owner(),
-                current.claimedAt()
-        );
-        adlQueue.set(index, updated);
-        return updated;
+        return adlQueueStore.updateRemaining(liquidationId, remainingAmount);
     }
 
     public synchronized AdlQueueEntry claimAdl(String liquidationId, String owner) {
-        String normalizedOwner = requireOwner(owner);
-        int index = indexOf(liquidationId);
-        AdlQueueEntry current = adlQueue.get(index);
-        if ("CLAIMED".equals(current.status()) && !normalizedOwner.equals(current.owner())) {
-            throw new IllegalStateException("ADL queue entry already claimed by " + current.owner());
-        }
-        AdlQueueEntry claimed = copy(current, "CLAIMED", normalizedOwner, Instant.now());
-        adlQueue.set(index, claimed);
-        return claimed;
+        return adlQueueStore.claim(liquidationId, owner);
     }
 
     public synchronized AdlQueueEntry releaseAdl(String liquidationId, String owner) {
-        String normalizedOwner = requireOwner(owner);
-        int index = indexOf(liquidationId);
-        AdlQueueEntry current = adlQueue.get(index);
-        if ("CLAIMED".equals(current.status()) && !normalizedOwner.equals(current.owner())) {
-            throw new IllegalStateException("ADL queue entry claimed by " + current.owner());
-        }
-        AdlQueueEntry released = copy(current, "OPEN", "", null);
-        adlQueue.set(index, released);
-        return released;
+        return adlQueueStore.release(liquidationId, owner);
     }
 
     private static String normalize(String value) {
@@ -128,44 +104,10 @@ public class InsuranceFundService {
         return ("LONG".equals(normalized) || "SHORT".equals(normalized)) ? normalized : "";
     }
 
-    private int indexOf(String liquidationId) {
+    private static String requireLiquidationId(String liquidationId) {
         if (liquidationId == null || liquidationId.isBlank()) {
             throw new IllegalArgumentException("liquidationId must not be blank");
         }
-        for (int i = 0; i < adlQueue.size(); i++) {
-            if (liquidationId.trim().equals(adlQueue.get(i).liquidationId())) {
-                return i;
-            }
-        }
-        throw new IllegalArgumentException("ADL queue entry not found: " + liquidationId);
-    }
-
-    private boolean hasAdlEntry(String liquidationId) {
-        if (liquidationId == null || liquidationId.isBlank()) {
-            throw new IllegalArgumentException("liquidationId must not be blank");
-        }
-        return adlQueue.stream()
-                .anyMatch(entry -> liquidationId.trim().equals(entry.liquidationId()));
-    }
-
-    private static String requireOwner(String owner) {
-        if (owner == null || owner.isBlank()) {
-            throw new IllegalArgumentException("ADL queue owner must not be blank");
-        }
-        return owner.trim();
-    }
-
-    private static AdlQueueEntry copy(AdlQueueEntry current, String status, String owner, Instant claimedAt) {
-        return new AdlQueueEntry(
-                current.liquidationId(),
-                current.uid(),
-                current.symbol(),
-                current.liquidatedSide(),
-                current.amount(),
-                current.ts(),
-                status,
-                owner,
-                claimedAt
-        );
+        return liquidationId.trim();
     }
 }

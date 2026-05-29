@@ -92,13 +92,12 @@ Current liquidation/ADL behavior:
 - `AdlRankingService` provides deterministic ranking by profit rate, effective leverage, notional, and uid.
 - `AdlDeleveragingPlanner` converts ranked candidates and ADL shortfall into deterministic reduce steps.
 - `AdlForcedExecutionService` consumes ADL plans, validates candidate quantities before mutation, force reduces selected positions, writes realized-PnL and `adl_forced_loss` ledger postings, publishes execution audit events, and uses durable execution records for command id idempotency when configured.
-- `InsuranceFundService` enqueues ADL shortfalls idempotently by `liquidationId`, preserving any existing operator claim on duplicate retry/replay.
+- `InsuranceFundService` enqueues ADL shortfalls idempotently by `liquidationId` through `AdlQueueStore`, preserving any existing operator claim on duplicate retry/replay; Spring runtime uses `JpaAdlQueueStore` and unit tests can use `InMemoryAdlQueueStore`.
 - `AdlQueueExecutionService` consumes queued liquidation shortfalls, enforces queue owner guard when claimed, filters opposite-side candidates, ranks/plans ADL reduction, executes through `ExecuteAdlUseCase`, completes fully covered queue entries, keeps remaining notional on partial execution, and returns `ADL_NO_ELIGIBLE_CANDIDATES` without consuming the queue when no candidate can be reduced.
 - `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:
 - Production scheduling/routing for liquidation scanners.
-- Move ADL queue state from in-memory service into durable storage.
 - Add production insurance-fund capital movement records, stuck-claim alerts, and stronger operator assignment audit history.
 - Alerts for reconciliation failure and unbalanced assets.
 

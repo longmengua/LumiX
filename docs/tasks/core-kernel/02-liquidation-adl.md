@@ -36,10 +36,11 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 - Added `AdlQueueExecutionService` to consume queued liquidation shortfalls, filter opposite-side ADL candidates, plan reduction, execute through `ExecuteAdlUseCase`, enforce claimed-entry owner guard, and keep queue entries retryable when only partial coverage or no eligible candidates are available.
 - ADL queue enqueue is idempotent by `liquidationId`; duplicate liquidation retry/replay does not create another queue entry or clear an existing operator claim.
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary`, so ADL queue-to-execution routes through the same command transaction baseline as other core writes.
+- Added `AdlQueueStore` with in-memory and JPA adapters plus `adl_queue_entries` Flyway schema so queue state and operator claims survive process restarts.
 
 Remaining work:
 - Add retry/ownership workflow for operator-reviewed liquidation decisions.
-- Move ADL queue state from in-memory service into durable storage and add stuck-claim alerts.
+- Add stuck-claim alerts, production insurance-fund capital movement records, and stronger operator assignment audit history.
 
 ## Acceptance Criteria
 

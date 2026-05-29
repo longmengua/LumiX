@@ -10,6 +10,10 @@ Flyway migration scripts。
 - `V5__market_data_trade_tape.sql`：post-core-v1 trade tape records。
 - `V6__market_data_tickers.sql`：post-core-v1 ticker latest-state records。
 - `V7__market_data_klines.sql`：post-core-v1 kline records。
+- `V8__hedge_venue_idempotency_records.sql`：hedge venue submit idempotency records。
+- `V9__polymarket_clob_command_records.sql`：Polymarket CLOB command idempotency records。
+- `V10__rpc_transaction_records.sql`：backend-observed RPC transaction outcome tracking records。
+- `V11__adl_queue_entries.sql`：durable ADL queue entries and operator claim state。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。
