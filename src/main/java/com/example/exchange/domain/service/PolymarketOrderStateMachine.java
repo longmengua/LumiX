@@ -21,6 +21,8 @@ public class PolymarketOrderStateMachine {
                     "ORDER_STATUS_CANCELLED",
                     "FILLED",
                     "ORDER_STATUS_FILLED",
+                    "SETTLED",
+                    "ORDER_STATUS_SETTLED",
                     "FAILED",
                     "REJECTED"
             );

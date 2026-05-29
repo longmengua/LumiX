@@ -52,7 +52,8 @@ CLOB order sync and reconcile are read-only external calls, but they still updat
 - Repeated sync of the same CLOB payload returns the local order without another database save.
 - Reconcile still counts the order as checked, but reports unchanged rows separately and avoids writing them.
 - Changed remote status, matched size, error, or raw payload is saved with a fresh `lastSyncedAt`.
-- Fuller local/CLOB/trade/settlement state-machine transitions remain TODO.
+- Stale active CLOB payloads cannot downgrade local filled/settled terminal orders or matched size.
+- Fuller local/CLOB/trade/settlement event payload transitions remain TODO.
 
 ## RPC Approval Read Baseline
 

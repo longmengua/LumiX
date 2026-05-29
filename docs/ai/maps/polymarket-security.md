@@ -26,7 +26,7 @@
 Remaining production TODO:
 - Local/CLOB/trade/settlement order state machine.
 - Versioned Gamma/CLOB response schemas.
-- Fuller CLOB trade/settlement state machine; `PolymarketOrderStateMachine` prevents stale active CLOB payloads from downgrading local terminal orders or matched size, place has a `clientRequestId` local idempotency baseline, cancel can use durable `commandId` records, cancel replays already-recorded cancel/uncertain statuses locally, and reconcile can resolve uncertain cancel from remote CLOB status while sync/reconcile skip unchanged local writes.
+- Fuller CLOB trade/settlement state machine; `PolymarketOrderStateMachine` prevents stale active CLOB payloads from downgrading local filled/settled terminal orders or matched size, place has a `clientRequestId` local idempotency baseline, cancel can use durable `commandId` records, cancel replays already-recorded cancel/uncertain statuses locally, and reconcile can resolve uncertain cancel from remote CLOB status while sync/reconcile skip unchanged local writes.
 - Independent user WebSocket worker with checkpoint, dedup, persistence, replay.
 - Backend-observed approval transaction idempotency tracking for any future effectful relayer flow; approval reads already have TTL cache and owner-scoped clear.
 
