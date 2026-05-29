@@ -25,7 +25,7 @@
 | `RiskSettlementServiceTest` | funding、liquidation、insurance fund、account reconciliation。 |
 | `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
 | `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration。 |
-| `IdempotentHedgeVenueAdapterTest` | Hedge venue submit refId idempotency、payload conflict、uncertain timeout duplicate blocking。 |
+| `IdempotentHedgeVenueAdapterTest` | Hedge venue submit refId idempotency、payload conflict、pending/uncertain timeout duplicate blocking。 |
 | `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、durable trade tape、ticker latest-state 與 1m kline baseline。 |
 | `MarketDataRetentionServiceTest` | Market-data high-volume history retention baseline。 |
 | `ExecuteAdlUseCaseTest` | ADL forced execution 入口的 transaction boundary commit/rollback。 |

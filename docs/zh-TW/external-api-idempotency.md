@@ -8,19 +8,19 @@
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | 共用 OkHttp timeout/retry/circuit/rate-limit baseline | Read-only，可重試；response schema versioning 仍待補。 |
 | Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | 外部 effectful writes plus read-only status sync | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel baseline：已記錄 cancel 狀態時直接回 local order，不再重送 DELETE。Sync/reconcile baseline：未變更的 CLOB payload 不再重複寫 local row。 |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | 外部 effectful writes and reads | 部分共用 config；RPC-specific limits 仍待補 | Approval reads 已有 TTL cache 與 owner-scoped clear。仍待補：backend-observed effectful flow 的 idempotent approval transaction tracking。 |
-| Hedge venue submit | `HedgeVenueAdapter` | 外部 effectful write | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，回傳 cached terminal results，拒絕 refId conflict，並在 timeout-like uncertain outcome 後阻止 duplicate submit。 |
+| Hedge venue submit | `HedgeVenueAdapter` | 外部 effectful write | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，會先 claim 再送 venue、durably 保存 terminal results、拒絕 refId conflict，並在 pending/uncertain outcome 後阻止 duplicate submit。 |
 | Bank/chain callbacks | Future callback clients/controllers | 外部 effectful reconciliation | 尚未實作 | 仍待補。 |
 
 ## Hedge Submit Baseline
 
-Hedge venue submit 使用 `HedgeOrderRequest.refId` 作為外部 idempotency key。Idempotency decorator 會保存每個 `refId` 第一次 payload 的 fingerprint。
+Hedge venue submit 使用 `HedgeOrderRequest.refId` 作為外部 idempotency key。Idempotency decorator 會透過 `HedgeVenueIdempotencyStore` 保存每個 `refId` 第一次 payload 的 fingerprint；Spring wiring 使用 JPA-backed store。
 
 - 相同 `refId` 且相同 payload，在 accepted 或 non-retryable result 後重送時直接回傳已保存結果，不再呼叫 venue。
 - 相同 `refId` 但 payload 不同時，以 `HEDGE_VENUE_IDEMPOTENCY_CONFLICT` 拒絕。
-- 相同 `refId` 在 retryable / timeout-like result 後重送時，以 `HEDGE_VENUE_OUTCOME_UNCERTAIN` 阻止第二次外部 effect，因為 venue 可能已收到第一次 request。
+- 相同 `refId` 在 first claim 仍 pending，或 retryable / timeout-like result 後重送時，以 `HEDGE_VENUE_OUTCOME_UNCERTAIN` 阻止第二次外部 effect，因為 venue 可能已收到第一次 request。
 - 缺少 `refId` 時，在呼叫 venue 前拒絕。
 
-這是目前 MVP 的 in-process baseline。Production venue adapter 仍需要 durable idempotency storage、venue order lookup/reconciliation、uncertain outcome operator handling，以及 integration-specific rate limits。
+Durable baseline 仍需要 venue order lookup/reconciliation、uncertain outcome operator handling，以及 integration-specific rate limits，才能接真實 venue adapter。
 
 ## CLOB Place Baseline
 

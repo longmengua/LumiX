@@ -11,6 +11,7 @@ Spring Data JPA repositories。
 - `JpaMarketDataTradeTapeStore` 保存 restart-safe recent trade tape records。
 - `JpaMarketDataTickerStore` 保存 restart-safe ticker latest-state records。
 - `JpaMarketDataKlineStore` 保存 restart-safe kline records。
+- `JpaHedgeVenueIdempotencyStore` 保存 hedge venue submit claim/result records。
 
 注意：
 - JPA repository 是 infrastructure 依賴較重的例外；使用時要避免 domain service 直接被 persistence 細節綁死。

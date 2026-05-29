@@ -78,6 +78,29 @@ class IdempotentHedgeVenueAdapterTest {
     }
 
     @Test
+    @DisplayName("venue submit 丟例外後同 refId 重送會被 pending claim 擋下")
+    /**
+     * 流程：adapter 已 claim refId，但 delegate 在外部結果不明時丟出例外。
+     * 期望：下一次同 refId/payload 不再呼叫 venue，回報 uncertain，避免 crash/timeout 後 duplicate external effect。
+     */
+    void duplicateAfterDelegateExceptionIsBlockedByPendingClaim() {
+        ThrowingVenueAdapter delegate = new ThrowingVenueAdapter();
+        IdempotentHedgeVenueAdapter adapter = new IdempotentHedgeVenueAdapter(delegate);
+
+        assertThatThrownBy(() -> adapter.submit(request("hedge-ref-1", "1.000")))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("network timeout");
+
+        HedgeOrderResult duplicate = adapter.submit(request("hedge-ref-1", "1.000"));
+
+        assertThat(duplicate.accepted()).isFalse();
+        assertThat(duplicate.retryable()).isTrue();
+        assertThat(duplicate.reason()).isEqualTo("HEDGE_VENUE_OUTCOME_UNCERTAIN");
+        assertThat(delegate.calls).isEqualTo(1);
+    }
+
+
+    @Test
     @DisplayName("缺少 refId 的 effectful hedge submit 會被拒絕")
     /**
      * 流程：呼叫 effectful venue submit 但沒有 refId。
@@ -119,6 +142,16 @@ class IdempotentHedgeVenueAdapterTest {
             requests.add(request);
             int index = Math.min(requests.size() - 1, results.size() - 1);
             return results.get(index);
+        }
+    }
+
+    private static class ThrowingVenueAdapter implements HedgeVenueAdapter {
+        private int calls;
+
+        @Override
+        public HedgeOrderResult submit(HedgeOrderRequest request) {
+            calls++;
+            throw new IllegalStateException("network timeout");
         }
     }
 }

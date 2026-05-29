@@ -7,7 +7,7 @@
 - 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`BonusCreditGrant`、`TurnoverRecord`、`TurnoverSummary`。
 - Snapshot read model：account risk snapshots、reconciliation reports、wallet ledger replay。
 - Finance read model：`TrialBalanceReport`、`TrialBalanceLine`、`LedgerReplayComparisonReport`、`LedgerReplayComparisonIssue`。
-- Market maker / hedging：`MarketMakerProfile`、`MarketMakerRiskLimit`、`MarketMakerExposure`、`MarketMakerQuoteCommand`、`MarketMakerQuoteDecision`、`HedgeOrderRequest`、`HedgeOrderResult`（含 retryable 錯誤分類）、`HedgeDecision`、`HedgeStrategyDecision`、`HedgeExecutionReport`、`HedgeDecisionAuditRecord`、`HedgeVenueFillMessage`、`HedgeFillRecord`、`HedgeReconciliationReport`、`HedgeReconciliationIssue`。
+- Market maker / hedging：`MarketMakerProfile`、`MarketMakerRiskLimit`、`MarketMakerExposure`、`MarketMakerQuoteCommand`、`MarketMakerQuoteDecision`、`HedgeOrderRequest`、`HedgeOrderResult`（含 retryable 錯誤分類）、`HedgeVenueIdempotencyRecord`、`HedgeDecision`、`HedgeStrategyDecision`、`HedgeExecutionReport`、`HedgeDecisionAuditRecord`、`HedgeVenueFillMessage`、`HedgeFillRecord`、`HedgeReconciliationReport`、`HedgeReconciliationIssue`。
 - Recovery / validation：`Snapshot`、`RecoveryResult`、`ValidationIssue`。
 - Polymarket：Gamma/CLOB/user WS 相關 request/response DTO；`PolymarketPlaceOrderRequest.clientRequestId` 是 CLOB place idempotency key。
 

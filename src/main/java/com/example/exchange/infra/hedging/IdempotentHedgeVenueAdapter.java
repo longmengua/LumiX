@@ -5,53 +5,71 @@ package com.example.exchange.infra.hedging;
 
 import com.example.exchange.domain.model.dto.HedgeOrderRequest;
 import com.example.exchange.domain.model.dto.HedgeOrderResult;
+import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyRecord;
+import com.example.exchange.domain.repository.HedgeVenueIdempotencyStore;
 import com.example.exchange.domain.service.HedgeVenueAdapter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Optional;
 
 @Component
 @Primary
 public class IdempotentHedgeVenueAdapter implements HedgeVenueAdapter {
 
     private final HedgeVenueAdapter delegate;
-    private final Map<String, Record> records = new ConcurrentHashMap<>();
+    private final HedgeVenueIdempotencyStore store;
 
     public IdempotentHedgeVenueAdapter(@Qualifier("rejectingHedgeVenueAdapter") HedgeVenueAdapter delegate) {
+        this(delegate, new InMemoryHedgeVenueIdempotencyStore());
+    }
+
+    @Autowired
+    public IdempotentHedgeVenueAdapter(
+            @Qualifier("rejectingHedgeVenueAdapter") HedgeVenueAdapter delegate,
+            HedgeVenueIdempotencyStore store
+    ) {
         this.delegate = delegate;
+        this.store = store;
     }
 
     @Override
     public HedgeOrderResult submit(HedgeOrderRequest request) {
         String key = key(request);
         String fingerprint = fingerprint(request);
-        Record existing = records.get(key);
-        if (existing != null) {
-            if (!existing.fingerprint().equals(fingerprint)) {
-                return HedgeOrderResult.rejected("HEDGE_VENUE_IDEMPOTENCY_CONFLICT");
-            }
-            if (existing.result().retryable()) {
-                return HedgeOrderResult.retryableRejected("HEDGE_VENUE_OUTCOME_UNCERTAIN");
-            }
-            return existing.result();
+        Optional<HedgeVenueIdempotencyRecord> existing =
+                store.find(key);
+        if (existing.isPresent()) {
+            return duplicateResult(existing.get(), fingerprint);
+        }
+
+        if (!store.claim(key, fingerprint)) {
+            return store.find(key)
+                    .map(record -> duplicateResult(record, fingerprint))
+                    .orElseGet(() -> HedgeOrderResult.retryableRejected("HEDGE_VENUE_OUTCOME_UNCERTAIN"));
         }
 
         HedgeOrderResult result = delegate.submit(request);
-        Record newRecord = new Record(fingerprint, result);
-        Record raced = records.putIfAbsent(key, newRecord);
-        if (raced == null) {
-            return result;
-        }
-        if (!raced.fingerprint().equals(fingerprint)) {
+        store.complete(key, fingerprint, result);
+        return result;
+    }
+
+    private static HedgeOrderResult duplicateResult(
+            HedgeVenueIdempotencyRecord record,
+            String fingerprint
+    ) {
+        if (!record.fingerprint().equals(fingerprint)) {
             return HedgeOrderResult.rejected("HEDGE_VENUE_IDEMPOTENCY_CONFLICT");
         }
-        return raced.result().retryable()
-                ? HedgeOrderResult.retryableRejected("HEDGE_VENUE_OUTCOME_UNCERTAIN")
-                : raced.result();
+
+        if (!record.completed() || record.result() == null || record.result().retryable()) {
+            return HedgeOrderResult.retryableRejected("HEDGE_VENUE_OUTCOME_UNCERTAIN");
+        }
+
+        return record.result();
     }
 
     private static String key(HedgeOrderRequest request) {
@@ -81,6 +99,4 @@ public class IdempotentHedgeVenueAdapter implements HedgeVenueAdapter {
         return value == null ? "" : value.stripTrailingZeros().toPlainString();
     }
 
-    private record Record(String fingerprint, HedgeOrderResult result) {
-    }
 }

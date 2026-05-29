@@ -24,8 +24,9 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 ## Progress
 
 - Added `docs/en/external-api-idempotency.md` and `docs/zh-TW/external-api-idempotency.md` with Gamma, CLOB, RPC/approval, hedge venue, and callback inventory.
-- Added `IdempotentHedgeVenueAdapter` as the first effectful-write envelope. It requires `HedgeOrderRequest.refId`, fingerprints payloads, returns cached terminal results for duplicate requests, rejects same-key/different-payload conflicts, and blocks duplicate submit after timeout-like uncertain outcomes.
+- Added `IdempotentHedgeVenueAdapter` as the first effectful-write envelope. It requires `HedgeOrderRequest.refId`, fingerprints payloads, claims before venue submit, returns durable terminal results for duplicate requests, rejects same-key/different-payload conflicts, and blocks duplicate submit after pending or timeout-like uncertain outcomes.
 - Added `IdempotentHedgeVenueAdapterTest` covering accepted duplicate replay, conflict, uncertain outcome, and missing ref id behavior.
+- Added `HedgeVenueIdempotencyStore`, `JpaHedgeVenueIdempotencyStore`, and `V8__hedge_venue_idempotency_records.sql` so hedge venue claim/result records survive process restart.
 - Added optional `PolymarketPlaceOrderRequest.clientRequestId` so CLOB place can use the local order record as an idempotency boundary before session limit consumption, approval checks, signing, or `/order` calls.
 - Added `PolymarketOrderServiceTest` covering same-key duplicate replay, same-key payload conflict, and existing local order with uncertain CLOB outcome.
 - Added a CLOB cancel local idempotency baseline: once cancel records `CANCEL_REQUESTED` or a canceled terminal status, duplicate cancel requests return the local order without another CLOB DELETE.
@@ -34,7 +35,7 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added CLOB sync/reconcile local no-op replay: unchanged CLOB payload/status/size/error does not save the local order row again, and reconcile reports unchanged rows separately.
 
 Remaining work:
-- Add durable idempotency storage and venue lookup/reconciliation for real hedge adapters.
+- Add venue lookup/reconciliation for real hedge adapters and operator handling for uncertain outcomes.
 - Add CLOB durable command identity, uncertain cancel remote lookup, and fuller local state-machine coverage.
 - Add RPC approval transaction idempotency tracking for any future backend-observed effectful approval/relayer flow.
 
