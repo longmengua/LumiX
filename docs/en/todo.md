@@ -82,7 +82,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Security
 
-- [ ] Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
+- [x] Add session signer lifecycle controls: expiration, revocation, audit, and abnormal-use detection.
+  - Baseline done: session use rejects inactive/expired records, expired use marks the record `EXPIRED`, revoke-all now covers both `PENDING` and `ACTIVE` sessions so a signed-but-unconfirmed signer cannot become active after wallet-wide revoke, and limit-breach/invalid-use warnings provide an audit trail for abnormal-use review.
 
 ## P1 Strongly Recommended
 

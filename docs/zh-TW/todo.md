@@ -82,7 +82,8 @@
 
 ### 安全
 
-- [ ] Session signer lifecycle 要有過期、撤銷、審計、異常使用檢測。
+- [x] Session signer lifecycle 要有過期、撤銷、審計、異常使用檢測。
+  - Baseline 已完成：session 使用會拒絕 inactive / expired record，過期使用會把 record 標成 `EXPIRED`，revoke-all 會同時覆蓋 `PENDING` 與 `ACTIVE`，避免已簽發但未 confirm 的 signer 在 wallet-wide revoke 後又變 ACTIVE；limit breach / invalid-use warning 也提供異常使用追查的 audit trail。
 
 ## P1 強烈建議
 

@@ -443,9 +443,7 @@ public class PolymarketSessionService {
 
         for (PredictionSessionRecord session : sessions) {
 
-            if (!"ACTIVE".equalsIgnoreCase(
-                    session.getStatus())) {
-
+            if (!isUsableSession(session)) {
                 continue;
             }
 
@@ -502,10 +500,19 @@ public class PolymarketSessionService {
             return;
         }
 
+        assertUsableSession(session);
+
         resetDailyUsageIfNeeded(session);
 
         if (session.getMaxOrderUsdt() != null
                 && usdtAmount.compareTo(session.getMaxOrderUsdt()) > 0) {
+            log.warn(
+                    "[Session] Abnormal usage rejected. reason=MAX_ORDER_LIMIT sessionId={}, userAddress={}, requested={}, max={}",
+                    session.getSessionId(),
+                    session.getUserAddress(),
+                    usdtAmount,
+                    session.getMaxOrderUsdt()
+            );
             throw new IllegalStateException(
                     "session max order limit exceeded. max="
                             + session.getMaxOrderUsdt()
@@ -521,6 +528,14 @@ public class PolymarketSessionService {
 
         if (session.getDailyLimitUsdt() != null
                 && dailyUsed.add(usdtAmount).compareTo(session.getDailyLimitUsdt()) > 0) {
+            log.warn(
+                    "[Session] Abnormal usage rejected. reason=DAILY_LIMIT sessionId={}, userAddress={}, requested={}, used={}, limit={}",
+                    session.getSessionId(),
+                    session.getUserAddress(),
+                    usdtAmount,
+                    dailyUsed,
+                    session.getDailyLimitUsdt()
+            );
             throw new IllegalStateException(
                     "session daily limit exceeded. limit="
                             + session.getDailyLimitUsdt()
@@ -534,6 +549,46 @@ public class PolymarketSessionService {
         session.setDailyUsedUsdt(dailyUsed.add(usdtAmount));
         session.setLastUsedAt(Instant.now().toString());
         sessionRecordRepository.save(session);
+    }
+
+    private void assertUsableSession(PredictionSessionRecord session) {
+        if (!"ACTIVE".equalsIgnoreCase(session.getStatus())) {
+            log.warn(
+                    "[Session] Usage rejected for inactive session. sessionId={}, userAddress={}, status={}",
+                    session.getSessionId(),
+                    session.getUserAddress(),
+                    session.getStatus()
+            );
+            throw new IllegalStateException(
+                    "session is not active"
+            );
+        }
+
+        long now =
+                Instant.now().getEpochSecond();
+
+        if (session.getExpiresAt() != null
+                && now > session.getExpiresAt()) {
+
+            session.setStatus("EXPIRED");
+            sessionRecordRepository.save(session);
+
+            log.warn(
+                    "[Session] Usage rejected for expired session. sessionId={}, userAddress={}",
+                    session.getSessionId(),
+                    session.getUserAddress()
+            );
+
+            throw new IllegalStateException(
+                    "session expired"
+            );
+        }
+    }
+
+    private boolean isUsableSession(PredictionSessionRecord session) {
+        return session != null
+                && ("ACTIVE".equalsIgnoreCase(session.getStatus())
+                || "PENDING".equalsIgnoreCase(session.getStatus()));
     }
 
     private void resetDailyUsageIfNeeded(PredictionSessionRecord session) {

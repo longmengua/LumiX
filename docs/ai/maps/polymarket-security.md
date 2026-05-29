@@ -65,6 +65,8 @@ Secrets must come from env/secret manager:
   - `JwtAuthenticatorTest`
   - `IpAllowlistTest`
 
+Session signer lifecycle baseline:
+- `PolymarketSessionService` rejects inactive or expired session use before limit consumption, marks expired stale records `EXPIRED`, revokes both `PENDING` and `ACTIVE` sessions on wallet-wide revoke, and logs abnormal limit-breach / invalid-use warnings for audit review.
+
 Remaining production TODO:
-- Session signer expiration, revocation, audit, abnormal-use detection.
 - Distributed tracing export, dashboards, sampling policy.

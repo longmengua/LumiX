@@ -13,10 +13,10 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
-| P0 Required | 26 | 17 | Core MVP capability exists, but many production blockers remain. |
+| P0 Required | 27 | 16 | Core MVP capability exists, but many production blockers remain. |
 | P1 Strongly Recommended | 6 | 16 | Operations, market data, Polymarket, and data governance are still early. |
 | P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
-| Total | 32 | 38 | The project has a baseline, but production hardening is still the main body of work. |
+| Total | 33 | 37 | The project has a baseline, but production hardening is still the main body of work. |
 
 ## Current Priority Override
 
@@ -80,7 +80,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - MySQL, Redis, and Kafka transaction boundaries have a command-boundary/outbox baseline for order commands, liquidation, ADL execution, and hedge execution, but still need persistence-backed rollback tests and broader cross-store failure drills.
 - Market data now has durable depth sequence checkpoints, reconnect backfill depth deltas, durable trade tape, durable ticker latest state, durable 1m klines, and disabled-by-default DB retention windows for high-volume depth/trade/kline history.
 - The WebSocket/SSE gateway still needs independent deployment, horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
-- Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel can use durable `commandId` records, CLOB cancel replays already-recorded cancel/uncertain statuses locally, reconcile can resolve uncertain cancel from remote CLOB status, sync/reconcile skip unchanged local writes, a state-machine guard prevents stale active CLOB payloads from downgrading local filled/settled terminal orders or matched size, and approval reads have TTL cache coverage; broader trade/settlement lifecycle, schema versioning, approval transaction tracking, and the user WebSocket worker are mostly still TODO.
+- Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel can use durable `commandId` records, CLOB cancel replays already-recorded cancel/uncertain statuses locally, reconcile can resolve uncertain cancel from remote CLOB status, sync/reconcile skip unchanged local writes, a state-machine guard prevents stale active CLOB payloads from downgrading local filled/settled terminal orders or matched size, approval reads have TTL cache coverage, and session signer lifecycle guards cover expiration, revoke-all for pending/active sessions, limit-breach warnings, and stale-session use rejection; broader trade/settlement lifecycle, schema versioning, approval transaction tracking, and the user WebSocket worker are mostly still TODO.
 - Metrics backend, distributed tracing export, dashboards, and alerting are incomplete.
 - Production indexes, archive policy, admin console, reporting, load testing, and compliance are not complete.
 

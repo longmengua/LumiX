@@ -208,7 +208,7 @@ public class PredictionOrderController {
     }
 
     /**
-     * 撤銷使用者全部 ACTIVE sessions。
+     * 撤銷使用者全部 PENDING / ACTIVE sessions。
      *
      * POST /api/prediction/session/revoke-all?userAddress=0x...
      */
