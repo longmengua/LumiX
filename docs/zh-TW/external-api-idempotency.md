@@ -6,7 +6,7 @@
 | Integration | Current client | Operation type | Retry/circuit/rate limit | Idempotency status |
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | 共用 OkHttp timeout/retry/circuit/rate-limit baseline | Read-only，可重試；response schema versioning 仍待補。 |
-| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` | 外部 effectful writes | 使用 HTTP client 的路徑會套共用 OkHttp baseline | 仍待補：local/CLOB state machine 與 idempotent place/cancel/reconcile commands。 |
+| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` | 外部 effectful writes | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel/sync/reconcile idempotency 仍待補。 |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / Web3j config | 外部 effectful writes and reads | 部分共用 config；RPC-specific limits 仍待補 | 仍待補：approval cache、expiry 與 idempotent transaction tracking。 |
 | Hedge venue submit | `HedgeVenueAdapter` | 外部 effectful write | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，回傳 cached terminal results，拒絕 refId conflict，並在 timeout-like uncertain outcome 後阻止 duplicate submit。 |
 | Bank/chain callbacks | Future callback clients/controllers | 外部 effectful reconciliation | 尚未實作 | 仍待補。 |
@@ -21,3 +21,12 @@ Hedge venue submit 使用 `HedgeOrderRequest.refId` 作為外部 idempotency key
 - 缺少 `refId` 時，在呼叫 venue 前拒絕。
 
 這是目前 MVP 的 in-process baseline。Production venue adapter 仍需要 durable idempotency storage、venue order lookup/reconciliation、uncertain outcome operator handling，以及 integration-specific rate limits。
+
+## CLOB Place Baseline
+
+Polymarket place order 支援可選 `clientRequestId`。有帶時，`PolymarketOrderService` 會把它作為 `internalOrderId`，並在消耗 session limit、檢查 approval、簽名或呼叫 CLOB `/order` 之前先查 local order table。
+
+- 相同 `clientRequestId` 且 payload 相同時，直接回傳既有 local/CLOB result，不再呼叫 CLOB。
+- 相同 `clientRequestId` 但 user/session/market/direction/amount/type 不同時，回傳 `IDEMPOTENCY_CONFLICT`。
+- 既有 local order 尚無 terminal CLOB result 時，回傳 `CLOB_OUTCOME_UNCERTAIN`，不再重送 `/order`。
+- 未提供 `clientRequestId` 的 request 保持原本自動產生 internal id 的行為。

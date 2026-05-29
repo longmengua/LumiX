@@ -25,6 +25,7 @@ import org.web3j.crypto.Credentials;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.RoundingMode;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -69,7 +70,8 @@ public class PolymarketOrderService {
             PolymarketPlaceOrderRequest request
     ) {
         String internalOrderId =
-                UUID.randomUUID().toString();
+                resolveInternalOrderId(request);
+        PredictionPolymarketOrder orderRecord = null;
 
         logStart(
                 internalOrderId,
@@ -78,6 +80,15 @@ public class PolymarketOrderService {
 
         try {
             validate(request);
+
+            Optional<PolymarketPlaceOrderResponse> duplicate =
+                    duplicateResponseIfPresent(
+                            internalOrderId,
+                            request
+                    );
+            if (duplicate.isPresent()) {
+                return duplicate.get();
+            }
 
             PredictionSessionRecord sessionRecord =
                     polymarketSessionService.getActiveSession(
@@ -125,7 +136,7 @@ public class PolymarketOrderService {
                             marketInfo
                     );
 
-            PredictionPolymarketOrder orderRecord =
+            orderRecord =
                     createOrderRecord(
                             internalOrderId,
                             request,
@@ -200,6 +211,11 @@ public class PolymarketOrderService {
                     e
             );
 
+            markOrderException(
+                    orderRecord,
+                    e
+            );
+
             return PolymarketPlaceOrderResponse.builder()
                     .success(false)
                     .internalOrderId(internalOrderId)
@@ -207,6 +223,91 @@ public class PolymarketOrderService {
                     .errorMsg(normalizeError(e))
                     .build();
         }
+    }
+
+    private String resolveInternalOrderId(
+            PolymarketPlaceOrderRequest request
+    ) {
+        if (request != null
+                && request.getClientRequestId() != null
+                && !request.getClientRequestId().isBlank()) {
+            return request.getClientRequestId().trim();
+        }
+        return UUID.randomUUID().toString();
+    }
+
+    private Optional<PolymarketPlaceOrderResponse> duplicateResponseIfPresent(
+            String internalOrderId,
+            PolymarketPlaceOrderRequest request
+    ) {
+        if (request.getClientRequestId() == null
+                || request.getClientRequestId().isBlank()) {
+            return Optional.empty();
+        }
+        return polymarketOrderRepository.findByInternalOrderId(internalOrderId)
+                .map(existing -> responseFromExistingOrder(existing, request));
+    }
+
+    private PolymarketPlaceOrderResponse responseFromExistingOrder(
+            PredictionPolymarketOrder existing,
+            PolymarketPlaceOrderRequest request
+    ) {
+        if (!sameIdempotentPayload(existing, request)) {
+            return PolymarketPlaceOrderResponse.builder()
+                    .success(false)
+                    .internalOrderId(existing.getInternalOrderId())
+                    .status("IDEMPOTENCY_CONFLICT")
+                    .errorMsg("clientRequestId already used with different payload")
+                    .build();
+        }
+        boolean terminalSuccess =
+                existing.getClobOrderId() != null
+                        && !"FAILED".equalsIgnoreCase(existing.getStatus())
+                        && !"EXCEPTION".equalsIgnoreCase(existing.getStatus());
+        boolean uncertain =
+                existing.getClobOrderId() == null
+                        && ("CREATED".equalsIgnoreCase(existing.getStatus())
+                        || existing.getStatus() == null);
+        return PolymarketPlaceOrderResponse.builder()
+                .success(terminalSuccess)
+                .internalOrderId(existing.getInternalOrderId())
+                .clobOrderId(existing.getClobOrderId())
+                .status(uncertain ? "CLOB_OUTCOME_UNCERTAIN" : existing.getStatus())
+                .tokenId(existing.getTokenId())
+                .side(parseSide(existing.getSide()))
+                .price(existing.getPrice())
+                .size(existing.getSize())
+                .usdtAmount(existing.getUsdtAmount())
+                .errorMsg(uncertain ? "existing local order has no terminal CLOB result" : existing.getLastError())
+                .build();
+    }
+
+    private boolean sameIdempotentPayload(
+            PredictionPolymarketOrder existing,
+            PolymarketPlaceOrderRequest request
+    ) {
+        PolymarketOrderType orderType =
+                request.getOrderType() == null
+                        ? PolymarketOrderType.FOK
+                        : request.getOrderType();
+        return equalsText(existing.getUserId(), request.getUserId())
+                && equalsText(existing.getSessionId(), request.getSessionId())
+                && equalsText(existing.getMarketSlug(), request.getMarketSlug())
+                && equalsText(existing.getDirection(), request.getDirection().name())
+                && equalsText(existing.getOrderType(), orderType.name())
+                && compareDecimal(existing.getUsdtAmount(), request.getUsdtAmount());
+    }
+
+    private void markOrderException(
+            PredictionPolymarketOrder orderRecord,
+            Exception e
+    ) {
+        if (orderRecord == null) {
+            return;
+        }
+        orderRecord.setStatus("EXCEPTION");
+        orderRecord.setLastError(normalizeError(e));
+        polymarketOrderRepository.save(orderRecord);
     }
 
     private String normalizeError(Exception e) {
@@ -467,6 +568,13 @@ public class PolymarketOrderService {
             );
         }
 
+        if (request.getClientRequestId() != null
+                && request.getClientRequestId().trim().length() > 64) {
+            throw new IllegalArgumentException(
+                    "clientRequestId must be 64 characters or fewer"
+            );
+        }
+
         validateClobApiConfig();
 
         if (polymarketConfigs.getWallet().getFunderAddress() == null
@@ -511,6 +619,27 @@ public class PolymarketOrderService {
         response.setPrice(normalizedOrder.getPrice());
         response.setSize(normalizedOrder.getSize());
         response.setUsdtAmount(normalizedOrder.getUsdtAmount());
+    }
+
+    private static PolymarketClobSide parseSide(String side) {
+        if (side == null || side.isBlank()) {
+            return null;
+        }
+        return PolymarketClobSide.valueOf(side.trim().toUpperCase());
+    }
+
+    private static boolean equalsText(String left, String right) {
+        if (left == null || right == null) {
+            return left == null && right == null;
+        }
+        return left.trim().equalsIgnoreCase(right.trim());
+    }
+
+    private static boolean compareDecimal(BigDecimal left, BigDecimal right) {
+        if (left == null || right == null) {
+            return left == null && right == null;
+        }
+        return left.compareTo(right) == 0;
     }
 
     private PredictionPolymarketOrder createOrderRecord(

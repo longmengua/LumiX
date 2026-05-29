@@ -19,6 +19,7 @@
 | `OperationalMetricsServiceTest` | 下單結果、撤單、成交事件、延遲統計。 |
 | `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event 的整合流程。 |
 | `OutboxServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers。 |
+| `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |
 | `RiskSettlementServiceTest` | funding、liquidation、insurance fund、account reconciliation。 |
 | `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
 | `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration。 |

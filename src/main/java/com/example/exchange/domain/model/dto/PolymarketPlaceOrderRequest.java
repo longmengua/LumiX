@@ -74,6 +74,14 @@ public class PolymarketPlaceOrderRequest {
     private String userId;
 
     /**
+     * Client-provided idempotency key for CLOB place order.
+     *
+     * 同一個 clientRequestId 只能對應同一筆 user/session/market/direction/amount/type。
+     * 重送相同 payload 時，後端會回傳既有 local/CLOB 結果，不再重複送外部下單。
+     */
+    private String clientRequestId;
+
+    /**
      * ACTIVE session id。
      *
      * placeOrder 時：

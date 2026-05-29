@@ -26,10 +26,12 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added `docs/en/external-api-idempotency.md` and `docs/zh-TW/external-api-idempotency.md` with Gamma, CLOB, RPC/approval, hedge venue, and callback inventory.
 - Added `IdempotentHedgeVenueAdapter` as the first effectful-write envelope. It requires `HedgeOrderRequest.refId`, fingerprints payloads, returns cached terminal results for duplicate requests, rejects same-key/different-payload conflicts, and blocks duplicate submit after timeout-like uncertain outcomes.
 - Added `IdempotentHedgeVenueAdapterTest` covering accepted duplicate replay, conflict, uncertain outcome, and missing ref id behavior.
+- Added optional `PolymarketPlaceOrderRequest.clientRequestId` so CLOB place can use the local order record as an idempotency boundary before session limit consumption, approval checks, signing, or `/order` calls.
+- Added `PolymarketOrderServiceTest` covering same-key duplicate replay, same-key payload conflict, and existing local order with uncertain CLOB outcome.
 
 Remaining work:
 - Add durable idempotency storage and venue lookup/reconciliation for real hedge adapters.
-- Add CLOB place/cancel/sync/reconcile idempotency and local state-machine coverage.
+- Add CLOB cancel/sync/reconcile idempotency and fuller local state-machine coverage.
 - Add RPC approval cache/expiry and transaction idempotency tracking.
 
 ## Acceptance Criteria

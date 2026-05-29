@@ -6,7 +6,7 @@
 | Integration | Current client | Operation type | Retry/circuit/rate limit | Idempotency status |
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | Shared OkHttp timeout/retry/circuit/rate-limit baseline | Safe to retry as read-only; response schema versioning still TODO. |
-| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` | External effectful writes | Shared OkHttp baseline where HTTP client is used | Still TODO: local/CLOB state machine and idempotent place/cancel/reconcile commands. |
+| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` | External effectful writes | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel/sync/reconcile idempotency still TODO. |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / Web3j config | External effectful writes and reads | Shared config partly applies; RPC-specific limits still TODO | Still TODO: approval cache, expiry, and idempotent transaction tracking. |
 | Hedge venue submit | `HedgeVenueAdapter` | External effectful write | `RetryingHedgeVenueAdapter`, `ThrottlingHedgeVenueAdapter` | Baseline: `IdempotentHedgeVenueAdapter` requires `refId`, returns cached terminal results, rejects refId conflicts, and blocks duplicate submits after uncertain timeout-like outcomes. |
 | Bank/chain callbacks | Future callback clients/controllers | External effectful reconciliation | Not implemented | Still TODO. |
@@ -21,3 +21,12 @@ Hedge venue submit uses `HedgeOrderRequest.refId` as the external idempotency ke
 - Missing `refId` is rejected before any venue call.
 
 This is an in-process baseline for the current MVP. A production venue adapter still needs durable idempotency storage, venue order lookup/reconciliation, operator handling for uncertain outcomes, and integration-specific rate limits.
+
+## CLOB Place Baseline
+
+Polymarket place order accepts optional `clientRequestId`. When present, `PolymarketOrderService` uses it as `internalOrderId` and checks the local order table before consuming session limits, checking approval, signing, or calling CLOB `/order`.
+
+- Same `clientRequestId` and same payload returns the existing local/CLOB result without another CLOB call.
+- Same `clientRequestId` with a different user/session/market/direction/amount/type returns `IDEMPOTENCY_CONFLICT`.
+- Existing local order without terminal CLOB result returns `CLOB_OUTCOME_UNCERTAIN` and does not call `/order` again.
+- Requests without `clientRequestId` keep the previous generated internal id behavior.
