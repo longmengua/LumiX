@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 @Slf4j
 @Service
@@ -59,7 +60,12 @@ public class PolymarketOrderTrackingService {
                         order.getClobOrderId()
                 );
 
-        applyClobOrderPayload(order, raw);
+        boolean changed =
+                applyClobOrderPayloadIfChanged(order, raw);
+
+        if (!changed) {
+            return order;
+        }
 
         return orderRepository.save(order);
     }
@@ -102,6 +108,7 @@ public class PolymarketOrderTrackingService {
                 orderRepository.findByStatusInOrderByIdAsc(RECONCILE_STATUSES);
 
         int synced = 0;
+        int unchanged = 0;
         int failed = 0;
 
         for (PredictionPolymarketOrder order : orders) {
@@ -116,8 +123,13 @@ public class PolymarketOrderTrackingService {
                                 order.getClobOrderId()
                         );
 
-                applyClobOrderPayload(order, raw);
-                orderRepository.save(order);
+                boolean changed =
+                        applyClobOrderPayloadIfChanged(order, raw);
+                if (changed) {
+                    orderRepository.save(order);
+                } else {
+                    unchanged++;
+                }
                 synced++;
             } catch (Exception e) {
                 failed++;
@@ -129,6 +141,7 @@ public class PolymarketOrderTrackingService {
         return Map.of(
                 "total", orders.size(),
                 "synced", synced,
+                "unchanged", unchanged,
                 "failed", failed
         );
     }
@@ -137,33 +150,55 @@ public class PolymarketOrderTrackingService {
         return clobTradingClient.getTrades(signerAddress());
     }
 
-    private void applyClobOrderPayload(
+    private boolean applyClobOrderPayloadIfChanged(
             PredictionPolymarketOrder order,
             Map<String, Object> raw
     ) {
-        order.setLastClobPayload(toJson(raw));
-        order.setLastSyncedAt(LocalDateTime.now());
+        String nextPayload =
+                toJson(raw);
+        String nextStatus =
+                order.getStatus();
+        BigDecimal nextSizeMatched =
+                order.getSizeMatched();
+        String nextLastError;
 
         if (!Boolean.TRUE.equals(raw.get("success"))) {
-            order.setLastError(firstText(raw, "errorMsg", "raw"));
-            return;
+            nextLastError =
+                    firstText(raw, "errorMsg", "raw");
+        } else {
+            String status =
+                    firstText(raw, "status");
+
+            if (status != null) {
+                nextStatus =
+                        status;
+            }
+
+            BigDecimal sizeMatched =
+                    decimal(firstText(raw, "size_matched"));
+
+            if (sizeMatched != null) {
+                nextSizeMatched =
+                        sizeMatched;
+            }
+
+            nextLastError =
+                    null;
         }
 
-        String status =
-                firstText(raw, "status");
-
-        if (status != null) {
-            order.setStatus(status);
+        if (Objects.equals(order.getLastClobPayload(), nextPayload)
+                && Objects.equals(order.getStatus(), nextStatus)
+                && compareDecimal(order.getSizeMatched(), nextSizeMatched)
+                && Objects.equals(order.getLastError(), nextLastError)) {
+            return false;
         }
 
-        BigDecimal sizeMatched =
-                decimal(firstText(raw, "size_matched"));
-
-        if (sizeMatched != null) {
-            order.setSizeMatched(sizeMatched);
-        }
-
-        order.setLastError(null);
+        order.setLastClobPayload(nextPayload);
+        order.setLastSyncedAt(LocalDateTime.now());
+        order.setStatus(nextStatus);
+        order.setSizeMatched(nextSizeMatched);
+        order.setLastError(nextLastError);
+        return true;
     }
 
     private String signerAddress() {
@@ -213,6 +248,14 @@ public class PolymarketOrderTrackingService {
         } catch (Exception e) {
             return null;
         }
+    }
+
+    private boolean compareDecimal(BigDecimal left, BigDecimal right) {
+        if (left == null || right == null) {
+            return left == right;
+        }
+
+        return left.compareTo(right) == 0;
     }
 
     private String toJson(Object value) {

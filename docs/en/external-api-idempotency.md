@@ -6,7 +6,7 @@
 | Integration | Current client | Operation type | Retry/circuit/rate limit | Idempotency status |
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | Shared OkHttp timeout/retry/circuit/rate-limit baseline | Safe to retry as read-only; response schema versioning still TODO. |
-| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | External effectful writes | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel baseline: recorded cancel statuses replay locally without another DELETE. Sync/reconcile idempotency still TODO. |
+| Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | External effectful writes plus read-only status sync | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel baseline: recorded cancel statuses replay locally without another DELETE. Sync/reconcile baseline: unchanged CLOB payloads are no-op local writes. |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | External effectful writes and reads | Shared config partly applies; RPC-specific limits still TODO | Approval reads have a TTL cache and owner-scoped clear. Still TODO: idempotent approval transaction tracking for any backend-observed effectful flow. |
 | Hedge venue submit | `HedgeVenueAdapter` | External effectful write | `RetryingHedgeVenueAdapter`, `ThrottlingHedgeVenueAdapter` | Baseline: `IdempotentHedgeVenueAdapter` requires `refId`, returns cached terminal results, rejects refId conflicts, and blocks duplicate submits after uncertain timeout-like outcomes. |
 | Bank/chain callbacks | Future callback clients/controllers | External effectful reconciliation | Not implemented | Still TODO. |
@@ -38,6 +38,15 @@ Polymarket cancel uses the local order status as the retry boundary. If a previo
 - First successful CLOB cancel stores the raw CLOB payload, `lastSyncedAt`, and `CANCEL_REQUESTED`.
 - Duplicate cancel requests after the local cancel marker do not send another external command.
 - This is still a local baseline; fuller CLOB state-machine transitions and remote lookup/reconcile for uncertain cancel outcomes remain TODO.
+
+## CLOB Sync/Reconcile Baseline
+
+CLOB order sync and reconcile are read-only external calls, but they still update the local order row when CLOB state changes. `PolymarketOrderTrackingService` now compares the incoming raw payload, status, matched size, and error before saving.
+
+- Repeated sync of the same CLOB payload returns the local order without another database save.
+- Reconcile still counts the order as checked, but reports unchanged rows separately and avoids writing them.
+- Changed remote status, matched size, error, or raw payload is saved with a fresh `lastSyncedAt`.
+- Durable command identity and fuller local/CLOB/trade/settlement state-machine transitions remain TODO.
 
 ## RPC Approval Read Baseline
 

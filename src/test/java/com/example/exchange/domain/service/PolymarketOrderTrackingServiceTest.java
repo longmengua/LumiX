@@ -10,7 +10,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.lang.reflect.Proxy;
+import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -56,6 +60,52 @@ class PolymarketOrderTrackingServiceTest {
         assertThat(fx.orderRepository.saveCount).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("CLOB sync 重送相同 payload 時不重複保存 local order")
+    /**
+     * 流程：local order 已套用過同一份 CLOB getOrder payload，retry sync 再取回相同內容。
+     * 期望：仍可安全查 CLOB read-only API，但不重複 save local row，避免 retry 製造新的本地狀態變更。
+     */
+    void syncRetryWithSamePayloadDoesNotSaveLocalOrderAgain() {
+        PredictionPolymarketOrder existing = order("live", "clob-1");
+        existing.setSizeMatched(new BigDecimal("2.0"));
+        existing.setLastError(null);
+        existing.setLastClobPayload("{\"success\":true,\"status\":\"live\",\"size_matched\":\"2.00\"}");
+        LocalDateTime lastSyncedAt = LocalDateTime.now().minusMinutes(1);
+        existing.setLastSyncedAt(lastSyncedAt);
+        Fixture fx = new Fixture(existing);
+        fx.clobClient.nextGetOrder = successOrderPayload("live", "2.00");
+
+        PredictionPolymarketOrder result = fx.service.syncOrder("internal-1");
+
+        assertThat(result).isSameAs(existing);
+        assertThat(result.getLastSyncedAt()).isEqualTo(lastSyncedAt);
+        assertThat(fx.clobClient.getOrderCount).isEqualTo(1);
+        assertThat(fx.orderRepository.saveCount).isZero();
+    }
+
+    @Test
+    @DisplayName("CLOB reconcile 對未變更 payload 計入 unchanged 且不保存")
+    /**
+     * 流程：reconcile open orders 取回的 CLOB 狀態與 local row 完全一致。
+     * 期望：報表標記 checked-but-unchanged，且不 save local row，讓 reconcile retry 不製造重複本地效果。
+     */
+    void reconcileUnchangedPayloadReportsUnchangedWithoutSave() {
+        PredictionPolymarketOrder existing = order("live", "clob-1");
+        existing.setSizeMatched(new BigDecimal("2.0"));
+        existing.setLastClobPayload("{\"success\":true,\"status\":\"live\",\"size_matched\":\"2.00\"}");
+        Fixture fx = new Fixture(existing);
+        fx.clobClient.nextGetOrder = successOrderPayload("live", "2.00");
+
+        Map<String, Object> result = fx.service.reconcileOpenOrders();
+
+        assertThat(result).containsEntry("total", 1);
+        assertThat(result).containsEntry("synced", 1);
+        assertThat(result).containsEntry("unchanged", 1);
+        assertThat(result).containsEntry("failed", 0);
+        assertThat(fx.orderRepository.saveCount).isZero();
+    }
+
     private static PredictionPolymarketOrder order(String status, String clobOrderId) {
         PredictionPolymarketOrder order = new PredictionPolymarketOrder();
         order.setInternalOrderId("internal-1");
@@ -65,6 +115,14 @@ class PolymarketOrderTrackingServiceTest {
         order.setMarketSlug("market-1");
         order.setStatus(status);
         return order;
+    }
+
+    private static Map<String, Object> successOrderPayload(String status, String sizeMatched) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("success", true);
+        payload.put("status", status);
+        payload.put("size_matched", sizeMatched);
+        return payload;
     }
 
     private static class Fixture {
@@ -92,6 +150,9 @@ class PolymarketOrderTrackingServiceTest {
 
     private static class CountingClobClient extends PolymarketClobTradingClient {
         private int cancelCount;
+        private int getOrderCount;
+        private Map<String, Object> nextGetOrder =
+                successOrderPayload("live", "0");
 
         private CountingClobClient(PolymarketConfigs configs) {
             super(new ObjectMapper(), configs, null);
@@ -104,6 +165,12 @@ class PolymarketOrderTrackingServiceTest {
                     "success", true,
                     "orderID", clobOrderId
             );
+        }
+
+        @Override
+        public Map<String, Object> getOrder(String polygonSignerAddress, String clobOrderId) {
+            getOrderCount++;
+            return nextGetOrder;
         }
     }
 
@@ -122,6 +189,9 @@ class PolymarketOrderTrackingServiceTest {
                     (proxy, method, args) -> {
                         if ("findByInternalOrderId".equals(method.getName())) {
                             return Optional.of(existing);
+                        }
+                        if ("findByStatusInOrderByIdAsc".equals(method.getName())) {
+                            return List.of(existing);
                         }
                         if ("save".equals(method.getName())) {
                             saveCount++;

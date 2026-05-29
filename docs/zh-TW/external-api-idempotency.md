@@ -6,7 +6,7 @@
 | Integration | Current client | Operation type | Retry/circuit/rate limit | Idempotency status |
 | --- | --- | --- | --- | --- |
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | 共用 OkHttp timeout/retry/circuit/rate-limit baseline | Read-only，可重試；response schema versioning 仍待補。 |
-| Polymarket CLOB place/cancel | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | 外部 effectful writes | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel baseline：已記錄 cancel 狀態時直接回 local order，不再重送 DELETE。Sync/reconcile idempotency 仍待補。 |
+| Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | 外部 effectful writes plus read-only status sync | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel baseline：已記錄 cancel 狀態時直接回 local order，不再重送 DELETE。Sync/reconcile baseline：未變更的 CLOB payload 不再重複寫 local row。 |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | 外部 effectful writes and reads | 部分共用 config；RPC-specific limits 仍待補 | Approval reads 已有 TTL cache 與 owner-scoped clear。仍待補：backend-observed effectful flow 的 idempotent approval transaction tracking。 |
 | Hedge venue submit | `HedgeVenueAdapter` | 外部 effectful write | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，回傳 cached terminal results，拒絕 refId conflict，並在 timeout-like uncertain outcome 後阻止 duplicate submit。 |
 | Bank/chain callbacks | Future callback clients/controllers | 外部 effectful reconciliation | 尚未實作 | 仍待補。 |
@@ -38,6 +38,15 @@ Polymarket cancel 使用 local order status 作為 retry boundary。若前一次
 - 第一次 CLOB cancel 成功後，會保存 raw CLOB payload、`lastSyncedAt` 與 `CANCEL_REQUESTED`。
 - local cancel marker 已存在時，duplicate cancel request 不會再送外部 command。
 - 這仍是 local baseline；更完整的 CLOB state-machine transitions，以及 uncertain cancel outcome 的 remote lookup/reconcile 還待補。
+
+## CLOB Sync/Reconcile Baseline
+
+CLOB order sync 與 reconcile 對外是 read-only call，但遠端狀態變更時仍會更新 local order row。`PolymarketOrderTrackingService` 現在會先比較 incoming raw payload、status、matched size 與 error，再決定是否保存。
+
+- 相同 CLOB payload 重複 sync 時，直接回 local order，不再 save database row。
+- Reconcile 仍會把 order 視為 checked，但會另外回報 unchanged rows，且不寫入未變更的 row。
+- 遠端 status、matched size、error 或 raw payload 有變化時，才保存並更新 `lastSyncedAt`。
+- Durable command identity 與更完整的 local/CLOB/trade/settlement state-machine transitions 仍待補。
 
 ## RPC Approval Read Baseline
 

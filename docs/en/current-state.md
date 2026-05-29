@@ -80,7 +80,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - MySQL, Redis, and Kafka transaction boundaries are not fully defined.
 - Market data now has durable depth sequence checkpoints, reconnect backfill depth deltas, durable trade tape, durable ticker latest state, durable 1m klines, and disabled-by-default DB retention windows for high-volume depth/trade/kline history.
 - The WebSocket/SSE gateway still needs independent deployment, horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
-- Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel replays already-recorded cancel statuses locally, and approval reads have TTL cache coverage; broader order lifecycle, schema versioning, sync/reconcile idempotency, cancel uncertainty handling, approval transaction tracking, and the user WebSocket worker are mostly still TODO.
+- Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel replays already-recorded cancel statuses locally, sync/reconcile skip unchanged local writes, and approval reads have TTL cache coverage; broader order lifecycle, schema versioning, durable CLOB command identity, cancel uncertainty handling, approval transaction tracking, and the user WebSocket worker are mostly still TODO.
 - Metrics backend, distributed tracing export, dashboards, and alerting are incomplete.
 - Production indexes, archive policy, admin console, reporting, load testing, and compliance are not complete.
 
