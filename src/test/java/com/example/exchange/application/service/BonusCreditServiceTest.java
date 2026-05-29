@@ -92,6 +92,49 @@ class BonusCreditServiceTest {
                 .contains("bonus_credit_expire");
     }
 
+    @Test
+    @DisplayName("clawback 依 active grant FIFO 追回體驗金並產生報表")
+    void clawbackUsesActiveGrantFifoAndReportSummarizesState() {
+        Fixtures fixtures = fixtures("2026-05-30T00:00:00Z");
+        BonusCreditGrant first = fixtures.service.grant(
+                63,
+                "USDT",
+                new BigDecimal("10.00"),
+                "campaign-a",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-a"
+        );
+        BonusCreditGrant second = fixtures.service.grant(
+                63,
+                "USDT",
+                new BigDecimal("15.00"),
+                "campaign-b",
+                Instant.parse("2026-06-02T00:00:00Z"),
+                "grant-b"
+        );
+
+        // 流程：追回 12 時先完整追回第一批 10，再部分追回第二批 2，ledger 與 report 都要可追。
+        BigDecimal clawedBack = fixtures.service.clawback(63, "USDT", new BigDecimal("12.00"), "ops-clawback");
+
+        assertThat(clawedBack).isEqualByComparingTo("12.00");
+        assertThat(fixtures.grantStore.records.get(first.id()).status()).isEqualTo(BonusCreditGrant.CLAWED_BACK);
+        assertThat(fixtures.grantStore.records.get(second.id()).status()).isEqualTo(BonusCreditGrant.ACTIVE);
+        assertThat(fixtures.grantStore.records.get(second.id()).remainingAmount()).isEqualByComparingTo("13.00");
+        assertThat(fixtures.walletLedgerService.bonusCreditBalance(63, "USDT")).isEqualByComparingTo("13.00");
+
+        var report = fixtures.service.report(63, "usdt");
+        assertThat(report.asset()).isEqualTo("USDT");
+        assertThat(report.totalGranted()).isEqualByComparingTo("25.00");
+        assertThat(report.totalRemaining()).isEqualByComparingTo("13.00");
+        assertThat(report.activeGrantCount()).isEqualTo(1);
+        assertThat(report.clawedBackGrantCount()).isEqualTo(1);
+        assertThat(report.clawedBackOriginalAmount()).isEqualByComparingTo("10.00");
+        assertThat(report.nextExpiryAt()).isEqualTo(Instant.parse("2026-06-02T00:00:00Z"));
+        assertThat(fixtures.ledgerRepository.findByUid(63))
+                .extracting(WalletLedgerEntry::getReason)
+                .contains("bonus_credit_clawback");
+    }
+
     private static Fixtures fixtures(String now) {
         MemAccountRepository accountRepository = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepository = new MemWalletLedgerRepository();

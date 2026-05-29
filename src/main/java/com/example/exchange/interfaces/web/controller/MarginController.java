@@ -6,16 +6,19 @@ package com.example.exchange.interfaces.web.controller;
 import com.example.exchange.application.command.TransferMarginCommand;
 import com.example.exchange.application.service.AccountRiskSnapshotService;
 import com.example.exchange.application.service.AccountRiskService;
+import com.example.exchange.application.service.BonusCreditService;
 import com.example.exchange.application.service.MarginService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
+import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.BonusCreditClawbackRequest;
 import com.example.exchange.interfaces.web.dto.DepositCallbackRequest;
 import com.example.exchange.interfaces.web.dto.DepositRequest;
 import com.example.exchange.interfaces.web.dto.TransferRequest;
@@ -24,6 +27,7 @@ import com.example.exchange.interfaces.web.dto.WithdrawalRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 /** 劃轉相關 REST API */
@@ -36,19 +40,22 @@ public class MarginController {
     private final AccountRiskService accountRiskService;
     private final AccountRiskSnapshotService accountRiskSnapshotService;
     private final WalletLedgerReplayService walletLedgerReplayService;
+    private final BonusCreditService bonusCreditService;
 
     public MarginController(
             TransferMarginUseCase usecase,
             MarginService marginService,
             AccountRiskService accountRiskService,
             AccountRiskSnapshotService accountRiskSnapshotService,
-            WalletLedgerReplayService walletLedgerReplayService
+            WalletLedgerReplayService walletLedgerReplayService,
+            BonusCreditService bonusCreditService
     ) {
         this.usecase = usecase;
         this.marginService = marginService;
         this.accountRiskService = accountRiskService;
         this.accountRiskSnapshotService = accountRiskSnapshotService;
         this.walletLedgerReplayService = walletLedgerReplayService;
+        this.bonusCreditService = bonusCreditService;
     }
 
     @PostMapping("/deposit")
@@ -84,6 +91,26 @@ public class MarginController {
     @GetMapping("/ledger")
     public ApiResponse<List<WalletLedgerEntry>> ledger(@RequestParam Long uid) {
         return ApiResponse.ok(marginService.findLedger(uid));
+    }
+
+    @GetMapping("/bonus-credit/report")
+    public ApiResponse<BonusCreditReport> bonusCreditReport(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String asset
+    ) {
+        return ApiResponse.ok(bonusCreditService.report(uid, asset));
+    }
+
+    @PostMapping("/bonus-credit/clawback")
+    public ApiResponse<BigDecimal> clawbackBonusCredit(
+            @Valid @RequestBody BonusCreditClawbackRequest request
+    ) {
+        return ApiResponse.ok(bonusCreditService.clawback(
+                request.uid(),
+                request.asset(),
+                request.amount(),
+                request.refId()
+        ));
     }
 
     @GetMapping("/ledger/replay")

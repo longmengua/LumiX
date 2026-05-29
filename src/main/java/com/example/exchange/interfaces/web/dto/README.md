@@ -3,7 +3,7 @@
 REST API request/response DTO。
 
 目前狀態：
-- 內部交易所：下單、改單、cancel-replace、margin deposit/withdraw/transfer、deposit callback、transfer review claim、order info、risk price oracle、ADL queue stuck-claim report/claim/release/execution、matching worker readiness、reconciliation issue workflow、market-maker profile/risk-limit request、hedge venue fill callback。
+- 內部交易所：下單、改單、cancel-replace、margin deposit/withdraw/transfer、deposit callback、transfer review claim、bonus-credit clawback request、order info、risk price oracle、ADL queue stuck-claim report/claim/release/execution、matching worker readiness、reconciliation issue workflow、market-maker profile/risk-limit request、hedge venue fill callback。
 - Polymarket：session、market、outcome、order、approval、WS status。
 - 共用：`ApiResponse`。
 
