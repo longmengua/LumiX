@@ -19,6 +19,7 @@ Technical documentation is for engineers who need to understand how the system i
 | [Redis Key Schema](redis-key-schema.md) | Redis key ownership, TTL rules, namespace policy, and migration backlog. |
 | [Kafka Topics](kafka-topics.md) | Topic matrix, partition key policy, consumer groups, schema versioning, and production creation rules. |
 | [Observability Baseline](observability.md) | Request/correlation ID propagation across HTTP, OkHttp, Kafka outbox, and audit logs. |
+| [Archive Strategy](archive-strategy.md) | Archive manifests, retention classes, delete preconditions, and restore rules for historical data. |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox, DLQ replay, and manual compensation operations. |
 | [Matching Sequencer Runbook](matching-sequencer-runbook.md) | Production ownership, partitioning, startup, and failover rules for per-symbol sequencers. |
 | [Product overview](README.md) | Business features, modules, order placement flow, APIs, and Kafka topics. |

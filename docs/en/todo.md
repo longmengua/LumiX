@@ -119,7 +119,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add final TTL/archive rules for Redis hot-state keys.
   - Baseline done: `docs/en/redis-key-schema.md` defines per-key-family production TTL, archive/delete rule, and authoritative rebuild source for account, position, order, snapshot, ledger, outbox/DLQ, and idempotency keys.
 - [x] Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
-- [ ] Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
+- [x] Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
+  - Baseline done: `docs/en/archive-strategy.md` defines hot/archive sources, minimum payloads, retention classes, manifests, delete rules, and restore rules; exporter jobs and restore smoke tests remain implementation work.
 
 ### Observability
 

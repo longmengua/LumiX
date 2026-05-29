@@ -67,6 +67,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
 - Redis hot-state keys 已補 final per-key-family TTL/archive rules、刪除前置條件與 authoritative rebuild source，供 production maintenance 使用。
+- 歷史訂單、成交、ledger entries、Kafka events 與 audit logs 已有 archive strategy，涵蓋 manifests、retention classes、刪除前置條件與 restore rules。
 - 測試資料夾已有 README 索引，測試案例也用註解和 `@DisplayName` 說明測試鏈路。
 
 ## 目前不能當作 production 完成的地方
@@ -84,7 +85,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - WebSocket/SSE gateway 還沒有獨立部署、水平擴展、訂閱授權、心跳、限流與斷線補償。
 - Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，state-machine guard 會防止 stale active CLOB payload 降級 local filled/settled terminal order 或 matched size，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op，backend-observed RPC transaction 也已有 durable command / txHash tracking envelope 與 unresolved outcome report；更完整的 trade/settlement lifecycle、schema versioning、獨立部署的 user WebSocket worker 還大多是待辦。
 - metrics backend、distributed tracing export、dashboard、alerting 還不完整。
-- production index、archive policy、admin console、報表、壓測、合規能力都還沒完成。
+- archive exporter jobs、admin console、報表、壓測、合規能力都還沒完成。
 
 ## 建議接下來先做什麼
 

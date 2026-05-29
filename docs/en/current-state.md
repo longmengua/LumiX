@@ -67,6 +67,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Outbox retry, max retry, DLQ replay, and manual compensation baselines exist.
 - Kafka topic, Redis key schema, request/correlation id, audit log, and ops metrics baseline documents exist.
 - Redis hot-state keys now have final per-key-family TTL/archive rules, deletion preconditions, and authoritative rebuild sources documented for production maintenance.
+- Historical orders, trades, ledger entries, Kafka events, and audit logs now have an archive strategy covering manifests, retention classes, delete preconditions, and restore rules.
 - Test folders have README indexes, and test cases use comments plus `@DisplayName` to explain test flow.
 
 ## What Is Not Production Complete
@@ -84,7 +85,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - The WebSocket/SSE gateway still needs independent deployment, horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
 - Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel can use durable `commandId` records, CLOB cancel replays already-recorded cancel/uncertain statuses locally, reconcile can resolve uncertain cancel from remote CLOB status, sync/reconcile skip unchanged local writes, a state-machine guard prevents stale active CLOB payloads from downgrading local filled/settled terminal orders or matched size, approval reads have TTL cache coverage, session signer lifecycle guards cover expiration/revocation/abnormal-use warnings, user-channel callbacks no-op duplicate `eventKey` replays including save-race duplicates, and backend-observed RPC transactions have a durable command/txHash tracking envelope with unresolved outcome reporting; broader trade/settlement lifecycle, schema versioning, and the independently deployed user WebSocket worker are mostly still TODO.
 - Metrics backend, distributed tracing export, dashboards, and alerting are incomplete.
-- Production indexes, archive policy, admin console, reporting, load testing, and compliance are not complete.
+- Archive exporter jobs, admin console, reporting, load testing, and compliance are not complete.
 
 ## Recommended Next Work
 

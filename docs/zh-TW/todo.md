@@ -119,7 +119,8 @@
 - [x] 補 Redis hot-state key 的最終 TTL / archive rules。
   - Baseline 已完成：`docs/zh-TW/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。
 - [x] Flyway migration 改為正式唯一 schema 管理，不再依賴 Hibernate `ddl-auto=update`。
-- [ ] 補齊資料歸檔策略：歷史訂單、成交、ledger、Kafka event、audit log。
+- [x] 補齊資料歸檔策略：歷史訂單、成交、ledger、Kafka event、audit log。
+  - Baseline 已完成：`docs/zh-TW/archive-strategy.md` 已定義 hot/archive sources、minimum payloads、retention classes、manifests、delete rules 與 restore rules；exporter jobs 與 restore smoke tests 仍是後續實作。
 
 ### 可觀測性
 
