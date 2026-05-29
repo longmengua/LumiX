@@ -29,8 +29,8 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 - Bonus credit uses `USER_BONUS_AVAILABLE` and does not change `Account.crossBalance`, so it cannot silently mix with real cash.
 - `BonusCreditService` now keeps grant batches with remaining amount and expiry, consumes by expiry FIFO, and can expire due grants.
 - `BonusCreditService` now has a configurable consume eligibility gate for allowed/blocked symbols, allowed order types, and allowed expense accounts under `bonus-credit.eligibility`.
-- `BonusCreditService` now reports per-user bonus-credit grant state and performs active-grant FIFO clawback with ledger entries.
-- `MarginController` exposes `GET /api/margin/bonus-credit/report` and `POST /api/margin/bonus-credit/clawback`; these inherit the existing `/api/margin/**` funds security classification.
+- `BonusCreditService` now reports per-user and per-campaign bonus-credit grant state and performs active-grant FIFO clawback with ledger entries.
+- `MarginController` exposes `GET /api/margin/bonus-credit/report`, `GET /api/margin/bonus-credit/campaign-report`, and `POST /api/margin/bonus-credit/clawback`; these inherit the existing `/api/margin/**` funds security classification.
 - `BonusCreditExpiryScheduler` provides a disabled-by-default scheduler entry via `bonus-credit.expiry-enabled`.
 - `TurnoverService` records `TradeExecuted` facts into `TurnoverRecord` with uid, account, symbol, strategy, order, match, sequence, quantity, price, and notional dimensions.
 - `TurnoverService` can summarize turnover and return limited drill-down records by uid with optional symbol, strategy, market-maker, and match filters.
@@ -45,7 +45,7 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 - Wire first-class product/order metadata into all future bonus consumption call sites as those flows start consuming bonus credits.
 - Add first-class `strategyId` / `marketMakerId` fields to order entry instead of temporarily deriving strategy from `clientOrderId`.
 - Add turnover reconciliation job that compares turnover records against trade tape and ledger refs.
-- Expand bonus reporting into campaign/operator reports and add paged/exportable turnover reports.
+- Add exportable bonus campaign reports and paged/exportable turnover reports.
 
 ## Acceptance Criteria
 

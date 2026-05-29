@@ -19,4 +19,6 @@ public interface BonusCreditGrantStore {
     List<BonusCreditGrant> findActiveExpiringAtOrBefore(Instant now, int limit);
 
     List<BonusCreditGrant> findByUid(long uid);
+
+    List<BonusCreditGrant> findByCampaignId(String campaignId);
 }

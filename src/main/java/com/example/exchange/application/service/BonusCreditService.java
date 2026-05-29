@@ -4,6 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.BonusCreditGrant;
+import com.example.exchange.domain.model.dto.BonusCreditCampaignReport;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.repository.BonusCreditGrantStore;
 import com.example.exchange.infra.config.BonusCreditProperties;
@@ -16,6 +17,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 public class BonusCreditService {
@@ -199,6 +201,45 @@ public class BonusCreditService {
                 countByStatus(grants, BonusCreditGrant.CONSUMED),
                 countByStatus(grants, BonusCreditGrant.EXPIRED),
                 countByStatus(grants, BonusCreditGrant.CLAWED_BACK),
+                grants.stream()
+                        .filter(grant -> BonusCreditGrant.ACTIVE.equals(grant.status()))
+                        .map(BonusCreditGrant::expiresAt)
+                        .filter(Objects::nonNull)
+                        .filter(expiresAt -> expiresAt.isAfter(now))
+                        .min(Instant::compareTo)
+                        .orElse(null),
+                now,
+                grants
+        );
+    }
+
+    public BonusCreditCampaignReport campaignReport(String campaignId, String asset) {
+        Instant now = clock.instant();
+        String normalizedAsset = normalizeAsset(asset);
+        List<BonusCreditGrant> grants = grantStore.findByCampaignId(campaignId).stream()
+                .filter(grant -> normalizedAsset == null || normalizedAsset.equals(normalizeAsset(grant.asset())))
+                .sorted(Comparator
+                        .comparing(BonusCreditGrant::grantedAt)
+                        .thenComparing(BonusCreditGrant::uid)
+                        .thenComparing(BonusCreditGrant::id))
+                .toList();
+        return new BonusCreditCampaignReport(
+                campaignId,
+                normalizedAsset == null ? "ALL" : normalizedAsset,
+                sum(grants, BonusCreditGrant::originalAmount),
+                sum(grants, BonusCreditGrant::remainingAmount),
+                sumByStatus(grants, BonusCreditGrant.ACTIVE),
+                sumByStatus(grants, BonusCreditGrant.CONSUMED),
+                sumByStatus(grants, BonusCreditGrant.EXPIRED),
+                sumByStatus(grants, BonusCreditGrant.CLAWED_BACK),
+                countByStatus(grants, BonusCreditGrant.ACTIVE),
+                countByStatus(grants, BonusCreditGrant.CONSUMED),
+                countByStatus(grants, BonusCreditGrant.EXPIRED),
+                countByStatus(grants, BonusCreditGrant.CLAWED_BACK),
+                grants.stream()
+                        .map(BonusCreditGrant::uid)
+                        .collect(Collectors.toSet())
+                        .size(),
                 grants.stream()
                         .filter(grant -> BonusCreditGrant.ACTIVE.equals(grant.status()))
                         .map(BonusCreditGrant::expiresAt)

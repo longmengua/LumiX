@@ -12,6 +12,7 @@ import com.example.exchange.application.service.TurnoverService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
+import com.example.exchange.domain.model.dto.BonusCreditCampaignReport;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
@@ -105,6 +106,14 @@ public class MarginController {
             @RequestParam(required = false) String asset
     ) {
         return ApiResponse.ok(bonusCreditService.report(uid, asset));
+    }
+
+    @GetMapping("/bonus-credit/campaign-report")
+    public ApiResponse<BonusCreditCampaignReport> bonusCreditCampaignReport(
+            @RequestParam String campaignId,
+            @RequestParam(required = false) String asset
+    ) {
+        return ApiResponse.ok(bonusCreditService.campaignReport(campaignId, asset));
     }
 
     @PostMapping("/bonus-credit/clawback")

@@ -25,7 +25,7 @@ Remaining production TODO:
 
 - API: `interfaces.web.controller.MarginController`
 - Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`
-- Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`, `BonusCreditReport`, `BonusCreditProperties`
+- Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`, `BonusCreditReport`, `BonusCreditCampaignReport`, `BonusCreditProperties`
 - Bonus expiry scheduler: `application.scheduler.BonusCreditExpiryScheduler`
 - Turnover: `TurnoverService`, `TurnoverStore`, `TurnoverSummary`
 - Hot state: `infra.redis.RedisAccountRepository`, `RedisWalletLedgerRepository`, `RedisWalletTransferRepository`
@@ -44,7 +44,7 @@ Ledger concerns:
 - Bonus credit is not added to `Account.crossBalance`, so promotional funds cannot silently mix with real cash.
 - Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.
 - `bonus-credit.eligibility` can gate consume by allowed/blocked symbol, allowed order type, and allowed expense account; it is disabled by default.
-- `MarginController` exposes bonus-credit report/clawback and turnover summary/drill-down APIs under `/api/margin/**`, which keeps them in the funds security classification.
+- `MarginController` exposes bonus-credit user report, campaign report, clawback, and turnover summary/drill-down APIs under `/api/margin/**`, which keeps them in the funds security classification.
 - Turnover facts are derived from processed `TradeExecuted` events and keep uid, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
 - Turnover summaries and limited record drill-downs can be queried by uid with optional symbol, strategy, market-maker, and match filters.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
@@ -57,7 +57,7 @@ Ledger concerns:
 
 Remaining production TODO:
 - Stronger database constraints, audit retention, replay validation.
-- Bonus-credit automated clawback policy, campaign controls, and broader turnover reporting controls.
+- Bonus-credit automated clawback policy, exportable campaign controls, and broader turnover reporting controls.
 - Turnover reconciliation against trade tape and ledger refs plus paged/exportable reports.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.

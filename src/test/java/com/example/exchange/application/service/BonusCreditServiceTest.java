@@ -214,6 +214,49 @@ class BonusCreditServiceTest {
         assertThat(fixtures.walletLedgerService.bonusCreditBalance(65, "USDT")).isEqualByComparingTo("20.00");
     }
 
+    @Test
+    @DisplayName("campaignReport 彙總同活動跨使用者 grant 狀態")
+    void campaignReportAggregatesAcrossUsers() {
+        Fixtures fixtures = fixtures("2026-05-30T00:00:00Z");
+        fixtures.service.grant(
+                66,
+                "USDT",
+                new BigDecimal("10.00"),
+                "campaign-a",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-a"
+        );
+        fixtures.service.grant(
+                67,
+                "USDT",
+                new BigDecimal("15.00"),
+                "campaign-a",
+                Instant.parse("2026-06-02T00:00:00Z"),
+                "grant-b"
+        );
+        fixtures.service.grant(
+                68,
+                "USDT",
+                new BigDecimal("99.00"),
+                "campaign-b",
+                Instant.parse("2026-06-03T00:00:00Z"),
+                "grant-c"
+        );
+        fixtures.service.consume(66, "USDT", new BigDecimal("4.00"), "trade-fee", "USER_FEE_EXPENSE");
+
+        // 場景：營運要看單一 campaign 的跨用戶 grant、remaining、狀態與最近到期日。
+        var report = fixtures.service.campaignReport("campaign-a", "usdt");
+
+        assertThat(report.campaignId()).isEqualTo("campaign-a");
+        assertThat(report.asset()).isEqualTo("USDT");
+        assertThat(report.userCount()).isEqualTo(2);
+        assertThat(report.totalGranted()).isEqualByComparingTo("25.00");
+        assertThat(report.totalRemaining()).isEqualByComparingTo("21.00");
+        assertThat(report.activeGrantCount()).isEqualTo(2);
+        assertThat(report.nextExpiryAt()).isEqualTo(Instant.parse("2026-06-01T00:00:00Z"));
+        assertThat(report.grants()).extracting(BonusCreditGrant::uid).containsExactly(66L, 67L);
+    }
+
     private static Fixtures fixtures(String now) {
         return fixtures(now, new BonusCreditProperties());
     }
@@ -275,6 +318,13 @@ class BonusCreditServiceTest {
         public List<BonusCreditGrant> findByUid(long uid) {
             return records.values().stream()
                     .filter(grant -> grant.uid() == uid)
+                    .toList();
+        }
+
+        @Override
+        public List<BonusCreditGrant> findByCampaignId(String campaignId) {
+            return records.values().stream()
+                    .filter(grant -> campaignId.equals(grant.campaignId()))
                     .toList();
         }
     }

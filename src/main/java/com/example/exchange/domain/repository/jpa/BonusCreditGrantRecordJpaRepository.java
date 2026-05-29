@@ -38,4 +38,6 @@ public interface BonusCreditGrantRecordJpaRepository extends JpaRepository<Bonus
     );
 
     List<BonusCreditGrantRecord> findByUidOrderByGrantedAtAscIdAsc(long uid);
+
+    List<BonusCreditGrantRecord> findByCampaignIdOrderByGrantedAtAscIdAsc(String campaignId);
 }

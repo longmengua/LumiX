@@ -61,4 +61,14 @@ public class JpaBonusCreditGrantStore implements BonusCreditGrantStore {
                 .map(BonusCreditGrantRecord::toGrant)
                 .toList();
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<BonusCreditGrant> findByCampaignId(String campaignId) {
+        if (campaignId == null || campaignId.isBlank()) return List.of();
+        return repository.findByCampaignIdOrderByGrantedAtAscIdAsc(campaignId.trim())
+                .stream()
+                .map(BonusCreditGrantRecord::toGrant)
+                .toList();
+    }
 }
