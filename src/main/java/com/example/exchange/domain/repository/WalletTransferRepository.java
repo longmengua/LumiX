@@ -17,6 +17,9 @@ public interface WalletTransferRepository {
     /** 依 transfer id 查詢單筆入金/出金狀態。 */
     Optional<WalletTransfer> findById(UUID id);
 
+    /** 依外部 callback reference 查詢，供鏈上 / 銀行 callback 冪等 replay。 */
+    Optional<WalletTransfer> findByExternalRef(String externalRef);
+
     /** 依使用者查詢 transfer 歷史，順序由 repository 實作維持。 */
     List<WalletTransfer> findByUid(long uid);
 }

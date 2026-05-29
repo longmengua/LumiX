@@ -52,6 +52,16 @@ public class WalletTransfer {
 
     private String reason;
 
+    /** 外部鏈上 / 銀行 callback reference，用於冪等處理。 */
+    private String externalRef;
+
+    /** 人工覆核 owner，避免多人同時處理同一筆 transfer。 */
+    private String reviewOwner;
+
+    private String reviewNote;
+
+    private Instant reviewedAt;
+
     @Builder.Default
     private Instant createdAt = Instant.now();
 
@@ -85,6 +95,26 @@ public class WalletTransfer {
     public void markManualReview(String reason) {
         this.status = Status.MANUAL_REVIEW;
         this.reason = normalizeReason(reason);
+        this.updatedAt = Instant.now();
+    }
+
+    /** 指派人工覆核 owner。 */
+    public void claimManualReview(String owner) {
+        if (this.status != Status.MANUAL_REVIEW) {
+            throw new IllegalStateException("transfer is not in manual review");
+        }
+        if (this.reviewOwner != null && !this.reviewOwner.equals(owner)) {
+            throw new IllegalStateException("transfer already claimed by " + this.reviewOwner);
+        }
+        this.reviewOwner = normalizeReason(owner);
+        this.reviewedAt = Instant.now();
+        this.updatedAt = Instant.now();
+    }
+
+    /** 記錄人工覆核備註。 */
+    public void addReviewNote(String note) {
+        this.reviewNote = normalizeReason(note);
+        this.reviewedAt = Instant.now();
         this.updatedAt = Instant.now();
     }
 

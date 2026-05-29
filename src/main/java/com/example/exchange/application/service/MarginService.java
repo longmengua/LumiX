@@ -4,6 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.entity.Account;
+import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
 import com.example.exchange.domain.repository.AccountRepository;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * 保證金相關服務
@@ -42,11 +44,46 @@ public class MarginService {
      */
     public WalletTransfer deposit(long uid, BigDecimal amount) {
         requirePositive(amount, "deposit amount");
+        return createConfirmedDeposit(uid, amount, null);
+    }
+
+    /**
+     * 處理鏈上 / 銀行入金 callback。
+     *
+     * <p>`externalRef` 是外部流水號或 tx hash；相同 externalRef 重送會 replay 既有 transfer，
+     * 不會再次寫入 ledger。若 externalRef 被不同 uid/amount/type 重用，會拒絕為 callback conflict。</p>
+     */
+    public WalletTransfer recordDepositCallback(
+            long uid,
+            BigDecimal amount,
+            String externalRef
+    ) {
+        requirePositive(amount, "deposit amount");
+        requireExternalRef(externalRef);
+
+        Optional<WalletTransfer> existing =
+                walletTransferRepository.findByExternalRef(externalRef.trim());
+        if (existing.isPresent()) {
+            WalletTransfer transfer =
+                    existing.get();
+            assertSameDepositCallback(transfer, uid, amount);
+            return transfer;
+        }
+
+        return createConfirmedDeposit(uid, amount, externalRef.trim());
+    }
+
+    private WalletTransfer createConfirmedDeposit(
+            long uid,
+            BigDecimal amount,
+            String externalRef
+    ) {
         WalletTransfer transfer = WalletTransfer.builder()
                 .uid(uid)
                 .asset(DEFAULT_ASSET)
                 .amount(amount)
                 .type(WalletTransfer.Type.DEPOSIT)
+                .externalRef(externalRef)
                 .build();
         walletTransferRepository.save(transfer);
 
@@ -106,6 +143,33 @@ public class MarginService {
         return walletTransferRepository.findByUid(uid);
     }
 
+    /** 指派人工覆核 owner，避免多位 operator 同時處理同一筆 transfer。 */
+    public WalletTransfer claimManualReview(
+            UUID transferId,
+            String owner
+    ) {
+        if (transferId == null) {
+            throw new IllegalArgumentException("transferId is required");
+        }
+        if (owner == null || owner.isBlank()) {
+            throw new IllegalArgumentException("owner is required");
+        }
+        WalletTransfer transfer =
+                walletTransferRepository.findById(transferId)
+                        .orElseThrow(() -> new IllegalArgumentException("transfer not found"));
+        transfer.claimManualReview(owner.trim());
+        walletTransferRepository.save(transfer);
+        return transfer;
+    }
+
+    /** 建立 transfer 對 ledger 的 reconciliation projection，供營運查漏帳、重複入帳與 manual-review queue。 */
+    public List<TransferReconciliationProjection> transferReconciliation(long uid) {
+        return walletTransferRepository.findByUid(uid)
+                .stream()
+                .map(this::toProjection)
+                .toList();
+    }
+
     /**
      * 劃轉：Cross <-> Isolated
      * - 若帳戶不存在則建立（簡化示範）
@@ -129,6 +193,57 @@ public class MarginService {
     private static void requirePositive(BigDecimal amount, String label) {
         if (amount == null || amount.signum() <= 0) {
             throw new IllegalArgumentException(label + " must be positive");
+        }
+    }
+
+    private TransferReconciliationProjection toProjection(WalletTransfer transfer) {
+        List<WalletLedgerEntry> entries =
+                walletLedgerRepository.findByRefId(transfer.getId().toString());
+        BigDecimal ledgerAmount =
+                entries.stream()
+                        .map(WalletLedgerEntry::getAmount)
+                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+        boolean expectedLedger =
+                transfer.getStatus() == WalletTransfer.Status.CONFIRMED;
+        boolean ledgerMatched =
+                expectedLedger
+                        ? ledgerAmount.compareTo(transfer.getAmount()) == 0
+                        : ledgerAmount.compareTo(BigDecimal.ZERO) == 0;
+
+        return new TransferReconciliationProjection(
+                transfer.getId(),
+                transfer.getUid(),
+                transfer.getType(),
+                transfer.getStatus(),
+                transfer.getAsset(),
+                transfer.getAmount(),
+                entries.size(),
+                ledgerAmount,
+                ledgerMatched,
+                transfer.getExternalRef(),
+                transfer.getReviewOwner(),
+                transfer.getReason()
+        );
+    }
+
+    private void assertSameDepositCallback(
+            WalletTransfer transfer,
+            long uid,
+            BigDecimal amount
+    ) {
+        if (transfer.getType() != WalletTransfer.Type.DEPOSIT
+                || transfer.getUid() != uid
+                || transfer.getAmount().compareTo(amount) != 0) {
+            throw new IllegalStateException(
+                    "deposit callback conflict: externalRef="
+                            + transfer.getExternalRef()
+            );
+        }
+    }
+
+    private static void requireExternalRef(String externalRef) {
+        if (externalRef == null || externalRef.isBlank()) {
+            throw new IllegalArgumentException("externalRef is required");
         }
     }
 }

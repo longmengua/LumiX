@@ -13,10 +13,10 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
-| P0 Required | 28 | 15 | Core MVP capability exists, but many production blockers remain. |
+| P0 Required | 29 | 14 | Core MVP capability exists, but many production blockers remain. |
 | P1 Strongly Recommended | 6 | 16 | Operations, market data, Polymarket, and data governance are still early. |
 | P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
-| Total | 34 | 36 | The project has a baseline, but production hardening is still the main body of work. |
+| Total | 35 | 35 | The project has a baseline, but production hardening is still the main body of work. |
 
 ## Current Priority Override
 
@@ -59,7 +59,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Bonus credit now has separate ledger postings for grant, consume, expiry, and clawback under `USER_BONUS_AVAILABLE`, does not change real cash account balance, and has grant-batch expiry/remaining tracking.
 - Turnover has a durable read-model baseline derived from processed trade events with user, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
 - Trial balance can be calculated from wallet ledger postings by asset/account code.
-- Deposit and withdrawal have a state-machine baseline covering pending, confirmed, failed, reversed, and manual review.
+- Deposit and withdrawal have a state-machine baseline covering pending, confirmed, failed, reversed, and manual review; deposit callbacks replay by `externalRef`, manual-review transfers can be owner-claimed, and transfer reconciliation projections compare transfers with ledger refs.
 - Account risk snapshot, persisted risk snapshot, pre-trade risk checks, risk tiers, global risk switches, mark/index price oracle baseline, liquidation MVP, funding settlement MVP, and reconciliation baseline exist.
 - Liquidation decisions now publish audit data, and operator controls can halt liquidation or route it to manual review.
 - Liquidation scanning can iterate open positions and trigger oracle-based liquidation decisions.

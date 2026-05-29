@@ -36,6 +36,9 @@ public class RedisWalletTransferRepository implements WalletTransferRepository {
     public void save(WalletTransfer transfer) {
         String id = transfer.getId().toString();
         redis.opsForValue().set(transferKey(transfer.getId()), transfer);
+        if (transfer.getExternalRef() != null && !transfer.getExternalRef().isBlank()) {
+            redis.opsForValue().set(externalRefKey(transfer.getExternalRef()), id);
+        }
         Long added = redis.opsForSet().add(uidSetKey(transfer.getUid()), id);
         if (added != null && added > 0) {
             redis.opsForList().rightPush(uidListKey(transfer.getUid()), id);
@@ -47,6 +50,23 @@ public class RedisWalletTransferRepository implements WalletTransferRepository {
     public Optional<WalletTransfer> findById(UUID id) {
         Object value = redis.opsForValue().get(transferKey(id));
         return value instanceof WalletTransfer transfer ? Optional.of(transfer) : Optional.empty();
+    }
+
+    /** 透過外部 callback reference 查詢，避免鏈上 / 銀行 callback 重送重複入帳。 */
+    @Override
+    public Optional<WalletTransfer> findByExternalRef(String externalRef) {
+        if (externalRef == null || externalRef.isBlank()) {
+            return Optional.empty();
+        }
+        Object rawId = redis.opsForValue().get(externalRefKey(externalRef));
+        if (rawId == null) {
+            return Optional.empty();
+        }
+        try {
+            return findById(UUID.fromString(String.valueOf(rawId)));
+        } catch (IllegalArgumentException e) {
+            return Optional.empty();
+        }
     }
 
     /** 透過 uid list index 批量載入 transfer，避免使用 Redis KEYS 掃描。 */
@@ -82,5 +102,9 @@ public class RedisWalletTransferRepository implements WalletTransferRepository {
 
     private String uidSetKey(long uid) {
         return keys.key("wallet:transfer:set:" + uid);
+    }
+
+    private String externalRefKey(String externalRef) {
+        return keys.key("wallet:transfer:external-ref:" + externalRef.trim());
     }
 }

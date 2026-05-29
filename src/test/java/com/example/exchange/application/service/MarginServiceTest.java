@@ -1,6 +1,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.entity.Account;
+import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
 import com.example.exchange.domain.repository.AccountRepository;
@@ -89,6 +90,67 @@ class MarginServiceTest {
         assertThat(fixtures.accountRepository.findByUid(13)).isEmpty();
         assertThat(fixtures.ledgerRepository.findByUid(13)).isEmpty();
         assertThat(fixtures.transferRepository.findByUid(13)).containsExactly(withdrawal);
+    }
+
+    @Test
+    @DisplayName("入金 callback 使用 externalRef 冪等 replay，避免重複入帳")
+    /**
+     * 流程：鏈上 / 銀行 callback 以同一 externalRef 重送兩次。
+     * 期望：第二次回傳既有 transfer，不再新增 ledger；若同 ref payload 不同則拒絕。
+     */
+    void depositCallbackReplaysByExternalRef() {
+        Fixtures fixtures = fixtures(new RiskControlsProperties());
+
+        WalletTransfer first =
+                fixtures.marginService.recordDepositCallback(
+                        14,
+                        new BigDecimal("50.00"),
+                        "bank-tx-1"
+                );
+        WalletTransfer replay =
+                fixtures.marginService.recordDepositCallback(
+                        14,
+                        new BigDecimal("50.00"),
+                        "bank-tx-1"
+                );
+
+        assertThat(replay.getId()).isEqualTo(first.getId());
+        assertThat(replay.getExternalRef()).isEqualTo("bank-tx-1");
+        assertThat(fixtures.ledgerRepository.findByUid(14))
+                .hasSize(1);
+        assertThat(fixtures.accountRepository.findByUid(14).orElseThrow().crossBalance())
+                .isEqualByComparingTo("50.00");
+    }
+
+    @Test
+    @DisplayName("人工覆核 transfer 可被 owner claim，且 reconciliation projection 顯示未入帳")
+    /**
+     * 流程：出金暫停產生 MANUAL_REVIEW transfer，operator claim 後查 reconciliation projection。
+     * 期望：owner 被記錄；manual review 未寫 ledger 仍視為 matched，避免誤判漏帳。
+     */
+    void manualReviewClaimAndTransferReconciliationProjection() {
+        RiskControlsProperties riskControls = new RiskControlsProperties();
+        Fixtures fixtures = fixtures(riskControls);
+        fixtures.marginService.deposit(15, new BigDecimal("100.00"));
+        riskControls.setWithdrawalHalt(true);
+        WalletTransfer review =
+                fixtures.marginService.withdraw(15, new BigDecimal("30.00"));
+
+        WalletTransfer claimed =
+                fixtures.marginService.claimManualReview(review.getId(), "ops-1");
+        List<TransferReconciliationProjection> projections =
+                fixtures.marginService.transferReconciliation(15);
+
+        assertThat(claimed.getReviewOwner()).isEqualTo("ops-1");
+        assertThat(projections)
+                .extracting(TransferReconciliationProjection::ledgerMatched)
+                .containsExactly(true, true);
+        assertThat(projections.get(1).status())
+                .isEqualTo(WalletTransfer.Status.MANUAL_REVIEW);
+        assertThat(projections.get(1).ledgerEntryCount())
+                .isZero();
+        assertThat(projections.get(1).reviewOwner())
+                .isEqualTo("ops-1");
     }
 
     /**
@@ -187,6 +249,16 @@ class MarginServiceTest {
          */
         public Optional<WalletTransfer> findById(UUID id) {
             return Optional.ofNullable(transfers.get(id));
+        }
+
+        @Override
+        /**
+         * 依 externalRef 查 callback-created transfer，模擬 production callback 去重索引。
+         */
+        public Optional<WalletTransfer> findByExternalRef(String externalRef) {
+            return transfers.values().stream()
+                    .filter(transfer -> externalRef.equals(transfer.getExternalRef()))
+                    .findFirst();
         }
 
         @Override

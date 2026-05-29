@@ -54,7 +54,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add an all-account reconciliation baseline that scans the maintained account index plus open-position index and reports account, position margin, and ledger-balance issues.
 - [x] Add persisted reconciliation reports, scheduling policy, alert routing, and event-store coverage.
 - [x] Add a Redis-backed deposit/withdrawal state-machine baseline for pending, confirmed, failed, reversed, and manual review transfer states.
-- [ ] Add chain/bank callbacks, manual-review workflow ownership, and transfer reconciliation projections.
+- [x] Add chain/bank callbacks, manual-review workflow ownership, and transfer reconciliation projections.
+  - Baseline done: deposit callbacks use `externalRef` idempotency to replay duplicates without double ledger posting, manual-review transfers can be claimed by an owner, and transfer reconciliation projections compare each transfer with wallet ledger refs.
 
 ### Risk
 

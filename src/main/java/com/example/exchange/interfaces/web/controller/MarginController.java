@@ -10,13 +10,16 @@ import com.example.exchange.application.service.MarginService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
+import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
+import com.example.exchange.interfaces.web.dto.DepositCallbackRequest;
 import com.example.exchange.interfaces.web.dto.DepositRequest;
 import com.example.exchange.interfaces.web.dto.TransferRequest;
+import com.example.exchange.interfaces.web.dto.TransferReviewClaimRequest;
 import com.example.exchange.interfaces.web.dto.WithdrawalRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
@@ -51,6 +54,15 @@ public class MarginController {
     @PostMapping("/deposit")
     public ApiResponse<WalletTransfer> deposit(@Valid @RequestBody DepositRequest request) {
         return ApiResponse.ok(marginService.deposit(request.uid(), request.amount()));
+    }
+
+    @PostMapping("/deposit/callback")
+    public ApiResponse<WalletTransfer> depositCallback(@Valid @RequestBody DepositCallbackRequest request) {
+        return ApiResponse.ok(marginService.recordDepositCallback(
+                request.uid(),
+                request.amount(),
+                request.externalRef()
+        ));
     }
 
     @PostMapping("/withdraw")
@@ -93,6 +105,23 @@ public class MarginController {
     @GetMapping("/transfers")
     public ApiResponse<List<WalletTransfer>> transfers(@RequestParam Long uid) {
         return ApiResponse.ok(marginService.findTransfers(uid));
+    }
+
+    @PostMapping("/transfers/manual-review/claim")
+    public ApiResponse<WalletTransfer> claimTransferReview(
+            @Valid @RequestBody TransferReviewClaimRequest request
+    ) {
+        return ApiResponse.ok(marginService.claimManualReview(
+                request.transferId(),
+                request.owner()
+        ));
+    }
+
+    @GetMapping("/transfers/reconciliation")
+    public ApiResponse<List<TransferReconciliationProjection>> transferReconciliation(
+            @RequestParam Long uid
+    ) {
+        return ApiResponse.ok(marginService.transferReconciliation(uid));
     }
 
     @GetMapping("/risk")

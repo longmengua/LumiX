@@ -54,7 +54,8 @@
 - [x] 補上全帳戶對帳 baseline，掃 maintained account index 與 open-position index，回報 account、position margin、ledger balance 問題。
 - [x] 補 persisted reconciliation reports、排程策略、alert routing 與 event-store coverage。
 - [x] 補上 Redis-backed 入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review transfer states。
-- [ ] 補鏈上/銀行 callbacks、人工覆核流程 owner 與 transfer reconciliation projections。
+- [x] 補鏈上/銀行 callbacks、人工覆核流程 owner 與 transfer reconciliation projections。
+  - Baseline 已完成：入金 callback 使用 `externalRef` 冪等 replay，避免重送時重複寫 ledger；manual-review transfer 可被 owner claim；transfer reconciliation projection 會用 wallet ledger ref 比對每筆 transfer。
 
 ### 風控
 

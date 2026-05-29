@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 28 | 15 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 29 | 14 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 6 | 16 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 34 | 36 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 35 | 35 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -59,7 +59,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 體驗金已用 `USER_BONUS_AVAILABLE` 拆出 grant、consume、expire、clawback ledger postings，且不會改動真實現金帳戶餘額；目前也有 grant 批次 expiry/remaining tracking。
 - 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、strategy、market-maker、order、match、sequence、quantity、price、notional 維度。
 - Trial balance 已可從 wallet ledger postings 依 asset/account code 計算。
-- 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review。
+- 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review；入金 callback 可用 `externalRef` 冪等 replay，manual-review transfer 可被 owner claim，transfer reconciliation projection 可用 ledger ref 比對每筆 transfer。
 - 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
 - liquidation decision 已會發布 audit data，營運控制可 halt liquidation 或導入 manual review。
 - liquidation scanning 可掃描 open positions 並觸發 oracle-based liquidation decisions。

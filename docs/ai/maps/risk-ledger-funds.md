@@ -44,6 +44,8 @@ Ledger concerns:
 - Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.
 - Turnover facts are derived from processed `TradeExecuted` events and keep uid, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
+- `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
+- Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
 - `CancelReplaceOrderUseCase` owns an outer boundary for cancel original plus replacement place, avoiding a database half-commit where original cancel succeeds but replacement order fails.
 - `LiquidateUseCase` now enters `CommandTransactionBoundary` in Spring runtime before liquidation mutates position, ledger, insurance/ADL coverage, and audit events.
@@ -54,7 +56,6 @@ Remaining production TODO:
 - Bonus-credit eligibility rules, automated clawback workflow, and reporting APIs.
 - Turnover reconciliation against trade tape and ledger refs.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
-- Chain/bank callbacks, manual-review ownership, transfer reconciliation projections.
 - ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
 
 ## Funding, Liquidation, Reconciliation
