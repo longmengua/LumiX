@@ -33,6 +33,12 @@ bonus-credit:
   expiry-enabled: ${BONUS_CREDIT_EXPIRY_ENABLED:false}
   expiry-fixed-delay-ms: ${BONUS_CREDIT_EXPIRY_FIXED_DELAY_MS:300000}
   expiry-batch-size: ${BONUS_CREDIT_EXPIRY_BATCH_SIZE:500}
+  eligibility:
+    enabled: ${BONUS_CREDIT_ELIGIBILITY_ENABLED:false}
+    allowed-symbols: ${BONUS_CREDIT_ELIGIBILITY_ALLOWED_SYMBOLS:}
+    blocked-symbols: ${BONUS_CREDIT_ELIGIBILITY_BLOCKED_SYMBOLS:}
+    allowed-order-types: ${BONUS_CREDIT_ELIGIBILITY_ALLOWED_ORDER_TYPES:}
+    allowed-expense-accounts: ${BONUS_CREDIT_ELIGIBILITY_ALLOWED_EXPENSE_ACCOUNTS:}
 
 market-maker:
   hedge-execution:

@@ -9,6 +9,7 @@ import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.BonusCreditGrantStore;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
+import com.example.exchange.infra.config.BonusCreditProperties;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -135,7 +136,89 @@ class BonusCreditServiceTest {
                 .contains("bonus_credit_clawback");
     }
 
+    @Test
+    @DisplayName("consume 啟用 eligibility 後會依 symbol/orderType/expenseAccount gate 控制體驗金使用")
+    void consumeAppliesEligibilityGateWhenEnabled() {
+        BonusCreditProperties properties = new BonusCreditProperties();
+        properties.getEligibility().setEnabled(true);
+        properties.getEligibility().setAllowedSymbols(List.of("BTCUSDT"));
+        properties.getEligibility().setAllowedOrderTypes(List.of("LIMIT"));
+        properties.getEligibility().setAllowedExpenseAccounts(List.of("USER_FEE_EXPENSE"));
+        Fixtures fixtures = fixtures("2026-05-30T00:00:00Z", properties);
+        fixtures.service.grant(
+                64,
+                "USDT",
+                new BigDecimal("20.00"),
+                "campaign-a",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-a"
+        );
+
+        // 場景：同一筆體驗金只允許 BTCUSDT/LIMIT/fee 消耗，不符合產品規則時不得寫 ledger。
+        BigDecimal rejected = fixtures.service.consume(
+                64,
+                "USDT",
+                new BigDecimal("5.00"),
+                "bonus-use",
+                "USER_FEE_EXPENSE",
+                "ETHUSDT",
+                "LIMIT"
+        );
+        BigDecimal accepted = fixtures.service.consume(
+                64,
+                "USDT",
+                new BigDecimal("5.00"),
+                "bonus-use",
+                "USER_FEE_EXPENSE",
+                "BTCUSDT",
+                "LIMIT"
+        );
+
+        assertThat(rejected).isZero();
+        assertThat(accepted).isEqualByComparingTo("5.00");
+        assertThat(fixtures.walletLedgerService.bonusCreditBalance(64, "USDT")).isEqualByComparingTo("15.00");
+        assertThat(fixtures.ledgerRepository.findByUid(64))
+                .extracting(WalletLedgerEntry::getReason)
+                .containsOnly("bonus_credit_grant", "bonus_credit_consume");
+    }
+
+    @Test
+    @DisplayName("eligibility blockedSymbols 優先於 allowedSymbols")
+    void eligibilityBlockedSymbolsOverrideAllowedSymbols() {
+        BonusCreditProperties properties = new BonusCreditProperties();
+        properties.getEligibility().setEnabled(true);
+        properties.getEligibility().setAllowedSymbols(List.of("BTCUSDT"));
+        properties.getEligibility().setBlockedSymbols(List.of("BTCUSDT"));
+        Fixtures fixtures = fixtures("2026-05-30T00:00:00Z", properties);
+        fixtures.service.grant(
+                65,
+                "USDT",
+                new BigDecimal("20.00"),
+                "campaign-a",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-a"
+        );
+
+        // 場景：營運可緊急封鎖指定 symbol，即使該 symbol 原本在 allow-list 內。
+        BigDecimal consumed = fixtures.service.consume(
+                65,
+                "USDT",
+                new BigDecimal("5.00"),
+                "bonus-use",
+                "USER_FEE_EXPENSE",
+                "BTCUSDT",
+                "LIMIT"
+        );
+
+        assertThat(consumed).isZero();
+        assertThat(fixtures.walletLedgerService.bonusCreditBalance(65, "USDT")).isEqualByComparingTo("20.00");
+    }
+
     private static Fixtures fixtures(String now) {
+        return fixtures(now, new BonusCreditProperties());
+    }
+
+    private static Fixtures fixtures(String now, BonusCreditProperties properties) {
         MemAccountRepository accountRepository = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepository = new MemWalletLedgerRepository();
         WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepository, ledgerRepository);
@@ -143,6 +226,7 @@ class BonusCreditServiceTest {
         BonusCreditService service = new BonusCreditService(
                 grantStore,
                 walletLedgerService,
+                properties,
                 Clock.fixed(Instant.parse(now), ZoneOffset.UTC)
         );
         return new Fixtures(grantStore, ledgerRepository, walletLedgerService, service);

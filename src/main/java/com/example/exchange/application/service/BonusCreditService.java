@@ -6,6 +6,7 @@ package com.example.exchange.application.service;
 import com.example.exchange.domain.model.dto.BonusCreditGrant;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.repository.BonusCreditGrantStore;
+import com.example.exchange.infra.config.BonusCreditProperties;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,16 +22,31 @@ public class BonusCreditService {
 
     private final BonusCreditGrantStore grantStore;
     private final WalletLedgerService walletLedgerService;
+    private final BonusCreditProperties properties;
     private final Clock clock;
 
     @Autowired
-    public BonusCreditService(BonusCreditGrantStore grantStore, WalletLedgerService walletLedgerService) {
-        this(grantStore, walletLedgerService, Clock.systemUTC());
+    public BonusCreditService(
+            BonusCreditGrantStore grantStore,
+            WalletLedgerService walletLedgerService,
+            BonusCreditProperties properties
+    ) {
+        this(grantStore, walletLedgerService, properties, Clock.systemUTC());
     }
 
     BonusCreditService(BonusCreditGrantStore grantStore, WalletLedgerService walletLedgerService, Clock clock) {
+        this(grantStore, walletLedgerService, new BonusCreditProperties(), clock);
+    }
+
+    BonusCreditService(
+            BonusCreditGrantStore grantStore,
+            WalletLedgerService walletLedgerService,
+            BonusCreditProperties properties,
+            Clock clock
+    ) {
         this.grantStore = grantStore;
         this.walletLedgerService = walletLedgerService;
+        this.properties = properties == null ? new BonusCreditProperties() : properties;
         this.clock = clock;
     }
 
@@ -64,7 +80,20 @@ public class BonusCreditService {
     }
 
     public BigDecimal consume(long uid, String asset, BigDecimal amount, String refId, String expenseAccount) {
+        return consume(uid, asset, amount, refId, expenseAccount, null, null);
+    }
+
+    public BigDecimal consume(
+            long uid,
+            String asset,
+            BigDecimal amount,
+            String refId,
+            String expenseAccount,
+            String symbol,
+            String orderType
+    ) {
         if (amount == null || amount.signum() <= 0) return BigDecimal.ZERO;
+        if (!eligibleForConsumption(symbol, orderType, expenseAccount)) return BigDecimal.ZERO;
         Instant now = clock.instant();
         BigDecimal remainingNeed = amount;
         BigDecimal totalConsumed = BigDecimal.ZERO;
@@ -88,6 +117,18 @@ public class BonusCreditService {
             grantStore.save(grant.withRemaining(grant.remainingAmount().subtract(ledgerConsumed), now));
         }
         return totalConsumed;
+    }
+
+    public boolean eligibleForConsumption(String symbol, String orderType, String expenseAccount) {
+        BonusCreditProperties.Eligibility eligibility = properties.getEligibility();
+        if (eligibility == null || !eligibility.isEnabled()) return true;
+        String normalizedSymbol = normalize(symbol);
+        String normalizedOrderType = normalize(orderType);
+        String normalizedExpenseAccount = normalize(expenseAccount);
+        if (containsNormalized(eligibility.getBlockedSymbols(), normalizedSymbol)) return false;
+        if (!allowedByList(eligibility.getAllowedSymbols(), normalizedSymbol)) return false;
+        if (!allowedByList(eligibility.getAllowedOrderTypes(), normalizedOrderType)) return false;
+        return allowedByList(eligibility.getAllowedExpenseAccounts(), normalizedExpenseAccount);
     }
 
     public int expireDue(int limit) {
@@ -183,6 +224,24 @@ public class BonusCreditService {
     private static String normalizeAsset(String asset) {
         if (asset == null || asset.isBlank()) return null;
         return asset.trim().toUpperCase();
+    }
+
+    private static boolean allowedByList(List<String> allowedValues, String value) {
+        return allowedValues == null
+                || allowedValues.stream().map(BonusCreditService::normalize).allMatch(Objects::isNull)
+                || containsNormalized(allowedValues, value);
+    }
+
+    private static boolean containsNormalized(List<String> values, String value) {
+        if (values == null || values.isEmpty() || value == null) return false;
+        return values.stream()
+                .map(BonusCreditService::normalize)
+                .anyMatch(value::equals);
+    }
+
+    private static String normalize(String value) {
+        if (value == null || value.isBlank()) return null;
+        return value.trim().toUpperCase();
     }
 
     private static BigDecimal sum(

@@ -28,6 +28,7 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
   `bonus_credit_grant`, `bonus_credit_consume`, `bonus_credit_expire`, and `bonus_credit_clawback`.
 - Bonus credit uses `USER_BONUS_AVAILABLE` and does not change `Account.crossBalance`, so it cannot silently mix with real cash.
 - `BonusCreditService` now keeps grant batches with remaining amount and expiry, consumes by expiry FIFO, and can expire due grants.
+- `BonusCreditService` now has a configurable consume eligibility gate for allowed/blocked symbols, allowed order types, and allowed expense accounts under `bonus-credit.eligibility`.
 - `BonusCreditService` now reports per-user bonus-credit grant state and performs active-grant FIFO clawback with ledger entries.
 - `MarginController` exposes `GET /api/margin/bonus-credit/report` and `POST /api/margin/bonus-credit/clawback`; these inherit the existing `/api/margin/**` funds security classification.
 - `BonusCreditExpiryScheduler` provides a disabled-by-default scheduler entry via `bonus-credit.expiry-enabled`.
@@ -41,7 +42,7 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 
 ## Remaining Work
 
-- Add bonus eligibility rules per product/symbol/order type before bonus consumption is allowed.
+- Wire first-class product/order metadata into all future bonus consumption call sites as those flows start consuming bonus credits.
 - Add first-class `strategyId` / `marketMakerId` fields to order entry instead of temporarily deriving strategy from `clientOrderId`.
 - Add turnover reconciliation job that compares turnover records against trade tape and ledger refs.
 - Expand bonus reporting into campaign/operator reports and add paged/exportable turnover reports.
