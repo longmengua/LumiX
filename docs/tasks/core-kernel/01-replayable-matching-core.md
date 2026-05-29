@@ -41,10 +41,11 @@ Evolve the current in-memory matching core toward replayability with durable com
 - Added `CANCEL_REPLACE` matching command semantics with replacement order payload and replay coverage.
 - Added `MatchingSequencerLeaseService.requireWritable(...)` guard to reject missing lease, wrong owner, stale epoch, and expired lease before command writes.
 - Added owner epoch audit fields to matching command/event logs and append APIs.
+- Matching recovery now rejects blank symbols before snapshot/report writes, so startup/takeover cannot create unactionable empty-symbol recovery records.
 
 Remaining work:
 - Add stronger application/accounting atomicity around cancel-replace reserve release and replacement reserve.
-- Wire lease write guard into the production worker command pipeline.
+- Continue production disaster-recovery drills and runbooks for matching/order/account/position restore.
 
 ## Acceptance Criteria
 

@@ -40,7 +40,7 @@ public class MatchingRecoveryService {
      * command/event log 不會被重寫，replay 只套用 snapshot command offset 之後的 command。</p>
      */
     public MatchingRecoveryResult recoverSymbol(String symbolCode) {
-        String symbol = normalize(symbolCode);
+        String symbol = requireSymbol(symbolCode);
         var latestSnapshot = snapshotStore.latest(symbol);
         MatchingEngineSnapshot startSnapshot = latestSnapshot.orElseGet(() -> emptySnapshot(symbol));
         List<MatchingCommandLogEntry> commands = commandLog.listAll(symbol);
@@ -83,5 +83,13 @@ public class MatchingRecoveryService {
 
     private static String normalize(String symbolCode) {
         return symbolCode == null ? "" : symbolCode.trim().toUpperCase();
+    }
+
+    private static String requireSymbol(String symbolCode) {
+        String symbol = normalize(symbolCode);
+        if (symbol.isBlank()) {
+            throw new IllegalArgumentException("matching recovery symbol is required");
+        }
+        return symbol;
     }
 }

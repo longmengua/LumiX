@@ -51,7 +51,7 @@ Current behavior:
 - In-memory event log records emitted trade events with event offsets and their source command offset.
 - Replay validation report compares command offset, event offset, match sequence, and book levels against expected snapshots.
 - Spring wiring can use durable JPA command/event log adapters with per-symbol checkpoint rows and pessimistic offset locking.
-- Matching recovery orchestration can rebuild a symbol from latest snapshot plus later command log entries, then save the recovered snapshot.
+- Matching recovery orchestration can rebuild a nonblank symbol from latest snapshot plus later command log entries, then save the recovered snapshot.
 - Replay validation reports have a durable JPA store for recovery audit history.
 - Sequencer lease service manages per-symbol owner acquire/renew/release and increments epoch on takeover.
 - Sequencer lease service exposes `requireWritable(...)` to reject missing lease, wrong owner, stale epoch, and expired lease before command writes.
@@ -72,7 +72,7 @@ Current behavior:
 - Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
 
 Remaining production TODO:
-- Stronger application/accounting cancel-replace atomicity and broader authenticated session replay semantics.
+- Stronger application/accounting cancel-replace atomicity, broader authenticated session replay semantics, and production restore drills for matching/order/account/position state.
 - Keep this area first in the roadmap until replayable matching is complete.
 
 ## Order Management
