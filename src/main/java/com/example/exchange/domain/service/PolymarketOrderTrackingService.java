@@ -25,7 +25,15 @@ import java.util.Objects;
 public class PolymarketOrderTrackingService {
 
     private static final List<String> RECONCILE_STATUSES =
-            List.of("CREATED", "ACCEPTED", "live", "matched", "ORDER_STATUS_LIVE", "ORDER_STATUS_MATCHED");
+            List.of(
+                    "CREATED",
+                    "ACCEPTED",
+                    "CANCEL_OUTCOME_UNCERTAIN",
+                    "live",
+                    "matched",
+                    "ORDER_STATUS_LIVE",
+                    "ORDER_STATUS_MATCHED"
+            );
 
     private static final List<String> CANCEL_IDEMPOTENT_STATUSES =
             List.of("CANCEL_REQUESTED", "CANCEL_OUTCOME_UNCERTAIN", "CANCELED", "CANCELLED", "ORDER_STATUS_CANCELED");

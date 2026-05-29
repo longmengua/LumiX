@@ -38,7 +38,8 @@ Polymarket cancel uses the local order status as the retry boundary. If a previo
 - First successful CLOB cancel stores the raw CLOB payload, `lastSyncedAt`, and `CANCEL_REQUESTED`.
 - CLOB cancel `EXCEPTION` or 5xx outcome stores the raw payload, `lastSyncedAt`, `lastError`, and `CANCEL_OUTCOME_UNCERTAIN`.
 - Duplicate cancel requests after the local cancel marker do not send another external command.
-- This is still a local baseline; fuller CLOB state-machine transitions and remote lookup/reconcile to resolve uncertain cancel outcomes remain TODO.
+- Reconcile includes `CANCEL_OUTCOME_UNCERTAIN` orders and can replace the uncertain local state with the remote CLOB status.
+- This is still a local baseline; fuller CLOB state-machine transitions and durable command identity remain TODO.
 
 ## CLOB Sync/Reconcile Baseline
 

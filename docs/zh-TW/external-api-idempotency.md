@@ -38,7 +38,8 @@ Polymarket cancel 使用 local order status 作為 retry boundary。若前一次
 - 第一次 CLOB cancel 成功後，會保存 raw CLOB payload、`lastSyncedAt` 與 `CANCEL_REQUESTED`。
 - CLOB cancel 回 `EXCEPTION` 或 5xx outcome 時，會保存 raw payload、`lastSyncedAt`、`lastError` 與 `CANCEL_OUTCOME_UNCERTAIN`。
 - local cancel marker 已存在時，duplicate cancel request 不會再送外部 command。
-- 這仍是 local baseline；更完整的 CLOB state-machine transitions，以及用 remote lookup/reconcile 解開 uncertain cancel outcome 還待補。
+- Reconcile 會納入 `CANCEL_OUTCOME_UNCERTAIN` orders，並可用遠端 CLOB status 取代 local uncertain state。
+- 這仍是 local baseline；更完整的 CLOB state-machine transitions 與 durable command identity 還待補。
 
 ## CLOB Sync/Reconcile Baseline
 

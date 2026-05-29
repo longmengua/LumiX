@@ -21,7 +21,7 @@
 | `OutboxServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers。 |
 | `PolymarketApprovalServiceTest` | RPC approval read cache、owner clear 與 TTL refresh。 |
 | `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |
-| `PolymarketOrderTrackingServiceTest` | CLOB cancel local idempotency replay、第一次 cancel 成功 marker、exception/5xx uncertain outcome、sync/reconcile unchanged no-op replay。 |
+| `PolymarketOrderTrackingServiceTest` | CLOB cancel local idempotency replay、第一次 cancel 成功 marker、exception/5xx uncertain outcome、uncertain cancel reconcile resolution、sync/reconcile unchanged no-op replay。 |
 | `RiskSettlementServiceTest` | funding、liquidation、insurance fund、account reconciliation。 |
 | `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
 | `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration。 |

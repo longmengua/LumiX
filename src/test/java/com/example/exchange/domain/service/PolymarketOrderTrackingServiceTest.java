@@ -156,6 +156,31 @@ class PolymarketOrderTrackingServiceTest {
         assertThat(fx.orderRepository.saveCount).isZero();
     }
 
+    @Test
+    @DisplayName("CLOB reconcile 會納入 cancel uncertain order 並用遠端狀態解除")
+    /**
+     * 流程：cancel timeout 後 local order 是 CANCEL_OUTCOME_UNCERTAIN，reconcile 查 CLOB getOrder。
+     * 期望：reconcile query 納入 uncertain 狀態，遠端若已取消就更新 local status，解除不確定狀態。
+     */
+    void reconcileIncludesCancelUncertainOrdersAndResolvesRemoteCanceledStatus() {
+        PredictionPolymarketOrder existing = order("CANCEL_OUTCOME_UNCERTAIN", "clob-1");
+        existing.setLastError("network timeout");
+        Fixture fx = new Fixture(existing);
+        fx.clobClient.nextGetOrder = successOrderPayload("ORDER_STATUS_CANCELED", "0");
+
+        Map<String, Object> result = fx.service.reconcileOpenOrders();
+
+        assertThat(result).containsEntry("total", 1);
+        assertThat(result).containsEntry("synced", 1);
+        assertThat(result).containsEntry("unchanged", 0);
+        assertThat(result).containsEntry("failed", 0);
+        assertThat(existing.getStatus()).isEqualTo("ORDER_STATUS_CANCELED");
+        assertThat(existing.getLastError()).isNull();
+        assertThat(fx.orderRepository.lastStatusQuery).contains("CANCEL_OUTCOME_UNCERTAIN");
+        assertThat(fx.orderRepository.saveCount).isEqualTo(1);
+    }
+
+
     private static PredictionPolymarketOrder order(String status, String clobOrderId) {
         PredictionPolymarketOrder order = new PredictionPolymarketOrder();
         order.setInternalOrderId("internal-1");
@@ -229,6 +254,7 @@ class PolymarketOrderTrackingServiceTest {
     private static class CountingOrderRepository {
         private final PredictionPolymarketOrder existing;
         private int saveCount;
+        private List<String> lastStatusQuery = List.of();
 
         private CountingOrderRepository(PredictionPolymarketOrder existing) {
             this.existing = existing;
@@ -243,6 +269,7 @@ class PolymarketOrderTrackingServiceTest {
                             return Optional.of(existing);
                         }
                         if ("findByStatusInOrderByIdAsc".equals(method.getName())) {
+                            lastStatusQuery = (List<String>) args[0];
                             return List.of(existing);
                         }
                         if ("save".equals(method.getName())) {
