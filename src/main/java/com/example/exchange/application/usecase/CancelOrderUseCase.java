@@ -4,6 +4,7 @@
 package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.event.DomainEventPublisher;
+import com.example.exchange.application.service.CommandTransactionBoundary;
 import com.example.exchange.application.service.MarketDataService;
 import com.example.exchange.application.service.OperationalMetricsService;
 import com.example.exchange.application.service.WalletLedgerService;
@@ -35,13 +36,26 @@ public class CancelOrderUseCase {
     private final MarketDataService marketDataService;
     private final DomainEventPublisher<Object> publisher;
     private OperationalMetricsService operationalMetricsService;
+    private CommandTransactionBoundary commandTransactionBoundary;
 
     @Autowired(required = false)
     public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
         this.operationalMetricsService = operationalMetricsService;
     }
 
+    @Autowired(required = false)
+    public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
+        this.commandTransactionBoundary = commandTransactionBoundary;
+    }
+
     public boolean handle(UUID orderId) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute("cancel-order", () -> handleInsideTransaction(orderId));
+        }
+        return handleInsideTransaction(orderId);
+    }
+
+    private boolean handleInsideTransaction(UUID orderId) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new IllegalArgumentException("order not found: " + orderId));
         if (order.getStatus() != Order.Status.NEW && order.getStatus() != Order.Status.PARTIALLY_FILLED) {
@@ -69,6 +83,13 @@ public class CancelOrderUseCase {
     }
 
     public int cancelOpenOrders(long uid, String symbol) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute("bulk-cancel-order", () -> cancelOpenOrdersInsideTransaction(uid, symbol));
+        }
+        return cancelOpenOrdersInsideTransaction(uid, symbol);
+    }
+
+    private int cancelOpenOrdersInsideTransaction(long uid, String symbol) {
         List<Order> openOrders = (symbol == null || symbol.isBlank())
                 ? orderRepository.openOrders(uid)
                 : orderRepository.findOpenOrders(uid, symbol);

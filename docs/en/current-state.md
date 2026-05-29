@@ -3,7 +3,7 @@
 
 This document answers one question: how complete is this repository right now?
 
-Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The active roadmap is now in core-v1 freeze mode: keep the existing core baseline bounded, verify it, and defer broader feature expansion.
+Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The core-v1 freeze checklist is now closed and post-v1 production hardening tasks are split out; the next step is to tag or hand off the bounded core-v1 baseline, then work through transaction boundaries and the other post-v1 blockers in order.
 
 中文版本：[../zh-TW/current-state.md](../zh-TW/current-state.md)
 
@@ -20,7 +20,7 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 ## Current Priority Override
 
-The next work should follow [core-v1-release-checklist.md](core-v1-release-checklist.md) and [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md). Do not expand web, Polymarket, reporting, compliance, or observability scope until the freeze checklist is closed.
+The next work should tag or hand off the baseline defined by [core-v1-release-checklist.md](core-v1-release-checklist.md). The freeze checklist, smoke runbook, and [post-v1 production hardening tasks](../tasks/post-v1/README.md) are complete. Do not expand web, Polymarket, reporting, compliance, or observability scope until core-v1 is tagged.
 
 The frozen core-v1 baseline includes:
 
@@ -81,9 +81,9 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 ## Recommended Next Work
 
-1. Close [core-v1-release-checklist.md](core-v1-release-checklist.md).
-2. Run [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md).
-3. Fix only compile/test/checklist gaps discovered during freeze verification.
+1. Tag or hand off the bounded core-v1 baseline.
+2. Work through P0 production hardening via [post-v1 production hardening tasks](../tasks/post-v1/README.md).
+3. Prioritize transaction boundaries, production worker routing, ADL forced execution, market data durability, and external API idempotency.
 4. Defer new product surfaces until core-v1 is tagged.
 
 ## Reading Order

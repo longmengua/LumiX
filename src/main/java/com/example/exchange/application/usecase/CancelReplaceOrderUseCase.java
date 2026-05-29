@@ -5,10 +5,12 @@ package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.CancelReplaceOrderCommand;
 import com.example.exchange.application.command.PlaceOrderCommand;
+import com.example.exchange.application.service.CommandTransactionBoundary;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -20,14 +22,27 @@ public class CancelReplaceOrderUseCase {
     private final OrderRepository orderRepository;
     private final CancelOrderUseCase cancelOrderUseCase;
     private final PlaceOrderUseCase placeOrderUseCase;
+    private CommandTransactionBoundary commandTransactionBoundary;
+
+    @Autowired(required = false)
+    public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
+        this.commandTransactionBoundary = commandTransactionBoundary;
+    }
 
     /**
      * 先撤原單，再用原單參數加上 request override 建立新單。
      *
-     * <p>MVP 版本沒有跨 Redis / matching engine 的強交易邊界，因此文件中仍將 stronger
-     * atomicity mode 保留為 production TODO。</p>
+     * <p>Spring runtime 會用 command transaction boundary 包住撤原單與 replacement 下單，
+     * 避免資料庫狀態出現「撤單已提交但 replacement 失敗」的半套結果。</p>
      */
     public OrderInfoResponse handle(CancelReplaceOrderCommand command) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute("cancel-replace-order", () -> handleInsideTransaction(command));
+        }
+        return handleInsideTransaction(command);
+    }
+
+    private OrderInfoResponse handleInsideTransaction(CancelReplaceOrderCommand command) {
         validateCommand(command);
 
         Order original = orderRepository.findById(command.orderId())

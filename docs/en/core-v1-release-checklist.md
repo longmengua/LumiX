@@ -32,13 +32,20 @@ git status --short
 
 ## Release Gate
 
-- [ ] `./mvnw test` passes.
-- [ ] `git diff --check` passes.
-- [ ] Flyway migrations are append-only and ordered.
-- [ ] Scheduler defaults that can mutate state are disabled unless explicitly intended.
-- [ ] Protected admin APIs are covered by `/api/market-maker/**`, `/api/recovery/**`, `/api/risk/**`, and related security classifier paths.
-- [ ] Current-state and TODO docs point to the freeze task instead of new feature expansion.
-- [ ] Known production blockers are documented and not silently treated as complete.
+- [x] `./mvnw test` passes.
+- [x] `git diff --check` passes.
+- [x] Flyway migrations were squashed into one `V1__core_v1_baseline.sql` before any production schema release; after core-v1, return to append-only migration versioning.
+- [x] Scheduler defaults that can mutate state are disabled unless explicitly intended.
+- [x] Protected admin APIs are covered by `/api/market-maker/**`, `/api/recovery/**`, `/api/risk/**`, and related security classifier paths.
+- [x] Current-state and TODO docs point to the freeze task instead of new feature expansion.
+- [x] Known production blockers are documented and not silently treated as complete.
+
+## Verification Record
+
+- `./mvnw test`: 122 tests passed.
+- `git diff --check`: passed.
+- Docker clean-volume smoke: Flyway validated and applied 1 migration, and Hibernate validate passed.
+- API smoke: `/api/ops/metrics`, `/api/market-maker/profiles/enabled`, and `/api/depth/BTC-USDT` all returned 200.
 
 ## Production Risks That Remain
 

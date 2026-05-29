@@ -7,6 +7,7 @@ import com.example.exchange.application.command.PlaceOrderCommand;
 import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.OperationalMetricsService;
 import com.example.exchange.application.service.OrderService;
+import com.example.exchange.application.service.CommandTransactionBoundary;
 import com.example.exchange.application.service.RiskService;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.domain.model.entity.Order;
@@ -66,10 +67,16 @@ public class PlaceOrderUseCase {
     private final SymbolConfigRepository symbolConfigRepository;
     private final DomainEventPublisher<Object> publisher;
     private OperationalMetricsService operationalMetricsService;
+    private CommandTransactionBoundary commandTransactionBoundary;
 
     @Autowired(required = false)
     public void setOperationalMetricsService(OperationalMetricsService operationalMetricsService) {
         this.operationalMetricsService = operationalMetricsService;
+    }
+
+    @Autowired(required = false)
+    public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
+        this.commandTransactionBoundary = commandTransactionBoundary;
     }
 
     /**
@@ -90,6 +97,13 @@ public class PlaceOrderUseCase {
     }
 
     public Order place(PlaceOrderCommand cmd) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute("place-order", () -> placeInsideTransaction(cmd));
+        }
+        return placeInsideTransaction(cmd);
+    }
+
+    private Order placeInsideTransaction(PlaceOrderCommand cmd) {
         long startedAt = operationalMetricsService == null ? 0 : operationalMetricsService.startTimer();
         Order order = null;
         // 1) 基本欄位檢查

@@ -3,7 +3,7 @@
 
 這份文件回答一個問題：目前這個 repo 到底完成到哪裡？
 
-結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 roadmap 進入 core-v1 freeze mode：把現有核心 baseline 收斂、驗證並凍結，先不要繼續擴功能面。
+結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 core-v1 freeze checklist 已關閉，post-v1 production hardening task 也已拆出；下一步是 tag / hand off 有邊界的 core-v1 baseline，然後依 post-v1 task 順序推進 transaction boundaries 等 production blocker。
 
 English version: [../en/current-state.md](../en/current-state.md)
 
@@ -20,7 +20,7 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 ## 目前插單優先順序
 
-接下來應遵循 [core-v1-release-checklist.md](core-v1-release-checklist.md) 與 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。在 freeze checklist 關閉前，不擴 web、Polymarket、報表、合規或觀測範圍。
+接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist、smoke runbook 與 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 已完成拆分；在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
 
 凍結的 core-v1 baseline 包含：
 
@@ -81,9 +81,9 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 ## 建議接下來先做什麼
 
-1. 關閉 [core-v1-release-checklist.md](core-v1-release-checklist.md)。
-2. 執行 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。
-3. 只修 freeze verification 發現的 compile/test/checklist 缺口。
+1. Tag 或 hand off 有邊界的 core-v1 baseline。
+2. 依 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 推進 P0 production hardening。
+3. 優先處理 transaction boundaries、production worker routing、ADL forced execution、market data durability 與外部 API idempotency。
 4. 新產品面延後到 core-v1 tag 之後。
 
 ## 閱讀順序

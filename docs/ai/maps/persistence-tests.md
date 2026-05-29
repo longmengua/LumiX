@@ -44,6 +44,7 @@ Run all tests:
 Targeted tests:
 
 ```bash
+./mvnw -Dtest=CommandTransactionBoundaryTest,OutboxServiceTest test
 ./mvnw -Dtest=InMemoryMatchingEngineTest test
 ./mvnw -Dtest=MatchingLogOwnerEpochTest test
 ./mvnw -Dtest=MatchingRecoveryServiceTest test
@@ -72,6 +73,11 @@ Test ownership:
 - Application flows: `src/test/java/com/example/exchange/application/service`
 - Utilities: `src/test/java/com/example/exchange/domain/util`
 - Web security/interceptors: `src/test/java/com/example/exchange/interfaces/web`
+
+Transaction boundary coverage:
+- `CommandTransactionBoundaryTest` proves successful command bodies commit and failed command bodies roll back without hidden retry.
+- `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
+- `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
 
 ## Agent Context Script
 

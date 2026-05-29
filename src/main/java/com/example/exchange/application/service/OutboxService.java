@@ -9,6 +9,8 @@ import com.example.exchange.domain.repository.DlqRepository;
 import com.example.exchange.domain.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -40,7 +42,7 @@ public class OutboxService {
                 .headers(normalizeHeaders(headers))
                 .build();
         outboxRepository.save(event);
-        publishExisting(event, publisher);
+        publishAfterCommitOrNow(event, publisher);
     }
 
     public int relayDue(int limit, CheckedPublisher publisher) {
@@ -98,6 +100,21 @@ public class OutboxService {
             markFailed(event, ex);
             return false;
         }
+    }
+
+    private void publishAfterCommitOrNow(OutboxEvent event, CheckedPublisher publisher) {
+        if (!TransactionSynchronizationManager.isActualTransactionActive()) {
+            publishExisting(event, publisher);
+            return;
+        }
+
+        // DB state and the outbox row must commit first; Kafka/external publish happens only after commit.
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                publishExisting(event, publisher);
+            }
+        });
     }
 
     private void markFailed(OutboxEvent event, Exception ex) {

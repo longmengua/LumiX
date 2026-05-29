@@ -17,6 +17,7 @@ Current behavior:
 - Durable outbox and DLQ baseline.
 - Retry backoff, max retry count, replay, manual compensation.
 - Request/correlation headers retained through delayed publish.
+- When a Spring transaction is active, `OutboxService.publish(...)` saves the outbox row inside the transaction and defers the external publisher call until `afterCommit`.
 
 ## Event Store And Recovery
 
@@ -28,7 +29,7 @@ Current behavior:
 - Snapshot scheduler: `application.scheduler.SnapshotScheduler`
 
 Remaining production TODO:
-- Explicit transaction boundaries across MySQL, Redis, Kafka.
+- Extend explicit transaction boundaries beyond the place-order path to cancel/amend/cancel-replace, liquidation, ADL execution, hedge execution, and Redis hot-state recovery.
 - Disaster recovery for matching, orders, accounts, and positions.
 
 ## Market Data And Push

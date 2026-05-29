@@ -1,13 +1,13 @@
 <!-- 檔案用途：繁體中文 production TODO；其他語言請見根目錄 README.md。 -->
 # Production TODO
 
-這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前產品優先順序是 core-v1 freeze：停止擴功能面，驗證目前核心交易 baseline，並明確記錄延後範圍。
+這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze 已關閉；接下來以 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 作為核心 production 工作主線。
 
 文件分類：[產品文件](README.md) / [技術文件](technical.md) / 待辦清單文件
 
 ## 目前 Freeze 工作
 
-- [ ] 關閉 [core-v1-release-checklist.md](core-v1-release-checklist.md)。
+- [x] 關閉 [core-v1-release-checklist.md](core-v1-release-checklist.md)。
 - [x] 執行 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。
 - [x] 只修 freeze verification 發現的 compile/test/checklist 缺口。
 - [x] Web app、Polymarket production worker split、完整報表、合規與觀測擴建延後到 core-v1 tag 之後。
@@ -126,8 +126,8 @@
 
 ## 近期落地順序建議
 
-1. [ ] 關閉 core-v1 freeze checklist。
+1. [x] 關閉 core-v1 freeze checklist。
 2. [x] 執行 core-v1 smoke runbook。
 3. [x] 只修 tests/checklists 發現的 release-blocking gaps。
 4. [ ] tag 或 hand off 有邊界的 core-v1 baseline。
-5. [ ] v1 之後的工作重新規劃，不再塞進本次 freeze。
+5. [x] v1 之後的工作重新規劃，不再塞進本次 freeze。

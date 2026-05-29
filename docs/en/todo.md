@@ -1,13 +1,13 @@
 <!-- File purpose: English production-readiness checklist. Other languages are listed in the repository root README.md. -->
 # Production TODO
 
-This checklist focuses on the work needed to move the current MVP toward production. The current product priority is core-v1 freeze: stop expanding feature surface, verify the current core exchange baseline, and document what is deferred.
+This checklist focuses on the work needed to move the current MVP toward production. Core-v1 freeze is closed; the next core production lane is [post-v1 production hardening tasks](../tasks/post-v1/README.md).
 
 Documentation categories: [Product Documentation](README.md) / [Technical Documentation](technical.md) / TODO Documentation
 
 ## Active Freeze Work
 
-- [ ] Close [core-v1-release-checklist.md](core-v1-release-checklist.md).
+- [x] Close [core-v1-release-checklist.md](core-v1-release-checklist.md).
 - [x] Run [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md).
 - [x] Fix only compile/test/checklist gaps discovered during freeze verification.
 - [x] Defer web apps, Polymarket production worker split, broad reporting, compliance, and observability expansion until after core-v1 is tagged.
@@ -126,8 +126,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ## Suggested Near-Term Order
 
-1. [ ] Close the core-v1 freeze checklist.
+1. [x] Close the core-v1 freeze checklist.
 2. [x] Run the core-v1 smoke runbook.
 3. [x] Fix only release-blocking gaps found by tests/checklists.
 4. [ ] Tag or hand off the bounded core-v1 baseline.
-5. [ ] Re-plan post-v1 work separately instead of adding it to this freeze.
+5. [x] Re-plan post-v1 work separately instead of adding it to this freeze.

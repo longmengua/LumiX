@@ -9,6 +9,8 @@ import com.example.exchange.domain.repository.DlqRepository;
 import com.example.exchange.domain.repository.OutboxRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -140,6 +142,38 @@ class OutboxServiceTest {
 
         assertThat(publishedHeaders).hasSize(2);
         assertThat(publishedHeaders.getLast()).containsEntry("X-Request-Id", "req-1");
+    }
+
+    @Test
+    @DisplayName("transaction active 時 outbox 只先落庫，外部發布延到 commit 後")
+    /**
+     * 流程：模擬 Spring transaction active -> publish 只保存 outbox row -> afterCommit 才呼叫外部 publisher。
+     */
+    void publishDefersExternalSendUntilAfterCommitWhenTransactionIsActive() {
+        MemOutboxRepository outboxRepository = new MemOutboxRepository();
+        MemDlqRepository dlqRepository = new MemDlqRepository();
+        OutboxService service = new OutboxService(outboxRepository, dlqRepository);
+        List<Object> published = new ArrayList<>();
+
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            service.publish("orders", "BTCUSDT", "payload", (topic, key, payload, headers) -> published.add(payload));
+
+            // 交易尚未 commit 前，資料庫 outbox row 是 authoritative record，Kafka 不應先看到事件。
+            assertThat(outboxRepository.onlyEvent().getStatus()).isEqualTo(OutboxEvent.Status.PENDING);
+            assertThat(published).isEmpty();
+
+            for (TransactionSynchronization synchronization : TransactionSynchronizationManager.getSynchronizations()) {
+                synchronization.afterCommit();
+            }
+
+            assertThat(published).containsExactly("payload");
+            assertThat(outboxRepository.onlyEvent().getStatus()).isEqualTo(OutboxEvent.Status.PUBLISHED);
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     /**

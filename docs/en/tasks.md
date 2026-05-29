@@ -11,6 +11,7 @@ Task files turn roadmap work into selectable Markdown files. When an interrupt r
 | --- | --- |
 | [Task README](../tasks/README.md) | Workflow, status legend, and task groups. |
 | [Core Kernel README](../tasks/core-kernel/README.md) | Current priority lane for the exchange/matching kernel. |
+| [Post-v1 Production Hardening README](../tasks/post-v1/README.md) | Main production-hardening lane after core-v1 freeze. |
 
 ## Core Kernel Tasks
 
@@ -21,6 +22,16 @@ Task files turn roadmap work into selectable Markdown files. When an interrupt r
 | 3 | [Bonus Credit And Turnover](../tasks/core-kernel/03-bonus-credit-turnover.md) | Experience fund accounting and turnover tracking. |
 | 4 | [Auditable Ledger Reconciliation](../tasks/core-kernel/04-auditable-ledger-reconciliation.md) | Trial balance, immutable journals, exception workflow. |
 | 5 | [Market Maker Hedging](../tasks/core-kernel/05-market-maker-hedging.md) | Quoting, inventory, hedge interface, hedge strategy, audit trail. |
+
+## Post-v1 Production Hardening
+
+| Order | Task | Purpose |
+| ---: | --- | --- |
+| 1 | [Transaction Boundaries](../tasks/post-v1/01-transaction-boundaries.md) | Define MySQL, Redis, Kafka, matching, ledger, and outbox consistency and recovery boundaries. |
+| 2 | [Production Worker Routing](../tasks/post-v1/02-production-worker-routing.md) | Route matching commands through the sequencer lease guard and owner epoch. |
+| 3 | [ADL Forced Execution](../tasks/post-v1/03-adl-forced-execution.md) | Move ADL from ranking/planning into forced reduction, accounting, and audit. |
+| 4 | [Market Data Durability](../tasks/post-v1/04-market-data-durability.md) | Add depth sequence checkpoints, reconnect backfill, and ticker/kline/trade tape durability. |
+| 5 | [External API Idempotency](../tasks/post-v1/05-external-api-idempotency.md) | Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage. |
 
 ## Web Tasks
 

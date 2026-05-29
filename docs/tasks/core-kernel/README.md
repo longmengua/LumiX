@@ -1,8 +1,9 @@
 # Core Kernel Tasks
 
-This task group is the core-kernel implementation lane. After the current baseline, the active priority is to freeze a bounded core v1 release instead of expanding new feature surfaces.
+This task group is the core-kernel implementation lane. Core-v1 freeze is closed; implementation should now continue through post-v1 production hardening tasks unless the user explicitly reopens a core-kernel task.
 
 Release freeze task: [../release/core-v1-freeze.md](../release/core-v1-freeze.md)
+Post-v1 hardening tasks: [../post-v1/README.md](../post-v1/README.md)
 
 ## Task Order
 

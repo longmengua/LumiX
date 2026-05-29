@@ -5,6 +5,7 @@ package com.example.exchange.application.usecase;
 
 import com.example.exchange.application.command.AmendOrderCommand;
 import com.example.exchange.application.event.DomainEventPublisher;
+import com.example.exchange.application.service.CommandTransactionBoundary;
 import com.example.exchange.application.service.MarketDataService;
 import com.example.exchange.application.service.RiskService;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
@@ -19,6 +20,7 @@ import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.domain.service.OrderBookSnapshot;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -34,6 +36,12 @@ public class AmendOrderUseCase {
     private final RiskService riskService;
     private final MarketDataService marketDataService;
     private final DomainEventPublisher<Object> publisher;
+    private CommandTransactionBoundary commandTransactionBoundary;
+
+    @Autowired(required = false)
+    public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
+        this.commandTransactionBoundary = commandTransactionBoundary;
+    }
 
     /**
      * 修改仍在簿內的 LIMIT 掛單。
@@ -42,6 +50,13 @@ public class AmendOrderUseCase {
      * 成功後會重新計算剩餘委託的 reserve，並推送 order lifecycle / depth delta。</p>
      */
     public OrderInfoResponse handle(AmendOrderCommand command) {
+        if (commandTransactionBoundary != null) {
+            return commandTransactionBoundary.execute("amend-order", () -> handleInsideTransaction(command));
+        }
+        return handleInsideTransaction(command);
+    }
+
+    private OrderInfoResponse handleInsideTransaction(AmendOrderCommand command) {
         validateCommand(command);
 
         Order order = orderRepository.findById(command.orderId())
