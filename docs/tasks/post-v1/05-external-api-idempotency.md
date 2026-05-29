@@ -1,6 +1,6 @@
 # Task: External API Idempotency
 
-Status: `todo`
+Status: `doing`
 
 ## Goal
 
@@ -16,10 +16,21 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 
 ## First Implementation Slice
 
-1. Inventory all external clients and classify calls as read-only, idempotent write, or non-idempotent write.
-2. Add an idempotency/retry envelope for one high-risk effectful command.
-3. Add tests for timeout, retry, duplicate request key, and uncertain remote outcome.
-4. Comment tests around why each retry is safe or blocked.
+1. [x] Inventory all external clients and classify calls as read-only, idempotent write, or non-idempotent write.
+2. [x] Add an idempotency/retry envelope for one high-risk effectful command.
+3. [x] Add tests for timeout, retry, duplicate request key, and uncertain remote outcome.
+4. [x] Comment tests around why each retry is safe or blocked.
+
+## Progress
+
+- Added `docs/en/external-api-idempotency.md` and `docs/zh-TW/external-api-idempotency.md` with Gamma, CLOB, RPC/approval, hedge venue, and callback inventory.
+- Added `IdempotentHedgeVenueAdapter` as the first effectful-write envelope. It requires `HedgeOrderRequest.refId`, fingerprints payloads, returns cached terminal results for duplicate requests, rejects same-key/different-payload conflicts, and blocks duplicate submit after timeout-like uncertain outcomes.
+- Added `IdempotentHedgeVenueAdapterTest` covering accepted duplicate replay, conflict, uncertain outcome, and missing ref id behavior.
+
+Remaining work:
+- Add durable idempotency storage and venue lookup/reconciliation for real hedge adapters.
+- Add CLOB place/cancel/sync/reconcile idempotency and local state-machine coverage.
+- Add RPC approval cache/expiry and transaction idempotency tracking.
 
 ## Acceptance Criteria
 

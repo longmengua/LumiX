@@ -7,7 +7,7 @@ Infrastructure adapters。
 - `kafka/`：domain event publisher 與 event store adapter。
 - `redis/`：Redis repository implementations。
 - `matching/`：in-memory matching engine adapter。
-- `hedging/`：hedge venue adapters，預設安全拒絕送單。
+- `hedging/`：hedge venue adapters，預設安全拒絕送單，並提供 idempotency / retry / throttle decorators。
 - `tracing/`：request/correlation id helper。
 
 目前狀態：

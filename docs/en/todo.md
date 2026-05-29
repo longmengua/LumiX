@@ -74,6 +74,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Document Kafka topic partition keys, retention, compaction, schema versions, and consumer-group strategy.
 - [x] Add shared HTTP timeout, retry, circuit breaker, and rate-limit baseline for external API calls.
 - [ ] Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage for every external API call.
+  - Baseline done: external API inventory plus hedge venue submit idempotency envelope using `refId`; CLOB/RPC/callback effectful idempotency remains.
 - [ ] Define transaction boundaries for core writes; MySQL, Redis, and Kafka must not be assumed to be automatically consistent.
 - [x] Add MVP snapshot + event replay recovery entry points.
 - [ ] Build production disaster recovery for matching, orders, accounts, and positions.

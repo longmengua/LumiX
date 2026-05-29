@@ -43,9 +43,10 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Venue fill mapping: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`.
 - Hedge venue contract: `domain.service.HedgeVenueAdapter`.
 - Default safe adapter: `infra.hedging.RejectingHedgeVenueAdapter`.
+- Idempotency decorator baseline: `infra.hedging.IdempotentHedgeVenueAdapter` uses `HedgeOrderRequest.refId` to prevent duplicate effectful venue submits and to block retries after uncertain timeout-like outcomes.
 - Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
 - Audit events: `HedgeDecisionRecorded`, `MarketMakerQuoteDecisionRecorded`.
-- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
+- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
 - Migrations: `V14__market_maker_profiles.sql`, `V15__hedge_decision_audits.sql`, `V16__hedge_fills.sql`.
 
 ## First Implementation Slice

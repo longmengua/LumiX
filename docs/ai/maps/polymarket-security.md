@@ -35,6 +35,7 @@ Remaining production TODO:
 - EIP-712 and CLOB signing: `domain.util.PolymarketEip712Signer`, `PolymarketClobOrderSigner`
 - External API config: `infra.config.OkHttpConfig`
 - Gamma client contract: `domain.repository.client.PredictionGammaMarketClient`
+- External API idempotency inventory: `docs/en/external-api-idempotency.md`
 
 Secrets must come from env/secret manager:
 - `POLYMARKET_WALLET_PRIVATE_KEY`

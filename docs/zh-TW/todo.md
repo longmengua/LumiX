@@ -74,6 +74,7 @@
 - [x] 文件化 Kafka topic partition key、retention、compaction、schema version 與 consumer group 策略。
 - [x] 補上外部 API 共用 HTTP timeout、retry、circuit breaker 與 rate-limit baseline。
 - [ ] 逐一確認所有外部 API 都具備 timeout、retry、circuit breaker、rate limit 與 idempotency coverage。
+  - Baseline 已完成：external API inventory，以及使用 `refId` 的 hedge venue submit idempotency envelope；CLOB/RPC/callback effectful idempotency 仍待補。
 - [ ] 所有核心寫入需要明確交易邊界；MySQL、Redis、Kafka 之間不能假設天然一致。
 - [x] 補上 MVP snapshot + event replay recovery 入口。
 - [ ] 建立 production 災難恢復流程：從 snapshot + event log 恢復 matching/order/account/position。
