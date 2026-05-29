@@ -6,12 +6,15 @@ package com.example.exchange.domain.repository;
 import com.example.exchange.domain.model.dto.HedgeFillRecord;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface HedgeFillStore {
 
     int SCHEMA_VERSION = 1;
 
     void append(HedgeFillRecord record);
+
+    Optional<HedgeFillRecord> findByVenueOrderIdAndVenueFillId(String venueOrderId, String venueFillId);
 
     List<HedgeFillRecord> findByMarketMakerId(String marketMakerId, int limit);
 

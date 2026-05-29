@@ -23,8 +23,18 @@ public class MarketMakerHedgeFillService {
     @Transactional
     public HedgeFillRecord recordFill(HedgeFillRecord fill) {
         validate(fill);
+        var existing = hedgeFillStore.findByVenueOrderIdAndVenueFillId(
+                fill.venueOrderId(),
+                fill.venueFillId()
+        );
+        if (existing.isPresent()) {
+            return existing.get();
+        }
         hedgeFillStore.append(fill);
-        return fill;
+        return hedgeFillStore.findByVenueOrderIdAndVenueFillId(
+                fill.venueOrderId(),
+                fill.venueFillId()
+        ).orElse(fill);
     }
 
     @Transactional

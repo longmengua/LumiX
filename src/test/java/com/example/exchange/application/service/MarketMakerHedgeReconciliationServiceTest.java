@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -126,6 +127,14 @@ class MarketMakerHedgeReconciliationServiceTest {
         @Override
         public void append(HedgeFillRecord record) {
             records.add(record);
+        }
+
+        @Override
+        public Optional<HedgeFillRecord> findByVenueOrderIdAndVenueFillId(String venueOrderId, String venueFillId) {
+            return records.stream()
+                    .filter(record -> venueOrderId.equals(record.venueOrderId())
+                            && venueFillId.equals(record.venueFillId()))
+                    .findFirst();
         }
 
         @Override

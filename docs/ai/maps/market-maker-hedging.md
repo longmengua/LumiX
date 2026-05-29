@@ -38,9 +38,9 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
 - Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`.
 - Hedge decision/routing: `MarketMakerHedgingService`.
-- Hedge fill recording: `MarketMakerHedgeFillService`.
+- Hedge fill recording: `MarketMakerHedgeFillService`; venue callback replay uses `venueOrderId + venueFillId` through `HedgeFillStore.findByVenueOrderIdAndVenueFillId(...)`.
 - Hedge decision-vs-fill reconciliation and idempotency operator view: `MarketMakerHedgeReconciliationService`, `MarketMakerHedgeVenueIdempotencyService`, `HedgeReconciliationReport`, `HedgeReconciliationIssue`, `HedgeVenueIdempotencyReport`, `HedgeVenueIdempotencyIssue`.
-- Venue fill mapping: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`.
+- Venue fill mapping/idempotency: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`, `HedgeFillStore`, `JpaHedgeFillStore`.
 - Hedge venue contract: `domain.service.HedgeVenueAdapter`.
 - Default safe adapter: `infra.hedging.RejectingHedgeVenueAdapter`.
 - Idempotency decorator baseline: `infra.hedging.IdempotentHedgeVenueAdapter` uses `HedgeOrderRequest.refId` with `HedgeVenueIdempotencyStore` / `JpaHedgeVenueIdempotencyStore` to claim before effectful venue submit, persist terminal results, prevent duplicate submits, reject payload conflicts, and block retries after pending or timeout-like uncertain outcomes. Operators can query unresolved pending/retryable records through `MarketMakerHedgeVenueIdempotencyService`.

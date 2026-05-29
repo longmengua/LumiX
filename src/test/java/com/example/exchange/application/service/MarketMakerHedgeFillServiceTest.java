@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -105,6 +106,44 @@ class MarketMakerHedgeFillServiceTest {
         assertThat(service.fillsByVenueOrder("venue-1")).containsExactly(record);
     }
 
+    @Test
+    @DisplayName("recordVenueFill 對相同 venue order/fill id 重送時回傳既有 record，不重複保存")
+    void recordVenueFillReplaysDuplicateVenueFillCallback() {
+        MemHedgeFillStore store = new MemHedgeFillStore();
+        MarketMakerHedgeFillService service = new MarketMakerHedgeFillService(store);
+
+        HedgeFillRecord first = service.recordVenueFill(new HedgeVenueFillMessage(
+                "mm-1",
+                "BTCUSDT",
+                "venue-1",
+                "fill-1",
+                OrderSide.BUY,
+                new BigDecimal("1.000"),
+                new BigDecimal("100.00"),
+                BigDecimal.ZERO,
+                "USDT",
+                "ref-1",
+                Instant.parse("2026-05-29T00:00:00Z")
+        ));
+        HedgeFillRecord replay = service.recordVenueFill(new HedgeVenueFillMessage(
+                "mm-1",
+                "BTCUSDT",
+                "venue-1",
+                "fill-1",
+                OrderSide.BUY,
+                new BigDecimal("1.000"),
+                new BigDecimal("100.00"),
+                BigDecimal.ZERO,
+                "USDT",
+                "ref-1",
+                Instant.parse("2026-05-29T00:00:00Z")
+        ));
+
+        // 流程：外部 callback 可能因 timeout 重送；相同 venue fill key 必須 replay 既有 audit row。
+        assertThat(replay).isEqualTo(first);
+        assertThat(service.fillsByVenueOrder("venue-1")).containsExactly(first);
+    }
+
     private static HedgeFillRecord fill(String venueOrderId, String venueFillId, String refId) {
         return new HedgeFillRecord(
                 null,
@@ -129,6 +168,14 @@ class MarketMakerHedgeFillServiceTest {
         @Override
         public void append(HedgeFillRecord record) {
             records.add(record);
+        }
+
+        @Override
+        public Optional<HedgeFillRecord> findByVenueOrderIdAndVenueFillId(String venueOrderId, String venueFillId) {
+            return records.stream()
+                    .filter(record -> venueOrderId.equals(record.venueOrderId())
+                            && venueFillId.equals(record.venueFillId()))
+                    .findFirst();
         }
 
         @Override

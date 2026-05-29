@@ -13,6 +13,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor
@@ -28,6 +29,17 @@ public class JpaHedgeFillStore implements HedgeFillStore {
         } catch (DataIntegrityViolationException ignored) {
             // Venue fill 回報可能重送；同一 venue_order_id + venue_fill_id 視為冪等。
         }
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<HedgeFillRecord> findByVenueOrderIdAndVenueFillId(String venueOrderId, String venueFillId) {
+        if (venueOrderId == null || venueOrderId.isBlank()
+                || venueFillId == null || venueFillId.isBlank()) {
+            return Optional.empty();
+        }
+        return repository.findByVenueOrderIdAndVenueFillId(venueOrderId.trim(), venueFillId.trim())
+                .map(HedgeFillRecordEntity::toRecord);
     }
 
     @Override

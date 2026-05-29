@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface HedgeFillRecordEntityJpaRepository extends JpaRepository<HedgeFillRecordEntity, String> {
 
@@ -17,6 +18,8 @@ public interface HedgeFillRecordEntityJpaRepository extends JpaRepository<HedgeF
     );
 
     List<HedgeFillRecordEntity> findByVenueOrderIdOrderByFilledAtAscIdAsc(String venueOrderId);
+
+    Optional<HedgeFillRecordEntity> findByVenueOrderIdAndVenueFillId(String venueOrderId, String venueFillId);
 
     List<HedgeFillRecordEntity> findByRefIdOrderByFilledAtAscIdAsc(String refId);
 }

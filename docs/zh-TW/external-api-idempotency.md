@@ -8,7 +8,7 @@
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | 共用 OkHttp timeout/retry/circuit/rate-limit baseline | Read-only，可重試；response schema versioning 仍待補。 |
 | Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | 外部 effectful writes plus read-only status sync | 使用 HTTP client 的路徑會套共用 OkHttp baseline | Place baseline：可選 `clientRequestId` 會成為 local idempotency key。Cancel baseline：已記錄 cancel/uncertain 狀態時直接回 local order，不再重送 DELETE。Sync/reconcile baseline：未變更的 CLOB payload 不再重複寫 local row。 |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | 外部 effectful writes and reads | 部分共用 config；RPC-specific limits 仍待補 | Approval reads 已有 TTL cache 與 owner-scoped clear。仍待補：backend-observed effectful flow 的 idempotent approval transaction tracking。 |
-| Hedge venue submit | `HedgeVenueAdapter` | 外部 effectful write | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，會先 claim 再送 venue、durably 保存 terminal results、拒絕 refId conflict，並在 pending/uncertain outcome 後阻止 duplicate submit。 |
+| Hedge venue submit/callback | `HedgeVenueAdapter`, `MarketMakerHedgeFillService` | 外部 effectful write plus callback reconciliation | `RetryingHedgeVenueAdapter`、`ThrottlingHedgeVenueAdapter` | Submit baseline：`IdempotentHedgeVenueAdapter` 要求 `refId`，會先 claim 再送 venue、durably 保存 terminal results、拒絕 refId conflict，並在 pending/uncertain outcome 後阻止 duplicate submit。Callback baseline：`venueOrderId + venueFillId` 會 replay 既有 hedge fill audit row。 |
 | Bank/chain callbacks | Future callback clients/controllers | 外部 effectful reconciliation | 尚未實作 | 仍待補。 |
 
 ## Hedge Submit Baseline
@@ -23,6 +23,14 @@ Hedge venue submit 使用 `HedgeOrderRequest.refId` 作為外部 idempotency key
 營運可透過 `GET /api/market-maker/hedge-idempotency/unresolved` 檢視未解的 hedge venue idempotency outcomes。報告會列出 pending claims 與 completed retryable outcomes，但不暴露已保存的 payload fingerprint。
 
 Durable baseline 仍需要 venue order lookup/reconciliation 與 integration-specific rate limits，才能接真實 venue adapter。
+
+## Hedge Fill Callback Baseline
+
+Venue fill callbacks 使用 `venueOrderId + venueFillId` 作為 idempotency key。`MarketMakerHedgeFillService.recordVenueFill(...)` 會在 append 前查 durable fill store；相同 callback replay 時直接回傳既有 audit row。
+
+- 重複 venue fill callback 不會建立第二筆 hedge fill audit record。
+- JPA store 仍保留 `venue_order_id + venue_fill_id` unique constraint 作為資料庫層防線。
+- 相同 fill key 但 payload 衝突時，仍需要真實 venue adapter 的 reconciliation policy。
 
 ## CLOB Place Baseline
 

@@ -36,6 +36,7 @@ Verify and enforce timeout, retry, circuit breaker, rate limit, and idempotency 
 - Added CLOB sync/reconcile local no-op replay: unchanged CLOB payload/status/size/error does not save the local order row again, and reconcile reports unchanged rows separately.
 - Added `PolymarketOrderStateMachine` as a first local/CLOB state-machine guard so stale active CLOB payloads cannot downgrade a local terminal order or its matched size; direct tests now cover filled/settled terminal guards and terminal remote progression.
 - Added `GET /api/market-maker/hedge-idempotency/unresolved` so operators can list pending hedge venue idempotency claims and completed retryable outcomes without exposing payload fingerprints.
+- Added hedge venue fill callback replay: `venueOrderId + venueFillId` returns the existing hedge fill audit row and keeps the database unique constraint as a final guard.
 
 Remaining work:
 - Add venue lookup/reconciliation for real hedge adapters.

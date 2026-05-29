@@ -8,7 +8,7 @@
 | Gamma market API | `PredictionGammaMarketClient` | Read-only market discovery | Shared OkHttp timeout/retry/circuit/rate-limit baseline | Safe to retry as read-only; response schema versioning still TODO. |
 | Polymarket CLOB place/cancel/sync/reconcile | `PolymarketClobTradingClient` via `PolymarketOrderService` / `PolymarketOrderTrackingService` | External effectful writes plus read-only status sync | Shared OkHttp baseline where HTTP client is used | Place baseline: optional `clientRequestId` becomes the local idempotency key. Cancel baseline: recorded cancel and uncertain statuses replay locally without another DELETE. Sync/reconcile baseline: unchanged CLOB payloads are no-op local writes. |
 | Polymarket relayer/RPC approval | `PolymarketSessionService` / `PolymarketApprovalService` / Web3j config | External effectful writes and reads | Shared config partly applies; RPC-specific limits still TODO | Approval reads have a TTL cache and owner-scoped clear. Still TODO: idempotent approval transaction tracking for any backend-observed effectful flow. |
-| Hedge venue submit | `HedgeVenueAdapter` | External effectful write | `RetryingHedgeVenueAdapter`, `ThrottlingHedgeVenueAdapter` | Baseline: `IdempotentHedgeVenueAdapter` requires `refId`, claims before venue submit, stores terminal results durably, rejects refId conflicts, and blocks duplicate submits after pending/uncertain outcomes. |
+| Hedge venue submit/callback | `HedgeVenueAdapter`, `MarketMakerHedgeFillService` | External effectful write plus callback reconciliation | `RetryingHedgeVenueAdapter`, `ThrottlingHedgeVenueAdapter` | Submit baseline: `IdempotentHedgeVenueAdapter` requires `refId`, claims before venue submit, stores terminal results durably, rejects refId conflicts, and blocks duplicate submits after pending/uncertain outcomes. Callback baseline: `venueOrderId + venueFillId` replays the existing hedge fill audit row. |
 | Bank/chain callbacks | Future callback clients/controllers | External effectful reconciliation | Not implemented | Still TODO. |
 
 ## Hedge Submit Baseline
@@ -23,6 +23,14 @@ Hedge venue submit uses `HedgeOrderRequest.refId` as the external idempotency ke
 Operators can inspect unresolved hedge venue idempotency outcomes with `GET /api/market-maker/hedge-idempotency/unresolved`. The report lists pending claims and completed retryable outcomes without exposing the stored payload fingerprint.
 
 The durable baseline still needs venue order lookup/reconciliation and integration-specific rate limits before wiring a real venue adapter.
+
+## Hedge Fill Callback Baseline
+
+Venue fill callbacks use `venueOrderId + venueFillId` as the idempotency key. `MarketMakerHedgeFillService.recordVenueFill(...)` checks the durable fill store before append and returns the existing audit row when the same callback is replayed.
+
+- Duplicate venue fill callbacks do not create another hedge fill audit record.
+- The JPA store keeps the existing unique constraint on `venue_order_id + venue_fill_id` as a database-level guard.
+- Same fill key with conflicting payload still needs venue-specific reconciliation policy before a real adapter is wired.
 
 ## CLOB Place Baseline
 
