@@ -66,7 +66,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add production frequency limits and broader abuse controls to pre-trade risk checks.
   - Baseline done: configurable uid+symbol fixed-window order-entry frequency limit rejects burst orders before reserve/matching side effects; default is disabled, and multi-instance production can replace the local counter with Redis/gateway shared counting.
 - [x] Add a liquidation MVP with trigger, close, insurance fund, ADL, and audit event coverage.
-- [ ] Add production liquidation scanning, execution routing, and operational controls.
+- [x] Add production liquidation scanning, execution routing, and operational controls.
+  - Baseline done: scanner iterates open positions with oracle-based liquidation routing, operator halt/manual-review controls, decision audit events, configurable scan batch size, and per-position failure isolation so one bad symbol/config does not stop the batch.
 - [x] Add global risk switches for reduce-only mode, order-entry halt, withdrawal halt, and per-symbol suspension.
 
 ### Reliability and Consistency

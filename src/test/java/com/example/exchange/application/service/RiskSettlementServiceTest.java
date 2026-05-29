@@ -335,6 +335,70 @@ class RiskSettlementServiceTest {
     }
 
     @Test
+    @DisplayName("liquidation scanner 支援 batch limit 且單筆失敗不會中止整批")
+    /**
+     * 流程：三筆 open positions，scan batch size 設為 2，第一筆因缺 symbol config 失敗，第二筆安全倉位正常判斷。
+     * 期望：scanner 只處理兩筆；第一筆被計入 reviewed，不阻止第二筆產生 decision audit。
+     */
+    void liquidationScannerLimitsBatchAndContinuesAfterPositionFailure() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InsuranceFundService insuranceFundService = new InsuranceFundService();
+        List<Object> published = new ArrayList<>();
+        RiskControlsProperties controls = new RiskControlsProperties();
+        controls.setLiquidationScanBatchSize(2);
+
+        positionRepo.save(Position.builder()
+                .uid(51)
+                .symbol(Symbol.builder().base("DOGE").quote("USDT").priceScale(1).qtyScale(1).build())
+                .mode(MarginMode.CROSS)
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("1"))
+                .build());
+
+        walletLedgerService.deposit(52, "USDT", new BigDecimal("1000"), "deposit-52");
+        positionRepo.save(Position.builder()
+                .uid(52)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("1"))
+                .build());
+
+        positionRepo.save(Position.builder()
+                .uid(53)
+                .symbol(symbol)
+                .mode(MarginMode.CROSS)
+                .qty(new BigDecimal("1"))
+                .entryPrice(new BigDecimal("100"))
+                .build());
+
+        LiquidationService liquidationService = new LiquidationService(
+                accountRepo,
+                positionRepo,
+                symbolRepo,
+                walletLedgerService,
+                insuranceFundService,
+                published::add
+        );
+        liquidationService.setMarkPriceOracleService(oracle("BTCUSDT", "1", "1"));
+        LiquidationScanService scanService = new LiquidationScanService(positionRepo, liquidationService);
+        scanService.setRiskControlsProperties(controls);
+
+        LiquidationScanResult scan = scanService.scanOpenPositions();
+
+        assertThat(scan.scannedPositions()).isEqualTo(2);
+        assertThat(scan.liquidationCount()).isZero();
+        assertThat(scan.reviewedCount()).isEqualTo(2);
+        assertThat(scan.results()).hasSize(1);
+        assertThat(published).filteredOn(LiquidationDecisionRecorded.class::isInstance).hasSize(1);
+        assertThat(positionRepo.find(53, symbol).orElseThrow().getQty()).isEqualByComparingTo("1");
+    }
+
+    @Test
     @DisplayName("全帳戶對帳會掃 account index 與 open-position index 找出不一致")
     /**
      * 流程：準備正常帳戶、margin 不一致帳戶、缺 account 的 open position -> validateAllAccounts 找出兩種問題。

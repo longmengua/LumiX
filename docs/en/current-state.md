@@ -13,10 +13,10 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
-| P0 Required | 30 | 13 | Core MVP capability exists, but many production blockers remain. |
+| P0 Required | 31 | 12 | Core MVP capability exists, but many production blockers remain. |
 | P1 Strongly Recommended | 8 | 14 | Operations, market data, Polymarket, and data governance are still early. |
 | P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
-| Total | 38 | 32 | The project has a baseline, but production hardening is still the main body of work. |
+| Total | 39 | 31 | The project has a baseline, but production hardening is still the main body of work. |
 
 ## Current Priority Override
 
@@ -73,7 +73,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Production worker routing has a documented deployment switch sequence, readiness inspection, rollback sequence, and focused smoke verification. The per-symbol sequencer still executes in an in-process engine, so broader disaster recovery and multi-process operational hardening remain.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
 - The ledger now has a durable double-entry journal, bonus-credit account separation, bonus expiry scanner baseline, turnover facts, and replay path; audit retention, deeper replay validation, bonus eligibility/reporting, turnover reconciliation, and operational controls are still incomplete.
-- Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Production feed redundancy, price clamps, scanner scheduling/routing, durable ADL queue storage, and production insurance-fund capital movement records are still incomplete.
+- Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Liquidation scanning can route open positions through oracle-based liquidation with halt/manual-review controls, batch limits, per-position failure isolation, and decision audit events. Production feed redundancy, price clamps, durable ADL queue storage, and production insurance-fund capital movement records are still incomplete.
 - Reconciliation now has persisted reports, a configurable scheduler policy, alert-route baseline, event-store coverage checks, trial-balance calculation, structured ledger replay comparison, issue workflow fields, admin issue workflow APIs, and workflow audit events. Daily finance reports remain incomplete.
 - Market-maker hedging now has durable profile/risk-limit storage, admin profile APIs, hedge fill query APIs, venue fill callback ingestion with venue fill idempotent replay, manual and default-disabled scheduled hedge execution APIs, exposure aggregation, inventory-aware reduce-only hedge planning/execution, global hedge execution halt, quote command validation, hedge venue adapter contract, retryable venue result classification, durable refId idempotency claim/result storage, unresolved hedge venue idempotency operator reporting, retry/backoff/throttle decorator baselines, standardized venue fill mapping, safe rejecting default adapter, hedging risk checks, slippage rejection, quote/hedge decision audit events, durable hedge decision/fill audit trails, and decision-vs-fill hedge reconciliation. Real venue adapters, venue lookup/reconciliation for uncertain outcomes, quote lifecycle integration, production callback authentication/verification, trade/ledger hedge reconciliation, production execution policy, scheduler/worker locking, and global limits remain incomplete.
 - Outbox now uses a production durable MySQL store for outbox/DLQ records and has an operational replay/compensation runbook.

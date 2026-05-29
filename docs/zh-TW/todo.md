@@ -66,7 +66,8 @@
 - [x] 為 pre-trade risk checks 補 production frequency limits 與更完整 abuse controls。
   - Baseline 已完成：可設定 uid+symbol fixed-window order-entry frequency limit，會在 reserve / matching side effect 前拒絕 burst orders；預設關閉，多實例 production 可替換為 Redis / gateway shared counting。
 - [x] 補上 liquidation MVP，涵蓋觸發、平倉、保險基金、ADL 與 audit event。
-- [ ] 補 production liquidation scanning、execution routing 與 operational controls。
+- [x] 補 production liquidation scanning、execution routing 與 operational controls。
+  - Baseline 已完成：scanner 會掃描 open positions 並走 oracle-based liquidation routing，支援 operator halt / manual-review controls、decision audit events、可設定 scan batch size，以及 per-position failure isolation，避免單一壞 symbol/config 中止整批掃描。
 - [x] 加上全站風控開關：只減倉、禁止下單、禁止提現、指定 symbol 停牌。
 
 ### 可靠性與一致性

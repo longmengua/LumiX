@@ -88,6 +88,7 @@ Remaining production TODO:
 Current liquidation/ADL behavior:
 - `LiquidationService` publishes `LiquidationDecisionRecorded` for liquidation decisions and `PositionLiquidated` when a position is closed.
 - `LiquidationScanService` scans open positions and delegates oracle-based liquidation decisions.
+- Scanner routing supports configurable batch size and isolates per-position failures so one bad symbol/config does not stop the whole batch.
 - `AdlRankingService` provides deterministic ranking by profit rate, effective leverage, notional, and uid.
 - `AdlDeleveragingPlanner` converts ranked candidates and ADL shortfall into deterministic reduce steps.
 - `AdlForcedExecutionService` consumes ADL plans, validates candidate quantities before mutation, force reduces selected positions, writes realized-PnL and `adl_forced_loss` ledger postings, publishes execution audit events, and uses durable execution records for command id idempotency when configured.

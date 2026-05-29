@@ -41,6 +41,11 @@ public class RiskControlsProperties {
     private boolean liquidationManualReview = false;
 
     /**
+     * 單次 liquidation scan 最多處理幾筆 open positions；0 或負數代表不限制。
+     */
+    private int liquidationScanBatchSize = 0;
+
+    /**
      * true 時拒絕 market-maker hedge execution，供營運緊急暫停對外對沖。
      */
     private boolean marketMakerHedgeExecutionHalt = false;
