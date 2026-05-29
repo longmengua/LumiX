@@ -46,6 +46,7 @@ Build the market-maker interface and hedging strategy baseline: quoting, invento
 - `MarketMakerController` exposes hedge reconciliation by market-maker id under `/api/market-maker/profiles/{marketMakerId}/hedge-reconciliation`.
 - `MarketMakerHedgeStrategyService` creates reduce-only hedge plans from inventory exposure, per-symbol long/short limits, max order notional, and slippage limits.
 - `MarketMakerHedgeExecutionService` executes reduce-only hedge plans for one market-maker or all enabled market-makers, returning `HedgeExecutionReport`.
+- `risk-controls.market-maker-hedge-execution-policy.enabled` plus `max-routed-orders-per-run` can cap venue order routing per execution run and records `HEDGE_EXECUTION_POLICY_MAX_ORDERS` decisions for skipped exposures.
 - `MarketMakerController` exposes manual hedge execution commands under `/api/market-maker/profiles/{marketMakerId}/hedge-execution` and `/api/market-maker/hedge-execution/enabled`.
 - `risk-controls.market-maker-hedge-execution-halt` blocks hedge execution globally and returns `HEDGE_EXECUTION_HALTED` strategy decisions without routing to venue.
 - `MarketMakerHedgeExecutionScheduler` can periodically execute enabled market-maker hedge plans, but defaults to `market-maker.hedge-execution.enabled=false`.
@@ -59,7 +60,7 @@ Build the market-maker interface and hedging strategy baseline: quoting, invento
 
 - Add real hedge venue adapter with signing and production callback authentication/verification.
 - Extend hedge reconciliation from decision-vs-fill checks into trade/ledger refs.
-- Add production execution policy, scheduler/worker locking, operator approval flow, and global risk limits.
+- Add scheduler/worker locking, operator approval flow, and global risk limits.
 
 ## Acceptance Criteria
 

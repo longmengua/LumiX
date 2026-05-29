@@ -81,10 +81,14 @@ public class MarketMakerHedgeExecutionService {
                     exposure,
                     refId(refPrefix, profile.marketMakerId(), exposure.symbol())
             );
-            strategyDecisions.add(strategyDecision);
             if (strategyDecision.hedgeRequired()) {
+                if (isPolicyRouteLimitReached(hedgeDecisions.size())) {
+                    strategyDecisions.add(policyRejectedDecision(profile, exposure));
+                    continue;
+                }
                 hedgeDecisions.add(hedgingService.hedge(profile, strategyDecision.orderRequest()));
             }
+            strategyDecisions.add(strategyDecision);
         }
         return new HedgeExecutionReport(
                 profile.marketMakerId(),
@@ -94,6 +98,29 @@ public class MarketMakerHedgeExecutionService {
                 Instant.now(),
                 strategyDecisions,
                 hedgeDecisions
+        );
+    }
+
+    private boolean isPolicyRouteLimitReached(int routedCount) {
+        RiskControlsProperties.MarketMakerHedgeExecutionPolicy policy =
+                riskControlsProperties.getMarketMakerHedgeExecutionPolicy();
+        if (policy == null || !policy.isEnabled() || policy.getMaxRoutedOrdersPerRun() <= 0) {
+            return false;
+        }
+        return routedCount >= policy.getMaxRoutedOrdersPerRun();
+    }
+
+    private static HedgeStrategyDecision policyRejectedDecision(
+            MarketMakerProfile profile,
+            MarketMakerExposure exposure
+    ) {
+        return new HedgeStrategyDecision(
+                profile.marketMakerId(),
+                exposure.symbol(),
+                false,
+                "HEDGE_EXECUTION_POLICY_MAX_ORDERS",
+                exposure,
+                null
         );
     }
 

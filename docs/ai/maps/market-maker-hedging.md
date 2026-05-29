@@ -36,6 +36,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
 - Hedge execution entry points use `CommandTransactionBoundary` when Spring wires it, so profile lookup, exposure planning, venue routing, hedge decision audit, and outbox rows share one command boundary.
 - Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
+- Execution route cap policy: `risk-controls.market-maker-hedge-execution-policy.enabled` and `risk-controls.market-maker-hedge-execution-policy.max-routed-orders-per-run` cap venue routing per execution run and emit `HEDGE_EXECUTION_POLICY_MAX_ORDERS` decisions for skipped exposures.
 - Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`.
 - Hedge decision/routing: `MarketMakerHedgingService`.
 - Hedge fill recording: `MarketMakerHedgeFillService`; venue callback replay uses `venueOrderId + venueFillId` through `HedgeFillStore.findByVenueOrderIdAndVenueFillId(...)`.
@@ -61,4 +62,4 @@ Remaining:
 - Quote lifecycle integration with actual order placement/cancel-replace.
 - Profile/fill API authorization and validation hardening.
 - Real hedge venue adapter, venue callback ingestion endpoint, and trade/ledger reconciliation refs.
-- Production execution policy, global limits, scheduler/worker locking, and operator approval flow.
+- Global limits, scheduler/worker locking, and operator approval flow.

@@ -62,6 +62,13 @@ public class RiskControlsProperties {
     private OrderEntryFrequencyLimit orderEntryFrequencyLimit =
             new OrderEntryFrequencyLimit();
 
+    /**
+     * 做市商 hedge execution policy。預設關閉；production 可用來限制單次 worker run
+     * 的對外 hedge order 數，避免 scheduler/worker 異常時瞬間放大 venue 風險。
+     */
+    private MarketMakerHedgeExecutionPolicy marketMakerHedgeExecutionPolicy =
+            new MarketMakerHedgeExecutionPolicy();
+
     @Data
     public static class OrderEntryFrequencyLimit {
 
@@ -79,5 +86,19 @@ public class RiskControlsProperties {
          * 固定視窗長度，單位秒。
          */
         private long windowSeconds = 60;
+    }
+
+    @Data
+    public static class MarketMakerHedgeExecutionPolicy {
+
+        /**
+         * true 時啟用 hedge execution policy。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 單次 hedge execution run 最多允許 route 的 venue orders；0 或負數代表不限制。
+         */
+        private int maxRoutedOrdersPerRun = 0;
     }
 }

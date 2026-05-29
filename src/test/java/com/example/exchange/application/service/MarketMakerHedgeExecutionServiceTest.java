@@ -111,6 +111,30 @@ class MarketMakerHedgeExecutionServiceTest {
     }
 
     @Test
+    @DisplayName("executeForMarketMaker 會套用單次 execution policy 的 venue route 上限")
+    void executeForMarketMakerAppliesPerRunRouteLimitPolicy() {
+        Fixture fixture = new Fixture();
+        fixture.riskControls.getMarketMakerHedgeExecutionPolicy().setEnabled(true);
+        fixture.riskControls.getMarketMakerHedgeExecutionPolicy().setMaxRoutedOrdersPerRun(1);
+        fixture.profileStore.save(profileWithSymbols("mm-1", 9001, true, false, "BTCUSDT", "ETHUSDT"));
+        fixture.addPosition(9001, "BTCUSDT", "2.000");
+        fixture.addPosition(9001, "ETHUSDT", "2.000");
+        fixture.oracle.update("BTCUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+        fixture.oracle.update("ETHUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+
+        // 流程：兩個 symbol 都超過 inventory limit，但 production policy 限制單次 run 只送一筆 venue order。
+        HedgeExecutionReport report = fixture.service.executeForMarketMaker("mm-1", "exec-test");
+
+        assertThat(report.exposureCount()).isEqualTo(2);
+        assertThat(report.plannedCount()).isEqualTo(1);
+        assertThat(report.routedCount()).isEqualTo(1);
+        assertThat(report.strategyDecisions()).extracting(decision -> decision.reason())
+                .contains("REDUCE_ONLY_HEDGE_REQUIRED", "HEDGE_EXECUTION_POLICY_MAX_ORDERS");
+        assertThat(fixture.venue.requests).hasSize(1);
+        assertThat(fixture.published).hasSize(1);
+    }
+
+    @Test
     @DisplayName("executeForMarketMaker 會進入 command transaction boundary")
     void executeForMarketMakerUsesCommandTransactionBoundaryWhenConfigured() {
         Fixture fixture = new Fixture();
@@ -131,18 +155,30 @@ class MarketMakerHedgeExecutionServiceTest {
     }
 
     private static MarketMakerProfile profile(String marketMakerId, long uid, boolean enabled, boolean killSwitch) {
+        return profileWithSymbols(marketMakerId, uid, enabled, killSwitch, "BTCUSDT");
+    }
+
+    private static MarketMakerProfile profileWithSymbols(
+            String marketMakerId,
+            long uid,
+            boolean enabled,
+            boolean killSwitch,
+            String... symbols
+    ) {
         return new MarketMakerProfile(
                 marketMakerId,
                 uid,
                 enabled,
-                List.of(new MarketMakerRiskLimit(
-                        "BTCUSDT",
-                        new BigDecimal("150.00"),
-                        new BigDecimal("120.00"),
-                        new BigDecimal("80.00"),
-                        new BigDecimal("0.01"),
-                        killSwitch
-                ))
+                java.util.Arrays.stream(symbols)
+                        .map(symbol -> new MarketMakerRiskLimit(
+                                symbol,
+                                new BigDecimal("150.00"),
+                                new BigDecimal("120.00"),
+                                new BigDecimal("80.00"),
+                                new BigDecimal("0.01"),
+                                killSwitch
+                        ))
+                        .toList()
         );
     }
 
