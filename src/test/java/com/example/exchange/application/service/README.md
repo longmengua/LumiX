@@ -18,7 +18,7 @@ Application service tests。
 | `MarketDataRetentionServiceTest` | Market-data depth delta、trade tape、1m kline retention cutoff 與 zero-window skip 行為。 |
 | `WalletLedgerServiceTest` | 體驗金 grant、consume、expire、clawback 與 real cash 隔離。 |
 | `BonusCreditServiceTest` | 體驗金批次 remaining、到期 FIFO consume 與 expiry scanner。 |
-| `TurnoverServiceTest` | 成交事件寫入 turnover fact 與 match-level summary。 |
+| `TurnoverServiceTest` / `TurnoverReconciliationServiceTest` | 成交事件寫入 turnover fact、match-level summary、drill-down 與 trade-tape reconciliation。 |
 | `MarkPriceOracleServiceTest` | oracle 設定載入、手動更新、stale quote 拒絕。 |
 | `AccountRiskSnapshotServiceTest` | 單一帳戶 risk snapshot 持久化、account/open-position index 掃描。 |
 | `MatchingRecoveryServiceTest` | 撮合 worker startup/takeover recovery，從 snapshot + command log replay 並保存 validation report。 |

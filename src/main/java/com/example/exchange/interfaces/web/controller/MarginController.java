@@ -8,6 +8,7 @@ import com.example.exchange.application.service.AccountRiskSnapshotService;
 import com.example.exchange.application.service.AccountRiskService;
 import com.example.exchange.application.service.BonusCreditService;
 import com.example.exchange.application.service.MarginService;
+import com.example.exchange.application.service.TurnoverReconciliationService;
 import com.example.exchange.application.service.TurnoverService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
@@ -16,6 +17,7 @@ import com.example.exchange.domain.model.dto.BonusCreditCampaignReport;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
+import com.example.exchange.domain.model.dto.TurnoverReconciliationReport;
 import com.example.exchange.domain.model.dto.TurnoverSummary;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
@@ -46,6 +48,7 @@ public class MarginController {
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final BonusCreditService bonusCreditService;
     private final TurnoverService turnoverService;
+    private final TurnoverReconciliationService turnoverReconciliationService;
 
     public MarginController(
             TransferMarginUseCase usecase,
@@ -54,7 +57,8 @@ public class MarginController {
             AccountRiskSnapshotService accountRiskSnapshotService,
             WalletLedgerReplayService walletLedgerReplayService,
             BonusCreditService bonusCreditService,
-            TurnoverService turnoverService
+            TurnoverService turnoverService,
+            TurnoverReconciliationService turnoverReconciliationService
     ) {
         this.usecase = usecase;
         this.marginService = marginService;
@@ -63,6 +67,7 @@ public class MarginController {
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.bonusCreditService = bonusCreditService;
         this.turnoverService = turnoverService;
+        this.turnoverReconciliationService = turnoverReconciliationService;
     }
 
     @PostMapping("/deposit")
@@ -149,6 +154,14 @@ public class MarginController {
             @RequestParam(defaultValue = "100") int limit
     ) {
         return ApiResponse.ok(turnoverService.records(uid, symbol, strategyId, marketMakerId, matchId, limit));
+    }
+
+    @GetMapping("/turnover/reconciliation")
+    public ApiResponse<TurnoverReconciliationReport> turnoverReconciliation(
+            @RequestParam Long uid,
+            @RequestParam String matchId
+    ) {
+        return ApiResponse.ok(turnoverReconciliationService.reconcileMatch(uid, matchId));
     }
 
     @GetMapping("/ledger/replay")

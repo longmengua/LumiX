@@ -14,6 +14,10 @@ public interface MarketDataTradeTapeStore {
 
     List<TradeTapeItem> findRecent(String symbol, int limit);
 
+    default List<TradeTapeItem> findByMatchId(String matchId) {
+        return List.of();
+    }
+
     default long purgeBefore(Instant cutoff) {
         return 0L;
     }

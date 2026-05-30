@@ -15,5 +15,7 @@ public interface MarketDataTradeTapeRecordJpaRepository
 
     List<MarketDataTradeTapeRecord> findBySymbolOrderByTradeTsDescIdDesc(String symbol, Pageable pageable);
 
+    List<MarketDataTradeTapeRecord> findByMatchIdOrderByTradeTsAscIdAsc(String matchId);
+
     long deleteByTradeTsBefore(Instant cutoff);
 }

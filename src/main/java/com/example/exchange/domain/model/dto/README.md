@@ -4,7 +4,7 @@
 
 目前重點：
 - Market data：`DepthDelta`、`MarketTicker`、`MarketKline`、`TradeTapeItem`。
-- 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`BonusCreditGrant`、`BonusCreditReport`、`BonusCreditCampaignReport`、`TurnoverRecord`、`TurnoverSummary`。
+- 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`BonusCreditGrant`、`BonusCreditReport`、`BonusCreditCampaignReport`、`TurnoverRecord`、`TurnoverSummary`、`TurnoverReconciliationReport`。
 - Snapshot read model：account risk snapshots、reconciliation reports、wallet ledger replay。
 - Finance read model：`TrialBalanceReport`、`TrialBalanceLine`、`LedgerReplayComparisonReport`、`LedgerReplayComparisonIssue`。
 - Market maker / hedging：`MarketMakerProfile`、`MarketMakerRiskLimit`、`MarketMakerExposure`、`MarketMakerQuoteCommand`、`MarketMakerQuoteDecision`、`HedgeOrderRequest`、`HedgeOrderResult`（含 retryable 錯誤分類）、`HedgeVenueIdempotencyRecord`、`HedgeDecision`、`HedgeStrategyDecision`、`HedgeExecutionReport`、`HedgeDecisionAuditRecord`、`HedgeVenueFillMessage`、`HedgeFillRecord`、`HedgeReconciliationReport`、`HedgeReconciliationIssue`。

@@ -42,6 +42,16 @@ public class JpaMarketDataTradeTapeStore implements MarketDataTradeTapeStore {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public List<TradeTapeItem> findByMatchId(String matchId) {
+        if (matchId == null || matchId.isBlank()) return List.of();
+        return repository.findByMatchIdOrderByTradeTsAscIdAsc(matchId.trim())
+                .stream()
+                .map(MarketDataTradeTapeRecord::toItem)
+                .toList();
+    }
+
+    @Override
     @Transactional
     public long purgeBefore(Instant cutoff) {
         return cutoff == null ? 0L : repository.deleteByTradeTsBefore(cutoff);
