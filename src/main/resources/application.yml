@@ -91,6 +91,12 @@ turnover:
     lookback-seconds: ${TURNOVER_RECONCILIATION_LOOKBACK_SECONDS:3600}
     batch-limit: ${TURNOVER_RECONCILIATION_BATCH_LIMIT:1000}
 
+ledger:
+  archive:
+    hot-retention-days: ${LEDGER_ARCHIVE_HOT_RETENTION_DAYS:365}
+    require-tamper-evidence-clean: ${LEDGER_ARCHIVE_REQUIRE_TAMPER_EVIDENCE_CLEAN:true}
+    require-balanced-daily-report: ${LEDGER_ARCHIVE_REQUIRE_BALANCED_DAILY_REPORT:true}
+
 funding-rate:
   settlements: []
 

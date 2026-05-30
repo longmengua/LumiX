@@ -5,6 +5,7 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.SnapshotRecoverCommand;
 import com.example.exchange.application.service.FinanceReportService;
+import com.example.exchange.application.service.LedgerArchiveEligibilityService;
 import com.example.exchange.application.service.OutboxService;
 import com.example.exchange.application.service.ReconciliationIssueWorkflowService;
 import com.example.exchange.application.service.ReconciliationReportService;
@@ -13,6 +14,7 @@ import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.TrialBalanceService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
+import com.example.exchange.domain.model.dto.LedgerArchiveEligibilityReport;
 import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
@@ -48,6 +50,7 @@ public class RecoveryController {
     private final MatchingWorkerLifecycleService matchingWorkerLifecycleService;
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final FinanceReportService financeReportService;
+    private final LedgerArchiveEligibilityService ledgerArchiveEligibilityService;
     private final TrialBalanceService trialBalanceService;
     private final OutboxService outboxService;
 
@@ -59,6 +62,7 @@ public class RecoveryController {
             MatchingWorkerLifecycleService matchingWorkerLifecycleService,
             WalletLedgerReplayService walletLedgerReplayService,
             FinanceReportService financeReportService,
+            LedgerArchiveEligibilityService ledgerArchiveEligibilityService,
             TrialBalanceService trialBalanceService,
             OutboxService outboxService
     ) {
@@ -69,6 +73,7 @@ public class RecoveryController {
         this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.financeReportService = financeReportService;
+        this.ledgerArchiveEligibilityService = ledgerArchiveEligibilityService;
         this.trialBalanceService = trialBalanceService;
         this.outboxService = outboxService;
     }
@@ -136,6 +141,13 @@ public class RecoveryController {
             @RequestParam(defaultValue = "fee") String category
     ) {
         return ApiResponse.ok(financeReportService.categoryReport(LocalDate.parse(date), category));
+    }
+
+    @GetMapping("/finance/ledger-archive-eligibility")
+    public ApiResponse<LedgerArchiveEligibilityReport> ledgerArchiveEligibility(
+            @RequestParam String date
+    ) {
+        return ApiResponse.ok(ledgerArchiveEligibilityService.evaluate(LocalDate.parse(date)));
     }
 
     @PostMapping("/finance/trial-balance/snapshot")
