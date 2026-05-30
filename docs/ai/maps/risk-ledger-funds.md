@@ -54,6 +54,7 @@ Ledger concerns:
 - Finance daily report summarizes durable ledger journal postings by reason, asset, and account code for a UTC report date.
 - Finance category report filters the daily durable-ledger report by fee, funding, liquidation, bonus, or transfer reason sets.
 - `LedgerArchiveEligibilityService` and `/api/recovery/finance/ledger-archive-eligibility` enforce ledger hot-path delete preconditions: retention window closed, hash-chain clean, balanced daily report, and non-empty candidate set.
+- `LedgerArchiveManifestService` and `/api/recovery/finance/ledger-archive-manifest` generate date-scoped ledger archive manifests with source row counts, posting counts, aggregate checksum, restore instructions, and delete eligibility.
 - `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.

@@ -6,6 +6,7 @@ package com.example.exchange.interfaces.web.controller;
 import com.example.exchange.application.command.SnapshotRecoverCommand;
 import com.example.exchange.application.service.FinanceReportService;
 import com.example.exchange.application.service.LedgerArchiveEligibilityService;
+import com.example.exchange.application.service.LedgerArchiveManifestService;
 import com.example.exchange.application.service.OutboxService;
 import com.example.exchange.application.service.ReconciliationIssueWorkflowService;
 import com.example.exchange.application.service.ReconciliationReportService;
@@ -15,6 +16,7 @@ import com.example.exchange.application.service.TrialBalanceService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveEligibilityReport;
+import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
 import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
@@ -51,6 +53,7 @@ public class RecoveryController {
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final FinanceReportService financeReportService;
     private final LedgerArchiveEligibilityService ledgerArchiveEligibilityService;
+    private final LedgerArchiveManifestService ledgerArchiveManifestService;
     private final TrialBalanceService trialBalanceService;
     private final OutboxService outboxService;
 
@@ -63,6 +66,7 @@ public class RecoveryController {
             WalletLedgerReplayService walletLedgerReplayService,
             FinanceReportService financeReportService,
             LedgerArchiveEligibilityService ledgerArchiveEligibilityService,
+            LedgerArchiveManifestService ledgerArchiveManifestService,
             TrialBalanceService trialBalanceService,
             OutboxService outboxService
     ) {
@@ -74,6 +78,7 @@ public class RecoveryController {
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.financeReportService = financeReportService;
         this.ledgerArchiveEligibilityService = ledgerArchiveEligibilityService;
+        this.ledgerArchiveManifestService = ledgerArchiveManifestService;
         this.trialBalanceService = trialBalanceService;
         this.outboxService = outboxService;
     }
@@ -148,6 +153,13 @@ public class RecoveryController {
             @RequestParam String date
     ) {
         return ApiResponse.ok(ledgerArchiveEligibilityService.evaluate(LocalDate.parse(date)));
+    }
+
+    @GetMapping("/finance/ledger-archive-manifest")
+    public ApiResponse<LedgerArchiveManifest> ledgerArchiveManifest(
+            @RequestParam String date
+    ) {
+        return ApiResponse.ok(ledgerArchiveManifestService.generate(LocalDate.parse(date)));
     }
 
     @PostMapping("/finance/trial-balance/snapshot")

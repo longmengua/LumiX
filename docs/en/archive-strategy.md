@@ -46,6 +46,6 @@ Every archive batch must write a manifest with:
 
 ## Open Implementation Work
 
-- Build archive exporter jobs and manifests for each data family.
+- Build archive exporter jobs for each data family. Ledger archive manifest generation has a baseline under `/api/recovery/finance/ledger-archive-manifest`.
 - Add restore smoke tests for order lifecycle, ledger replay, and Kafka event payloads.
 - Add archive checksums to operations dashboards and incident runbooks.
