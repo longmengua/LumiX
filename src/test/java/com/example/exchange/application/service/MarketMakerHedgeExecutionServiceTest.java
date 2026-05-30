@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.event.HedgeDecisionRecorded;
 import com.example.exchange.domain.model.dto.HedgeDecision;
+import com.example.exchange.domain.model.dto.HedgeExecutionLock;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeOrderRequest;
 import com.example.exchange.domain.model.dto.HedgeOrderResult;
@@ -15,6 +16,7 @@ import com.example.exchange.domain.model.entity.Symbol;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.repository.MarketMakerProfileStore;
 import com.example.exchange.domain.repository.PositionRepository;
+import com.example.exchange.domain.repository.HedgeExecutionLockStore;
 import com.example.exchange.domain.service.HedgeVenueAdapter;
 import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import com.example.exchange.infra.config.RiskControlsProperties;
@@ -31,6 +33,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.time.Duration;
+import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -152,6 +156,25 @@ class MarketMakerHedgeExecutionServiceTest {
         assertThat(report.routedCount()).isEqualTo(1);
         assertThat(transactionManager.commits).isEqualTo(1);
         assertThat(transactionManager.rollbacks).isZero();
+    }
+
+    @Test
+    @DisplayName("executeForEnabledMarketMakers 啟用 worker lock 時拿不到 lock 不送 venue")
+    void executeForEnabledMarketMakersSkipsWhenWorkerLockIsHeldByAnotherOwner() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile("mm-enabled", 9001, true, false));
+        fixture.addPosition(9001, "BTCUSDT", "2.000");
+        fixture.oracle.update("BTCUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+        MemHedgeExecutionLockStore lockStore = new MemHedgeExecutionLockStore();
+        lockStore.blockAcquire = true;
+        fixture.service.setLockStore(lockStore);
+        fixture.service.configureWorkerLockForTest(true, "worker-a", 30_000);
+
+        // 流程：另一個 worker 持有 batch lock 時，本 worker 不能重複計畫或送出 hedge order。
+        List<HedgeExecutionReport> reports = fixture.service.executeForEnabledMarketMakers("exec-test");
+
+        assertThat(reports).isEmpty();
+        assertThat(fixture.venue.requests).isEmpty();
     }
 
     private static MarketMakerProfile profile(String marketMakerId, long uid, boolean enabled, boolean killSwitch) {
@@ -282,6 +305,25 @@ class MarketMakerHedgeExecutionServiceTest {
 
         private static String key(long uid, String symbol) {
             return uid + ":" + symbol;
+        }
+    }
+
+    private static final class MemHedgeExecutionLockStore implements HedgeExecutionLockStore {
+        private boolean blockAcquire;
+        private boolean released;
+
+        @Override
+        public Optional<HedgeExecutionLock> acquire(String lockName, String ownerId, Duration ttl, Instant now) {
+            if (blockAcquire) {
+                return Optional.empty();
+            }
+            return Optional.of(new HedgeExecutionLock(lockName, ownerId, now.plus(ttl), now));
+        }
+
+        @Override
+        public boolean release(String lockName, String ownerId, Instant now) {
+            released = true;
+            return true;
         }
     }
 

@@ -52,6 +52,9 @@ market-maker:
     enabled: ${MARKET_MAKER_HEDGE_EXECUTION_ENABLED:false}
     fixed-delay-ms: ${MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS:300000}
     ref-prefix: ${MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX:scheduled}
+    lock-enabled: ${MARKET_MAKER_HEDGE_EXECUTION_LOCK_ENABLED:false}
+    lock-owner-id: ${MARKET_MAKER_HEDGE_EXECUTION_LOCK_OWNER_ID:${HOSTNAME:unknown-hedge-worker}}
+    lock-ttl-ms: ${MARKET_MAKER_HEDGE_EXECUTION_LOCK_TTL_MS:30000}
 
 market-data:
   retention:

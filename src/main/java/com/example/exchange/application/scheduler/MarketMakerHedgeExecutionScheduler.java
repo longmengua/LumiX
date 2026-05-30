@@ -26,7 +26,7 @@ public class MarketMakerHedgeExecutionScheduler {
         if (!enabled) {
             return;
         }
-        // Execution service 會再次檢查全域 halt；scheduler 預設關閉，production 啟用前要補 worker lock。
+        // Execution service 會再次檢查全域 halt；production 可用 lock-enabled 防止多 worker 重複送單。
         hedgeExecutionService.executeForEnabledMarketMakers(refPrefix);
     }
 }

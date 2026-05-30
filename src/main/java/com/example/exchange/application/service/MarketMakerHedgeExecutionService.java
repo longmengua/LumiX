@@ -4,19 +4,24 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.HedgeDecision;
+import com.example.exchange.domain.model.dto.HedgeExecutionLock;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeStrategyDecision;
 import com.example.exchange.domain.model.dto.MarketMakerExposure;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
+import com.example.exchange.domain.repository.HedgeExecutionLockStore;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,10 +33,31 @@ public class MarketMakerHedgeExecutionService {
     private final MarketMakerHedgingService hedgingService;
     private final RiskControlsProperties riskControlsProperties;
     private CommandTransactionBoundary commandTransactionBoundary;
+    private HedgeExecutionLockStore lockStore;
+
+    @Value("${market-maker.hedge-execution.lock-enabled:false}")
+    private boolean lockEnabled;
+
+    @Value("${market-maker.hedge-execution.lock-owner-id:${HOSTNAME:unknown-hedge-worker}}")
+    private String lockOwnerId;
+
+    @Value("${market-maker.hedge-execution.lock-ttl-ms:30000}")
+    private long lockTtlMs;
 
     @Autowired(required = false)
     public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
         this.commandTransactionBoundary = commandTransactionBoundary;
+    }
+
+    @Autowired(required = false)
+    public void setLockStore(HedgeExecutionLockStore lockStore) {
+        this.lockStore = lockStore;
+    }
+
+    void configureWorkerLockForTest(boolean enabled, String ownerId, long ttlMs) {
+        this.lockEnabled = enabled;
+        this.lockOwnerId = ownerId;
+        this.lockTtlMs = ttlMs;
     }
 
     @Transactional
@@ -63,9 +89,17 @@ public class MarketMakerHedgeExecutionService {
     }
 
     private List<HedgeExecutionReport> executeForEnabledMarketMakersInsideTransaction(String refPrefix) {
-        return profileService.enabledProfiles().stream()
-                .map(profile -> execute(profile, refPrefix))
-                .toList();
+        Optional<HedgeExecutionLock> lock = acquireBatchLock();
+        if (lockEnabled && lock.isEmpty()) {
+            return List.of();
+        }
+        try {
+            return profileService.enabledProfiles().stream()
+                    .map(profile -> execute(profile, refPrefix))
+                    .toList();
+        } finally {
+            lock.ifPresent(ignored -> lockStore.release(batchLockName(), lockOwnerId, Instant.now()));
+        }
     }
 
     private HedgeExecutionReport execute(MarketMakerProfile profile, String refPrefix) {
@@ -108,6 +142,25 @@ public class MarketMakerHedgeExecutionService {
             return false;
         }
         return routedCount >= policy.getMaxRoutedOrdersPerRun();
+    }
+
+    private Optional<HedgeExecutionLock> acquireBatchLock() {
+        if (!lockEnabled) {
+            return Optional.empty();
+        }
+        if (lockStore == null) {
+            throw new IllegalStateException("hedge execution lock enabled but store is not configured");
+        }
+        return lockStore.acquire(
+                batchLockName(),
+                lockOwnerId,
+                Duration.ofMillis(Math.max(1, lockTtlMs)),
+                Instant.now()
+        );
+    }
+
+    private static String batchLockName() {
+        return "market-maker-hedge-execution";
     }
 
     private static HedgeStrategyDecision policyRejectedDecision(
