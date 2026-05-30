@@ -13,6 +13,7 @@ import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.TrialBalanceService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
+import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
 import com.example.exchange.domain.model.dto.ReconciliationReportResult;
@@ -115,6 +116,11 @@ public class RecoveryController {
             @RequestParam(defaultValue = "USDT") String asset
     ) {
         return ApiResponse.ok(walletLedgerReplayService.compareAccountDetails(uid, asset));
+    }
+
+    @GetMapping("/reconcile/ledger/tamper-evidence")
+    public ApiResponse<LedgerTamperEvidenceReport> verifyLedgerTamperEvidence() {
+        return ApiResponse.ok(walletLedgerReplayService.verifyTamperEvidence());
     }
 
     @GetMapping("/finance/daily-report")

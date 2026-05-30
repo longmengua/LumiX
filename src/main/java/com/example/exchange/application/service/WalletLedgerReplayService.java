@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonIssue;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
+import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
@@ -88,6 +89,11 @@ public class WalletLedgerReplayService {
                 List.copyOf(issues),
                 Instant.now()
         );
+    }
+
+    @Transactional(readOnly = true)
+    public LedgerTamperEvidenceReport verifyTamperEvidence() {
+        return journal.verifyTamperEvidence();
     }
 
     public static void validateBalancedEntry(WalletLedgerEntry entry) {

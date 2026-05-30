@@ -3,11 +3,13 @@
  */
 package com.example.exchange.domain.repository.jpa;
 
+import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerEntryRecord;
 import com.example.exchange.domain.model.entity.WalletLedgerPosting;
 import com.example.exchange.domain.model.entity.WalletLedgerPostingRecord;
 import com.example.exchange.domain.repository.WalletLedgerJournal;
+import com.example.exchange.domain.util.WalletLedgerHash;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,12 +33,19 @@ public class JpaWalletLedgerJournal implements WalletLedgerJournal {
     @Transactional
     public void append(WalletLedgerEntry entry) {
         WalletLedgerJournal.validateBalancedEntry(entry);
-        entryRepository.save(WalletLedgerEntryRecord.from(entry, WalletLedgerJournal.SCHEMA_VERSION));
         List<WalletLedgerPostingRecord> postings = new ArrayList<>();
         int lineNo = 1;
         for (WalletLedgerPosting posting : entry.getPostings()) {
             postings.add(WalletLedgerPostingRecord.from(entry, posting, lineNo++));
         }
+        String previousHash = entryRepository.findTopByOrderByCreatedAtDescIdDesc()
+                .map(WalletLedgerEntryRecord::getEntryHash)
+                .filter(hash -> hash != null && !hash.isBlank())
+                .orElse(WalletLedgerHash.GENESIS_HASH);
+        WalletLedgerEntryRecord record = WalletLedgerEntryRecord.from(entry, WalletLedgerJournal.SCHEMA_VERSION);
+        record.setPreviousHash(previousHash);
+        record.setEntryHash(WalletLedgerHash.entryHash(previousHash, entry));
+        entryRepository.save(record);
         postingRepository.saveAll(postings);
     }
 
@@ -67,6 +76,41 @@ public class JpaWalletLedgerJournal implements WalletLedgerJournal {
                 fromInclusive,
                 toExclusive
         ));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public LedgerTamperEvidenceReport verifyTamperEvidence() {
+        List<WalletLedgerEntryRecord> records = entryRepository.findAllByOrderByCreatedAtAscIdAsc();
+        if (records.isEmpty()) {
+            return new LedgerTamperEvidenceReport(0, 0, Instant.now(), List.of());
+        }
+        List<String> entryIds = records.stream().map(WalletLedgerEntryRecord::getId).toList();
+        Map<String, List<WalletLedgerPosting>> postingsByEntryId = new LinkedHashMap<>();
+        for (WalletLedgerPostingRecord postingRecord : postingRepository.findByEntryIdInOrderByEntryIdAscLineNoAsc(entryIds)) {
+            postingsByEntryId
+                    .computeIfAbsent(postingRecord.getEntryId(), ignored -> new ArrayList<>())
+                    .add(postingRecord.toPosting());
+        }
+        List<String> issues = new ArrayList<>();
+        String expectedPrevious = WalletLedgerHash.GENESIS_HASH;
+        for (WalletLedgerEntryRecord record : records) {
+            if (record.getPreviousHash() == null || record.getEntryHash() == null) {
+                issues.add("MISSING_HASH:" + record.getId());
+                expectedPrevious = record.getEntryHash();
+                continue;
+            }
+            if (!expectedPrevious.equals(record.getPreviousHash())) {
+                issues.add("PREVIOUS_HASH_MISMATCH:" + record.getId());
+            }
+            WalletLedgerEntry entry = toEntry(record, postingsByEntryId.getOrDefault(record.getId(), List.of()));
+            String recalculated = WalletLedgerHash.entryHash(record.getPreviousHash(), entry);
+            if (!recalculated.equals(record.getEntryHash())) {
+                issues.add("ENTRY_HASH_MISMATCH:" + record.getId());
+            }
+            expectedPrevious = record.getEntryHash();
+        }
+        return new LedgerTamperEvidenceReport(records.size(), issues.size(), Instant.now(), issues);
     }
 
     private List<WalletLedgerEntry> toEntries(List<WalletLedgerEntryRecord> records) {

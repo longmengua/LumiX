@@ -55,6 +55,12 @@ public class WalletLedgerEntryRecord {
     @Column(name = "created_at", nullable = false, columnDefinition = "DATETIME(6)")
     private Instant createdAt;
 
+    @Column(name = "previous_hash", length = 128)
+    private String previousHash;
+
+    @Column(name = "entry_hash", length = 128)
+    private String entryHash;
+
     public static WalletLedgerEntryRecord from(WalletLedgerEntry entry, int schemaVersion) {
         WalletLedgerEntryRecord record = new WalletLedgerEntryRecord();
         record.setId(entry.getId().toString());

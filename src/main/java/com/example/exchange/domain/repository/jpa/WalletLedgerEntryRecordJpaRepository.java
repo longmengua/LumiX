@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface WalletLedgerEntryRecordJpaRepository
         extends JpaRepository<WalletLedgerEntryRecord, String> {
@@ -17,6 +18,10 @@ public interface WalletLedgerEntryRecordJpaRepository
     List<WalletLedgerEntryRecord> findByUidAndAssetOrderByCreatedAtAscIdAsc(Long uid, String asset);
 
     List<WalletLedgerEntryRecord> findByRefIdOrderByCreatedAtAscIdAsc(String refId);
+
+    Optional<WalletLedgerEntryRecord> findTopByOrderByCreatedAtDescIdDesc();
+
+    List<WalletLedgerEntryRecord> findAllByOrderByCreatedAtAscIdAsc();
 
     List<WalletLedgerEntryRecord> findByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtAscIdAsc(
             Instant fromInclusive,

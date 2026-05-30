@@ -4,6 +4,7 @@
 package com.example.exchange.domain.repository;
 
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 
 import java.time.Instant;
 import java.util.List;
@@ -22,6 +23,10 @@ public interface WalletLedgerJournal {
 
     default List<WalletLedgerEntry> findByCreatedAtBetween(Instant fromInclusive, Instant toExclusive) {
         return List.of();
+    }
+
+    default LedgerTamperEvidenceReport verifyTamperEvidence() {
+        return new LedgerTamperEvidenceReport(0, 0, Instant.now(), List.of());
     }
 
     static void validateBalancedEntry(WalletLedgerEntry entry) {

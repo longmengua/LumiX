@@ -113,6 +113,7 @@ Remaining production TODO:
 
 - `TrialBalanceService` aggregates wallet ledger postings by asset/account code and returns total debit, total credit, balanced flag, and net debit/credit lines.
 - Trial-balance daily snapshots can be persisted and fetched through `/api/recovery/finance/trial-balance/snapshot` for finance close replay.
+- Durable ledger entries now carry `previous_hash` and `entry_hash`; `/api/recovery/reconcile/ledger/tamper-evidence` verifies the journal hash chain and flags missing, previous-hash, or entry-hash mismatches.
 - `ReconciliationReportIssue` now has `status`, `owner`, and `resolvedAt` fields for an operator workflow baseline.
 - `ReconciliationIssueWorkflowService` and `/api/recovery/reconcile/issues/...` expose claim, resolve, reopen, and open-issue queue operations.
 - `WalletLedgerReplayService.compareAccountDetails` and `/api/recovery/reconcile/ledger/{uid}/compare` return structured account/replay/delta mismatches.
@@ -120,4 +121,4 @@ Remaining production TODO:
 - New issues created by `ReconciliationReportService` default to `OPEN`.
 
 Remaining production TODO:
-- Category-specific finance exports.
+- Ledger retention/archive enforcement and category-specific finance exports.

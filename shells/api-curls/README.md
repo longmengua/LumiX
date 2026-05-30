@@ -104,6 +104,7 @@ User WebSocket:
 ./shells/api-curls/exchange/recovery-reconcile-accounts-get.sh
 ./shells/api-curls/exchange/recovery-reconcile-report-post.sh
 ./shells/api-curls/exchange/recovery-reconcile-reports-get.sh
+./shells/api-curls/exchange/recovery-ledger-tamper-evidence-get.sh
 ./shells/api-curls/exchange/recovery-finance-daily-report-get.sh
 ./shells/api-curls/exchange/recovery-trial-balance-snapshot-post.sh
 ./shells/api-curls/exchange/recovery-trial-balance-snapshot-get.sh
