@@ -4,15 +4,19 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.TrialBalanceReport;
+import com.example.exchange.domain.model.dto.TrialBalanceSnapshot;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerPosting;
+import com.example.exchange.domain.repository.TrialBalanceSnapshotStore;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -61,6 +65,27 @@ class TrialBalanceServiceTest {
         assertThat(report.totalCredit()).isEqualByComparingTo("0");
     }
 
+    @Test
+    @DisplayName("persistSnapshot 會把指定日期的 trial balance 固定保存供財務日結重查")
+    void persistSnapshotSavesDailyTrialBalance() {
+        MemWalletLedgerRepository ledgerRepository = new MemWalletLedgerRepository();
+        ledgerRepository.entries.add(entry("deposit", List.of(
+                debit("USER_AVAILABLE", "USDT", "100"),
+                credit("EXTERNAL_CASH", "USDT", "100")
+        )));
+        MemTrialBalanceSnapshotStore snapshotStore = new MemTrialBalanceSnapshotStore();
+        TrialBalanceService service = new TrialBalanceService(ledgerRepository);
+        service.setSnapshotStore(snapshotStore);
+
+        // 流程：日結時先即時計算 trial balance，再以 date+uid+asset 保存快照。
+        TrialBalanceSnapshot snapshot = service.persistSnapshot(LocalDate.parse("2026-05-30"), 71, "USDT");
+
+        assertThat(snapshot.reportDate()).isEqualTo(LocalDate.parse("2026-05-30"));
+        assertThat(snapshot.totalDebit()).isEqualByComparingTo("100");
+        assertThat(snapshot.totalCredit()).isEqualByComparingTo("100");
+        assertThat(service.snapshot(LocalDate.parse("2026-05-30"), 71, "USDT")).isEqualTo(snapshot);
+    }
+
     private static WalletLedgerEntry entry(String reason, List<WalletLedgerPosting> postings) {
         return WalletLedgerEntry.builder()
                 .uid(71)
@@ -101,6 +126,29 @@ class TrialBalanceServiceTest {
             return entries.stream()
                     .filter(entry -> refId.equals(entry.getRefId()))
                     .toList();
+        }
+    }
+
+    private static class MemTrialBalanceSnapshotStore implements TrialBalanceSnapshotStore {
+        private TrialBalanceSnapshot snapshot;
+
+        @Override
+        public TrialBalanceSnapshot save(TrialBalanceSnapshot snapshot) {
+            this.snapshot = snapshot;
+            return snapshot;
+        }
+
+        @Override
+        public Optional<TrialBalanceSnapshot> find(LocalDate reportDate, long uid, String asset) {
+            if (snapshot == null) {
+                return Optional.empty();
+            }
+            if (!snapshot.reportDate().equals(reportDate)
+                    || snapshot.uid() != uid
+                    || !snapshot.asset().equals(asset)) {
+                return Optional.empty();
+            }
+            return Optional.of(snapshot);
         }
     }
 }

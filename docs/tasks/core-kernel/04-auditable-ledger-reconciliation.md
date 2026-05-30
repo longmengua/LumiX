@@ -23,8 +23,8 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 
 ## Progress
 
-- `TrialBalanceService` can calculate total debit/credit and account-code lines from wallet ledger postings.
-- `TrialBalanceReport` / `TrialBalanceLine` provide a finance-facing read model for user/asset scoped trial balance.
+- `TrialBalanceService` can calculate total debit/credit and account-code lines from wallet ledger postings, then persist date/uid/asset scoped snapshots.
+- `TrialBalanceReport` / `TrialBalanceLine` / `TrialBalanceSnapshot` provide finance-facing read models for user/asset scoped trial balance and daily close snapshots.
 - `ReconciliationReportIssue` now has `status`, `owner`, and `resolvedAt` fields, defaulting new issues to `OPEN`.
 - `ReconciliationIssueWorkflowService` supports claim, resolve, reopen, and open-issue queue queries.
 - `RecoveryController` exposes admin endpoints under `/api/recovery/reconcile/issues/...` for issue workflow.
@@ -32,13 +32,12 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 - `RecoveryController` exposes `/api/recovery/reconcile/ledger/{uid}/compare` for structured replay comparison.
 - `ReconciliationIssueWorkflowChanged` records claim/resolve/reopen workflow audit events.
 - `FinanceReportService` can generate a UTC daily durable-ledger report grouped by reason, asset, and account code.
-- `RecoveryController` exposes `GET /api/recovery/finance/daily-report?date=YYYY-MM-DD`.
+- `RecoveryController` exposes `GET /api/recovery/finance/daily-report?date=YYYY-MM-DD` and `GET/POST /api/recovery/finance/trial-balance/snapshot`.
 - `V13__reconciliation_issue_workflow.sql` adds issue workflow columns and indexes.
 - Tests cover balanced trial balance aggregation, unbalanced posting detection, and default reconciliation issue workflow state.
 
 ## Remaining Work
 
-- Persist trial-balance snapshots for daily finance reports.
 - Add immutable journal retention/archive policy and tamper-evidence checks.
 - Add category-specific exports for fees, funding, liquidation, bonus credit, and transfers.
 

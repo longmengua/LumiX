@@ -5,8 +5,10 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.TrialBalanceLine;
 import com.example.exchange.domain.model.dto.TrialBalanceReport;
+import com.example.exchange.domain.model.dto.TrialBalanceSnapshot;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerPosting;
+import com.example.exchange.domain.repository.TrialBalanceSnapshotStore;
 import com.example.exchange.domain.repository.WalletLedgerJournal;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -26,10 +29,16 @@ public class TrialBalanceService {
 
     private final WalletLedgerRepository ledgerRepository;
     private WalletLedgerJournal ledgerJournal;
+    private TrialBalanceSnapshotStore snapshotStore;
 
     @Autowired(required = false)
     public void setLedgerJournal(WalletLedgerJournal ledgerJournal) {
         this.ledgerJournal = ledgerJournal;
+    }
+
+    @Autowired(required = false)
+    public void setSnapshotStore(TrialBalanceSnapshotStore snapshotStore) {
+        this.snapshotStore = snapshotStore;
     }
 
     public TrialBalanceReport calculateForUid(long uid, String asset) {
@@ -81,6 +90,26 @@ public class TrialBalanceService {
                 totalDebit.compareTo(totalCredit) == 0,
                 lines
         );
+    }
+
+    public TrialBalanceSnapshot persistSnapshot(LocalDate reportDate, long uid, String asset) {
+        if (snapshotStore == null) {
+            throw new IllegalStateException("trial balance snapshot store is not configured");
+        }
+        String normalizedAsset = normalizeAsset(asset);
+        TrialBalanceReport report = calculateForUid(uid, normalizedAsset);
+        return snapshotStore.save(TrialBalanceSnapshot.from(reportDate, report));
+    }
+
+    public TrialBalanceSnapshot snapshot(LocalDate reportDate, long uid, String asset) {
+        if (snapshotStore == null) {
+            return null;
+        }
+        return snapshotStore.find(reportDate, uid, normalizeAsset(asset)).orElse(null);
+    }
+
+    private static String normalizeAsset(String asset) {
+        return asset == null || asset.isBlank() ? "USDT" : asset.trim();
     }
 
     private record Key(String asset, String accountCode) {

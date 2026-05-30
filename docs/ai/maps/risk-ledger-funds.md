@@ -74,7 +74,7 @@ Remaining production TODO:
 - Insurance fund: `InsuranceFundService`
 - ADL ranking/planning/execution: `AdlRankingService`, `AdlDeleveragingPlanner`, `AdlForcedExecutionService`, `AdlQueueExecutionService`, `AdlExecutionStore`, `JpaAdlExecutionStore`
 - Reconciliation: `ReconciliationService`, `ReconciliationReportService`
-- Trial balance: `TrialBalanceService`, `TrialBalanceReport`, `TrialBalanceLine`
+- Trial balance: `TrialBalanceService`, `TrialBalanceReport`, `TrialBalanceLine`, `TrialBalanceSnapshot`, `TrialBalanceSnapshotStore`, `JpaTrialBalanceSnapshotStore`
 - Liquidation audit event: `LiquidationDecisionRecorded`
 - Migrations:
   - `V4__reconciliation_reports.sql`
@@ -112,6 +112,7 @@ Remaining production TODO:
 ## Trial Balance And Reconciliation Issues
 
 - `TrialBalanceService` aggregates wallet ledger postings by asset/account code and returns total debit, total credit, balanced flag, and net debit/credit lines.
+- Trial-balance daily snapshots can be persisted and fetched through `/api/recovery/finance/trial-balance/snapshot` for finance close replay.
 - `ReconciliationReportIssue` now has `status`, `owner`, and `resolvedAt` fields for an operator workflow baseline.
 - `ReconciliationIssueWorkflowService` and `/api/recovery/reconcile/issues/...` expose claim, resolve, reopen, and open-issue queue operations.
 - `WalletLedgerReplayService.compareAccountDetails` and `/api/recovery/reconcile/ledger/{uid}/compare` return structured account/replay/delta mismatches.
@@ -119,4 +120,4 @@ Remaining production TODO:
 - New issues created by `ReconciliationReportService` default to `OPEN`.
 
 Remaining production TODO:
-- Persist daily trial-balance snapshots and category-specific finance exports.
+- Category-specific finance exports.

@@ -10,12 +10,14 @@ import com.example.exchange.application.service.ReconciliationIssueWorkflowServi
 import com.example.exchange.application.service.ReconciliationReportService;
 import com.example.exchange.application.service.ReconciliationService;
 import com.example.exchange.application.service.MatchingWorkerLifecycleService;
+import com.example.exchange.application.service.TrialBalanceService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
 import com.example.exchange.domain.model.dto.ReconciliationReportResult;
 import com.example.exchange.domain.model.dto.RecoveryResult;
+import com.example.exchange.domain.model.dto.TrialBalanceSnapshot;
 import com.example.exchange.domain.model.dto.ValidationIssue;
 import com.example.exchange.domain.model.entity.DlqEvent;
 import com.example.exchange.domain.model.entity.OutboxEvent;
@@ -45,6 +47,7 @@ public class RecoveryController {
     private final MatchingWorkerLifecycleService matchingWorkerLifecycleService;
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final FinanceReportService financeReportService;
+    private final TrialBalanceService trialBalanceService;
     private final OutboxService outboxService;
 
     public RecoveryController(
@@ -55,6 +58,7 @@ public class RecoveryController {
             MatchingWorkerLifecycleService matchingWorkerLifecycleService,
             WalletLedgerReplayService walletLedgerReplayService,
             FinanceReportService financeReportService,
+            TrialBalanceService trialBalanceService,
             OutboxService outboxService
     ) {
         this.usecase = usecase;
@@ -64,6 +68,7 @@ public class RecoveryController {
         this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.financeReportService = financeReportService;
+        this.trialBalanceService = trialBalanceService;
         this.outboxService = outboxService;
     }
 
@@ -117,6 +122,24 @@ public class RecoveryController {
             @RequestParam String date
     ) {
         return ApiResponse.ok(financeReportService.dailyReport(LocalDate.parse(date)));
+    }
+
+    @PostMapping("/finance/trial-balance/snapshot")
+    public ApiResponse<TrialBalanceSnapshot> persistTrialBalanceSnapshot(
+            @RequestParam String date,
+            @RequestParam Long uid,
+            @RequestParam(defaultValue = "USDT") String asset
+    ) {
+        return ApiResponse.ok(trialBalanceService.persistSnapshot(LocalDate.parse(date), uid, asset));
+    }
+
+    @GetMapping("/finance/trial-balance/snapshot")
+    public ApiResponse<TrialBalanceSnapshot> trialBalanceSnapshot(
+            @RequestParam String date,
+            @RequestParam Long uid,
+            @RequestParam(defaultValue = "USDT") String asset
+    ) {
+        return ApiResponse.ok(trialBalanceService.snapshot(LocalDate.parse(date), uid, asset));
     }
 
     @GetMapping("/matching-worker/contexts")
