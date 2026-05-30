@@ -4,6 +4,7 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.service.MarketMakerHedgeFillService;
+import com.example.exchange.application.service.HedgeVenueCallbackVerifier;
 import com.example.exchange.application.service.MarketMakerHedgeExecutionService;
 import com.example.exchange.application.service.MarketMakerHedgeReconciliationService;
 import com.example.exchange.application.service.MarketMakerHedgeVenueIdempotencyService;
@@ -39,6 +40,7 @@ public class MarketMakerController {
     private final MarketMakerHedgeReconciliationService hedgeReconciliationService;
     private final MarketMakerHedgeExecutionService hedgeExecutionService;
     private final MarketMakerHedgeVenueIdempotencyService hedgeVenueIdempotencyService;
+    private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -82,8 +84,11 @@ public class MarketMakerController {
 
     @PostMapping("/hedge-fills/venue-callback")
     public ApiResponse<HedgeFillRecord> recordHedgeFillCallback(
-            @Valid @RequestBody HedgeVenueFillCallbackRequest request
+            @Valid @RequestBody HedgeVenueFillCallbackRequest request,
+            @RequestHeader(value = "X-Hedge-Venue-Timestamp", required = false) String timestamp,
+            @RequestHeader(value = "X-Hedge-Venue-Signature", required = false) String signature
     ) {
+        hedgeVenueCallbackVerifier.verify(request, timestamp, signature);
         return ApiResponse.ok(hedgeFillService.recordVenueFill(request.toMessage()));
     }
 

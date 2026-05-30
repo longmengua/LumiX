@@ -30,6 +30,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Hedge fill/reconciliation admin queries: `/api/market-maker/profiles/{marketMakerId}/hedge-fills`, `/api/market-maker/hedge-fills/venue-orders/{venueOrderId}`, `/api/market-maker/hedge-fills/ref/{refId}`, `/api/market-maker/profiles/{marketMakerId}/hedge-reconciliation`, `/api/market-maker/hedge-idempotency/unresolved`.
 - Hedge fill/reconciliation/idempotency operator views enforce bounded query limits of 1..500.
 - Venue fill callback ingestion: `POST /api/market-maker/hedge-fills/venue-callback`, request DTO `HedgeVenueFillCallbackRequest`.
+- Venue fill callback HMAC verification: `HedgeVenueCallbackVerifier` uses `X-Hedge-Venue-Timestamp`, `X-Hedge-Venue-Signature`, and `market-maker.hedge-callback.*`; default disabled for dev.
 - Manual hedge execution admin commands: `POST /api/market-maker/profiles/{marketMakerId}/hedge-execution`, `POST /api/market-maker/hedge-execution/enabled`.
 - Manual hedge execution validates bounded safe `refPrefix` values before building external venue ref ids.
 - Scheduled hedge execution: `MarketMakerHedgeExecutionScheduler`, default disabled by `market-maker.hedge-execution.enabled=false`.
@@ -51,7 +52,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Idempotency decorator baseline: `infra.hedging.IdempotentHedgeVenueAdapter` uses `HedgeOrderRequest.refId` with `HedgeVenueIdempotencyStore` / `JpaHedgeVenueIdempotencyStore` to claim before effectful venue submit, persist terminal results, prevent duplicate submits, reject payload conflicts, and block retries after pending or timeout-like uncertain outcomes. Operators can query unresolved pending/retryable records through `MarketMakerHedgeVenueIdempotencyService`.
 - Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
 - Audit events: `HedgeDecisionRecorded`, `MarketMakerQuoteDecisionRecorded`.
-- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
+- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `HedgeVenueCallbackVerifierTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
 - Migrations include hedge venue idempotency records in `V8__hedge_venue_idempotency_records.sql`.
 
 ## First Implementation Slice
@@ -64,6 +65,5 @@ This map is part of the current core-kernel priority lane. It should be read whe
 
 Remaining:
 - Quote lifecycle integration with actual order placement/cancel-replace.
-- Production callback authentication/verification beyond internal admin auth.
-- Real hedge venue adapter, venue callback ingestion endpoint, and trade/ledger reconciliation refs.
+- Real hedge venue adapter, venue lookup for uncertain outcomes, and trade/ledger reconciliation refs.
 - Broader cross-venue global limits.

@@ -28,7 +28,7 @@
 - [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
   - Baseline 已完成：durable profile/risk-limit storage、admin profile API、exposure aggregation、quote command validation、kill switch、slippage control、hedge venue contract、預設安全拒絕 adapter、quote/hedge decision audit events、durable hedge decision audit trails 與 hedge fill audit persistence。
 - [ ] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。
-  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、per-run execution route cap policy、slippage controls、durable scheduled-worker lock、operator approval token gate、bounded operator queries/ref prefixes、durable hedge decision audit trail 與 fill audit persistence；real venue adapters、quote lifecycle integration、trade/ledger hedge reconciliation 與更完整 cross-venue global limits 仍待補。
+  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、per-run execution route cap policy、slippage controls、durable scheduled-worker lock、operator approval token gate、bounded operator queries/ref prefixes、可選 venue callback HMAC/timestamp verification、durable hedge decision audit trail 與 fill audit persistence；real venue adapters、quote lifecycle integration、trade/ledger hedge reconciliation 與更完整 cross-venue global limits 仍待補。
 
 ### 交易與撮合
 
@@ -77,7 +77,7 @@
 - [x] 文件化 Kafka topic partition key、retention、compaction、schema version 與 consumer group 策略。
 - [x] 補上外部 API 共用 HTTP timeout、retry、circuit breaker 與 rate-limit baseline。
 - [x] 逐一確認所有外部 API 都具備 timeout、retry、circuit breaker、rate limit 與 idempotency coverage。
-  - Baseline 已完成：external API inventory、共用 HTTP timeout/retry/circuit/rate-limit config、使用 `refId` 的 durable hedge venue submit idempotency envelope、使用 `venueOrderId + venueFillId` 的 hedge venue fill callback replay、未解 hedge venue idempotency 營運報告、使用 `clientRequestId` 的 CLOB place local idempotency、durable CLOB cancel `commandId`、CLOB cancel 對已記錄 cancel/uncertain 狀態的 local replay、uncertain cancel 的 reconcile resolution、CLOB sync/reconcile 對未變更 payload 的 no-op local replay、使用 `eventKey` 的 Polymarket user-channel callback replay / race idempotency、approval read TTL cache coverage，以及 durable backend-observed RPC transaction tracking / unresolved outcome report。
+  - Baseline 已完成：external API inventory、共用 HTTP timeout/retry/circuit/rate-limit config、使用 `refId` 的 durable hedge venue submit idempotency envelope、使用 `venueOrderId + venueFillId` 的 hedge venue fill callback replay、可選 hedge venue fill callback HMAC/timestamp verification、未解 hedge venue idempotency 營運報告、使用 `clientRequestId` 的 CLOB place local idempotency、durable CLOB cancel `commandId`、CLOB cancel 對已記錄 cancel/uncertain 狀態的 local replay、uncertain cancel 的 reconcile resolution、CLOB sync/reconcile 對未變更 payload 的 no-op local replay、使用 `eventKey` 的 Polymarket user-channel callback replay / race idempotency、approval read TTL cache coverage，以及 durable backend-observed RPC transaction tracking / unresolved outcome report。
 - [ ] 所有核心寫入需要明確交易邊界；MySQL、Redis、Kafka 之間不能假設天然一致。
   - Baseline 已完成：command transaction boundaries 已包住 order place/cancel/amend/cancel-replace、manual liquidation、ADL forced execution 與 hedge execution；outbox row 會在 command transaction 內保存，外部 publish 延到 `afterCommit`。Remaining：persistence-backed rollback tests 與更完整的 cross-store failure drills。
 - [x] 補上 MVP snapshot + event replay recovery 入口。

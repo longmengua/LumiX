@@ -6,6 +6,7 @@ package com.example.exchange;
 import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.BonusCreditProperties;
 import com.example.exchange.infra.config.FundingRateProperties;
+import com.example.exchange.infra.config.HedgeVenueCallbackProperties;
 import com.example.exchange.infra.config.LedgerArchiveProperties;
 import com.example.exchange.infra.config.MatchingWorkerProperties;
 import com.example.exchange.infra.config.MarkPriceOracleProperties;
@@ -35,6 +36,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         ApiAuthProperties.class,
         BonusCreditProperties.class,
         FundingRateProperties.class,
+        HedgeVenueCallbackProperties.class,
         LedgerArchiveProperties.class,
         MatchingWorkerProperties.class,
         MarkPriceOracleProperties.class,

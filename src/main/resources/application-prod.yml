@@ -58,6 +58,10 @@ market-maker:
     approval-required: ${MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_REQUIRED:false}
     approval-token: ${MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_TOKEN:}
     scheduled-approval-token: ${MARKET_MAKER_HEDGE_EXECUTION_SCHEDULED_APPROVAL_TOKEN:}
+  hedge-callback:
+    signature-required: ${MARKET_MAKER_HEDGE_CALLBACK_SIGNATURE_REQUIRED:false}
+    signature-secret: ${MARKET_MAKER_HEDGE_CALLBACK_SIGNATURE_SECRET:}
+    timestamp-tolerance-seconds: ${MARKET_MAKER_HEDGE_CALLBACK_TIMESTAMP_TOLERANCE_SECONDS:300}
 
 market-data:
   retention:
