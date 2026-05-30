@@ -20,6 +20,11 @@ public class BonusCreditProperties {
      */
     private Eligibility eligibility = new Eligibility();
 
+    /**
+     * 體驗金自動追回 policy。預設關閉，只在明確指定 campaign / asset 後執行。
+     */
+    private ClawbackPolicy clawbackPolicy = new ClawbackPolicy();
+
     @Data
     public static class Eligibility {
 
@@ -47,5 +52,34 @@ public class BonusCreditProperties {
          * 空清單代表不限制；有值時只允許列出的 expense ledger account 消耗體驗金。
          */
         private List<String> allowedExpenseAccounts = new ArrayList<>();
+    }
+
+    @Data
+    public static class ClawbackPolicy {
+
+        /**
+         * true 時 scheduler 會依 campaign / asset 自動追回 active grant remaining。
+         */
+        private boolean enabled = false;
+
+        /**
+         * 必填。要自動追回的 campaign id。
+         */
+        private String campaignId;
+
+        /**
+         * 必填。要自動追回的資產，例如 USDT。
+         */
+        private String asset;
+
+        /**
+         * 單次 scheduler run 最多追回金額；0 或負數代表不執行。
+         */
+        private java.math.BigDecimal maxAmountPerRun = java.math.BigDecimal.ZERO;
+
+        /**
+         * ledger ref prefix；scheduler 會附加 run timestamp 與 grant id。
+         */
+        private String refPrefix = "bonus-auto-clawback";
     }
 }

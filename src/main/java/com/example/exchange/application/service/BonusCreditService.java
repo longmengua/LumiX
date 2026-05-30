@@ -179,6 +179,45 @@ public class BonusCreditService {
         return totalClawedBack;
     }
 
+    public BigDecimal clawbackCampaign(String campaignId, String asset, BigDecimal amount, String refId) {
+        if (campaignId == null || campaignId.isBlank()) return BigDecimal.ZERO;
+        if (amount == null || amount.signum() <= 0) return BigDecimal.ZERO;
+        String normalizedAsset = normalizeAsset(asset);
+        if (normalizedAsset == null) return BigDecimal.ZERO;
+        Instant now = clock.instant();
+        BigDecimal remainingNeed = amount;
+        BigDecimal totalClawedBack = BigDecimal.ZERO;
+        List<BonusCreditGrant> grants = grantStore.findByCampaignId(campaignId).stream()
+                .filter(grant -> BonusCreditGrant.ACTIVE.equals(grant.status()))
+                .filter(grant -> normalizedAsset.equals(normalizeAsset(grant.asset())))
+                .filter(grant -> grant.expiresAt() == null || grant.expiresAt().isAfter(now))
+                .sorted(Comparator
+                        .comparing(BonusCreditService::sortableExpiry)
+                        .thenComparing(BonusCreditGrant::grantedAt)
+                        .thenComparing(BonusCreditGrant::uid)
+                        .thenComparing(BonusCreditGrant::id))
+                .toList();
+        for (BonusCreditGrant grant : grants) {
+            if (remainingNeed.signum() <= 0) break;
+            BigDecimal clawbackAmount = grant.remainingAmount().min(remainingNeed);
+            if (clawbackAmount.signum() <= 0) continue;
+            BigDecimal ledgerClawedBack = walletLedgerService.clawbackBonusCredit(
+                    grant.uid(),
+                    grant.asset(),
+                    clawbackAmount,
+                    clawbackRef(refId, grant)
+            );
+            if (ledgerClawedBack.signum() <= 0) continue;
+            totalClawedBack = totalClawedBack.add(ledgerClawedBack);
+            remainingNeed = remainingNeed.subtract(ledgerClawedBack);
+            BigDecimal nextRemaining = grant.remainingAmount().subtract(ledgerClawedBack);
+            grantStore.save(nextRemaining.signum() <= 0
+                    ? grant.clawBack(now)
+                    : grant.withRemaining(nextRemaining, now));
+        }
+        return totalClawedBack;
+    }
+
     public BonusCreditReport report(long uid, String asset) {
         Instant now = clock.instant();
         String normalizedAsset = normalizeAsset(asset);
@@ -260,6 +299,10 @@ public class BonusCreditService {
     private static String clawbackRef(String refId, BonusCreditGrant grant) {
         String prefix = refId == null || refId.isBlank() ? "bonus-clawback" : refId;
         return prefix + ":" + grant.id();
+    }
+
+    private static Instant sortableExpiry(BonusCreditGrant grant) {
+        return grant.expiresAt() == null ? Instant.MAX : grant.expiresAt();
     }
 
     private static String normalizeAsset(String asset) {

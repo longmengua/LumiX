@@ -29,9 +29,10 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 - Bonus credit uses `USER_BONUS_AVAILABLE` and does not change `Account.crossBalance`, so it cannot silently mix with real cash.
 - `BonusCreditService` now keeps grant batches with remaining amount and expiry, consumes by expiry FIFO, and can expire due grants.
 - `BonusCreditService` now has a configurable consume eligibility gate for allowed/blocked symbols, allowed order types, and allowed expense accounts under `bonus-credit.eligibility`.
-- `BonusCreditService` now reports per-user and per-campaign bonus-credit grant state and performs active-grant FIFO clawback with ledger entries.
+- `BonusCreditService` now reports per-user and per-campaign bonus-credit grant state and performs user or campaign active-grant FIFO clawback with ledger entries.
 - `MarginController` exposes `GET /api/margin/bonus-credit/report`, `GET /api/margin/bonus-credit/campaign-report`, and `POST /api/margin/bonus-credit/clawback`; these inherit the existing `/api/margin/**` funds security classification.
 - `BonusCreditExpiryScheduler` provides a disabled-by-default scheduler entry via `bonus-credit.expiry-enabled`.
+- `BonusCreditClawbackScheduler` provides a disabled-by-default campaign clawback policy via `bonus-credit.clawback-policy.*`.
 - `TurnoverService` records `TradeExecuted` facts into `TurnoverRecord` with uid, account, symbol, strategy, order, match, sequence, quantity, price, and notional dimensions.
 - `TurnoverService` can summarize turnover and return limited drill-down records by uid with optional symbol, strategy, market-maker, and match filters.
 - `MarginController` exposes `GET /api/margin/turnover/summary` and `GET /api/margin/turnover/records` for operations and campaign reporting baselines.

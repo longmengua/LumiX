@@ -257,6 +257,54 @@ class BonusCreditServiceTest {
         assertThat(report.grants()).extracting(BonusCreditGrant::uid).containsExactly(66L, 67L);
     }
 
+    @Test
+    @DisplayName("clawbackCampaign 只追回指定 campaign active grants 並遵守單次上限")
+    void clawbackCampaignCapsRunAndSkipsOtherCampaigns() {
+        Fixtures fixtures = fixtures("2026-05-30T00:00:00Z");
+        BonusCreditGrant first = fixtures.service.grant(
+                69,
+                "USDT",
+                new BigDecimal("10.00"),
+                "campaign-a",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-a"
+        );
+        BonusCreditGrant second = fixtures.service.grant(
+                70,
+                "USDT",
+                new BigDecimal("15.00"),
+                "campaign-a",
+                Instant.parse("2026-06-02T00:00:00Z"),
+                "grant-b"
+        );
+        BonusCreditGrant otherCampaign = fixtures.service.grant(
+                71,
+                "USDT",
+                new BigDecimal("99.00"),
+                "campaign-b",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-c"
+        );
+
+        // 場景：自動追回 campaign-a 單次最多 12，先追回較早到期 grant，再部分追回下一筆。
+        BigDecimal clawedBack = fixtures.service.clawbackCampaign(
+                "campaign-a",
+                "USDT",
+                new BigDecimal("12.00"),
+                "auto-clawback-run"
+        );
+
+        assertThat(clawedBack).isEqualByComparingTo("12.00");
+        assertThat(fixtures.grantStore.records.get(first.id()).status()).isEqualTo(BonusCreditGrant.CLAWED_BACK);
+        assertThat(fixtures.grantStore.records.get(second.id()).status()).isEqualTo(BonusCreditGrant.ACTIVE);
+        assertThat(fixtures.grantStore.records.get(second.id()).remainingAmount()).isEqualByComparingTo("13.00");
+        assertThat(fixtures.grantStore.records.get(otherCampaign.id()).status()).isEqualTo(BonusCreditGrant.ACTIVE);
+        assertThat(fixtures.grantStore.records.get(otherCampaign.id()).remainingAmount()).isEqualByComparingTo("99.00");
+        assertThat(fixtures.walletLedgerService.bonusCreditBalance(69, "USDT")).isZero();
+        assertThat(fixtures.walletLedgerService.bonusCreditBalance(70, "USDT")).isEqualByComparingTo("13.00");
+        assertThat(fixtures.walletLedgerService.bonusCreditBalance(71, "USDT")).isEqualByComparingTo("99.00");
+    }
+
     private static Fixtures fixtures(String now) {
         return fixtures(now, new BonusCreditProperties());
     }

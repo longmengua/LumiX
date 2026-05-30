@@ -39,6 +39,13 @@ bonus-credit:
     blocked-symbols: ${BONUS_CREDIT_ELIGIBILITY_BLOCKED_SYMBOLS:}
     allowed-order-types: ${BONUS_CREDIT_ELIGIBILITY_ALLOWED_ORDER_TYPES:}
     allowed-expense-accounts: ${BONUS_CREDIT_ELIGIBILITY_ALLOWED_EXPENSE_ACCOUNTS:}
+  clawback-policy:
+    enabled: ${BONUS_CREDIT_CLAWBACK_POLICY_ENABLED:false}
+    fixed-delay-ms: ${BONUS_CREDIT_CLAWBACK_POLICY_FIXED_DELAY_MS:300000}
+    campaign-id: ${BONUS_CREDIT_CLAWBACK_POLICY_CAMPAIGN_ID:}
+    asset: ${BONUS_CREDIT_CLAWBACK_POLICY_ASSET:USDT}
+    max-amount-per-run: ${BONUS_CREDIT_CLAWBACK_POLICY_MAX_AMOUNT_PER_RUN:0}
+    ref-prefix: ${BONUS_CREDIT_CLAWBACK_POLICY_REF_PREFIX:bonus-auto-clawback}
 
 market-maker:
   hedge-execution:
