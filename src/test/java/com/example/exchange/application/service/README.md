@@ -34,6 +34,7 @@ Application service tests。
 | `MarketMakerQuoteServiceTest` | 做市商 quote kill switch、crossed quote rejection 與 quote audit event。 |
 | `MarketMakerProfileServiceTest` | 做市商 profile/risk limit 保存、查詢與 validation。 |
 | `MarketMakerHedgeFillServiceTest` | 做市商 hedge fill 保存、查詢與 validation。 |
+| `MarketMakerHedgeVenueIdempotencyServiceTest` | Hedge venue submit idempotency unresolved report 與 lookup reconcile trigger。 |
 | `HedgeVenueCallbackVerifierTest` | Hedge venue callback HMAC 簽章、timestamp replay window 與 secret 設定檢查。 |
 
 注意：

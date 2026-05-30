@@ -7,12 +7,15 @@ import com.example.exchange.domain.model.dto.HedgeOrderResult;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyRecord;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.repository.HedgeVenueIdempotencyStore;
+import com.example.exchange.domain.service.HedgeVenueOrderLookupAdapter;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -25,7 +28,7 @@ class MarketMakerHedgeVenueIdempotencyServiceTest {
     void unresolvedReportsPendingAndRetryableVenueOutcomes() {
         MemStore store = new MemStore();
         MarketMakerHedgeVenueIdempotencyService service =
-                new MarketMakerHedgeVenueIdempotencyService(store);
+                new MarketMakerHedgeVenueIdempotencyService(store, new MemLookup());
         store.records.add(new HedgeVenueIdempotencyRecord("ref-pending", "fp-1", false, null));
         store.records.add(new HedgeVenueIdempotencyRecord(
                 "ref-timeout",
@@ -56,7 +59,7 @@ class MarketMakerHedgeVenueIdempotencyServiceTest {
     @DisplayName("unresolved 拒絕無界限查詢 limit")
     void unresolvedRejectsInvalidLimit() {
         MarketMakerHedgeVenueIdempotencyService service =
-                new MarketMakerHedgeVenueIdempotencyService(new MemStore());
+                new MarketMakerHedgeVenueIdempotencyService(new MemStore(), new MemLookup());
 
         // 流程：operator unresolved view 只允許 bounded page size，避免 effectful submit 記錄被一次掃完。
         assertThatThrownBy(() -> service.unresolved(0))
@@ -65,6 +68,41 @@ class MarketMakerHedgeVenueIdempotencyServiceTest {
         assertThatThrownBy(() -> service.unresolved(501))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("between 1 and 500");
+    }
+
+    @Test
+    @DisplayName("reconcileUnresolved 會用 venue lookup 回填 pending outcome")
+    void reconcileUnresolvedCompletesResolvedVenueOutcomes() {
+        MemStore store = new MemStore();
+        MemLookup lookup = new MemLookup();
+        MarketMakerHedgeVenueIdempotencyService service =
+                new MarketMakerHedgeVenueIdempotencyService(store, lookup);
+        store.records.add(new HedgeVenueIdempotencyRecord("ref-pending", "fp-1", false, null));
+        store.records.add(new HedgeVenueIdempotencyRecord(
+                "ref-timeout",
+                "fp-2",
+                true,
+                HedgeOrderResult.retryableRejected("HEDGE_VENUE_TIMEOUT")
+        ));
+        store.records.add(new HedgeVenueIdempotencyRecord("ref-still-missing", "fp-3", false, null));
+        lookup.results.put("ref-pending", new HedgeOrderResult(
+                true,
+                "venue-1",
+                null,
+                false,
+                Instant.parse("2026-05-30T00:00:00Z")
+        ));
+        lookup.results.put("ref-timeout", HedgeOrderResult.rejected("HEDGE_VENUE_REJECTED"));
+
+        // 流程：operator 觸發 reconcile 後，只要 venue lookup 有明確結果，就 complete 原本 pending/uncertain idempotency row。
+        HedgeVenueIdempotencyReport report = service.reconcileUnresolved(50);
+
+        assertThat(report.issueCount()).isEqualTo(1);
+        assertThat(report.issues()).extracting("refId")
+                .containsExactly("ref-still-missing");
+        assertThat(store.find("ref-pending").orElseThrow().completed()).isTrue();
+        assertThat(store.find("ref-pending").orElseThrow().result().accepted()).isTrue();
+        assertThat(store.find("ref-timeout").orElseThrow().result().retryable()).isFalse();
     }
 
     private static class MemStore implements HedgeVenueIdempotencyStore {
@@ -84,7 +122,16 @@ class MarketMakerHedgeVenueIdempotencyServiceTest {
 
         @Override
         public HedgeVenueIdempotencyRecord complete(String refId, String fingerprint, HedgeOrderResult result) {
-            throw new UnsupportedOperationException();
+            for (int i = 0; i < records.size(); i++) {
+                HedgeVenueIdempotencyRecord record = records.get(i);
+                if (refId.equals(record.refId()) && fingerprint.equals(record.fingerprint())) {
+                    HedgeVenueIdempotencyRecord completed =
+                            new HedgeVenueIdempotencyRecord(refId, fingerprint, true, result);
+                    records.set(i, completed);
+                    return completed;
+                }
+            }
+            throw new IllegalStateException("missing claim");
         }
 
         @Override
@@ -94,6 +141,15 @@ class MarketMakerHedgeVenueIdempotencyServiceTest {
                             || (record.result() != null && record.result().retryable()))
                     .limit(limit)
                     .toList();
+        }
+    }
+
+    private static class MemLookup implements HedgeVenueOrderLookupAdapter {
+        private final Map<String, HedgeOrderResult> results = new HashMap<>();
+
+        @Override
+        public Optional<HedgeOrderResult> lookupByRefId(String refId) {
+            return Optional.ofNullable(results.get(refId));
         }
     }
 }

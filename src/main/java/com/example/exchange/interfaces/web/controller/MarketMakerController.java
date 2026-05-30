@@ -107,6 +107,13 @@ public class MarketMakerController {
         return ApiResponse.ok(hedgeVenueIdempotencyService.unresolved(limit));
     }
 
+    @PostMapping("/hedge-idempotency/reconcile")
+    public ApiResponse<HedgeVenueIdempotencyReport> reconcileHedgeVenueIdempotency(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(hedgeVenueIdempotencyService.reconcileUnresolved(limit));
+    }
+
     @PostMapping("/profiles/{marketMakerId}/hedge-execution")
     public ApiResponse<HedgeExecutionReport> executeHedgeByMarketMaker(
             @PathVariable String marketMakerId,

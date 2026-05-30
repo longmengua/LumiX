@@ -8,6 +8,7 @@ import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyIssue;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyRecord;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.repository.HedgeVenueIdempotencyStore;
+import com.example.exchange.domain.service.HedgeVenueOrderLookupAdapter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,18 +22,29 @@ public class MarketMakerHedgeVenueIdempotencyService {
     private static final int MAX_QUERY_LIMIT = 500;
 
     private final HedgeVenueIdempotencyStore store;
+    private final HedgeVenueOrderLookupAdapter lookupAdapter;
 
     @Transactional(readOnly = true)
     public HedgeVenueIdempotencyReport unresolved(int limit) {
         validateQueryLimit(limit);
-        var issues = store.findUnresolved(limit).stream()
+        return report(store.findUnresolved(limit));
+    }
+
+    @Transactional
+    public HedgeVenueIdempotencyReport reconcileUnresolved(int limit) {
+        validateQueryLimit(limit);
+        for (HedgeVenueIdempotencyRecord record : store.findUnresolved(limit)) {
+            lookupAdapter.lookupByRefId(record.refId())
+                    .ifPresent(result -> store.complete(record.refId(), record.fingerprint(), result));
+        }
+        return report(store.findUnresolved(limit));
+    }
+
+    private HedgeVenueIdempotencyReport report(Iterable<HedgeVenueIdempotencyRecord> records) {
+        var issues = java.util.stream.StreamSupport.stream(records.spliterator(), false)
                 .map(this::toIssue)
                 .toList();
-        return new HedgeVenueIdempotencyReport(
-                issues.size(),
-                Instant.now(),
-                issues
-        );
+        return new HedgeVenueIdempotencyReport(issues.size(), Instant.now(), issues);
     }
 
     private HedgeVenueIdempotencyIssue toIssue(HedgeVenueIdempotencyRecord record) {

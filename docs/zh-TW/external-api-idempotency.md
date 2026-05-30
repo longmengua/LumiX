@@ -20,7 +20,7 @@ Hedge venue submit 使用 `HedgeOrderRequest.refId` 作為外部 idempotency key
 - 相同 `refId` 在 first claim 仍 pending，或 retryable / timeout-like result 後重送時，以 `HEDGE_VENUE_OUTCOME_UNCERTAIN` 阻止第二次外部 effect，因為 venue 可能已收到第一次 request。
 - 缺少 `refId` 時，在呼叫 venue 前拒絕。
 
-營運可透過 `GET /api/market-maker/hedge-idempotency/unresolved` 檢視未解的 hedge venue idempotency outcomes。報告會列出 pending claims 與 completed retryable outcomes，但不暴露已保存的 payload fingerprint。
+營運可透過 `GET /api/market-maker/hedge-idempotency/unresolved` 檢視未解的 hedge venue idempotency outcomes。報告會列出 pending claims 與 completed retryable outcomes，但不暴露已保存的 payload fingerprint。`POST /api/market-maker/hedge-idempotency/reconcile` 會要求目前設定的 `HedgeVenueOrderLookupAdapter` 依 `refId` 解析 outcome；預設 adapter 是安全 no-op，直到真實 venue lookup 接上。
 
 Durable baseline 仍需要 venue order lookup/reconciliation 與 integration-specific rate limits，才能接真實 venue adapter。
 
