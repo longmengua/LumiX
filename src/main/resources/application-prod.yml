@@ -61,6 +61,13 @@ market-data:
     trade-tape: ${MARKET_DATA_RETENTION_TRADE_TAPE:P7D}
     kline: ${MARKET_DATA_RETENTION_KLINE:P30D}
 
+turnover:
+  reconciliation:
+    enabled: ${TURNOVER_RECONCILIATION_ENABLED:false}
+    fixed-delay-ms: ${TURNOVER_RECONCILIATION_FIXED_DELAY_MS:300000}
+    lookback-seconds: ${TURNOVER_RECONCILIATION_LOOKBACK_SECONDS:3600}
+    batch-limit: ${TURNOVER_RECONCILIATION_BATCH_LIMIT:1000}
+
 funding-rate:
   settlements: []
 

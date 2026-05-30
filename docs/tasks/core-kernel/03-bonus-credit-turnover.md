@@ -35,8 +35,8 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 - `BonusCreditClawbackScheduler` provides a disabled-by-default campaign clawback policy via `bonus-credit.clawback-policy.*`.
 - `TurnoverService` records `TradeExecuted` facts into `TurnoverRecord` with uid, account, symbol, strategy, order, match, sequence, quantity, price, and notional dimensions.
 - `TurnoverService` can summarize turnover and return limited drill-down records by uid with optional symbol, strategy, market-maker, and match filters.
-- `TurnoverReconciliationService` compares turnover records with trade tape for a uid + matchId and reports missing/mismatched trade facts.
-- `MarginController` exposes `GET /api/margin/turnover/summary`, `GET /api/margin/turnover/records`, and `GET /api/margin/turnover/reconciliation` for operations and campaign reporting baselines.
+- `TurnoverReconciliationService` compares turnover records with trade tape for a uid + matchId, reports missing/mismatched trade facts, and can batch recent-window uid+match checks while flagging missing ledger refs when the durable ledger journal is available.
+- `MarginController` exposes `GET /api/margin/turnover/summary`, `GET /api/margin/turnover/records`, `GET /api/margin/turnover/reconciliation`, and `GET /api/margin/turnover/reconciliation/recent` for operations and campaign reporting baselines.
 - `OrderService` can optionally write turnover facts after idempotent trade accounting.
 - `V11__turnover_records.sql` adds the durable turnover read model with indexes for uid, symbol, strategy, market-maker, and match lookups.
 - `V12__bonus_credit_grants.sql` adds the durable bonus grant read model with uid/asset/status/expiry indexes.
@@ -46,8 +46,8 @@ Add bonus-credit / experience-fund accounting and turnover tracking so promotion
 
 - Wire first-class product/order metadata into all future bonus consumption call sites as those flows start consuming bonus credits.
 - Add first-class `strategyId` / `marketMakerId` fields to order entry instead of temporarily deriving strategy from `clientOrderId`.
-- Extend turnover reconciliation from match-level trade-tape checks to scheduled ledger-ref reconciliation.
 - Add exportable bonus campaign reports and paged/exportable turnover reports.
+- Add stronger alert delivery and worker locking around scheduled turnover reconciliation.
 
 ## Acceptance Criteria
 

@@ -5,17 +5,22 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.TradeTapeItem;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
+import com.example.exchange.domain.model.dto.TurnoverReconciliationBatchReport;
 import com.example.exchange.domain.model.dto.TurnoverReconciliationIssue;
 import com.example.exchange.domain.model.dto.TurnoverReconciliationReport;
 import com.example.exchange.domain.repository.MarketDataTradeTapeStore;
 import com.example.exchange.domain.repository.TurnoverStore;
+import com.example.exchange.domain.repository.WalletLedgerJournal;
+import org.springframework.beans.factory.annotation.Autowired;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Service
@@ -24,6 +29,12 @@ public class TurnoverReconciliationService {
 
     private final TurnoverStore turnoverStore;
     private final MarketDataTradeTapeStore tradeTapeStore;
+    private WalletLedgerJournal ledgerJournal;
+
+    @Autowired(required = false)
+    public void setLedgerJournal(WalletLedgerJournal ledgerJournal) {
+        this.ledgerJournal = ledgerJournal;
+    }
 
     public TurnoverReconciliationReport reconcileMatch(long uid, String matchId) {
         if (matchId == null || matchId.isBlank()) {
@@ -71,6 +82,24 @@ public class TurnoverReconciliationService {
                 ));
             }
         }
+        if (!turnoverRecords.isEmpty()
+                && ledgerJournal != null
+                && ledgerJournal.findByRefId(normalizedMatchId).isEmpty()) {
+            TurnoverRecord first = turnoverRecords.getFirst();
+            issues.add(new TurnoverReconciliationIssue(
+                    "TURNOVER_LEDGER_REF_MISSING",
+                    "turnover match has no durable ledger journal entries with the same refId",
+                    uid,
+                    normalizedMatchId,
+                    first.orderId(),
+                    BigDecimal.ZERO,
+                    BigDecimal.ZERO,
+                    turnoverRecords.stream()
+                            .map(TurnoverRecord::notional)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add),
+                    BigDecimal.ZERO
+            ));
+        }
         BigDecimal turnoverNotional = turnoverRecords.stream()
                 .map(TurnoverRecord::notional)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -87,6 +116,39 @@ public class TurnoverReconciliationService {
                 issues.size(),
                 Instant.now(),
                 issues
+        );
+    }
+
+    public TurnoverReconciliationBatchReport reconcileRecent(Instant fromInclusive, Instant toExclusive, int limit) {
+        Instant upper = toExclusive == null ? Instant.now() : toExclusive;
+        Instant lower = fromInclusive == null ? upper.minusSeconds(3_600) : fromInclusive;
+        if (!lower.isBefore(upper)) {
+            return new TurnoverReconciliationBatchReport(lower, upper, 0, 0, 0, Instant.now(), List.of());
+        }
+        int boundedLimit = Math.max(1, Math.min(limit, 10_000));
+        List<TurnoverRecord> sampled = turnoverStore.findByCreatedAtBetween(lower, upper, boundedLimit);
+        Map<String, TurnoverRecord> firstByUidMatch = new LinkedHashMap<>();
+        for (TurnoverRecord record : sampled) {
+            if (record.matchId() == null || record.matchId().isBlank()) {
+                continue;
+            }
+            firstByUidMatch.putIfAbsent(record.uid() + "|" + record.matchId().trim(), record);
+        }
+        List<TurnoverReconciliationReport> reports = new ArrayList<>();
+        int issues = 0;
+        for (TurnoverRecord record : firstByUidMatch.values()) {
+            TurnoverReconciliationReport report = reconcileMatch(record.uid(), record.matchId());
+            reports.add(report);
+            issues += report.issueCount();
+        }
+        return new TurnoverReconciliationBatchReport(
+                lower,
+                upper,
+                sampled.size(),
+                reports.size(),
+                issues,
+                Instant.now(),
+                reports
         );
     }
 

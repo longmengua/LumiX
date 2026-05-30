@@ -10,6 +10,7 @@
 - `MarketMakerHedgeExecutionScheduler` 預設 `market-maker.hedge-execution.enabled=false`，啟用前要確認 venue adapter、global halt、worker lock、告警與對帳策略。
 - `MatchingWorkerLeaseRenewalScheduler` 預設 `matching-worker.enabled=false`，啟用前要確認 symbol routing、readiness、舊 REST path halt/fencing 與告警策略。
 - `MarketDataRetentionScheduler` 預設 `market-data.retention.enabled=false`，啟用前要確認 archive/export、DB partition 與監控策略。
+- `TurnoverReconciliationScheduler` 預設 `turnover.reconciliation.enabled=false`，啟用前要確認 trade tape / ledger journal 延遲、batch size、worker lock 與告警策略。
 
 注意：
 - production 啟用前要確認 idempotency、分散式鎖、重試策略與監控告警。

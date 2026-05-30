@@ -22,7 +22,7 @@
 - [ ] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
   - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking、預設關閉的 expiry scanner、可設定 consume eligibility gate、預設關閉的 campaign auto-clawback policy、用戶/活動體驗金 report APIs 與營運 clawback API。Remaining：可匯出的完整活動/流水報表仍待補。
 - [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
-  - Baseline 已完成：已處理成交會寫 durable turnover records，並有 uid/symbol/strategy/market-maker/match 維度的 turnover summary、限量 drill-down 與 match-level trade-tape reconciliation APIs；ledger reconciliation job 與正式 strategy/market-maker 下單欄位仍待補。
+  - Baseline 已完成：已處理成交會寫 durable turnover records，並有 uid/symbol/strategy/market-maker/match 維度的 turnover summary、限量 drill-down、match-level trade-tape reconciliation APIs，以及預設關閉的 recent-window uid+match trade tape / ledger-ref reconciliation；正式 strategy/market-maker 下單欄位與可匯出報表仍待補。
 - [ ] 將 ledger reconciliation 強化成可審計帳本：immutable journal、trial balance、replay comparison、exception workflow 與財務報表。
   - Baseline 已完成：trial-balance 計算、結構化 replay comparison、reconciliation issue workflow 欄位/後台 API、workflow audit events，以及按 reason/asset/account code 彙總 durable ledger 的 daily finance report；更完整 fee/funding/liquidation/bonus/transfer 匯出仍待補。
 - [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。

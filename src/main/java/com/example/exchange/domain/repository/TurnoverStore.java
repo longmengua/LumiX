@@ -5,6 +5,7 @@ package com.example.exchange.domain.repository;
 
 import com.example.exchange.domain.model.dto.TurnoverRecord;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface TurnoverStore {
@@ -16,4 +17,8 @@ public interface TurnoverStore {
     List<TurnoverRecord> findByUid(long uid);
 
     List<TurnoverRecord> findByMatchId(String matchId);
+
+    default List<TurnoverRecord> findByCreatedAtBetween(Instant fromInclusive, Instant toExclusive, int limit) {
+        return List.of();
+    }
 }

@@ -17,6 +17,7 @@ import com.example.exchange.domain.model.dto.BonusCreditCampaignReport;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
+import com.example.exchange.domain.model.dto.TurnoverReconciliationBatchReport;
 import com.example.exchange.domain.model.dto.TurnoverReconciliationReport;
 import com.example.exchange.domain.model.dto.TurnoverSummary;
 import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
@@ -34,6 +35,7 @@ import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 
 /** 劃轉相關 REST API */
@@ -162,6 +164,15 @@ public class MarginController {
             @RequestParam String matchId
     ) {
         return ApiResponse.ok(turnoverReconciliationService.reconcileMatch(uid, matchId));
+    }
+
+    @GetMapping("/turnover/reconciliation/recent")
+    public ApiResponse<TurnoverReconciliationBatchReport> turnoverRecentReconciliation(
+            @RequestParam(required = false) Instant from,
+            @RequestParam(required = false) Instant to,
+            @RequestParam(defaultValue = "1000") int limit
+    ) {
+        return ApiResponse.ok(turnoverReconciliationService.reconcileRecent(from, to, limit));
     }
 
     @GetMapping("/ledger/replay")
