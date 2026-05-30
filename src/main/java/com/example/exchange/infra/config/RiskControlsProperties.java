@@ -7,6 +7,7 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -100,5 +101,11 @@ public class RiskControlsProperties {
          * 單次 hedge execution run 最多允許 route 的 venue orders；0 或負數代表不限制。
          */
         private int maxRoutedOrdersPerRun = 0;
+
+        /**
+         * 單次 hedge execution run 最多允許 route 的總名目金額；0 或負數代表不限制。
+         * 這個 budget 應跨 market-maker profile 與 venue adapter 共用。
+         */
+        private BigDecimal maxRoutedNotionalPerRun = BigDecimal.ZERO;
     }
 }

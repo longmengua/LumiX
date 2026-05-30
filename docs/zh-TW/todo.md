@@ -28,7 +28,7 @@
 - [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
   - Baseline 已完成：durable profile/risk-limit storage、admin profile API、exposure aggregation、quote command validation、kill switch、slippage control、hedge venue contract、預設安全拒絕 adapter、quote/hedge decision audit events、durable hedge decision audit trails 與 hedge fill audit persistence。
 - [ ] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。
-  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、per-run execution route cap policy、slippage controls、durable scheduled-worker lock、operator approval token gate、bounded operator queries/ref prefixes、可選 venue callback HMAC/timestamp verification、durable hedge decision audit trail 與 fill audit persistence；real venue adapters、quote lifecycle integration、trade/ledger hedge reconciliation 與更完整 cross-venue global limits 仍待補。
+  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、enabled-profile batch 共用的 per-run execution route/notional cap policy、slippage controls、durable scheduled-worker lock、operator approval token gate、bounded operator queries/ref prefixes、可選 venue callback HMAC/timestamp verification、durable hedge decision audit trail 與 fill audit persistence；real venue adapters、quote lifecycle integration 與 trade/ledger hedge reconciliation 仍待補。
 
 ### 交易與撮合
 

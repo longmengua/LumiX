@@ -51,6 +51,10 @@ risk-controls:
   liquidation-halt: ${RISK_CONTROLS_LIQUIDATION_HALT:false}
   liquidation-manual-review: ${RISK_CONTROLS_LIQUIDATION_MANUAL_REVIEW:false}
   market-maker-hedge-execution-halt: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT:false}
+  market-maker-hedge-execution-policy:
+    enabled: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_POLICY_ENABLED:false}
+    max-routed-orders-per-run: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_POLICY_MAX_ROUTED_ORDERS_PER_RUN:0}
+    max-routed-notional-per-run: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_POLICY_MAX_ROUTED_NOTIONAL_PER_RUN:0}
   suspended-symbols: ${RISK_CONTROLS_SUSPENDED_SYMBOLS:}
 bonus-credit:
   expiry-enabled: ${BONUS_CREDIT_EXPIRY_ENABLED:false}

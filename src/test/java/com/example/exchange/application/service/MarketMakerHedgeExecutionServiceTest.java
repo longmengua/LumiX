@@ -9,6 +9,7 @@ import com.example.exchange.domain.model.dto.HedgeExecutionLock;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeOrderRequest;
 import com.example.exchange.domain.model.dto.HedgeOrderResult;
+import com.example.exchange.domain.model.dto.HedgeStrategyDecision;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerRiskLimit;
 import com.example.exchange.domain.model.entity.Position;
@@ -135,6 +136,30 @@ class MarketMakerHedgeExecutionServiceTest {
         assertThat(report.routedCount()).isEqualTo(1);
         assertThat(report.strategyDecisions()).extracting(decision -> decision.reason())
                 .contains("REDUCE_ONLY_HEDGE_REQUIRED", "HEDGE_EXECUTION_POLICY_MAX_ORDERS");
+        assertThat(fixture.venue.requests).hasSize(1);
+        assertThat(fixture.published).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("executeForEnabledMarketMakers 會跨 profile 共用全域 notional budget")
+    void executeForEnabledMarketMakersAppliesGlobalNotionalBudgetAcrossProfiles() {
+        Fixture fixture = new Fixture();
+        fixture.riskControls.getMarketMakerHedgeExecutionPolicy().setEnabled(true);
+        fixture.riskControls.getMarketMakerHedgeExecutionPolicy().setMaxRoutedNotionalPerRun(new BigDecimal("60.00"));
+        fixture.profileStore.save(profile("mm-a", 9001, true, false));
+        fixture.profileStore.save(profile("mm-b", 9002, true, false));
+        fixture.addPosition(9001, "BTCUSDT", "2.000");
+        fixture.addPosition(9002, "BTCUSDT", "2.000");
+        fixture.oracle.update("BTCUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+
+        // 流程：兩個 profile 都各需 route 50 notional；全域 budget 60 只允許第一筆，第二筆不能再送 venue。
+        List<HedgeExecutionReport> reports = fixture.service.executeForEnabledMarketMakers("exec-test");
+
+        assertThat(reports).hasSize(2);
+        assertThat(reports).extracting(HedgeExecutionReport::routedCount)
+                .containsExactly(1, 0);
+        assertThat(reports.get(1).strategyDecisions()).extracting(HedgeStrategyDecision::reason)
+                .containsExactly("HEDGE_EXECUTION_POLICY_MAX_NOTIONAL");
         assertThat(fixture.venue.requests).hasSize(1);
         assertThat(fixture.published).hasSize(1);
     }

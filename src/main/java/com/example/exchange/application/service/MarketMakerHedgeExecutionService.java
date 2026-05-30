@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -95,7 +96,7 @@ public class MarketMakerHedgeExecutionService {
     private HedgeExecutionReport executeForMarketMakerInsideTransaction(String marketMakerId, String refPrefix) {
         MarketMakerProfile profile = profileService.findByMarketMakerId(marketMakerId)
                 .orElseThrow(() -> new IllegalArgumentException("market maker profile not found"));
-        return execute(profile, refPrefix);
+        return execute(profile, refPrefix, new ExecutionBudget());
     }
 
     @Transactional
@@ -147,15 +148,16 @@ public class MarketMakerHedgeExecutionService {
             return List.of();
         }
         try {
+            ExecutionBudget budget = new ExecutionBudget();
             return profileService.enabledProfiles().stream()
-                    .map(profile -> execute(profile, refPrefix))
+                    .map(profile -> execute(profile, refPrefix, budget))
                     .toList();
         } finally {
             lock.ifPresent(ignored -> lockStore.release(batchLockName(), lockOwnerId, Instant.now()));
         }
     }
 
-    private HedgeExecutionReport execute(MarketMakerProfile profile, String refPrefix) {
+    private HedgeExecutionReport execute(MarketMakerProfile profile, String refPrefix, ExecutionBudget budget) {
         List<MarketMakerExposure> exposures = exposureService.exposures(profile);
         if (riskControlsProperties.isMarketMakerHedgeExecutionHalt()) {
             return haltedReport(profile, exposures);
@@ -169,11 +171,13 @@ public class MarketMakerHedgeExecutionService {
                     refId(refPrefix, profile.marketMakerId(), exposure.symbol())
             );
             if (strategyDecision.hedgeRequired()) {
-                if (isPolicyRouteLimitReached(hedgeDecisions.size())) {
-                    strategyDecisions.add(policyRejectedDecision(profile, exposure));
+                String policyRejection = budget.rejectionFor(strategyDecision);
+                if (policyRejection != null) {
+                    strategyDecisions.add(policyRejectedDecision(profile, exposure, policyRejection));
                     continue;
                 }
                 hedgeDecisions.add(hedgingService.hedge(profile, strategyDecision.orderRequest()));
+                budget.record(strategyDecision);
             }
             strategyDecisions.add(strategyDecision);
         }
@@ -186,15 +190,6 @@ public class MarketMakerHedgeExecutionService {
                 strategyDecisions,
                 hedgeDecisions
         );
-    }
-
-    private boolean isPolicyRouteLimitReached(int routedCount) {
-        RiskControlsProperties.MarketMakerHedgeExecutionPolicy policy =
-                riskControlsProperties.getMarketMakerHedgeExecutionPolicy();
-        if (policy == null || !policy.isEnabled() || policy.getMaxRoutedOrdersPerRun() <= 0) {
-            return false;
-        }
-        return routedCount >= policy.getMaxRoutedOrdersPerRun();
     }
 
     private Optional<HedgeExecutionLock> acquireBatchLock() {
@@ -218,13 +213,14 @@ public class MarketMakerHedgeExecutionService {
 
     private static HedgeStrategyDecision policyRejectedDecision(
             MarketMakerProfile profile,
-            MarketMakerExposure exposure
+            MarketMakerExposure exposure,
+            String reason
     ) {
         return new HedgeStrategyDecision(
                 profile.marketMakerId(),
                 exposure.symbol(),
                 false,
-                "HEDGE_EXECUTION_POLICY_MAX_ORDERS",
+                reason,
                 exposure,
                 null
         );
@@ -255,5 +251,40 @@ public class MarketMakerHedgeExecutionService {
     private static String refId(String refPrefix, String marketMakerId, String symbol) {
         String normalizedPrefix = refPrefix == null || refPrefix.isBlank() ? "inventory-hedge" : refPrefix.trim();
         return normalizedPrefix + ":" + marketMakerId + ":" + symbol + ":" + Instant.now().toEpochMilli();
+    }
+
+    private final class ExecutionBudget {
+        private int routedCount;
+        private BigDecimal routedNotional = BigDecimal.ZERO;
+
+        private String rejectionFor(HedgeStrategyDecision decision) {
+            RiskControlsProperties.MarketMakerHedgeExecutionPolicy policy =
+                    riskControlsProperties.getMarketMakerHedgeExecutionPolicy();
+            if (policy == null || !policy.isEnabled()) {
+                return null;
+            }
+            if (policy.getMaxRoutedOrdersPerRun() > 0
+                    && routedCount >= policy.getMaxRoutedOrdersPerRun()) {
+                return "HEDGE_EXECUTION_POLICY_MAX_ORDERS";
+            }
+            BigDecimal maxNotional = policy.getMaxRoutedNotionalPerRun();
+            if (maxNotional != null && maxNotional.signum() > 0
+                    && routedNotional.add(orderNotional(decision)).compareTo(maxNotional) > 0) {
+                return "HEDGE_EXECUTION_POLICY_MAX_NOTIONAL";
+            }
+            return null;
+        }
+
+        private void record(HedgeStrategyDecision decision) {
+            routedCount++;
+            routedNotional = routedNotional.add(orderNotional(decision));
+        }
+    }
+
+    private static BigDecimal orderNotional(HedgeStrategyDecision decision) {
+        if (decision == null || decision.orderRequest() == null) {
+            return BigDecimal.ZERO;
+        }
+        return decision.orderRequest().quantity().multiply(decision.orderRequest().referencePrice());
     }
 }

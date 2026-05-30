@@ -41,7 +41,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
 - Hedge execution entry points use `CommandTransactionBoundary` when Spring wires it, so profile lookup, exposure planning, venue routing, hedge decision audit, and outbox rows share one command boundary.
 - Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
-- Execution route cap policy: `risk-controls.market-maker-hedge-execution-policy.enabled` and `risk-controls.market-maker-hedge-execution-policy.max-routed-orders-per-run` cap venue routing per execution run and emit `HEDGE_EXECUTION_POLICY_MAX_ORDERS` decisions for skipped exposures.
+- Execution route cap policy: `risk-controls.market-maker-hedge-execution-policy.enabled`, `max-routed-orders-per-run`, and `max-routed-notional-per-run` cap venue routing per execution run. Enabled-profile batch execution shares one budget across profiles and emits `HEDGE_EXECUTION_POLICY_MAX_ORDERS` or `HEDGE_EXECUTION_POLICY_MAX_NOTIONAL` for skipped exposures.
 - Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_OWNER_ID`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_TTL_MS`, `MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_REQUIRED`, `MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_TOKEN`, `MARKET_MAKER_HEDGE_EXECUTION_SCHEDULED_APPROVAL_TOKEN`.
 - Hedge decision/routing: `MarketMakerHedgingService`.
 - Hedge fill recording: `MarketMakerHedgeFillService`; venue callback replay uses `venueOrderId + venueFillId` through `HedgeFillStore.findByVenueOrderIdAndVenueFillId(...)`.
@@ -66,4 +66,3 @@ This map is part of the current core-kernel priority lane. It should be read whe
 Remaining:
 - Quote lifecycle integration with actual order placement/cancel-replace.
 - Real hedge venue adapter, venue lookup for uncertain outcomes, and trade/ledger reconciliation refs.
-- Broader cross-venue global limits.
