@@ -103,6 +103,7 @@ User WebSocket：
 ./shells/api-curls/exchange/recovery-reconcile-accounts-get.sh
 ./shells/api-curls/exchange/recovery-reconcile-report-post.sh
 ./shells/api-curls/exchange/recovery-reconcile-reports-get.sh
+./shells/api-curls/exchange/recovery-finance-daily-report-get.sh
 ./shells/api-curls/exchange/recovery-outbox-dlq-get.sh
 ./shells/api-curls/exchange/recovery-outbox-dead-replay-post.sh
 ./shells/api-curls/exchange/recovery-outbox-dead-compensate-post.sh

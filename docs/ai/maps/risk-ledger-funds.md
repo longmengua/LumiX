@@ -24,7 +24,7 @@ Remaining production TODO:
 ## Funds And Ledger
 
 - API: `interfaces.web.controller.MarginController`
-- Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`
+- Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`, `FinanceReportService`
 - Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`, `BonusCreditReport`, `BonusCreditCampaignReport`, `BonusCreditProperties`
 - Bonus expiry scheduler: `application.scheduler.BonusCreditExpiryScheduler`
 - Turnover: `TurnoverService`, `TurnoverReconciliationService`, `TurnoverStore`, `TurnoverSummary`, `TurnoverReconciliationReport`
@@ -50,6 +50,7 @@ Ledger concerns:
 - Turnover summaries and limited record drill-downs can be queried by uid with optional symbol, strategy, market-maker, and match filters.
 - Turnover reconciliation can compare uid + matchId turnover records with trade tape order/price/qty/notional facts.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
+- Finance daily report summarizes durable ledger journal postings by reason, asset, and account code for a UTC report date.
 - `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
@@ -117,4 +118,4 @@ Remaining production TODO:
 - New issues created by `ReconciliationReportService` default to `OPEN`.
 
 Remaining production TODO:
-- Persist daily trial-balance snapshots and finance reports.
+- Persist daily trial-balance snapshots and category-specific finance exports.

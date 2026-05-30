@@ -4,6 +4,7 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.SnapshotRecoverCommand;
+import com.example.exchange.application.service.FinanceReportService;
 import com.example.exchange.application.service.OutboxService;
 import com.example.exchange.application.service.ReconciliationIssueWorkflowService;
 import com.example.exchange.application.service.ReconciliationReportService;
@@ -12,6 +13,7 @@ import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
+import com.example.exchange.domain.model.dto.FinanceDailyReport;
 import com.example.exchange.domain.model.dto.ReconciliationReportResult;
 import com.example.exchange.domain.model.dto.RecoveryResult;
 import com.example.exchange.domain.model.dto.ValidationIssue;
@@ -24,6 +26,7 @@ import com.example.exchange.interfaces.web.dto.ReconciliationIssueActionRequest;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -41,6 +44,7 @@ public class RecoveryController {
     private final ReconciliationIssueWorkflowService reconciliationIssueWorkflowService;
     private final MatchingWorkerLifecycleService matchingWorkerLifecycleService;
     private final WalletLedgerReplayService walletLedgerReplayService;
+    private final FinanceReportService financeReportService;
     private final OutboxService outboxService;
 
     public RecoveryController(
@@ -50,6 +54,7 @@ public class RecoveryController {
             ReconciliationIssueWorkflowService reconciliationIssueWorkflowService,
             MatchingWorkerLifecycleService matchingWorkerLifecycleService,
             WalletLedgerReplayService walletLedgerReplayService,
+            FinanceReportService financeReportService,
             OutboxService outboxService
     ) {
         this.usecase = usecase;
@@ -58,6 +63,7 @@ public class RecoveryController {
         this.reconciliationIssueWorkflowService = reconciliationIssueWorkflowService;
         this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
         this.walletLedgerReplayService = walletLedgerReplayService;
+        this.financeReportService = financeReportService;
         this.outboxService = outboxService;
     }
 
@@ -104,6 +110,13 @@ public class RecoveryController {
             @RequestParam(defaultValue = "USDT") String asset
     ) {
         return ApiResponse.ok(walletLedgerReplayService.compareAccountDetails(uid, asset));
+    }
+
+    @GetMapping("/finance/daily-report")
+    public ApiResponse<FinanceDailyReport> financeDailyReport(
+            @RequestParam String date
+    ) {
+        return ApiResponse.ok(financeReportService.dailyReport(LocalDate.parse(date)));
     }
 
     @GetMapping("/matching-worker/contexts")

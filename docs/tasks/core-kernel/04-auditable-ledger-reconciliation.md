@@ -31,6 +31,8 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 - `WalletLedgerReplayService.compareAccountDetails` returns structured account/replay/delta mismatches per balance component.
 - `RecoveryController` exposes `/api/recovery/reconcile/ledger/{uid}/compare` for structured replay comparison.
 - `ReconciliationIssueWorkflowChanged` records claim/resolve/reopen workflow audit events.
+- `FinanceReportService` can generate a UTC daily durable-ledger report grouped by reason, asset, and account code.
+- `RecoveryController` exposes `GET /api/recovery/finance/daily-report?date=YYYY-MM-DD`.
 - `V13__reconciliation_issue_workflow.sql` adds issue workflow columns and indexes.
 - Tests cover balanced trial balance aggregation, unbalanced posting detection, and default reconciliation issue workflow state.
 
@@ -38,7 +40,7 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 
 - Persist trial-balance snapshots for daily finance reports.
 - Add immutable journal retention/archive policy and tamper-evidence checks.
-- Add daily finance reports for fees, funding, liquidation, bonus credit, and transfers.
+- Add category-specific exports for fees, funding, liquidation, bonus credit, and transfers.
 
 ## Acceptance Criteria
 

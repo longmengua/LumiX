@@ -6,6 +6,7 @@ package com.example.exchange.domain.repository.jpa;
 import com.example.exchange.domain.model.entity.WalletLedgerEntryRecord;
 import org.springframework.data.jpa.repository.JpaRepository;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface WalletLedgerEntryRecordJpaRepository
@@ -16,4 +17,9 @@ public interface WalletLedgerEntryRecordJpaRepository
     List<WalletLedgerEntryRecord> findByUidAndAssetOrderByCreatedAtAscIdAsc(Long uid, String asset);
 
     List<WalletLedgerEntryRecord> findByRefIdOrderByCreatedAtAscIdAsc(String refId);
+
+    List<WalletLedgerEntryRecord> findByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtAscIdAsc(
+            Instant fromInclusive,
+            Instant toExclusive
+    );
 }

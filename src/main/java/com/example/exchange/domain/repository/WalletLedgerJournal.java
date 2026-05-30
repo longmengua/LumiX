@@ -5,6 +5,7 @@ package com.example.exchange.domain.repository;
 
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 
+import java.time.Instant;
 import java.util.List;
 
 public interface WalletLedgerJournal {
@@ -18,6 +19,10 @@ public interface WalletLedgerJournal {
     List<WalletLedgerEntry> findByUidAndAsset(long uid, String asset);
 
     List<WalletLedgerEntry> findByRefId(String refId);
+
+    default List<WalletLedgerEntry> findByCreatedAtBetween(Instant fromInclusive, Instant toExclusive) {
+        return List.of();
+    }
 
     static void validateBalancedEntry(WalletLedgerEntry entry) {
         if (entry == null) {

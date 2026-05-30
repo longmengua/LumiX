@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -56,6 +57,16 @@ public class JpaWalletLedgerJournal implements WalletLedgerJournal {
     public List<WalletLedgerEntry> findByRefId(String refId) {
         if (refId == null || refId.isBlank()) return List.of();
         return toEntries(entryRepository.findByRefIdOrderByCreatedAtAscIdAsc(refId));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<WalletLedgerEntry> findByCreatedAtBetween(Instant fromInclusive, Instant toExclusive) {
+        if (fromInclusive == null || toExclusive == null || !fromInclusive.isBefore(toExclusive)) return List.of();
+        return toEntries(entryRepository.findByCreatedAtGreaterThanEqualAndCreatedAtLessThanOrderByCreatedAtAscIdAsc(
+                fromInclusive,
+                toExclusive
+        ));
     }
 
     private List<WalletLedgerEntry> toEntries(List<WalletLedgerEntryRecord> records) {

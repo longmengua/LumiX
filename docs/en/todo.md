@@ -24,7 +24,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Add turnover tracking for user, account, symbol, strategy, and market-maker dimensions, with ledger/trade reconciliation.
   - Baseline done: durable turnover records emitted from processed trades plus turnover summary, limited drill-down, and match-level trade-tape reconciliation APIs for uid/symbol/strategy/market-maker/match dimensions; ledger reconciliation job and first-class strategy/market-maker order fields remain.
 - [ ] Harden ledger reconciliation into an auditable accounting book: immutable journals, trial balance, replay comparison, exception workflow, and finance reports.
-  - Baseline done: trial-balance calculation, structured replay comparison, reconciliation issue workflow fields/admin APIs, and workflow audit events; daily reports remain.
+  - Baseline done: trial-balance calculation, structured replay comparison, reconciliation issue workflow fields/admin APIs, workflow audit events, and durable-ledger daily finance report by reason/asset/account code; broader fee/funding/liquidation/bonus/transfer exports remain.
 - [ ] Build market-maker interfaces for quoting, inventory, risk limits, kill switch, and hedging order routing.
   - Baseline done: durable profile/risk-limit storage, admin profile APIs, exposure aggregation, quote command validation, kill switch, slippage control, hedge venue contract, safe rejecting adapter, quote/hedge decision audit events, durable hedge decision audit trails, and hedge fill audit persistence.
 - [ ] Build market-maker hedging strategy baseline: exposure aggregation, hedge venue adapter interface, execution policy, slippage controls, and hedge audit trail.
