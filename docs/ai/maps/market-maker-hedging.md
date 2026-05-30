@@ -32,13 +32,14 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Manual hedge execution admin commands: `POST /api/market-maker/profiles/{marketMakerId}/hedge-execution`, `POST /api/market-maker/hedge-execution/enabled`.
 - Scheduled hedge execution: `MarketMakerHedgeExecutionScheduler`, default disabled by `market-maker.hedge-execution.enabled=false`.
 - Scheduled hedge execution can use durable worker locking through `market-maker.hedge-execution.lock-enabled=true`, `HedgeExecutionLockStore`, `JpaHedgeExecutionLockStore`, and `hedge_execution_locks`.
+- Operator approval can be required through `market-maker.hedge-execution.approval-required=true`; manual APIs must pass `X-Operator-Approval`, while scheduler uses `scheduled-approval-token`.
 - Exposure aggregation: `MarketMakerExposureService`.
 - Quote validation: `MarketMakerQuoteService`.
 - Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
 - Hedge execution entry points use `CommandTransactionBoundary` when Spring wires it, so profile lookup, exposure planning, venue routing, hedge decision audit, and outbox rows share one command boundary.
 - Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
 - Execution route cap policy: `risk-controls.market-maker-hedge-execution-policy.enabled` and `risk-controls.market-maker-hedge-execution-policy.max-routed-orders-per-run` cap venue routing per execution run and emit `HEDGE_EXECUTION_POLICY_MAX_ORDERS` decisions for skipped exposures.
-- Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_OWNER_ID`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_TTL_MS`.
+- Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_OWNER_ID`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_TTL_MS`, `MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_REQUIRED`, `MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_TOKEN`, `MARKET_MAKER_HEDGE_EXECUTION_SCHEDULED_APPROVAL_TOKEN`.
 - Hedge decision/routing: `MarketMakerHedgingService`.
 - Hedge fill recording: `MarketMakerHedgeFillService`; venue callback replay uses `venueOrderId + venueFillId` through `HedgeFillStore.findByVenueOrderIdAndVenueFillId(...)`.
 - Hedge decision-vs-fill reconciliation and idempotency operator view: `MarketMakerHedgeReconciliationService`, `MarketMakerHedgeVenueIdempotencyService`, `HedgeReconciliationReport`, `HedgeReconciliationIssue`, `HedgeVenueIdempotencyReport`, `HedgeVenueIdempotencyIssue`.
@@ -63,4 +64,4 @@ Remaining:
 - Quote lifecycle integration with actual order placement/cancel-replace.
 - Profile/fill API authorization and validation hardening.
 - Real hedge venue adapter, venue callback ingestion endpoint, and trade/ledger reconciliation refs.
-- Operator approval flow and broader cross-venue global limits.
+- Broader cross-venue global limits.

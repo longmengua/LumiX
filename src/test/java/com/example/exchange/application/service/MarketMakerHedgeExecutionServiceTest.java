@@ -37,6 +37,7 @@ import java.time.Duration;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MarketMakerHedgeExecutionServiceTest {
 
@@ -175,6 +176,26 @@ class MarketMakerHedgeExecutionServiceTest {
 
         assertThat(reports).isEmpty();
         assertThat(fixture.venue.requests).isEmpty();
+    }
+
+    @Test
+    @DisplayName("executeForMarketMaker 啟用 operator approval 時必須帶正確 token")
+    void executeForMarketMakerRequiresOperatorApprovalTokenWhenEnabled() {
+        Fixture fixture = new Fixture();
+        fixture.service.configureApprovalForTest(true, "approved-token");
+        fixture.profileStore.save(profile("mm-1", 9001, true, false));
+        fixture.addPosition(9001, "BTCUSDT", "2.000");
+        fixture.oracle.update("BTCUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+
+        // 流程：production 可要求 operator approval token；缺 token 時不得規劃或送出 hedge order。
+        assertThatThrownBy(() -> fixture.service.executeForMarketMaker("mm-1", "exec-test"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("operator approval required");
+        assertThat(fixture.venue.requests).isEmpty();
+
+        HedgeExecutionReport report =
+                fixture.service.executeForMarketMaker("mm-1", "exec-test", "approved-token");
+        assertThat(report.routedCount()).isEqualTo(1);
     }
 
     private static MarketMakerProfile profile(String marketMakerId, long uid, boolean enabled, boolean killSwitch) {

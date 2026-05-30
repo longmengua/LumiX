@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -104,15 +105,17 @@ public class MarketMakerController {
     @PostMapping("/profiles/{marketMakerId}/hedge-execution")
     public ApiResponse<HedgeExecutionReport> executeHedgeByMarketMaker(
             @PathVariable String marketMakerId,
-            @RequestParam(defaultValue = "manual") String refPrefix
+            @RequestParam(defaultValue = "manual") String refPrefix,
+            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
     ) {
-        return ApiResponse.ok(hedgeExecutionService.executeForMarketMaker(marketMakerId, refPrefix));
+        return ApiResponse.ok(hedgeExecutionService.executeForMarketMaker(marketMakerId, refPrefix, approvalToken));
     }
 
     @PostMapping("/hedge-execution/enabled")
     public ApiResponse<List<HedgeExecutionReport>> executeHedgeForEnabledMarketMakers(
-            @RequestParam(defaultValue = "manual") String refPrefix
+            @RequestParam(defaultValue = "manual") String refPrefix,
+            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
     ) {
-        return ApiResponse.ok(hedgeExecutionService.executeForEnabledMarketMakers(refPrefix));
+        return ApiResponse.ok(hedgeExecutionService.executeForEnabledMarketMakers(refPrefix, approvalToken));
     }
 }

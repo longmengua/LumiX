@@ -21,12 +21,15 @@ public class MarketMakerHedgeExecutionScheduler {
     @Value("${market-maker.hedge-execution.ref-prefix:scheduled}")
     private String refPrefix;
 
+    @Value("${market-maker.hedge-execution.scheduled-approval-token:}")
+    private String approvalToken;
+
     @Scheduled(fixedDelayString = "${market-maker.hedge-execution.fixed-delay-ms:300000}")
     public void executeEnabledMarketMakerHedges() {
         if (!enabled) {
             return;
         }
         // Execution service 會再次檢查全域 halt；production 可用 lock-enabled 防止多 worker 重複送單。
-        hedgeExecutionService.executeForEnabledMarketMakers(refPrefix);
+        hedgeExecutionService.executeForEnabledMarketMakers(refPrefix, approvalToken);
     }
 }

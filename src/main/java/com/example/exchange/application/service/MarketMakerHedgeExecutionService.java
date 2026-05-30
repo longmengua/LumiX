@@ -44,6 +44,12 @@ public class MarketMakerHedgeExecutionService {
     @Value("${market-maker.hedge-execution.lock-ttl-ms:30000}")
     private long lockTtlMs;
 
+    @Value("${market-maker.hedge-execution.approval-required:false}")
+    private boolean approvalRequired;
+
+    @Value("${market-maker.hedge-execution.approval-token:}")
+    private String approvalToken;
+
     @Autowired(required = false)
     public void setCommandTransactionBoundary(CommandTransactionBoundary commandTransactionBoundary) {
         this.commandTransactionBoundary = commandTransactionBoundary;
@@ -60,8 +66,19 @@ public class MarketMakerHedgeExecutionService {
         this.lockTtlMs = ttlMs;
     }
 
+    void configureApprovalForTest(boolean required, String token) {
+        this.approvalRequired = required;
+        this.approvalToken = token;
+    }
+
     @Transactional
     public HedgeExecutionReport executeForMarketMaker(String marketMakerId, String refPrefix) {
+        return executeForMarketMaker(marketMakerId, refPrefix, null);
+    }
+
+    @Transactional
+    public HedgeExecutionReport executeForMarketMaker(String marketMakerId, String refPrefix, String operatorApprovalToken) {
+        requireApproval(operatorApprovalToken);
         if (commandTransactionBoundary != null) {
             return commandTransactionBoundary.execute(
                     "market-maker-hedge-execution",
@@ -79,6 +96,12 @@ public class MarketMakerHedgeExecutionService {
 
     @Transactional
     public List<HedgeExecutionReport> executeForEnabledMarketMakers(String refPrefix) {
+        return executeForEnabledMarketMakers(refPrefix, null);
+    }
+
+    @Transactional
+    public List<HedgeExecutionReport> executeForEnabledMarketMakers(String refPrefix, String operatorApprovalToken) {
+        requireApproval(operatorApprovalToken);
         if (commandTransactionBoundary != null) {
             return commandTransactionBoundary.execute(
                     "market-maker-enabled-hedge-execution",
@@ -86,6 +109,18 @@ public class MarketMakerHedgeExecutionService {
             );
         }
         return executeForEnabledMarketMakersInsideTransaction(refPrefix);
+    }
+
+    private void requireApproval(String operatorApprovalToken) {
+        if (!approvalRequired) {
+            return;
+        }
+        if (approvalToken == null || approvalToken.isBlank()) {
+            throw new IllegalStateException("hedge execution approval required but approval token is not configured");
+        }
+        if (operatorApprovalToken == null || !approvalToken.trim().equals(operatorApprovalToken.trim())) {
+            throw new IllegalStateException("hedge execution operator approval required");
+        }
     }
 
     private List<HedgeExecutionReport> executeForEnabledMarketMakersInsideTransaction(String refPrefix) {
