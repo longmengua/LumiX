@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MarketMakerHedgeReconciliationServiceTest {
 
@@ -62,6 +63,21 @@ class MarketMakerHedgeReconciliationServiceTest {
         assertThat(report.issueCount()).isEqualTo(1);
         assertThat(report.issues().getFirst().reason()).isEqualTo("OVERFILLED_NOTIONAL");
         assertThat(report.issues().getFirst().filledNotional()).isEqualByComparingTo("120.00000");
+    }
+
+    @Test
+    @DisplayName("reconcileMarketMaker 拒絕無界限查詢 limit")
+    void reconcileMarketMakerRejectsInvalidLimit() {
+        MarketMakerHedgeReconciliationService service =
+                new MarketMakerHedgeReconciliationService(new MemDecisionStore(), new MemFillStore());
+
+        // 流程：reconciliation 報告要有固定頁面大小上限，避免單次後台請求掃過量 decision audit。
+        assertThatThrownBy(() -> service.reconcileMarketMaker("mm-1", -1))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
+        assertThatThrownBy(() -> service.reconcileMarketMaker("mm-1", 501))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
     }
 
     private static HedgeDecisionAuditRecord decision(String venueOrderId, String notional, boolean accepted) {

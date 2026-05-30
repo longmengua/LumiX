@@ -18,10 +18,13 @@ import java.time.Instant;
 @RequiredArgsConstructor
 public class MarketMakerHedgeVenueIdempotencyService {
 
+    private static final int MAX_QUERY_LIMIT = 500;
+
     private final HedgeVenueIdempotencyStore store;
 
     @Transactional(readOnly = true)
     public HedgeVenueIdempotencyReport unresolved(int limit) {
+        validateQueryLimit(limit);
         var issues = store.findUnresolved(limit).stream()
                 .map(this::toIssue)
                 .toList();
@@ -53,5 +56,11 @@ public class MarketMakerHedgeVenueIdempotencyService {
             return "HEDGE_VENUE_OUTCOME_UNCERTAIN";
         }
         return result.reason();
+    }
+
+    private static void validateQueryLimit(int limit) {
+        if (limit <= 0 || limit > MAX_QUERY_LIMIT) {
+            throw new IllegalArgumentException("hedge venue idempotency query limit must be between 1 and " + MAX_QUERY_LIMIT);
+        }
     }
 }

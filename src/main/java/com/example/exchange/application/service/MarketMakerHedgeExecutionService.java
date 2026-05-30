@@ -27,6 +27,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class MarketMakerHedgeExecutionService {
 
+    private static final int MAX_REF_PREFIX_LENGTH = 64;
+    private static final String REF_PREFIX_PATTERN = "[A-Za-z0-9._:-]+";
+
     private final MarketMakerProfileService profileService;
     private final MarketMakerExposureService exposureService;
     private final MarketMakerHedgeStrategyService strategyService;
@@ -79,6 +82,7 @@ public class MarketMakerHedgeExecutionService {
     @Transactional
     public HedgeExecutionReport executeForMarketMaker(String marketMakerId, String refPrefix, String operatorApprovalToken) {
         requireApproval(operatorApprovalToken);
+        validateRefPrefix(refPrefix);
         if (commandTransactionBoundary != null) {
             return commandTransactionBoundary.execute(
                     "market-maker-hedge-execution",
@@ -102,6 +106,7 @@ public class MarketMakerHedgeExecutionService {
     @Transactional
     public List<HedgeExecutionReport> executeForEnabledMarketMakers(String refPrefix, String operatorApprovalToken) {
         requireApproval(operatorApprovalToken);
+        validateRefPrefix(refPrefix);
         if (commandTransactionBoundary != null) {
             return commandTransactionBoundary.execute(
                     "market-maker-enabled-hedge-execution",
@@ -120,6 +125,19 @@ public class MarketMakerHedgeExecutionService {
         }
         if (operatorApprovalToken == null || !approvalToken.trim().equals(operatorApprovalToken.trim())) {
             throw new IllegalStateException("hedge execution operator approval required");
+        }
+    }
+
+    private static void validateRefPrefix(String refPrefix) {
+        if (refPrefix == null || refPrefix.isBlank()) {
+            return;
+        }
+        String normalized = refPrefix.trim();
+        if (normalized.length() > MAX_REF_PREFIX_LENGTH) {
+            throw new IllegalArgumentException("hedge execution ref prefix is too long");
+        }
+        if (!normalized.matches(REF_PREFIX_PATTERN)) {
+            throw new IllegalArgumentException("hedge execution ref prefix contains invalid characters");
         }
     }
 

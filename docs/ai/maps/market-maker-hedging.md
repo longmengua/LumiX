@@ -28,8 +28,10 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Profile service: `MarketMakerProfileService`.
 - Admin API: `interfaces.web.controller.MarketMakerController`, request DTOs `MarketMakerProfileRequest`, `MarketMakerRiskLimitRequest`.
 - Hedge fill/reconciliation admin queries: `/api/market-maker/profiles/{marketMakerId}/hedge-fills`, `/api/market-maker/hedge-fills/venue-orders/{venueOrderId}`, `/api/market-maker/hedge-fills/ref/{refId}`, `/api/market-maker/profiles/{marketMakerId}/hedge-reconciliation`, `/api/market-maker/hedge-idempotency/unresolved`.
+- Hedge fill/reconciliation/idempotency operator views enforce bounded query limits of 1..500.
 - Venue fill callback ingestion: `POST /api/market-maker/hedge-fills/venue-callback`, request DTO `HedgeVenueFillCallbackRequest`.
 - Manual hedge execution admin commands: `POST /api/market-maker/profiles/{marketMakerId}/hedge-execution`, `POST /api/market-maker/hedge-execution/enabled`.
+- Manual hedge execution validates bounded safe `refPrefix` values before building external venue ref ids.
 - Scheduled hedge execution: `MarketMakerHedgeExecutionScheduler`, default disabled by `market-maker.hedge-execution.enabled=false`.
 - Scheduled hedge execution can use durable worker locking through `market-maker.hedge-execution.lock-enabled=true`, `HedgeExecutionLockStore`, `JpaHedgeExecutionLockStore`, and `hedge_execution_locks`.
 - Operator approval can be required through `market-maker.hedge-execution.approval-required=true`; manual APIs must pass `X-Operator-Approval`, while scheduler uses `scheduled-approval-token`.
@@ -62,6 +64,6 @@ This map is part of the current core-kernel priority lane. It should be read whe
 
 Remaining:
 - Quote lifecycle integration with actual order placement/cancel-replace.
-- Profile/fill API authorization and validation hardening.
+- Production callback authentication/verification beyond internal admin auth.
 - Real hedge venue adapter, venue callback ingestion endpoint, and trade/ledger reconciliation refs.
 - Broader cross-venue global limits.

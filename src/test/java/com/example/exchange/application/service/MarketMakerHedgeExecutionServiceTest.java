@@ -198,6 +198,24 @@ class MarketMakerHedgeExecutionServiceTest {
         assertThat(report.routedCount()).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("executeForMarketMaker 拒絕不安全的 refPrefix")
+    void executeForMarketMakerRejectsUnsafeRefPrefix() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile("mm-1", 9001, true, false));
+        fixture.addPosition(9001, "BTCUSDT", "2.000");
+        fixture.oracle.update("BTCUSDT", new BigDecimal("100.00"), new BigDecimal("100.00"), "test");
+
+        // 流程：refPrefix 會進入 venue refId/audit trail；拒絕空白以外的特殊字元，避免污染營運查詢與外部冪等鍵。
+        assertThatThrownBy(() -> fixture.service.executeForMarketMaker("mm-1", "manual run"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("invalid characters");
+        assertThatThrownBy(() -> fixture.service.executeForEnabledMarketMakers("x".repeat(65)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("too long");
+        assertThat(fixture.venue.requests).isEmpty();
+    }
+
     private static MarketMakerProfile profile(String marketMakerId, long uid, boolean enabled, boolean killSwitch) {
         return profileWithSymbols(marketMakerId, uid, enabled, killSwitch, "BTCUSDT");
     }

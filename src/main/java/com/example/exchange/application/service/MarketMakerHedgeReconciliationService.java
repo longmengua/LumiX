@@ -22,11 +22,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MarketMakerHedgeReconciliationService {
 
+    private static final int MAX_QUERY_LIMIT = 500;
+
     private final HedgeDecisionAuditStore decisionAuditStore;
     private final HedgeFillStore hedgeFillStore;
 
     @Transactional(readOnly = true)
     public HedgeReconciliationReport reconcileMarketMaker(String marketMakerId, int limit) {
+        validateQueryLimit(limit);
         List<HedgeDecisionAuditRecord> decisions = decisionAuditStore.findByMarketMakerId(marketMakerId, limit)
                 .stream()
                 .filter(HedgeDecisionAuditRecord::accepted)
@@ -79,5 +82,11 @@ public class MarketMakerHedgeReconciliationService {
                 decision.orderNotional(),
                 filledNotional
         );
+    }
+
+    private static void validateQueryLimit(int limit) {
+        if (limit <= 0 || limit > MAX_QUERY_LIMIT) {
+            throw new IllegalArgumentException("hedge reconciliation query limit must be between 1 and " + MAX_QUERY_LIMIT);
+        }
     }
 }

@@ -17,6 +17,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MarketMakerHedgeFillService {
 
+    private static final int MAX_QUERY_LIMIT = 500;
+
     private final HedgeFillStore hedgeFillStore;
     private final HedgeVenueFillMapper fillMapper = new HedgeVenueFillMapper();
 
@@ -44,6 +46,7 @@ public class MarketMakerHedgeFillService {
 
     @Transactional(readOnly = true)
     public List<HedgeFillRecord> fillsByMarketMaker(String marketMakerId, int limit) {
+        validateQueryLimit(limit);
         return hedgeFillStore.findByMarketMakerId(marketMakerId, limit);
     }
 
@@ -78,6 +81,12 @@ public class MarketMakerHedgeFillService {
         }
         if (fill.quantity().signum() <= 0 || fill.price().signum() <= 0) {
             throw new IllegalArgumentException("fill quantity and price must be positive");
+        }
+    }
+
+    private static void validateQueryLimit(int limit) {
+        if (limit <= 0 || limit > MAX_QUERY_LIMIT) {
+            throw new IllegalArgumentException("hedge fill query limit must be between 1 and " + MAX_QUERY_LIMIT);
         }
     }
 }

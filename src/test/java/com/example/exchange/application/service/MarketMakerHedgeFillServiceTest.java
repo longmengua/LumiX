@@ -144,6 +144,20 @@ class MarketMakerHedgeFillServiceTest {
         assertThat(service.fillsByVenueOrder("venue-1")).containsExactly(first);
     }
 
+    @Test
+    @DisplayName("fillsByMarketMaker 拒絕無界限查詢 limit")
+    void fillsByMarketMakerRejectsInvalidLimit() {
+        MarketMakerHedgeFillService service = new MarketMakerHedgeFillService(new MemHedgeFillStore());
+
+        // 流程：後台查詢不能接受 0、負數或過大 limit，避免單次 API 拉過量 audit rows。
+        assertThatThrownBy(() -> service.fillsByMarketMaker("mm-1", 0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
+        assertThatThrownBy(() -> service.fillsByMarketMaker("mm-1", 501))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
+    }
+
     private static HedgeFillRecord fill(String venueOrderId, String venueFillId, String refId) {
         return new HedgeFillRecord(
                 null,

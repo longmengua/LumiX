@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class MarketMakerHedgeVenueIdempotencyServiceTest {
 
@@ -49,6 +50,21 @@ class MarketMakerHedgeVenueIdempotencyServiceTest {
                 .containsExactly("HEDGE_VENUE_SUBMIT_PENDING", "HEDGE_VENUE_TIMEOUT");
         assertThat(report.issues().getFirst().completed()).isFalse();
         assertThat(report.issues().get(1).retryable()).isTrue();
+    }
+
+    @Test
+    @DisplayName("unresolved 拒絕無界限查詢 limit")
+    void unresolvedRejectsInvalidLimit() {
+        MarketMakerHedgeVenueIdempotencyService service =
+                new MarketMakerHedgeVenueIdempotencyService(new MemStore());
+
+        // 流程：operator unresolved view 只允許 bounded page size，避免 effectful submit 記錄被一次掃完。
+        assertThatThrownBy(() -> service.unresolved(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
+        assertThatThrownBy(() -> service.unresolved(501))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
     }
 
     private static class MemStore implements HedgeVenueIdempotencyStore {

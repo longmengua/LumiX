@@ -28,7 +28,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Build market-maker interfaces for quoting, inventory, risk limits, kill switch, and hedging order routing.
   - Baseline done: durable profile/risk-limit storage, admin profile APIs, exposure aggregation, quote command validation, kill switch, slippage control, hedge venue contract, safe rejecting adapter, quote/hedge decision audit events, durable hedge decision audit trails, and hedge fill audit persistence.
 - [ ] Build market-maker hedging strategy baseline: exposure aggregation, hedge venue adapter interface, execution policy, slippage controls, and hedge audit trail.
-  - Baseline done: exposure aggregation, hedge venue adapter interface, per-run execution route cap policy, slippage controls, durable scheduled-worker lock, operator approval token gate, durable hedge decision audit trail, and fill audit persistence; real venue adapters, quote lifecycle integration, trade/ledger hedge reconciliation, and broader cross-venue global limits remain.
+  - Baseline done: exposure aggregation, hedge venue adapter interface, per-run execution route cap policy, slippage controls, durable scheduled-worker lock, operator approval token gate, bounded operator queries/ref prefixes, durable hedge decision audit trail, and fill audit persistence; real venue adapters, quote lifecycle integration, trade/ledger hedge reconciliation, and broader cross-venue global limits remain.
 
 ### Trading and Matching
 
