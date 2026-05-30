@@ -52,6 +52,7 @@ Ledger concerns:
 - `TurnoverReconciliationScheduler` can run disabled-by-default recent-window batch reconciliation with `turnover.reconciliation.*` settings.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
 - Finance daily report summarizes durable ledger journal postings by reason, asset, and account code for a UTC report date.
+- Finance category report filters the daily durable-ledger report by fee, funding, liquidation, bonus, or transfer reason sets.
 - `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
@@ -121,4 +122,4 @@ Remaining production TODO:
 - New issues created by `ReconciliationReportService` default to `OPEN`.
 
 Remaining production TODO:
-- Ledger retention/archive enforcement and category-specific finance exports.
+- Ledger retention/archive enforcement.

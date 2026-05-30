@@ -73,6 +73,41 @@ class FinanceReportServiceTest {
                 });
     }
 
+    @Test
+    @DisplayName("categoryReport 依財務分類匯出指定 reason set")
+    void categoryReportFiltersByFinanceCategory() {
+        MemLedgerJournal journal = new MemLedgerJournal();
+        journal.entries.add(entry(
+                1,
+                "USDT",
+                "trade_fee",
+                "2026-05-30T01:00:00Z",
+                List.of(
+                        new WalletLedgerPosting("USER_AVAILABLE", "USDT", BigDecimal.ZERO, new BigDecimal("2.50")),
+                        new WalletLedgerPosting("USER_FEE_EXPENSE", "USDT", new BigDecimal("2.50"), BigDecimal.ZERO)
+                )
+        ));
+        journal.entries.add(entry(
+                2,
+                "USDT",
+                "funding_fee_paid",
+                "2026-05-30T02:00:00Z",
+                List.of(
+                        new WalletLedgerPosting("FUNDING_FEE_EXPENSE", "USDT", new BigDecimal("1.25"), BigDecimal.ZERO),
+                        new WalletLedgerPosting("USER_AVAILABLE", "USDT", BigDecimal.ZERO, new BigDecimal("1.25"))
+                )
+        ));
+        FinanceReportService service = new FinanceReportService(journal);
+
+        // 場景：fee 匯出只包含 trade_fee/bonus fee 類 reason，不混入 funding movement。
+        FinanceDailyReport report = service.categoryReport(LocalDate.parse("2026-05-30"), "fee");
+
+        assertThat(report.entryCount()).isEqualTo(1);
+        assertThat(report.totalDebit()).isEqualByComparingTo("2.50");
+        assertThat(report.totalCredit()).isEqualByComparingTo("2.50");
+        assertThat(report.lines()).allSatisfy(line -> assertThat(line.reason()).isEqualTo("trade_fee"));
+    }
+
     private static WalletLedgerEntry entry(
             long uid,
             String asset,

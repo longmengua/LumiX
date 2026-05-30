@@ -130,6 +130,14 @@ public class RecoveryController {
         return ApiResponse.ok(financeReportService.dailyReport(LocalDate.parse(date)));
     }
 
+    @GetMapping("/finance/category-report")
+    public ApiResponse<FinanceDailyReport> financeCategoryReport(
+            @RequestParam String date,
+            @RequestParam(defaultValue = "fee") String category
+    ) {
+        return ApiResponse.ok(financeReportService.categoryReport(LocalDate.parse(date), category));
+    }
+
     @PostMapping("/finance/trial-balance/snapshot")
     public ApiResponse<TrialBalanceSnapshot> persistTrialBalanceSnapshot(
             @RequestParam String date,

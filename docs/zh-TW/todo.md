@@ -24,7 +24,7 @@
 - [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
   - Baseline 已完成：已處理成交會寫 durable turnover records，並有 uid/symbol/strategy/market-maker/match 維度的 turnover summary、限量 drill-down、match-level trade-tape reconciliation APIs，以及預設關閉的 recent-window uid+match trade tape / ledger-ref reconciliation；正式 strategy/market-maker 下單欄位與可匯出報表仍待補。
 - [ ] 將 ledger reconciliation 強化成可審計帳本：immutable journal、trial balance、replay comparison、exception workflow 與財務報表。
-  - Baseline 已完成：durable journal hash-chain tamper-evidence、trial-balance 計算與 daily snapshot persistence、結構化 replay comparison、reconciliation issue workflow 欄位/後台 API、workflow audit events，以及按 reason/asset/account code 彙總 durable ledger 的 daily finance report；retention/archive enforcement 與更完整 fee/funding/liquidation/bonus/transfer 匯出仍待補。
+  - Baseline 已完成：durable journal hash-chain tamper-evidence、trial-balance 計算與 daily snapshot persistence、結構化 replay comparison、reconciliation issue workflow 欄位/後台 API、workflow audit events、按 reason/asset/account code 彙總 durable ledger 的 daily finance report，以及 fee/funding/liquidation/bonus/transfer category exports；retention/archive enforcement 仍待補。
 - [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
   - Baseline 已完成：durable profile/risk-limit storage、admin profile API、exposure aggregation、quote command validation、kill switch、slippage control、hedge venue contract、預設安全拒絕 adapter、quote/hedge decision audit events、durable hedge decision audit trails 與 hedge fill audit persistence。
 - [ ] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。

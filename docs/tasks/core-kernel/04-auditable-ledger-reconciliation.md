@@ -34,6 +34,7 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 - `ReconciliationIssueWorkflowChanged` records claim/resolve/reopen workflow audit events.
 - `FinanceReportService` can generate a UTC daily durable-ledger report grouped by reason, asset, and account code.
 - `RecoveryController` exposes `GET /api/recovery/finance/daily-report?date=YYYY-MM-DD` and `GET/POST /api/recovery/finance/trial-balance/snapshot`.
+- `FinanceReportService.categoryReport` and `GET /api/recovery/finance/category-report` provide fee/funding/liquidation/bonus/transfer category exports.
 - `RecoveryController` exposes `GET /api/recovery/reconcile/ledger/tamper-evidence` to verify durable journal hash-chain integrity.
 - `V13__reconciliation_issue_workflow.sql` adds issue workflow columns and indexes.
 - Tests cover balanced trial balance aggregation, unbalanced posting detection, and default reconciliation issue workflow state.
@@ -41,7 +42,7 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 ## Remaining Work
 
 - Add immutable journal retention/archive enforcement.
-- Add category-specific exports for fees, funding, liquidation, bonus credit, and transfers.
+- Add retention/archive enforcement for durable ledger close data.
 
 ## Acceptance Criteria
 

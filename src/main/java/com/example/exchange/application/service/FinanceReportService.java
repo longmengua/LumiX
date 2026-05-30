@@ -17,10 +17,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +37,17 @@ public class FinanceReportService {
         Instant from = date.atStartOfDay().toInstant(ZoneOffset.UTC);
         Instant to = date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
         return dailyReport(date, from, to, ledgerJournal.findByCreatedAtBetween(from, to));
+    }
+
+    public FinanceDailyReport categoryReport(LocalDate reportDate, String category) {
+        LocalDate date = reportDate == null ? LocalDate.now(clock) : reportDate;
+        Instant from = date.atStartOfDay().toInstant(ZoneOffset.UTC);
+        Instant to = date.plusDays(1).atStartOfDay().toInstant(ZoneOffset.UTC);
+        Set<String> reasons = reasonsForCategory(category);
+        List<WalletLedgerEntry> entries = ledgerJournal.findByCreatedAtBetween(from, to).stream()
+                .filter(entry -> reasons.contains(entry.getReason()))
+                .toList();
+        return dailyReport(date, from, to, entries);
     }
 
     FinanceDailyReport dailyReport(LocalDate date, Instant from, Instant to, List<WalletLedgerEntry> entries) {
@@ -81,6 +95,36 @@ public class FinanceReportService {
     }
 
     private record Key(String reason, String asset, String accountCode) {
+    }
+
+    private static Set<String> reasonsForCategory(String category) {
+        return switch (normalizeCategory(category)) {
+            case "fee" -> set("trade_fee", "trade_rebate", "bonus_credit_consume");
+            case "funding" -> set("funding_fee_paid", "funding_fee_received");
+            case "liquidation" -> set(
+                    "insurance_fund_payout",
+                    "adl_socialized_loss",
+                    "adl_forced_loss",
+                    "realized_pnl_profit",
+                    "realized_pnl_loss"
+            );
+            case "bonus" -> set(
+                    "bonus_credit_grant",
+                    "bonus_credit_consume",
+                    "bonus_credit_expire",
+                    "bonus_credit_clawback"
+            );
+            case "transfer" -> set("deposit", "withdrawal");
+            default -> throw new IllegalArgumentException("unsupported finance category");
+        };
+    }
+
+    private static String normalizeCategory(String category) {
+        return category == null || category.isBlank() ? "fee" : category.trim().toLowerCase();
+    }
+
+    private static Set<String> set(String... values) {
+        return new HashSet<>(Arrays.asList(values));
     }
 
     private static class Totals {
