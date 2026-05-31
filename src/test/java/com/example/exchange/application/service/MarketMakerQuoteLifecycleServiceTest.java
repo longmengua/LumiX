@@ -48,6 +48,10 @@ class MarketMakerQuoteLifecycleServiceTest {
                     assertThat(state.active()).isTrue();
                     assertThat(state.bidOrderId()).isEqualTo(report.bidOrderId());
                     assertThat(state.askOrderId()).isEqualTo(report.askOrderId());
+                    assertThat(state.bidVersion()).isEqualTo(1);
+                    assertThat(state.askVersion()).isEqualTo(1);
+                    assertThat(state.replacedBidOrderId()).isNull();
+                    assertThat(state.replacedAskOrderId()).isNull();
                 });
         assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
                 .containsExactly(OrderSide.BUY, OrderSide.SELL);
@@ -94,6 +98,29 @@ class MarketMakerQuoteLifecycleServiceTest {
         assertThat(fixture.gateway.cancelRequests).containsExactly("quote-ref-1");
         assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
                 .containsExactly(OrderSide.BUY, OrderSide.SELL);
+    }
+
+    @Test
+    @DisplayName("placeQuote 連續 replacement 會遞增 bid/ask version 並保留上一輪 order id")
+    void placeQuoteIncrementsPerSideVersionsAndTracksReplacedOrderIds() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false));
+        MarketMakerQuoteLifecycleReport first = fixture.service.placeQuote(quote("99.00", "101.00"));
+        fixture.gateway.cancelCount = 2;
+
+        // 流程：新的 quote 取代舊 quote 時，state 必須保留上一輪 bid/ask id 供重啟後 reconciliation 追查。
+        MarketMakerQuoteLifecycleReport second = fixture.service.placeQuote(quote("100.00", "102.00"));
+
+        assertThat(fixture.quoteStateStore.find("mm-quote-1", "BTCUSDT"))
+                .get()
+                .satisfies(state -> {
+                    assertThat(state.bidOrderId()).isEqualTo(second.bidOrderId());
+                    assertThat(state.askOrderId()).isEqualTo(second.askOrderId());
+                    assertThat(state.bidVersion()).isEqualTo(2);
+                    assertThat(state.askVersion()).isEqualTo(2);
+                    assertThat(state.replacedBidOrderId()).isEqualTo(first.bidOrderId());
+                    assertThat(state.replacedAskOrderId()).isEqualTo(first.askOrderId());
+                });
     }
 
     @Test

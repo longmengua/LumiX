@@ -107,6 +107,10 @@ class MarketMakerQuoteReconciliationServiceTest {
                 0,
                 bidOrderId,
                 askOrderId,
+                1,
+                1,
+                null,
+                null,
                 Instant.parse("2026-06-01T00:00:00Z")
         );
     }

@@ -68,6 +68,18 @@ public class MarketMakerQuoteStateRecord {
     @Column(name = "ask_order_id", length = 36)
     private String askOrderId;
 
+    @Column(name = "bid_version", nullable = false)
+    private Long bidVersion;
+
+    @Column(name = "ask_version", nullable = false)
+    private Long askVersion;
+
+    @Column(name = "replaced_bid_order_id", length = 36)
+    private String replacedBidOrderId;
+
+    @Column(name = "replaced_ask_order_id", length = 36)
+    private String replacedAskOrderId;
+
     @Column(name = "updated_at", nullable = false, columnDefinition = "DATETIME(6)")
     private Instant updatedAt;
 
@@ -84,6 +96,10 @@ public class MarketMakerQuoteStateRecord {
         record.setCanceledCount(state.canceledCount());
         record.setBidOrderId(state.bidOrderId() == null ? null : state.bidOrderId().toString());
         record.setAskOrderId(state.askOrderId() == null ? null : state.askOrderId().toString());
+        record.setBidVersion(state.bidVersion());
+        record.setAskVersion(state.askVersion());
+        record.setReplacedBidOrderId(state.replacedBidOrderId() == null ? null : state.replacedBidOrderId().toString());
+        record.setReplacedAskOrderId(state.replacedAskOrderId() == null ? null : state.replacedAskOrderId().toString());
         record.setUpdatedAt(state.updatedAt());
         return record;
     }
@@ -100,6 +116,10 @@ public class MarketMakerQuoteStateRecord {
                 canceledCount == null ? 0 : canceledCount,
                 bidOrderId == null ? null : UUID.fromString(bidOrderId),
                 askOrderId == null ? null : UUID.fromString(askOrderId),
+                bidVersion == null ? 0 : bidVersion,
+                askVersion == null ? 0 : askVersion,
+                replacedBidOrderId == null ? null : UUID.fromString(replacedBidOrderId),
+                replacedAskOrderId == null ? null : UUID.fromString(replacedAskOrderId),
                 updatedAt
         );
     }

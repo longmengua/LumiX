@@ -17,6 +17,10 @@ public record MarketMakerQuoteState(
         int canceledCount,
         UUID bidOrderId,
         UUID askOrderId,
+        long bidVersion,
+        long askVersion,
+        UUID replacedBidOrderId,
+        UUID replacedAskOrderId,
         Instant updatedAt
 ) {
 }

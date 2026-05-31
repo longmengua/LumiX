@@ -39,7 +39,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Operator approval can be required through `market-maker.hedge-execution.approval-required=true`; manual APIs must pass `X-Operator-Approval`, while scheduler uses `scheduled-approval-token`.
 - Exposure aggregation: `MarketMakerExposureService`.
 - Quote validation and placement lifecycle: `MarketMakerQuoteService`, `MarketMakerQuoteLifecycleService`, `MarketMakerQuoteOrderGateway`, `UseCaseMarketMakerQuoteOrderGateway`; accepted or rejected quotes first clear prior open `mmq:{marketMakerId}:...` quote orders for the same uid/symbol before replacement placement, then persist latest active quote state for restart/operator lookup.
-- Quote state reconciliation: `MarketMakerQuoteReconciliationService` compares active quote state against open orders and reports missing tracked orders or untracked `mmq:` open orders.
+- Quote state versioning/reconciliation: `MarketMakerQuoteState` keeps per-side bid/ask versions and replaced order ids; `MarketMakerQuoteReconciliationService` compares active quote state against open orders and reports missing tracked orders or untracked `mmq:` open orders.
 - Quote state operator APIs: `GET /api/market-maker/quotes/active`, `GET /api/market-maker/quotes/reconciliation`, `GET /api/market-maker/profiles/{marketMakerId}/quotes`, `GET /api/market-maker/profiles/{marketMakerId}/quotes/{symbol}`.
 - Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
 - Hedge execution entry points use `CommandTransactionBoundary` when Spring wires it, so profile lookup, exposure planning, venue routing, hedge decision audit, and outbox rows share one command boundary.
@@ -52,11 +52,12 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Venue fill mapping/idempotency: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`, `HedgeFillStore`, `JpaHedgeFillStore`.
 - Hedge venue contract: `domain.service.HedgeVenueAdapter`.
 - Default safe adapter: `infra.hedging.RejectingHedgeVenueAdapter`.
+- Real venue adapter skeleton: `infra.hedging.RealHedgeVenueAdapter`, `RealHedgeVenueSigner`, and `SignedHedgeVenueRequest`; disabled mode safely rejects, enabled mode signs the stable submit payload but does not perform HTTP I/O yet.
 - Idempotency decorator baseline: `infra.hedging.IdempotentHedgeVenueAdapter` uses `HedgeOrderRequest.refId` with `HedgeVenueIdempotencyStore` / `JpaHedgeVenueIdempotencyStore` to claim before effectful venue submit, persist terminal results, prevent duplicate submits, reject payload conflicts, and block retries after pending or timeout-like uncertain outcomes. Operators can query unresolved pending/retryable records and trigger lookup reconciliation through `MarketMakerHedgeVenueIdempotencyService`.
 - Venue outcome lookup contract: `HedgeVenueOrderLookupAdapter` with safe default `NoopHedgeVenueOrderLookupAdapter`; real venue adapters should implement lookup by `refId` and return terminal `HedgeOrderResult` for uncertain submit reconciliation.
 - Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
 - Audit events: `HedgeDecisionRecorded`, `MarketMakerQuoteDecisionRecorded`.
-- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerQuoteLifecycleServiceTest`, `MarketMakerQuoteReconciliationServiceTest`, `UseCaseMarketMakerQuoteOrderGatewayTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `HedgeVenueCallbackVerifierTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
+- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerQuoteLifecycleServiceTest`, `MarketMakerQuoteReconciliationServiceTest`, `MarketMakerQuoteStateRecordTest`, `UseCaseMarketMakerQuoteOrderGatewayTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `HedgeVenueCallbackVerifierTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `RealHedgeVenueAdapterTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
 - Migrations include hedge venue idempotency records in `V8__hedge_venue_idempotency_records.sql`.
 
 ## First Implementation Slice
@@ -67,8 +68,8 @@ This map is part of the current core-kernel priority lane. It should be read whe
 4. [x] Add audit events for quote decisions, hedge decisions, and venue order id.
 5. [x] Add tests covering exposure aggregation, quote kill switch, crossed quote, hedge kill switch, slippage rejection, and accepted venue routing.
 
-- Migrations include market-maker quote states in `V16__market_maker_quote_states.sql`.
+- Migrations include market-maker quote states in `V16__market_maker_quote_states.sql` and per-side quote metadata in `V17__market_maker_quote_state_versions.sql`.
 
 Remaining:
-- Per-side quote version metadata and restore/reconciliation jobs that compare active quote state with actual open orders after restart.
-- Real hedge venue adapter and trade/ledger reconciliation refs.
+- Automated quote reconciliation repair jobs after restart.
+- Real hedge venue HTTP transport, lookup implementation, and trade/ledger reconciliation refs.

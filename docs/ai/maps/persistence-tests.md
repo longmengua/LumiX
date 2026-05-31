@@ -21,6 +21,7 @@ Migrations:
 - `V14__market_maker_profiles.sql`: durable market-maker profile and per-symbol risk limits.
 - `V15__hedge_decision_audits.sql`: durable hedge decision audit trail by market-maker, symbol, ref id, and venue order id.
 - `V16__hedge_fills.sql`: durable hedge fill audit trail by venue order/fill id, ref id, quantity, price, and fee.
+- `V17__market_maker_quote_state_versions.sql`: per-side bid/ask quote version and replaced order metadata for active quote restore/reconciliation.
 - `V2__adl_execution_records.sql`: post-core-v1 durable ADL forced execution summary and command idempotency records.
 - `V3__market_data_sequence_checkpoints.sql`: post-core-v1 durable market-data stream sequence/checksum checkpoints.
 - `V4__market_data_depth_deltas.sql`: post-core-v1 durable depth deltas for reconnect backfill.

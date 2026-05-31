@@ -26,7 +26,7 @@ P0 fine: 0/36 done, remaining 36 -> 35
 
 ## Current Fine-Grained Counts
 
-- P0 fine: `1/36` done.
+- P0 fine: `5/36` done.
 - P1 fine: `0/22` done.
 - P2 fine: `0/14` done.
 

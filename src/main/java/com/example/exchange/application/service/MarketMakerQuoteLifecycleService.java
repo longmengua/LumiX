@@ -37,16 +37,18 @@ public class MarketMakerQuoteLifecycleService {
             throw new IllegalArgumentException("market maker uid mismatch");
         }
 
+        Optional<MarketMakerQuoteState> previousState =
+                quoteStateStore.find(command.marketMakerId(), command.symbol());
         MarketMakerQuoteDecision decision = quoteService.validateQuote(profile, command);
         int canceledCount = orderGateway.cancelOpenQuoteOrders(command);
         if (!decision.accepted()) {
-            quoteStateStore.save(state(command, decision, canceledCount, null, null));
+            quoteStateStore.save(state(command, decision, canceledCount, null, null, previousState.orElse(null)));
             return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 0, null, null);
         }
 
         UUID bidOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.BUY);
         UUID askOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.SELL);
-        quoteStateStore.save(state(command, decision, canceledCount, bidOrderId, askOrderId));
+        quoteStateStore.save(state(command, decision, canceledCount, bidOrderId, askOrderId, previousState.orElse(null)));
         return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 2, bidOrderId, askOrderId);
     }
 
@@ -70,8 +72,11 @@ public class MarketMakerQuoteLifecycleService {
             MarketMakerQuoteDecision decision,
             int canceledCount,
             UUID bidOrderId,
-            UUID askOrderId
+            UUID askOrderId,
+            MarketMakerQuoteState previousState
     ) {
+        long previousBidVersion = previousState == null ? 0 : previousState.bidVersion();
+        long previousAskVersion = previousState == null ? 0 : previousState.askVersion();
         return new MarketMakerQuoteState(
                 command.marketMakerId().trim(),
                 command.uid(),
@@ -83,6 +88,10 @@ public class MarketMakerQuoteLifecycleService {
                 canceledCount,
                 bidOrderId,
                 askOrderId,
+                previousBidVersion + 1,
+                previousAskVersion + 1,
+                previousState == null ? null : previousState.bidOrderId(),
+                previousState == null ? null : previousState.askOrderId(),
                 Instant.now()
         );
     }

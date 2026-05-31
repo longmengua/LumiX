@@ -16,6 +16,7 @@ Flyway migration scripts。
 - `V11__adl_queue_entries.sql`：durable ADL queue entries and operator claim state。
 - `V12__production_query_indexes.sql`：orders projections、ledger、events、prediction orders 的 production query indexes。
 - `V16__market_maker_quote_states.sql`：market-maker active quote ownership state。
+- `V17__market_maker_quote_state_versions.sql`：market-maker bid/ask quote version and replaced order metadata。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。

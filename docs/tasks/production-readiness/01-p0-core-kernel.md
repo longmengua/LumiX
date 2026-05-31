@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`1/36` done.
+`5/36` done.
 
 ## Matching And Command Recovery
 
@@ -44,10 +44,10 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 ## Market Maker Quoting And Hedging
 
 - [x] Add quote state vs open-order reconciliation service.
-- [ ] Add quote state reconciliation operator API and curl script.
-- [ ] Add per-side quote version metadata for bid/ask replacement history.
-- [ ] Add active quote restore test after repository restart/reload.
-- [ ] Add real hedge venue adapter skeleton with signed request contract but safe disabled default.
+- [x] Add quote state reconciliation operator API and curl script.
+- [x] Add per-side quote version metadata for bid/ask replacement history.
+- [x] Add active quote restore test after repository restart/reload.
+- [x] Add real hedge venue adapter skeleton with signed request contract but safe disabled default.
 - [ ] Add real hedge venue lookup adapter implementation contract test.
 - [ ] Link hedge decisions to internal trade refs when exposure is created from internal fills.
 - [ ] Link hedge fills to ledger refs for fee/PnL accounting reconciliation.
