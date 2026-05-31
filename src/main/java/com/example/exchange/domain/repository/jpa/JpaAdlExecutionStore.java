@@ -8,6 +8,7 @@ import com.example.exchange.domain.model.dto.AdlExecutionResult;
 import com.example.exchange.domain.model.entity.AdlExecutionRecordEntity;
 import com.example.exchange.domain.repository.AdlExecutionStore;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,19 @@ public class JpaAdlExecutionStore implements AdlExecutionStore {
         if (commandId == null || commandId.isBlank()) return Optional.empty();
         return repository.findByCommandIdAndStatusIn(commandId.trim(), List.of("EXECUTED", "REJECTED"))
                 .map(AdlExecutionRecordEntity::toResult);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<AdlExecutionResult> findRecent(int limit) {
+        int safeLimit = Math.max(1, Math.min(limit, 500));
+        return repository.findAllByStatusInOrderByUpdatedAtDescCommandIdAsc(
+                        List.of("EXECUTED", "REJECTED"),
+                        PageRequest.of(0, safeLimit)
+                )
+                .stream()
+                .map(AdlExecutionRecordEntity::toResult)
+                .toList();
     }
 
     @Override

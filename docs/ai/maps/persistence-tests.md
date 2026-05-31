@@ -101,6 +101,7 @@ Transaction boundary coverage:
 - `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
 - `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
 - `LiquidateUseCaseTest`, `ExecuteAdlUseCaseTest`, and `MarketMakerHedgeExecutionServiceTest` prove manual liquidation, ADL forced execution, and hedge execution enter the same command boundary when configured.
+- `AdlQueueExecutionServiceTest` includes restart-style partial retry coverage by reusing the same queue store across service instances and asserting only persisted remaining notional is retried.
 
 Production worker routing coverage:
 - `MatchingWorkerCommandRouterTest` proves a matching command/event append must pass the sequencer lease owner/epoch guard before the log write happens.

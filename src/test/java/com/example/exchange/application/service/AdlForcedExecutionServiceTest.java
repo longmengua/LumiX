@@ -133,6 +133,25 @@ class AdlForcedExecutionServiceTest {
     }
 
     @Test
+    @DisplayName("recentExecutions 會回傳最近 ADL forced execution outcome")
+    /**
+     * 流程：execution 完成後，後台報告 API 需要能取回最近 outcome；durable store 存在時以 store 為準。
+     */
+    void recentExecutionsReturnsLatestOutcomesFromStore() {
+        Fixture fixture = fixture();
+        fixture.seedLongPosition(10, "2", "80", "10");
+        MemAdlExecutionStore store = new MemAdlExecutionStore();
+        fixture.service.setAdlExecutionStore(store);
+
+        AdlExecutionResult result = fixture.service.execute("adl-report-1", plan("100", "1"));
+
+        assertThat(fixture.service.recentExecutions(10)).containsExactly(result);
+        assertThatThrownBy(() -> fixture.service.recentExecutions(0))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("between 1 and 500");
+    }
+
+    @Test
     @DisplayName("候選持倉數量不足時 ADL execution 不做部分異動")
     /**
      * 流程：plan 要減 3 BTC，但候選只有 2 BTC -> validation 在寫 position/ledger 前失敗。
@@ -314,6 +333,13 @@ class AdlForcedExecutionServiceTest {
         @Override
         public Optional<AdlExecutionResult> findCompleted(String commandId) {
             return Optional.ofNullable(completed.get(commandId));
+        }
+
+        @Override
+        public List<AdlExecutionResult> findRecent(int limit) {
+            return completed.values().stream()
+                    .limit(limit)
+                    .toList();
         }
 
         @Override

@@ -63,7 +63,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、uid+symbol order-entry frequency limits、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
 - liquidation decision 已會發布 audit data，營運控制可 halt liquidation 或導入 manual review。
 - liquidation scanning 可掃描 open positions 並觸發 oracle-based liquidation decisions。
-- ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、durable queue storage、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、stuck-claim operator reporting、partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。
+- ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、durable queue storage、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、stuck-claim operator reporting 與 runbook、recent execution reporting、insurance/shortfall reconciliation、含 restart coverage 的 partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。
 - 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
 - Redis hot-state keys 已補 final per-key-family TTL/archive rules、刪除前置條件與 authoritative rebuild source，供 production maintenance 使用。

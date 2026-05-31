@@ -4,11 +4,14 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.LiquidateCommand;
+import com.example.exchange.application.service.AdlForcedExecutionService;
+import com.example.exchange.application.service.AdlInsuranceReconciliationService;
 import com.example.exchange.application.service.AdlQueueExecutionService;
 import com.example.exchange.application.service.FundingRateService;
 import com.example.exchange.application.service.InsuranceFundService;
 import com.example.exchange.application.service.MarkPriceOracleService;
 import com.example.exchange.application.usecase.LiquidateUseCase;
+import com.example.exchange.domain.model.dto.AdlInsuranceReconciliationReport;
 import com.example.exchange.domain.model.dto.AdlExecutionResult;
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
 import com.example.exchange.domain.model.dto.FundingSettlementResult;
@@ -45,6 +48,8 @@ public class RiskController {
     private final InsuranceFundService insuranceFundService;
     private final MarkPriceOracleService markPriceOracleService;
     private final AdlQueueExecutionService adlQueueExecutionService;
+    private final AdlForcedExecutionService adlForcedExecutionService;
+    private final AdlInsuranceReconciliationService adlInsuranceReconciliationService;
 
     @PostMapping("/funding/settle")
     public ApiResponse<FundingSettlementResult> settleFunding(
@@ -99,6 +104,20 @@ public class RiskController {
     ) {
         long safeSeconds = Math.max(0, minClaimAgeSeconds);
         return ApiResponse.ok(insuranceFundService.stuckAdlClaims(Duration.ofSeconds(safeSeconds)));
+    }
+
+    @GetMapping("/adl-executions")
+    public ApiResponse<List<AdlExecutionResult>> recentAdlExecutions(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(adlForcedExecutionService.recentExecutions(limit));
+    }
+
+    @GetMapping("/adl-insurance-reconciliation")
+    public ApiResponse<AdlInsuranceReconciliationReport> adlInsuranceReconciliation(
+            @RequestParam(defaultValue = "USDT") String asset
+    ) {
+        return ApiResponse.ok(adlInsuranceReconciliationService.reconcile(asset));
     }
 
     @PostMapping("/adl-queue/{liquidationId}/execute")

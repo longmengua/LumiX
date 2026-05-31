@@ -7,6 +7,7 @@ import com.example.exchange.domain.model.dto.AdlDeleveragingPlan;
 import com.example.exchange.domain.model.dto.AdlExecutionResult;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface AdlExecutionStore {
@@ -14,6 +15,10 @@ public interface AdlExecutionStore {
     int SCHEMA_VERSION = 1;
 
     Optional<AdlExecutionResult> findCompleted(String commandId);
+
+    default List<AdlExecutionResult> findRecent(int limit) {
+        return List.of();
+    }
 
     boolean tryStart(String commandId, AdlDeleveragingPlan plan, Instant startedAt);
 

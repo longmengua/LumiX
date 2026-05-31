@@ -38,6 +38,10 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary`, so ADL queue-to-execution routes through the same command transaction baseline as other core writes.
 - Added `AdlQueueStore` with in-memory and JPA adapters plus `adl_queue_entries` Flyway schema so queue state and operator claims survive process restarts.
 - Added `GET /api/risk/adl-queue/stuck-claims?minClaimAgeSeconds=...` to report claimed ADL entries that have exceeded the operator age threshold.
+- Added `GET /api/risk/adl-executions?limit=...` for recent forced-deleveraging outcomes.
+- Added `GET /api/risk/adl-insurance-reconciliation?asset=...` to compare open ADL queue shortfalls with liquidated-position ADL/insurance coverage.
+- Added ADL operator runbooks for stuck claims, partial retries, and no-candidate retries.
+- Added restart-style partial retry coverage showing a restarted executor consumes only persisted remaining queue notional.
 
 Remaining work:
 - Add retry/ownership workflow for operator-reviewed liquidation decisions.

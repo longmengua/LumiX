@@ -27,8 +27,9 @@
 | `PolymarketUserEventServiceTest` | User-channel callback `eventKey` replay、duplicate-key race no-op 與 order side effect 去重。 |
 | `RiskSettlementServiceTest` | funding、liquidation、liquidation scanner batch/failure isolation、insurance fund、account reconciliation。 |
 | `InsuranceFundServiceTest` | ADL queue enqueue by liquidation id、duplicate replay、operator claim preservation。 |
-| `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency 與 operator halt。 |
-| `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration。 |
+| `AdlInsuranceReconciliationServiceTest` | ADL queue shortfall 與 liquidated-position insurance/ADL coverage 對帳。 |
+| `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency、operator halt 與 recent execution report。 |
+| `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration，含 restart-style partial retry。 |
 | `IdempotentHedgeVenueAdapterTest` | Hedge venue submit refId idempotency、payload conflict、pending/uncertain timeout duplicate blocking。 |
 | `RealHedgeVenueAdapterTest` | Real hedge venue skeleton 的 disabled safety 與 signed request contract。 |
 | `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、durable trade tape、ticker latest-state 與 1m kline baseline。 |

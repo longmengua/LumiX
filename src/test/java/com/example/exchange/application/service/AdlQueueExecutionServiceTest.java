@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.application.usecase.ExecuteAdlUseCase;
 import com.example.exchange.domain.model.dto.AdlExecutionResult;
+import com.example.exchange.domain.repository.InMemoryAdlQueueStore;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.Position;
 import com.example.exchange.domain.model.entity.Symbol;
@@ -110,6 +111,32 @@ class AdlQueueExecutionServiceTest {
     }
 
     @Test
+    @DisplayName("ADL queue partial retry 經 service restart 後只處理 durable store 的剩餘缺口")
+    /**
+     * 流程：第一次 partial execution 後 queue store 保存剩餘缺口 -> 模擬 service restart 共用同一 durable queue store ->
+     * 新 executor 只按剩餘缺口規劃下一次 retry，不重複承接已執行的 notional。
+     */
+    void partialQueueRetryAfterRestartUsesPersistedRemainingAmount() {
+        InMemoryAdlQueueStore queueStore = new InMemoryAdlQueueStore();
+        Fixture first = fixture(new InsuranceFundService(queueStore));
+        first.insuranceFundService.enqueueAdl("liq-restart", 7, "BTCUSDT", "LONG", new BigDecimal("300"));
+        first.seedPosition(10, "-1", "120", "10");
+
+        AdlExecutionResult firstResult = first.queueExecutionService.execute("adl-restart-1", "liq-restart");
+
+        Fixture restarted = fixture(new InsuranceFundService(queueStore));
+        restarted.seedPosition(11, "-1", "130", "10");
+        AdlExecutionResult retryResult = restarted.queueExecutionService.execute("adl-restart-2", "liq-restart");
+
+        assertThat(firstResult.executedNotional()).isEqualByComparingTo("100.000000000000000000");
+        assertThat(retryResult.requestedNotional()).isEqualByComparingTo("200.000000000000000000");
+        assertThat(retryResult.executedNotional()).isEqualByComparingTo("100.000000000000000000");
+        assertThat(restarted.insuranceFundService.adlQueue()).singleElement()
+                .extracting("liquidationId", "amount")
+                .containsExactly("liq-restart", new BigDecimal("100.000000000000000000"));
+    }
+
+    @Test
     @DisplayName("ADL queue 沒有合格對手方時會回 non-executed result 並保留 queue")
     /**
      * 流程：LONG 被清算但只有同方向或不獲利倉位 -> planner 產生空 plan ->
@@ -134,11 +161,14 @@ class AdlQueueExecutionServiceTest {
     }
 
     private Fixture fixture() {
+        return fixture(new InsuranceFundService());
+    }
+
+    private Fixture fixture(InsuranceFundService insuranceFundService) {
         MemAccountRepository accountRepo = new MemAccountRepository();
         MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
         MemPositionRepository positionRepo = new MemPositionRepository();
         WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
-        InsuranceFundService insuranceFundService = new InsuranceFundService();
         MarkPriceOracleService markPriceOracleService = new MarkPriceOracleService(new MarkPriceOracleProperties());
         markPriceOracleService.update("BTCUSDT", new BigDecimal("100"), new BigDecimal("100"), "test");
         AdlForcedExecutionService executionService = new AdlForcedExecutionService(

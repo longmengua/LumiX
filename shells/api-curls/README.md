@@ -104,6 +104,8 @@ User WebSocket:
 ./shells/api-curls/exchange/risk-adl-queue-claim-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-execute-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-release-post.sh
+./shells/api-curls/exchange/risk-adl-executions-get.sh
+./shells/api-curls/exchange/risk-adl-insurance-reconciliation-get.sh
 ./shells/api-curls/exchange/recovery-recover-post.sh
 ./shells/api-curls/exchange/recovery-reconcile-accounts-get.sh
 ./shells/api-curls/exchange/recovery-reconcile-report-post.sh

@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`9/36` done.
+`13/36` done.
 
 ## Matching And Command Recovery
 
@@ -20,10 +20,10 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## ADL And Liquidation Closeout
 
-- [ ] Add ADL execution report API for recent forced-deleveraging outcomes.
-- [ ] Add insurance-fund interaction reconciliation for liquidation shortfall and ADL coverage.
-- [ ] Add operator runbook for stuck ADL claims, partial retries, and no-candidate retries.
-- [ ] Add persistence-backed retry test for ADL queue partial execution after restart.
+- [x] Add ADL execution report API for recent forced-deleveraging outcomes.
+- [x] Add insurance-fund interaction reconciliation for liquidation shortfall and ADL coverage.
+- [x] Add operator runbook for stuck ADL claims, partial retries, and no-candidate retries.
+- [x] Add persistence-backed retry test for ADL queue partial execution after restart.
 
 ## Bonus Credit And Turnover Reporting
 

@@ -21,6 +21,7 @@ English version: [../en/technical.md](../en/technical.md)
 | [Observability Baseline](observability.md) | Request/correlation ID 在 HTTP、OkHttp、Kafka outbox 與 audit logs 的傳遞基線。 |
 | [Archive Strategy](archive-strategy.md) | 歷史資料的 archive manifest、retention class、刪除前置條件與 restore 規則。 |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
+| [ADL 營運手冊](adl-operator-runbook.md) | ADL queue claim、execution、partial retry、no-candidate retry 與 insurance reconciliation 操作流程。 |
 | [Matching Sequencer Runbook](matching-sequencer-runbook.md) | 單 symbol sequencer 的 production ownership、partition、啟動與 failover 規則。 |
 | [產品總覽](README.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |
 | [待辦清單](todo.md) | Production readiness 的工程待辦路線圖。 |

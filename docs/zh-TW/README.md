@@ -295,6 +295,8 @@ src/main/java/com/example/exchange
 - `GET /api/recovery/reconcile/reports?limit=20`
 - `GET /api/recovery/reconcile/reports/{reportId}`
 - `GET /api/risk/adl-queue`
+- `GET /api/risk/adl-executions?limit=50`
+- `GET /api/risk/adl-insurance-reconciliation?asset=USDT`
 - `POST /api/recovery/recover/{uid}?fromSeq=0`
 - `GET /api/recovery/validate/{uid}`
 - `GET /api/recovery/outbox/dlq?limit=50`

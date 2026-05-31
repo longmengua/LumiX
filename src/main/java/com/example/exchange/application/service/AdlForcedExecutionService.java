@@ -27,6 +27,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -108,6 +109,17 @@ public class AdlForcedExecutionService {
         rememberCompleted(result);
         publish(result);
         return result;
+    }
+
+    public List<AdlExecutionResult> recentExecutions(int limit) {
+        int safeLimit = validateReportLimit(limit);
+        if (adlExecutionStore != null) {
+            return adlExecutionStore.findRecent(safeLimit);
+        }
+        return completedCommands.values().stream()
+                .sorted(Comparator.comparing(AdlExecutionResult::executedAt, Comparator.nullsFirst(Comparator.naturalOrder())).reversed())
+                .limit(safeLimit)
+                .toList();
     }
 
     private PreparedStep prepare(AdlDeleveragingStep step) {
@@ -252,6 +264,13 @@ public class AdlForcedExecutionService {
             throw new IllegalArgumentException("ADL command id must not be blank");
         }
         return commandId.trim();
+    }
+
+    private static int validateReportLimit(int limit) {
+        if (limit <= 0 || limit > 500) {
+            throw new IllegalArgumentException("ADL execution report limit must be between 1 and 500");
+        }
+        return limit;
     }
 
     private static BigDecimal safe(BigDecimal value) {

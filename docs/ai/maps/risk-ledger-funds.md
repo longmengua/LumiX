@@ -75,7 +75,7 @@ Remaining production TODO:
 - Funding: `FundingRateService`
 - Liquidation: `LiquidationService`, `LiquidationScanService`
 - Insurance fund: `InsuranceFundService`
-- ADL ranking/planning/execution: `AdlRankingService`, `AdlDeleveragingPlanner`, `AdlForcedExecutionService`, `AdlQueueExecutionService`, `AdlExecutionStore`, `JpaAdlExecutionStore`
+- ADL ranking/planning/execution: `AdlRankingService`, `AdlDeleveragingPlanner`, `AdlForcedExecutionService`, `AdlQueueExecutionService`, `AdlInsuranceReconciliationService`, `AdlExecutionStore`, `JpaAdlExecutionStore`
 - Reconciliation: `ReconciliationService`, `ReconciliationReportService`
 - Trial balance: `TrialBalanceService`, `TrialBalanceReport`, `TrialBalanceLine`, `TrialBalanceSnapshot`, `TrialBalanceSnapshotStore`, `JpaTrialBalanceSnapshotStore`
 - Liquidation audit event: `LiquidationDecisionRecorded`
@@ -104,7 +104,10 @@ Current liquidation/ADL behavior:
 - `AdlForcedExecutionService` consumes ADL plans, validates candidate quantities before mutation, force reduces selected positions, writes realized-PnL and `adl_forced_loss` ledger postings, publishes execution audit events, and uses durable execution records for command id idempotency when configured.
 - `InsuranceFundService` enqueues ADL shortfalls idempotently by `liquidationId` through `AdlQueueStore`, preserving any existing operator claim on duplicate retry/replay; Spring runtime uses `JpaAdlQueueStore` and unit tests can use `InMemoryAdlQueueStore`.
 - `InsuranceFundService.stuckAdlClaims(...)` and `GET /api/risk/adl-queue/stuck-claims` expose claimed ADL entries older than an operator threshold for alert/report wiring.
+- `GET /api/risk/adl-executions` reports recent forced-deleveraging outcomes from durable execution records when available.
+- `AdlInsuranceReconciliationService` and `GET /api/risk/adl-insurance-reconciliation` compare open ADL queue shortfalls against liquidated-position ADL/insurance coverage.
 - `AdlQueueExecutionService` consumes queued liquidation shortfalls, enforces queue owner guard when claimed, filters opposite-side candidates, ranks/plans ADL reduction, executes through `ExecuteAdlUseCase`, completes fully covered queue entries, keeps remaining notional on partial execution, and returns `ADL_NO_ELIGIBLE_CANDIDATES` without consuming the queue when no candidate can be reduced.
+- Operator retry steps for stuck claims, partial executions, and no-candidate outcomes are documented in `docs/en/adl-operator-runbook.md` and `docs/zh-TW/adl-operator-runbook.md`.
 - `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:
