@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
+import com.example.exchange.domain.model.dto.TurnoverExportReport;
 import com.example.exchange.domain.model.dto.TurnoverSummary;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.repository.TurnoverStore;
@@ -25,14 +26,13 @@ public class TurnoverService {
         if (trade == null || trade.orderId() == null || trade.symbol() == null) {
             return;
         }
-        // clientOrderId 先作為 strategy 維度；後續 API 可獨立傳 strategyId / marketMakerId。
         TurnoverRecord record = new TurnoverRecord(
                 null,
                 trade.uid(),
                 String.valueOf(trade.uid()),
                 trade.symbol().code(),
-                order == null ? null : order.getClientOrderId(),
-                null,
+                strategyId(order),
+                order == null ? null : order.getMarketMakerId(),
                 trade.orderId(),
                 trade.matchId(),
                 trade.seq(),
@@ -108,6 +108,68 @@ public class TurnoverService {
                 .toList();
     }
 
+    public TurnoverExportReport export(
+            long uid,
+            String symbol,
+            String strategyId,
+            String marketMakerId,
+            String matchId,
+            int limit
+    ) {
+        List<TurnoverRecord> filtered = records(uid, symbol, strategyId, marketMakerId, matchId, limit);
+        TurnoverSummary summary = summarize(uid, filtered);
+        TurnoverSummary scopedSummary = new TurnoverSummary(
+                uid,
+                normalize(symbol),
+                normalize(strategyId),
+                normalize(marketMakerId),
+                summary.tradeCount(),
+                summary.quantity(),
+                summary.notional()
+        );
+        List<String> headers = List.of(
+                "id",
+                "uid",
+                "accountId",
+                "symbol",
+                "strategyId",
+                "marketMakerId",
+                "orderId",
+                "matchId",
+                "tradeSeq",
+                "quantity",
+                "price",
+                "notional",
+                "tradedAt",
+                "createdAt"
+        );
+        List<List<String>> rows = filtered.stream()
+                .map(record -> List.of(
+                        record.id().toString(),
+                        String.valueOf(record.uid()),
+                        value(record.accountId()),
+                        value(record.symbol()),
+                        value(record.strategyId()),
+                        value(record.marketMakerId()),
+                        value(record.orderId()),
+                        value(record.matchId()),
+                        String.valueOf(record.tradeSeq()),
+                        record.quantity().toPlainString(),
+                        record.price().toPlainString(),
+                        record.notional().toPlainString(),
+                        value(record.tradedAt()),
+                        value(record.createdAt())
+                ))
+                .toList();
+        return new TurnoverExportReport(
+                "turnover-" + uid + ".csv",
+                java.time.Instant.now(),
+                scopedSummary,
+                headers,
+                rows
+        );
+    }
+
     private static TurnoverSummary summarize(long uid, List<TurnoverRecord> records) {
         BigDecimal quantity = BigDecimal.ZERO;
         BigDecimal notional = BigDecimal.ZERO;
@@ -123,5 +185,15 @@ public class TurnoverService {
 
     private static String normalize(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static String value(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private static String strategyId(Order order) {
+        if (order == null) return null;
+        String explicit = normalize(order.getStrategyId());
+        return explicit == null ? normalize(order.getClientOrderId()) : explicit;
     }
 }

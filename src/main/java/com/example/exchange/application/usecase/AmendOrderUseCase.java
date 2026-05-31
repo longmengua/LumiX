@@ -179,6 +179,8 @@ public class AmendOrderUseCase {
                 .marginMode(order.getMarginMode())
                 .reservedAmount(order.getReservedAmount())
                 .clientOrderId(newClientOrderId)
+                .strategyId(order.getStrategyId())
+                .marketMakerId(order.getMarketMakerId())
                 .status(order.getExecutedQty().signum() > 0 ? Order.Status.PARTIALLY_FILLED : Order.Status.NEW)
                 .ctime(order.getCtime())
                 .build();

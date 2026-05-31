@@ -4,7 +4,7 @@
 
 目前重點：
 - Market data：`DepthDelta`、`MarketTicker`、`MarketKline`、`TradeTapeItem`。
-- 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`AdlInsuranceReconciliationReport`、`AdlInsuranceReconciliationIssue`、`BonusCreditGrant`、`BonusCreditReport`、`BonusCreditCampaignReport`、`TurnoverRecord`、`TurnoverSummary`、`TurnoverReconciliationReport`。
+- 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`AdlInsuranceReconciliationReport`、`AdlInsuranceReconciliationIssue`、`BonusCreditGrant`、`BonusCreditReport`、`BonusCreditCampaignReport`、`BonusCreditCampaignExport`、`TurnoverRecord`、`TurnoverSummary`、`TurnoverExportReport`、`TurnoverReconciliationReport`；`TurnoverReconciliationIssue` 會攜帶 order tag 與 ledger-ref presence 方便營運對帳。
 - Snapshot read model：account risk snapshots、reconciliation reports、wallet ledger replay。
 - Finance read model：`TrialBalanceReport`、`TrialBalanceLine`、`FinanceDailyReport`、`FinanceDailyReportLine`、`LedgerReplayComparisonReport`、`LedgerReplayComparisonIssue`。
 - Market maker / hedging：`MarketMakerProfile`、`MarketMakerRiskLimit`、`MarketMakerExposure`、`MarketMakerQuoteCommand`、`MarketMakerQuoteDecision`、`MarketMakerQuoteLifecycleReport`、`MarketMakerQuoteState`（含 per-side version / replaced order metadata）、`MarketMakerQuoteReconciliationReport`、`MarketMakerQuoteReconciliationIssue`、`HedgeOrderRequest`、`HedgeOrderResult`（含 retryable 錯誤分類）、`HedgeVenueIdempotencyRecord`、`HedgeVenueIdempotencyReport`、`HedgeVenueIdempotencyIssue`、`HedgeDecision`、`HedgeStrategyDecision`、`HedgeExecutionReport`、`HedgeDecisionAuditRecord`（含 internal trade ref）、`HedgeVenueFillMessage`、`HedgeFillRecord`（含 ledger ref）、`HedgeReconciliationReport`、`HedgeReconciliationIssue`。

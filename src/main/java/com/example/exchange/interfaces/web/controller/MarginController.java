@@ -14,9 +14,11 @@ import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.application.usecase.TransferMarginUseCase;
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
 import com.example.exchange.domain.model.dto.BonusCreditCampaignReport;
+import com.example.exchange.domain.model.dto.BonusCreditCampaignExport;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.model.dto.TransferReconciliationProjection;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
+import com.example.exchange.domain.model.dto.TurnoverExportReport;
 import com.example.exchange.domain.model.dto.TurnoverReconciliationBatchReport;
 import com.example.exchange.domain.model.dto.TurnoverReconciliationReport;
 import com.example.exchange.domain.model.dto.TurnoverSummary;
@@ -123,6 +125,14 @@ public class MarginController {
         return ApiResponse.ok(bonusCreditService.campaignReport(campaignId, asset));
     }
 
+    @GetMapping("/bonus-credit/campaign-export")
+    public ApiResponse<BonusCreditCampaignExport> bonusCreditCampaignExport(
+            @RequestParam String campaignId,
+            @RequestParam(required = false) String asset
+    ) {
+        return ApiResponse.ok(bonusCreditService.campaignExport(campaignId, asset));
+    }
+
     @PostMapping("/bonus-credit/clawback")
     public ApiResponse<BigDecimal> clawbackBonusCredit(
             @Valid @RequestBody BonusCreditClawbackRequest request
@@ -156,6 +166,18 @@ public class MarginController {
             @RequestParam(defaultValue = "100") int limit
     ) {
         return ApiResponse.ok(turnoverService.records(uid, symbol, strategyId, marketMakerId, matchId, limit));
+    }
+
+    @GetMapping("/turnover/export")
+    public ApiResponse<TurnoverExportReport> turnoverExport(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol,
+            @RequestParam(required = false) String strategyId,
+            @RequestParam(required = false) String marketMakerId,
+            @RequestParam(required = false) String matchId,
+            @RequestParam(defaultValue = "500") int limit
+    ) {
+        return ApiResponse.ok(turnoverService.export(uid, symbol, strategyId, marketMakerId, matchId, limit));
     }
 
     @GetMapping("/turnover/reconciliation")

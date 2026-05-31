@@ -8,8 +8,8 @@
 - `RiskService`：pre-trade checks、uid+symbol order-entry frequency limit、reserve、amend reserve reconciliation。
 - `WalletLedgerService` / `MarginService`：帳務 posting、入出金狀態機、callback 冪等、manual-review owner、transfer reconciliation projection、margin transfer。
 - `WalletLedgerReplayService`：由 durable ledger replay 帳戶狀態，並提供 account/replay/delta 結構化 comparison。
-- `BonusCreditService`：體驗金 grant 批次、到期 FIFO 消耗、consume eligibility gate、expiry scanner orchestration、用戶/活動 grant state report、營運 clawback 與 campaign auto-clawback policy。
-- `TurnoverService` / `TurnoverReconciliationService`：由已處理成交事件建立 turnover read model，提供 uid/symbol/strategy/market-maker/match summary、drill-down query 與 match-level trade-tape reconciliation，供活動門檻與 trade/ledger 對帳。
+- `BonusCreditService`：體驗金 grant 批次、到期 FIFO 消耗、consume eligibility gate、expiry scanner orchestration、用戶/活動 grant state report、活動 export、營運 clawback 與 campaign auto-clawback policy。
+- `TurnoverService` / `TurnoverReconciliationService`：由已處理成交事件建立 turnover read model，提供 uid/symbol/strategy/market-maker/match summary、drill-down/export query 與帶 order tag / ledger ref 的 trade-tape reconciliation，供活動門檻與 trade/ledger 對帳。
 - `AccountRiskService` / `AccountRiskSnapshotService` / `MarkPriceOracleService` / `ReconciliationService`：帳戶風險快照、snapshot 持久化、mark/index price baseline 與對帳 baseline。
 - `TrialBalanceService`：由 wallet ledger postings 產生 asset/account-code trial balance。
 - `FinanceReportService`：由 durable wallet ledger journal 產生 UTC daily finance report，依 reason/asset/account-code 彙總 debit/credit。

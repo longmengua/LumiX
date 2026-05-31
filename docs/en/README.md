@@ -261,6 +261,8 @@ src/main/java/com/example/exchange
 - `POST /api/margin/risk/snapshots`
 - `GET /api/margin/risk/snapshot/latest?uid=1`
 - `GET /api/margin/risk/snapshots?uid=1&limit=30`
+- `GET /api/margin/bonus-credit/campaign-export?campaignId=camp-1&asset=USDT`
+- `GET /api/margin/turnover/export?uid=1&symbol=BTCUSDT&strategyId=strategy-1&marketMakerId=mm-1`
 - `POST /api/order/place`
 - `PATCH /api/order/{orderId}`
 - `POST /api/order/{orderId}/replace`

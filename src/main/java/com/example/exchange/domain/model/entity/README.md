@@ -5,6 +5,7 @@
 目前重點：
 - 內部交易所：`Order`、`Account`、`Position`、`Symbol`、`SymbolConfig`（含 risk tiers）。
 - 帳務：`WalletLedgerEntry`、`WalletLedgerPosting`、`WalletTransfer`、`BonusCreditGrantRecord`、`TurnoverRecordEntity`。
+- 訂單 lifecycle：`OrderLifecycleEventRecord`、`OrderLifecycleProjection` 保存 latest order state 與 strategy/market-maker tags。
 - 做市商：`MarketMakerProfileRecord`、`MarketMakerRiskLimitRecord`、`MarketMakerQuoteStateRecord`、`HedgeDecisionAuditRecordEntity`（含 internal trade ref）、`HedgeFillRecordEntity`（含 ledger ref）。
 - 風控 read model：`AccountRiskSnapshotRecord`、`AdlExecutionRecordEntity`。
 - Market data：`MarketDataSequenceCheckpointRecord`、`MarketDataDepthDeltaRecord`、`MarketDataTradeTapeRecord`、`MarketDataTickerRecord`、`MarketDataKlineRecord`。

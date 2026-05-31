@@ -18,8 +18,8 @@ Application service tests。
 | `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint 單調遞增、duplicate/out-of-order ignore、depth version recovery、depth delta backfill、durable trade tape restart read、ticker latest-state restart read 與 1m kline restart read。 |
 | `MarketDataRetentionServiceTest` | Market-data depth delta、trade tape、1m kline retention cutoff 與 zero-window skip 行為。 |
 | `WalletLedgerServiceTest` | 體驗金 grant、consume、expire、clawback 與 real cash 隔離。 |
-| `BonusCreditServiceTest` | 體驗金批次 remaining、到期 FIFO consume 與 expiry scanner。 |
-| `TurnoverServiceTest` / `TurnoverReconciliationServiceTest` | 成交事件寫入 turnover fact、match-level summary、drill-down 與 trade-tape reconciliation。 |
+| `BonusCreditServiceTest` | 體驗金批次 remaining、到期 FIFO consume、expiry scanner 與 campaign export rows。 |
+| `TurnoverServiceTest` / `TurnoverReconciliationServiceTest` | 成交事件寫入 turnover fact、explicit/fallback strategy tags、match-level summary、drill-down/export 與帶 ledger-ref flag 的 trade-tape reconciliation。 |
 | `MarkPriceOracleServiceTest` | oracle 設定載入、手動更新、stale quote 拒絕。 |
 | `AccountRiskSnapshotServiceTest` | 單一帳戶 risk snapshot 持久化、account/open-position index 掃描。 |
 | `MatchingRecoveryServiceTest` | 撮合 worker startup/takeover recovery，從 snapshot + command log replay 並保存 validation report。 |

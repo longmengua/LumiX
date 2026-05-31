@@ -127,6 +127,10 @@ public record OrderInfoResponse(
          */
         String clientOrderId,
 
+        String strategyId,
+
+        String marketMakerId,
+
         /**
          * 訂單狀態
          * - 例如：NEW、PARTIALLY_FILLED、FILLED、CANCELED、REJECTED、EXPIRED

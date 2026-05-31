@@ -38,6 +38,8 @@ class TurnoverServiceTest {
                 .side(OrderSide.BUY)
                 .type(OrderType.LIMIT)
                 .clientOrderId("strategy-a")
+                .strategyId("strategy-explicit")
+                .marketMakerId("mm-explicit")
                 .build();
         TradeExecuted trade = new TradeExecuted(
                 41,
@@ -61,12 +63,35 @@ class TurnoverServiceTest {
         assertThat(record.uid()).isEqualTo(41);
         assertThat(record.accountId()).isEqualTo("41");
         assertThat(record.symbol()).isEqualTo("BTCUSDT");
-        assertThat(record.strategyId()).isEqualTo("strategy-a");
+        assertThat(record.strategyId()).isEqualTo("strategy-explicit");
+        assertThat(record.marketMakerId()).isEqualTo("mm-explicit");
         assertThat(record.matchId()).isEqualTo("match-77");
         assertThat(record.quantity()).isEqualByComparingTo("2.500");
         assertThat(record.notional()).isEqualByComparingTo("250.00000");
         assertThat(summary.tradeCount()).isEqualTo(1);
         assertThat(summary.notional()).isEqualByComparingTo("250.00000");
+    }
+
+    @Test
+    @DisplayName("recordTrade 沒有一等 strategyId 時才 fallback 到 clientOrderId")
+    void recordTradeFallsBackToClientOrderIdWhenStrategyTagMissing() {
+        MemTurnoverStore store = new MemTurnoverStore();
+        TurnoverService service = new TurnoverService(store);
+        UUID orderId = UUID.randomUUID();
+        Symbol symbol = Symbol.builder().base("BTC").quote("USDT").priceScale(2).qtyScale(3).build();
+        Order order = Order.builder()
+                .id(orderId)
+                .uid(42)
+                .symbol(symbol)
+                .side(OrderSide.BUY)
+                .type(OrderType.LIMIT)
+                .clientOrderId("client-strategy")
+                .build();
+
+        service.recordTrade(trade(42, symbol, orderId, "match-fallback", "100"), order);
+
+        assertThat(store.records.getFirst().strategyId()).isEqualTo("client-strategy");
+        assertThat(store.records.getFirst().marketMakerId()).isNull();
     }
 
     @Test
@@ -124,6 +149,24 @@ class TurnoverServiceTest {
 
         assertThat(records).hasSize(1);
         assertThat(records.getFirst().matchId()).isEqualTo("match-a");
+    }
+
+    @Test
+    @DisplayName("export 產生 turnover summary 與可轉 CSV 的 rows")
+    void exportReturnsSummaryAndRowsForOperationalDimensions() {
+        MemTurnoverStore store = new MemTurnoverStore();
+        TurnoverService service = new TurnoverService(store);
+        store.append(record(72, "BTCUSDT", "campaign-a", "mm-1", "match-a", "1", "100"));
+        store.append(record(72, "BTCUSDT", "campaign-a", "mm-1", "match-b", "2", "100"));
+        store.append(record(72, "BTCUSDT", "campaign-b", "mm-1", "match-c", "3", "100"));
+
+        var export = service.export(72, "BTCUSDT", "campaign-a", "mm-1", null, 100);
+
+        assertThat(export.filename()).isEqualTo("turnover-72.csv");
+        assertThat(export.summary().tradeCount()).isEqualTo(2);
+        assertThat(export.summary().notional()).isEqualByComparingTo("300");
+        assertThat(export.headers()).contains("strategyId", "marketMakerId", "notional");
+        assertThat(export.rows()).hasSize(2);
     }
 
     private static TradeExecuted trade(long uid, Symbol symbol, UUID orderId, String matchId, String price) {

@@ -49,6 +49,8 @@ class OrderLifecycleProjectionServiceTest {
         assertThat(history).extracting(OrderLifecycleEventRecord::getSchemaVersion)
                 .containsOnly(OrderLifecycleProjectionService.SCHEMA_VERSION);
         assertThat(projection.getOrderId()).isEqualTo(orderId.toString());
+        assertThat(projection.getStrategyId()).isEqualTo("strategy-42");
+        assertThat(projection.getMarketMakerId()).isEqualTo("mm-42");
         assertThat(projection.getLatestStage()).isEqualTo("FILLED");
         assertThat(projection.getStatus()).isEqualTo("FILLED");
         assertThat(projection.getExecutedQty()).isEqualByComparingTo("1.000");
@@ -91,6 +93,8 @@ class OrderLifecycleProjectionServiceTest {
                 42,
                 Symbol.builder().base("BTC").quote("USDT").priceScale(2).qtyScale(3).build(),
                 "client-42",
+                "strategy-42",
+                "mm-42",
                 stage,
                 status,
                 status == Order.Status.CANCELED ? "USER_REQUEST" : null,

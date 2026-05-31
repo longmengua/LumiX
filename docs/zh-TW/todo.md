@@ -19,10 +19,10 @@
 - [ ] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
 - [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
   - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks、forced-execution service、持倉減倉、ledger postings、audit event、durable execution summary/idempotency records、recent execution report API、durable ADL queue store、依 `liquidationId` 冪等的 ADL queue enqueue、queue-to-execution orchestration、operator claim/release guard、stuck-claim operator report 與 runbook、含 restart coverage 的 partial-execution retry semantics、no-eligible-candidate retry semantics，以及 ADL insurance/shortfall reconciliation。
-- [ ] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
-  - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking、預設關閉的 expiry scanner、可設定 consume eligibility gate、預設關閉的 campaign auto-clawback policy、用戶/活動體驗金 report APIs 與營運 clawback API。Remaining：可匯出的完整活動/流水報表仍待補。
-- [ ] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
-  - Baseline 已完成：已處理成交會寫 durable turnover records，並有 uid/symbol/strategy/market-maker/match 維度的 turnover summary、限量 drill-down、match-level trade-tape reconciliation APIs，以及預設關閉的 recent-window uid+match trade tape / ledger-ref reconciliation；正式 strategy/market-maker 下單欄位與可匯出報表仍待補。
+- [x] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
+  - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking、預設關閉的 expiry scanner、可設定 consume eligibility gate、預設關閉的 campaign auto-clawback policy、用戶/活動體驗金 report APIs、可匯出的 campaign rows 與營運 clawback API。
+- [x] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
+  - Baseline 已完成：已處理成交會寫 durable turnover records，strategy/market-maker 一等 order tags 會通過下單與 lifecycle projection，並有 uid/symbol/strategy/market-maker/match 維度的 turnover summary、限量 drill-down、export rows、match-level trade-tape reconciliation APIs，以及預設關閉的 recent-window uid+match trade tape / ledger-ref reconciliation。
 - [ ] 將 ledger reconciliation 強化成可審計帳本：immutable journal、trial balance、replay comparison、exception workflow 與財務報表。
   - Baseline 已完成：durable journal hash-chain tamper-evidence、trial-balance 計算與 daily snapshot persistence、結構化 replay comparison、reconciliation issue workflow 欄位/後台 API、workflow audit events、按 reason/asset/account code 彙總 durable ledger 的 daily finance report、fee/funding/liquidation/bonus/transfer category exports、ledger archive/delete eligibility checks，以及 ledger archive manifest checksums；exporter jobs 仍待補。
 - [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。

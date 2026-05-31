@@ -147,6 +147,8 @@ public class PlaceOrderUseCase {
                 .leverage(cmd.leverage())
                 .marginMode(marginMode)
                 .clientOrderId(cmd.clientOrderId())
+                .strategyId(cmd.strategyId())
+                .marketMakerId(cmd.marketMakerId())
                 .build();
 
         publisher.publish(OrderLifecycleEvent.created(order));

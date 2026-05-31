@@ -25,9 +25,9 @@ Remaining production TODO:
 
 - API: `interfaces.web.controller.MarginController`
 - Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`, `FinanceReportService`
-- Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`, `BonusCreditReport`, `BonusCreditCampaignReport`, `BonusCreditProperties`
+- Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`, `BonusCreditReport`, `BonusCreditCampaignReport`, `BonusCreditCampaignExport`, `BonusCreditProperties`
 - Bonus expiry scheduler: `application.scheduler.BonusCreditExpiryScheduler`
-- Turnover: `TurnoverService`, `TurnoverReconciliationService`, `TurnoverStore`, `TurnoverSummary`, `TurnoverReconciliationReport`
+- Turnover: `TurnoverService`, `TurnoverReconciliationService`, `TurnoverStore`, `TurnoverSummary`, `TurnoverExportReport`, `TurnoverReconciliationReport`
 - Hot state: `infra.redis.RedisAccountRepository`, `RedisWalletLedgerRepository`, `RedisWalletTransferRepository`
 - Durable journal: `domain.repository.jpa.JpaWalletLedgerJournal`
 - Turnover store: `domain.repository.jpa.JpaTurnoverStore`
@@ -45,10 +45,10 @@ Ledger concerns:
 - Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.
 - `bonus-credit.eligibility` can gate consume by allowed/blocked symbol, allowed order type, and allowed expense account; it is disabled by default.
 - `bonus-credit.clawback-policy` can auto-clawback a configured campaign/asset with a per-run cap; it is disabled by default.
-- `MarginController` exposes bonus-credit user report, campaign report, clawback, and turnover summary/drill-down/reconciliation APIs under `/api/margin/**`, which keeps them in the funds security classification.
-- Turnover facts are derived from processed `TradeExecuted` events and keep uid, account, symbol, strategy, market-maker, order, match, sequence, quantity, price, and notional dimensions.
-- Turnover summaries and limited record drill-downs can be queried by uid with optional symbol, strategy, market-maker, and match filters.
-- Turnover reconciliation can compare uid + matchId turnover records with trade tape order/price/qty/notional facts and, when a durable wallet ledger journal is available, flags missing same-match ledger refs.
+- `MarginController` exposes bonus-credit user report, campaign report/export, clawback, and turnover summary/drill-down/export/reconciliation APIs under `/api/margin/**`, which keeps them in the funds security classification.
+- Turnover facts are derived from processed `TradeExecuted` events and keep uid, account, symbol, first-class order strategy/market-maker tags, order, match, sequence, quantity, price, and notional dimensions.
+- Turnover summaries, limited record drill-downs, and export rows can be queried by uid with optional symbol, strategy, market-maker, and match filters.
+- Turnover reconciliation can compare uid + matchId turnover records with trade tape order/price/qty/notional facts, report order strategy/market-maker tags, and, when a durable wallet ledger journal is available, flags missing same-match ledger refs.
 - `TurnoverReconciliationScheduler` can run disabled-by-default recent-window batch reconciliation with `turnover.reconciliation.*` settings.
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
 - Finance daily report summarizes durable ledger journal postings by reason, asset, and account code for a UTC report date.
@@ -64,8 +64,7 @@ Ledger concerns:
 
 Remaining production TODO:
 - Stronger database constraints, audit retention, replay validation.
-- Bonus-credit exportable campaign controls and broader turnover reporting controls.
-- Paged/exportable turnover reports and stronger alert delivery for scheduled reconciliation.
+- Stronger alert delivery and worker locking for scheduled turnover reconciliation.
 - Auditable accounting book with trial balance and reconciliation exception workflow.
 - ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
 

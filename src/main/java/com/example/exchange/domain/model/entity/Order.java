@@ -201,6 +201,16 @@ public class Order {
     private String clientOrderId;
 
     /**
+     * 一等策略維度，用於流水、活動與營運報表；不再從 clientOrderId 隱含推導。
+     */
+    private String strategyId;
+
+    /**
+     * 一等做市商維度，用於區分 quote/hedge 或 LP 來源訂單的 turnover。
+     */
+    private String marketMakerId;
+
+    /**
      * 拒單原因碼
      * - 僅在 status = REJECTED 時有意義
      * - 例如：MARGIN_INSUFF、INVALID_PRICE、REDUCE_ONLY_VIOLATION
@@ -248,6 +258,8 @@ public class Order {
                 getTimeInForce().name(),
                 isReduceOnly(),
                 getClientOrderId(),
+                getStrategyId(),
+                getMarketMakerId(),
                 getStatus().name(),
                 getRejectCode(),
                 getCtime()

@@ -305,6 +305,37 @@ class BonusCreditServiceTest {
         assertThat(fixtures.walletLedgerService.bonusCreditBalance(71, "USDT")).isEqualByComparingTo("99.00");
     }
 
+    @Test
+    @DisplayName("campaignExport 產生活動彙總與可轉 CSV 的 grant rows")
+    void campaignExportReturnsSummaryHeadersAndRows() {
+        Fixtures fixtures = fixtures("2026-05-30T00:00:00Z");
+        fixtures.service.grant(
+                72,
+                "USDT",
+                new BigDecimal("10.00"),
+                "campaign-export",
+                Instant.parse("2026-06-01T00:00:00Z"),
+                "grant-export-a"
+        );
+        fixtures.service.grant(
+                73,
+                "USDT",
+                new BigDecimal("15.00"),
+                "campaign-export",
+                Instant.parse("2026-06-02T00:00:00Z"),
+                "grant-export-b"
+        );
+
+        // 場景：營運匯出 campaign grant 明細時，要同時帶 summary、headers 與穩定欄位順序。
+        var export = fixtures.service.campaignExport("campaign-export", "usdt");
+
+        assertThat(export.filename()).isEqualTo("bonus-credit-campaign-export-USDT.csv");
+        assertThat(export.summary().totalGranted()).isEqualByComparingTo("25.00");
+        assertThat(export.headers()).contains("uid", "campaignId", "remainingAmount");
+        assertThat(export.rows()).hasSize(2);
+        assertThat(export.rows().getFirst()).contains("72", "campaign-export", "10.00");
+    }
+
     private static Fixtures fixtures(String now) {
         return fixtures(now, new BonusCreditProperties());
     }

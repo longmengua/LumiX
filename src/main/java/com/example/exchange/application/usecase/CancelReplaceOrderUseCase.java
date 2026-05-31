@@ -74,6 +74,8 @@ public class CancelReplaceOrderUseCase {
                 original.getLeverage(),
                 original.getMarginMode().name(),
                 clientOrderId,
+                original.getStrategyId(),
+                original.getMarketMakerId(),
                 original.getTimeInForce().name(),
                 original.isReduceOnly(),
                 original.isPostOnly()

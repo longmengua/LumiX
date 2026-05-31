@@ -45,6 +45,12 @@ public class OrderLifecycleProjection {
     @Column(name = "client_order_id", length = 128)
     private String clientOrderId;
 
+    @Column(name = "strategy_id", length = 128)
+    private String strategyId;
+
+    @Column(name = "market_maker_id", length = 128)
+    private String marketMakerId;
+
     @Column(name = "latest_stage", nullable = false, length = 32)
     private String latestStage;
 
@@ -85,6 +91,8 @@ public class OrderLifecycleProjection {
         uid = record.getUid();
         symbol = record.getSymbol();
         clientOrderId = record.getClientOrderId();
+        strategyId = record.getStrategyId();
+        marketMakerId = record.getMarketMakerId();
         latestStage = record.getStage();
         status = record.getStatus();
         reasonCode = record.getReasonCode();

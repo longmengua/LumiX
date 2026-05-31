@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`13/36` done.
+`18/36` done.
 
 ## Matching And Command Recovery
 
@@ -27,11 +27,11 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Bonus Credit And Turnover Reporting
 
-- [ ] Add exportable bonus-credit campaign report DTO and service method.
-- [ ] Add bonus-credit campaign export API and curl script.
-- [ ] Add turnover export API for uid/symbol/strategy/market-maker dimensions.
-- [ ] Persist first-class strategy/market-maker order tags through order placement and order projection.
-- [ ] Add turnover reconciliation report linking order tags to trade tape and ledger refs.
+- [x] Add exportable bonus-credit campaign report DTO and service method.
+- [x] Add bonus-credit campaign export API and curl script.
+- [x] Add turnover export API for uid/symbol/strategy/market-maker dimensions.
+- [x] Persist first-class strategy/market-maker order tags through order placement and order projection.
+- [x] Add turnover reconciliation report linking order tags to trade tape and ledger refs.
 
 ## Auditable Ledger And Finance
 

@@ -22,6 +22,8 @@ public record PlaceOrderCommand(
         int leverage,       // 槓桿倍數（1~125）
         String marginMode,   // "CROSS" / "ISOLATED"
         String clientOrderId,
+        String strategyId,
+        String marketMakerId,
         String timeInForce,
         boolean reduceOnly,
         boolean postOnly

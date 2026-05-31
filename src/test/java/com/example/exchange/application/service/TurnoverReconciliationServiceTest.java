@@ -83,6 +83,9 @@ class TurnoverReconciliationServiceTest {
 
         assertThat(report.issueCount()).isEqualTo(1);
         assertThat(report.issues().getFirst().code()).isEqualTo("TURNOVER_LEDGER_REF_MISSING");
+        assertThat(report.issues().getFirst().strategyId()).isEqualTo("strategy-a");
+        assertThat(report.issues().getFirst().marketMakerId()).isEqualTo("mm-1");
+        assertThat(report.issues().getFirst().ledgerRefPresent()).isFalse();
         assertThat(report.issues().getFirst().turnoverNotional()).isEqualByComparingTo("200");
     }
 

@@ -60,6 +60,8 @@ public class UseCaseMarketMakerQuoteOrderGateway implements MarketMakerQuoteOrde
                 1,
                 "CROSS",
                 clientOrderId(command, side),
+                command.refId(),
+                command.marketMakerId(),
                 "GTC",
                 false,
                 true

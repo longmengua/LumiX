@@ -882,6 +882,8 @@ class OrderAccountingIntegrationTest {
                 20,
                 "CROSS",
                 null,
+                null,
+                null,
                 "GTC",
                 false,
                 false

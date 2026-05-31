@@ -71,6 +71,10 @@ public class PlaceOrderRequest {
 
     private String clientOrderId;
 
+    private String strategyId;
+
+    private String marketMakerId;
+
     private String timeInForce;
 
     private Boolean reduceOnly;
@@ -96,6 +100,8 @@ public class PlaceOrderRequest {
             getLeverage(),
             getMarginMode(),
             getClientOrderId(),
+            getStrategyId(),
+            getMarketMakerId(),
             getTimeInForce(),
             Boolean.TRUE.equals(getReduceOnly()),
             Boolean.TRUE.equals(getPostOnly())

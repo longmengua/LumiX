@@ -51,6 +51,12 @@ public class OrderLifecycleEventRecord {
     @Column(name = "client_order_id", length = 128)
     private String clientOrderId;
 
+    @Column(name = "strategy_id", length = 128)
+    private String strategyId;
+
+    @Column(name = "market_maker_id", length = 128)
+    private String marketMakerId;
+
     @Column(name = "stage", nullable = false, length = 32)
     private String stage;
 
@@ -88,6 +94,8 @@ public class OrderLifecycleEventRecord {
         record.setUid(event.uid());
         record.setSymbol(event.symbol() == null ? "UNKNOWN" : event.symbol().code());
         record.setClientOrderId(blankToNull(event.clientOrderId()));
+        record.setStrategyId(blankToNull(event.strategyId()));
+        record.setMarketMakerId(blankToNull(event.marketMakerId()));
         record.setStage(event.stage().name());
         record.setStatus(event.status().name());
         record.setReasonCode(blankToNull(event.reasonCode()));

@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.BonusCreditGrant;
 import com.example.exchange.domain.model.dto.BonusCreditCampaignReport;
+import com.example.exchange.domain.model.dto.BonusCreditCampaignExport;
 import com.example.exchange.domain.model.dto.BonusCreditReport;
 import com.example.exchange.domain.repository.BonusCreditGrantStore;
 import com.example.exchange.infra.config.BonusCreditProperties;
@@ -291,6 +292,43 @@ public class BonusCreditService {
         );
     }
 
+    public BonusCreditCampaignExport campaignExport(String campaignId, String asset) {
+        BonusCreditCampaignReport report = campaignReport(campaignId, asset);
+        List<String> headers = List.of(
+                "grantId",
+                "uid",
+                "asset",
+                "campaignId",
+                "status",
+                "originalAmount",
+                "remainingAmount",
+                "grantedAt",
+                "expiresAt",
+                "updatedAt"
+        );
+        List<List<String>> rows = report.grants().stream()
+                .map(grant -> List.of(
+                        grant.id().toString(),
+                        String.valueOf(grant.uid()),
+                        value(grant.asset()),
+                        value(grant.campaignId()),
+                        value(grant.status()),
+                        grant.originalAmount().toPlainString(),
+                        grant.remainingAmount().toPlainString(),
+                        value(grant.grantedAt()),
+                        value(grant.expiresAt()),
+                        value(grant.updatedAt())
+                ))
+                .toList();
+        return new BonusCreditCampaignExport(
+                "bonus-credit-" + report.campaignId() + "-" + report.asset() + ".csv",
+                clock.instant(),
+                report,
+                headers,
+                rows
+        );
+    }
+
     private static String consumeRef(String refId, BonusCreditGrant grant) {
         String prefix = refId == null || refId.isBlank() ? "bonus-consume" : refId;
         return prefix + ":" + grant.id();
@@ -308,6 +346,10 @@ public class BonusCreditService {
     private static String normalizeAsset(String asset) {
         if (asset == null || asset.isBlank()) return null;
         return asset.trim().toUpperCase();
+    }
+
+    private static String value(Object value) {
+        return value == null ? "" : String.valueOf(value);
     }
 
     private static boolean allowedByList(List<String> allowedValues, String value) {

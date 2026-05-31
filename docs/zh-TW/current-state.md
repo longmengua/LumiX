@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 31 | 12 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 33 | 10 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 8 | 14 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 39 | 31 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 41 | 29 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -56,8 +56,8 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - Market data depth delta 已有 durable sequence/checksum checkpoints、啟動時恢復最新 depth sequence、durable depth delta records，以及依 known version 查詢後續 deltas 的 reconnect backfill endpoint。Trade tape 也有 restart-safe durable baseline。
 - 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
-- 體驗金已用 `USER_BONUS_AVAILABLE` 拆出 grant、consume、expire、clawback ledger postings，且不會改動真實現金帳戶餘額；目前也有 grant 批次 expiry/remaining tracking、可設定 consume eligibility gate、用戶/活動 report APIs、營運 clawback API，以及預設關閉的 campaign auto-clawback scheduler baseline。
-- 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、strategy、market-maker、order、match、sequence、quantity、price、notional 維度，並可用 summary / drill-down APIs 依 uid/symbol/strategy/market-maker/match 查詢，也可做 match-level turnover-vs-trade-tape reconciliation。
+- 體驗金已用 `USER_BONUS_AVAILABLE` 拆出 grant、consume、expire、clawback ledger postings，且不會改動真實現金帳戶餘額；目前也有 grant 批次 expiry/remaining tracking、可設定 consume eligibility gate、用戶/活動 report/export APIs、營運 clawback API，以及預設關閉的 campaign auto-clawback scheduler baseline。
+- 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、一等 order strategy/market-maker tags、order、match、sequence、quantity、price、notional 維度，並可用 summary / drill-down / export APIs 依 uid/symbol/strategy/market-maker/match 查詢，也可做 tag-aware trade/ledger reconciliation。
 - Trial balance 已可從 wallet ledger postings 依 asset/account code 計算。
 - 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review；入金 callback 可用 `externalRef` 冪等 replay，manual-review transfer 可被 owner claim，transfer reconciliation projection 可用 ledger ref 比對每筆 transfer。
 - 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、uid+symbol order-entry frequency limits、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
@@ -75,7 +75,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 - Production worker routing 已有 production deployment switch sequence、readiness inspection、rollback sequence 與聚焦 smoke verification。單 symbol sequencer 目前仍以 in-process engine 執行，因此更完整的 disaster recovery 與多進程營運強化仍未完成。
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
-- ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金 consume eligibility gate、體驗金到期 scanner 與 campaign auto-clawback scheduler baseline、體驗金用戶/活動 report 與 clawback APIs、流水 facts、流水 summary/drill-down queries、match-level turnover-vs-trade-tape reconciliation、預設關閉的 recent-window 流水 trade/ledger-ref reconciliation 與 replay path；audit retention、更深入 replay validation、可匯出活動報表與營運控制仍未完成。
+- ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金 consume eligibility gate、體驗金到期 scanner 與 campaign auto-clawback scheduler baseline、體驗金用戶/活動 report/export 與 clawback APIs、流水 facts、一等 strategy/market-maker order tags、流水 summary/drill-down/export queries、match-level turnover-vs-trade-tape reconciliation、預設關閉的 recent-window 流水 trade/ledger-ref reconciliation 與 replay path；audit retention、更深入 replay validation 與更完整營運控制仍未完成。
 - funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。liquidation scanning 可把 open positions 透過 oracle-based liquidation routing 處理，並具備 halt / manual-review controls、batch limit、per-position failure isolation 與 decision audit events。production feed redundancy、price clamp、stuck claim 的 alert-backend delivery 與 production insurance-fund capital movement records 仍未完成。
 - reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、durable ledger hash-chain tamper-evidence、trial-balance 計算與 daily snapshot persistence、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API、workflow audit events、durable-ledger daily finance report baseline、fee/funding/liquidation/bonus/transfer finance category exports，以及 ledger archive/delete eligibility checks；archive exporter jobs 仍未完成。
 - 做市商對沖已有 durable profile/risk-limit storage、profile admin API、bounded hedge fill query API、venue fill callback ingestion、venue fill idempotent replay 與可選 HMAC/timestamp verification、manual 與預設關閉的 scheduled hedge execution API 且限制安全 ref prefix、durable scheduled-worker lock、operator approval token gate、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、enabled-profile batch 共用的 per-run execution route/notional cap policy、quote command validation、stale quote cleanup、post-only internal order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage 與 quote/open-order reconciliation baseline、hedge venue adapter contract、real venue signed-request/lookup skeleton、uncertain submit reconciliation 的 venue outcome lookup contract、retryable venue result classification、durable refId idempotency claim/result storage、未解 hedge venue idempotency 營運報告與 reconcile trigger、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、含 internal trade 與 ledger refs 的 durable hedge decision/fill audit trails、decision-vs-fill hedge reconciliation，以及 trade/ledger ref issue reporting；real venue HTTP transport 與自動 quote reconciliation repair job 仍未完成。
