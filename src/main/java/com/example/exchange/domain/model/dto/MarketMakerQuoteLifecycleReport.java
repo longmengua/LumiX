@@ -7,6 +7,7 @@ import java.util.UUID;
 
 public record MarketMakerQuoteLifecycleReport(
         MarketMakerQuoteDecision decision,
+        int canceledCount,
         int placedCount,
         UUID bidOrderId,
         UUID askOrderId

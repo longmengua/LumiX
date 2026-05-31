@@ -4,15 +4,18 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.application.command.PlaceOrderCommand;
+import com.example.exchange.application.usecase.CancelOrderUseCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 @Component
@@ -20,6 +23,25 @@ import java.util.UUID;
 public class UseCaseMarketMakerQuoteOrderGateway implements MarketMakerQuoteOrderGateway {
 
     private final PlaceOrderUseCase placeOrderUseCase;
+    private final CancelOrderUseCase cancelOrderUseCase;
+    private final OrderRepository orderRepository;
+
+    @Override
+    public int cancelOpenQuoteOrders(MarketMakerQuoteCommand command) {
+        String prefix = quoteClientOrderPrefix(command);
+        List<Order> staleQuoteOrders = orderRepository.findOpenOrders(command.uid(), command.symbol()).stream()
+                .filter(order -> order.getClientOrderId() != null)
+                .filter(order -> order.getClientOrderId().startsWith(prefix))
+                .toList();
+
+        int canceled = 0;
+        for (Order order : staleQuoteOrders) {
+            if (cancelOrderUseCase.handle(order.getId())) {
+                canceled++;
+            }
+        }
+        return canceled;
+    }
 
     @Override
     public UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side) {
@@ -56,6 +78,10 @@ public class UseCaseMarketMakerQuoteOrderGateway implements MarketMakerQuoteOrde
         String ref = command.refId() == null || command.refId().isBlank()
                 ? "quote"
                 : command.refId().trim();
-        return "mmq:" + command.marketMakerId().trim() + ":" + ref + ":" + side.name().toLowerCase();
+        return quoteClientOrderPrefix(command) + ref + ":" + side.name().toLowerCase();
+    }
+
+    private static String quoteClientOrderPrefix(MarketMakerQuoteCommand command) {
+        return "mmq:" + command.marketMakerId().trim() + ":";
     }
 }

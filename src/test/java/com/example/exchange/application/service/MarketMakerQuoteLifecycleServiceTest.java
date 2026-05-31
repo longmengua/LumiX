@@ -36,6 +36,7 @@ class MarketMakerQuoteLifecycleServiceTest {
         MarketMakerQuoteLifecycleReport report = fixture.service.placeQuote(quote("99.00", "101.00"));
 
         assertThat(report.decision().accepted()).isTrue();
+        assertThat(report.canceledCount()).isZero();
         assertThat(report.placedCount()).isEqualTo(2);
         assertThat(report.bidOrderId()).isNotNull();
         assertThat(report.askOrderId()).isNotNull();
@@ -55,8 +56,27 @@ class MarketMakerQuoteLifecycleServiceTest {
 
         assertThat(report.decision().accepted()).isFalse();
         assertThat(report.decision().reason()).isEqualTo("KILL_SWITCH_ENABLED");
+        assertThat(report.canceledCount()).isZero();
         assertThat(report.placedCount()).isZero();
         assertThat(fixture.gateway.requests).isEmpty();
+    }
+
+    @Test
+    @DisplayName("placeQuote 會先撤同一做市商同 symbol 的舊 quote orders 再掛 replacement")
+    void placeQuoteCancelsStaleQuoteOrdersBeforeReplacement() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false));
+        fixture.gateway.cancelCount = 2;
+
+        // 流程：新的 quote accepted 時，先清掉舊 bid/ask quote，避免 stale quote 留在 book 上。
+        MarketMakerQuoteLifecycleReport report = fixture.service.placeQuote(quote("100.00", "102.00"));
+
+        assertThat(report.decision().accepted()).isTrue();
+        assertThat(report.canceledCount()).isEqualTo(2);
+        assertThat(report.placedCount()).isEqualTo(2);
+        assertThat(fixture.gateway.cancelRequests).containsExactly("quote-ref-1");
+        assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
+                .containsExactly(OrderSide.BUY, OrderSide.SELL);
     }
 
     @Test
@@ -125,6 +145,14 @@ class MarketMakerQuoteLifecycleServiceTest {
 
     private static final class RecordingQuoteOrderGateway implements MarketMakerQuoteOrderGateway {
         private final List<PlacedQuoteOrder> requests = new ArrayList<>();
+        private final List<String> cancelRequests = new ArrayList<>();
+        private int cancelCount;
+
+        @Override
+        public int cancelOpenQuoteOrders(MarketMakerQuoteCommand command) {
+            cancelRequests.add(command.refId());
+            return cancelCount;
+        }
 
         @Override
         public UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side) {

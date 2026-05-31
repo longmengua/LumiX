@@ -32,13 +32,14 @@ public class MarketMakerQuoteLifecycleService {
         }
 
         MarketMakerQuoteDecision decision = quoteService.validateQuote(profile, command);
+        int canceledCount = orderGateway.cancelOpenQuoteOrders(command);
         if (!decision.accepted()) {
-            return new MarketMakerQuoteLifecycleReport(decision, 0, null, null);
+            return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 0, null, null);
         }
 
         UUID bidOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.BUY);
         UUID askOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.SELL);
-        return new MarketMakerQuoteLifecycleReport(decision, 2, bidOrderId, askOrderId);
+        return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 2, bidOrderId, askOrderId);
     }
 
     private static void validate(MarketMakerQuoteCommand command) {

@@ -10,5 +10,7 @@ import java.util.UUID;
 
 public interface MarketMakerQuoteOrderGateway {
 
+    int cancelOpenQuoteOrders(MarketMakerQuoteCommand command);
+
     UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side);
 }
