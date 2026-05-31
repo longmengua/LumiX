@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 33 | 10 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 34 | 9 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 8 | 14 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 41 | 29 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 42 | 28 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -77,7 +77,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
 - ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金 consume eligibility gate、體驗金到期 scanner 與 campaign auto-clawback scheduler baseline、體驗金用戶/活動 report/export 與 clawback APIs、流水 facts、一等 strategy/market-maker order tags、流水 summary/drill-down/export queries、match-level turnover-vs-trade-tape reconciliation、預設關閉的 recent-window 流水 trade/ledger-ref reconciliation 與 replay path；audit retention、更深入 replay validation 與更完整營運控制仍未完成。
 - funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。liquidation scanning 可把 open positions 透過 oracle-based liquidation routing 處理，並具備 halt / manual-review controls、batch limit、per-position failure isolation 與 decision audit events。production feed redundancy、price clamp、stuck claim 的 alert-backend delivery 與 production insurance-fund capital movement records 仍未完成。
-- reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、durable ledger hash-chain tamper-evidence、trial-balance 計算與 daily snapshot persistence、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API、workflow audit events、durable-ledger daily finance report baseline、fee/funding/liquidation/bonus/transfer finance category exports，以及 ledger archive/delete eligibility checks；archive exporter jobs 仍未完成。
+- reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、durable ledger hash-chain tamper-evidence、SQL-enforced wallet ledger invariants、trial-balance 計算與 daily snapshot persistence、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API、workflow audit events、durable-ledger daily finance report baseline、預設關閉的 finance category exporter job、fee/funding/liquidation/bonus/transfer finance category exports、ledger archive/delete eligibility checks、manifest restore smoke、archived date-range replay validation，以及不平衡報表 operator runbook。
 - 做市商對沖已有 durable profile/risk-limit storage、profile admin API、bounded hedge fill query API、venue fill callback ingestion、venue fill idempotent replay 與可選 HMAC/timestamp verification、manual 與預設關閉的 scheduled hedge execution API 且限制安全 ref prefix、durable scheduled-worker lock、operator approval token gate、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、enabled-profile batch 共用的 per-run execution route/notional cap policy、quote command validation、stale quote cleanup、post-only internal order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage 與 quote/open-order reconciliation baseline、hedge venue adapter contract、real venue signed-request/lookup skeleton、uncertain submit reconciliation 的 venue outcome lookup contract、retryable venue result classification、durable refId idempotency claim/result storage、未解 hedge venue idempotency 營運報告與 reconcile trigger、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、含 internal trade 與 ledger refs 的 durable hedge decision/fill audit trails、decision-vs-fill hedge reconciliation，以及 trade/ledger ref issue reporting；real venue HTTP transport 與自動 quote reconciliation repair job 仍未完成。
 - outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。
 - Database indexing 已有 Flyway baseline，涵蓋 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events 與 prediction order/user-event 查詢；live order/position hot-state 仍由 Redis 擁有，關閉 TODO 前還需要 durable indexing 設計。
@@ -86,7 +86,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - WebSocket/SSE gateway 還沒有獨立部署、水平擴展、訂閱授權、心跳、限流與斷線補償。
 - Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，state-machine guard 會防止 stale active CLOB payload 降級 local filled/settled terminal order 或 matched size，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op，backend-observed RPC transaction 也已有 durable command / txHash tracking envelope 與 unresolved outcome report；更完整的 trade/settlement lifecycle、schema versioning、獨立部署的 user WebSocket worker 還大多是待辦。
 - metrics backend、distributed tracing export、dashboard、alerting 還不完整。
-- archive exporter jobs、admin console、報表、壓測、合規能力都還沒完成。
+- admin console、報表、壓測、合規能力都還沒完成。
 
 ## 建議接下來先做什麼
 

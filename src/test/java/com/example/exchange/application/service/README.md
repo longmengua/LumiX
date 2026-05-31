@@ -9,7 +9,8 @@ Application service tests。
 | `OrderAccountingIntegrationTest` | 成交後帳務與持倉、風控拒單、risk tiers、max open orders、pre-trade frequency limit、重複 client order id、kill switch、批量撤單、改單、cancel-replace、cancel-on-disconnect、connection resume。 |
 | `RiskSettlementServiceTest` | 單一 funding、批次 funding、強平/decision audit/營運控制、liquidation scanner batch/failure isolation、保險基金、全帳戶 reconciliation。 |
 | `TrialBalanceServiceTest` | Wallet ledger postings 產生 trial balance 與不平衡分類。 |
-| `FinanceReportServiceTest` | Durable ledger daily finance report 的 reason/asset/account-code 彙總與借貸平衡。 |
+| `FinanceReportServiceTest` | Durable ledger daily/category finance report 的 reason/asset/account-code 彙總、每日 category export batch 與借貸平衡。 |
+| `LedgerArchiveEligibilityServiceTest` / `LedgerArchiveManifestServiceTest` | Ledger archive/delete eligibility、manifest checksum、restore smoke 與 archived date-range replay validation。 |
 | `ReconciliationIssueWorkflowServiceTest` | 對帳 issue claim、resolve、reopen、open queue 過濾與 workflow audit event。 |
 | `AdlRankingServiceTest` | ADL queue deterministic ranking 與候選排除規則。 |
 | `AdlDeleveragingPlannerTest` | ADL forced deleveraging plan 分配與剩餘缺口計算。 |

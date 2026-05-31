@@ -111,6 +111,12 @@ ledger:
     require-tamper-evidence-clean: ${LEDGER_ARCHIVE_REQUIRE_TAMPER_EVIDENCE_CLEAN:true}
     require-balanced-daily-report: ${LEDGER_ARCHIVE_REQUIRE_BALANCED_DAILY_REPORT:true}
 
+finance:
+  export:
+    enabled: ${FINANCE_EXPORT_ENABLED:false}
+    cron: "${FINANCE_EXPORT_CRON:0 30 1 * * *}"
+    zone: ${FINANCE_EXPORT_ZONE:UTC}
+
 funding-rate:
   settlements: []
 

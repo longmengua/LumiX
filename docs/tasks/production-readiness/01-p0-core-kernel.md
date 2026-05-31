@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`18/36` done.
+`23/36` done.
 
 ## Matching And Command Recovery
 
@@ -35,11 +35,11 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Auditable Ledger And Finance
 
-- [ ] Add finance exporter job for daily category reports.
-- [ ] Add ledger archive manifest restore smoke test.
-- [ ] Add database constraints for wallet ledger entry/posting balance invariants where schema can enforce them.
-- [ ] Add replay validation test for archived ledger date range.
-- [ ] Add operator runbook for unbalanced daily finance report handling.
+- [x] Add finance exporter job for daily category reports.
+- [x] Add ledger archive manifest restore smoke test.
+- [x] Add database constraints for wallet ledger entry/posting balance invariants where schema can enforce them.
+- [x] Add replay validation test for archived ledger date range.
+- [x] Add operator runbook for unbalanced daily finance report handling.
 
 ## Market Maker Quoting And Hedging
 

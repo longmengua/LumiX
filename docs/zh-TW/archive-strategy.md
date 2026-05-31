@@ -46,6 +46,6 @@ English version: [../en/archive-strategy.md](../en/archive-strategy.md)
 
 ## Open Implementation Work
 
-- 為每個 data family 實作 archive exporter jobs。Ledger archive manifest generation 已有 `/api/recovery/finance/ledger-archive-manifest` baseline。
+- 為每個 data family 實作 archive exporter jobs。Ledger finance category export、archive manifest generation、restore smoke、archived range replay validation 已有 `/api/recovery/finance/**` baseline。
 - 為 order lifecycle、ledger replay、Kafka event payload 補 restore smoke tests。
 - 把 archive checksum 接進 operations dashboards 與 incident runbooks。

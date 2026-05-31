@@ -17,8 +17,12 @@ import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveEligibilityReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
+import com.example.exchange.domain.model.dto.LedgerArchiveReplayValidationReport;
+import com.example.exchange.domain.model.dto.LedgerArchiveRestoreSmokeReport;
 import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 import com.example.exchange.application.usecase.SnapshotRecoverUseCase;
+import com.example.exchange.application.service.FinanceExportService;
+import com.example.exchange.domain.model.dto.FinanceCategoryExportBatch;
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
 import com.example.exchange.domain.model.dto.ReconciliationReportResult;
 import com.example.exchange.domain.model.dto.RecoveryResult;
@@ -52,6 +56,7 @@ public class RecoveryController {
     private final MatchingWorkerLifecycleService matchingWorkerLifecycleService;
     private final WalletLedgerReplayService walletLedgerReplayService;
     private final FinanceReportService financeReportService;
+    private final FinanceExportService financeExportService;
     private final LedgerArchiveEligibilityService ledgerArchiveEligibilityService;
     private final LedgerArchiveManifestService ledgerArchiveManifestService;
     private final TrialBalanceService trialBalanceService;
@@ -65,6 +70,7 @@ public class RecoveryController {
             MatchingWorkerLifecycleService matchingWorkerLifecycleService,
             WalletLedgerReplayService walletLedgerReplayService,
             FinanceReportService financeReportService,
+            FinanceExportService financeExportService,
             LedgerArchiveEligibilityService ledgerArchiveEligibilityService,
             LedgerArchiveManifestService ledgerArchiveManifestService,
             TrialBalanceService trialBalanceService,
@@ -77,6 +83,7 @@ public class RecoveryController {
         this.matchingWorkerLifecycleService = matchingWorkerLifecycleService;
         this.walletLedgerReplayService = walletLedgerReplayService;
         this.financeReportService = financeReportService;
+        this.financeExportService = financeExportService;
         this.ledgerArchiveEligibilityService = ledgerArchiveEligibilityService;
         this.ledgerArchiveManifestService = ledgerArchiveManifestService;
         this.trialBalanceService = trialBalanceService;
@@ -148,6 +155,13 @@ public class RecoveryController {
         return ApiResponse.ok(financeReportService.categoryReport(LocalDate.parse(date), category));
     }
 
+    @GetMapping("/finance/category-export-batch")
+    public ApiResponse<FinanceCategoryExportBatch> financeCategoryExportBatch(
+            @RequestParam String date
+    ) {
+        return ApiResponse.ok(financeExportService.exportDailyCategories(LocalDate.parse(date)));
+    }
+
     @GetMapping("/finance/ledger-archive-eligibility")
     public ApiResponse<LedgerArchiveEligibilityReport> ledgerArchiveEligibility(
             @RequestParam String date
@@ -160,6 +174,24 @@ public class RecoveryController {
             @RequestParam String date
     ) {
         return ApiResponse.ok(ledgerArchiveManifestService.generate(LocalDate.parse(date)));
+    }
+
+    @GetMapping("/finance/ledger-archive-restore-smoke")
+    public ApiResponse<LedgerArchiveRestoreSmokeReport> ledgerArchiveRestoreSmoke(
+            @RequestParam String date
+    ) {
+        return ApiResponse.ok(ledgerArchiveManifestService.restoreSmoke(LocalDate.parse(date)));
+    }
+
+    @GetMapping("/finance/ledger-archive-replay-validation")
+    public ApiResponse<LedgerArchiveReplayValidationReport> ledgerArchiveReplayValidation(
+            @RequestParam String fromDate,
+            @RequestParam String toDate
+    ) {
+        return ApiResponse.ok(ledgerArchiveManifestService.validateReplayRange(
+                LocalDate.parse(fromDate),
+                LocalDate.parse(toDate)
+        ));
     }
 
     @PostMapping("/finance/trial-balance/snapshot")

@@ -24,7 +24,7 @@ Remaining production TODO:
 ## Funds And Ledger
 
 - API: `interfaces.web.controller.MarginController`
-- Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`, `FinanceReportService`
+- Services: `MarginService`, `WalletLedgerService`, `WalletLedgerReplayService`, `FinanceReportService`, `FinanceExportService`
 - Bonus credit: `WalletLedgerService` bonus-credit methods with `USER_BONUS_AVAILABLE`, `BonusCreditService`, `BonusCreditReport`, `BonusCreditCampaignReport`, `BonusCreditCampaignExport`, `BonusCreditProperties`
 - Bonus expiry scheduler: `application.scheduler.BonusCreditExpiryScheduler`
 - Turnover: `TurnoverService`, `TurnoverReconciliationService`, `TurnoverStore`, `TurnoverSummary`, `TurnoverExportReport`, `TurnoverReconciliationReport`
@@ -35,8 +35,8 @@ Remaining production TODO:
 - Models: `Account`, `WalletLedgerEntry`, `WalletLedgerPosting`, `WalletTransfer`
 - Turnover model: `TurnoverRecord`, `TurnoverSummary`, `TurnoverRecordEntity`
 - Bonus grant model: `BonusCreditGrant`, `BonusCreditGrantRecord`
-- Migrations: `V3__wallet_ledger_journal.sql`, `V11__turnover_records.sql`, `V12__bonus_credit_grants.sql`
-- Tests: `MarginServiceTest`, `WalletLedgerReplayServiceTest`, `WalletLedgerServiceTest`, `BonusCreditServiceTest`, `TurnoverServiceTest`
+- Migrations: `V1__core_v1_baseline.sql`, `V14__wallet_ledger_hash_chain.sql`, `V20__wallet_ledger_journal_constraints.sql`
+- Tests: `MarginServiceTest`, `WalletLedgerReplayServiceTest`, `WalletLedgerServiceTest`, `BonusCreditServiceTest`, `TurnoverServiceTest`, `FinanceReportServiceTest`, `LedgerArchiveManifestServiceTest`
 
 Ledger concerns:
 - Order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, withdrawal are explicit accounting entries.
@@ -53,8 +53,10 @@ Ledger concerns:
 - Replay compare endpoint verifies ledger-derived balances against stored account balances.
 - Finance daily report summarizes durable ledger journal postings by reason, asset, and account code for a UTC report date.
 - Finance category report filters the daily durable-ledger report by fee, funding, liquidation, bonus, or transfer reason sets.
+- `FinanceExportService`, `FinanceExportScheduler`, and `/api/recovery/finance/category-export-batch` provide disabled-by-default daily category export batches.
 - `LedgerArchiveEligibilityService` and `/api/recovery/finance/ledger-archive-eligibility` enforce ledger hot-path delete preconditions: retention window closed, hash-chain clean, balanced daily report, and non-empty candidate set.
 - `LedgerArchiveManifestService` and `/api/recovery/finance/ledger-archive-manifest` generate date-scoped ledger archive manifests with source row counts, posting counts, aggregate checksum, restore instructions, and delete eligibility.
+- `/api/recovery/finance/ledger-archive-restore-smoke` and `/api/recovery/finance/ledger-archive-replay-validation` verify archive row counts/checksums and archived date-range replay readiness.
 - `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
@@ -63,9 +65,8 @@ Ledger concerns:
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary` in Spring runtime before ADL execution mutates position, ledger, execution records, and audit events.
 
 Remaining production TODO:
-- Stronger database constraints, audit retention, replay validation.
+- Audit retention and immutable archive enforcement.
 - Stronger alert delivery and worker locking for scheduled turnover reconciliation.
-- Auditable accounting book with trial balance and reconciliation exception workflow.
 - ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
 
 ## Funding, Liquidation, Reconciliation
@@ -126,4 +127,4 @@ Remaining production TODO:
 - New issues created by `ReconciliationReportService` default to `OPEN`.
 
 Remaining production TODO:
-- Ledger archive exporter jobs and manifests.
+- Immutable archive enforcement beyond manifest smoke checks.

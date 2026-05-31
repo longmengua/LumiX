@@ -4,6 +4,8 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
+import com.example.exchange.domain.model.dto.LedgerArchiveReplayValidationReport;
+import com.example.exchange.domain.model.dto.LedgerArchiveRestoreSmokeReport;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerPosting;
@@ -35,7 +37,8 @@ class LedgerArchiveManifestServiceTest {
         WalletLedgerReplayService replayService = new WalletLedgerReplayService(journal, new EmptyAccountRepository());
         LedgerArchiveEligibilityService eligibilityService =
                 new LedgerArchiveEligibilityService(journal, financeReportService, replayService, properties);
-        LedgerArchiveManifestService service = new LedgerArchiveManifestService(journal, eligibilityService);
+        LedgerArchiveManifestService service =
+                new LedgerArchiveManifestService(journal, eligibilityService, financeReportService);
 
         // 場景：manifest 必須固定 archive batch id、來源筆數、posting 筆數與 aggregate checksum，供刪除前校驗。
         LedgerArchiveManifest manifest = service.generate(LocalDate.parse("2024-01-01"));
@@ -45,6 +48,57 @@ class LedgerArchiveManifestServiceTest {
         assertThat(manifest.sourcePostingCount()).isEqualTo(2);
         assertThat(manifest.aggregateChecksum()).hasSize(64);
         assertThat(manifest.deleteEligible()).isTrue();
+    }
+
+    @Test
+    @DisplayName("restoreSmoke 重新計算 archive manifest row count 與 checksum")
+    void restoreSmokeVerifiesManifestCountsAndChecksum() {
+        MemLedgerJournal journal = new MemLedgerJournal();
+        journal.entries.add(entry("2024-01-01T00:00:00Z"));
+        LedgerArchiveProperties properties = new LedgerArchiveProperties();
+        properties.setHotRetentionDays(1);
+        FinanceReportService financeReportService = new FinanceReportService(journal);
+        WalletLedgerReplayService replayService = new WalletLedgerReplayService(journal, new EmptyAccountRepository());
+        LedgerArchiveEligibilityService eligibilityService =
+                new LedgerArchiveEligibilityService(journal, financeReportService, replayService, properties);
+        LedgerArchiveManifestService service =
+                new LedgerArchiveManifestService(journal, eligibilityService, financeReportService);
+        LedgerArchiveManifest manifest = service.generate(LocalDate.parse("2024-01-01"));
+
+        // 場景：archive restore 前先用 staging 匯入結果重算 count/checksum；這裡用 hot journal 模擬 staging。
+        LedgerArchiveRestoreSmokeReport report = service.restoreSmoke(LocalDate.parse("2024-01-01"), manifest);
+
+        assertThat(report.passed()).isTrue();
+        assertThat(report.expectedEntryCount()).isEqualTo(1);
+        assertThat(report.actualEntryCount()).isEqualTo(1);
+        assertThat(report.expectedChecksum()).isEqualTo(report.actualChecksum());
+    }
+
+    @Test
+    @DisplayName("validateReplayRange 逐日檢查 archived ledger 日報平衡與 restore smoke")
+    void validateReplayRangeChecksDailyBalanceAndRestoreSmoke() {
+        MemLedgerJournal journal = new MemLedgerJournal();
+        journal.entries.add(entry("2024-01-01T00:00:00Z"));
+        journal.entries.add(entry("2024-01-02T00:00:00Z"));
+        LedgerArchiveProperties properties = new LedgerArchiveProperties();
+        properties.setHotRetentionDays(1);
+        FinanceReportService financeReportService = new FinanceReportService(journal);
+        WalletLedgerReplayService replayService = new WalletLedgerReplayService(journal, new EmptyAccountRepository());
+        LedgerArchiveEligibilityService eligibilityService =
+                new LedgerArchiveEligibilityService(journal, financeReportService, replayService, properties);
+        LedgerArchiveManifestService service =
+                new LedgerArchiveManifestService(journal, eligibilityService, financeReportService);
+
+        // 場景：archive 日期區間 replay validation 會逐日驗證日報平衡與 manifest 可還原性。
+        LedgerArchiveReplayValidationReport report = service.validateReplayRange(
+                LocalDate.parse("2024-01-01"),
+                LocalDate.parse("2024-01-02")
+        );
+
+        assertThat(report.passed()).isTrue();
+        assertThat(report.daysChecked()).isEqualTo(2);
+        assertThat(report.balancedDays()).isEqualTo(2);
+        assertThat(report.restoreSmokePassedDays()).isEqualTo(2);
     }
 
     private static WalletLedgerEntry entry(String createdAt) {

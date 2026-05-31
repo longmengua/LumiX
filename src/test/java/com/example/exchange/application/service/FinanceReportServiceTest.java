@@ -4,6 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
+import com.example.exchange.domain.model.dto.FinanceCategoryExportBatch;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerPosting;
 import com.example.exchange.domain.repository.WalletLedgerJournal;
@@ -106,6 +107,31 @@ class FinanceReportServiceTest {
         assertThat(report.totalDebit()).isEqualByComparingTo("2.50");
         assertThat(report.totalCredit()).isEqualByComparingTo("2.50");
         assertThat(report.lines()).allSatisfy(line -> assertThat(line.reason()).isEqualTo("trade_fee"));
+    }
+
+    @Test
+    @DisplayName("exportDailyCategories 產生每日分類匯出批次並阻擋不平衡分類")
+    void exportDailyCategoriesReturnsAllCategoryReportsAndBalanceState() {
+        MemLedgerJournal journal = new MemLedgerJournal();
+        journal.entries.add(entry(
+                1,
+                "USDT",
+                "trade_fee",
+                "2026-05-30T01:00:00Z",
+                List.of(
+                        new WalletLedgerPosting("USER_AVAILABLE", "USDT", BigDecimal.ZERO, new BigDecimal("2.50")),
+                        new WalletLedgerPosting("USER_FEE_EXPENSE", "USDT", new BigDecimal("2.50"), BigDecimal.ZERO)
+                )
+        ));
+        FinanceExportService service = new FinanceExportService(new FinanceReportService(journal));
+
+        // 場景：每日 exporter 一次產生所有財務分類，讓營運不用逐一呼叫 category-report。
+        FinanceCategoryExportBatch batch = service.exportDailyCategories(LocalDate.parse("2026-05-30"));
+
+        assertThat(batch.exportBatchId()).isEqualTo("finance-category-2026-05-30");
+        assertThat(batch.reports()).hasSize(FinanceExportService.DAILY_CATEGORIES.size());
+        assertThat(batch.balanced()).isTrue();
+        assertThat(batch.blockers()).isEmpty();
     }
 
     private static WalletLedgerEntry entry(

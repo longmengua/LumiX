@@ -263,6 +263,9 @@ src/main/java/com/example/exchange
 - `GET /api/margin/risk/snapshots?uid=1&limit=30`
 - `GET /api/margin/bonus-credit/campaign-export?campaignId=camp-1&asset=USDT`
 - `GET /api/margin/turnover/export?uid=1&symbol=BTCUSDT&strategyId=strategy-1&marketMakerId=mm-1`
+- `GET /api/recovery/finance/category-export-batch?date=2026-05-30`
+- `GET /api/recovery/finance/ledger-archive-restore-smoke?date=2026-05-30`
+- `GET /api/recovery/finance/ledger-archive-replay-validation?fromDate=2026-05-29&toDate=2026-05-30`
 - `POST /api/order/place`
 - `PATCH /api/order/{orderId}`
 - `POST /api/order/{orderId}/replace`

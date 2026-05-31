@@ -7,7 +7,7 @@
 - 行情：depth snapshot 與 depth delta backfill 範例已補齊。
 - 資金/風控：入金、出金、margin transfer、transfer list、bonus-credit user/campaign report/export/clawback、turnover summary/records/export/reconciliation、risk snapshot、persisted risk snapshot、price oracle、ADL queue claim/release/execution、ADL execution report、ADL insurance reconciliation 範例已補齊。
 - 做市商：post-only quote placement、active quote state 查詢與 quote/open-order reconciliation 範例已補齊。
-- Recovery：包含 snapshot recovery、全帳戶 reconciliation 與 daily finance report 範例。
+- Recovery：包含 snapshot recovery、全帳戶 reconciliation、daily/category finance report、category export batch、ledger archive manifest restore smoke 與 replay validation 範例。
 
 新增 API 時請同步補：
 1. 對應 curl 腳本。

@@ -115,8 +115,11 @@ User WebSocket：
 ./shells/api-curls/exchange/recovery-ledger-tamper-evidence-get.sh
 ./shells/api-curls/exchange/recovery-finance-daily-report-get.sh
 ./shells/api-curls/exchange/recovery-finance-category-report-get.sh
+./shells/api-curls/exchange/recovery-finance-category-export-batch-get.sh
 ./shells/api-curls/exchange/recovery-ledger-archive-eligibility-get.sh
 ./shells/api-curls/exchange/recovery-ledger-archive-manifest-get.sh
+./shells/api-curls/exchange/recovery-ledger-archive-restore-smoke-get.sh
+./shells/api-curls/exchange/recovery-ledger-archive-replay-validation-get.sh
 ./shells/api-curls/exchange/recovery-trial-balance-snapshot-post.sh
 ./shells/api-curls/exchange/recovery-trial-balance-snapshot-get.sh
 ./shells/api-curls/exchange/recovery-outbox-dlq-get.sh
