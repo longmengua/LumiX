@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -48,15 +49,16 @@ class LedgerArchiveEligibilityServiceTest {
     @DisplayName("evaluate 會阻擋 retention 未關閉或日報不平衡的 ledger archive delete")
     void evaluateBlocksWhenRetentionOrBalanceChecksFail() {
         MemLedgerJournal journal = new MemLedgerJournal();
-        journal.entries.add(entry(Instant.now().toString(), List.of(
+        LocalDate todayUtc = LocalDate.now(ZoneOffset.UTC);
+        journal.entries.add(entry(todayUtc.atStartOfDay().plusHours(1).toInstant(ZoneOffset.UTC).toString(), List.of(
                 new WalletLedgerPosting("USER_AVAILABLE", "USDT", new BigDecimal("100"), BigDecimal.ZERO)
         )));
         LedgerArchiveProperties properties = new LedgerArchiveProperties();
         properties.setHotRetentionDays(365);
         LedgerArchiveEligibilityService service = service(journal, properties);
 
-        // 場景：今天的資料還在 hot retention window 內，且 posting 不平衡，不能刪 hot path。
-        LedgerArchiveEligibilityReport report = service.evaluate(LocalDate.now());
+        // 場景：UTC 今天的資料還在 hot retention window 內，且 posting 不平衡，不能刪 hot path。
+        LedgerArchiveEligibilityReport report = service.evaluate(todayUtc);
 
         assertThat(report.deleteEligible()).isFalse();
         assertThat(report.blockers()).contains("RETENTION_WINDOW_NOT_CLOSED", "DAILY_REPORT_UNBALANCED");

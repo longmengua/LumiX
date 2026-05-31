@@ -97,6 +97,7 @@ User WebSocket：
 ./shells/api-curls/exchange/margin-ledger-replay-compare-get.sh
 ./shells/api-curls/exchange/risk-price-oracle-put.sh
 ./shells/api-curls/exchange/risk-price-oracle-get.sh
+./shells/api-curls/exchange/market-maker-quotes-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-claim-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-execute-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-release-post.sh

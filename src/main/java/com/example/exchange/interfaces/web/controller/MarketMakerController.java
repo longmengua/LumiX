@@ -9,14 +9,17 @@ import com.example.exchange.application.service.MarketMakerHedgeExecutionService
 import com.example.exchange.application.service.MarketMakerHedgeReconciliationService;
 import com.example.exchange.application.service.MarketMakerHedgeVenueIdempotencyService;
 import com.example.exchange.application.service.MarketMakerProfileService;
+import com.example.exchange.application.service.MarketMakerQuoteLifecycleService;
 import com.example.exchange.domain.model.dto.HedgeFillRecord;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerProfileRequest;
+import com.example.exchange.interfaces.web.dto.MarketMakerQuoteRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,6 +44,7 @@ public class MarketMakerController {
     private final MarketMakerHedgeExecutionService hedgeExecutionService;
     private final MarketMakerHedgeVenueIdempotencyService hedgeVenueIdempotencyService;
     private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
+    private final MarketMakerQuoteLifecycleService quoteLifecycleService;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -62,6 +66,13 @@ public class MarketMakerController {
     @GetMapping("/uids/{uid}/profile")
     public ApiResponse<MarketMakerProfile> profileByUid(@PathVariable long uid) {
         return ApiResponse.ok(profileService.findByUid(uid).orElse(null));
+    }
+
+    @PostMapping("/quotes")
+    public ApiResponse<MarketMakerQuoteLifecycleReport> placeQuote(
+            @Valid @RequestBody MarketMakerQuoteRequest request
+    ) {
+        return ApiResponse.ok(quoteLifecycleService.placeQuote(request.toCommand()));
     }
 
     @GetMapping("/profiles/{marketMakerId}/hedge-fills")

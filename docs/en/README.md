@@ -281,6 +281,7 @@ src/main/java/com/example/exchange
 - `GET /api/market-data/user/{uid}/stream`
 - `PUT /api/risk/price-oracle`
 - `GET /api/risk/price-oracle/{symbol}`
+- `POST /api/market-maker/quotes`
 - `POST /api/risk/funding/settle`
 - `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`

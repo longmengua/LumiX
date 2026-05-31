@@ -21,7 +21,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Ledger/reconciliation: `WalletLedgerService`, `ReconciliationService`
 - Future market-maker package should stay behind application/domain contracts before adding infra adapters.
 - Market-maker DTOs: `MarketMakerProfile`, `MarketMakerRiskLimit`, `MarketMakerExposure`, `HedgeOrderRequest`, `HedgeOrderResult`, `HedgeDecision`.
-- Quote DTOs: `MarketMakerQuoteCommand`, `MarketMakerQuoteDecision`.
+- Quote DTOs: `MarketMakerQuoteCommand`, `MarketMakerQuoteDecision`, `MarketMakerQuoteLifecycleReport`.
 - Durable profile store: `MarketMakerProfileStore`, `JpaMarketMakerProfileStore`, `MarketMakerProfileRecord`, `MarketMakerRiskLimitRecord`.
 - Hedge audit store: `HedgeDecisionAuditStore`, `JpaHedgeDecisionAuditStore`, `HedgeDecisionAuditRecord`, `HedgeDecisionAuditRecordEntity`.
 - Hedge fill store: `HedgeFillStore`, `JpaHedgeFillStore`, `HedgeFillRecord`, `HedgeFillRecordEntity`.
@@ -37,7 +37,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Scheduled hedge execution can use durable worker locking through `market-maker.hedge-execution.lock-enabled=true`, `HedgeExecutionLockStore`, `JpaHedgeExecutionLockStore`, and `hedge_execution_locks`.
 - Operator approval can be required through `market-maker.hedge-execution.approval-required=true`; manual APIs must pass `X-Operator-Approval`, while scheduler uses `scheduled-approval-token`.
 - Exposure aggregation: `MarketMakerExposureService`.
-- Quote validation: `MarketMakerQuoteService`.
+- Quote validation and placement lifecycle: `MarketMakerQuoteService`, `MarketMakerQuoteLifecycleService`, `MarketMakerQuoteOrderGateway`, `UseCaseMarketMakerQuoteOrderGateway`.
 - Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
 - Hedge execution entry points use `CommandTransactionBoundary` when Spring wires it, so profile lookup, exposure planning, venue routing, hedge decision audit, and outbox rows share one command boundary.
 - Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
@@ -53,7 +53,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Venue outcome lookup contract: `HedgeVenueOrderLookupAdapter` with safe default `NoopHedgeVenueOrderLookupAdapter`; real venue adapters should implement lookup by `refId` and return terminal `HedgeOrderResult` for uncertain submit reconciliation.
 - Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
 - Audit events: `HedgeDecisionRecorded`, `MarketMakerQuoteDecisionRecorded`.
-- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `HedgeVenueCallbackVerifierTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
+- Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerQuoteLifecycleServiceTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `HedgeVenueCallbackVerifierTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
 - Migrations include hedge venue idempotency records in `V8__hedge_venue_idempotency_records.sql`.
 
 ## First Implementation Slice
@@ -65,5 +65,5 @@ This map is part of the current core-kernel priority lane. It should be read whe
 5. [x] Add tests covering exposure aggregation, quote kill switch, crossed quote, hedge kill switch, slippage rejection, and accepted venue routing.
 
 Remaining:
-- Quote lifecycle integration with actual order placement/cancel-replace.
+- Quote lifecycle cancel-replace / stale quote replacement.
 - Real hedge venue adapter and trade/ledger reconciliation refs.

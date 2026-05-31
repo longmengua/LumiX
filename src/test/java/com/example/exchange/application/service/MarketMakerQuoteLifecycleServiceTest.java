@@ -1,0 +1,164 @@
+/*
+ * 檔案用途：測試做市商 quote lifecycle 會將合法 quote 轉成內部 post-only 掛單。
+ */
+package com.example.exchange.application.service;
+
+import com.example.exchange.domain.event.MarketMakerQuoteDecisionRecorded;
+import com.example.exchange.domain.model.dto.MarketMakerProfile;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
+import com.example.exchange.domain.model.dto.MarketMakerRiskLimit;
+import com.example.exchange.domain.model.enums.OrderSide;
+import com.example.exchange.domain.repository.MarketMakerProfileStore;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.UUID;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class MarketMakerQuoteLifecycleServiceTest {
+
+    @Test
+    @DisplayName("placeQuote 會把合法雙邊 quote 轉成 BUY/SELL post-only limit orders")
+    void placeQuotePlacesBidAndAskOrdersWhenQuoteAccepted() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false));
+
+        // 流程：quote validation 通過後，lifecycle service 會送出 bid/ask 兩個 post-only LIMIT leg。
+        MarketMakerQuoteLifecycleReport report = fixture.service.placeQuote(quote("99.00", "101.00"));
+
+        assertThat(report.decision().accepted()).isTrue();
+        assertThat(report.placedCount()).isEqualTo(2);
+        assertThat(report.bidOrderId()).isNotNull();
+        assertThat(report.askOrderId()).isNotNull();
+        assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
+                .containsExactly(OrderSide.BUY, OrderSide.SELL);
+        assertThat(fixture.published).hasSize(1);
+    }
+
+    @Test
+    @DisplayName("placeQuote 被 quote validation 拒絕時不送任何內部訂單")
+    void placeQuoteDoesNotPlaceOrdersWhenQuoteRejected() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(true));
+
+        // 流程：kill switch 開啟時只留下 decision audit，不產生任何內部 order side effect。
+        MarketMakerQuoteLifecycleReport report = fixture.service.placeQuote(quote("99.00", "101.00"));
+
+        assertThat(report.decision().accepted()).isFalse();
+        assertThat(report.decision().reason()).isEqualTo("KILL_SWITCH_ENABLED");
+        assertThat(report.placedCount()).isZero();
+        assertThat(fixture.gateway.requests).isEmpty();
+    }
+
+    @Test
+    @DisplayName("placeQuote 會拒絕 uid 與 profile 不一致的 quote command")
+    void placeQuoteRejectsUidMismatch() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false));
+
+        // 流程：quote command 的 uid 必須與 durable market-maker profile 一致，避免借其他帳戶掛 quote。
+        assertThatThrownBy(() -> fixture.service.placeQuote(new MarketMakerQuoteCommand(
+                "mm-quote-1",
+                9999,
+                "BTCUSDT",
+                new BigDecimal("99.00"),
+                new BigDecimal("1.000"),
+                new BigDecimal("101.00"),
+                new BigDecimal("1.000"),
+                "quote-ref-1"
+        ))).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("uid mismatch");
+        assertThat(fixture.gateway.requests).isEmpty();
+    }
+
+    private static MarketMakerProfile profile(boolean killSwitch) {
+        return new MarketMakerProfile(
+                "mm-quote-1",
+                9101,
+                true,
+                List.of(new MarketMakerRiskLimit(
+                        "BTCUSDT",
+                        new BigDecimal("1000000"),
+                        new BigDecimal("1000000"),
+                        new BigDecimal("10000"),
+                        new BigDecimal("0.01"),
+                        killSwitch
+                ))
+        );
+    }
+
+    private static MarketMakerQuoteCommand quote(String bidPrice, String askPrice) {
+        return new MarketMakerQuoteCommand(
+                "mm-quote-1",
+                9101,
+                "BTCUSDT",
+                new BigDecimal(bidPrice),
+                new BigDecimal("1.000"),
+                new BigDecimal(askPrice),
+                new BigDecimal("1.000"),
+                "quote-ref-1"
+        );
+    }
+
+    private static final class Fixture {
+        private final MemProfileStore profileStore = new MemProfileStore();
+        private final RecordingQuoteOrderGateway gateway = new RecordingQuoteOrderGateway();
+        private final List<MarketMakerQuoteDecisionRecorded> published = new ArrayList<>();
+        private final MarketMakerQuoteLifecycleService service = new MarketMakerQuoteLifecycleService(
+                new MarketMakerProfileService(profileStore),
+                new MarketMakerQuoteService(published::add),
+                gateway
+        );
+    }
+
+    private record PlacedQuoteOrder(MarketMakerQuoteCommand command, OrderSide side, UUID orderId) {
+    }
+
+    private static final class RecordingQuoteOrderGateway implements MarketMakerQuoteOrderGateway {
+        private final List<PlacedQuoteOrder> requests = new ArrayList<>();
+
+        @Override
+        public UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side) {
+            UUID orderId = UUID.randomUUID();
+            requests.add(new PlacedQuoteOrder(command, side, orderId));
+            return orderId;
+        }
+    }
+
+    private static final class MemProfileStore implements MarketMakerProfileStore {
+        private final Map<String, MarketMakerProfile> profiles = new LinkedHashMap<>();
+
+        @Override
+        public void save(MarketMakerProfile profile) {
+            profiles.put(profile.marketMakerId(), profile);
+        }
+
+        @Override
+        public Optional<MarketMakerProfile> findByMarketMakerId(String marketMakerId) {
+            return Optional.ofNullable(profiles.get(marketMakerId));
+        }
+
+        @Override
+        public Optional<MarketMakerProfile> findByUid(long uid) {
+            return profiles.values().stream()
+                    .filter(profile -> profile.uid() == uid)
+                    .findFirst();
+        }
+
+        @Override
+        public List<MarketMakerProfile> findEnabled() {
+            return profiles.values().stream()
+                    .filter(MarketMakerProfile::enabled)
+                    .toList();
+        }
+    }
+}
