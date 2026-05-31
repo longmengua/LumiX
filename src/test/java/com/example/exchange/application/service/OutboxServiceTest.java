@@ -210,6 +210,11 @@ class OutboxServiceTest {
                     .toList();
         }
 
+        @Override
+        public List<OutboxEvent> latest(int limit) {
+            return events.values().stream().limit(Math.max(1, limit)).toList();
+        }
+
         /**
          * 測試輔助方法：確保目前只有一筆 outbox event，方便直接檢查狀態轉換。
          */

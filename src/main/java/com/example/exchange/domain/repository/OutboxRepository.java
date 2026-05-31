@@ -17,4 +17,8 @@ public interface OutboxRepository {
     Optional<OutboxEvent> findById(UUID id);
 
     List<OutboxEvent> findDue(Instant now, int limit);
+
+    default List<OutboxEvent> latest(int limit) {
+        return List.of();
+    }
 }

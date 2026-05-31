@@ -266,6 +266,7 @@ src/main/java/com/example/exchange
 - `GET /api/recovery/finance/category-export-batch?date=2026-05-30`
 - `GET /api/recovery/finance/ledger-archive-restore-smoke?date=2026-05-30`
 - `GET /api/recovery/finance/ledger-archive-replay-validation?fromDate=2026-05-29&toDate=2026-05-30`
+- `GET /api/recovery/outbox/domain-state-consistency?limit=50`
 - `POST /api/order/place`
 - `PATCH /api/order/{orderId}`
 - `POST /api/order/{orderId}/replace`

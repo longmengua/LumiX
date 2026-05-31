@@ -123,6 +123,7 @@ User WebSocket:
 ./shells/api-curls/exchange/recovery-trial-balance-snapshot-post.sh
 ./shells/api-curls/exchange/recovery-trial-balance-snapshot-get.sh
 ./shells/api-curls/exchange/recovery-outbox-dlq-get.sh
+./shells/api-curls/exchange/recovery-outbox-domain-state-consistency-get.sh
 ./shells/api-curls/exchange/recovery-outbox-dead-replay-post.sh
 ./shells/api-curls/exchange/recovery-outbox-dead-compensate-post.sh
 ```

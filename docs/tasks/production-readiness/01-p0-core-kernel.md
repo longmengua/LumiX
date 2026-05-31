@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`23/36` done.
+`28/36` done.
 
 ## Matching And Command Recovery
 
@@ -55,11 +55,11 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Transaction Boundaries And Cross-Store Consistency
 
-- [ ] Add persistence-backed rollback test for order place when outbox insert fails.
-- [ ] Add persistence-backed rollback test for cancel when ledger release fails.
-- [ ] Add persistence-backed rollback test for hedge execution when audit/outbox persistence fails.
-- [ ] Add cross-store failure drill doc for MySQL committed but Redis/Kafka delayed.
-- [ ] Add recovery command for detecting outbox rows without matching domain-state transition.
+- [x] Add persistence-backed rollback test for order place when outbox insert fails.
+- [x] Add persistence-backed rollback test for cancel when ledger release fails.
+- [x] Add persistence-backed rollback test for hedge execution when audit/outbox persistence fails.
+- [x] Add cross-store failure drill doc for MySQL committed but Redis/Kafka delayed.
+- [x] Add recovery command for detecting outbox rows without matching domain-state transition.
 
 ## Disaster Recovery
 

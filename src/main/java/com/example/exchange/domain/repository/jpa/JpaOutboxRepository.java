@@ -55,6 +55,15 @@ public class JpaOutboxRepository implements OutboxRepository {
                 .toList();
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<OutboxEvent> latest(int limit) {
+        return repository.findByOrderByCreatedAtDesc(PageRequest.of(0, Math.max(1, limit)))
+                .stream()
+                .map(this::toDomain)
+                .toList();
+    }
+
     private OutboxEventRecord toRecord(OutboxEvent event) {
         OutboxEventRecord record = new OutboxEventRecord();
         record.setId(event.getId().toString());

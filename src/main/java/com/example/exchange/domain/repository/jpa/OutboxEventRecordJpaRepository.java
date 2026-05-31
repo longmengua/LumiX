@@ -23,4 +23,6 @@ public interface OutboxEventRecordJpaRepository
             order by event.nextAttemptAt asc, event.createdAt asc
             """)
     List<OutboxEventRecord> findDue(@Param("now") Instant now, Pageable pageable);
+
+    List<OutboxEventRecord> findByOrderByCreatedAtDesc(Pageable pageable);
 }

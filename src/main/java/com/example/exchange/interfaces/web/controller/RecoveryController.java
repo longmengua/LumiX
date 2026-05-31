@@ -8,6 +8,7 @@ import com.example.exchange.application.service.FinanceReportService;
 import com.example.exchange.application.service.LedgerArchiveEligibilityService;
 import com.example.exchange.application.service.LedgerArchiveManifestService;
 import com.example.exchange.application.service.OutboxService;
+import com.example.exchange.application.service.OutboxDomainStateConsistencyService;
 import com.example.exchange.application.service.ReconciliationIssueWorkflowService;
 import com.example.exchange.application.service.ReconciliationReportService;
 import com.example.exchange.application.service.ReconciliationService;
@@ -30,6 +31,7 @@ import com.example.exchange.domain.model.dto.TrialBalanceSnapshot;
 import com.example.exchange.domain.model.dto.ValidationIssue;
 import com.example.exchange.domain.model.entity.DlqEvent;
 import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.dto.OutboxDomainStateConsistencyReport;
 import com.example.exchange.domain.model.entity.ReconciliationReportIssue;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.MatchingWorkerOwnerContextResponse;
@@ -61,6 +63,7 @@ public class RecoveryController {
     private final LedgerArchiveManifestService ledgerArchiveManifestService;
     private final TrialBalanceService trialBalanceService;
     private final OutboxService outboxService;
+    private final OutboxDomainStateConsistencyService outboxDomainStateConsistencyService;
 
     public RecoveryController(
             SnapshotRecoverUseCase usecase,
@@ -74,7 +77,8 @@ public class RecoveryController {
             LedgerArchiveEligibilityService ledgerArchiveEligibilityService,
             LedgerArchiveManifestService ledgerArchiveManifestService,
             TrialBalanceService trialBalanceService,
-            OutboxService outboxService
+            OutboxService outboxService,
+            OutboxDomainStateConsistencyService outboxDomainStateConsistencyService
     ) {
         this.usecase = usecase;
         this.reconciliationService = reconciliationService;
@@ -88,6 +92,7 @@ public class RecoveryController {
         this.ledgerArchiveManifestService = ledgerArchiveManifestService;
         this.trialBalanceService = trialBalanceService;
         this.outboxService = outboxService;
+        this.outboxDomainStateConsistencyService = outboxDomainStateConsistencyService;
     }
 
     @PostMapping("/recover/{uid}")
@@ -260,6 +265,13 @@ public class RecoveryController {
     @GetMapping("/outbox/dlq")
     public ApiResponse<List<DlqEvent>> latestDlq(@RequestParam(defaultValue = "50") int limit) {
         return ApiResponse.ok(outboxService.latestDlq(limit));
+    }
+
+    @GetMapping("/outbox/domain-state-consistency")
+    public ApiResponse<OutboxDomainStateConsistencyReport> outboxDomainStateConsistency(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(outboxDomainStateConsistencyService.inspectLatest(limit));
     }
 
     @PostMapping("/outbox/dead/{outboxId}/replay")

@@ -25,7 +25,7 @@ Application service tests。
 | `AccountRiskSnapshotServiceTest` | 單一帳戶 risk snapshot 持久化、account/open-position index 掃描。 |
 | `MatchingRecoveryServiceTest` | 撮合 worker startup/takeover recovery，從 snapshot + command log replay 並保存 validation report。 |
 | `MatchingSequencerLeaseServiceTest` | 撮合 worker lease owner 互斥、續租 checkpoint、release 與過期 takeover epoch。 |
-| `OutboxServiceTest` | publish 失敗 retry、DLQ、replay、manual compensation、trace header 傳遞。 |
+| `OutboxServiceTest` / `OutboxDomainStateConsistencyServiceTest` | publish 失敗 retry、DLQ、replay、manual compensation、trace header 傳遞，以及 outbox row 對 domain-state projection 的 consistency report。 |
 | `RpcTransactionTrackingServiceTest` | RPC transaction commandId replay、fingerprint/txHash conflict 與 unresolved outcome report。 |
 | `MarginServiceTest` | 入金、成功出金、callback idempotency、出金暫停進人工覆核、manual-review claim、transfer reconciliation projection、餘額不足拒絕。 |
 | `WalletLedgerReplayServiceTest` | Durable ledger replay、account comparison 與結構化 mismatch details。 |

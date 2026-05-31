@@ -12,8 +12,8 @@ This group splits the broad `docs/*/todo.md` production checklist into small imp
 4. Report both broad TODO progress and fine-grained progress, for example:
 
 ```text
-P0 broad: 33/43 -> 34/43 done, remaining 10 -> 9
-P0 fine: 18/36 -> 23/36 done, remaining 18 -> 13
+P0 broad: 34/43 -> 35/43 done, remaining 9 -> 8
+P0 fine: 23/36 -> 28/36 done, remaining 13 -> 8
 ```
 
 ## Fine-Grained Task Files
@@ -26,7 +26,7 @@ P0 fine: 18/36 -> 23/36 done, remaining 18 -> 13
 
 ## Current Fine-Grained Counts
 
-- P0 fine: `23/36` done.
+- P0 fine: `28/36` done.
 - P1 fine: `0/22` done.
 - P2 fine: `0/14` done.
 

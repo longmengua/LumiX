@@ -19,6 +19,8 @@ Current behavior:
 - Request/correlation headers retained through delayed publish.
 - When a Spring transaction is active, `OutboxService.publish(...)` saves the outbox row inside the transaction and defers the external publisher call until `afterCommit`.
 - Redis hot-state recovery rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`: MySQL/outbox rows are authoritative after commit; Redis projection failures should be rebuilt rather than blindly replaying the whole command.
+- `OutboxDomainStateConsistencyService` and `/api/recovery/outbox/domain-state-consistency` inspect recent durable outbox rows and flag `order.lifecycle` rows without a matching lifecycle projection.
+- Cross-store failure drill docs live in `docs/en/cross-store-failure-drill.md` and `docs/zh-TW/cross-store-failure-drill.md`.
 
 ## Event Store And Recovery
 
@@ -30,7 +32,7 @@ Current behavior:
 - Snapshot scheduler: `application.scheduler.SnapshotScheduler`
 
 Remaining production TODO:
-- Add persistence-backed transaction boundary tests proving database state and outbox rows roll back together under MySQL.
+- Broaden outbox/domain-state consistency probes beyond order lifecycle as more durable projections become authoritative.
 - Disaster recovery for matching, orders, accounts, and positions.
 
 ## Market Data And Push

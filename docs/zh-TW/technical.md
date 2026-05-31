@@ -22,6 +22,7 @@ English version: [../en/technical.md](../en/technical.md)
 | [Archive Strategy](archive-strategy.md) | 歷史資料的 archive manifest、retention class、刪除前置條件與 restore 規則。 |
 | [Finance Operator Runbook](finance-operator-runbook.md) | 每日財務匯出、ledger archive restore smoke、replay validation 與不平衡日報處理。 |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
+| [Cross-Store Failure Drill](cross-store-failure-drill.md) | MySQL/Redis/Kafka failure drill 與 outbox/domain-state consistency checks。 |
 | [ADL 營運手冊](adl-operator-runbook.md) | ADL queue claim、execution、partial retry、no-candidate retry 與 insurance reconciliation 操作流程。 |
 | [Matching Sequencer Runbook](matching-sequencer-runbook.md) | 單 symbol sequencer 的 production ownership、partition、啟動與 failover 規則。 |
 | [產品總覽](README.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |

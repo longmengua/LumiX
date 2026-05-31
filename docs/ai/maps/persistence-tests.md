@@ -57,7 +57,7 @@ Run all tests:
 Targeted tests:
 
 ```bash
-./mvnw -Dtest=CommandTransactionBoundaryTest,OutboxServiceTest test
+./mvnw -Dtest=CommandTransactionBoundaryTest,OutboxServiceTest,OutboxDomainStateConsistencyServiceTest test
 ./mvnw -Dtest=InMemoryMatchingEngineTest test
 ./mvnw -Dtest=MatchingLogOwnerEpochTest test
 ./mvnw -Dtest=MatchingWorkerCommandRouterTest test
@@ -97,8 +97,9 @@ Test ownership:
 - Web security/interceptors: `src/test/java/com/example/exchange/interfaces/web`
 
 Transaction boundary coverage:
-- `CommandTransactionBoundaryTest` proves successful command bodies commit and failed command bodies roll back without hidden retry.
+- `CommandTransactionBoundaryTest` proves successful command bodies commit, failed command bodies roll back without hidden retry, and order-place/cancel/hedge persistence-style failures leave no half-state.
 - `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
+- `OutboxDomainStateConsistencyServiceTest` proves recovery reporting flags `order.lifecycle` outbox rows without matching lifecycle projection.
 - `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
 - `LiquidateUseCaseTest`, `ExecuteAdlUseCaseTest`, and `MarketMakerHedgeExecutionServiceTest` prove manual liquidation, ADL forced execution, and hedge execution enter the same command boundary when configured.
 - `AdlQueueExecutionServiceTest` includes restart-style partial retry coverage by reusing the same queue store across service instances and asserting only persisted remaining notional is retried.

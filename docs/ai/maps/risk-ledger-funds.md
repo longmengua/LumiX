@@ -61,6 +61,7 @@ Ledger concerns:
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
 - `CancelReplaceOrderUseCase` owns an outer boundary for cancel original plus replacement place, avoiding a database half-commit where original cancel succeeds but replacement order fails.
+- Transaction-boundary tests cover rollback semantics for order-place outbox insert failure, cancel ledger-release failure, and hedge audit/outbox persistence failure.
 - `LiquidateUseCase` now enters `CommandTransactionBoundary` in Spring runtime before liquidation mutates position, ledger, insurance/ADL coverage, and audit events.
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary` in Spring runtime before ADL execution mutates position, ledger, execution records, and audit events.
 

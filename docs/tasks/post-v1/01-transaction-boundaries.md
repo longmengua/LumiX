@@ -30,10 +30,11 @@ Define and enforce explicit write boundaries for MySQL, Redis, Kafka, matching s
 - Wired `ExecuteAdlUseCase` through the same boundary so ADL forced execution enters a command transaction before position, ledger, execution record, and audit event work.
 - Wired `MarketMakerHedgeExecutionService` manual and enabled-profile execution through the same boundary so profile lookup, exposure planning, hedge routing, and audit publish share one command entry.
 - Updated `OutboxService` so `publish(...)` saves the outbox row immediately but defers the external publisher call until Spring transaction `afterCommit` when a transaction is active.
-- Added tests proving successful command bodies commit, failed command bodies roll back without hidden retry, order command validation/missing-order failures roll back, active transactions do not send outbox payloads before commit, and liquidation/ADL/hedge execution enter the boundary when configured.
+- Added tests proving successful command bodies commit, failed command bodies roll back without hidden retry, order command validation/missing-order failures roll back, active transactions do not send outbox payloads before commit, liquidation/ADL/hedge execution enter the boundary when configured, and persistence-style order-place/cancel/hedge rollback cases leave no half-state.
+- Added `/api/recovery/outbox/domain-state-consistency` to detect order lifecycle outbox rows that lack matching domain-state projection.
+- Added cross-store failure drill docs for MySQL committed while Redis/Kafka are delayed.
 
 Remaining work:
-- Add persistence-backed integration tests that prove DB state and outbox rows roll back together under MySQL.
 - [x] Document Redis hot-state recovery rules for cases where DB commits but cache writes fail.
 
 ## Acceptance Criteria
