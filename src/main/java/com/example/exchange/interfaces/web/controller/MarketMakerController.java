@@ -10,12 +10,14 @@ import com.example.exchange.application.service.MarketMakerHedgeReconciliationSe
 import com.example.exchange.application.service.MarketMakerHedgeVenueIdempotencyService;
 import com.example.exchange.application.service.MarketMakerProfileService;
 import com.example.exchange.application.service.MarketMakerQuoteLifecycleService;
+import com.example.exchange.application.service.MarketMakerQuoteReconciliationService;
 import com.example.exchange.domain.model.dto.HedgeFillRecord;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteReconciliationReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
@@ -46,6 +48,7 @@ public class MarketMakerController {
     private final MarketMakerHedgeVenueIdempotencyService hedgeVenueIdempotencyService;
     private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
+    private final MarketMakerQuoteReconciliationService quoteReconciliationService;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -97,6 +100,13 @@ public class MarketMakerController {
             @PathVariable String symbol
     ) {
         return ApiResponse.ok(quoteLifecycleService.quoteState(marketMakerId, symbol).orElse(null));
+    }
+
+    @GetMapping("/quotes/reconciliation")
+    public ApiResponse<MarketMakerQuoteReconciliationReport> reconcileQuoteStates(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(quoteReconciliationService.reconcileActiveQuotes(limit));
     }
 
     @GetMapping("/profiles/{marketMakerId}/hedge-fills")

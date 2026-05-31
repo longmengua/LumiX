@@ -100,6 +100,7 @@ User WebSocket：
 ./shells/api-curls/exchange/market-maker-quotes-post.sh
 ./shells/api-curls/exchange/market-maker-quotes-active-get.sh
 ./shells/api-curls/exchange/market-maker-profile-quotes-get.sh
+./shells/api-curls/exchange/market-maker-quotes-reconciliation-get.sh
 ./shells/api-curls/exchange/risk-adl-queue-claim-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-execute-post.sh
 ./shells/api-curls/exchange/risk-adl-queue-release-post.sh

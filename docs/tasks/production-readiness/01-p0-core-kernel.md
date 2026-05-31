@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`0/36` done.
+`1/36` done.
 
 ## Matching And Command Recovery
 
@@ -43,7 +43,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Market Maker Quoting And Hedging
 
-- [ ] Add quote state vs open-order reconciliation service.
+- [x] Add quote state vs open-order reconciliation service.
 - [ ] Add quote state reconciliation operator API and curl script.
 - [ ] Add per-side quote version metadata for bid/ask replacement history.
 - [ ] Add active quote restore test after repository restart/reload.
