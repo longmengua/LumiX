@@ -32,7 +32,7 @@ Application service tests。
 | `OperationalMetricsServiceTest` | 下單結果 counters、取消數、成交事件數、latency 統計。 |
 | `MarketMakerHedgingServiceTest` | 做市商 exposure aggregation、kill switch、slippage rejection 與 venue routing。 |
 | `MarketMakerQuoteServiceTest` | 做市商 quote kill switch、crossed quote rejection 與 quote audit event。 |
-| `MarketMakerQuoteLifecycleServiceTest` / `UseCaseMarketMakerQuoteOrderGatewayTest` | 做市商 quote validation 後的 stale quote cleanup 與 post-only bid/ask 內部掛單 placement。 |
+| `MarketMakerQuoteLifecycleServiceTest` / `UseCaseMarketMakerQuoteOrderGatewayTest` | 做市商 quote validation 後的 stale quote cleanup、durable active quote state 與 post-only bid/ask 內部掛單 placement。 |
 | `MarketMakerProfileServiceTest` | 做市商 profile/risk limit 保存、查詢與 validation。 |
 | `MarketMakerHedgeFillServiceTest` | 做市商 hedge fill 保存、查詢與 validation。 |
 | `MarketMakerHedgeVenueIdempotencyServiceTest` | Hedge venue submit idempotency unresolved report 與 lookup reconcile trigger。 |

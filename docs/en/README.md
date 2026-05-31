@@ -282,6 +282,9 @@ src/main/java/com/example/exchange
 - `PUT /api/risk/price-oracle`
 - `GET /api/risk/price-oracle/{symbol}`
 - `POST /api/market-maker/quotes`
+- `GET /api/market-maker/quotes/active?limit=50`
+- `GET /api/market-maker/profiles/{marketMakerId}/quotes`
+- `GET /api/market-maker/profiles/{marketMakerId}/quotes/{symbol}`
 - `POST /api/risk/funding/settle`
 - `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`

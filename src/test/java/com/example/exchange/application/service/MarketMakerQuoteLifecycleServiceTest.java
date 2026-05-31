@@ -7,9 +7,11 @@ import com.example.exchange.domain.event.MarketMakerQuoteDecisionRecorded;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
 import com.example.exchange.domain.model.dto.MarketMakerRiskLimit;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.repository.MarketMakerProfileStore;
+import com.example.exchange.domain.repository.MarketMakerQuoteStateStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -40,6 +42,13 @@ class MarketMakerQuoteLifecycleServiceTest {
         assertThat(report.placedCount()).isEqualTo(2);
         assertThat(report.bidOrderId()).isNotNull();
         assertThat(report.askOrderId()).isNotNull();
+        assertThat(fixture.quoteStateStore.find("mm-quote-1", "BTCUSDT"))
+                .get()
+                .satisfies(state -> {
+                    assertThat(state.active()).isTrue();
+                    assertThat(state.bidOrderId()).isEqualTo(report.bidOrderId());
+                    assertThat(state.askOrderId()).isEqualTo(report.askOrderId());
+                });
         assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
                 .containsExactly(OrderSide.BUY, OrderSide.SELL);
         assertThat(fixture.published).hasSize(1);
@@ -58,6 +67,14 @@ class MarketMakerQuoteLifecycleServiceTest {
         assertThat(report.decision().reason()).isEqualTo("KILL_SWITCH_ENABLED");
         assertThat(report.canceledCount()).isZero();
         assertThat(report.placedCount()).isZero();
+        assertThat(fixture.quoteStateStore.find("mm-quote-1", "BTCUSDT"))
+                .get()
+                .satisfies(state -> {
+                    assertThat(state.active()).isFalse();
+                    assertThat(state.reason()).isEqualTo("KILL_SWITCH_ENABLED");
+                    assertThat(state.bidOrderId()).isNull();
+                    assertThat(state.askOrderId()).isNull();
+                });
         assertThat(fixture.gateway.requests).isEmpty();
     }
 
@@ -131,12 +148,14 @@ class MarketMakerQuoteLifecycleServiceTest {
 
     private static final class Fixture {
         private final MemProfileStore profileStore = new MemProfileStore();
+        private final MemQuoteStateStore quoteStateStore = new MemQuoteStateStore();
         private final RecordingQuoteOrderGateway gateway = new RecordingQuoteOrderGateway();
         private final List<MarketMakerQuoteDecisionRecorded> published = new ArrayList<>();
         private final MarketMakerQuoteLifecycleService service = new MarketMakerQuoteLifecycleService(
                 new MarketMakerProfileService(profileStore),
                 new MarketMakerQuoteService(published::add),
-                gateway
+                gateway,
+                quoteStateStore
         );
     }
 
@@ -187,6 +206,40 @@ class MarketMakerQuoteLifecycleServiceTest {
             return profiles.values().stream()
                     .filter(MarketMakerProfile::enabled)
                     .toList();
+        }
+    }
+
+    private static final class MemQuoteStateStore implements MarketMakerQuoteStateStore {
+        private final Map<String, MarketMakerQuoteState> states = new LinkedHashMap<>();
+
+        @Override
+        public void save(MarketMakerQuoteState state) {
+            states.put(key(state.marketMakerId(), state.symbol()), state);
+        }
+
+        @Override
+        public Optional<MarketMakerQuoteState> find(String marketMakerId, String symbol) {
+            return Optional.ofNullable(states.get(key(marketMakerId, symbol)));
+        }
+
+        @Override
+        public List<MarketMakerQuoteState> findByMarketMakerId(String marketMakerId, int limit) {
+            return states.values().stream()
+                    .filter(state -> state.marketMakerId().equals(marketMakerId))
+                    .limit(limit)
+                    .toList();
+        }
+
+        @Override
+        public List<MarketMakerQuoteState> findActive(int limit) {
+            return states.values().stream()
+                    .filter(MarketMakerQuoteState::active)
+                    .limit(limit)
+                    .toList();
+        }
+
+        private static String key(String marketMakerId, String symbol) {
+            return marketMakerId.trim() + ":" + symbol.trim().toUpperCase();
         }
     }
 }

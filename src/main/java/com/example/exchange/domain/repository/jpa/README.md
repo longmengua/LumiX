@@ -13,6 +13,7 @@ Spring Data JPA repositories。
 - `JpaMarketDataTickerStore` 保存 restart-safe ticker latest-state records。
 - `JpaMarketDataKlineStore` 保存 restart-safe kline records。
 - `JpaHedgeVenueIdempotencyStore` 保存 hedge venue submit claim/result records。
+- `JpaMarketMakerQuoteStateStore` 保存 market-maker active quote ownership records。
 - `JpaPolymarketClobCommandStore` 保存 Polymarket CLOB command claim/result records。
 - `JpaRpcTransactionStore` 保存 backend-observed RPC transaction command/txHash tracking records。
 

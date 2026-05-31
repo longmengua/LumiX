@@ -6,7 +6,7 @@
 - 訂單：下單、查 open/all、撤單、amend、cancel-replace 的主要 API 已在 controller 中提供；此目錄目前只放部分常用範例。
 - 行情：depth snapshot 與 depth delta backfill 範例已補齊。
 - 資金/風控：入金、出金、margin transfer、transfer list、bonus-credit user/campaign report/clawback、turnover summary/records/reconciliation、risk snapshot、persisted risk snapshot、price oracle、ADL queue claim/release/execution 範例已補齊。
-- 做市商：post-only quote placement 範例已補齊。
+- 做市商：post-only quote placement 與 active quote state 查詢範例已補齊。
 - Recovery：包含 snapshot recovery、全帳戶 reconciliation 與 daily finance report 範例。
 
 新增 API 時請同步補：

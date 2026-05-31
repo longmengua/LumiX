@@ -21,8 +21,9 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Ledger/reconciliation: `WalletLedgerService`, `ReconciliationService`
 - Future market-maker package should stay behind application/domain contracts before adding infra adapters.
 - Market-maker DTOs: `MarketMakerProfile`, `MarketMakerRiskLimit`, `MarketMakerExposure`, `HedgeOrderRequest`, `HedgeOrderResult`, `HedgeDecision`.
-- Quote DTOs: `MarketMakerQuoteCommand`, `MarketMakerQuoteDecision`, `MarketMakerQuoteLifecycleReport`.
+- Quote DTOs: `MarketMakerQuoteCommand`, `MarketMakerQuoteDecision`, `MarketMakerQuoteLifecycleReport`, `MarketMakerQuoteState`.
 - Durable profile store: `MarketMakerProfileStore`, `JpaMarketMakerProfileStore`, `MarketMakerProfileRecord`, `MarketMakerRiskLimitRecord`.
+- Durable quote state store: `MarketMakerQuoteStateStore`, `JpaMarketMakerQuoteStateStore`, `MarketMakerQuoteStateRecord`.
 - Hedge audit store: `HedgeDecisionAuditStore`, `JpaHedgeDecisionAuditStore`, `HedgeDecisionAuditRecord`, `HedgeDecisionAuditRecordEntity`.
 - Hedge fill store: `HedgeFillStore`, `JpaHedgeFillStore`, `HedgeFillRecord`, `HedgeFillRecordEntity`.
 - Profile service: `MarketMakerProfileService`.
@@ -37,7 +38,8 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Scheduled hedge execution can use durable worker locking through `market-maker.hedge-execution.lock-enabled=true`, `HedgeExecutionLockStore`, `JpaHedgeExecutionLockStore`, and `hedge_execution_locks`.
 - Operator approval can be required through `market-maker.hedge-execution.approval-required=true`; manual APIs must pass `X-Operator-Approval`, while scheduler uses `scheduled-approval-token`.
 - Exposure aggregation: `MarketMakerExposureService`.
-- Quote validation and placement lifecycle: `MarketMakerQuoteService`, `MarketMakerQuoteLifecycleService`, `MarketMakerQuoteOrderGateway`, `UseCaseMarketMakerQuoteOrderGateway`; accepted or rejected quotes first clear prior open `mmq:{marketMakerId}:...` quote orders for the same uid/symbol before replacement placement.
+- Quote validation and placement lifecycle: `MarketMakerQuoteService`, `MarketMakerQuoteLifecycleService`, `MarketMakerQuoteOrderGateway`, `UseCaseMarketMakerQuoteOrderGateway`; accepted or rejected quotes first clear prior open `mmq:{marketMakerId}:...` quote orders for the same uid/symbol before replacement placement, then persist latest active quote state for restart/operator lookup.
+- Quote state operator APIs: `GET /api/market-maker/quotes/active`, `GET /api/market-maker/profiles/{marketMakerId}/quotes`, `GET /api/market-maker/profiles/{marketMakerId}/quotes/{symbol}`.
 - Inventory-aware hedge planning/execution: `MarketMakerHedgeStrategyService`, `MarketMakerHedgeExecutionService`, `HedgeStrategyDecision`, `HedgeExecutionReport`.
 - Hedge execution entry points use `CommandTransactionBoundary` when Spring wires it, so profile lookup, exposure planning, venue routing, hedge decision audit, and outbox rows share one command boundary.
 - Global execution halt: `risk-controls.market-maker-hedge-execution-halt` / `RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_HALT`.
@@ -64,6 +66,8 @@ This map is part of the current core-kernel priority lane. It should be read whe
 4. [x] Add audit events for quote decisions, hedge decisions, and venue order id.
 5. [x] Add tests covering exposure aggregation, quote kill switch, crossed quote, hedge kill switch, slippage rejection, and accepted venue routing.
 
+- Migrations include market-maker quote states in `V16__market_maker_quote_states.sql`.
+
 Remaining:
-- Durable quote state, per-side cancel-replace metadata, and restore/reconciliation of active quote ownership after restart.
+- Per-side quote version metadata and restore/reconciliation jobs that compare active quote state with actual open orders after restart.
 - Real hedge venue adapter and trade/ledger reconciliation refs.

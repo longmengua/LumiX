@@ -16,6 +16,7 @@ import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerProfileRequest;
@@ -73,6 +74,29 @@ public class MarketMakerController {
             @Valid @RequestBody MarketMakerQuoteRequest request
     ) {
         return ApiResponse.ok(quoteLifecycleService.placeQuote(request.toCommand()));
+    }
+
+    @GetMapping("/quotes/active")
+    public ApiResponse<List<MarketMakerQuoteState>> activeQuoteStates(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(quoteLifecycleService.activeQuoteStates(limit));
+    }
+
+    @GetMapping("/profiles/{marketMakerId}/quotes")
+    public ApiResponse<List<MarketMakerQuoteState>> quoteStatesByMarketMaker(
+            @PathVariable String marketMakerId,
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(quoteLifecycleService.quoteStatesByMarketMaker(marketMakerId, limit));
+    }
+
+    @GetMapping("/profiles/{marketMakerId}/quotes/{symbol}")
+    public ApiResponse<MarketMakerQuoteState> quoteState(
+            @PathVariable String marketMakerId,
+            @PathVariable String symbol
+    ) {
+        return ApiResponse.ok(quoteLifecycleService.quoteState(marketMakerId, symbol).orElse(null));
     }
 
     @GetMapping("/profiles/{marketMakerId}/hedge-fills")
