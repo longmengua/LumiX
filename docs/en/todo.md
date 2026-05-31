@@ -1,7 +1,7 @@
 <!-- File purpose: English production-readiness checklist. Other languages are listed in the repository root README.md. -->
 # Production TODO
 
-This checklist focuses on the work needed to move the current MVP toward production. Core-v1 freeze is closed; the next core production lane is [post-v1 production hardening tasks](../tasks/post-v1/README.md).
+This checklist focuses on the work needed to move the current MVP toward production. Core-v1 freeze is closed; the next core production lane is [post-v1 production hardening tasks](../tasks/post-v1/README.md). Fine-grained progress for the broad checklist items is tracked in [production-readiness fine tasks](../tasks/production-readiness/README.md).
 
 Documentation categories: [Product Documentation](README.md) / [Technical Documentation](technical.md) / TODO Documentation
 

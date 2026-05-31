@@ -21,6 +21,7 @@ This directory turns roadmap items into executable task files. Use it when the u
 | Group | Directory | Purpose |
 | --- | --- | --- |
 | Core exchange kernel | [core-kernel](core-kernel) | Replayable matching, ADL, bonus credit, turnover, accounting book, market-maker hedging. |
+| Production readiness fine tasks | [production-readiness](production-readiness) | Small progress-tracking slices split from broad P0/P1/P2 TODO items. |
 | Post-v1 production hardening | [post-v1](post-v1) | Transaction boundaries, production worker routing, ADL execution, market data durability, and external API idempotency. |
 | Release freeze | [release](release) | Bounded release scope, verification checklist, and closeout runbooks. |
 | Web applications | [web](web) | Client web and admin web task breakdown. |

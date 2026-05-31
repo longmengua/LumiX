@@ -1,7 +1,7 @@
 <!-- 檔案用途：繁體中文 production TODO；其他語言請見根目錄 README.md。 -->
 # Production TODO
 
-這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze 已關閉；接下來以 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 作為核心 production 工作主線。
+這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze 已關閉；接下來以 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 作為核心 production 工作主線。粗項 TODO 的細分進度追蹤放在 [production-readiness fine tasks](../tasks/production-readiness/README.md)。
 
 文件分類：[產品文件](README.md) / [技術文件](technical.md) / 待辦清單文件
 
