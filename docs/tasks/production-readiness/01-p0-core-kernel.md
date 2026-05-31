@@ -8,7 +8,7 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`5/36` done.
+`9/36` done.
 
 ## Matching And Command Recovery
 
@@ -48,10 +48,10 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 - [x] Add per-side quote version metadata for bid/ask replacement history.
 - [x] Add active quote restore test after repository restart/reload.
 - [x] Add real hedge venue adapter skeleton with signed request contract but safe disabled default.
-- [ ] Add real hedge venue lookup adapter implementation contract test.
-- [ ] Link hedge decisions to internal trade refs when exposure is created from internal fills.
-- [ ] Link hedge fills to ledger refs for fee/PnL accounting reconciliation.
-- [ ] Add hedge reconciliation issue report for trade-vs-ledger mismatches.
+- [x] Add real hedge venue lookup adapter implementation contract test.
+- [x] Link hedge decisions to internal trade refs when exposure is created from internal fills.
+- [x] Link hedge fills to ledger refs for fee/PnL accounting reconciliation.
+- [x] Add hedge reconciliation issue report for trade-vs-ledger mismatches.
 
 ## Transaction Boundaries And Cross-Store Consistency
 

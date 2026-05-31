@@ -24,6 +24,7 @@ public class HedgeVenueFillMapper {
                 message.fee(),
                 normalizeOptional(message.feeAsset()),
                 normalizeOptional(message.refId()),
+                null,
                 message.filledAt(),
                 null
         );

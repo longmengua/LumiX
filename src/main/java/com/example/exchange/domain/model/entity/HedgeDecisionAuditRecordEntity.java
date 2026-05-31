@@ -25,6 +25,7 @@ import java.util.UUID;
                 @Index(name = "idx_hedge_decision_mm_time", columnList = "market_maker_id,decided_at"),
                 @Index(name = "idx_hedge_decision_symbol_time", columnList = "symbol,decided_at"),
                 @Index(name = "idx_hedge_decision_ref", columnList = "ref_id"),
+                @Index(name = "idx_hedge_decision_trade_ref", columnList = "internal_trade_ref_id"),
                 @Index(name = "idx_hedge_decision_accepted", columnList = "accepted,decided_at")
         }
 )
@@ -58,6 +59,9 @@ public class HedgeDecisionAuditRecordEntity {
     @Column(name = "ref_id", length = 128)
     private String refId;
 
+    @Column(name = "internal_trade_ref_id", length = 128)
+    private String internalTradeRefId;
+
     @Column(name = "decided_at", nullable = false, columnDefinition = "DATETIME(6)")
     private Instant decidedAt;
 
@@ -75,6 +79,7 @@ public class HedgeDecisionAuditRecordEntity {
         entity.setOrderNotional(record.orderNotional());
         entity.setVenueOrderId(record.venueOrderId());
         entity.setRefId(record.refId());
+        entity.setInternalTradeRefId(record.internalTradeRefId());
         entity.setDecidedAt(record.decidedAt());
         entity.setCreatedAt(record.createdAt());
         return entity;
@@ -90,6 +95,7 @@ public class HedgeDecisionAuditRecordEntity {
                 orderNotional,
                 venueOrderId,
                 refId,
+                internalTradeRefId,
                 decidedAt,
                 createdAt
         );

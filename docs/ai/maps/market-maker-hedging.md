@@ -48,17 +48,17 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Scheduler config: `MARKET_MAKER_HEDGE_EXECUTION_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS`, `MARKET_MAKER_HEDGE_EXECUTION_REF_PREFIX`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_ENABLED`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_OWNER_ID`, `MARKET_MAKER_HEDGE_EXECUTION_LOCK_TTL_MS`, `MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_REQUIRED`, `MARKET_MAKER_HEDGE_EXECUTION_APPROVAL_TOKEN`, `MARKET_MAKER_HEDGE_EXECUTION_SCHEDULED_APPROVAL_TOKEN`.
 - Hedge decision/routing: `MarketMakerHedgingService`.
 - Hedge fill recording: `MarketMakerHedgeFillService`; venue callback replay uses `venueOrderId + venueFillId` through `HedgeFillStore.findByVenueOrderIdAndVenueFillId(...)`.
-- Hedge decision-vs-fill reconciliation and idempotency operator view: `MarketMakerHedgeReconciliationService`, `MarketMakerHedgeVenueIdempotencyService`, `HedgeReconciliationReport`, `HedgeReconciliationIssue`, `HedgeVenueIdempotencyReport`, `HedgeVenueIdempotencyIssue`.
+- Hedge decision-vs-fill reconciliation and idempotency operator view: `MarketMakerHedgeReconciliationService`, `MarketMakerHedgeVenueIdempotencyService`, `HedgeReconciliationReport`, `HedgeReconciliationIssue`, `HedgeVenueIdempotencyReport`, `HedgeVenueIdempotencyIssue`; reconciliation now reports missing internal trade refs, missing ledger refs, and trade/ledger ref mismatches.
 - Venue fill mapping/idempotency: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`, `HedgeFillStore`, `JpaHedgeFillStore`.
 - Hedge venue contract: `domain.service.HedgeVenueAdapter`.
 - Default safe adapter: `infra.hedging.RejectingHedgeVenueAdapter`.
-- Real venue adapter skeleton: `infra.hedging.RealHedgeVenueAdapter`, `RealHedgeVenueSigner`, and `SignedHedgeVenueRequest`; disabled mode safely rejects, enabled mode signs the stable submit payload but does not perform HTTP I/O yet.
+- Real venue adapter skeleton: `infra.hedging.RealHedgeVenueAdapter`, `RealHedgeVenueOrderLookupAdapter`, `RealHedgeVenueSigner`, and `SignedHedgeVenueRequest`; disabled mode safely rejects or returns empty lookup, enabled mode signs stable submit/lookup payloads but does not perform HTTP I/O yet.
 - Idempotency decorator baseline: `infra.hedging.IdempotentHedgeVenueAdapter` uses `HedgeOrderRequest.refId` with `HedgeVenueIdempotencyStore` / `JpaHedgeVenueIdempotencyStore` to claim before effectful venue submit, persist terminal results, prevent duplicate submits, reject payload conflicts, and block retries after pending or timeout-like uncertain outcomes. Operators can query unresolved pending/retryable records and trigger lookup reconciliation through `MarketMakerHedgeVenueIdempotencyService`.
 - Venue outcome lookup contract: `HedgeVenueOrderLookupAdapter` with safe default `NoopHedgeVenueOrderLookupAdapter`; real venue adapters should implement lookup by `refId` and return terminal `HedgeOrderResult` for uncertain submit reconciliation.
 - Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
 - Audit events: `HedgeDecisionRecorded`, `MarketMakerQuoteDecisionRecorded`.
 - Tests: `MarketMakerHedgingServiceTest`, `MarketMakerQuoteServiceTest`, `MarketMakerQuoteLifecycleServiceTest`, `MarketMakerQuoteReconciliationServiceTest`, `MarketMakerQuoteStateRecordTest`, `UseCaseMarketMakerQuoteOrderGatewayTest`, `MarketMakerProfileServiceTest`, `MarketMakerHedgeFillServiceTest`, `HedgeVenueCallbackVerifierTest`, `MarketMakerHedgeReconciliationServiceTest`, `MarketMakerHedgeVenueIdempotencyServiceTest`, `MarketMakerHedgeStrategyServiceTest`, `MarketMakerHedgeExecutionServiceTest`, `RealHedgeVenueAdapterTest`, `IdempotentHedgeVenueAdapterTest`, `RetryingHedgeVenueAdapterTest`, `ThrottlingHedgeVenueAdapterTest`, `ApiAuthenticationInterceptorTest`.
-- Migrations include hedge venue idempotency records in `V8__hedge_venue_idempotency_records.sql`.
+- Migrations include hedge venue idempotency records in `V8__hedge_venue_idempotency_records.sql` and hedge trade/ledger refs in `V18__hedge_trade_ledger_refs.sql`.
 
 ## First Implementation Slice
 
@@ -72,4 +72,4 @@ This map is part of the current core-kernel priority lane. It should be read whe
 
 Remaining:
 - Automated quote reconciliation repair jobs after restart.
-- Real hedge venue HTTP transport, lookup implementation, and trade/ledger reconciliation refs.
+- Real hedge venue HTTP transport and automated reconciliation repair jobs.

@@ -48,28 +48,45 @@ public class MarketMakerHedgeReconciliationService {
     }
 
     private List<HedgeReconciliationIssue> reconcileDecision(HedgeDecisionAuditRecord decision) {
+        List<HedgeReconciliationIssue> issues = new ArrayList<>();
+        if (isBlank(decision.internalTradeRefId())) {
+            issues.add(issue(decision, null, "MISSING_INTERNAL_TRADE_REF", BigDecimal.ZERO));
+        }
         if (decision.venueOrderId() == null || decision.venueOrderId().isBlank()) {
-            return List.of(issue(decision, "MISSING_VENUE_ORDER", BigDecimal.ZERO));
+            issues.add(issue(decision, null, "MISSING_VENUE_ORDER", BigDecimal.ZERO));
+            return issues;
         }
         List<HedgeFillRecord> fills = hedgeFillStore.findByVenueOrderId(decision.venueOrderId());
         if (fills.isEmpty()) {
-            return List.of(issue(decision, "MISSING_FILL", BigDecimal.ZERO));
+            issues.add(issue(decision, null, "MISSING_FILL", BigDecimal.ZERO));
+            return issues;
+        }
+        for (HedgeFillRecord fill : fills) {
+            if (isBlank(fill.ledgerRefId())) {
+                issues.add(issue(decision, fill, "MISSING_LEDGER_REF", BigDecimal.ZERO));
+            }
+            if (!refsMatch(decision, fill)) {
+                issues.add(issue(decision, fill, "TRADE_LEDGER_REF_MISMATCH", BigDecimal.ZERO));
+            }
         }
         BigDecimal filledNotional = fills.stream()
                 .map(HedgeFillRecord::notional)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         int compare = filledNotional.compareTo(decision.orderNotional());
         if (compare < 0) {
-            return List.of(issue(decision, "UNDERFILLED_NOTIONAL", filledNotional));
+            issues.add(issue(decision, null, "UNDERFILLED_NOTIONAL", filledNotional));
+            return issues;
         }
         if (compare > 0) {
-            return List.of(issue(decision, "OVERFILLED_NOTIONAL", filledNotional));
+            issues.add(issue(decision, null, "OVERFILLED_NOTIONAL", filledNotional));
+            return issues;
         }
-        return List.of();
+        return issues;
     }
 
     private static HedgeReconciliationIssue issue(
             HedgeDecisionAuditRecord decision,
+            HedgeFillRecord fill,
             String reason,
             BigDecimal filledNotional
     ) {
@@ -78,10 +95,23 @@ public class MarketMakerHedgeReconciliationService {
                 decision.symbol(),
                 decision.refId(),
                 decision.venueOrderId(),
+                decision.internalTradeRefId(),
+                fill == null ? null : fill.ledgerRefId(),
                 reason,
                 decision.orderNotional(),
                 filledNotional
         );
+    }
+
+    private static boolean refsMatch(HedgeDecisionAuditRecord decision, HedgeFillRecord fill) {
+        if (isBlank(decision.internalTradeRefId()) || isBlank(fill.refId())) {
+            return true;
+        }
+        return decision.internalTradeRefId().equals(fill.refId());
+    }
+
+    private static boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 
     private static void validateQueryLimit(int limit) {

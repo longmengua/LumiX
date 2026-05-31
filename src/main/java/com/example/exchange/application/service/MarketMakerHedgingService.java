@@ -115,6 +115,7 @@ public class MarketMakerHedgingService {
                     decision.orderNotional(),
                     decision.orderResult() == null ? null : decision.orderResult().venueOrderId(),
                     refId,
+                    refId,
                     decision.decidedAt(),
                     null
             ));

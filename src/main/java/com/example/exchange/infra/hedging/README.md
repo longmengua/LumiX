@@ -4,7 +4,7 @@ Hedge venue adapters。
 
 目前內容：
 - `RejectingHedgeVenueAdapter`：預設 adapter，在未設定外部 venue 前安全拒絕送單，避免 production 誤以為已接上真實對沖通道。
-- `RealHedgeVenueAdapter` / `RealHedgeVenueSigner` / `SignedHedgeVenueRequest`：真實 venue adapter skeleton，固定 submit payload 與 HMAC header contract；未顯式啟用前安全拒絕實際送單。
+- `RealHedgeVenueAdapter` / `RealHedgeVenueOrderLookupAdapter` / `RealHedgeVenueSigner` / `SignedHedgeVenueRequest`：真實 venue adapter skeleton，固定 submit/lookup payload 與 HMAC header contract；未顯式啟用前安全拒絕實際送單或回傳空查詢。
 - `NoopHedgeVenueOrderLookupAdapter`：預設 lookup adapter，在未設定外部 venue 前不回填 uncertain outcome，避免誤標完成。
 - `IdempotentHedgeVenueAdapter`：Spring 預設 `@Primary` adapter，以 `refId` claim/result store 包住目前的 safe rejecting venue submit，阻止 duplicate submit、payload conflict、pending claim 與 timeout-like uncertain outcome 後的重送；接真實 venue 時需替換 delegate wiring。
 - `RetryingHedgeVenueAdapter`：retry decorator baseline，依 `HedgeOrderResult.retryable` 對暫時性 venue 錯誤做有限次重試，並保留同一個 `refId` 作為冪等送單來源。

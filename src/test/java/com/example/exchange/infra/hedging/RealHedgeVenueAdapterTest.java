@@ -51,6 +51,50 @@ class RealHedgeVenueAdapterTest {
         assertThat(signed.headers().get("X-Hedge-Signature")).hasSize(64);
     }
 
+    @Test
+    @DisplayName("signLookup 產生查詢 ref id 的穩定簽名 request")
+    void signerBuildsDeterministicLookupRequest() {
+        RealHedgeVenueSigner signer = new RealHedgeVenueSigner(
+                "api-key-1",
+                "secret-1",
+                Clock.fixed(Instant.parse("2026-06-01T00:00:00Z"), ZoneOffset.UTC)
+        );
+
+        // 場景：補單查詢要用 ref id 做 idempotent lookup，且與 submit 使用同一套 HMAC contract。
+        SignedHedgeVenueRequest signed = signer.signLookup("hedge/ref-1");
+
+        assertThat(signed.method()).isEqualTo("GET");
+        assertThat(signed.path()).isEqualTo("/hedge/orders/hedge%2Fref-1");
+        assertThat(signed.payload()).isEmpty();
+        assertThat(signed.headers()).containsEntry("X-Hedge-Api-Key", "api-key-1");
+        assertThat(signed.headers()).containsEntry("X-Hedge-Timestamp", "2026-06-01T00:00:00Z");
+        assertThat(signed.headers().get("X-Hedge-Signature")).hasSize(64);
+    }
+
+    @Test
+    @DisplayName("real hedge venue lookup adapter 未接 HTTP 前只回傳 retryable 狀態")
+    void lookupAdapterHasSafeSkeletonContract() {
+        RealHedgeVenueOrderLookupAdapter disabled = new RealHedgeVenueOrderLookupAdapter(false, null);
+        RealHedgeVenueOrderLookupAdapter missingSigner = new RealHedgeVenueOrderLookupAdapter(true, null);
+        RealHedgeVenueOrderLookupAdapter enabled = new RealHedgeVenueOrderLookupAdapter(
+                true,
+                new RealHedgeVenueSigner(
+                        "api-key-1",
+                        "secret-1",
+                        Clock.fixed(Instant.parse("2026-06-01T00:00:00Z"), ZoneOffset.UTC)
+                )
+        );
+
+        // 場景：production 預設停用不出站；啟用但未完成 HTTP client 時，對帳流程可重試而不誤判成功。
+        assertThat(disabled.lookupByRefId("hedge-ref-1")).isEmpty();
+        assertThat(missingSigner.lookupByRefId("hedge-ref-1")).get()
+                .extracting("reason", "retryable")
+                .containsExactly("REAL_HEDGE_VENUE_LOOKUP_SIGNER_NOT_CONFIGURED", true);
+        assertThat(enabled.lookupByRefId("hedge-ref-1")).get()
+                .extracting("reason", "retryable")
+                .containsExactly("REAL_HEDGE_VENUE_LOOKUP_HTTP_NOT_IMPLEMENTED", true);
+    }
+
     private static HedgeOrderRequest request() {
         return new HedgeOrderRequest(
                 "mm-1",

@@ -21,6 +21,7 @@ public record HedgeFillRecord(
         BigDecimal fee,
         String feeAsset,
         String refId,
+        String ledgerRefId,
         Instant filledAt,
         Instant createdAt
 ) {

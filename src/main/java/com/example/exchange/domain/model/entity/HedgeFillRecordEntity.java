@@ -27,6 +27,7 @@ import java.util.UUID;
                 @Index(name = "idx_hedge_fills_mm_time", columnList = "market_maker_id,filled_at"),
                 @Index(name = "idx_hedge_fills_venue_order", columnList = "venue_order_id"),
                 @Index(name = "idx_hedge_fills_ref", columnList = "ref_id"),
+                @Index(name = "idx_hedge_fills_ledger_ref", columnList = "ledger_ref_id"),
                 @Index(name = "idx_hedge_fills_symbol_time", columnList = "symbol,filled_at")
         },
         uniqueConstraints = {
@@ -75,6 +76,9 @@ public class HedgeFillRecordEntity {
     @Column(name = "ref_id", length = 128)
     private String refId;
 
+    @Column(name = "ledger_ref_id", length = 128)
+    private String ledgerRefId;
+
     @Column(name = "filled_at", nullable = false, columnDefinition = "DATETIME(6)")
     private Instant filledAt;
 
@@ -95,6 +99,7 @@ public class HedgeFillRecordEntity {
         entity.setFee(record.fee());
         entity.setFeeAsset(record.feeAsset());
         entity.setRefId(record.refId());
+        entity.setLedgerRefId(record.ledgerRefId());
         entity.setFilledAt(record.filledAt());
         entity.setCreatedAt(record.createdAt());
         return entity;
@@ -113,6 +118,7 @@ public class HedgeFillRecordEntity {
                 fee,
                 feeAsset,
                 refId,
+                ledgerRefId,
                 filledAt,
                 createdAt
         );

@@ -16,6 +16,7 @@ public record HedgeDecisionAuditRecord(
         BigDecimal orderNotional,
         String venueOrderId,
         String refId,
+        String internalTradeRefId,
         Instant decidedAt,
         Instant createdAt
 ) {

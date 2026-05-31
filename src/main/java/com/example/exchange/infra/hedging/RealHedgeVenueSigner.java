@@ -7,6 +7,7 @@ import com.example.exchange.domain.model.dto.HedgeOrderRequest;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.Instant;
@@ -38,6 +39,27 @@ public class RealHedgeVenueSigner {
         String method = "POST";
         String path = "/hedge/orders";
         String payload = payload(request);
+        String timestamp = Instant.now(clock).toString();
+        String preimage = timestamp + "\n" + method + "\n" + path + "\n" + payload;
+        return new SignedHedgeVenueRequest(
+                method,
+                path,
+                payload,
+                Map.of(
+                        "X-Hedge-Api-Key", apiKey,
+                        "X-Hedge-Timestamp", timestamp,
+                        "X-Hedge-Signature", hmac(preimage)
+                )
+        );
+    }
+
+    public SignedHedgeVenueRequest signLookup(String refId) {
+        if (refId == null || refId.isBlank()) {
+            throw new IllegalArgumentException("ref id is required");
+        }
+        String method = "GET";
+        String path = "/hedge/orders/" + escapePath(refId.trim());
+        String payload = "";
         String timestamp = Instant.now(clock).toString();
         String preimage = timestamp + "\n" + method + "\n" + path + "\n" + payload;
         return new SignedHedgeVenueRequest(
@@ -104,5 +126,9 @@ public class RealHedgeVenueSigner {
 
     private static String escape(String value) {
         return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static String escapePath(String value) {
+        return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
     }
 }

@@ -55,6 +55,7 @@ class MarketMakerHedgeFillServiceTest {
                 BigDecimal.ZERO,
                 "USDT",
                 "trade-ref-1",
+                "ledger-ref-1",
                 Instant.parse("2026-05-28T00:00:00Z"),
                 null
         ))).isInstanceOf(IllegalArgumentException.class)
@@ -72,6 +73,7 @@ class MarketMakerHedgeFillServiceTest {
                 BigDecimal.ZERO,
                 "USDT",
                 "trade-ref-1",
+                "ledger-ref-1",
                 Instant.parse("2026-05-28T00:00:00Z"),
                 null
         ))).isInstanceOf(IllegalArgumentException.class)
@@ -171,6 +173,7 @@ class MarketMakerHedgeFillServiceTest {
                 new BigDecimal("0.01"),
                 "USDT",
                 refId,
+                "ledger-" + venueFillId,
                 Instant.parse("2026-05-28T00:00:00Z"),
                 null
         );

@@ -66,6 +66,34 @@ class MarketMakerHedgeReconciliationServiceTest {
     }
 
     @Test
+    @DisplayName("reconcileMarketMaker 會找出 hedge trade ref 與 ledger ref 缺口")
+    void reconcileMarketMakerReportsTradeAndLedgerReferenceGaps() {
+        MemDecisionStore decisionStore = new MemDecisionStore();
+        MemFillStore fillStore = new MemFillStore();
+        MarketMakerHedgeReconciliationService service =
+                new MarketMakerHedgeReconciliationService(decisionStore, fillStore);
+        decisionStore.append(decision("venue-missing-trade", "100.00", true, null));
+        decisionStore.append(decision("venue-missing-ledger", "100.00", true, "trade-ref-2"));
+        decisionStore.append(decision("venue-mismatch", "100.00", true, "trade-ref-3"));
+        fillStore.append(fill("venue-missing-trade", "1.000", "100.00", "trade-ref-1", "ledger-ref-1"));
+        fillStore.append(fill("venue-missing-ledger", "1.000", "100.00", "trade-ref-2", null));
+        fillStore.append(fill("venue-mismatch", "1.000", "100.00", "wrong-trade-ref", "ledger-ref-3"));
+
+        // 流程：notional 對得上時，仍要能報出 trade ref 與 ledger ref 缺口，供 fee/PnL 對帳追查。
+        HedgeReconciliationReport report = service.reconcileMarketMaker("mm-1", 50);
+
+        assertThat(report.issueCount()).isEqualTo(3);
+        assertThat(report.issues()).extracting("reason")
+                .containsExactly(
+                        "MISSING_INTERNAL_TRADE_REF",
+                        "MISSING_LEDGER_REF",
+                        "TRADE_LEDGER_REF_MISMATCH"
+                );
+        assertThat(report.issues().get(1).ledgerRefId()).isNull();
+        assertThat(report.issues().get(2).internalTradeRefId()).isEqualTo("trade-ref-3");
+    }
+
+    @Test
     @DisplayName("reconcileMarketMaker 拒絕無界限查詢 limit")
     void reconcileMarketMakerRejectsInvalidLimit() {
         MarketMakerHedgeReconciliationService service =
@@ -81,6 +109,15 @@ class MarketMakerHedgeReconciliationServiceTest {
     }
 
     private static HedgeDecisionAuditRecord decision(String venueOrderId, String notional, boolean accepted) {
+        return decision(venueOrderId, notional, accepted, "trade-ref-1");
+    }
+
+    private static HedgeDecisionAuditRecord decision(
+            String venueOrderId,
+            String notional,
+            boolean accepted,
+            String internalTradeRefId
+    ) {
         return new HedgeDecisionAuditRecord(
                 null,
                 "mm-1",
@@ -90,12 +127,23 @@ class MarketMakerHedgeReconciliationServiceTest {
                 new BigDecimal(notional),
                 venueOrderId,
                 "trade-ref-1",
+                internalTradeRefId,
                 Instant.parse("2026-05-28T00:00:00Z"),
                 null
         );
     }
 
     private static HedgeFillRecord fill(String venueOrderId, String quantity, String price) {
+        return fill(venueOrderId, quantity, price, "trade-ref-1", "ledger-ref-1");
+    }
+
+    private static HedgeFillRecord fill(
+            String venueOrderId,
+            String quantity,
+            String price,
+            String refId,
+            String ledgerRefId
+    ) {
         return new HedgeFillRecord(
                 null,
                 "mm-1",
@@ -107,7 +155,8 @@ class MarketMakerHedgeReconciliationServiceTest {
                 new BigDecimal(price),
                 BigDecimal.ZERO,
                 "USDT",
-                "trade-ref-1",
+                refId,
+                ledgerRefId,
                 Instant.parse("2026-05-28T00:00:01Z"),
                 null
         );

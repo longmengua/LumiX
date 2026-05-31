@@ -10,6 +10,8 @@ public record HedgeReconciliationIssue(
         String symbol,
         String refId,
         String venueOrderId,
+        String internalTradeRefId,
+        String ledgerRefId,
         String reason,
         BigDecimal expectedNotional,
         BigDecimal filledNotional
