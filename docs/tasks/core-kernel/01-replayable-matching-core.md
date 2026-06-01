@@ -42,10 +42,14 @@ Evolve the current in-memory matching core toward replayability with durable com
 - Added `MatchingSequencerLeaseService.requireWritable(...)` guard to reject missing lease, wrong owner, stale epoch, and expired lease before command writes.
 - Added owner epoch audit fields to matching command/event logs and append APIs.
 - Matching recovery now rejects blank symbols before snapshot/report writes, so startup/takeover cannot create unactionable empty-symbol recovery records.
+- Added restore drill coverage that starts from matching snapshot plus command log and asserts recovered open orders.
+- Added multi-symbol replay validation coverage for interleaved BTC/ETH command offsets.
+- Added cancel-replace rollback coverage for original reserve release plus failed replacement reserve.
+- [../../en/disaster-recovery-runbook.md](../../en/disaster-recovery-runbook.md) documents matching worker takeover, reconnect/session replay semantics, and restore smoke commands.
+- `AccountPositionConsistencyService` and `/api/recovery/restore/account-position-consistency` provide post-restore account/position validation.
 
-Remaining work:
-- Add stronger application/accounting atomicity around cancel-replace reserve release and replacement reserve.
-- Continue production disaster-recovery drills and runbooks for matching/order/account/position restore.
+Future hardening:
+- Continue expanding DR automation from runbook/API baselines into operator-triggered repair workflows.
 
 ## Acceptance Criteria
 

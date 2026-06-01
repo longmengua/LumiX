@@ -133,6 +133,37 @@ class MatchingRecoveryServiceTest {
     }
 
     @Test
+    @DisplayName("restore drill 會從 snapshot + command log 恢復 open orders 並保留 account restore baseline")
+    void restoreDrillRecoversOpenOrdersFromSnapshotAndCommandLog() {
+        InMemoryMatchingCommandLog commandLog = new InMemoryMatchingCommandLog();
+        InMemoryMatchingEngine sourceEngine = new InMemoryMatchingEngine(commandLog, new InMemoryMatchingEventLog());
+        InMemoryMatchingSnapshotStore snapshotStore = new InMemoryMatchingSnapshotStore();
+        InMemoryMatchingReplayReportStore reportStore = new InMemoryMatchingReplayReportStore();
+        sourceEngine.submit(limit(1, OrderSide.SELL, "100", "1"));
+        snapshotStore.save(sourceEngine.exportSnapshot("BTCUSDT"));
+        Order recoveredAsk = limit(2, OrderSide.SELL, "101", "2");
+        sourceEngine.submit(recoveredAsk);
+
+        InMemoryMatchingEngine recoveredEngine = new InMemoryMatchingEngine(commandLog, new InMemoryMatchingEventLog());
+        MatchingRecoveryService service = new MatchingRecoveryService(
+                recoveredEngine,
+                commandLog,
+                snapshotStore,
+                reportStore
+        );
+
+        // Drill：worker crash 後以 snapshot checkpoint 為起點 replay command log，open order 必須仍在 book 上。
+        MatchingRecoveryResult result = service.recoverSymbol("BTCUSDT");
+
+        assertThat(result.validationValid()).isTrue();
+        assertThat(recoveredEngine.exportSnapshot("BTCUSDT").asks())
+                .extracting(order -> order.getId())
+                .contains(recoveredAsk.getId());
+        sourceEngine.shutdown();
+        recoveredEngine.shutdown();
+    }
+
+    @Test
     @DisplayName("recoverSymbol 會拒絕空 symbol，避免產生無法營運追蹤的 recovery report")
     /**
      * 流程：operator 或 startup config 傳入空 symbol -> recovery 應直接拒絕，

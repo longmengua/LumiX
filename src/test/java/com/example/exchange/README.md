@@ -34,11 +34,12 @@
 | `RealHedgeVenueAdapterTest` | Real hedge venue skeleton 的 disabled safety 與 signed request contract。 |
 | `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、durable trade tape、ticker latest-state 與 1m kline baseline。 |
 | `MarketDataRetentionServiceTest` | Market-data high-volume history retention baseline。 |
+| `AccountPositionConsistencyServiceTest` | Restore 後檢查 account/open-position consistency issue 與 valid report。 |
 | `ExecuteAdlUseCaseTest` | ADL forced execution 入口的 transaction boundary commit/rollback。 |
-| `OrderCommandTransactionBoundaryTest` | place/cancel/amend/cancel-replace 指令入口失敗時 rollback command transaction。 |
+| `CommandTransactionBoundaryTest` / `OrderCommandTransactionBoundaryTest` | command body 與 place/cancel/amend/cancel-replace 指令入口失敗時 rollback command transaction。 |
 | `OrderBookChecksumTest` | order book checksum 的 BigDecimal scale normalization。 |
 | `SensitiveLogSanitizerTest` | query、JSON、Authorization header、known sensitive header 遮罩。 |
-| `InMemoryMatchingEngineTest` | FIFO、post-only、自成交拒絕、FOK/IOC、市價單流動性不足。 |
+| `InMemoryMatchingEngineTest` | FIFO、post-only、自成交拒絕、FOK/IOC、市價單流動性不足、snapshot/replay、multi-symbol replay validation。 |
 | `ApiAuthenticationInterceptorTest` | API auth 開關、401、403、role/scope 授權、principal 寫入。 |
 | `ProtectedApiSecurityInterceptorTest` | IP allowlist 與 per-IP rate limit。 |
 | `RequestLoggingInterceptorTest` | request/correlation id、response headers、MDC lifecycle。 |

@@ -16,7 +16,8 @@
 
 ### 核心交易內核優先線
 
-- [ ] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
+- [x] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
+  - Baseline 已完成：durable command/event logs、durable snapshots、offset checkpoints、owner/epoch fencing audit fields、deterministic replay validation reports、worker startup/takeover recovery orchestration、recovered open orders restore drill coverage，以及 interleaved command offsets 的 multi-symbol replay validation。
 - [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
   - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks、forced-execution service、持倉減倉、ledger postings、audit event、durable execution summary/idempotency records、recent execution report API、durable ADL queue store、依 `liquidationId` 冪等的 ADL queue enqueue、queue-to-execution orchestration、operator claim/release guard、stuck-claim operator report 與 runbook、含 restart coverage 的 partial-execution retry semantics、no-eligible-candidate retry semantics，以及 ADL insurance/shortfall reconciliation。
 - [x] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
@@ -32,14 +33,14 @@
 
 ### 交易與撮合
 
-- [ ] 將 in-memory matching engine 演進為可 replay 的撮合核心，至少要有 command log、event log、snapshot、offset checkpoint。
+- [x] 將 in-memory matching engine 演進為可 replay 的撮合核心，至少要有 command log、event log、snapshot、offset checkpoint。
 - [x] 補上 in-process 單 symbol sequencer baseline，讓同一 symbol 的撮合操作序列化。
 - [x] 定義 production 單 symbol sequencer 的部署與 failover 策略，避免多實例同時處理同一 symbol 造成狀態分裂。
 - [x] 發布 order lifecycle events，涵蓋 created、accepted、updated、rejected、canceled、expired、filled。
 - [x] 將 order lifecycle events 產品化，補 durable storage、schema version、replay 與查詢 projection。
 - [x] 補上 amend order、cancel replace、bulk cancel、cancel on disconnect 的 REST/WebSocket baseline。
-- [ ] 為交易所常見指令補 durable command log、更強 atomicity mode 與 reconnect/session 語意。
-  - Baseline 已完成：durable matching command/event logs、worker fencing、cancel-replace command replay，以及 cancel-on-disconnect connection resume semantics。
+- [x] 為交易所常見指令補 durable command log、更強 atomicity mode 與 reconnect/session 語意。
+  - Baseline 已完成：durable matching command/event logs、worker fencing、cancel-replace command replay、cancel-replace reserve-release/replacement rollback coverage、cancel-on-disconnect connection resume semantics，以及 DR runbook reconnect/session replay guidance。
 - [x] 在 pre-trade checks 落實 tick size、lot size、min notional、price band、max order size、max open orders。
 - [x] 明確處理 MARKET 流動性不足、IOC/FOK 未完全成交、POST_ONLY 會吃單、REDUCE_ONLY 超過可減倉量等拒單原因。
 
@@ -79,9 +80,10 @@
 - [x] 逐一確認所有外部 API 都具備 timeout、retry、circuit breaker、rate limit 與 idempotency coverage。
   - Baseline 已完成：external API inventory、共用 HTTP timeout/retry/circuit/rate-limit config、使用 `refId` 的 durable hedge venue submit idempotency envelope、使用 `venueOrderId + venueFillId` 的 hedge venue fill callback replay、可選 hedge venue fill callback HMAC/timestamp verification、未解 hedge venue idempotency 營運報告與 lookup reconcile trigger、使用 `clientRequestId` 的 CLOB place local idempotency、durable CLOB cancel `commandId`、CLOB cancel 對已記錄 cancel/uncertain 狀態的 local replay、uncertain cancel 的 reconcile resolution、CLOB sync/reconcile 對未變更 payload 的 no-op local replay、使用 `eventKey` 的 Polymarket user-channel callback replay / race idempotency、approval read TTL cache coverage，以及 durable backend-observed RPC transaction tracking / unresolved outcome report。
 - [x] 所有核心寫入需要明確交易邊界；MySQL、Redis、Kafka 之間不能假設天然一致。
-  - Baseline 已完成：command transaction boundaries 已包住 order place/cancel/amend/cancel-replace、manual liquidation、ADL forced execution 與 hedge execution；outbox row 會在 command transaction 內保存，外部 publish 延到 `afterCommit`；rollback coverage 已包含 order-place outbox insert failure、cancel ledger-release failure、hedge audit/outbox failure；並有 cross-store MySQL/Redis/Kafka failure drill 與 outbox/domain-state consistency recovery report。
+  - Baseline 已完成：command transaction boundaries 已包住 order place/cancel/amend/cancel-replace、manual liquidation、ADL forced execution 與 hedge execution；outbox row 會在 command transaction 內保存，外部 publish 延到 `afterCommit`；rollback coverage 已包含 order-place outbox insert failure、cancel ledger-release failure、cancel-replace reserve-release/replacement reserve failure、hedge audit/outbox failure；並有 cross-store MySQL/Redis/Kafka failure drill 與 outbox/domain-state consistency recovery report。
 - [x] 補上 MVP snapshot + event replay recovery 入口。
-- [ ] 建立 production 災難恢復流程：從 snapshot + event log 恢復 matching/order/account/position。
+- [x] 建立 production 災難恢復流程：從 snapshot + event log 恢復 matching/order/account/position。
+  - Baseline 已完成：matching/order/account/position restore production DR runbook、worker takeover steps、restore smoke command list、outbox/domain-state consistency report，以及 restore 後 account/position consistency validation report。
 
 ### 安全
 

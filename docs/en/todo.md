@@ -16,7 +16,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Core Exchange Kernel Priority Lane
 
-- [ ] Finish the replayable matching core: durable command log, event log, snapshots, offset checkpoints, and deterministic replay validation.
+- [x] Finish the replayable matching core: durable command log, event log, snapshots, offset checkpoints, and deterministic replay validation.
+  - Baseline done: durable command/event logs, durable snapshots, offset checkpoints, owner/epoch fencing audit fields, deterministic replay validation reports, worker startup/takeover recovery orchestration, restore drill coverage for recovered open orders, and multi-symbol replay validation for interleaved command offsets.
 - [ ] Complete production ADL: queue ranking, forced deleveraging execution, audit events, insurance-fund interaction, and operator controls.
   - Baseline done: deterministic ranking/planning, liquidation decision audit, operator halt/manual-review hooks, forced-execution service for position reduction, ledger postings, audit events, durable execution summary/idempotency records, recent execution report API, durable ADL queue store, idempotent ADL queue enqueue by `liquidationId`, queue-to-execution orchestration, operator claim/release guard, stuck-claim operator report and runbook, partial-execution retry semantics including restart coverage, no-eligible-candidate retry semantics, and ADL insurance/shortfall reconciliation.
 - [x] Add bonus-credit / experience-fund accounting with separate ledger accounts, eligibility rules, consumption priority, expiry, clawback, and reporting.
@@ -32,14 +33,14 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Trading and Matching
 
-- [ ] Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
+- [x] Evolve the in-memory matching engine into a replayable matching core with command log, event log, snapshot, and offset checkpoint.
 - [x] Add an in-process per-symbol sequencer baseline so matching operations for the same symbol are serialized.
 - [x] Define production deployment and failover rules for the per-symbol sequencer to prevent multiple instances from processing the same symbol concurrently.
 - [x] Publish order lifecycle events for created, accepted, updated, rejected, canceled, expired, and filled states.
 - [x] Persist and operationalize order lifecycle events with durable storage, schema versioning, replay, and query projections.
 - [x] Add REST/WebSocket baselines for amend order, cancel replace, bulk cancel, and cancel on disconnect.
-- [ ] Add durable command logs, stronger cancel-replace atomicity modes, and reconnect/session semantics for exchange-standard commands.
-  - Baseline done: durable matching command/event logs, worker fencing, cancel-replace command replay, and cancel-on-disconnect connection resume semantics.
+- [x] Add durable command logs, stronger cancel-replace atomicity modes, and reconnect/session semantics for exchange-standard commands.
+  - Baseline done: durable matching command/event logs, worker fencing, cancel-replace command replay, cancel-replace reserve-release/replacement rollback coverage, cancel-on-disconnect connection resume semantics, and DR runbook reconnect/session replay guidance.
 - [x] Enforce tick size, lot size, min notional, price band, max order size, and max open orders in pre-trade checks.
 - [x] Make rejection semantics explicit for insufficient MARKET liquidity, unfilled IOC/FOK, POST_ONLY taking liquidity, and REDUCE_ONLY exceeding reducible position size.
 
@@ -79,9 +80,10 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Verify timeout, retry, circuit breaker, rate limit, and idempotency coverage for every external API call.
   - Baseline done: external API inventory, shared HTTP timeout/retry/circuit/rate-limit config, durable hedge venue submit idempotency envelope using `refId`, hedge venue fill callback replay using `venueOrderId + venueFillId`, optional hedge venue fill callback HMAC/timestamp verification, unresolved hedge venue idempotency operator report and lookup reconcile trigger, CLOB place local idempotency using `clientRequestId`, durable CLOB cancel `commandId`, CLOB cancel local replay for already-recorded cancel/uncertain statuses, reconcile resolution for uncertain cancel, CLOB sync/reconcile no-op local replay for unchanged payloads, Polymarket user-channel callback replay/race idempotency using `eventKey`, approval read TTL cache coverage, and durable backend-observed RPC transaction tracking with unresolved outcome reporting.
 - [x] Define transaction boundaries for core writes; MySQL, Redis, and Kafka must not be assumed to be automatically consistent.
-  - Baseline done: command transaction boundaries now wrap order place/cancel/amend/cancel-replace, manual liquidation, ADL forced execution, and hedge execution; outbox rows are saved in the command transaction and external publish is deferred until `afterCommit`; rollback coverage now includes order-place outbox insert failure, cancel ledger-release failure, and hedge audit/outbox failure; cross-store MySQL/Redis/Kafka failure drill and outbox/domain-state consistency recovery report are available.
+  - Baseline done: command transaction boundaries now wrap order place/cancel/amend/cancel-replace, manual liquidation, ADL forced execution, and hedge execution; outbox rows are saved in the command transaction and external publish is deferred until `afterCommit`; rollback coverage now includes order-place outbox insert failure, cancel ledger-release failure, cancel-replace reserve-release/replacement reserve failure, and hedge audit/outbox failure; cross-store MySQL/Redis/Kafka failure drill and outbox/domain-state consistency recovery report are available.
 - [x] Add MVP snapshot + event replay recovery entry points.
-- [ ] Build production disaster recovery for matching, orders, accounts, and positions.
+- [x] Build production disaster recovery for matching, orders, accounts, and positions.
+  - Baseline done: production DR runbook for matching/order/account/position restore, worker takeover steps, restore smoke command list, outbox/domain-state consistency report, and account/position consistency validation report after restore.
 
 ### Security
 

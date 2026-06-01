@@ -23,7 +23,8 @@ Application service tests。
 | `TurnoverServiceTest` / `TurnoverReconciliationServiceTest` | 成交事件寫入 turnover fact、explicit/fallback strategy tags、match-level summary、drill-down/export 與帶 ledger-ref flag 的 trade-tape reconciliation。 |
 | `MarkPriceOracleServiceTest` | oracle 設定載入、手動更新、stale quote 拒絕。 |
 | `AccountRiskSnapshotServiceTest` | 單一帳戶 risk snapshot 持久化、account/open-position index 掃描。 |
-| `MatchingRecoveryServiceTest` | 撮合 worker startup/takeover recovery，從 snapshot + command log replay 並保存 validation report。 |
+| `AccountPositionConsistencyServiceTest` | Restore 後 account/open-position consistency report，涵蓋 missing account、margin shortage 與 valid case。 |
+| `MatchingRecoveryServiceTest` | 撮合 worker startup/takeover recovery，從 snapshot + command log replay、assert recovered open orders 並保存 validation report。 |
 | `MatchingSequencerLeaseServiceTest` | 撮合 worker lease owner 互斥、續租 checkpoint、release 與過期 takeover epoch。 |
 | `OutboxServiceTest` / `OutboxDomainStateConsistencyServiceTest` | publish 失敗 retry、DLQ、replay、manual compensation、trace header 傳遞，以及 outbox row 對 domain-state projection 的 consistency report。 |
 | `RpcTransactionTrackingServiceTest` | RPC transaction commandId replay、fingerprint/txHash conflict 與 unresolved outcome report。 |

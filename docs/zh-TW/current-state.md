@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 35 | 8 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 39 | 4 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 8 | 14 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 43 | 27 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 47 | 23 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -42,7 +42,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 撮合狀態已有 in-memory snapshot export/restore baseline，可保留掛單 FIFO、command offset、event offset 與 match sequence。
 - 撮合已有 in-memory command/event log 與 replay baseline，可在 deterministic tests 中從 snapshot checkpoint 重建狀態。
 - 撮合 command/event log、engine snapshot 與 replay validation report 也已有 Flyway schema、JPA durable adapter baseline 與 per-symbol offset checkpoint。
-- 撮合 recovery orchestration 可從 latest snapshot 加 command log 恢復單一 symbol，並保存恢復後 snapshot 與 replay validation report。
+- 撮合 recovery orchestration 可從 latest snapshot 加 command log 恢復單一 symbol，並在 restore drill 驗證 recovered open orders，再保存恢復後 snapshot 與 replay validation report。
 - 撮合 sequencer lease service 可 acquire、renew、release，並在 symbol owner takeover 時遞增 epoch。
 - 撮合 sequencer write guard 會在 command write 前拒絕 missing lease、wrong owner、stale epoch 與 expired lease。
 - 撮合 command replay 支援帶 replacement order payload 的 cancel-replace。
@@ -52,7 +52,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 既有 submit、cancel、amend、cancel-replace accounting-safe cancel + replacement-submit intake path 在該 symbol 有 ready owner context 時，已可使用 worker execution。
 - `matching-worker.fence-legacy-routing` 可在切流時拒絕 configured symbol fallback 到尚未 worker-ready 的舊 in-process path。
 - `MatchingWorkerStartupListener` 會在 `matching-worker.enabled=true` 時，於 application ready 後啟動 configured worker symbols。
-- 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence 與 book-level 差異。
+- 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence、book-level 差異，也已有 multi-symbol interleaved-offset coverage。
 - Market data depth delta 已有 durable sequence/checksum checkpoints、啟動時恢復最新 depth sequence、durable depth delta records，以及依 known version 查詢後續 deltas 的 reconnect backfill endpoint。Trade tape 也有 restart-safe durable baseline。
 - 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
@@ -73,7 +73,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 ## 目前不能當作 production 完成的地方
 
-- Production worker routing 已有 production deployment switch sequence、readiness inspection、rollback sequence 與聚焦 smoke verification。單 symbol sequencer 目前仍以 in-process engine 執行，因此更完整的 disaster recovery 與多進程營運強化仍未完成。
+- Production worker routing 與 disaster recovery 已有 production deployment switch sequence、worker takeover、reconnect/session replay semantics、restore smoke commands、account/position consistency validation、readiness inspection、rollback sequence 與聚焦 smoke verification。單 symbol sequencer 目前仍以 in-process engine 執行，因此更完整的多進程營運強化仍未完成。
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
 - ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金 consume eligibility gate、體驗金到期 scanner 與 campaign auto-clawback scheduler baseline、體驗金用戶/活動 report/export 與 clawback APIs、流水 facts、一等 strategy/market-maker order tags、流水 summary/drill-down/export queries、match-level turnover-vs-trade-tape reconciliation、預設關閉的 recent-window 流水 trade/ledger-ref reconciliation 與 replay path；audit retention、更深入 replay validation 與更完整營運控制仍未完成。
 - funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。liquidation scanning 可把 open positions 透過 oracle-based liquidation routing 處理，並具備 halt / manual-review controls、batch limit、per-position failure isolation 與 decision audit events。production feed redundancy、price clamp、stuck claim 的 alert-backend delivery 與 production insurance-fund capital movement records 仍未完成。

@@ -8,15 +8,15 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Fine-Grained Progress
 
-`28/36` done.
+`36/36` done.
 
 ## Matching And Command Recovery
 
-- [ ] Add a matching/order/account restore drill that starts from snapshot + command/event logs and asserts recovered open orders.
-- [ ] Add matching replay validation for multiple symbols with interleaved command offsets.
-- [ ] Add restore runbook steps for matching worker takeover after process crash.
-- [ ] Add reconnect/session replay semantics for authenticated exchange command clients.
-- [ ] Add persistence-backed cancel-replace rollback test covering reserve release and replacement failure.
+- [x] Add a matching/order/account restore drill that starts from snapshot + command/event logs and asserts recovered open orders.
+- [x] Add matching replay validation for multiple symbols with interleaved command offsets.
+- [x] Add restore runbook steps for matching worker takeover after process crash.
+- [x] Add reconnect/session replay semantics for authenticated exchange command clients.
+- [x] Add persistence-backed cancel-replace rollback test covering reserve release and replacement failure.
 
 ## ADL And Liquidation Closeout
 
@@ -63,9 +63,9 @@ Break the remaining P0 production TODOs into small, commit-sized slices that can
 
 ## Disaster Recovery
 
-- [ ] Add production disaster-recovery runbook for matching/order/account/position restore.
-- [ ] Add smoke test command list for restoring from latest matching snapshot.
-- [ ] Add account/position consistency validation report after restore.
+- [x] Add production disaster-recovery runbook for matching/order/account/position restore.
+- [x] Add smoke test command list for restoring from latest matching snapshot.
+- [x] Add account/position consistency validation report after restore.
 
 ## Read First
 

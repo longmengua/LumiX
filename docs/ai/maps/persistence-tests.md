@@ -59,6 +59,7 @@ Targeted tests:
 ```bash
 ./mvnw -Dtest=CommandTransactionBoundaryTest,OutboxServiceTest,OutboxDomainStateConsistencyServiceTest test
 ./mvnw -Dtest=InMemoryMatchingEngineTest test
+./mvnw -Dtest=AccountPositionConsistencyServiceTest test
 ./mvnw -Dtest=MatchingLogOwnerEpochTest test
 ./mvnw -Dtest=MatchingWorkerCommandRouterTest test
 ./mvnw -Dtest=MatchingWorkerExecutionServiceTest test
@@ -97,7 +98,7 @@ Test ownership:
 - Web security/interceptors: `src/test/java/com/example/exchange/interfaces/web`
 
 Transaction boundary coverage:
-- `CommandTransactionBoundaryTest` proves successful command bodies commit, failed command bodies roll back without hidden retry, and order-place/cancel/hedge persistence-style failures leave no half-state.
+- `CommandTransactionBoundaryTest` proves successful command bodies commit, failed command bodies roll back without hidden retry, and order-place/cancel/cancel-replace/hedge persistence-style failures leave no half-state.
 - `OutboxServiceTest` proves active transactions persist outbox rows first and defer external publish until `afterCommit`.
 - `OutboxDomainStateConsistencyServiceTest` proves recovery reporting flags `order.lifecycle` outbox rows without matching lifecycle projection.
 - `OrderAccountingIntegrationTest` covers the direct-instantiation path for place, cancel, amend, bulk cancel, cancel-on-disconnect, and cancel-replace after optional transaction boundary wiring.
@@ -110,7 +111,12 @@ Production worker routing coverage:
 - `MatchingWorkerLifecycleServiceTest` proves configured worker startup acquires ownership, runs recovery, stores ready owner context, stays inert when disabled, rejects symbols owned by another worker, renews checkpoints, and removes readiness after renewal failure.
 - `OrderAccountingIntegrationTest` includes a worker-ready cancel-replace case proving the accounting-safe cancel + replacement-submit orchestration produces fenced worker commands while preserving reserve re-hold semantics.
 - `MatchingSequencerLeaseServiceTest` covers lease acquire, renew, release, takeover, missing lease, wrong owner, stale epoch, and expired lease behavior.
+- `MatchingRecoveryServiceTest` includes a restore drill that rebuilds from latest snapshot plus command log and asserts recovered open orders.
+- `InMemoryMatchingEngineTest` includes interleaved multi-symbol command replay validation, proving per-symbol command offsets stay independent.
 - `matching-worker.*` configuration is bound by `MatchingWorkerProperties` and documented in the matching sequencer runbook.
+
+Restore validation coverage:
+- `AccountPositionConsistencyServiceTest` proves restored open positions without accounts are reported, account margin below open-position margin is flagged, and aligned restored account/position state is valid.
 
 ## Agent Context Script
 

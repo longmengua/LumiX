@@ -123,6 +123,28 @@ class CommandTransactionBoundaryTest {
         assertThat(transactionManager.rollbacks).isEqualTo(1);
     }
 
+    @Test
+    @DisplayName("cancel-replace replacement reserve 失敗時會 rollback 原單 reserve release")
+    void cancelReplaceRollsBackReserveReleaseWhenReplacementReserveFails() {
+        RecordingTransactionManager transactionManager = new RecordingTransactionManager();
+        TransactionalList<String> reserveReleases = new TransactionalList<>(transactionManager);
+        TransactionalList<String> replacementReserves = new TransactionalList<>(transactionManager);
+        CommandTransactionBoundary boundary = new CommandTransactionBoundary(new TransactionTemplate(transactionManager));
+
+        assertThatThrownBy(() -> boundary.execute("cancel-replace", () -> {
+            reserveReleases.add("release-original-reserve:order-1");
+            replacementReserves.failNextAdd("replacement reserve failed");
+            replacementReserves.add("reserve-replacement:order-2");
+            return null;
+        })).isInstanceOf(IllegalStateException.class)
+                .hasMessage("replacement reserve failed");
+
+        // cancel-replace 是原單釋放 + 新單保留的一個 atomic command；新單保留失敗不能釋放原單 reserve。
+        assertThat(reserveReleases.committed()).isEmpty();
+        assertThat(replacementReserves.committed()).isEmpty();
+        assertThat(transactionManager.rollbacks).isEqualTo(1);
+    }
+
     /**
      * 測試專用 transaction manager；只記錄 commit/rollback 次數，不連接真實資料庫。
      */

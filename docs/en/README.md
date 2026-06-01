@@ -81,6 +81,7 @@ docker compose down -v
 - Position updates, maker/taker fees, referral rebates, and realized PnL.
 - Funding settlement, liquidation, insurance fund, and ADL queue MVP.
 - Snapshot, event replay, recovery, and validation entry points.
+- Restore smoke APIs include account/position consistency validation at `GET /api/recovery/restore/account-position-consistency`.
 - Domain event publishing, outbox retry, DLQ, and Kafka event store.
 - Lightweight operations metrics endpoint for order status counts, order latency, cancel counts, and trade event counts.
 - SSE / WebSocket push for market events and private user events, including opt-in cancel-on-disconnect for user WebSocket sessions.

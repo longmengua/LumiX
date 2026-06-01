@@ -13,10 +13,10 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
-| P0 Required | 35 | 8 | Core MVP capability exists, but many production blockers remain. |
+| P0 Required | 39 | 4 | Core MVP capability exists, but many production blockers remain. |
 | P1 Strongly Recommended | 8 | 14 | Operations, market data, Polymarket, and data governance are still early. |
 | P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
-| Total | 43 | 27 | The project has a baseline, but production hardening is still the main body of work. |
+| Total | 47 | 23 | The project has a baseline, but production hardening is still the main body of work. |
 
 ## Current Priority Override
 
@@ -42,7 +42,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Matching state has an in-memory snapshot export/restore baseline that preserves resting order FIFO, command offset, event offset, and match sequence.
 - Matching has in-memory command/event log and replay baselines that can rebuild state from a snapshot checkpoint in deterministic tests.
 - Matching command/event logs, engine snapshots, and replay validation reports now have Flyway schema, JPA durable adapter baselines, and per-symbol offset checkpoints.
-- Matching recovery orchestration can restore a symbol from latest snapshot plus command log, then persist the recovered snapshot and replay validation report.
+- Matching recovery orchestration can restore a symbol from latest snapshot plus command log, assert recovered open orders in restore drills, then persist the recovered snapshot and replay validation report.
 - Matching sequencer lease service can acquire, renew, release, and increment per-symbol owner epochs on takeover.
 - Matching sequencer write guard rejects missing lease, wrong owner, stale epoch, and expired lease before command writes.
 - Matching command replay supports cancel-replace with a replacement order payload.
@@ -52,7 +52,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Existing submit, cancel, amend, and cancel-replace's accounting-safe cancel + replacement-submit intake paths can use worker execution when the symbol has a ready owner context.
 - `matching-worker.fence-legacy-routing` can reject old in-process fallback for configured symbols that are not worker-ready during cutover.
 - `MatchingWorkerStartupListener` starts configured worker symbols after application readiness when `matching-worker.enabled=true`.
-- Matching replay validation can compare replay output against an expected snapshot and report command-offset, event-offset, match-sequence, and book-level differences.
+- Matching replay validation can compare replay output against an expected snapshot and report command-offset, event-offset, match-sequence, book-level differences, and multi-symbol interleaved-offset coverage.
 - Market data depth deltas now have durable sequence/checksum checkpoints, restart recovery of latest depth sequence, durable depth delta records, and a reconnect backfill endpoint for deltas after a known version. Trade tape has a durable restart-safe baseline.
 - A wallet-ledger balanced posting baseline makes MVP fund movements traceable and testable.
 - Accounting entries are split for order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal.
@@ -73,7 +73,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 ## What Is Not Production Complete
 
-- Production worker routing has a documented deployment switch sequence, readiness inspection, rollback sequence, and focused smoke verification. The per-symbol sequencer still executes in an in-process engine, so broader disaster recovery and multi-process operational hardening remain.
+- Production worker routing and disaster recovery now have documented deployment switch sequence, worker takeover, reconnect/session replay semantics, restore smoke commands, account/position consistency validation, readiness inspection, rollback sequence, and focused smoke verification. The per-symbol sequencer still executes in an in-process engine, so broader multi-process operational hardening remains.
 - Order lifecycle events now have a durable event log and latest-state projection baseline; broader order/account replay and operational runbooks are still incomplete.
 - The ledger now has a durable double-entry journal, bonus-credit account separation, configurable bonus consume eligibility, bonus expiry and campaign auto-clawback scheduler baselines, bonus user/campaign report/export and clawback APIs, turnover facts, first-class strategy/market-maker order tags, turnover summary/drill-down/export queries, match-level turnover-vs-trade-tape reconciliation, disabled-by-default recent-window turnover trade/ledger-ref reconciliation, and replay path; audit retention, deeper replay validation, and broader operational controls are still incomplete.
 - Funding, account risk snapshots, and manual liquidation now require mark/index price oracle input; risk tiers cover initial margin, maintenance margin, leverage, and stepped position caps. Liquidation scanning can route open positions through oracle-based liquidation with halt/manual-review controls, batch limits, per-position failure isolation, and decision audit events. Production feed redundancy, price clamps, alert-backend delivery for stuck claims, and production insurance-fund capital movement records are still incomplete.

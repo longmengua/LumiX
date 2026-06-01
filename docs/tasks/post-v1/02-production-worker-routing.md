@@ -44,7 +44,7 @@ Route matching commands through the sequencer lease guard and owner epoch before
 
 Smoke verification:
 - 2026-05-29: `./mvnw -Dtest=MatchingWorkerCommandRouterTest,MatchingWorkerExecutionServiceTest,MatchingWorkerLifecycleServiceTest,OrderAccountingIntegrationTest test` passed with 25 tests, 0 failures.
-- The matching sequencer runbook now documents the deployment switch sequence, readiness inspection, command-log owner/epoch verification, and rollback order.
+- The matching sequencer runbook and disaster recovery runbook now document the deployment switch sequence, readiness inspection, command-log owner/epoch verification, worker takeover, reconnect/session replay semantics, restore smoke commands, and rollback order.
 
 ## Acceptance Criteria
 

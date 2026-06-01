@@ -246,6 +246,53 @@ class InMemoryMatchingEngineTest {
     }
 
     @Test
+    @DisplayName("多 symbol 交錯 command offset 仍可各自 replay validation")
+    void replayValidationSupportsInterleavedMultiSymbolCommandOffsets() {
+        InMemoryMatchingCommandLog commandLog = new InMemoryMatchingCommandLog();
+        InMemoryMatchingEngine engine = new InMemoryMatchingEngine(commandLog, new InMemoryMatchingEventLog());
+        Symbol eth = Symbol.builder()
+                .base("ETH")
+                .quote("USDT")
+                .priceScale(2)
+                .qtyScale(3)
+                .build();
+
+        engine.submit(limit(1, OrderSide.SELL, "100", "1"));
+        MatchingEngineSnapshot btcStart = engine.exportSnapshot("BTCUSDT");
+        engine.submit(Order.builder()
+                .uid(2)
+                .symbol(eth)
+                .side(OrderSide.SELL)
+                .type(OrderType.LIMIT)
+                .price(new BigDecimal("200"))
+                .qty(new BigDecimal("1"))
+                .origQty(new BigDecimal("1"))
+                .build());
+        MatchingEngineSnapshot ethStart = engine.exportSnapshot("ETHUSDT");
+        engine.submit(limit(3, OrderSide.SELL, "101", "1"));
+        engine.submit(Order.builder()
+                .uid(4)
+                .symbol(eth)
+                .side(OrderSide.BUY)
+                .type(OrderType.LIMIT)
+                .price(new BigDecimal("200"))
+                .qty(new BigDecimal("1"))
+                .origQty(new BigDecimal("1"))
+                .build());
+
+        MatchingReplayValidationReport btcReport =
+                engine.validateReplay(btcStart, commandLog.listAll("BTCUSDT"), engine.exportSnapshot("BTCUSDT"));
+        MatchingReplayValidationReport ethReport =
+                engine.validateReplay(ethStart, commandLog.listAll("ETHUSDT"), engine.exportSnapshot("ETHUSDT"));
+
+        assertThat(btcReport.valid()).isTrue();
+        assertThat(ethReport.valid()).isTrue();
+        assertThat(btcReport.actualCommandOffset()).isEqualTo(2);
+        assertThat(ethReport.actualCommandOffset()).isEqualTo(2);
+        engine.shutdown();
+    }
+
+    @Test
     @DisplayName("cancel-replace command 可在 replay 後重建 replacement 成交")
     /**
      * 流程：先保存含原掛單的 snapshot -> 用 cancel-replace 把買單改成可成交價格 ->

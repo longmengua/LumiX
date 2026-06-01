@@ -121,4 +121,4 @@ Smoke verification on 2026-05-29 passed with:
 ./mvnw -Dtest=MatchingWorkerCommandRouterTest,MatchingWorkerExecutionServiceTest,MatchingWorkerLifecycleServiceTest,OrderAccountingIntegrationTest test
 ```
 
-The remaining production hardening is broader disaster recovery and multi-process operational hardening, not the worker-routing acceptance criteria itself.
+The remaining production hardening is multi-process operational hardening beyond the current in-process worker baseline, not the worker-routing acceptance criteria itself.

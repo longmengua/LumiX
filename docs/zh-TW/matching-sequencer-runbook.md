@@ -121,4 +121,4 @@ Readiness inspection：
 ./mvnw -Dtest=MatchingWorkerCommandRouterTest,MatchingWorkerExecutionServiceTest,MatchingWorkerLifecycleServiceTest,OrderAccountingIntegrationTest test
 ```
 
-剩餘 production hardening 屬於更完整的 disaster recovery 與多進程營運強化，不是 worker-routing acceptance criteria 本身。
+剩餘 production hardening 屬於目前 in-process worker baseline 之外的多進程營運強化，不是 worker-routing acceptance criteria 本身。

@@ -11,6 +11,7 @@
 - `BonusCreditService`：體驗金 grant 批次、到期 FIFO 消耗、consume eligibility gate、expiry scanner orchestration、用戶/活動 grant state report、活動 export、營運 clawback 與 campaign auto-clawback policy。
 - `TurnoverService` / `TurnoverReconciliationService`：由已處理成交事件建立 turnover read model，提供 uid/symbol/strategy/market-maker/match summary、drill-down/export query 與帶 order tag / ledger ref 的 trade-tape reconciliation，供活動門檻與 trade/ledger 對帳。
 - `AccountRiskService` / `AccountRiskSnapshotService` / `MarkPriceOracleService` / `ReconciliationService`：帳戶風險快照、snapshot 持久化、mark/index price baseline 與對帳 baseline。
+- `AccountPositionConsistencyService`：restore 後比對 restored accounts 與 open positions，回報缺 account 或 account position margin 不足的 consistency issue。
 - `TrialBalanceService`：由 wallet ledger postings 產生 asset/account-code trial balance。
 - `FinanceReportService` / `FinanceExportService`：由 durable wallet ledger journal 產生 UTC daily finance report、category report 與每日 category export batch，依 reason/asset/account-code 彙總 debit/credit。
 - `ReconciliationIssueWorkflowService`：reconciliation issue claim、resolve、reopen、open queue workflow 與 workflow audit event。

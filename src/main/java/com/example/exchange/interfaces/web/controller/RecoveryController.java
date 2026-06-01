@@ -5,6 +5,7 @@ package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.command.SnapshotRecoverCommand;
 import com.example.exchange.application.service.FinanceReportService;
+import com.example.exchange.application.service.AccountPositionConsistencyService;
 import com.example.exchange.application.service.LedgerArchiveEligibilityService;
 import com.example.exchange.application.service.LedgerArchiveManifestService;
 import com.example.exchange.application.service.OutboxService;
@@ -16,6 +17,7 @@ import com.example.exchange.application.service.MatchingWorkerLifecycleService;
 import com.example.exchange.application.service.TrialBalanceService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
+import com.example.exchange.domain.model.dto.AccountPositionConsistencyReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveEligibilityReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
 import com.example.exchange.domain.model.dto.LedgerArchiveReplayValidationReport;
@@ -52,6 +54,7 @@ import java.util.UUID;
 public class RecoveryController {
 
     private final SnapshotRecoverUseCase usecase;
+    private final AccountPositionConsistencyService accountPositionConsistencyService;
     private final ReconciliationService reconciliationService;
     private final ReconciliationReportService reconciliationReportService;
     private final ReconciliationIssueWorkflowService reconciliationIssueWorkflowService;
@@ -67,6 +70,7 @@ public class RecoveryController {
 
     public RecoveryController(
             SnapshotRecoverUseCase usecase,
+            AccountPositionConsistencyService accountPositionConsistencyService,
             ReconciliationService reconciliationService,
             ReconciliationReportService reconciliationReportService,
             ReconciliationIssueWorkflowService reconciliationIssueWorkflowService,
@@ -81,6 +85,7 @@ public class RecoveryController {
             OutboxDomainStateConsistencyService outboxDomainStateConsistencyService
     ) {
         this.usecase = usecase;
+        this.accountPositionConsistencyService = accountPositionConsistencyService;
         this.reconciliationService = reconciliationService;
         this.reconciliationReportService = reconciliationReportService;
         this.reconciliationIssueWorkflowService = reconciliationIssueWorkflowService;
@@ -111,6 +116,11 @@ public class RecoveryController {
     @GetMapping("/reconcile/accounts")
     public ApiResponse<List<ValidationIssue>> validateAllAccounts() {
         return ApiResponse.ok(reconciliationService.validateAllAccounts());
+    }
+
+    @GetMapping("/restore/account-position-consistency")
+    public ApiResponse<AccountPositionConsistencyReport> accountPositionConsistency() {
+        return ApiResponse.ok(accountPositionConsistencyService.validateAfterRestore());
     }
 
     @PostMapping("/reconcile/accounts/report")

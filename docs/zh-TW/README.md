@@ -81,6 +81,7 @@ docker compose down -v
 - 持倉更新、maker/taker fee、referral rebate、realized PnL。
 - 資金費結算、強平、保險基金與 ADL queue MVP。
 - 快照、事件回放與 recovery/validation 入口。
+- Restore smoke API 包含 `GET /api/recovery/restore/account-position-consistency`，可檢查 account / open position 一致性。
 - Domain event 發布、outbox retry、DLQ、Kafka event store。
 - 輕量 operations metrics endpoint，提供訂單狀態計數、下單延遲、撤單數與成交事件數。
 - SSE / WebSocket 推送市場與使用者私有事件，使用者 WebSocket 可 opt-in 啟用 cancel-on-disconnect。
