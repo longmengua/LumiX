@@ -44,6 +44,11 @@ public class UseCaseMarketMakerQuoteOrderGateway implements MarketMakerQuoteOrde
     }
 
     @Override
+    public boolean cancelOrder(UUID orderId) {
+        return cancelOrderUseCase.handle(orderId);
+    }
+
+    @Override
     public UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side) {
         Order order = placeOrderUseCase.place(toPlaceOrderCommand(command, side));
         return order.getId();

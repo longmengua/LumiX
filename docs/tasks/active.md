@@ -27,4 +27,6 @@ If context is lost, the next agent must read this file and `docs/tasks/handoffs/
 
 | Status | Task / Lane | Owner | Since | Expected Areas | Handoff |
 | --- | --- | --- | --- | --- | --- |
-| doing | Market-maker quote reconciliation repair job | Codex-MM-Repair-02 | 2026-06-01 | `application/service`, `application/scheduler`, `interfaces/web`, market-maker tests/docs | None |
+| _none_ | _No active claimed work._ |  |  |  |  |
+
+Replace the `_none_` row with real claim rows when work starts.

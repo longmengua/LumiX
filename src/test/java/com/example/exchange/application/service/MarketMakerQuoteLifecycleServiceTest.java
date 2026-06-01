@@ -201,6 +201,11 @@ class MarketMakerQuoteLifecycleServiceTest {
         }
 
         @Override
+        public boolean cancelOrder(UUID orderId) {
+            return true;
+        }
+
+        @Override
         public UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side) {
             UUID orderId = UUID.randomUUID();
             requests.add(new PlacedQuoteOrder(command, side, orderId));

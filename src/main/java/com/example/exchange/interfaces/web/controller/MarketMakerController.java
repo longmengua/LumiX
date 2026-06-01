@@ -18,6 +18,7 @@ import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteReconciliationReport;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteRepairReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
@@ -107,6 +108,13 @@ public class MarketMakerController {
             @RequestParam(defaultValue = "50") int limit
     ) {
         return ApiResponse.ok(quoteReconciliationService.reconcileActiveQuotes(limit));
+    }
+
+    @PostMapping("/quotes/reconciliation/repair")
+    public ApiResponse<MarketMakerQuoteRepairReport> repairQuoteStates(
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(quoteReconciliationService.repairActiveQuotes(limit));
     }
 
     @GetMapping("/profiles/{marketMakerId}/hedge-fills")

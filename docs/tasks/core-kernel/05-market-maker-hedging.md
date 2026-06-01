@@ -55,12 +55,13 @@ Build the market-maker interface and hedging strategy baseline: quoting, invento
 - `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, and `MarketMakerHedgeFillService.recordVenueFill(...)` define the standard fill mapping path from venue callbacks into durable hedge fill records.
 - `MarketMakerController` exposes venue fill callback ingestion at `/api/market-maker/hedge-fills/venue-callback`.
 - Tests cover exposure aggregation, quote kill-switch rejection, crossed quote rejection, hedge kill-switch rejection, slippage rejection, and accepted venue routing.
+- `MarketMakerQuoteReconciliationService.repairActiveQuotes(...)`, `MarketMakerQuoteRepairScheduler`, and `POST /api/market-maker/quotes/reconciliation/repair` add fail-closed quote repair: untracked quote orders are canceled, and incomplete tracked bid/ask state is deactivated after canceling the remaining tracked quote order.
 
 ## Remaining Work
 
 - Add real hedge venue adapter with signing and production callback authentication/verification.
 - Extend hedge reconciliation from decision-vs-fill checks into trade/ledger refs.
-- Add scheduler/worker locking, operator approval flow, and global risk limits.
+- Add automated hedge reconciliation repair jobs.
 
 ## Acceptance Criteria
 

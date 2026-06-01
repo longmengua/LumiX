@@ -52,6 +52,10 @@ bonus-credit:
     ref-prefix: ${BONUS_CREDIT_CLAWBACK_POLICY_REF_PREFIX:bonus-auto-clawback}
 
 market-maker:
+  quote-repair:
+    enabled: ${MARKET_MAKER_QUOTE_REPAIR_ENABLED:false}
+    fixed-delay-ms: ${MARKET_MAKER_QUOTE_REPAIR_FIXED_DELAY_MS:300000}
+    limit: ${MARKET_MAKER_QUOTE_REPAIR_LIMIT:50}
   hedge-execution:
     enabled: ${MARKET_MAKER_HEDGE_EXECUTION_ENABLED:false}
     fixed-delay-ms: ${MARKET_MAKER_HEDGE_EXECUTION_FIXED_DELAY_MS:300000}

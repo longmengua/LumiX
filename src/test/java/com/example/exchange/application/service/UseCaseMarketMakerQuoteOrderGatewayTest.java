@@ -46,6 +46,24 @@ class UseCaseMarketMakerQuoteOrderGatewayTest {
         assertThat(cancelOrderUseCase.canceledOrderIds).containsExactly(staleBid.getId(), staleAsk.getId());
     }
 
+    @Test
+    @DisplayName("cancelOrder 會委派給內部 cancel use case 以保留帳務釋放與 lifecycle event")
+    void cancelOrderDelegatesToCancelUseCase() {
+        RecordingCancelOrderUseCase cancelOrderUseCase = new RecordingCancelOrderUseCase();
+        UseCaseMarketMakerQuoteOrderGateway gateway = new UseCaseMarketMakerQuoteOrderGateway(
+                null,
+                cancelOrderUseCase,
+                new MemOrderRepository()
+        );
+        UUID orderId = UUID.randomUUID();
+
+        // 場景：自動 quote repair 需要撤單時，仍必須走正式 cancel use case，而不是直接改 order status。
+        boolean canceled = gateway.cancelOrder(orderId);
+
+        assertThat(canceled).isTrue();
+        assertThat(cancelOrderUseCase.canceledOrderIds).containsExactly(orderId);
+    }
+
     private static MarketMakerQuoteCommand quote() {
         return new MarketMakerQuoteCommand(
                 "mm-1",

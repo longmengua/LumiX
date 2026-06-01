@@ -4,6 +4,8 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.MarketMakerQuoteReconciliationReport;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
+import com.example.exchange.domain.model.dto.MarketMakerQuoteRepairReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
 import com.example.exchange.domain.model.entity.Order;
 import com.example.exchange.domain.model.entity.Symbol;
@@ -95,6 +97,51 @@ class MarketMakerQuoteReconciliationServiceTest {
                 .hasMessageContaining("between 1 and 500");
     }
 
+    @Test
+    @DisplayName("repairActiveQuotes 會取消 state 未追蹤的殘留 quote order")
+    void repairActiveQuotesCancelsUntrackedOpenQuoteOrder() {
+        Fixture fixture = new Fixture();
+        Order bid = order(OrderSide.BUY, "mmq:mm-1:ref-1:buy");
+        Order ask = order(OrderSide.SELL, "mmq:mm-1:ref-1:sell");
+        Order stale = order(OrderSide.BUY, "mmq:mm-1:old-ref:buy");
+        fixture.orderRepository.orders.addAll(List.of(bid, ask, stale));
+        fixture.quoteStateStore.save(state(bid.getId(), ask.getId()));
+
+        // 場景：重啟後殘留舊 quote order 但最新 state 的雙邊仍完整，只需要撤掉未追蹤殘單。
+        MarketMakerQuoteRepairReport report = fixture.service.repairActiveQuotes(50);
+
+        assertThat(report.checkedStates()).isEqualTo(1);
+        assertThat(report.issueCount()).isEqualTo(1);
+        assertThat(report.canceledOrders()).isEqualTo(1);
+        assertThat(report.deactivatedStates()).isZero();
+        assertThat(fixture.gateway.canceledOrderIds).containsExactly(stale.getId());
+        assertThat(fixture.quoteStateStore.states.getFirst().active()).isTrue();
+        assertThat(report.actions().getFirst().action()).isEqualTo("CANCEL_UNTRACKED_OPEN_QUOTE_ORDER");
+    }
+
+    @Test
+    @DisplayName("repairActiveQuotes 遇到缺失 tracked leg 時會撤剩餘 quote 並停用 state")
+    void repairActiveQuotesDeactivatesIncompleteTrackedState() {
+        Fixture fixture = new Fixture();
+        Order bid = order(OrderSide.BUY, "mmq:mm-1:ref-1:buy");
+        UUID missingAskId = UUID.randomUUID();
+        fixture.orderRepository.orders.add(bid);
+        fixture.quoteStateStore.save(state(bid.getId(), missingAskId));
+
+        // 場景：tracked ask 已不存在，保留單邊 bid 會造成做市商暴露，因此 repair 採 fail-closed 停用 state。
+        MarketMakerQuoteRepairReport report = fixture.service.repairActiveQuotes(50);
+
+        assertThat(report.issueCount()).isEqualTo(1);
+        assertThat(report.canceledOrders()).isEqualTo(1);
+        assertThat(report.deactivatedStates()).isEqualTo(1);
+        assertThat(fixture.gateway.canceledOrderIds).containsExactly(bid.getId());
+        MarketMakerQuoteState repairedState = fixture.quoteStateStore.states.getFirst();
+        assertThat(repairedState.active()).isFalse();
+        assertThat(repairedState.reason()).isEqualTo("QUOTE_REPAIR_DEACTIVATED_INCOMPLETE_STATE");
+        assertThat(report.actions()).extracting("action")
+                .containsExactly("CANCEL_REMAINING_TRACKED_QUOTE_ORDER", "DEACTIVATE_QUOTE_STATE");
+    }
+
     private static MarketMakerQuoteState state(UUID bidOrderId, UUID askOrderId) {
         return new MarketMakerQuoteState(
                 "mm-1",
@@ -133,8 +180,29 @@ class MarketMakerQuoteReconciliationServiceTest {
     private static final class Fixture {
         private final MemQuoteStateStore quoteStateStore = new MemQuoteStateStore();
         private final MemOrderRepository orderRepository = new MemOrderRepository();
+        private final RecordingQuoteOrderGateway gateway = new RecordingQuoteOrderGateway();
         private final MarketMakerQuoteReconciliationService service =
-                new MarketMakerQuoteReconciliationService(quoteStateStore, orderRepository);
+                new MarketMakerQuoteReconciliationService(quoteStateStore, orderRepository, gateway);
+    }
+
+    private static final class RecordingQuoteOrderGateway implements MarketMakerQuoteOrderGateway {
+        private final List<UUID> canceledOrderIds = new ArrayList<>();
+
+        @Override
+        public int cancelOpenQuoteOrders(MarketMakerQuoteCommand command) {
+            return 0;
+        }
+
+        @Override
+        public boolean cancelOrder(UUID orderId) {
+            canceledOrderIds.add(orderId);
+            return true;
+        }
+
+        @Override
+        public UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side) {
+            return UUID.randomUUID();
+        }
     }
 
     private static final class MemQuoteStateStore implements MarketMakerQuoteStateStore {
@@ -142,6 +210,8 @@ class MarketMakerQuoteReconciliationServiceTest {
 
         @Override
         public void save(MarketMakerQuoteState state) {
+            states.removeIf(existing -> existing.marketMakerId().equals(state.marketMakerId())
+                    && existing.symbol().equals(state.symbol()));
             states.add(state);
         }
 

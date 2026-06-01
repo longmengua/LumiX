@@ -12,5 +12,7 @@ public interface MarketMakerQuoteOrderGateway {
 
     int cancelOpenQuoteOrders(MarketMakerQuoteCommand command);
 
+    boolean cancelOrder(UUID orderId);
+
     UUID placePostOnlyLimit(MarketMakerQuoteCommand command, OrderSide side);
 }
