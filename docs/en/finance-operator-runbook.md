@@ -15,6 +15,8 @@ Use this runbook when closing a UTC finance day or investigating an unbalanced d
 4. Run restore smoke and replay validation before any hot-path delete:
    `GET /api/recovery/finance/ledger-archive-restore-smoke?date=YYYY-MM-DD`
    `GET /api/recovery/finance/ledger-archive-replay-validation?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD`
+5. Run the immutable delete guard and only proceed when `approved=true`:
+   `GET /api/recovery/finance/ledger-archive-delete-guard?date=YYYY-MM-DD`
 
 ## If The Daily Report Is Unbalanced
 
@@ -26,7 +28,7 @@ Use this runbook when closing a UTC finance day or investigating an unbalanced d
    `GET /api/recovery/reconcile/ledger/{uid}/compare?asset=USDT`
 5. Open or claim reconciliation issues before manual compensation:
    `GET /api/recovery/reconcile/issues/open`
-6. After correction, rerun daily report, category export batch, archive restore smoke, and replay validation.
+6. After correction, rerun daily report, category export batch, archive restore smoke, replay validation, and delete guard.
 
 ## Scheduler
 

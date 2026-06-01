@@ -38,16 +38,16 @@ Harden the current ledger and reconciliation baseline into an auditable accounti
 - `FinanceExportService`, `FinanceExportScheduler`, and `GET /api/recovery/finance/category-export-batch` provide a disabled-by-default daily category export job and operator-visible batch report.
 - `LedgerArchiveEligibilityService` and `GET /api/recovery/finance/ledger-archive-eligibility` report whether ledger hot-path delete preconditions are met before any archive purge.
 - `LedgerArchiveManifestService` and `GET /api/recovery/finance/ledger-archive-manifest` generate date-scoped archive manifests with counts, checksum, restore instructions, and delete eligibility.
-- `LedgerArchiveManifestService` also exposes restore smoke and archived date-range replay validation through `/api/recovery/finance/ledger-archive-restore-smoke` and `/api/recovery/finance/ledger-archive-replay-validation`.
+- `LedgerArchiveManifestService` also exposes restore smoke, archived date-range replay validation, and immutable delete guard through `/api/recovery/finance/ledger-archive-restore-smoke`, `/api/recovery/finance/ledger-archive-replay-validation`, and `/api/recovery/finance/ledger-archive-delete-guard`.
 - `RecoveryController` exposes `GET /api/recovery/reconcile/ledger/tamper-evidence` to verify durable journal hash-chain integrity.
 - `V20__wallet_ledger_journal_constraints.sql` adds SQL constraints for wallet ledger schema version, nonblank entry dimensions, positive posting lines, and nonblank posting dimensions.
 - [../../en/finance-operator-runbook.md](../../en/finance-operator-runbook.md) documents daily close, archive smoke, replay validation, and unbalanced report handling.
 - `V13__reconciliation_issue_workflow.sql` adds issue workflow columns and indexes.
-- Tests cover balanced trial balance aggregation, unbalanced posting detection, default reconciliation issue workflow state, daily category export batches, archive manifest restore smoke, and archived date-range replay validation.
+- Tests cover balanced trial balance aggregation, unbalanced posting detection, default reconciliation issue workflow state, daily category export batches, archive manifest restore smoke, archived date-range replay validation, and archive delete guard approval/blocking.
 
 ## Future Hardening
 
-- Add immutable journal retention/archive enforcement.
+- Add broader operational controls around archive object storage and operator approvals.
 
 ## Acceptance Criteria
 

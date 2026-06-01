@@ -3,6 +3,7 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.domain.model.dto.LedgerArchiveDeleteGuardReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveEligibilityReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
 import com.example.exchange.domain.model.dto.LedgerArchiveReplayValidationReport;
@@ -147,6 +148,37 @@ public class LedgerArchiveManifestService {
                 Instant.now(),
                 blockers,
                 smokeReports
+        );
+    }
+
+    public LedgerArchiveDeleteGuardReport deleteGuard(LocalDate reportDate) {
+        LocalDate date = reportDate == null ? LocalDate.now(ZoneOffset.UTC).minusDays(1) : reportDate;
+        LedgerArchiveEligibilityReport eligibility = eligibilityService.evaluate(date);
+        LedgerArchiveManifest manifest = generate(date);
+        LedgerArchiveRestoreSmokeReport smoke = restoreSmoke(date, manifest);
+        LedgerArchiveReplayValidationReport replay = validateReplayRange(date, date);
+        List<String> blockers = new ArrayList<>();
+        if (!eligibility.deleteEligible()) {
+            blockers.add("DELETE_ELIGIBILITY_FAILED:" + eligibility.blockers());
+        }
+        if (!manifest.deleteEligible()) {
+            blockers.add("MANIFEST_NOT_DELETE_ELIGIBLE");
+        }
+        if (!smoke.passed()) {
+            blockers.add("RESTORE_SMOKE_FAILED:" + smoke.blockers());
+        }
+        if (!replay.passed()) {
+            blockers.add("REPLAY_VALIDATION_FAILED:" + replay.blockers());
+        }
+        return new LedgerArchiveDeleteGuardReport(
+                date,
+                blockers.isEmpty(),
+                Instant.now(),
+                eligibility,
+                manifest,
+                smoke,
+                replay,
+                blockers
         );
     }
 

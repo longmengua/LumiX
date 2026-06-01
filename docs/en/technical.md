@@ -20,7 +20,7 @@ Technical documentation is for engineers who need to understand how the system i
 | [Kafka Topics](kafka-topics.md) | Topic matrix, partition key policy, consumer groups, schema versioning, and production creation rules. |
 | [Observability Baseline](observability.md) | Request/correlation ID propagation across HTTP, OkHttp, Kafka outbox, and audit logs. |
 | [Archive Strategy](archive-strategy.md) | Archive manifests, retention classes, delete preconditions, and restore rules for historical data. |
-| [Finance Operator Runbook](finance-operator-runbook.md) | Daily finance export, ledger archive restore smoke, replay validation, and unbalanced report handling. |
+| [Finance Operator Runbook](finance-operator-runbook.md) | Daily finance export, ledger archive restore smoke, delete guard, replay validation, and unbalanced report handling. |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox, DLQ replay, and manual compensation operations. |
 | [Cross-Store Failure Drill](cross-store-failure-drill.md) | MySQL/Redis/Kafka failure drill and outbox/domain-state consistency checks. |
 | [Disaster Recovery Runbook](disaster-recovery-runbook.md) | Matching/order/account/position restore order, worker takeover, authenticated reconnect replay, and smoke commands. |

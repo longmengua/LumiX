@@ -20,7 +20,7 @@ English version: [../en/technical.md](../en/technical.md)
 | [Kafka Topics](kafka-topics.md) | Topic matrix、partition key policy、consumer groups、schema versioning 與正式環境建立規則。 |
 | [Observability Baseline](observability.md) | Request/correlation ID 在 HTTP、OkHttp、Kafka outbox 與 audit logs 的傳遞基線。 |
 | [Archive Strategy](archive-strategy.md) | 歷史資料的 archive manifest、retention class、刪除前置條件與 restore 規則。 |
-| [Finance Operator Runbook](finance-operator-runbook.md) | 每日財務匯出、ledger archive restore smoke、replay validation 與不平衡日報處理。 |
+| [Finance Operator Runbook](finance-operator-runbook.md) | 每日財務匯出、ledger archive restore smoke、delete guard、replay validation 與不平衡日報處理。 |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
 | [Cross-Store Failure Drill](cross-store-failure-drill.md) | MySQL/Redis/Kafka failure drill 與 outbox/domain-state consistency checks。 |
 | [Disaster Recovery Runbook](disaster-recovery-runbook.md) | Matching/order/account/position restore 順序、worker takeover、authenticated reconnect replay 與 smoke commands。 |

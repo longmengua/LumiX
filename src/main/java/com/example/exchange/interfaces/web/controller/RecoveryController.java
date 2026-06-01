@@ -18,6 +18,7 @@ import com.example.exchange.application.service.TrialBalanceService;
 import com.example.exchange.application.service.WalletLedgerReplayService;
 import com.example.exchange.domain.model.dto.LedgerReplayComparisonReport;
 import com.example.exchange.domain.model.dto.AccountPositionConsistencyReport;
+import com.example.exchange.domain.model.dto.LedgerArchiveDeleteGuardReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveEligibilityReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
 import com.example.exchange.domain.model.dto.LedgerArchiveReplayValidationReport;
@@ -207,6 +208,13 @@ public class RecoveryController {
                 LocalDate.parse(fromDate),
                 LocalDate.parse(toDate)
         ));
+    }
+
+    @GetMapping("/finance/ledger-archive-delete-guard")
+    public ApiResponse<LedgerArchiveDeleteGuardReport> ledgerArchiveDeleteGuard(
+            @RequestParam String date
+    ) {
+        return ApiResponse.ok(ledgerArchiveManifestService.deleteGuard(LocalDate.parse(date)));
     }
 
     @PostMapping("/finance/trial-balance/snapshot")

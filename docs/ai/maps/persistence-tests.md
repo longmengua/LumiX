@@ -84,6 +84,7 @@ Targeted tests:
 ./mvnw -Dtest=OrderAccountingIntegrationTest test
 ./mvnw -Dtest=RiskSettlementServiceTest test
 ./mvnw -Dtest=TrialBalanceServiceTest test
+./mvnw -Dtest=LedgerArchiveEligibilityServiceTest,LedgerArchiveManifestServiceTest test
 ./mvnw -Dtest=OutboxServiceTest test
 ./mvnw -Dtest=MarginServiceTest test
 ./mvnw -Dtest=AccountRiskServiceTest test
@@ -117,6 +118,7 @@ Production worker routing coverage:
 
 Restore validation coverage:
 - `AccountPositionConsistencyServiceTest` proves restored open positions without accounts are reported, account margin below open-position margin is flagged, and aligned restored account/position state is valid.
+- `LedgerArchiveManifestServiceTest` proves archive manifests carry deterministic checksums and that the immutable delete guard requires eligibility, manifest, restore-smoke, and replay-validation checks before ledger delete can proceed.
 
 ## Agent Context Script
 

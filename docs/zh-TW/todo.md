@@ -49,7 +49,8 @@
 - [x] 建立 wallet ledger balanced posting baseline，讓 MVP 資金變動可追溯、可對帳。
 - [x] 建立完整 production 雙分錄 ledger schema 與 replay path。
 - [x] 將 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 拆成明確 accounting entries。
-- [ ] 用 production database constraints、audit retention 與 replay validation 強化 accounting entries。
+- [x] 用 production database constraints、audit retention 與 replay validation 強化 accounting entries。
+  - Baseline 已完成：SQL-enforced wallet ledger entry/posting constraints、durable hash-chain tamper evidence、daily/category finance reports、trial-balance snapshots、replay comparison、archive eligibility、archive manifest checksums、restore smoke、archived date-range replay validation，以及 immutable ledger archive delete guard，會在 eligibility、manifest、restore smoke、replay validation 未全數通過時阻擋 hot-path delete。
 - [x] 補上 `/api/margin/risk`，計算凍結資金、可用餘額、總權益、維持保證金與風險率 snapshot。
 - [x] 持久化每日 account risk snapshots，並完整用獨立 mark/index oracle inputs 取代 trade/ticker fallback marks。
 - [x] 補上全帳戶對帳 baseline，掃 maintained account index 與 open-position index，回報 account、position margin、ledger balance 問題。

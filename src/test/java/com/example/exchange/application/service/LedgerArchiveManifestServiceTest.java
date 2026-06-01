@@ -3,6 +3,7 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.domain.model.dto.LedgerArchiveDeleteGuardReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveManifest;
 import com.example.exchange.domain.model.dto.LedgerArchiveReplayValidationReport;
 import com.example.exchange.domain.model.dto.LedgerArchiveRestoreSmokeReport;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -99,6 +101,61 @@ class LedgerArchiveManifestServiceTest {
         assertThat(report.daysChecked()).isEqualTo(2);
         assertThat(report.balancedDays()).isEqualTo(2);
         assertThat(report.restoreSmokePassedDays()).isEqualTo(2);
+    }
+
+    @Test
+    @DisplayName("deleteGuard 只有 eligibility、manifest、restore smoke 與 replay validation 全通過才核准 hot-path delete")
+    void deleteGuardRequiresAllArchiveAndReplayChecks() {
+        MemLedgerJournal journal = new MemLedgerJournal();
+        journal.entries.add(entry("2024-01-01T00:00:00Z"));
+        LedgerArchiveProperties properties = new LedgerArchiveProperties();
+        properties.setHotRetentionDays(1);
+        FinanceReportService financeReportService = new FinanceReportService(journal);
+        WalletLedgerReplayService replayService = new WalletLedgerReplayService(journal, new EmptyAccountRepository());
+        LedgerArchiveEligibilityService eligibilityService =
+                new LedgerArchiveEligibilityService(journal, financeReportService, replayService, properties);
+        LedgerArchiveManifestService service =
+                new LedgerArchiveManifestService(journal, eligibilityService, financeReportService);
+
+        // 場景：delete guard 是 hot ledger 刪除前最後一道不可跳過的 immutable archive gate。
+        LedgerArchiveDeleteGuardReport report = service.deleteGuard(LocalDate.parse("2024-01-01"));
+
+        assertThat(report.approved()).isTrue();
+        assertThat(report.eligibility().deleteEligible()).isTrue();
+        assertThat(report.manifest().deleteEligible()).isTrue();
+        assertThat(report.restoreSmoke().passed()).isTrue();
+        assertThat(report.replayValidation().passed()).isTrue();
+        assertThat(report.blockers()).isEmpty();
+    }
+
+    @Test
+    @DisplayName("deleteGuard 會阻擋未通過 retention/restore/replay gate 的 hot-path delete")
+    void deleteGuardBlocksUnsafeDelete() {
+        MemLedgerJournal journal = new MemLedgerJournal();
+        LocalDate today = LocalDate.now(ZoneOffset.UTC);
+        journal.entries.add(WalletLedgerEntry.builder()
+                .uid(92)
+                .asset("USDT")
+                .reason("deposit")
+                .amount(new BigDecimal("100"))
+                .balanceAfter(new BigDecimal("100"))
+                .createdAt(today.atStartOfDay().toInstant(ZoneOffset.UTC))
+                .postings(List.of(new WalletLedgerPosting("USER_AVAILABLE", "USDT", new BigDecimal("100"), BigDecimal.ZERO)))
+                .build());
+        LedgerArchiveProperties properties = new LedgerArchiveProperties();
+        properties.setHotRetentionDays(365);
+        FinanceReportService financeReportService = new FinanceReportService(journal);
+        WalletLedgerReplayService replayService = new WalletLedgerReplayService(journal, new EmptyAccountRepository());
+        LedgerArchiveEligibilityService eligibilityService =
+                new LedgerArchiveEligibilityService(journal, financeReportService, replayService, properties);
+        LedgerArchiveManifestService service =
+                new LedgerArchiveManifestService(journal, eligibilityService, financeReportService);
+
+        LedgerArchiveDeleteGuardReport report = service.deleteGuard(today);
+
+        assertThat(report.approved()).isFalse();
+        assertThat(report.blockers()).anyMatch(blocker -> blocker.contains("DELETE_ELIGIBILITY_FAILED"));
+        assertThat(report.blockers()).anyMatch(blocker -> blocker.contains("REPLAY_VALIDATION_FAILED"));
     }
 
     private static WalletLedgerEntry entry(String createdAt) {

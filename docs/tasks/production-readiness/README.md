@@ -12,7 +12,7 @@ This group splits the broad `docs/*/todo.md` production checklist into small imp
 4. Report both broad TODO progress and fine-grained progress, for example:
 
 ```text
-P0 broad: 39/43 -> 40/43 done, remaining 4 -> 3
+P0 broad: 40/43 -> 41/43 done, remaining 3 -> 2
 P0 fine: 28/36 -> 36/36 done, remaining 8 -> 0
 ```
 

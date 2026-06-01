@@ -49,7 +49,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add a balanced wallet-ledger posting baseline so balance changes are traceable and reconcilable in the MVP.
 - [x] Build the complete production double-entry ledger schema and replay path.
 - [x] Split order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, and withdrawal into explicit accounting entries.
-- [ ] Harden accounting entries with production database constraints, audit retention, and replay validation.
+- [x] Harden accounting entries with production database constraints, audit retention, and replay validation.
+  - Baseline done: SQL-enforced wallet ledger entry/posting constraints, durable hash-chain tamper evidence, daily/category finance reports, trial-balance snapshots, replay comparison, archive eligibility, archive manifest checksums, restore smoke, archived date-range replay validation, and immutable ledger archive delete guard that blocks hot-path delete unless eligibility, manifest, restore smoke, and replay validation all pass.
 - [x] Add `/api/margin/risk` for frozen funds, available balance, total equity, maintenance margin, and risk ratio snapshots.
 - [x] Persist daily account risk snapshots and fully replace trade/ticker fallback marks with independent mark/index oracle inputs.
 - [x] Add an all-account reconciliation baseline that scans the maintained account index plus open-position index and reports account, position margin, and ledger-balance issues.

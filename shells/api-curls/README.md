@@ -120,6 +120,7 @@ User WebSocket:
 ./shells/api-curls/exchange/recovery-finance-category-report-get.sh
 ./shells/api-curls/exchange/recovery-finance-category-export-batch-get.sh
 ./shells/api-curls/exchange/recovery-ledger-archive-eligibility-get.sh
+./shells/api-curls/exchange/recovery-ledger-archive-delete-guard-get.sh
 ./shells/api-curls/exchange/recovery-ledger-archive-manifest-get.sh
 ./shells/api-curls/exchange/recovery-ledger-archive-restore-smoke-get.sh
 ./shells/api-curls/exchange/recovery-ledger-archive-replay-validation-get.sh

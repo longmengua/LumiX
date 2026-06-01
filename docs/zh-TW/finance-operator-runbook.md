@@ -15,6 +15,8 @@ UTC 財務日結或 durable-ledger 日報不平衡時使用這份 runbook。
 4. hot-path delete 前先跑 restore smoke 與 replay validation：
    `GET /api/recovery/finance/ledger-archive-restore-smoke?date=YYYY-MM-DD`
    `GET /api/recovery/finance/ledger-archive-replay-validation?fromDate=YYYY-MM-DD&toDate=YYYY-MM-DD`
+5. 跑 immutable delete guard，只有 `approved=true` 才能繼續：
+   `GET /api/recovery/finance/ledger-archive-delete-guard?date=YYYY-MM-DD`
 
 ## 如果日報不平衡
 
@@ -26,7 +28,7 @@ UTC 財務日結或 durable-ledger 日報不平衡時使用這份 runbook。
    `GET /api/recovery/reconcile/ledger/{uid}/compare?asset=USDT`
 5. manual compensation 前先開啟或 claim reconciliation issue：
    `GET /api/recovery/reconcile/issues/open`
-6. 修正後重跑 daily report、category export batch、archive restore smoke、replay validation。
+6. 修正後重跑 daily report、category export batch、archive restore smoke、replay validation 與 delete guard。
 
 ## Scheduler
 

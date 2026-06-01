@@ -57,6 +57,7 @@ Ledger concerns:
 - `LedgerArchiveEligibilityService` and `/api/recovery/finance/ledger-archive-eligibility` enforce ledger hot-path delete preconditions: retention window closed, hash-chain clean, balanced daily report, and non-empty candidate set.
 - `LedgerArchiveManifestService` and `/api/recovery/finance/ledger-archive-manifest` generate date-scoped ledger archive manifests with source row counts, posting counts, aggregate checksum, restore instructions, and delete eligibility.
 - `/api/recovery/finance/ledger-archive-restore-smoke` and `/api/recovery/finance/ledger-archive-replay-validation` verify archive row counts/checksums and archived date-range replay readiness.
+- `/api/recovery/finance/ledger-archive-delete-guard` blocks hot-path ledger delete unless archive eligibility, manifest delete eligibility, restore smoke, and replay validation all pass.
 - `MarginService.recordDepositCallback` uses `WalletTransfer.externalRef` to replay duplicate chain/bank callbacks without double ledger posting.
 - Manual-review transfers can be owner-claimed, and `transferReconciliation` projects transfer-vs-ledger ref matches for operations review.
 - `PlaceOrderUseCase`, `CancelOrderUseCase`, `AmendOrderUseCase`, and `CancelReplaceOrderUseCase` now enter `CommandTransactionBoundary` in Spring runtime, so order reserve, matching side effects, ledger writes, order updates, and outbox rows share command-level database transaction boundaries.
@@ -67,7 +68,6 @@ Ledger concerns:
 - `ExecuteAdlUseCase` now enters `CommandTransactionBoundary` in Spring runtime before ADL execution mutates position, ledger, execution records, and audit events.
 
 Remaining production TODO:
-- Audit retention and immutable archive enforcement.
 - Stronger alert delivery and worker locking for scheduled turnover reconciliation.
 - ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
 

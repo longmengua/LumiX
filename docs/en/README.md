@@ -302,6 +302,7 @@ src/main/java/com/example/exchange
 - `POST /api/recovery/reconcile/accounts/report`
 - `GET /api/recovery/reconcile/reports?limit=20`
 - `GET /api/recovery/reconcile/reports/{reportId}`
+- `GET /api/recovery/finance/ledger-archive-delete-guard?date=YYYY-MM-DD`
 - `GET /api/risk/adl-queue`
 - `GET /api/risk/adl-queue/alerts?minAgeSeconds=900`
 - `GET /api/risk/adl-executions?limit=50`
