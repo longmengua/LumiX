@@ -36,6 +36,8 @@ docker compose up -d
 
 ## AI Usage
 
+For parallel AI work, read `AGENTS.md`, `docs/ai/team-collaboration.md`, and `docs/tasks/active.md` first, then claim one task in `docs/tasks/active.md`, commit and push that claim before implementation.
+
 | Language | How To Use |
 | --- | --- |
 | English | Use these prompts when asking Codex to work from the maintained documentation. |
