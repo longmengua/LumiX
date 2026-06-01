@@ -32,15 +32,15 @@ Move ADL from ranking and planning into forced position/accounting execution wit
 - Added `ExecuteAdlCommand` and `ExecuteAdlUseCase` so ADL forced execution can enter `CommandTransactionBoundary` in Spring runtime.
 - Added `AdlQueueExecutionService` to consume an ADL queue entry, filter opposite-side profitable candidates, rank/plan the forced reduction, execute through `ExecuteAdlUseCase`, and complete the queue entry after full coverage.
 - Added `POST /api/risk/adl-queue/{liquidationId}/claim`, `/execute`, and `/release` plus curl examples for operator-triggered queue ownership/execution with command idempotency.
+- Added `GET /api/risk/adl-queue/alerts?minAgeSeconds=...` and curl coverage for aged open/stuck claimed ADL queue alert reports.
+- Added durable insurance-fund movement records, `V21__insurance_fund_movements.sql`, JPA/in-memory stores, `GET /api/risk/insurance-fund/movements`, and curl/test coverage.
 - Claimed queue entries now reject execution attempts from a different operator id.
 - Documented ADL hot-state repair rules for cases where DB execution commits but Redis/in-memory queue or account/position projections drift.
 - Partial ADL execution now updates the queue item to the remaining notional instead of retrying the original amount.
 - Added focused tests for full execution, repeated command id idempotency, durable-store idempotency across service instances, insufficient candidate quantity pre-mutation rejection, and operator halt audit.
 
 Follow-up hardening:
-- Move ADL queue state from the in-memory insurance-fund service into durable storage before production use.
-- Add stronger operator assignment audit history and alerting for stuck claimed queue items.
-- Add production insurance-fund capital movement records beyond the current MVP balance service.
+- Add stronger operator assignment audit history.
 
 ## Acceptance Criteria
 

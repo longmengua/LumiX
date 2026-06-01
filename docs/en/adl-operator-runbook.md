@@ -7,8 +7,10 @@ This runbook covers ADL queue entries created when liquidation shortfall exceeds
 
 1. List open ADL shortfalls: `GET /api/risk/adl-queue`.
 2. List stuck claims: `GET /api/risk/adl-queue/stuck-claims?minClaimAgeSeconds=900`.
-3. Review recent execution outcomes: `GET /api/risk/adl-executions?limit=50`.
-4. Reconcile ADL queue against liquidated-position coverage: `GET /api/risk/adl-insurance-reconciliation?asset=USDT`.
+3. List alert-ready open/stuck queue entries: `GET /api/risk/adl-queue/alerts?minAgeSeconds=900`.
+4. Review recent execution outcomes: `GET /api/risk/adl-executions?limit=50`.
+5. Review insurance-fund capital movements: `GET /api/risk/insurance-fund/movements?asset=USDT&limit=50`.
+6. Reconcile ADL queue against liquidated-position coverage: `GET /api/risk/adl-insurance-reconciliation?asset=USDT`.
 
 ## Claim And Execute
 

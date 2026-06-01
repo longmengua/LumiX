@@ -94,4 +94,59 @@ class InsuranceFundServiceTest {
                 .extracting(AdlQueueEntry::liquidationId)
                 .containsExactly("old-claim");
     }
+
+    @Test
+    @DisplayName("adlOperationalAlerts 會同時回報逾時 open entry 與卡住的 claimed entry")
+    void adlOperationalAlertsReportOpenAndClaimedQueueIssues() {
+        InMemoryAdlQueueStore store = new InMemoryAdlQueueStore();
+        InsuranceFundService service = new InsuranceFundService(store);
+        store.enqueueIfAbsent(new AdlQueueEntry(
+                "open-old",
+                7,
+                "BTCUSDT",
+                "LONG",
+                new BigDecimal("100"),
+                Instant.now().minus(Duration.ofHours(2)),
+                "OPEN",
+                "",
+                null
+        ));
+        store.enqueueIfAbsent(new AdlQueueEntry(
+                "claim-old",
+                8,
+                "ETHUSDT",
+                "SHORT",
+                new BigDecimal("200"),
+                Instant.now().minus(Duration.ofHours(2)),
+                "CLAIMED",
+                "ops-1",
+                Instant.now().minus(Duration.ofHours(1))
+        ));
+
+        // 場景：alert backend 尚未接入時，營運 API 仍要能列出需要 assignment/retry 的 ADL queue。
+        assertThat(service.adlOperationalAlerts(Duration.ofMinutes(30)).alerts())
+                .extracting(alert -> alert.alertType() + ":" + alert.liquidationId())
+                .containsExactly(
+                        "ADL_QUEUE_OPEN_OVER_THRESHOLD:open-old",
+                        "ADL_CLAIM_STUCK:claim-old"
+                );
+    }
+
+    @Test
+    @DisplayName("cover 會保存 insurance fund payout movement 供 liquidation 資本移動追蹤")
+    void coverRecordsInsuranceFundMovement() {
+        InsuranceFundService service = new InsuranceFundService();
+
+        BigDecimal covered = service.cover("usdt", new BigDecimal("25"), "liq-1");
+
+        assertThat(covered).isEqualByComparingTo("25");
+        assertThat(service.movements("USDT", 10))
+                .singleElement()
+                .satisfies(movement -> {
+                    assertThat(movement.reason()).isEqualTo("INSURANCE_FUND_PAYOUT");
+                    assertThat(movement.refId()).isEqualTo("liq-1");
+                    assertThat(movement.amount()).isEqualByComparingTo("-25");
+                    assertThat(movement.balanceAfter()).isEqualByComparingTo("999975");
+                });
+    }
 }

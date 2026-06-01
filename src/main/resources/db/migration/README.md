@@ -20,6 +20,7 @@ Flyway migration scripts。
 - `V18__hedge_trade_ledger_refs.sql`：hedge decision internal trade refs and hedge fill ledger refs for reconciliation。
 - `V19__order_strategy_market_maker_tags.sql`：order lifecycle strategy / market-maker reporting tags。
 - `V20__wallet_ledger_journal_constraints.sql`：wallet ledger schema version、asset/reason、posting line/account/asset SQL constraints。
+- `V21__insurance_fund_movements.sql`：insurance fund capital movement records for liquidation / ADL operations。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。

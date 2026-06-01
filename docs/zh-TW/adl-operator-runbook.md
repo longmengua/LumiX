@@ -7,8 +7,10 @@
 
 1. 查 open ADL shortfall：`GET /api/risk/adl-queue`。
 2. 查卡住的 claim：`GET /api/risk/adl-queue/stuck-claims?minClaimAgeSeconds=900`。
-3. 查最近執行結果：`GET /api/risk/adl-executions?limit=50`。
-4. 對帳 ADL queue 與被清算持倉 coverage：`GET /api/risk/adl-insurance-reconciliation?asset=USDT`。
+3. 查可送 alert backend 的 open/stuck queue entries：`GET /api/risk/adl-queue/alerts?minAgeSeconds=900`。
+4. 查最近執行結果：`GET /api/risk/adl-executions?limit=50`。
+5. 查 insurance-fund capital movements：`GET /api/risk/insurance-fund/movements?asset=USDT&limit=50`。
+6. 對帳 ADL queue 與被清算持倉 coverage：`GET /api/risk/adl-insurance-reconciliation?asset=USDT`。
 
 ## Claim And Execute
 

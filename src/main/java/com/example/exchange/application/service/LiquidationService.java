@@ -105,7 +105,7 @@ public class LiquidationService {
             Account beforeLoss = walletLedgerService.getOrCreate(uid);
             BigDecimal shortfall = loss.subtract(beforeLoss.crossBalance());
             if (shortfall.signum() > 0) {
-                insuranceCovered = insuranceFundService.cover(config.getQuoteAsset(), shortfall);
+                insuranceCovered = insuranceFundService.cover(config.getQuoteAsset(), shortfall, liquidationId);
                 walletLedgerService.applyInsurancePayout(uid, config.getQuoteAsset(), insuranceCovered, liquidationId);
 
                 adlCovered = shortfall.subtract(insuranceCovered);

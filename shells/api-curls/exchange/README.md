@@ -5,7 +5,7 @@
 目前狀態：
 - 訂單：下單、查 open/all、撤單、amend、cancel-replace 的主要 API 已在 controller 中提供；此目錄目前只放部分常用範例。
 - 行情：depth snapshot 與 depth delta backfill 範例已補齊。
-- 資金/風控：入金、出金、margin transfer、transfer list、bonus-credit user/campaign report/export/clawback、turnover summary/records/export/reconciliation、risk snapshot、persisted risk snapshot、price oracle、ADL queue claim/release/execution、ADL execution report、ADL insurance reconciliation 範例已補齊。
+- 資金/風控：入金、出金、margin transfer、transfer list、bonus-credit user/campaign report/export/clawback、turnover summary/records/export/reconciliation、risk snapshot、persisted risk snapshot、price oracle、ADL queue claim/release/execution/alerts、ADL execution report、ADL insurance reconciliation、insurance fund movement 範例已補齊。
 - 做市商：post-only quote placement、active quote state 查詢與 quote/open-order reconciliation 範例已補齊。
 - Recovery：包含 snapshot recovery、全帳戶 reconciliation、account-position consistency、daily/category finance report、category export batch、ledger archive manifest restore smoke、replay validation、outbox/domain-state consistency 範例。
 

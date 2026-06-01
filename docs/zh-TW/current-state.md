@@ -13,10 +13,10 @@ English version: [../en/current-state.md](../en/current-state.md)
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
-| P0 必做 | 39 | 4 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
+| P0 必做 | 40 | 3 | MVP 核心能力已鋪底，但 production blocker 仍很多。 |
 | P1 強烈建議 | 8 | 14 | 營運、market data、Polymarket、資料治理仍偏早期。 |
 | P2 演進項 | 0 | 5 | 後台、報表、壓測、合規與灰度能力尚未開始。 |
-| 合計 | 47 | 23 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
+| 合計 | 48 | 22 | 目前不是接近完成，而是「baseline 已建立、production 化待推進」。 |
 
 ## 目前插單優先順序
 
@@ -63,7 +63,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、uid+symbol order-entry frequency limits、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
 - liquidation decision 已會發布 audit data，營運控制可 halt liquidation 或導入 manual review。
 - liquidation scanning 可掃描 open positions 並觸發 oracle-based liquidation decisions。
-- ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、durable queue storage、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、stuck-claim operator reporting 與 runbook、recent execution reporting、insurance/shortfall reconciliation、含 restart coverage 的 partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。
+- ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、durable queue storage、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、stuck/open queue alert reporting、stuck-claim operator reporting 與 runbook、recent execution reporting、insurance/shortfall reconciliation、durable insurance-fund movement records、含 restart coverage 的 partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。
 - 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
 - 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
 - Redis hot-state keys 已補 final per-key-family TTL/archive rules、刪除前置條件與 authoritative rebuild source，供 production maintenance 使用。
@@ -76,7 +76,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - Production worker routing 與 disaster recovery 已有 production deployment switch sequence、worker takeover、reconnect/session replay semantics、restore smoke commands、account/position consistency validation、readiness inspection、rollback sequence 與聚焦 smoke verification。單 symbol sequencer 目前仍以 in-process engine 執行，因此更完整的多進程營運強化仍未完成。
 - order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
 - ledger 已有 durable double-entry journal、體驗金獨立帳戶、體驗金 consume eligibility gate、體驗金到期 scanner 與 campaign auto-clawback scheduler baseline、體驗金用戶/活動 report/export 與 clawback APIs、流水 facts、一等 strategy/market-maker order tags、流水 summary/drill-down/export queries、match-level turnover-vs-trade-tape reconciliation、預設關閉的 recent-window 流水 trade/ledger-ref reconciliation 與 replay path；audit retention、更深入 replay validation 與更完整營運控制仍未完成。
-- funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。liquidation scanning 可把 open positions 透過 oracle-based liquidation routing 處理，並具備 halt / manual-review controls、batch limit、per-position failure isolation 與 decision audit events。production feed redundancy、price clamp、stuck claim 的 alert-backend delivery 與 production insurance-fund capital movement records 仍未完成。
+- funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。liquidation scanning 可把 open positions 透過 oracle-based liquidation routing 處理，並具備 halt / manual-review controls、batch limit、per-position failure isolation、decision audit events、ADL alert reporting 與 insurance-fund movement records。production feed redundancy 與 price clamp 仍未完成。
 - reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、durable ledger hash-chain tamper-evidence、SQL-enforced wallet ledger invariants、trial-balance 計算與 daily snapshot persistence、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API、workflow audit events、durable-ledger daily finance report baseline、預設關閉的 finance category exporter job、fee/funding/liquidation/bonus/transfer finance category exports、ledger archive/delete eligibility checks、manifest restore smoke、archived date-range replay validation，以及不平衡報表 operator runbook。
 - 做市商對沖已有 durable profile/risk-limit storage、profile admin API、bounded hedge fill query API、venue fill callback ingestion、venue fill idempotent replay 與可選 HMAC/timestamp verification、manual 與預設關閉的 scheduled hedge execution API 且限制安全 ref prefix、durable scheduled-worker lock、operator approval token gate、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、enabled-profile batch 共用的 per-run execution route/notional cap policy、quote command validation、stale quote cleanup、post-only internal order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage 與 quote/open-order reconciliation baseline、hedge venue adapter contract、real venue signed-request/lookup skeleton、uncertain submit reconciliation 的 venue outcome lookup contract、retryable venue result classification、durable refId idempotency claim/result storage、未解 hedge venue idempotency 營運報告與 reconcile trigger、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、含 internal trade 與 ledger refs 的 durable hedge decision/fill audit trails、decision-vs-fill hedge reconciliation，以及 trade/ledger ref issue reporting；real venue HTTP transport 與自動 quote reconciliation repair job 仍未完成。
 - outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。

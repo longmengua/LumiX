@@ -7,7 +7,7 @@
 - 帳務：`WalletLedgerEntry`、`WalletLedgerPosting`、`WalletTransfer`、`BonusCreditGrantRecord`、`TurnoverRecordEntity`。
 - 訂單 lifecycle：`OrderLifecycleEventRecord`、`OrderLifecycleProjection` 保存 latest order state 與 strategy/market-maker tags。
 - 做市商：`MarketMakerProfileRecord`、`MarketMakerRiskLimitRecord`、`MarketMakerQuoteStateRecord`、`HedgeDecisionAuditRecordEntity`（含 internal trade ref）、`HedgeFillRecordEntity`（含 ledger ref）。
-- 風控 read model：`AccountRiskSnapshotRecord`、`AdlExecutionRecordEntity`。
+- 風控 read model：`AccountRiskSnapshotRecord`、`AdlExecutionRecordEntity`、`InsuranceFundMovementEntity`。
 - Market data：`MarketDataSequenceCheckpointRecord`、`MarketDataDepthDeltaRecord`、`MarketDataTradeTapeRecord`、`MarketDataTickerRecord`、`MarketDataKlineRecord`。
 - Reliability：`OutboxEvent`、`DlqEvent`。
 - Polymarket：market、session、local order、WS event、sync progress entities。

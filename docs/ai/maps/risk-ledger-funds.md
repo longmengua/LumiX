@@ -106,6 +106,8 @@ Current liquidation/ADL behavior:
 - `AdlForcedExecutionService` consumes ADL plans, validates candidate quantities before mutation, force reduces selected positions, writes realized-PnL and `adl_forced_loss` ledger postings, publishes execution audit events, and uses durable execution records for command id idempotency when configured.
 - `InsuranceFundService` enqueues ADL shortfalls idempotently by `liquidationId` through `AdlQueueStore`, preserving any existing operator claim on duplicate retry/replay; Spring runtime uses `JpaAdlQueueStore` and unit tests can use `InMemoryAdlQueueStore`.
 - `InsuranceFundService.stuckAdlClaims(...)` and `GET /api/risk/adl-queue/stuck-claims` expose claimed ADL entries older than an operator threshold for alert/report wiring.
+- `InsuranceFundService.adlOperationalAlerts(...)` and `GET /api/risk/adl-queue/alerts` expose aged open queue entries and stuck claimed entries for alert backend wiring.
+- `InsuranceFundService` writes durable insurance-fund payout movement records through `InsuranceFundMovementStore`; `GET /api/risk/insurance-fund/movements` reports recent movements by asset.
 - `GET /api/risk/adl-executions` reports recent forced-deleveraging outcomes from durable execution records when available.
 - `AdlInsuranceReconciliationService` and `GET /api/risk/adl-insurance-reconciliation` compare open ADL queue shortfalls against liquidated-position ADL/insurance coverage.
 - `AdlQueueExecutionService` consumes queued liquidation shortfalls, enforces queue owner guard when claimed, filters opposite-side candidates, ranks/plans ADL reduction, executes through `ExecuteAdlUseCase`, completes fully covered queue entries, keeps remaining notional on partial execution, and returns `ADL_NO_ELIGIBLE_CANDIDATES` without consuming the queue when no candidate can be reduced.
@@ -114,7 +116,7 @@ Current liquidation/ADL behavior:
 
 Remaining production TODO:
 - Production scheduling/routing for liquidation scanners.
-- Add production insurance-fund capital movement records, alert-backend delivery for stuck claims, and stronger operator assignment audit history.
+- Add stronger operator assignment audit history.
 - Alerts for reconciliation failure and unbalanced assets.
 
 ## Trial Balance And Reconciliation Issues

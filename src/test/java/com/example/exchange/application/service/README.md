@@ -7,7 +7,7 @@ Application service tests。
 | 測試類別 | 主要案例 |
 | --- | --- |
 | `OrderAccountingIntegrationTest` | 成交後帳務與持倉、風控拒單、risk tiers、max open orders、pre-trade frequency limit、重複 client order id、kill switch、批量撤單、改單、cancel-replace、cancel-on-disconnect、connection resume。 |
-| `RiskSettlementServiceTest` | 單一 funding、批次 funding、強平/decision audit/營運控制、liquidation scanner batch/failure isolation、保險基金、全帳戶 reconciliation。 |
+| `RiskSettlementServiceTest` | 單一 funding、批次 funding、強平/decision audit/營運控制、liquidation scanner batch/failure isolation、保險基金 movement、全帳戶 reconciliation。 |
 | `TrialBalanceServiceTest` | Wallet ledger postings 產生 trial balance 與不平衡分類。 |
 | `FinanceReportServiceTest` | Durable ledger daily/category finance report 的 reason/asset/account-code 彙總、每日 category export batch 與借貸平衡。 |
 | `LedgerArchiveEligibilityServiceTest` / `LedgerArchiveManifestServiceTest` | Ledger archive/delete eligibility、manifest checksum、restore smoke 與 archived date-range replay validation。 |
@@ -16,6 +16,7 @@ Application service tests。
 | `AdlDeleveragingPlannerTest` | ADL forced deleveraging plan 分配與剩餘缺口計算。 |
 | `AdlForcedExecutionServiceTest` | ADL forced execution 的減倉、ledger posting、service/durable idempotency、候選數量不足與 operator halt。 |
 | `AdlQueueExecutionServiceTest` | ADL queue entry owner guard、篩選對手方候選、planning、execution、queue completion 與 partial retry remaining amount。 |
+| `InsuranceFundServiceTest` | ADL queue idempotent enqueue、claim preservation、open/stuck alert report 與 insurance fund movement。 |
 | `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint 單調遞增、duplicate/out-of-order ignore、depth version recovery、depth delta backfill、durable trade tape restart read、ticker latest-state restart read 與 1m kline restart read。 |
 | `MarketDataRetentionServiceTest` | Market-data depth delta、trade tape、1m kline retention cutoff 與 zero-window skip 行為。 |
 | `WalletLedgerServiceTest` | 體驗金 grant、consume、expire、clawback 與 real cash 隔離。 |

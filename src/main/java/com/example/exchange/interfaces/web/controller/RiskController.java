@@ -13,8 +13,10 @@ import com.example.exchange.application.service.MarkPriceOracleService;
 import com.example.exchange.application.usecase.LiquidateUseCase;
 import com.example.exchange.domain.model.dto.AdlInsuranceReconciliationReport;
 import com.example.exchange.domain.model.dto.AdlExecutionResult;
+import com.example.exchange.domain.model.dto.AdlOperationalAlertReport;
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
 import com.example.exchange.domain.model.dto.FundingSettlementResult;
+import com.example.exchange.domain.model.dto.InsuranceFundMovement;
 import com.example.exchange.domain.model.dto.LiquidationResult;
 import com.example.exchange.domain.model.dto.MarkPriceSnapshot;
 import com.example.exchange.interfaces.web.dto.AdlQueueClaimRequest;
@@ -93,6 +95,14 @@ public class RiskController {
         return ApiResponse.ok(insuranceFundService.balance(asset));
     }
 
+    @GetMapping("/insurance-fund/movements")
+    public ApiResponse<List<InsuranceFundMovement>> insuranceFundMovements(
+            @RequestParam(defaultValue = "USDT") String asset,
+            @RequestParam(defaultValue = "50") int limit
+    ) {
+        return ApiResponse.ok(insuranceFundService.movements(asset, limit));
+    }
+
     @GetMapping("/adl-queue")
     public ApiResponse<List<AdlQueueEntry>> adlQueue() {
         return ApiResponse.ok(insuranceFundService.adlQueue());
@@ -104,6 +114,14 @@ public class RiskController {
     ) {
         long safeSeconds = Math.max(0, minClaimAgeSeconds);
         return ApiResponse.ok(insuranceFundService.stuckAdlClaims(Duration.ofSeconds(safeSeconds)));
+    }
+
+    @GetMapping("/adl-queue/alerts")
+    public ApiResponse<AdlOperationalAlertReport> adlQueueAlerts(
+            @RequestParam(defaultValue = "900") long minAgeSeconds
+    ) {
+        long safeSeconds = Math.max(0, minAgeSeconds);
+        return ApiResponse.ok(insuranceFundService.adlOperationalAlerts(Duration.ofSeconds(safeSeconds)));
     }
 
     @GetMapping("/adl-executions")

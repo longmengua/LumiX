@@ -297,11 +297,13 @@ src/main/java/com/example/exchange
 - `GET /api/ops/metrics`
 - `POST /api/risk/liquidate`
 - `GET /api/risk/insurance-fund`
+- `GET /api/risk/insurance-fund/movements?asset=USDT&limit=50`
 - `GET /api/recovery/reconcile/accounts`
 - `POST /api/recovery/reconcile/accounts/report`
 - `GET /api/recovery/reconcile/reports?limit=20`
 - `GET /api/recovery/reconcile/reports/{reportId}`
 - `GET /api/risk/adl-queue`
+- `GET /api/risk/adl-queue/alerts?minAgeSeconds=900`
 - `GET /api/risk/adl-executions?limit=50`
 - `GET /api/risk/adl-insurance-reconciliation?asset=USDT`
 - `POST /api/recovery/recover/{uid}?fromSeq=0`

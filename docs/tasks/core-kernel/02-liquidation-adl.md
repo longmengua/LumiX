@@ -42,10 +42,12 @@ Complete production-grade liquidation and ADL behavior beyond the current MVP: s
 - Added `GET /api/risk/adl-insurance-reconciliation?asset=...` to compare open ADL queue shortfalls with liquidated-position ADL/insurance coverage.
 - Added ADL operator runbooks for stuck claims, partial retries, and no-candidate retries.
 - Added restart-style partial retry coverage showing a restarted executor consumes only persisted remaining queue notional.
+- Added `GET /api/risk/adl-queue/alerts?minAgeSeconds=...` to report aged open ADL queue entries and stuck claimed entries for alert-backend wiring.
+- Added durable insurance-fund movement records, Flyway schema, JPA adapter, `GET /api/risk/insurance-fund/movements`, and tests proving liquidation payouts are traceable by `liquidationId`.
 
 Remaining work:
 - Add retry/ownership workflow for operator-reviewed liquidation decisions.
-- Add alert-backend delivery for stuck claims, production insurance-fund capital movement records, and stronger operator assignment audit history.
+- Add stronger operator assignment audit history.
 
 ## Acceptance Criteria
 

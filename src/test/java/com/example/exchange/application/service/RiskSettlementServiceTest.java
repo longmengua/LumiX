@@ -214,6 +214,13 @@ class RiskSettlementServiceTest {
                     assertThat(decision.insuranceCovered()).isEqualByComparingTo("89");
                     assertThat(decision.adlCovered()).isEqualByComparingTo("0");
                 });
+        assertThat(insuranceFundService.movements("USDT", 10))
+                .singleElement()
+                .satisfies(movement -> {
+                    assertThat(movement.reason()).isEqualTo("INSURANCE_FUND_PAYOUT");
+                    assertThat(movement.refId()).isEqualTo(result.liquidationId());
+                    assertThat(movement.amount()).isEqualByComparingTo("-89");
+                });
         assertThat(insuranceFundService.adlQueue()).isEmpty();
     }
 

@@ -3,7 +3,7 @@
 Repository contracts，domain/application 只依賴這裡的介面。
 
 目前重點：
-- 內部交易所：`OrderRepository`、`AccountRepository`、`PositionRepository`、`WalletLedgerRepository`、`WalletLedgerJournal`、`AccountRiskSnapshotStore`。
+- 內部交易所：`OrderRepository`、`AccountRepository`、`PositionRepository`、`WalletLedgerRepository`、`WalletLedgerJournal`、`AccountRiskSnapshotStore`、`AdlQueueStore`、`InsuranceFundMovementStore`。
 - Market maker / hedging：`MarketMakerQuoteStateStore` 保存 active quote ownership；`HedgeVenueIdempotencyStore` 保存外部 venue submit 的 refId claim/result。
 - Reliability：`OutboxRepository`、`DlqRepository`、`EventStore`、`SnapshotRepository`。
 - Polymarket：`PolymarketClobCommandStore` 保存 CLOB effectful command 的 commandId claim/result；JPA repository 位於 `jpa/`，Gamma client contract 位於 `client/`。

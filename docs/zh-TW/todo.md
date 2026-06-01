@@ -18,8 +18,8 @@
 
 - [x] 完成可 replay 的撮合核心：durable command log、event log、snapshot、offset checkpoint 與 deterministic replay validation。
   - Baseline 已完成：durable command/event logs、durable snapshots、offset checkpoints、owner/epoch fencing audit fields、deterministic replay validation reports、worker startup/takeover recovery orchestration、recovered open orders restore drill coverage，以及 interleaved command offsets 的 multi-symbol replay validation。
-- [ ] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
-  - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks、forced-execution service、持倉減倉、ledger postings、audit event、durable execution summary/idempotency records、recent execution report API、durable ADL queue store、依 `liquidationId` 冪等的 ADL queue enqueue、queue-to-execution orchestration、operator claim/release guard、stuck-claim operator report 與 runbook、含 restart coverage 的 partial-execution retry semantics、no-eligible-candidate retry semantics，以及 ADL insurance/shortfall reconciliation。
+- [x] 完成 production ADL：隊列排序、強制減倉執行、audit event、保險基金互動與營運控制。
+  - Baseline 已完成：deterministic ranking/planning、liquidation decision audit、營運 halt/manual-review hooks、forced-execution service、持倉減倉、ledger postings、audit event、durable execution summary/idempotency records、recent execution report API、durable ADL queue store、依 `liquidationId` 冪等的 ADL queue enqueue、queue-to-execution orchestration、operator claim/release guard、stuck/open ADL alert report API、stuck-claim operator report 與 runbook、含 restart coverage 的 partial-execution retry semantics、no-eligible-candidate retry semantics、ADL insurance/shortfall reconciliation，以及 durable insurance-fund movement records。
 - [x] 補體驗金 / bonus credit 帳務：獨立 ledger account、資格規則、扣抵順序、到期、追回與報表。
   - Baseline 已完成：獨立 bonus ledger account、grant/consume/expire/clawback postings，不混入真實現金餘額，並有 grant 批次 remaining tracking、預設關閉的 expiry scanner、可設定 consume eligibility gate、預設關閉的 campaign auto-clawback policy、用戶/活動體驗金 report APIs、可匯出的 campaign rows 與營運 clawback API。
 - [x] 補流水 tracking：按 user、account、symbol、strategy、market-maker 維度統計，並能與 ledger/trade reconciliation 對齊。
