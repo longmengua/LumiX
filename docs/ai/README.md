@@ -4,6 +4,7 @@ This directory contains compact, agent-facing context. It is intentionally split
 
 Start here:
 - [code-map.md](code-map.md)
+- [team-collaboration.md](team-collaboration.md) when multiple agents are working in parallel.
 
 Sub-maps live in [maps/](maps/).
 

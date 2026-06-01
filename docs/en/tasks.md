@@ -9,9 +9,11 @@ Task files turn roadmap work into selectable Markdown files. When an interrupt r
 
 | Document | Description |
 | --- | --- |
+| [Active AI Work](../tasks/active.md) | Shared registry for claimed, blocked, and handoff work before implementation starts. |
 | [Task README](../tasks/README.md) | Workflow, status legend, and task groups. |
 | [Core Kernel README](../tasks/core-kernel/README.md) | Current priority lane for the exchange/matching kernel. |
 | [Post-v1 Production Hardening README](../tasks/post-v1/README.md) | Main production-hardening lane after core-v1 freeze. |
+| [AI Handoffs](../tasks/handoffs/README.md) | Template for unfinished parallel-agent work. |
 
 ## Core Kernel Tasks
 

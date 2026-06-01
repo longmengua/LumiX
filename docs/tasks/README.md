@@ -7,7 +7,9 @@ This directory turns roadmap items into executable task files. Use it when the u
 1. User proposes a new priority or interrupt request.
 2. Codex converts it into one or more task Markdown files under this directory.
 3. User chooses a task file.
-4. Codex reads that task file, opens the referenced AI maps, implements the task, and updates status/docs.
+4. Codex checks [active.md](active.md) for active parallel work.
+5. Codex claims the selected task in [active.md](active.md), commits and pushes that claim, then starts implementation.
+6. Codex reads that task file, opens the referenced AI maps, implements the task, and updates status/docs.
 
 ## Status Legend
 
@@ -20,11 +22,13 @@ This directory turns roadmap items into executable task files. Use it when the u
 
 | Group | Directory | Purpose |
 | --- | --- | --- |
+| Active AI work | [active.md](active.md) | Shared registry for claimed, blocked, and handoff work before implementation starts. |
 | Core exchange kernel | [core-kernel](core-kernel) | Replayable matching, ADL, bonus credit, turnover, accounting book, market-maker hedging. |
 | Production readiness fine tasks | [production-readiness](production-readiness) | Small progress-tracking slices split from broad P0/P1/P2 TODO items. |
 | Post-v1 production hardening | [post-v1](post-v1) | Transaction boundaries, production worker routing, ADL execution, market data durability, and external API idempotency. |
 | Release freeze | [release](release) | Bounded release scope, verification checklist, and closeout runbooks. |
 | Web applications | [web](web) | Client web and admin web task breakdown. |
+| AI handoffs | [handoffs](handoffs) | Short notes for unfinished parallel-agent work that another agent should resume. |
 
 ## How To Ask Codex
 

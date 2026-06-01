@@ -9,6 +9,7 @@
 - `en/todo.md` / `zh-TW/todo.md`：production-readiness checklist，已用 `[x]` 標示 MVP baseline 完成項。
 - `en/ai.md` / `zh-TW/ai.md`：Codex/代理快速理解程式碼用的雙語索引；共用細節位於 `ai/maps/`。
 - `en/tasks.md` / `zh-TW/tasks.md`：可點名執行的任務雙語索引；共用任務位於 `tasks/`。
+- `ai/team-collaboration.md`：多人 / 多 AI 並行開工時的 ownership、衝突處理與 handoff 規範。
 - `kafka-topics.md`、`redis-key-schema.md`、`observability.md`、`matching-sequencer-runbook.md`：各語言目錄下的營運規格文件。
 
 優先閱讀：

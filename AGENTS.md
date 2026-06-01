@@ -13,6 +13,7 @@ Primary docs:
 - Current state: `docs/en/current-state.md` / `docs/zh-TW/current-state.md`
 - Production TODO: `docs/en/todo.md` / `docs/zh-TW/todo.md`
 - Agent code map index: `docs/ai/code-map.md`
+- Team AI collaboration mode: `docs/ai/team-collaboration.md`
 
 ## Fast Context
 
@@ -60,6 +61,18 @@ Suggested user commands:
 把這個插單需求轉成 task md：先做做市商對沖。
 讀一下 docs/tasks/core-kernel/05-market-maker-hedging.md，開始做。
 ```
+
+## Team AI Collaboration Protocol
+
+When multiple humans or agents are working at the same time:
+
+1. Read `docs/ai/team-collaboration.md` before editing.
+2. Read `docs/tasks/active.md` and existing handoff notes before choosing work.
+3. Work from one task file or one `docs/ai/maps/*.md` area at a time.
+4. Claim the lane in `docs/tasks/active.md`, commit, and push that claim before implementation.
+5. State the selected lane, expected files, and focused tests before making edits.
+6. Avoid parallel edits to shared coordination files until the end of the task.
+7. Leave unfinished work as a short handoff note under `docs/tasks/handoffs/`.
 
 ## Common Commands
 
