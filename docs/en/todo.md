@@ -148,6 +148,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 - [ ] Admin console: market config, risk parameters, manual suspension, DLQ replay, reconciliation reports.
   - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split admin market config, risk parameters, DLQ replay, and reconciliation report screens into implementable lanes.
+  - Baseline progress: read-only admin market-config API and static screen are available at `GET /api/admin/market-config` and `src/main/resources/static/admin-market-config.html`; write actions remain disabled pending permissioned backend endpoints.
 - [ ] Reporting: user asset reports, trade reports, fee reports, operations and finance daily reports.
   - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split user asset, trade, fee, and operations/finance daily report exports into implementable lanes.
 - [ ] Load testing tools: order-entry TPS, matching TPS, market-data fanout, Polymarket sync pressure.

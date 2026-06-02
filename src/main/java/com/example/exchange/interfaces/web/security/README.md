@@ -12,6 +12,7 @@ Web security helper。
 - `MarketMakerQuoteRateLimiter`：market-maker quote command per-client / market-maker / symbol 限流。
 - `MarketMakerHedgeExecutionRateLimiter`：market-maker manual hedge execution per-client / execution scope 限流。
 - `MarketMakerEndpointAuditLogger`：market-maker effectful endpoint audit 欄位，包含 operator identity 與 approval token outcome 分類。
+- `/api/admin/**` 由 `ProtectedApiClassifier` 分類為 `ADMIN`。
 
 目前狀態：
 - API key、JWT、IP allowlist、固定視窗 rate limit、private user stream authorization baseline、market-data stream per-client limiter、market-maker quote command limiter、market-maker hedge execution limiter、market-maker endpoint audit fields 已有測試。

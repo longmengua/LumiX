@@ -38,6 +38,13 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
         return Optional.empty();
     }
 
+    @Override
+    public List<SymbolConfig> findAll() {
+        return configs.values().stream()
+                .sorted((left, right) -> left.getSymbol().compareTo(right.getSymbol()))
+                .toList();
+    }
+
     private void put(SymbolConfig config) {
         configs.put(config.getSymbol().toUpperCase(), config);
     }

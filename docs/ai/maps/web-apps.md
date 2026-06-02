@@ -5,6 +5,7 @@ This map covers future client-facing and admin-facing web applications.
 ## Existing Frontend State
 
 - Current static page: `src/main/resources/static/index.html`
+- Current static admin page: `src/main/resources/static/admin-market-config.html`
 - Current static README: `src/main/resources/static/README.md`
 - There is no full production frontend app yet.
 
@@ -23,6 +24,9 @@ This map covers future client-facing and admin-facing web applications.
 - Finance operations: ledger replay, reconciliation reports, exception workflow.
 - Recovery operations: snapshot/replay, DLQ replay, manual compensation.
 - Market-maker operations: inventory, kill switch, hedge status, audit trail.
+
+Implemented baseline:
+- `AdminMarketConfigController` exposes read-only `/api/admin/market-config` market configuration data for the static admin market-config page; write actions remain disabled until permissioned backend endpoints exist.
 
 ## Design Constraints
 
