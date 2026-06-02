@@ -15,7 +15,7 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 | --- | ---: | ---: | --- |
 | P0 Required | 43 | 0 | Core production baseline items are closed; post-v1 hardening still remains. |
 | P1 Strongly Recommended | 19 | 3 | Operations, market data, Polymarket, and data governance still need hardening. |
-| P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls have not started. |
+| P2 Evolution | 0 | 5 | Admin, reporting, load testing, compliance, and rollout controls are not implemented; task specs are ready under [P2 evolution tasks](../tasks/p2/README.md). |
 | Total | 62 | 8 | The core baseline is closed, but production hardening and evolution work remain. |
 
 ## Current Priority Override
@@ -86,7 +86,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - The WebSocket/SSE gateway now has a heartbeat contract, disabled-by-default heartbeat scheduler, private user stream subscription authorization for SSE/WebSocket, per-client stream subscription rate limiting, a depth/trade recovery cursor contract, and a horizontal-scaling deployment runbook; it still needs the actual production infrastructure split.
 - Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel can use durable `commandId` records, CLOB cancel replays already-recorded cancel/uncertain statuses locally, reconcile can resolve uncertain cancel from remote CLOB status, sync/reconcile skip unchanged local writes, a documented local/CLOB/trade/settlement transition matrix prevents stale active or terminal downgrade payloads from downgrading local filled/settled terminal orders or matched size, lets settlement/redeem events advance matched or filled orders to settled, routes user-channel trade matches into the local matched lifecycle, user-channel trade payloads persist matched lifecycle and lastTradeId into the local `PredictionPolymarketOrder` projection, user WebSocket gateway checkpoint/replay has a durable wallet-scoped baseline, approval reads have TTL cache coverage, session signer lifecycle guards cover expiration/revocation/abnormal-use warnings, user-channel callbacks no-op duplicate `eventKey` replays including save-race duplicates, backend-observed RPC transactions have a durable command/txHash tracking envelope with unresolved outcome reporting, and Gamma/CLOB responses now have versioned schema reports for remote-field drift; the independently deployed user WebSocket worker is still TODO.
 - Metrics backend, distributed tracing export, dashboards, and alerting are incomplete.
-- Admin console, reporting, load testing, and compliance are not complete.
+- Admin console, reporting, load testing, rollout, and compliance features are not complete; the P2 roadmap is now split into 14 executable task specs under [P2 evolution tasks](../tasks/p2/README.md).
 
 ## Recommended Next Work
 

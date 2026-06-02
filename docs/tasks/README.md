@@ -39,6 +39,7 @@ Each lane should claim exactly one task file or code-map area in [active.md](act
 | Core exchange kernel | [core-kernel](core-kernel) | Replayable matching, ADL, bonus credit, turnover, accounting book, market-maker hedging. |
 | Production readiness fine tasks | [production-readiness](production-readiness) | Small progress-tracking slices split from broad P0/P1/P2 TODO items. |
 | Post-v1 production hardening | [post-v1](post-v1) | Transaction boundaries, production worker routing, ADL execution, market data durability, and external API idempotency. |
+| P2 evolution tasks | [p2](p2) | Admin console, reporting, load testing, rollout, and compliance task specs. |
 | Release freeze | [release](release) | Bounded release scope, verification checklist, and closeout runbooks. |
 | Web applications | [web](web) | Client web and admin web task breakdown. |
 | AI handoffs | [handoffs](handoffs) | Short notes for unfinished parallel-agent work that another agent should resume. |

@@ -144,10 +144,15 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ## P2 Incremental Evolution
 
 - [ ] Admin console: market config, risk parameters, manual suspension, DLQ replay, reconciliation reports.
+  - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split admin market config, risk parameters, DLQ replay, and reconciliation report screens into implementable lanes.
 - [ ] Reporting: user asset reports, trade reports, fee reports, operations and finance daily reports.
+  - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split user asset, trade, fee, and operations/finance daily report exports into implementable lanes.
 - [ ] Load testing tools: order-entry TPS, matching TPS, market-data fanout, Polymarket sync pressure.
+  - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split order-entry TPS, matching TPS, and market-data fanout load tests into implementable lanes; Polymarket sync pressure remains part of the broader load-test roadmap.
 - [ ] Gradual rollout and rollback: feature flags, canary deployment, schema backward compatibility.
+  - Task spec ready: [feature flag, canary, and rollback](../tasks/p2/12-feature-flag-canary-rollback.md).
 - [ ] Compliance hooks: KYC/AML integration, sanctions screening, trade surveillance, suspicious-activity reports.
+  - Task specs ready: [KYC/AML/sanctions](../tasks/p2/13-kyc-aml-sanctions-integration.md) and [trade surveillance/SAR](../tasks/p2/14-trade-surveillance-sar.md).
 
 ## Suggested Near-Term Order
 

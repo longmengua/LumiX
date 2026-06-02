@@ -144,10 +144,15 @@
 ## P2 可逐步演進
 
 - [ ] Admin console：市場配置、風控參數、手動停牌、DLQ replay、對帳報表。
+  - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 admin market config、risk parameters、DLQ replay、reconciliation report screens 拆成可實作 lane。
 - [ ] 報表系統：用戶資產報表、交易報表、手續費報表、營運與財務日報。
+  - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 user asset、trade、fee、operations/finance daily report exports 拆成可實作 lane。
 - [ ] 壓測工具：下單 TPS、撮合 TPS、行情推送 fanout、Polymarket sync 壓力。
+  - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 order-entry TPS、matching TPS、market-data fanout load tests 拆成可實作 lane；Polymarket sync pressure 仍屬於更大的 load-test roadmap。
 - [ ] 灰度與回滾：feature flag、canary deployment、schema backward compatibility。
+  - Task spec 已就緒：[feature flag, canary, and rollback](../tasks/p2/12-feature-flag-canary-rollback.md)。
 - [ ] 合規能力：KYC/AML hook、制裁名單、交易監控、可疑行為報表。
+  - Task specs 已就緒：[KYC/AML/sanctions](../tasks/p2/13-kyc-aml-sanctions-integration.md) 與 [trade surveillance/SAR](../tasks/p2/14-trade-surveillance-sar.md)。
 
 ## 近期落地順序建議
 
