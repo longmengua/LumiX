@@ -23,8 +23,9 @@
 | `PolymarketApprovalServiceTest` | RPC approval read cache、owner clear 與 TTL refresh。 |
 | `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |
 | `PolymarketOrderTrackingServiceTest` | CLOB cancel local idempotency replay、durable commandId replay/conflict、第一次 cancel 成功 marker、exception/5xx uncertain outcome、uncertain cancel reconcile resolution、sync/reconcile unchanged no-op replay、terminal status/matched-size downgrade guard。 |
+| `PolymarketOrderStateMachineTest` | Local/CLOB/trade/settlement state-machine matrix、settlement progression 與 terminal downgrade guard。 |
 | `PolymarketSessionServiceTest` | Session signer revoke-all 覆蓋 pending/active、過期使用拒絕與 EXPIRED 標記。 |
-| `PolymarketUserEventServiceTest` | User-channel callback `eventKey` replay、duplicate-key race no-op 與 order side effect 去重。 |
+| `PolymarketUserEventServiceTest` | User-channel callback `eventKey` replay、duplicate-key race no-op、payload-only trade projection 與 order side effect 去重。 |
 | `RiskSettlementServiceTest` | funding、liquidation、liquidation scanner batch/failure isolation、insurance fund movement、account reconciliation。 |
 | `InsuranceFundServiceTest` | ADL queue enqueue by liquidation id、duplicate replay、operator claim preservation、ADL alert report、insurance fund movement。 |
 | `AdlInsuranceReconciliationServiceTest` | ADL queue shortfall 與 liquidated-position insurance/ADL coverage 對帳。 |

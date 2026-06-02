@@ -36,7 +36,8 @@ class PolymarketUserEventServiceTest {
                 new PolymarketUserEventService(
                         new ObjectMapper(),
                         orderRepository.proxy(),
-                        eventRepository.proxy()
+                        eventRepository.proxy(),
+                        new PolymarketOrderStateMachine()
                 );
 
         service.handle(event("clob-1", "trade-1"));
@@ -48,6 +49,8 @@ class PolymarketUserEventServiceTest {
                 .isEqualTo(1);
         assertThat(orderRepository.order.getTradeStatus())
                 .isEqualTo("MATCHED");
+        assertThat(orderRepository.order.getStatus())
+                .isEqualTo("ORDER_STATUS_MATCHED");
         assertThat(orderRepository.order.getLastTradeId())
                 .isEqualTo("trade-1");
     }
@@ -67,7 +70,8 @@ class PolymarketUserEventServiceTest {
                 new PolymarketUserEventService(
                         new ObjectMapper(),
                         orderRepository.proxy(),
-                        eventRepository.proxy()
+                        eventRepository.proxy(),
+                        new PolymarketOrderStateMachine()
                 );
 
         service.handle(event("clob-1", "trade-1"));
@@ -78,6 +82,43 @@ class PolymarketUserEventServiceTest {
                 .isZero();
         assertThat(orderRepository.saveCount)
                 .isZero();
+    }
+
+    @Test
+    @DisplayName("payload-only trade event 會持久化到 local Polymarket order lifecycle projection")
+    /**
+     * 流程：Polymarket user event top-level 沒有 orderId/tradeId，但 payload 帶 order_id/trade_id。
+     * 期望：event row 保存 resolved ids，local order projection 更新 matched lifecycle 與 lastTradeId。
+     */
+    void payloadOnlyTradeEventUpdatesLocalOrderLifecycleProjection() {
+        CountingOrderRepository orderRepository =
+                new CountingOrderRepository(order("clob-2"));
+        CountingEventRepository eventRepository =
+                new CountingEventRepository(false);
+        PolymarketUserEventService service =
+                new PolymarketUserEventService(
+                        new ObjectMapper(),
+                        orderRepository.proxy(),
+                        eventRepository.proxy(),
+                        new PolymarketOrderStateMachine()
+                );
+
+        service.handle(payloadOnlyTradeEvent("clob-2", "trade-2"));
+
+        assertThat(eventRepository.saved.getOrderId())
+                .isEqualTo("clob-2");
+        assertThat(eventRepository.saved.getTradeId())
+                .isEqualTo("trade-2");
+        assertThat(orderRepository.findCount)
+                .isEqualTo(1);
+        assertThat(orderRepository.saveCount)
+                .isEqualTo(1);
+        assertThat(orderRepository.order.getStatus())
+                .isEqualTo("ORDER_STATUS_MATCHED");
+        assertThat(orderRepository.order.getTradeStatus())
+                .isEqualTo("MATCHED");
+        assertThat(orderRepository.order.getLastTradeId())
+                .isEqualTo("trade-2");
     }
 
     private static PolymarketUserWsEvent event(
@@ -92,6 +133,20 @@ class PolymarketUserEventServiceTest {
                 .assetId("asset-1")
                 .orderId(orderId)
                 .tradeId(tradeId)
+                .payload(Map.of("order_id", orderId, "trade_id", tradeId))
+                .build();
+    }
+
+    private static PolymarketUserWsEvent payloadOnlyTradeEvent(
+            String orderId,
+            String tradeId
+    ) {
+        return PolymarketUserWsEvent.builder()
+                .eventType("trade")
+                .status("MATCHED")
+                .walletAddress("0x0000000000000000000000000000000000000001")
+                .market("condition-2")
+                .assetId("asset-2")
                 .payload(Map.of("order_id", orderId, "trade_id", tradeId))
                 .build();
     }
