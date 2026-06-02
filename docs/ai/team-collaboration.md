@@ -73,6 +73,38 @@ Claim docs/tasks/post-v1/05-external-api-idempotency.md as one lane.
 Commit and push the active.md claim before implementation.
 ```
 
+Parallel two-terminal prompt examples:
+
+Terminal A:
+
+```text
+讀一下 AGENTS.md 和 docs/ai/team-collaboration.md。
+我要開 parallel agent A。請建立或使用 worktree ../java21-match-hub-agent-a，branch 用 agent-a/p1-market-data。
+不要在目前 worktree 寫 code。
+進入該 worktree 後，讀 docs/tasks/active.md，認領 market-data gateway 相關下一個 P1 lane。
+先 commit/push active.md claim，再開始實作。
+```
+
+Terminal B:
+
+```text
+讀一下 AGENTS.md 和 docs/ai/team-collaboration.md。
+我要開 parallel agent B。請建立或使用 worktree ../java21-match-hub-agent-b，branch 用 agent-b/p1-polymarket。
+不要在目前 worktree 寫 code。
+進入該 worktree 後，讀 docs/tasks/active.md，認領 Polymarket integration 相關下一個 P1 lane。
+先 commit/push active.md claim，再開始實作。
+```
+
+Shorter direct prompts:
+
+```text
+以 parallel agent 模式開工。使用獨立 worktree ../java21-match-hub-agent-a 和 branch agent-a/p1-market-data。不要在目前 worktree 寫 code。完成 claim 後從 docs/tasks/production-readiness/02-p1-production-hardening.md 的 Market Data Gateway 下一個未完成項開始做。
+```
+
+```text
+以 parallel agent 模式開工。使用獨立 worktree ../java21-match-hub-agent-b 和 branch agent-b/p1-polymarket。不要在目前 worktree 寫 code。完成 claim 後從 docs/tasks/production-readiness/02-p1-production-hardening.md 的 Polymarket Integration 下一個未完成項開始做。
+```
+
 ## Startup Checklist
 
 1. Pull the latest branch state.
