@@ -3,6 +3,7 @@
 Web layer tests。
 
 目前目錄：
+- `controller/`：admin market-config read-only API mapping。
 - `interceptor/`：request logging、API auth、protected API security。
 - `security/`：API key、JWT、IP allowlist。
 

@@ -7,7 +7,7 @@ Interceptor tests。
 | 測試類別 | 主要案例 |
 | --- | --- |
 | `RequestLoggingInterceptorTest` | incoming trace headers、response headers、MDC cleanup、缺 headers 時產生 ids。 |
-| `ApiAuthenticationInterceptorTest` | auth disabled、missing credentials、admin/trader 授權、principal attribute。 |
+| `ApiAuthenticationInterceptorTest` | auth disabled、missing credentials、admin/trader 授權、`/api/admin/**` admin-only、principal attribute。 |
 | `ProtectedApiSecurityInterceptorTest` | IP allowlist 拒絕/放行、per-IP rate limit 與 Retry-After。 |
 
 注意：

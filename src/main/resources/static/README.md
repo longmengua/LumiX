@@ -4,6 +4,7 @@
 
 目前內容：
 - `index.html`：本機真實交易測試控制台。
+- `admin-market-config.html`：read-only admin market-config 檢視頁，搭配 `/api/admin/market-config`。
 
 注意：
 - 這不是 production 前端。

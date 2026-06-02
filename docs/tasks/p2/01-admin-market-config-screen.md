@@ -1,6 +1,6 @@
 # Task: Admin Market Config Screen
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -27,9 +27,15 @@ Add an admin screen for inspecting and editing market, symbol, and trading-sessi
 - Missing backend write support is represented as disabled controls, not hidden assumptions.
 - Any enabled write requires confirmation, reason text, permission check, and trace id display.
 
+## Implementation Notes
+
+- Read-only API: `GET /api/admin/market-config`.
+- Static page: `src/main/resources/static/admin-market-config.html`.
+- Curl script: `shells/api-curls/exchange/admin-market-config-get.sh`.
+- Writes remain disabled and documented through response capabilities.
+
 ## Read First
 
 - [../web/02-admin-web.md](../web/02-admin-web.md)
 - [../../ai/maps/web-apps.md](../../ai/maps/web-apps.md)
 - [../../ai/maps/order-matching.md](../../ai/maps/order-matching.md)
-
