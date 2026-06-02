@@ -5,6 +5,10 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PolymarketUserWsEvent;
 import com.example.exchange.domain.model.dto.PolymarketUserWsStatusResponse;
+import com.example.exchange.domain.model.entity.PredictionPolymarketUserWsCheckpoint;
+import com.example.exchange.domain.model.entity.PredictionPolymarketWsEvent;
+import com.example.exchange.domain.repository.jpa.PredictionPolymarketUserWsCheckpointRepository;
+import com.example.exchange.domain.repository.jpa.PredictionPolymarketWsEventRepository;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -16,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +28,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -45,6 +52,8 @@ public class PolymarketUserWebSocketService {
     private final ObjectMapper objectMapper;
     private final PolymarketConfigs polymarketConfigs;
     private final KafkaTemplate<String, Object> kafkaTemplate;
+    private final PredictionPolymarketUserWsCheckpointRepository checkpointRepository;
+    private final PredictionPolymarketWsEventRepository eventRepository;
 
     private final HttpClient httpClient =
             HttpClient.newHttpClient();
@@ -137,6 +146,48 @@ public class PolymarketUserWebSocketService {
                 .lastCloseReason(lastCloseReason)
                 .lastError(lastError)
                 .build();
+    }
+
+    public int replayPersistedEventsFromCheckpoint(int maxEvents) {
+        if (maxEvents <= 0) {
+            return 0;
+        }
+
+        PredictionPolymarketUserWsCheckpoint checkpoint =
+                checkpointRepository.findByStreamKey(streamKey())
+                        .orElseGet(this::newCheckpoint);
+
+        LocalDateTime lastReceivedAt =
+                checkpoint.getLastReceivedAt() == null
+                        ? LocalDateTime.of(1970, 1, 1, 0, 0)
+                        : checkpoint.getLastReceivedAt();
+        String lastEventKey =
+                checkpoint.getLastEventKey() == null
+                        ? ""
+                        : checkpoint.getLastEventKey();
+
+        List<PredictionPolymarketWsEvent> events =
+                eventRepository.findReplayBatchAfterCheckpoint(
+                        polymarketConfigs.getWallet().getFunderAddress(),
+                        lastReceivedAt,
+                        lastEventKey,
+                        PageRequest.of(0, maxEvents)
+                );
+
+        for (PredictionPolymarketWsEvent event : events) {
+            PolymarketUserWsEvent wsEvent =
+                    toUserWsEvent(event);
+            kafkaTemplate.send(TOPIC, kafkaKey(wsEvent), wsEvent);
+            saveCheckpoint(
+                    event.getEventKey(),
+                    event.getEventType(),
+                    event.getWalletAddress(),
+                    event.getPayload(),
+                    event.getReceivedAt()
+            );
+        }
+
+        return events.size();
     }
 
     private void connect() {
@@ -336,8 +387,82 @@ public class PolymarketUserWebSocketService {
                 event
         );
 
+        saveCheckpoint(
+                buildEventKey(event),
+                eventType,
+                event.getWalletAddress(),
+                toJson(payload),
+                toLocalDateTime(now)
+        );
+
         lastMessageAt = now;
         lastEventType = eventType;
+    }
+
+    void handleTextForTest(String text) {
+        handleText(text, null);
+    }
+
+    private PolymarketUserWsEvent toUserWsEvent(PredictionPolymarketWsEvent event) {
+        return PolymarketUserWsEvent.builder()
+                .source(SOURCE)
+                .eventType(event.getEventType())
+                .status(event.getStatus())
+                .walletAddress(event.getWalletAddress())
+                .market(event.getMarket())
+                .assetId(event.getAssetId())
+                .orderId(event.getOrderId())
+                .tradeId(event.getTradeId())
+                .receivedAt(
+                        event.getReceivedAt() == null
+                                ? null
+                                : event.getReceivedAt().atZone(ZoneId.systemDefault()).toInstant()
+                )
+                .payload(fromJson(event.getPayload()))
+                .build();
+    }
+
+    private void saveCheckpoint(
+            String eventKey,
+            String eventType,
+            String walletAddress,
+            String payload,
+            LocalDateTime receivedAt
+    ) {
+        PredictionPolymarketUserWsCheckpoint checkpoint =
+                checkpointRepository.findByStreamKey(streamKey())
+                        .orElseGet(this::newCheckpoint);
+
+        checkpoint.setWalletAddress(walletAddress);
+        checkpoint.setLastEventKey(eventKey);
+        checkpoint.setLastEventType(eventType);
+        checkpoint.setLastPayload(payload);
+        checkpoint.setLastReceivedAt(receivedAt);
+
+        checkpointRepository.save(checkpoint);
+    }
+
+    private PredictionPolymarketUserWsCheckpoint newCheckpoint() {
+        PredictionPolymarketUserWsCheckpoint checkpoint =
+                new PredictionPolymarketUserWsCheckpoint();
+        checkpoint.setStreamKey(streamKey());
+        checkpoint.setWalletAddress(polymarketConfigs.getWallet().getFunderAddress());
+        return checkpoint;
+    }
+
+    private String streamKey() {
+        String walletAddress =
+                polymarketConfigs.getWallet().getFunderAddress();
+        return "user:" + (walletAddress == null ? "unknown" : walletAddress.trim().toLowerCase());
+    }
+
+    private String buildEventKey(PolymarketUserWsEvent event) {
+        return safe(event.getEventType())
+                + ":" + safe(event.getStatus())
+                + ":" + safe(event.getOrderId())
+                + ":" + safe(event.getTradeId())
+                + ":" + safe(event.getMarket())
+                + ":" + safe(event.getAssetId());
     }
 
     private String kafkaKey(PolymarketUserWsEvent event) {
@@ -357,6 +482,42 @@ public class PolymarketUserWebSocketService {
         }
 
         return event.getEventType();
+    }
+
+    private String toJson(Map<String, Object> payload) {
+        if (payload == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(payload);
+        } catch (Exception e) {
+            throw new IllegalStateException("serialize Polymarket user event payload failed", e);
+        }
+    }
+
+    private Map<String, Object> fromJson(String payload) {
+        if (payload == null || payload.isBlank()) {
+            return Map.of();
+        }
+        try {
+            return objectMapper.readValue(
+                    payload,
+                    new TypeReference<Map<String, Object>>() {
+                    }
+            );
+        } catch (Exception e) {
+            throw new IllegalStateException("deserialize Polymarket user event payload failed", e);
+        }
+    }
+
+    private LocalDateTime toLocalDateTime(Instant instant) {
+        return instant == null
+                ? null
+                : LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
+    }
+
+    private String safe(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private String firstText(

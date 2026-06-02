@@ -6,13 +6,14 @@ Keep entries short. Long notes belong in `docs/tasks/handoffs/`.
 
 ## Protocol
 
-1. Pull the latest branch state.
+1. Pull the latest branch state and merge or rebase the latest `main` into the work branch before selecting work.
 2. Run `./shells/ai-context.sh` and `git status --short`.
 3. Read this registry before selecting work.
 4. Add or update one row with `doing`, expected file areas, and a timestamp.
 5. Commit and push only the registry claim before coding.
-6. Start implementation only after the claim push succeeds.
-7. When done, update the row to `done` or remove it in the implementation commit. If unfinished, keep it as `doing` or `blocked` and add a handoff note.
+6. Merge or fast-forward that claim commit to `main` and push `main`.
+7. Start implementation only after the claim is visible on `origin/main`, not only on the agent branch.
+8. When done, update the row to `done` or remove it in the implementation commit, merge/push completion to `main`, then claim the next lane. If unfinished, keep it as `doing` or `blocked` and add a handoff note.
 
 If context is lost, the next agent must read this file and `docs/tasks/handoffs/` before deciding whether to resume or start another task.
 
@@ -27,7 +28,7 @@ If context is lost, the next agent must read this file and `docs/tasks/handoffs/
 
 | Status | Task / Lane | Owner | Since | Expected Areas | Handoff |
 | --- | --- | --- | --- | --- | --- |
-| doing | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-user-websocket-checkpoint-replay | T2 polymarket-ws-checkpoint | 2026-06-03 | `src/main/java/com/example/exchange/domain/service/PolymarketUserWebSocketService.java`, `src/main/java/com/example/exchange/domain/model/entity/PredictionPolymarket*`, `src/main/java/com/example/exchange/domain/repository/jpa/PredictionPolymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md`, `docs/tasks/production-readiness/02-p1-production-hardening.md` |  |
+| done | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-user-websocket-checkpoint-replay | T2 polymarket-ws-checkpoint | 2026-06-03 | `src/main/java/com/example/exchange/domain/service/PolymarketUserWebSocketService.java`, `src/main/java/com/example/exchange/domain/model/entity/PredictionPolymarket*`, `src/main/java/com/example/exchange/domain/repository/jpa/PredictionPolymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md`, `docs/tasks/production-readiness/02-p1-production-hardening.md` |  |
 | done | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-settlement-transition-tests | T2 polymarket-settlement-tests | 2026-06-03 | `src/main/java/com/example/exchange/domain/service/PolymarketOrderStateMachine.java`, `src/test/java/com/example/exchange/domain/service/PolymarketOrderStateMachineTest.java`, `docs/ai/maps/polymarket-security.md`, `docs/tasks/production-readiness/02-p1-production-hardening.md` |  |
 | done | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-trade-lifecycle-projection | T2 polymarket-trade-projection | 2026-06-03 | `src/main/java/com/example/exchange/domain/service/Polymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md`, `docs/tasks/production-readiness/02-p1-production-hardening.md` |  |
 | done | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-integration-state-matrix | T2 polymarket-state-matrix | 2026-06-03 | `src/main/java/com/example/exchange/domain/service/Polymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md`, `docs/tasks/production-readiness/02-p1-production-hardening.md` |  |
