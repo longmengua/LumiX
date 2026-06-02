@@ -11,6 +11,7 @@ Security helper tests。
 | `IpAllowlistTest` | 精確 IP、`*`、IPv4 CIDR、網段外/無效規則/空值拒絕。 |
 | `MarketMakerQuoteRateLimiterTest` | 做市商 quote API frequency limit、client/market-maker/symbol key、forwarded IP、停用開關。 |
 | `MarketMakerHedgeExecutionRateLimiterTest` | 做市商 hedge execution API frequency limit、client/execution scope key、forwarded IP、停用開關。 |
+| `MarketMakerEndpointAuditLoggerTest` | 做市商 effectful endpoint audit 欄位、operator identity、request id、approval token outcome 分類。 |
 
 注意：
 - 認證邏輯改動要保持 secret masking、permission scope、過期/格式錯誤的測試覆蓋。
