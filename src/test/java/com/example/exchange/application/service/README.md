@@ -32,7 +32,7 @@ Application service tests。
 | `MarginServiceTest` | 入金、成功出金、callback idempotency、出金暫停進人工覆核、manual-review claim、transfer reconciliation projection、餘額不足拒絕。 |
 | `WalletLedgerReplayServiceTest` | Durable ledger replay、account comparison 與結構化 mismatch details。 |
 | `AccountRiskServiceTest` | 帳戶不存在零值快照、oracle mark price 下的 equity/maintenance/risk ratio、缺 oracle 拒絕。 |
-| `OperationalMetricsServiceTest` | 下單結果 counters、取消數、成交事件數、latency 統計。 |
+| `OperationalMetricsServiceTest` | 下單結果 counters、取消數、成交事件數、matching/DB/Redis latency 統計。 |
 | `MarketMakerHedgingServiceTest` | 做市商 exposure aggregation、kill switch、slippage rejection 與 venue routing。 |
 | `MarketMakerQuoteServiceTest` | 做市商 quote kill switch、crossed quote rejection 與 quote audit event。 |
 | `MarketMakerQuoteLifecycleServiceTest` / `MarketMakerQuoteReconciliationServiceTest` / `MarketMakerQuoteStateRecordTest` / `UseCaseMarketMakerQuoteOrderGatewayTest` | 做市商 quote validation 後的 stale quote cleanup、durable active quote state、per-side version metadata、quote/open-order reconciliation 與 post-only bid/ask 內部掛單 placement。 |

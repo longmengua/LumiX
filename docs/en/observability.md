@@ -26,4 +26,4 @@ Order lifecycle projection emits structured `CORE_EVENT eventType=ORDER_LIFECYCL
 
 ## Operations Metrics
 
-`GET /api/ops/metrics` returns an in-process snapshot for order status counts, order latency average/max, canceled order count, emitted trade-event count, matching latency average/max, matching rejection rate, and matching fill rate. This is a lightweight baseline for local operation; production should still export metrics through a dedicated metrics backend.
+`GET /api/ops/metrics` returns an in-process snapshot for order status counts, order latency average/max, canceled order count, emitted trade-event count, matching latency average/max, matching rejection rate, matching fill rate, DB operation latency average/max, and Redis operation latency average/max. This is a lightweight baseline for local operation; production should still export metrics through a dedicated metrics backend.

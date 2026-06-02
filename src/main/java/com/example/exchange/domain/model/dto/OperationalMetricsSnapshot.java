@@ -46,5 +46,17 @@ public record OperationalMetricsSnapshot(
         /** 平均 matching latency，單位毫秒。 */
         long matchingLatencyAvgMs,
         /** 最大 matching latency，單位毫秒。 */
-        long matchingLatencyMaxMs
+        long matchingLatencyMaxMs,
+        /** 有 DB operation latency 樣本的流程數。 */
+        long databaseLatencyCount,
+        /** 平均 DB operation latency，單位毫秒。 */
+        long databaseLatencyAvgMs,
+        /** 最大 DB operation latency，單位毫秒。 */
+        long databaseLatencyMaxMs,
+        /** 有 Redis operation latency 樣本的流程數。 */
+        long redisLatencyCount,
+        /** 平均 Redis operation latency，單位毫秒。 */
+        long redisLatencyAvgMs,
+        /** 最大 Redis operation latency，單位毫秒。 */
+        long redisLatencyMaxMs
 ) {}

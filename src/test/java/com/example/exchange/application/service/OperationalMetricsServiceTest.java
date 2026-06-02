@@ -64,4 +64,27 @@ class OperationalMetricsServiceTest {
         assertThat(snapshot.matchingRejectionRate()).isEqualTo(1.0 / 3.0);
         assertThat(snapshot.matchingLatencyCount()).isEqualTo(3);
     }
+
+    @Test
+    @DisplayName("DB 與 Redis latency collectors 會計算樣本數、平均與最大值")
+    /**
+     * 流程：直接送入已量測的 DB / Redis 毫秒值；
+     * 期望：snapshot 用整數平均值與最大值呈現 production hot path latency baseline。
+     */
+    void recordsDatabaseAndRedisLatencyMetrics() {
+        OperationalMetricsService service = new OperationalMetricsService();
+
+        service.recordDatabaseLatencyMillis(12);
+        service.recordDatabaseLatencyMillis(18);
+        service.recordRedisLatencyMillis(3);
+        service.recordRedisLatencyMillis(9);
+
+        var snapshot = service.snapshot();
+        assertThat(snapshot.databaseLatencyCount()).isEqualTo(2);
+        assertThat(snapshot.databaseLatencyAvgMs()).isEqualTo(15);
+        assertThat(snapshot.databaseLatencyMaxMs()).isEqualTo(18);
+        assertThat(snapshot.redisLatencyCount()).isEqualTo(2);
+        assertThat(snapshot.redisLatencyAvgMs()).isEqualTo(6);
+        assertThat(snapshot.redisLatencyMaxMs()).isEqualTo(9);
+    }
 }

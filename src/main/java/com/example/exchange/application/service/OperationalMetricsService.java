@@ -32,6 +32,12 @@ public class OperationalMetricsService {
     private final LongAdder matchingLatencyCount = new LongAdder();
     private final LongAdder matchingLatencyTotalMs = new LongAdder();
     private final AtomicLong matchingLatencyMaxMs = new AtomicLong();
+    private final LongAdder databaseLatencyCount = new LongAdder();
+    private final LongAdder databaseLatencyTotalMs = new LongAdder();
+    private final AtomicLong databaseLatencyMaxMs = new AtomicLong();
+    private final LongAdder redisLatencyCount = new LongAdder();
+    private final LongAdder redisLatencyTotalMs = new LongAdder();
+    private final AtomicLong redisLatencyMaxMs = new AtomicLong();
 
     /** 回傳 monotonic timer 起點，呼叫方應在同一流程完成後交給 recordOrderResult。 */
     public long startTimer() {
@@ -65,6 +71,32 @@ public class OperationalMetricsService {
         tradeEvents.add(count);
     }
 
+    /** 記錄單次 DB operation 延遲；呼叫方可用 startTimer() 建立 startedAtNanos。 */
+    public void recordDatabaseLatency(long startedAtNanos) {
+        if (startedAtNanos <= 0) {
+            return;
+        }
+        recordDatabaseLatencyMillis(elapsedMs(startedAtNanos));
+    }
+
+    /** 記錄已由 adapter 或測試計算好的 DB operation 延遲。 */
+    public void recordDatabaseLatencyMillis(long elapsedMs) {
+        recordLatency(databaseLatencyCount, databaseLatencyTotalMs, databaseLatencyMaxMs, elapsedMs);
+    }
+
+    /** 記錄單次 Redis operation 延遲；呼叫方可用 startTimer() 建立 startedAtNanos。 */
+    public void recordRedisLatency(long startedAtNanos) {
+        if (startedAtNanos <= 0) {
+            return;
+        }
+        recordRedisLatencyMillis(elapsedMs(startedAtNanos));
+    }
+
+    /** 記錄已由 adapter 或測試計算好的 Redis operation 延遲。 */
+    public void recordRedisLatencyMillis(long elapsedMs) {
+        recordLatency(redisLatencyCount, redisLatencyTotalMs, redisLatencyMaxMs, elapsedMs);
+    }
+
     /** 建立即時快照；不會重置 counters。 */
     public OperationalMetricsSnapshot snapshot() {
         long latencyCount = orderLatencyCount.sum();
@@ -74,6 +106,10 @@ public class OperationalMetricsService {
         long matchingFillCount = matchingFilled.sum();
         long matchingLatencySamples = matchingLatencyCount.sum();
         long matchingLatencyTotal = matchingLatencyTotalMs.sum();
+        long databaseLatencySamples = databaseLatencyCount.sum();
+        long databaseLatencyTotal = databaseLatencyTotalMs.sum();
+        long redisLatencySamples = redisLatencyCount.sum();
+        long redisLatencyTotal = redisLatencyTotalMs.sum();
         return new OperationalMetricsSnapshot(
                 orderRequests.sum(),
                 orderNew.sum(),
@@ -93,7 +129,13 @@ public class OperationalMetricsService {
                 rate(matchingFillCount, matchingRequestCount),
                 matchingLatencySamples,
                 matchingLatencySamples == 0 ? 0 : matchingLatencyTotal / matchingLatencySamples,
-                matchingLatencyMaxMs.get()
+                matchingLatencyMaxMs.get(),
+                databaseLatencySamples,
+                databaseLatencySamples == 0 ? 0 : databaseLatencyTotal / databaseLatencySamples,
+                databaseLatencyMaxMs.get(),
+                redisLatencySamples,
+                redisLatencySamples == 0 ? 0 : redisLatencyTotal / redisLatencySamples,
+                redisLatencyMaxMs.get()
         );
     }
 
@@ -111,7 +153,7 @@ public class OperationalMetricsService {
 
     private void recordOrderLatency(long startedAtNanos) {
         if (startedAtNanos <= 0) return;
-        long elapsedMs = Math.max(0, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos));
+        long elapsedMs = elapsedMs(startedAtNanos);
         orderLatencyCount.increment();
         orderLatencyTotalMs.add(elapsedMs);
         orderLatencyMaxMs.accumulateAndGet(elapsedMs, Math::max);
@@ -131,10 +173,28 @@ public class OperationalMetricsService {
 
     private void recordMatchingLatency(long startedAtNanos) {
         if (startedAtNanos <= 0) return;
-        long elapsedMs = Math.max(0, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos));
+        long elapsedMs = elapsedMs(startedAtNanos);
         matchingLatencyCount.increment();
         matchingLatencyTotalMs.add(elapsedMs);
         matchingLatencyMaxMs.accumulateAndGet(elapsedMs, Math::max);
+    }
+
+    private static long elapsedMs(long startedAtNanos) {
+        return Math.max(0, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos));
+    }
+
+    private static void recordLatency(
+            LongAdder count,
+            LongAdder totalMs,
+            AtomicLong maxMs,
+            long elapsedMs
+    ) {
+        if (elapsedMs < 0) {
+            return;
+        }
+        count.increment();
+        totalMs.add(elapsedMs);
+        maxMs.accumulateAndGet(elapsedMs, Math::max);
     }
 
     private static double rate(long numerator, long denominator) {
