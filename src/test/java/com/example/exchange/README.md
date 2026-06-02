@@ -26,6 +26,7 @@
 | `PolymarketOrderStateMachineTest` | Local/CLOB/trade/settlement state-machine matrix、settlement progression 與 terminal downgrade guard。 |
 | `PolymarketSessionServiceTest` | Session signer revoke-all 覆蓋 pending/active、過期使用拒絕與 EXPIRED 標記。 |
 | `PolymarketUserEventServiceTest` | User-channel callback `eventKey` replay、duplicate-key race no-op、payload-only trade projection 與 order side effect 去重。 |
+| `PolymarketUserWebSocketServiceTest` | User WebSocket gateway publish checkpoint 與 checkpoint 後 durable event replay。 |
 | `RiskSettlementServiceTest` | funding、liquidation、liquidation scanner batch/failure isolation、insurance fund movement、account reconciliation。 |
 | `InsuranceFundServiceTest` | ADL queue enqueue by liquidation id、duplicate replay、operator claim preservation、ADL alert report、insurance fund movement。 |
 | `AdlInsuranceReconciliationServiceTest` | ADL queue shortfall 與 liquidated-position insurance/ADL coverage 對帳。 |

@@ -114,6 +114,7 @@
   - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes；stale active CLOB payload 不會降級 local filled/settled terminal order 或 matched size；user-channel trade payload 現在會從 top-level 欄位或 payload 解析 order/trade ids，並把 matched lifecycle / lastTradeId 持久化到 local `PredictionPolymarketOrder` projection；settlement terminal downgrade tests 已覆蓋 filled-to-settled progression 與 settled downgrade rejection。
   - Baseline 已完成：place 支援 `clientRequestId` duplicate replay、payload conflict rejection 與 uncertain local-order retry blocking。
 - [ ] User WebSocket 服務獨立部署，支援自動重連、checkpoint、事件去重、落庫與 replay。
+  - Baseline 進度：user WebSocket gateway 會將 user-channel message 發到 Kafka，publish/replay 後保存 wallet-scoped durable checkpoint，並可從 checkpoint 後的 `prediction_polymarket_ws_event` rows 做 restart recovery replay 測試。Remaining：拆成可獨立部署的 worker，並補營運 checkpoint controls。
 - [x] allowance / approval 查詢加入 cache 與過期策略，避免 RPC 被打爆。
   - Baseline 已完成：ERC20 allowance 與 ERC1155 approval reads 使用 owner/contract scoped TTL cache，支援 owner-scoped clear、full-cache clear 與 expiry refresh 測試覆蓋。
 
