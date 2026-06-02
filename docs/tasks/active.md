@@ -27,6 +27,6 @@ If context is lost, the next agent must read this file and `docs/tasks/handoffs/
 
 | Status | Task / Lane | Owner | Since | Expected Areas | Handoff |
 | --- | --- | --- | --- | --- | --- |
-| _none_ | _No active claimed work._ |  |  |  |  |
+| doing | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-integration | T1 polymarket-schema-versioning | 2026-06-03 | `src/main/java/com/example/exchange/domain/model/dto`, `src/main/java/com/example/exchange/domain/service/Polymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md` |  |
 
 Replace the `_none_` row with real claim rows when work starts.
