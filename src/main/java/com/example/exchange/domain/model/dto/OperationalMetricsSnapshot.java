@@ -30,5 +30,21 @@ public record OperationalMetricsSnapshot(
         /** 平均下單延遲，單位毫秒。 */
         long orderLatencyAvgMs,
         /** 最大下單延遲，單位毫秒。 */
-        long orderLatencyMaxMs
+        long orderLatencyMaxMs,
+        /** 已納入 matching 指標的下單嘗試數。 */
+        long matchingRequests,
+        /** 最終狀態為 REJECTED 的 matching 嘗試數。 */
+        long matchingRejected,
+        /** 最終狀態有成交量的 matching 嘗試數。 */
+        long matchingFilled,
+        /** matchingRejected / matchingRequests，沒有樣本時為 0。 */
+        double matchingRejectionRate,
+        /** matchingFilled / matchingRequests，沒有樣本時為 0。 */
+        double matchingFillRate,
+        /** 有 matching latency 樣本的流程數。 */
+        long matchingLatencyCount,
+        /** 平均 matching latency，單位毫秒。 */
+        long matchingLatencyAvgMs,
+        /** 最大 matching latency，單位毫秒。 */
+        long matchingLatencyMaxMs
 ) {}

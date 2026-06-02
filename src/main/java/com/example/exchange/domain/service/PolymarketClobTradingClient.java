@@ -5,7 +5,9 @@ package com.example.exchange.domain.service;
 
 import com.example.exchange.domain.model.dto.PolymarketClobOrderRequest;
 import com.example.exchange.domain.model.dto.PolymarketPlaceOrderResponse;
+import com.example.exchange.domain.model.dto.PolymarketResponseSchemaReport;
 import com.example.exchange.domain.util.PolymarketL2AuthSigner;
+import com.example.exchange.domain.util.PolymarketResponseSchemaValidator;
 import com.example.exchange.domain.util.SensitiveLogSanitizer;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -84,6 +86,8 @@ public class PolymarketClobTradingClient {
                 );
 
                 Map<String, Object> raw = parseJsonToMap(responseBody);
+                PolymarketResponseSchemaReport schemaReport =
+                        validateClobSchema("POST /order", responseBody);
 
                 if (!response.isSuccessful()) {
                     String readableError = classifyClobError(responseBody);
@@ -126,10 +130,10 @@ public class PolymarketClobTradingClient {
                 );
 
                 return PolymarketPlaceOrderResponse.builder()
-                        .success(true)
-                        .clobOrderId(orderId)
-                        .status(status)
-                        .build();
+                            .success(true)
+                            .clobOrderId(orderId)
+                            .status(status)
+                            .build();
             }
         } catch (Exception e) {
             String safeExceptionMessage =
@@ -238,12 +242,15 @@ public class PolymarketClobTradingClient {
 
                 Map<String, Object> raw =
                         parseJsonToMap(responseBody);
+                PolymarketResponseSchemaReport schemaReport =
+                        validateClobSchema(method + " " + path, responseBody);
 
                 if (!response.isSuccessful()) {
                     return Map.of(
                             "success", false,
                             "httpCode", response.code(),
                             "errorMsg", classifyClobError(responseBody),
+                            "_schemaVersion", schemaReport.schemaVersion(),
                             "raw", safeResponseBody
                     );
                 }
@@ -251,12 +258,14 @@ public class PolymarketClobTradingClient {
                 if (raw.isEmpty()) {
                     return Map.of(
                             "success", true,
-                            "httpCode", response.code()
+                            "httpCode", response.code(),
+                            "_schemaVersion", schemaReport.schemaVersion()
                     );
                 }
 
                 raw.put("success", true);
                 raw.put("httpCode", response.code());
+                raw.put("_schemaVersion", schemaReport.schemaVersion());
                 return raw;
             }
         } catch (Exception e) {
@@ -277,6 +286,32 @@ public class PolymarketClobTradingClient {
                     "errorMsg", safeExceptionMessage
             );
         }
+    }
+
+    private PolymarketResponseSchemaReport validateClobSchema(String operation, String responseBody) {
+        PolymarketResponseSchemaReport report =
+                PolymarketResponseSchemaValidator.validateClobOrderOperation(
+                        objectMapper,
+                        operation,
+                        responseBody
+                );
+        if (!report.compatible()) {
+            log.warn(
+                    "[PolymarketCLOB] Response schema incompatible. schemaVersion={}, operation={}, missingFields={}, unknownFields={}",
+                    report.schemaVersion(),
+                    operation,
+                    report.missingFields(),
+                    report.unknownFields()
+            );
+        } else if (!report.unknownFields().isEmpty()) {
+            log.debug(
+                    "[PolymarketCLOB] Response schema has unknown fields. schemaVersion={}, operation={}, unknownFields={}",
+                    report.schemaVersion(),
+                    operation,
+                    report.unknownFields()
+            );
+        }
+        return report;
     }
 
     private Map<String, Object> parseJsonToMap(String responseBody) {

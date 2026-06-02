@@ -28,10 +28,10 @@ Implemented baselines:
 - `PolymarketUserEventService` persists user-channel events by `eventKey`, no-ops duplicate replays, and treats unique-key save races as duplicate replay before applying order side effects.
 - Approval reads already have TTL cache and owner-scoped clear.
 - `RpcTransactionTrackingService` persists backend-observed RPC transaction command/chain/wallet/fingerprint/txHash/status records, rejects command conflicts, and exposes unresolved outcome reporting.
+- `PolymarketResponseSchemaValidator` produces versioned Gamma `/events` and `/markets` schema reports plus CLOB order-operation schema reports; Gamma DTOs ignore unknown remote fields while the reports keep remote-field drift visible in logs/tests.
 
 Remaining production TODO:
 - Local/CLOB/trade/settlement order state machine completion.
-- Versioned Gamma/CLOB response schemas.
 - Independent user WebSocket worker with checkpoint, dedup, persistence, replay.
 
 ## Signing And External APIs

@@ -26,4 +26,4 @@ Order lifecycle projection 會輸出 structured `CORE_EVENT eventType=ORDER_LIFE
 
 ## Operations Metrics
 
-`GET /api/ops/metrics` 會回傳 in-process snapshot，包含訂單狀態計數、下單延遲平均/最大值、撤單數與送出的成交事件數。這是本機營運基線；production 仍應匯出到專用 metrics backend。
+`GET /api/ops/metrics` 會回傳 in-process snapshot，包含訂單狀態計數、下單延遲平均/最大值、撤單數、送出的成交事件數、matching latency 平均/最大值、matching rejection rate 與 matching fill rate。這是本機營運基線；production 仍應匯出到專用 metrics backend。

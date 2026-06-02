@@ -11,6 +11,19 @@ This directory turns roadmap items into executable task files. Use it when the u
 5. Codex claims the selected task in [active.md](active.md), commits and pushes that claim, then starts implementation.
 6. Codex reads that task file, opens the referenced AI maps, implements the task, and updates status/docs.
 
+## Parallel Terminal Pattern
+
+When opening several Codex terminals, use one terminal per lane:
+
+```text
+T1 matching-command-log
+T2 polymarket-clob-state
+T3 abuse-controls
+T4 docs-task-splitter
+```
+
+Each lane should claim exactly one task file or code-map area in [active.md](active.md), with expected files listed before coding starts. Do not start implementation until the claim commit has been pushed.
+
 ## Status Legend
 
 - `todo`: not started.
@@ -40,4 +53,12 @@ Then:
 
 ```text
 讀一下 docs/tasks/core-kernel/01-replayable-matching-core.md，開始做。
+```
+
+For parallel work:
+
+```text
+讀一下 AGENTS.md、docs/ai/team-collaboration.md、docs/tasks/active.md。
+認領 docs/tasks/core-kernel/01-replayable-matching-core.md 這條 lane。
+先更新 active.md 並 commit/push claim，然後開始實作。
 ```

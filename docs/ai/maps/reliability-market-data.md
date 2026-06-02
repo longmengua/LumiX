@@ -66,11 +66,15 @@ Current behavior:
 - Generated depth deltas advance the durable sequence/checksum checkpoint.
 - Duplicate or out-of-order checkpoint writes are ignored deterministically.
 - Depth deltas can be persisted and queried through `GET /api/market-data/{symbol}/depth-deltas?afterVersion=...` for reconnect backfill.
-- Trade tape can be persisted and read back after service restart when `MarketDataTradeTapeStore` is configured.
+- Trade tape can be persisted and read back after service restart when `MarketDataTradeTapeStore` is configured; clients can replay after `tradeTs` + `matchId` through `GET /api/market-data/{symbol}/trades?afterTs=...&afterMatchId=...`.
+- `GET /api/market-data/{symbol}/recovery-cursor` returns the current depth version and latest trade cursor for reconnect handoff.
 - Ticker latest state can be persisted and read back after service restart when `MarketDataTickerStore` is configured.
 - 1m klines can be persisted and read back after service restart when `MarketDataKlineStore` is configured.
 - High-volume depth delta, trade tape, and 1m kline history can be purged through disabled-by-default market-data retention config; ticker latest state and sequence checkpoints are not purged by that job.
+- `PushGatewayService.publishHeartbeat(...)` emits `gateway.heartbeat` to all active SSE/WebSocket channels with channel/timestamp payload and removes closed WebSocket sessions; `PushGatewayHeartbeatScheduler` can run it through disabled-by-default `push-gateway.heartbeat.*` config.
+- `UserStreamSubscriptionAuthorizer` protects private user SSE/WebSocket streams when `api-auth.enabled=true`; admin principals may subscribe to any uid, while user principals must own the requested uid and carry `stream:read`, `user:stream`, or `user:read` scope. WebSocket handshakes also accept `apiKey`, `access_token`, or `token` query parameters for browser clients.
+- `MarketDataStreamRateLimiter` applies per-client fixed-window limits to market/user SSE subscriptions and WebSocket handshakes through `push-gateway.rate-limit.*`.
 
 Remaining production TODO:
 - Production archive export/storage for market-data history beyond local DB retention.
-- Independently deployable WebSocket/SSE gateway.
+- Independently deployable WebSocket/SSE gateway with horizontal-scaling runbook.

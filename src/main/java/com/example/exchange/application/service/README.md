@@ -22,7 +22,8 @@
 - `MatchingWorkerCommandRouter` / `MatchingWorkerExecutionService` / `MatchingWorkerLifecycleService` / `MatchingWorkerStartupListener`：撮合 worker owner/epoch guard、fenced command append、已落 log command execution、lease acquire + recovery startup、runtime startup hook、renewal/readiness baseline。
 - `OutboxService` / `OutboxDomainStateConsistencyService`：retry、DLQ replay、manual compensation baseline，以及 outbox row 對 domain-state projection 的 recovery consistency report。
 - `RpcTransactionTrackingService`：backend-observed RPC transaction 的 durable idempotency / lifecycle tracking 與 unresolved outcome report。
-- `MarketDataService` / `MarketDataSequenceCheckpointService` / `MarketDataRetentionService`：ticker、kline、depth delta、durable depth sequence checkpoint、reconnect backfill、durable trade tape、durable ticker latest-state、durable 1m kline 與 history retention baseline。
+- `MarketDataService` / `MarketDataSequenceCheckpointService` / `MarketDataRetentionService`：ticker、kline、depth delta、durable depth sequence checkpoint、reconnect backfill/recovery cursor、durable trade tape、durable ticker latest-state、durable 1m kline 與 history retention baseline。
+- `PushGatewayService`：SSE/WebSocket market/user channel registration、publish path、`gateway.heartbeat` contract 與 closed WebSocket cleanup baseline。
 
 目前狀態：
 - 這層承擔 MVP orchestration，尚未具備 production transaction boundary。

@@ -13,7 +13,7 @@ This group splits the broad `docs/*/todo.md` production checklist into small imp
 
 ```text
 P0 broad: 40/43 -> 41/43 done, remaining 3 -> 2
-P0 fine: 28/36 -> 36/36 done, remaining 8 -> 0
+P0 fine: 28/36 -> 37/37 done, remaining 9 -> 0
 ```
 
 ## Fine-Grained Task Files
@@ -26,8 +26,8 @@ P0 fine: 28/36 -> 36/36 done, remaining 8 -> 0
 
 ## Current Fine-Grained Counts
 
-- P0 fine: `36/36` done.
-- P1 fine: `0/22` done.
+- P0 fine: `37/37` done.
+- P1 fine: `2/22` done.
 - P2 fine: `0/14` done.
 
 These counts intentionally start from this split date. Earlier baseline work remains documented in `docs/*/todo.md`, current-state docs, and AI maps.

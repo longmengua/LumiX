@@ -6,6 +6,7 @@ package com.example.exchange.application.service;
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.DepthDelta;
 import com.example.exchange.domain.model.dto.MarketKline;
+import com.example.exchange.domain.model.dto.MarketDataRecoveryCursor;
 import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.PriceLevel;
 import com.example.exchange.domain.model.dto.TopOfBook;
@@ -155,6 +156,40 @@ public class MarketDataService {
                     .limit(Math.max(1, limit))
                     .toList();
         }
+    }
+
+    public List<TradeTapeItem> tradesAfter(String symbol, Instant afterTs, String afterMatchId, int limit) {
+        String code = normalize(symbol);
+        int normalizedLimit = Math.max(1, limit);
+        if (afterTs == null) {
+            return trades(code, normalizedLimit);
+        }
+        if (tradeTapeStore != null) {
+            return tradeTapeStore.findAfter(code, afterTs, afterMatchId, normalizedLimit);
+        }
+        Deque<TradeTapeItem> tape = tradeTapes.get(code);
+        if (tape == null) return List.of();
+        String normalizedMatchId = afterMatchId == null ? null : afterMatchId.trim();
+        synchronized (tape) {
+            return tape.stream()
+                    .filter(item -> isAfterCursor(item, afterTs, normalizedMatchId))
+                    .sorted(Comparator.comparing(TradeTapeItem::ts)
+                            .thenComparing(TradeTapeItem::matchId))
+                    .limit(normalizedLimit)
+                    .toList();
+        }
+    }
+
+    public MarketDataRecoveryCursor recoveryCursor(String symbol) {
+        String code = normalize(symbol);
+        TradeTapeItem latestTrade = trades(code, 1).stream().findFirst().orElse(null);
+        return new MarketDataRecoveryCursor(
+                code,
+                depthVersion(code),
+                latestTrade == null ? null : latestTrade.ts(),
+                latestTrade == null ? null : latestTrade.matchId(),
+                Instant.now()
+        );
     }
 
     public List<MarketKline> klines(String symbol, int limit) {
@@ -325,6 +360,16 @@ public class MarketDataService {
             }
         }
         return delta;
+    }
+
+    private static boolean isAfterCursor(TradeTapeItem item, Instant afterTs, String afterMatchId) {
+        if (item.ts().isAfter(afterTs)) {
+            return true;
+        }
+        if (!item.ts().equals(afterTs)) {
+            return false;
+        }
+        return afterMatchId == null || item.matchId().compareTo(afterMatchId) > 0;
     }
 
     private static String normalize(String symbol) {

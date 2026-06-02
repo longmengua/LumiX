@@ -5,6 +5,8 @@ package com.example.exchange.domain.repository.client;
 
 import com.example.exchange.domain.model.dto.PredictionGammaEventDto;
 import com.example.exchange.domain.model.dto.PredictionGammaMarketDto;
+import com.example.exchange.domain.model.dto.PolymarketResponseSchemaReport;
+import com.example.exchange.domain.util.PolymarketResponseSchemaValidator;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -128,6 +130,12 @@ public class PredictionGammaMarketClient {
                     return Collections.emptyList();
                 }
 
+                logSchemaReport(PolymarketResponseSchemaValidator.validateGammaEventsPage(
+                        objectMapper,
+                        "/events",
+                        body
+                ));
+
                 return objectMapper.readValue(
                         body,
                         new TypeReference<List<PredictionGammaEventDto>>() {
@@ -186,6 +194,12 @@ public class PredictionGammaMarketClient {
                     return Collections.emptyList();
                 }
 
+                logSchemaReport(PolymarketResponseSchemaValidator.validateGammaMarketsPage(
+                        objectMapper,
+                        "/markets",
+                        body
+                ));
+
                 return objectMapper.readValue(
                         body,
                         new TypeReference<List<PredictionGammaMarketDto>>() {
@@ -207,6 +221,30 @@ public class PredictionGammaMarketClient {
             Thread.sleep(millis);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+        }
+    }
+
+    private void logSchemaReport(PolymarketResponseSchemaReport report) {
+        if (!report.compatible()) {
+            log.warn(
+                    "Polymarket response schema incompatible, schemaVersion={}, source={}, endpoint={}, missingFields={}, unknownFields={}",
+                    report.schemaVersion(),
+                    report.source(),
+                    report.endpoint(),
+                    report.missingFields(),
+                    report.unknownFields()
+            );
+            return;
+        }
+
+        if (!report.unknownFields().isEmpty()) {
+            log.debug(
+                    "Polymarket response schema has unknown fields, schemaVersion={}, source={}, endpoint={}, unknownFields={}",
+                    report.schemaVersion(),
+                    report.source(),
+                    report.endpoint(),
+                    report.unknownFields()
+            );
         }
     }
 }

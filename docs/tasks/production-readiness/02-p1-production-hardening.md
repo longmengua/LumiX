@@ -8,14 +8,14 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Fine-Grained Progress
 
-`0/22` done.
+`7/22` done.
 
 ## Market Data Gateway
 
-- [ ] Add gateway heartbeat contract for SSE/WebSocket clients.
-- [ ] Add subscription authorization check baseline for private user streams.
-- [ ] Add per-client market-data rate limiter.
-- [ ] Add disconnect recovery cursor contract for depth/trade streams.
+- [x] Add gateway heartbeat contract for SSE/WebSocket clients.
+- [x] Add subscription authorization check baseline for private user streams.
+- [x] Add per-client market-data rate limiter.
+- [x] Add disconnect recovery cursor contract for depth/trade streams.
 - [ ] Add deployment notes for horizontally scaled market-data gateway instances.
 
 ## Market Maker API Hardening
@@ -29,8 +29,8 @@ Split remaining P1 hardening items into small implementation slices for market d
 - [ ] Add local/CLOB/trade/settlement state machine transition matrix.
 - [ ] Persist Polymarket trade events into local order lifecycle projection.
 - [ ] Add settlement state transition and terminal-state downgrade protection tests.
-- [ ] Add Gamma response schema version wrapper for market discovery.
-- [ ] Add CLOB response schema version wrapper for order operations.
+- [x] Add Gamma response schema version wrapper for market discovery.
+- [x] Add CLOB response schema version wrapper for order operations.
 - [ ] Add user WebSocket checkpoint persistence and replay test.
 
 ## Database And Storage
@@ -42,7 +42,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 ## Observability And Alerts
 
 - [ ] Add metrics collectors for DB latency and Redis latency.
-- [ ] Add metrics collectors for matching latency, rejection rate, and fill rate.
+- [x] Add metrics collectors for matching latency, rejection rate, and fill rate.
 - [ ] Add Kafka lag metric collector.
 - [ ] Add tracing export configuration and sampling policy doc.
 - [ ] Add alert rules for matching halt, DLQ buildup, reconciliation failure, and unbalanced assets.

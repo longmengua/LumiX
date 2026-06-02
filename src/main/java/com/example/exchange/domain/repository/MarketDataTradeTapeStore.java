@@ -14,6 +14,10 @@ public interface MarketDataTradeTapeStore {
 
     List<TradeTapeItem> findRecent(String symbol, int limit);
 
+    default List<TradeTapeItem> findAfter(String symbol, Instant afterTs, String afterMatchId, int limit) {
+        return List.of();
+    }
+
     default List<TradeTapeItem> findByMatchId(String matchId) {
         return List.of();
     }

@@ -53,7 +53,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Venue fill mapping/idempotency: `HedgeVenueFillMessage`, `HedgeVenueFillMapper`, `MarketMakerHedgeFillService.recordVenueFill(...)`, `HedgeFillStore`, `JpaHedgeFillStore`.
 - Hedge venue contract: `domain.service.HedgeVenueAdapter`.
 - Default safe adapter: `infra.hedging.RejectingHedgeVenueAdapter`.
-- Real venue adapter skeleton: `infra.hedging.RealHedgeVenueAdapter`, `RealHedgeVenueOrderLookupAdapter`, `RealHedgeVenueSigner`, and `SignedHedgeVenueRequest`; disabled mode safely rejects or returns empty lookup, enabled mode signs stable submit/lookup payloads but does not perform HTTP I/O yet.
+- Real venue adapter transport: `infra.hedging.RealHedgeVenueAdapter`, `RealHedgeVenueOrderLookupAdapter`, `RealHedgeVenueHttpClient`, `RealHedgeVenueSigner`, and `SignedHedgeVenueRequest`; disabled mode safely rejects or returns empty lookup, enabled mode signs stable submit/lookup payloads, sends them through injected `OkHttpClient`, attaches submit idempotency headers, and maps venue accepted/rejected/retryable responses.
 - Idempotency decorator baseline: `infra.hedging.IdempotentHedgeVenueAdapter` uses `HedgeOrderRequest.refId` with `HedgeVenueIdempotencyStore` / `JpaHedgeVenueIdempotencyStore` to claim before effectful venue submit, persist terminal results, prevent duplicate submits, reject payload conflicts, and block retries after pending or timeout-like uncertain outcomes. Operators can query unresolved pending/retryable records and trigger lookup reconciliation through `MarketMakerHedgeVenueIdempotencyService`.
 - Venue outcome lookup contract: `HedgeVenueOrderLookupAdapter` with safe default `NoopHedgeVenueOrderLookupAdapter`; real venue adapters should implement lookup by `refId` and return terminal `HedgeOrderResult` for uncertain submit reconciliation.
 - Retry/backoff/throttle decorator baseline: `infra.hedging.RetryingHedgeVenueAdapter`, `RetryBackoff`, `Sleeper`, `ThrottlingHedgeVenueAdapter`; `HedgeOrderResult.retryable` separates temporary venue errors from final rejections.
@@ -72,4 +72,4 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Migrations include market-maker quote states in `V16__market_maker_quote_states.sql` and per-side quote metadata in `V17__market_maker_quote_state_versions.sql`.
 
 Remaining:
-- Real hedge venue HTTP transport and automated hedge reconciliation repair jobs.
+- Automated hedge reconciliation repair jobs.

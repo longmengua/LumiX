@@ -5,6 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.DepthDelta;
 import com.example.exchange.domain.model.dto.MarketKline;
+import com.example.exchange.domain.model.dto.MarketDataRecoveryCursor;
 import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.MarketDataSequenceCheckpoint;
 import com.example.exchange.domain.model.dto.PriceLevel;
@@ -130,6 +131,63 @@ class MarketDataSequenceCheckpointServiceTest {
     }
 
     @Test
+    @DisplayName("market data recovery cursor 會回傳 depth version 與最新 trade 游標")
+    /**
+     * 流程：產生一筆 depth delta 與兩筆 trade -> client 取得 reconnect cursor。
+     * 期望：cursor 帶目前 depth version，以及最新 trade 的 ts/matchId，供斷線後接續查詢。
+     */
+    void marketDataServiceReturnsDepthAndTradeRecoveryCursor() {
+        MarketDataService service = new MarketDataService();
+
+        service.onTrades(
+                "BTCUSDT",
+                List.of(
+                        trade("match-1", "100", "2", Instant.parse("2026-06-01T00:00:00Z")),
+                        trade("match-2", "101", "3", Instant.parse("2026-06-01T00:00:01Z"))
+                ),
+                snapshot("101", "1"),
+                Optional.empty()
+        );
+
+        MarketDataRecoveryCursor cursor = service.recoveryCursor("btcusdt");
+
+        assertThat(cursor.symbol()).isEqualTo("BTCUSDT");
+        assertThat(cursor.depthVersion()).isEqualTo(1);
+        assertThat(cursor.tradeTs()).isEqualTo(Instant.parse("2026-06-01T00:00:01Z"));
+        assertThat(cursor.tradeMatchId()).isEqualTo("match-2");
+        assertThat(cursor.generatedAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("market data service 可用 trade cursor 查詢斷線後成交")
+    /**
+     * 流程：同一 timestamp 有多筆 trade，client 用 afterTs + afterMatchId reconnect。
+     * 期望：只回 cursor 之後的 trade，並用 ts/matchId 保持 deterministic replay order。
+     */
+    void marketDataServiceBackfillsTradesAfterCursor() {
+        MemMarketDataTradeTapeStore tradeTapeStore = new MemMarketDataTradeTapeStore();
+        MarketDataService service = new MarketDataService();
+        service.setTradeTapeStore(tradeTapeStore);
+        Instant base = Instant.parse("2026-06-01T00:00:00Z");
+
+        service.onTrades(
+                "BTCUSDT",
+                List.of(
+                        trade("match-1", "100", "1", base),
+                        trade("match-2", "101", "1", base),
+                        trade("match-3", "102", "1", base.plusSeconds(1))
+                ),
+                snapshot("102", "1"),
+                Optional.empty()
+        );
+
+        List<TradeTapeItem> replay = service.tradesAfter("BTCUSDT", base, "match-1", 10);
+
+        assertThat(replay).extracting(TradeTapeItem::matchId)
+                .containsExactly("match-2", "match-3");
+    }
+
+    @Test
     @DisplayName("market data service 會持久化 ticker latest state 並可於重啟後查詢")
     /**
      * 流程：第一個 MarketDataService 收到 taker trade 後更新 ticker latest state ->
@@ -192,13 +250,17 @@ class MarketDataSequenceCheckpointServiceTest {
     }
 
     private static TradeExecuted trade(String matchId, String price, String qty) {
+        return trade(matchId, price, qty, Instant.EPOCH);
+    }
+
+    private static TradeExecuted trade(String matchId, String price, String qty, Instant ts) {
         return new TradeExecuted(
                 7,
                 Symbol.builder().base("BTC").quote("USDT").priceScale(1).qtyScale(3).build(),
                 new BigDecimal(qty),
                 new BigDecimal(price),
                 1,
-                Instant.EPOCH,
+                ts,
                 UUID.randomUUID(),
                 UUID.randomUUID(),
                 matchId,
@@ -257,7 +319,21 @@ class MarketDataSequenceCheckpointServiceTest {
         public List<TradeTapeItem> findRecent(String symbol, int limit) {
             return items.stream()
                     .filter(item -> item.symbol().equals(symbol))
-                    .sorted(java.util.Comparator.comparing(TradeTapeItem::ts).reversed())
+                    .sorted(java.util.Comparator.comparing(TradeTapeItem::ts).reversed()
+                            .thenComparing(TradeTapeItem::matchId, java.util.Comparator.reverseOrder()))
+                    .limit(Math.max(1, limit))
+                    .toList();
+        }
+
+        @Override
+        public List<TradeTapeItem> findAfter(String symbol, Instant afterTs, String afterMatchId, int limit) {
+            return items.stream()
+                    .filter(item -> item.symbol().equals(symbol))
+                    .filter(item -> item.ts().isAfter(afterTs)
+                            || (item.ts().equals(afterTs)
+                            && (afterMatchId == null || item.matchId().compareTo(afterMatchId) > 0)))
+                    .sorted(java.util.Comparator.comparing(TradeTapeItem::ts)
+                            .thenComparing(TradeTapeItem::matchId))
                     .limit(Math.max(1, limit))
                     .toList();
         }

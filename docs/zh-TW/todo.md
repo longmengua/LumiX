@@ -26,10 +26,10 @@
   - Baseline 已完成：已處理成交會寫 durable turnover records，strategy/market-maker 一等 order tags 會通過下單與 lifecycle projection，並有 uid/symbol/strategy/market-maker/match 維度的 turnover summary、限量 drill-down、export rows、match-level trade-tape reconciliation APIs，以及預設關閉的 recent-window uid+match trade tape / ledger-ref reconciliation。
 - [x] 將 ledger reconciliation 強化成可審計帳本：immutable journal、trial balance、replay comparison、exception workflow 與財務報表。
   - Baseline 已完成：durable journal hash-chain tamper-evidence、SQL-enforced wallet ledger entry/posting invariants、trial-balance 計算與 daily snapshot persistence、結構化 replay comparison、reconciliation issue workflow 欄位/後台 API、workflow audit events、按 reason/asset/account code 彙總 durable ledger 的 daily finance report、預設關閉的 finance category exporter job、fee/funding/liquidation/bonus/transfer category exports、ledger archive/delete eligibility checks、ledger archive manifest checksums、restore smoke checks、archived date ranges replay validation，以及不平衡報表 operator runbook。
-- [ ] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
-  - Baseline 已完成：durable profile/risk-limit storage、admin profile API、exposure aggregation、quote command validation、stale quote cleanup、post-only quote order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage、quote/open-order reconciliation、預設關閉的 fail-closed quote repair、kill switch、slippage control、hedge venue contract、預設安全拒絕 adapter、real venue signed-request/lookup skeleton、quote/hedge decision audit events、含 internal trade ref 的 durable hedge decision audit trails、含 ledger ref 的 hedge fill audit persistence，以及 hedge trade/ledger reconciliation issues。
-- [ ] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。
-  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、real venue signed-request/lookup skeleton、enabled-profile batch 共用的 per-run execution route/notional cap policy、slippage controls、durable scheduled-worker lock、operator approval token gate、bounded operator queries/ref prefixes、可選 venue callback HMAC/timestamp verification、uncertain outcome venue lookup/reconcile contract、stale quote cleanup、post-only quote order placement、durable active quote state/operator lookup、per-side quote version metadata、quote/open-order reconciliation、預設關閉的 fail-closed quote repair、含 internal trade ref 的 durable hedge decision audit trail、含 ledger ref 的 fill audit persistence，以及 trade/ledger reconciliation issues；real venue HTTP transport 仍待補。
+- [x] 建立做市商 interface：報價、inventory、risk limit、kill switch 與 hedge order routing。
+  - Baseline 已完成：durable profile/risk-limit storage、admin profile API、exposure aggregation、quote command validation、stale quote cleanup、post-only quote order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage、quote/open-order reconciliation、預設關閉的 fail-closed quote repair、kill switch、slippage control、hedge venue contract、預設安全拒絕 adapter、real venue signed-request/lookup HTTP transport、quote/hedge decision audit events、含 internal trade ref 的 durable hedge decision audit trails、含 ledger ref 的 hedge fill audit persistence，以及 hedge trade/ledger reconciliation issues。
+- [x] 建立做市商對沖策略 baseline：exposure aggregation、hedge venue adapter interface、execution policy、slippage controls 與 hedge audit trail。
+  - Baseline 已完成：exposure aggregation、hedge venue adapter interface、real venue signed-request/lookup HTTP transport、enabled-profile batch 共用的 per-run execution route/notional cap policy、slippage controls、durable scheduled-worker lock、operator approval token gate、bounded operator queries/ref prefixes、可選 venue callback HMAC/timestamp verification、uncertain outcome venue lookup/reconcile contract、stale quote cleanup、post-only quote order placement、durable active quote state/operator lookup、per-side quote version metadata、quote/open-order reconciliation、預設關閉的 fail-closed quote repair、含 internal trade ref 的 durable hedge decision audit trail、含 ledger ref 的 fill audit persistence，以及 trade/ledger reconciliation issues。
 
 ### 交易與撮合
 
@@ -101,12 +101,14 @@
 - [x] 定義高流量 market-data depth、trade 與 kline history 的 retention/archive policy。
   - Baseline 已完成：DB retention job 依獨立 window 清理 depth delta、trade tape 與 1m kline history；production archive export/storage 仍屬於後續營運任務。
 - [ ] WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
+  - Baseline 進度：gateway heartbeat contract 會向 SSE/WebSocket channel 發送 `gateway.heartbeat`，payload 包含 channel 與 timestamp，會清理已關閉 WebSocket session，並提供預設關閉的 scheduler config。Private user SSE/WebSocket stream 在 `api-auth.enabled=true` 時需要 API key 或 Bearer credentials；admin principal 可供營運訂閱，user principal 則需要 uid ownership 與 stream read scope。SSE/WebSocket stream 訂閱嘗試現在會通過 `push-gateway.rate-limit.*` per-client fixed-window limiter。Client 可讀取 `GET /api/market-data/{symbol}/recovery-cursor`，用 `afterVersion` replay depth，並用 `afterTs` 加 `afterMatchId` replay trades。
 - [ ] 在 P0 做市商 interface baseline 完成後，補齊 market maker / liquidity provider API hardening 與節流策略。
 
 ### Polymarket 整合
 
 - [ ] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
-- [ ] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
+- [x] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
+  - Baseline 已完成：Gamma `/events` 與 `/markets` response 會在 DTO 解析前經過 versioned schema report 驗證，Gamma event/market DTO 可忽略未知遠端欄位，CLOB order-operation response 會記錄 `clob.order-operations.v1` metadata，並在 schema shape 不相容時產生 warning。
 - [x] 對 CLOB 下單、取消、同步、reconcile 做 idempotent command 設計。
   - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes；stale active CLOB payload 不會降級 local filled/settled terminal order 或 matched size。Remaining：完整 trade/settlement state-machine transitions。
   - Baseline 已完成：place 支援 `clientRequestId` duplicate replay、payload conflict rejection 與 uncertain local-order retry blocking。

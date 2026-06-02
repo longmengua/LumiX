@@ -36,5 +36,32 @@ class OperationalMetricsServiceTest {
         assertThat(snapshot.tradeEvents()).isEqualTo(4);
         assertThat(snapshot.orderLatencyCount()).isEqualTo(1);
         assertThat(snapshot.orderLatencyMaxMs()).isGreaterThanOrEqualTo(0);
+        assertThat(snapshot.matchingRequests()).isEqualTo(1);
+        assertThat(snapshot.matchingFilled()).isEqualTo(1);
+        assertThat(snapshot.matchingFillRate()).isEqualTo(1.0);
+        assertThat(snapshot.matchingLatencyCount()).isEqualTo(1);
+        assertThat(snapshot.matchingLatencyMaxMs()).isGreaterThanOrEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("matching 指標會計算拒單率與成交率")
+    /**
+     * 流程：三筆 matching 嘗試包含 filled、partial fill、rejected；
+     * 期望：fill rate 只看有成交量的結果，rejection rate 只看最終拒單結果。
+     */
+    void recordsMatchingRejectionAndFillRates() {
+        OperationalMetricsService service = new OperationalMetricsService();
+
+        service.recordOrderResult(Order.builder().status(Order.Status.FILLED).build(), service.startTimer());
+        service.recordOrderResult(Order.builder().status(Order.Status.PARTIALLY_FILLED).build(), service.startTimer());
+        service.recordOrderResult(Order.builder().status(Order.Status.REJECTED).build(), service.startTimer());
+
+        var snapshot = service.snapshot();
+        assertThat(snapshot.matchingRequests()).isEqualTo(3);
+        assertThat(snapshot.matchingFilled()).isEqualTo(2);
+        assertThat(snapshot.matchingRejected()).isEqualTo(1);
+        assertThat(snapshot.matchingFillRate()).isEqualTo(2.0 / 3.0);
+        assertThat(snapshot.matchingRejectionRate()).isEqualTo(1.0 / 3.0);
+        assertThat(snapshot.matchingLatencyCount()).isEqualTo(3);
     }
 }

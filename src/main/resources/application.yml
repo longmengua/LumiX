@@ -102,6 +102,16 @@ market-data:
     trade-tape: ${MARKET_DATA_RETENTION_TRADE_TAPE:P7D}
     kline: ${MARKET_DATA_RETENTION_KLINE:P30D}
 
+push-gateway:
+  heartbeat:
+    enabled: ${PUSH_GATEWAY_HEARTBEAT_ENABLED:false}
+    fixed-delay-ms: ${PUSH_GATEWAY_HEARTBEAT_FIXED_DELAY_MS:30000}
+  rate-limit:
+    enabled: ${PUSH_GATEWAY_RATE_LIMIT_ENABLED:true}
+    subscriptions-per-minute: ${PUSH_GATEWAY_RATE_LIMIT_SUBSCRIPTIONS_PER_MINUTE:60}
+    max-tracked-keys: ${PUSH_GATEWAY_RATE_LIMIT_MAX_TRACKED_KEYS:10000}
+    client-ip-header: ${PUSH_GATEWAY_RATE_LIMIT_CLIENT_IP_HEADER:X-Forwarded-For}
+
 turnover:
   reconciliation:
     enabled: ${TURNOVER_RECONCILIATION_ENABLED:false}

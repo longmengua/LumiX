@@ -12,4 +12,4 @@ Web interface 層。
 
 目前狀態：
 - 內部交易所、risk、margin、market data、recovery、Polymarket API 都在這層暴露。
-- WebSocket/SSE push config 位於本目錄根層；user WebSocket 支援 cancel-on-disconnect 與 `resumeConnectionId` registration transfer。
+- WebSocket/SSE push config 位於本目錄根層；market/user stream 支援 per-client subscription rate limiting，user WebSocket 支援 private stream subscription authorization、cancel-on-disconnect 與 `resumeConnectionId` registration transfer。

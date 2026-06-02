@@ -10,6 +10,8 @@ import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
@@ -20,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
 public class PushGatewayService {
 
     private static final long TIMEOUT_MS = 30 * 60 * 1000L;
+    public static final String HEARTBEAT_EVENT = "gateway.heartbeat";
 
     private final Map<String, Set<SseEmitter>> subscribers = new ConcurrentHashMap<>();
     private final Map<String, Set<WebSocketSession>> websocketSubscribers = new ConcurrentHashMap<>();
@@ -45,6 +48,22 @@ public class PushGatewayService {
         publish("user:" + uid, eventName, payload);
     }
 
+    public PushGatewayHeartbeatReport publishHeartbeat(Instant now) {
+        Instant heartbeatAt = now == null ? Instant.now() : now;
+        Set<String> channels = new HashSet<>();
+        channels.addAll(subscribers.keySet());
+        channels.addAll(websocketSubscribers.keySet());
+
+        int delivered = 0;
+        int failed = 0;
+        for (String channel : channels) {
+            PublishResult result = publish(channel, HEARTBEAT_EVENT, new PushGatewayHeartbeat(channel, heartbeatAt.toString()));
+            delivered += result.delivered();
+            failed += result.failed();
+        }
+        return new PushGatewayHeartbeatReport(heartbeatAt, channels.size(), delivered, failed);
+    }
+
     public void registerMarketWebSocket(String symbol, WebSocketSession session) {
         registerWebSocket("market:" + normalize(symbol), session);
     }
@@ -66,14 +85,18 @@ public class PushGatewayService {
         return emitter;
     }
 
-    private void publish(String channel, String eventName, Object payload) {
+    private PublishResult publish(String channel, String eventName, Object payload) {
+        int delivered = 0;
+        int failed = 0;
         Set<SseEmitter> emitters = subscribers.get(channel);
         if (emitters != null && !emitters.isEmpty()) {
             for (SseEmitter emitter : emitters) {
                 try {
                     emitter.send(SseEmitter.event().name(eventName).data(payload));
+                    delivered++;
                 } catch (IOException | IllegalStateException ex) {
                     remove(channel, emitter);
+                    failed++;
                 }
             }
         }
@@ -84,14 +107,18 @@ public class PushGatewayService {
                 try {
                     if (!session.isOpen()) {
                         remove(channel, session);
+                        failed++;
                         continue;
                     }
                     session.sendMessage(new TextMessage(toJson(eventName, payload)));
+                    delivered++;
                 } catch (IOException | IllegalStateException ex) {
                     remove(channel, session);
+                    failed++;
                 }
             }
         }
+        return new PublishResult(delivered, failed);
     }
 
     private void registerWebSocket(String channel, WebSocketSession session) {
@@ -121,5 +148,25 @@ public class PushGatewayService {
 
     private static String normalize(String symbol) {
         return symbol == null ? "" : symbol.trim().toUpperCase();
+    }
+
+    public record PushGatewayHeartbeat(
+            String channel,
+            String ts
+    ) {
+    }
+
+    public record PushGatewayHeartbeatReport(
+            Instant heartbeatAt,
+            int channels,
+            int delivered,
+            int failed
+    ) {
+    }
+
+    private record PublishResult(
+            int delivered,
+            int failed
+    ) {
     }
 }

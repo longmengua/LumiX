@@ -43,6 +43,25 @@ public class JpaMarketDataTradeTapeStore implements MarketDataTradeTapeStore {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TradeTapeItem> findAfter(String symbol, Instant afterTs, String afterMatchId, int limit) {
+        if (afterTs == null) {
+            return findRecent(symbol, limit);
+        }
+        int normalizedLimit = Math.min(Math.max(1, limit), 1000);
+        String normalizedMatchId = afterMatchId == null || afterMatchId.isBlank() ? null : afterMatchId.trim();
+        return repository.findAfterCursor(
+                        normalize(symbol),
+                        afterTs,
+                        normalizedMatchId,
+                        PageRequest.of(0, normalizedLimit)
+                )
+                .stream()
+                .map(MarketDataTradeTapeRecord::toItem)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<TradeTapeItem> findByMatchId(String matchId) {
         if (matchId == null || matchId.isBlank()) return List.of();
         return repository.findByMatchIdOrderByTradeTsAscIdAsc(matchId.trim())

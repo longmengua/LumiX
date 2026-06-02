@@ -133,6 +133,13 @@ market-data:
     trade-tape: P7D
     kline: P30D
 
+push-gateway:
+  rate-limit:
+    enabled: true
+    subscriptions-per-minute: 120
+    max-tracked-keys: 10000
+    client-ip-header: X-Forwarded-For
+
 # --------------------------------
 # Actuator（健康檢查/觀測，dev 範例）
 # --------------------------------

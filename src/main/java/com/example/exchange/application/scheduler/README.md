@@ -12,6 +12,7 @@
 - `MarketMakerHedgeExecutionScheduler` 預設 `market-maker.hedge-execution.enabled=false`，production 可開 `market-maker.hedge-execution.lock-enabled=true` 使用 durable worker lock，也可開 `approval-required=true` 要求 operator approval token；啟用前要確認 venue adapter、global halt、告警與對帳策略。
 - `MatchingWorkerLeaseRenewalScheduler` 預設 `matching-worker.enabled=false`，啟用前要確認 symbol routing、readiness、舊 REST path halt/fencing 與告警策略。
 - `MarketDataRetentionScheduler` 預設 `market-data.retention.enabled=false`，啟用前要確認 archive/export、DB partition 與監控策略。
+- `PushGatewayHeartbeatScheduler` 預設 `push-gateway.heartbeat.enabled=false`，啟用後會定期向 SSE/WebSocket channel 發送 `gateway.heartbeat`，啟用前要確認 gateway 部署、client timeout 與監控策略。
 - `TurnoverReconciliationScheduler` 預設 `turnover.reconciliation.enabled=false`，啟用前要確認 trade tape / ledger journal 延遲、batch size、worker lock 與告警策略。
 
 注意：

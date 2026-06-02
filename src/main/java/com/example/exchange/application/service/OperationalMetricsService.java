@@ -26,6 +26,12 @@ public class OperationalMetricsService {
     private final LongAdder orderLatencyCount = new LongAdder();
     private final LongAdder orderLatencyTotalMs = new LongAdder();
     private final AtomicLong orderLatencyMaxMs = new AtomicLong();
+    private final LongAdder matchingRequests = new LongAdder();
+    private final LongAdder matchingRejected = new LongAdder();
+    private final LongAdder matchingFilled = new LongAdder();
+    private final LongAdder matchingLatencyCount = new LongAdder();
+    private final LongAdder matchingLatencyTotalMs = new LongAdder();
+    private final AtomicLong matchingLatencyMaxMs = new AtomicLong();
 
     /** 回傳 monotonic timer 起點，呼叫方應在同一流程完成後交給 recordOrderResult。 */
     public long startTimer() {
@@ -40,6 +46,7 @@ public class OperationalMetricsService {
         orderRequests.increment();
         recordStatus(order.getStatus());
         recordOrderLatency(startedAtNanos);
+        recordMatchingResult(order.getStatus(), startedAtNanos);
     }
 
     /** 批量撤單或 cancel-on-disconnect 會一次增加多筆取消計數。 */
@@ -62,6 +69,11 @@ public class OperationalMetricsService {
     public OperationalMetricsSnapshot snapshot() {
         long latencyCount = orderLatencyCount.sum();
         long latencyTotal = orderLatencyTotalMs.sum();
+        long matchingRequestCount = matchingRequests.sum();
+        long matchingRejectCount = matchingRejected.sum();
+        long matchingFillCount = matchingFilled.sum();
+        long matchingLatencySamples = matchingLatencyCount.sum();
+        long matchingLatencyTotal = matchingLatencyTotalMs.sum();
         return new OperationalMetricsSnapshot(
                 orderRequests.sum(),
                 orderNew.sum(),
@@ -73,7 +85,15 @@ public class OperationalMetricsService {
                 tradeEvents.sum(),
                 latencyCount,
                 latencyCount == 0 ? 0 : latencyTotal / latencyCount,
-                orderLatencyMaxMs.get()
+                orderLatencyMaxMs.get(),
+                matchingRequestCount,
+                matchingRejectCount,
+                matchingFillCount,
+                rate(matchingRejectCount, matchingRequestCount),
+                rate(matchingFillCount, matchingRequestCount),
+                matchingLatencySamples,
+                matchingLatencySamples == 0 ? 0 : matchingLatencyTotal / matchingLatencySamples,
+                matchingLatencyMaxMs.get()
         );
     }
 
@@ -95,5 +115,32 @@ public class OperationalMetricsService {
         orderLatencyCount.increment();
         orderLatencyTotalMs.add(elapsedMs);
         orderLatencyMaxMs.accumulateAndGet(elapsedMs, Math::max);
+    }
+
+    private void recordMatchingResult(Order.Status status, long startedAtNanos) {
+        if (status == null) return;
+        matchingRequests.increment();
+        if (status == Order.Status.REJECTED) {
+            matchingRejected.increment();
+        }
+        if (status == Order.Status.PARTIALLY_FILLED || status == Order.Status.FILLED) {
+            matchingFilled.increment();
+        }
+        recordMatchingLatency(startedAtNanos);
+    }
+
+    private void recordMatchingLatency(long startedAtNanos) {
+        if (startedAtNanos <= 0) return;
+        long elapsedMs = Math.max(0, TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAtNanos));
+        matchingLatencyCount.increment();
+        matchingLatencyTotalMs.add(elapsedMs);
+        matchingLatencyMaxMs.accumulateAndGet(elapsedMs, Math::max);
+    }
+
+    private static double rate(long numerator, long denominator) {
+        if (denominator <= 0) {
+            return 0.0;
+        }
+        return (double) numerator / denominator;
     }
 }

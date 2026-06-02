@@ -31,9 +31,10 @@
 | `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency、operator halt 與 recent execution report。 |
 | `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration，含 restart-style partial retry。 |
 | `IdempotentHedgeVenueAdapterTest` | Hedge venue submit refId idempotency、payload conflict、pending/uncertain timeout duplicate blocking。 |
-| `RealHedgeVenueAdapterTest` | Real hedge venue skeleton 的 disabled safety 與 signed request contract。 |
-| `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、durable trade tape、ticker latest-state 與 1m kline baseline。 |
+| `RealHedgeVenueAdapterTest` | Real hedge venue 的 disabled safety、signed request contract、HTTP transport 與 response mapping。 |
+| `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、recovery cursor、durable trade tape、ticker latest-state 與 1m kline baseline。 |
 | `MarketDataRetentionServiceTest` | Market-data high-volume history retention baseline。 |
+| `PushGatewayServiceTest` | Push gateway heartbeat event contract and closed WebSocket cleanup. |
 | `AccountPositionConsistencyServiceTest` | Restore 後檢查 account/open-position consistency issue 與 valid report。 |
 | `ExecuteAdlUseCaseTest` | ADL forced execution 入口的 transaction boundary commit/rollback。 |
 | `CommandTransactionBoundaryTest` / `OrderCommandTransactionBoundaryTest` | command body 與 place/cancel/amend/cancel-replace 指令入口失敗時 rollback command transaction。 |
@@ -44,6 +45,8 @@
 | `ProtectedApiSecurityInterceptorTest` | IP allowlist 與 per-IP rate limit。 |
 | `RequestLoggingInterceptorTest` | request/correlation id、response headers、MDC lifecycle。 |
 | `ApiKeyAuthenticatorTest` | API key hash 驗證與 roles/scopes 解析。 |
+| `MarketDataStreamRateLimiterTest` | Market/user SSE/WebSocket stream per-client 訂閱限流。 |
+| `UserStreamSubscriptionAuthorizerTest` | Private user SSE/WebSocket stream subscription authorization。 |
 | `IpAllowlistTest` | 精確 IP、萬用字元、IPv4 CIDR、拒絕分支。 |
 | `JwtAuthenticatorTest` | HS256 JWT 簽章、exp、roles/scopes。 |
 

@@ -6,6 +6,8 @@ package com.example.exchange.domain.repository.jpa;
 import com.example.exchange.domain.model.entity.MarketDataTradeTapeRecord;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,6 +16,25 @@ public interface MarketDataTradeTapeRecordJpaRepository
         extends JpaRepository<MarketDataTradeTapeRecord, Long> {
 
     List<MarketDataTradeTapeRecord> findBySymbolOrderByTradeTsDescIdDesc(String symbol, Pageable pageable);
+
+    @Query("""
+            select record from MarketDataTradeTapeRecord record
+            where record.symbol = :symbol
+              and (
+                    record.tradeTs > :afterTs
+                    or (
+                        record.tradeTs = :afterTs
+                        and (:afterMatchId is null or record.matchId > :afterMatchId)
+                    )
+              )
+            order by record.tradeTs asc, record.matchId asc, record.id asc
+            """)
+    List<MarketDataTradeTapeRecord> findAfterCursor(
+            @Param("symbol") String symbol,
+            @Param("afterTs") Instant afterTs,
+            @Param("afterMatchId") String afterMatchId,
+            Pageable pageable
+    );
 
     List<MarketDataTradeTapeRecord> findByMatchIdOrderByTradeTsAscIdAsc(String matchId);
 

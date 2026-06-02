@@ -6,10 +6,45 @@ Use this mode when multiple people or agents work in this repository at the same
 
 - Work from one Markdown task entry point whenever possible: a file under `docs/tasks/`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, or a specific `docs/ai/maps/*.md` file.
 - Use `docs/tasks/active.md` as the shared active-work registry before implementation starts.
+- Treat one terminal window as one lane: one agent, one task entry point, one active registry row, and one narrow expected file set.
 - Prefer one agent per task file or one agent per code-map area. If two agents need the same area, split the task into smaller files before both start coding.
 - Keep ownership temporary and narrow: own a task, package, or migration while working; do not claim broad directories for longer than needed.
 - Treat shared docs as coordination surfaces, not scratchpads. Update them at the end after code and tests are stable.
 - Do not revert or rewrite changes from another agent. If a file changed unexpectedly, re-read it and adapt the current patch.
+
+## Multi-Terminal Lane Rules
+
+Use short, stable terminal labels so claims and handoffs are easy to match. Examples:
+
+```text
+T1 matching-command-log
+T2 polymarket-clob-state
+T3 abuse-controls
+T4 docs-task-splitter
+```
+
+Each terminal agent must follow this contract:
+
+- Own exactly one lane at a time.
+- Start from exactly one task file, TODO section, or code-map area.
+- Register expected files or package areas before editing code.
+- Avoid files listed in another active lane's expected areas.
+- Do not edit shared coordination docs during implementation unless the lane is specifically about those docs.
+- If the lane needs another active lane's files, stop and write the dependency or conflict in `docs/tasks/active.md` or a handoff note.
+
+Good first prompts for a new terminal:
+
+```text
+讀一下 AGENTS.md、docs/ai/team-collaboration.md、docs/tasks/active.md。
+認領 docs/tasks/core-kernel/01-replayable-matching-core.md 這條 lane。
+先更新 active.md 並 commit/push claim，然後開始實作。
+```
+
+```text
+Read AGENTS.md, docs/ai/team-collaboration.md, and docs/tasks/active.md.
+Claim docs/tasks/post-v1/05-external-api-idempotency.md as one lane.
+Commit and push the active.md claim before implementation.
+```
 
 ## Startup Checklist
 
@@ -33,6 +68,13 @@ Use a small claim commit to prevent duplicate starts:
 
 Do not claim broad roadmap buckets such as "P1 hardening". Claim the smallest useful task file, package, or code-map area.
 
+Claim commit messages should stay boring and specific:
+
+```text
+docs: claim replayable matching core lane
+docs: claim external api idempotency lane
+```
+
 ## Context Loss Recovery
 
 When an agent resumes after losing chat context:
@@ -48,6 +90,7 @@ If the registry says another owner is `doing`, avoid that lane unless the user e
 ## Parallel Work Rules
 
 - Avoid parallel edits to these high-conflict files unless the task is explicitly about them: `AGENTS.md`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, `docs/en/current-state.md`, `docs/zh-TW/current-state.md`, `docs/ai/code-map.md`, Flyway migrations, and global config files.
+- Avoid overlapping expected areas. If two tasks both need the same controller, service, migration, or map file, split the tasks further or define a dependency order before both agents code.
 - If a task needs a schema migration, use the next migration number only after checking `src/main/resources/db/migration`.
 - Keep commits or final patch sets scoped to one behavior. Split unrelated cleanup into a later task.
 - When adding APIs, update docs and security classification in the same lane.

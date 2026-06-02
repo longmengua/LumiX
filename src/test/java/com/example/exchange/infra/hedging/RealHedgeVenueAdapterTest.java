@@ -6,13 +6,22 @@ package com.example.exchange.infra.hedging;
 import com.example.exchange.domain.model.dto.HedgeOrderRequest;
 import com.example.exchange.domain.model.dto.HedgeOrderResult;
 import com.example.exchange.domain.model.enums.OrderSide;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import okhttp3.Interceptor;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -72,7 +81,7 @@ class RealHedgeVenueAdapterTest {
     }
 
     @Test
-    @DisplayName("real hedge venue lookup adapter 未接 HTTP 前只回傳 retryable 狀態")
+    @DisplayName("real hedge venue lookup adapter 未設定 HTTP client 前只回傳 retryable 狀態")
     void lookupAdapterHasSafeSkeletonContract() {
         RealHedgeVenueOrderLookupAdapter disabled = new RealHedgeVenueOrderLookupAdapter(false, null);
         RealHedgeVenueOrderLookupAdapter missingSigner = new RealHedgeVenueOrderLookupAdapter(true, null);
@@ -85,14 +94,87 @@ class RealHedgeVenueAdapterTest {
                 )
         );
 
-        // 場景：production 預設停用不出站；啟用但未完成 HTTP client 時，對帳流程可重試而不誤判成功。
+        // 場景：production 預設停用不出站；啟用但未設定 HTTP client 時，對帳流程可重試而不誤判成功。
         assertThat(disabled.lookupByRefId("hedge-ref-1")).isEmpty();
         assertThat(missingSigner.lookupByRefId("hedge-ref-1")).get()
                 .extracting("reason", "retryable")
                 .containsExactly("REAL_HEDGE_VENUE_LOOKUP_SIGNER_NOT_CONFIGURED", true);
         assertThat(enabled.lookupByRefId("hedge-ref-1")).get()
                 .extracting("reason", "retryable")
-                .containsExactly("REAL_HEDGE_VENUE_LOOKUP_HTTP_NOT_IMPLEMENTED", true);
+                .containsExactly("REAL_HEDGE_VENUE_LOOKUP_HTTP_NOT_CONFIGURED", true);
+    }
+
+    @Test
+    @DisplayName("real hedge venue submit 送出 signed HTTP request 並解析 accepted response")
+    void submitSendsSignedHttpRequestAndMapsAcceptedResponse() {
+        List<okhttp3.Request> seen = new ArrayList<>();
+        OkHttpClient client = clientReturning(seen, 200, "{\"accepted\":true,\"venueOrderId\":\"venue-1\"}");
+        RealHedgeVenueAdapter adapter = new RealHedgeVenueAdapter(
+                true,
+                signer(),
+                client,
+                "https://hedge.example.test/",
+                new ObjectMapper()
+        );
+
+        // 場景：effectful submit 必須帶簽名 header 與 idempotency key，讓共用 OkHttp retry 不會造成重複外部效果。
+        HedgeOrderResult result = adapter.submit(request());
+
+        assertThat(result.accepted()).isTrue();
+        assertThat(result.venueOrderId()).isEqualTo("venue-1");
+        assertThat(seen).hasSize(1);
+        okhttp3.Request httpRequest = seen.getFirst();
+        assertThat(httpRequest.method()).isEqualTo("POST");
+        assertThat(httpRequest.url().toString()).isEqualTo("https://hedge.example.test/hedge/orders");
+        assertThat(httpRequest.header("X-Hedge-Api-Key")).isEqualTo("api-key-1");
+        assertThat(httpRequest.header("X-Hedge-Timestamp")).isEqualTo("2026-06-01T00:00:00Z");
+        assertThat(httpRequest.header("X-Hedge-Signature")).hasSize(64);
+        assertThat(httpRequest.header("Idempotency-Key")).isEqualTo("hedge-ref-1");
+        assertThat(httpRequest.header("X-Idempotency-Key")).isEqualTo("hedge-ref-1");
+    }
+
+    @Test
+    @DisplayName("real hedge venue lookup 以 signed GET 查詢 ref id 並解析 venue order id")
+    void lookupUsesSignedHttpRequestAndMapsAcceptedResponse() {
+        List<okhttp3.Request> seen = new ArrayList<>();
+        OkHttpClient client = clientReturning(seen, 200, "{\"status\":\"OPEN\",\"orderId\":\"venue-lookup-1\"}");
+        RealHedgeVenueOrderLookupAdapter adapter = new RealHedgeVenueOrderLookupAdapter(
+                true,
+                signer(),
+                client,
+                "https://hedge.example.test",
+                new ObjectMapper()
+        );
+
+        // 場景：uncertain submit reconciliation 依 ref id 查 venue，成功命中後回填 terminal venue result。
+        HedgeOrderResult result = adapter.lookupByRefId("hedge/ref-1").orElseThrow();
+
+        assertThat(result.accepted()).isTrue();
+        assertThat(result.venueOrderId()).isEqualTo("venue-lookup-1");
+        assertThat(seen).hasSize(1);
+        okhttp3.Request httpRequest = seen.getFirst();
+        assertThat(httpRequest.method()).isEqualTo("GET");
+        assertThat(httpRequest.url().toString()).isEqualTo("https://hedge.example.test/hedge/orders/hedge%2Fref-1");
+        assertThat(httpRequest.header("X-Hedge-Api-Key")).isEqualTo("api-key-1");
+    }
+
+    @Test
+    @DisplayName("real hedge venue HTTP 5xx 會映射成 retryable rejection")
+    void submitMapsServerErrorToRetryableRejection() {
+        RealHedgeVenueAdapter adapter = new RealHedgeVenueAdapter(
+                true,
+                signer(),
+                clientReturning(new ArrayList<>(), 503, "{\"reason\":\"venue maintenance\"}"),
+                "https://hedge.example.test",
+                new ObjectMapper()
+        );
+
+        // 場景：外部 venue 暫時錯誤不能誤標 final rejection，後續 idempotency reconcile 仍可查未解 outcome。
+        HedgeOrderResult result = adapter.submit(request());
+
+        assertThat(result.accepted()).isFalse();
+        assertThat(result.retryable()).isTrue();
+        assertThat(result.reason()).isEqualTo("venue maintenance");
     }
 
     private static HedgeOrderRequest request() {
@@ -106,5 +188,37 @@ class RealHedgeVenueAdapterTest {
                 new BigDecimal("29900.00"),
                 "hedge-ref-1"
         );
+    }
+
+    private static RealHedgeVenueSigner signer() {
+        return new RealHedgeVenueSigner(
+                "api-key-1",
+                "secret-1",
+                Clock.fixed(Instant.parse("2026-06-01T00:00:00Z"), ZoneOffset.UTC)
+        );
+    }
+
+    private static OkHttpClient clientReturning(List<okhttp3.Request> seen, int statusCode, String body) {
+        return new OkHttpClient.Builder()
+                .addInterceptor(new StaticResponseInterceptor(seen, statusCode, body))
+                .build();
+    }
+
+    private record StaticResponseInterceptor(
+            List<okhttp3.Request> seen,
+            int statusCode,
+            String body
+    ) implements Interceptor {
+        @Override
+        public Response intercept(Chain chain) throws IOException {
+            seen.add(chain.request());
+            return new Response.Builder()
+                    .request(chain.request())
+                    .protocol(Protocol.HTTP_1_1)
+                    .code(statusCode)
+                    .message("test")
+                    .body(ResponseBody.create(body, okhttp3.MediaType.get("application/json; charset=utf-8")))
+                    .build();
+        }
     }
 }
