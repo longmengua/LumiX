@@ -9,9 +9,10 @@ Web security helper。
 - `ApiPrincipal`。
 - `UserStreamSubscriptionAuthorizer`：private user SSE/WebSocket stream 訂閱授權。
 - `MarketDataStreamRateLimiter`：market-data SSE/WebSocket per-client stream 訂閱限流。
+- `MarketMakerQuoteRateLimiter`：market-maker quote command per-client / market-maker / symbol 限流。
 
 目前狀態：
-- API key、JWT、IP allowlist、固定視窗 rate limit、private user stream authorization baseline、market-data stream per-client limiter 已有測試。
+- API key、JWT、IP allowlist、固定視窗 rate limit、private user stream authorization baseline、market-data stream per-client limiter、market-maker quote command limiter 已有測試。
 - production 仍需完整 key rotation、audit sink、異常使用偵測。
 
 注意：

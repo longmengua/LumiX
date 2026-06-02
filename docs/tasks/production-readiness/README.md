@@ -27,7 +27,7 @@ P0 fine: 28/36 -> 37/37 done, remaining 9 -> 0
 ## Current Fine-Grained Counts
 
 - P0 fine: `37/37` done.
-- P1 fine: `8/22` done.
+- P1 fine: `9/22` done.
 - P2 fine: `0/14` done.
 
 These counts intentionally start from this split date. Earlier baseline work remains documented in `docs/*/todo.md`, current-state docs, and AI maps.

@@ -103,6 +103,7 @@
 - [ ] WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
   - Baseline 進度：gateway heartbeat contract 會向 SSE/WebSocket channel 發送 `gateway.heartbeat`，payload 包含 channel 與 timestamp，會清理已關閉 WebSocket session，並提供預設關閉的 scheduler config。Private user SSE/WebSocket stream 在 `api-auth.enabled=true` 時需要 API key 或 Bearer credentials；admin principal 可供營運訂閱，user principal 則需要 uid ownership 與 stream read scope。SSE/WebSocket stream 訂閱嘗試現在會通過 `push-gateway.rate-limit.*` per-client fixed-window limiter。Client 可讀取 `GET /api/market-data/{symbol}/recovery-cursor`，用 `afterVersion` replay depth，並用 `afterTs` 加 `afterMatchId` replay trades。[Market data gateway scaling](market-data-gateway-scaling.md) 已記錄 independent gateway role、broadcast fanout、load-balancer draining、shared rate-limit options、heartbeat policy 與 rollback。
 - [ ] 在 P0 做市商 interface baseline 完成後，補齊 market maker / liquidity provider API hardening 與節流策略。
+  - Baseline 進度：`POST /api/market-maker/quotes` 現在有可設定的 fixed-window frequency limit，設定在 `market-maker.api.quote-rate-limit.*`，會依 client、market-maker id 與 symbol 分 key，並在 quote replacement side effects 前拒絕 burst。
 
 ### Polymarket 整合
 

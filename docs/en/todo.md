@@ -103,6 +103,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [ ] Deploy WebSocket/SSE gateway independently with horizontal scaling, subscription authorization, heartbeat, rate limiting, and disconnect recovery.
   - Baseline progress: gateway heartbeat contract emits `gateway.heartbeat` to SSE/WebSocket channels with channel and timestamp payload, removes closed WebSocket sessions, and has disabled-by-default scheduler config. Private user SSE/WebSocket streams now require API key or Bearer credentials when `api-auth.enabled=true`; admin principals can subscribe for operations, while user principals need matching uid ownership plus stream read scope. SSE/WebSocket stream subscription attempts now pass through a per-client fixed-window limiter under `push-gateway.rate-limit.*`. Clients can read `GET /api/market-data/{symbol}/recovery-cursor`, replay depth with `afterVersion`, and replay trades with `afterTs` plus `afterMatchId`. [Market data gateway scaling](market-data-gateway-scaling.md) documents independent gateway role, broadcast fanout, load-balancer draining, shared rate-limit options, heartbeat policy, and rollback.
 - [ ] Add market-maker / liquidity-provider API hardening and rate-limit policies after the P0 market-maker interface baseline is complete.
+  - Baseline progress: `POST /api/market-maker/quotes` now has a configurable fixed-window frequency limit under `market-maker.api.quote-rate-limit.*`, keyed by client, market-maker id, and symbol before quote replacement side effects run.
 
 ### Polymarket Integration
 

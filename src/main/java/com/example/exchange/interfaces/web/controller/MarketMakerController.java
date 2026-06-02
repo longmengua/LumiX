@@ -24,6 +24,8 @@ import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerProfileRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerQuoteRequest;
+import com.example.exchange.interfaces.web.security.MarketMakerQuoteRateLimiter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -50,6 +53,7 @@ public class MarketMakerController {
     private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
     private final MarketMakerQuoteReconciliationService quoteReconciliationService;
+    private final MarketMakerQuoteRateLimiter marketMakerQuoteRateLimiter;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -75,8 +79,10 @@ public class MarketMakerController {
 
     @PostMapping("/quotes")
     public ApiResponse<MarketMakerQuoteLifecycleReport> placeQuote(
-            @Valid @RequestBody MarketMakerQuoteRequest request
+            @Valid @RequestBody MarketMakerQuoteRequest request,
+            HttpServletRequest httpRequest
     ) {
+        enforceQuoteRateLimit(httpRequest, request);
         return ApiResponse.ok(quoteLifecycleService.placeQuote(request.toCommand()));
     }
 
@@ -182,5 +188,13 @@ public class MarketMakerController {
             @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
     ) {
         return ApiResponse.ok(hedgeExecutionService.executeForEnabledMarketMakers(refPrefix, approvalToken));
+    }
+
+    private void enforceQuoteRateLimit(HttpServletRequest httpRequest, MarketMakerQuoteRequest request) {
+        MarketMakerQuoteRateLimiter.RateLimitDecision decision =
+                marketMakerQuoteRateLimiter.consume(httpRequest, request);
+        if (!decision.allowed()) {
+            throw new ResponseStatusException(decision.status(), decision.reason());
+        }
     }
 }

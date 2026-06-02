@@ -8,7 +8,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Fine-Grained Progress
 
-`8/22` done.
+`9/22` done.
 
 ## Market Data Gateway
 
@@ -20,7 +20,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Market Maker API Hardening
 
-- [ ] Add market-maker quote API frequency limit policy.
+- [x] Add market-maker quote API frequency limit policy.
 - [ ] Add market-maker hedge execution API frequency limit policy.
 - [ ] Add market-maker endpoint audit fields for operator identity and approval token outcome.
 
