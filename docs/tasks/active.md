@@ -28,5 +28,24 @@ If context is lost, the next agent must read this file and `docs/tasks/handoffs/
 | Status | Task / Lane | Owner | Since | Expected Areas | Handoff |
 | --- | --- | --- | --- | --- | --- |
 | doing | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-integration | T1 polymarket-schema-versioning | 2026-06-03 | `src/main/java/com/example/exchange/domain/model/dto`, `src/main/java/com/example/exchange/domain/service/Polymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md` |  |
+| doing | docs/tasks/production-readiness/02-p1-production-hardening.md#observability-matching-metrics | T2 observability-matching-metrics | 2026-06-03 | `src/main/java/com/example/exchange/application/service/OperationalMetricsService.java`, `src/main/java/com/example/exchange/domain/model/dto/OperationalMetricsSnapshot.java`, `src/test/java/com/example/exchange/application/service/OperationalMetricsServiceTest.java`, `docs/en/observability.md`, `docs/zh-TW/observability.md` |  |
 
 Replace the `_none_` row with real claim rows when work starts.
+
+## Claim Row Template
+
+Use one row per terminal agent. Keep `Expected Areas` narrow enough that another agent can safely choose unrelated work.
+
+```markdown
+| doing | docs/tasks/core-kernel/01-replayable-matching-core.md | T1 matching-command-log | 2026-06-02 | `src/main/java/com/example/exchange/infra/matching`, `src/test/java/com/example/exchange/infra/matching`, `docs/ai/maps/order-matching.md` |  |
+```
+
+Terminal labels should be stable for the session, for example `T1 matching-command-log` or `T2 polymarket-clob-state`.
+
+## Conflict Notes
+
+If a new lane needs files already listed by another `doing` row:
+
+1. Do not start implementation.
+2. Split the work into a smaller task file or define a dependency order.
+3. If useful discovery already happened, write a handoff note under `docs/tasks/handoffs/`.
