@@ -107,10 +107,11 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Polymarket Integration
 
 - [ ] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
+  - Baseline progress: `PolymarketOrderStateMachine` now exposes a local/CLOB/trade/settlement transition matrix, routes user-channel trade events through the matrix, promotes matched trade events into local matched lifecycle, and preserves settled terminal status against later stale active order events.
 - [x] Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
   - Baseline done: Gamma `/events` and `/markets` responses are validated through versioned schema reports before DTO parsing, Gamma event/market DTOs ignore unknown remote fields, and CLOB order-operation responses record `clob.order-operations.v1` metadata while warning on incompatible shapes.
 - [x] Make CLOB place, cancel, sync, and reconcile commands idempotent.
-  - Baseline done: place can use `clientRequestId`; cancel can use durable `commandId`; cancel locally replays already-recorded cancel/uncertain statuses; reconcile can resolve uncertain cancel from remote CLOB status; sync/reconcile skip unchanged local writes; stale active CLOB payloads cannot downgrade local filled/settled terminal orders or matched size. Remaining: full trade/settlement state-machine transitions.
+  - Baseline done: place can use `clientRequestId`; cancel can use durable `commandId`; cancel locally replays already-recorded cancel/uncertain statuses; reconcile can resolve uncertain cancel from remote CLOB status; sync/reconcile skip unchanged local writes; stale active CLOB payloads cannot downgrade local filled/settled terminal orders or matched size. Remaining: durable trade lifecycle projection and settlement terminal downgrade tests.
   - Baseline done: place supports `clientRequestId` duplicate replay, payload conflict rejection, and uncertain local-order retry blocking.
 - [ ] Deploy the user WebSocket service independently with reconnect, checkpoint, event deduplication, persistence, and replay.
 - [x] Add cache and expiry policy for allowance / approval checks to avoid overloading RPC endpoints.

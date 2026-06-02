@@ -36,7 +36,8 @@ class PolymarketUserEventServiceTest {
                 new PolymarketUserEventService(
                         new ObjectMapper(),
                         orderRepository.proxy(),
-                        eventRepository.proxy()
+                        eventRepository.proxy(),
+                        new PolymarketOrderStateMachine()
                 );
 
         service.handle(event("clob-1", "trade-1"));
@@ -48,6 +49,8 @@ class PolymarketUserEventServiceTest {
                 .isEqualTo(1);
         assertThat(orderRepository.order.getTradeStatus())
                 .isEqualTo("MATCHED");
+        assertThat(orderRepository.order.getStatus())
+                .isEqualTo("ORDER_STATUS_MATCHED");
         assertThat(orderRepository.order.getLastTradeId())
                 .isEqualTo("trade-1");
     }
@@ -67,7 +70,8 @@ class PolymarketUserEventServiceTest {
                 new PolymarketUserEventService(
                         new ObjectMapper(),
                         orderRepository.proxy(),
-                        eventRepository.proxy()
+                        eventRepository.proxy(),
+                        new PolymarketOrderStateMachine()
                 );
 
         service.handle(event("clob-1", "trade-1"));

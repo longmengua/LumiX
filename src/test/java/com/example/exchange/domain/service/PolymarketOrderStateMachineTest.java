@@ -42,4 +42,51 @@ class PolymarketOrderStateMachineTest {
         assertThat(stateMachine.shouldApplyRemoteMatchedSize("ORDER_STATUS_MATCHED", "ORDER_STATUS_MATCHED"))
                 .isTrue();
     }
+
+    @Test
+    @DisplayName("transitionMatrix 明確列出 local/CLOB/trade/settlement lifecycle progression")
+    void transitionMatrixDocumentsLocalClobTradeAndSettlementProgression() {
+        // 場景：production review 需要能看見每個 lifecycle 來源如何推進或保護 local 狀態。
+        assertThat(stateMachine.transitionMatrix())
+                .extracting(PolymarketOrderStateMachine.TransitionRule::stage)
+                .contains(
+                        PolymarketOrderStateMachine.LifecycleStage.LOCAL,
+                        PolymarketOrderStateMachine.LifecycleStage.CLOB_ORDER,
+                        PolymarketOrderStateMachine.LifecycleStage.TRADE,
+                        PolymarketOrderStateMachine.LifecycleStage.SETTLEMENT
+                );
+        assertThat(stateMachine.transitionMatrix())
+                .anySatisfy(rule -> {
+                    assertThat(rule.stage()).isEqualTo(PolymarketOrderStateMachine.LifecycleStage.CLOB_ORDER);
+                    assertThat(rule.currentStatus()).isEqualTo("ORDER_STATUS_SETTLED");
+                    assertThat(rule.protectsTerminalDowngrade()).isTrue();
+                });
+    }
+
+    @Test
+    @DisplayName("trade event 會推進 order lifecycle 並保留 trade status")
+    void resolveUserEventStatusPromotesTradeMatch() {
+        PolymarketOrderStateMachine.LifecycleTransition transition =
+                stateMachine.resolveUserEventStatus("ORDER_STATUS_LIVE", null, "trade", "MATCHED");
+
+        // 場景：user-channel trade event 比 CLOB reconcile 更早到，local order 應進入 matched lifecycle。
+        assertThat(transition.stage()).isEqualTo(PolymarketOrderStateMachine.LifecycleStage.TRADE);
+        assertThat(transition.orderStatus()).isEqualTo("ORDER_STATUS_MATCHED");
+        assertThat(transition.tradeStatus()).isEqualTo("MATCHED");
+        assertThat(transition.changed()).isTrue();
+    }
+
+    @Test
+    @DisplayName("settlement event 會推進到 settled 並拒絕後續 active downgrade")
+    void resolveUserEventStatusSettlesAndProtectsTerminalStatus() {
+        PolymarketOrderStateMachine.LifecycleTransition settled =
+                stateMachine.resolveUserEventStatus("ORDER_STATUS_MATCHED", "MATCHED", "settlement", "SETTLED");
+        PolymarketOrderStateMachine.LifecycleTransition stale =
+                stateMachine.resolveUserEventStatus(settled.orderStatus(), settled.tradeStatus(), "order", "ORDER_STATUS_LIVE");
+
+        // 場景：settlement 已落地後，較舊的 order active event 不能把 local order 拉回 live。
+        assertThat(settled.orderStatus()).isEqualTo("ORDER_STATUS_SETTLED");
+        assertThat(settled.stage()).isEqualTo(PolymarketOrderStateMachine.LifecycleStage.SETTLEMENT);
+        assertThat(stale.orderStatus()).isEqualTo("ORDER_STATUS_SETTLED");
+    }
 }

@@ -27,6 +27,7 @@ public class PolymarketUserEventService {
     private final ObjectMapper objectMapper;
     private final PredictionPolymarketOrderRepository orderRepository;
     private final PredictionPolymarketWsEventRepository eventRepository;
+    private final PolymarketOrderStateMachine orderStateMachine;
 
     @Transactional
     public void handle(PolymarketUserWsEvent event) {
@@ -94,11 +95,15 @@ public class PolymarketUserEventService {
             PolymarketUserWsEvent event
     ) {
         if (event.getStatus() != null && !event.getStatus().isBlank()) {
-            if ("trade".equalsIgnoreCase(event.getEventType())) {
-                order.setTradeStatus(event.getStatus());
-            } else {
-                order.setStatus(event.getStatus());
-            }
+            PolymarketOrderStateMachine.LifecycleTransition transition =
+                    orderStateMachine.resolveUserEventStatus(
+                            order.getStatus(),
+                            order.getTradeStatus(),
+                            event.getEventType(),
+                            event.getStatus()
+                    );
+            order.setStatus(transition.orderStatus());
+            order.setTradeStatus(transition.tradeStatus());
         }
 
         if (event.getTradeId() != null && !event.getTradeId().isBlank()) {
