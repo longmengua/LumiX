@@ -100,6 +100,7 @@ User WebSocket:
 ./shells/api-curls/exchange/risk-price-oracle-put.sh
 ./shells/api-curls/exchange/risk-price-oracle-get.sh
 ./shells/api-curls/exchange/admin-market-config-get.sh
+./shells/api-curls/exchange/admin-risk-parameters-get.sh
 ./shells/api-curls/exchange/market-maker-quotes-post.sh
 ./shells/api-curls/exchange/market-maker-quotes-active-get.sh
 ./shells/api-curls/exchange/market-maker-profile-quotes-get.sh
