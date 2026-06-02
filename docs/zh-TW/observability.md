@@ -40,3 +40,7 @@ Order lifecycle projection 會輸出 structured `CORE_EVENT eventType=ORDER_LIFE
 - `drop-health-and-metrics`：跳過 `/actuator/health`、readiness 與 metrics reads，避免低價值 trace volume。
 
 Dashboard 應按 service name、route、status、external venue、Kafka topic 與 matching symbol 分組。實際 exporter wiring 仍是後續工作；目前 repo 提供 config 與 policy baseline。
+
+## Alert Rules
+
+Production alert baseline 已整理在 [Alert Rules Baseline](alert-rules.md)。內容涵蓋 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets，並定義每個 alert 的 route 與 first runbook。

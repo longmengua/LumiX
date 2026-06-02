@@ -40,3 +40,7 @@ Order lifecycle projection emits structured `CORE_EVENT eventType=ORDER_LIFECYCL
 - `drop-health-and-metrics`: skip `/actuator/health`, readiness, and metrics reads to avoid low-value trace volume.
 
 Dashboards should group by service name, route, status, external venue, Kafka topic, and matching symbol. Actual exporter wiring remains future work; this repo currently provides the config and policy baseline.
+
+## Alert Rules
+
+The production alert baseline is documented in [Alert Rules Baseline](alert-rules.md). It covers matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets, with routes and first runbooks for each alert.

@@ -142,6 +142,7 @@
 - [x] 補核心事件 structured logging，能按 uid、orderId、clientOrderId、symbol 搜尋。
   - Baseline 已完成：order lifecycle projection 會寫 `CORE_EVENT eventType=ORDER_LIFECYCLE` log line，包含穩定的 `uid`、`orderId`、`clientOrderId`、`symbol`、`stage`、`status`、`reasonCode`、`eventTs` 欄位。
 - [ ] 建立 alert：撮合停止、Kafka lag、DLQ 堆積、對帳失敗、外部 API 錯誤率、資產不平。
+  - Baseline 已完成：[Alert Rules Baseline](alert-rules.md) 已定義 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets 的 signal、threshold、severity、route、runbook、routing rules 與 noise controls。Remaining：接入實際 alert backend。
 
 ## P2 可逐步演進
 
