@@ -125,6 +125,15 @@ ledger:
     require-tamper-evidence-clean: ${LEDGER_ARCHIVE_REQUIRE_TAMPER_EVIDENCE_CLEAN:true}
     require-balanced-daily-report: ${LEDGER_ARCHIVE_REQUIRE_BALANCED_DAILY_REPORT:true}
 
+archive:
+  exporter:
+    enabled: ${ARCHIVE_EXPORTER_ENABLED:false}
+    fixed-delay-ms: ${ARCHIVE_EXPORTER_FIXED_DELAY_MS:86400000}
+    days-back: ${ARCHIVE_EXPORTER_DAYS_BACK:1}
+    orders-enabled: ${ARCHIVE_EXPORTER_ORDERS_ENABLED:true}
+    trades-enabled: ${ARCHIVE_EXPORTER_TRADES_ENABLED:true}
+    ledger-enabled: ${ARCHIVE_EXPORTER_LEDGER_ENABLED:true}
+
 finance:
   export:
     enabled: ${FINANCE_EXPORT_ENABLED:false}

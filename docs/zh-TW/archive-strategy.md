@@ -46,6 +46,7 @@ English version: [../en/archive-strategy.md](../en/archive-strategy.md)
 
 ## Open Implementation Work
 
-- 為每個 data family 實作 archive exporter jobs。Ledger finance category export、archive manifest generation、restore smoke、archived range replay validation 已有 `/api/recovery/finance/**` baseline。
+- Historical orders、trades、ledger 的 archive exporter skeleton 已由 `ArchiveExporterService` / `ArchiveExporterScheduler` 提供；預設關閉，且只產生 export plans 與 ledger manifest/delete-guard checks，不會刪 hot-path data。
+- 後續仍需替各 data family 實作 object-storage writers 與 hot-path delete jobs。Ledger finance category export、archive manifest generation、restore smoke、archived range replay validation 已有 `/api/recovery/finance/**` baseline。
 - 為 order lifecycle、ledger replay、Kafka event payload 補 restore smoke tests。
 - 把 archive checksum 接進 operations dashboards 與 incident runbooks。

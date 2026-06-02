@@ -133,6 +133,15 @@ market-data:
     trade-tape: P7D
     kline: P30D
 
+archive:
+  exporter:
+    enabled: false
+    fixed-delay-ms: 86400000
+    days-back: 1
+    orders-enabled: true
+    trades-enabled: true
+    ledger-enabled: true
+
 push-gateway:
   rate-limit:
     enabled: true

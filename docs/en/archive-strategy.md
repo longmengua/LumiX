@@ -46,6 +46,7 @@ Every archive batch must write a manifest with:
 
 ## Open Implementation Work
 
-- Build archive exporter jobs for each data family. Ledger finance category export, archive manifest generation, restore smoke, and archived range replay validation have baselines under `/api/recovery/finance/**`.
+- Archive exporter skeleton exists for historical orders, trades, and ledger through `ArchiveExporterService` / `ArchiveExporterScheduler`; it is disabled by default and generates export plans plus ledger manifest/delete-guard checks before any hot-path delete work.
+- Implement object-storage writers and hot-path delete jobs for each data family. Ledger finance category export, archive manifest generation, restore smoke, and archived range replay validation have baselines under `/api/recovery/finance/**`.
 - Add restore smoke tests for order lifecycle, ledger replay, and Kafka event payloads.
 - Add archive checksums to operations dashboards and incident runbooks.

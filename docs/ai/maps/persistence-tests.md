@@ -44,6 +44,7 @@ Config:
 - Live order SQL mirror/index decision: `docs/en/live-order-sql-mirror.md`
 - Live position SQL mirror/index decision: `docs/en/live-position-sql-mirror.md`
 - Historical data archive strategy: `docs/en/archive-strategy.md`
+- Archive exporter skeleton: `ArchiveExporterService`, `ArchiveExporterScheduler`, `ArchiveExporterServiceTest`
 - Kafka topic contract: `docs/en/kafka-topics.md`
 - Observability baseline: `docs/en/observability.md`
 - Outbox runbook: `docs/en/outbox-runbook.md`

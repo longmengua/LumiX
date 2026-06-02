@@ -122,13 +122,13 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Database and Storage
 
 - [ ] Add production indexes for orders, positions, ledger, events, and prediction orders.
-  - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. [Live order SQL mirror](live-order-sql-mirror.md) design chooses `order_lifecycle_projection` as the durable live-order mirror and treats Redis order keys as hot projections. Remaining: live position SQL mirror/index decision and archive exporter skeleton.
+  - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. [Live order SQL mirror](live-order-sql-mirror.md) design chooses `order_lifecycle_projection` as the durable live-order mirror, [live position SQL mirror](live-position-sql-mirror.md) defines future `position_lifecycle_projection`, and the archive exporter skeleton covers historical order/trade/ledger export plans. Remaining: implement the future position mirror schema.
 - [x] Document Redis key schema, namespace prefix, versioning, and migration strategy.
 - [x] Add final TTL/archive rules for Redis hot-state keys.
   - Baseline done: `docs/en/redis-key-schema.md` defines per-key-family production TTL, archive/delete rule, and authoritative rebuild source for account, position, order, snapshot, ledger, outbox/DLQ, and idempotency keys.
 - [x] Use Flyway as the single production schema manager; do not rely on Hibernate `ddl-auto=update`.
 - [x] Add archive strategy for historical orders, trades, ledger entries, Kafka events, and audit logs.
-  - Baseline done: `docs/en/archive-strategy.md` defines hot/archive sources, minimum payloads, retention classes, manifests, delete rules, and restore rules; exporter jobs and restore smoke tests remain implementation work.
+  - Baseline done: `docs/en/archive-strategy.md` defines hot/archive sources, minimum payloads, retention classes, manifests, delete rules, and restore rules; `ArchiveExporterService` / `ArchiveExporterScheduler` provide a disabled-by-default historical order/trade/ledger export-plan skeleton. Remaining: object-storage writers, delete jobs, and broader restore smoke tests.
 
 ### Observability
 

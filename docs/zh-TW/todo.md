@@ -122,13 +122,13 @@
 ### 資料庫與儲存
 
 - [ ] 為 orders、positions、ledger、events、prediction orders 補齊 production index。
-  - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror，Redis order keys 則作為 hot projections。Remaining：live position SQL mirror/index decision 與 archive exporter skeleton。
+  - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror，[Live position SQL mirror](live-position-sql-mirror.md) 定義未來 `position_lifecycle_projection`，archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Remaining：實作 future position mirror schema。
 - [x] 文件化 Redis key schema、namespace prefix、版本與 migration 策略。
 - [x] 補 Redis hot-state key 的最終 TTL / archive rules。
   - Baseline 已完成：`docs/zh-TW/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。
 - [x] Flyway migration 改為正式唯一 schema 管理，不再依賴 Hibernate `ddl-auto=update`。
 - [x] 補齊資料歸檔策略：歷史訂單、成交、ledger、Kafka event、audit log。
-  - Baseline 已完成：`docs/zh-TW/archive-strategy.md` 已定義 hot/archive sources、minimum payloads、retention classes、manifests、delete rules 與 restore rules；exporter jobs 與 restore smoke tests 仍是後續實作。
+  - Baseline 已完成：`docs/zh-TW/archive-strategy.md` 已定義 hot/archive sources、minimum payloads、retention classes、manifests、delete rules 與 restore rules；`ArchiveExporterService` / `ArchiveExporterScheduler` 提供預設關閉的 historical order/trade/ledger export-plan skeleton。Remaining：object-storage writers、delete jobs 與更完整 restore smoke tests。
 
 ### 可觀測性
 

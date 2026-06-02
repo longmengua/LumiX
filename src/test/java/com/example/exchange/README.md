@@ -14,6 +14,7 @@
 | 測試類別 | 主要驗證 |
 | --- | --- |
 | `ExchangeApplicationTests` | application class 能載入，避免啟動入口破壞 Spring 掃描。 |
+| `ArchiveExporterServiceTest` | Historical orders/trades/ledger archive exporter skeleton 與 disabled-by-default 行為。 |
 | `AccountRiskServiceTest` | risk snapshot 的 equity、PNL、maintenance margin、risk ratio。 |
 | `MarginServiceTest` | deposit/withdraw transfer state machine、callback idempotency、manual-review owner、transfer reconciliation projection 與 ledger side effect。 |
 | `OperationalMetricsServiceTest` | 下單結果、撤單、成交事件、延遲統計。 |

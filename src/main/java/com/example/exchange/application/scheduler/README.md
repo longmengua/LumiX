@@ -8,6 +8,7 @@
 - `BonusCreditExpiryScheduler` 預設 `bonus-credit.expiry-enabled=false`，啟用前要確認 ledger/retry/告警策略。
 - `BonusCreditClawbackScheduler` 預設 `bonus-credit.clawback-policy.enabled=false`，啟用前要確認 campaign/asset/max-amount 設定、營運核准、worker lock 與告警策略。
 - `FinanceExportScheduler` 預設 `finance.export.enabled=false`，啟用後會依 cron 產生前一 UTC 日 fee/funding/liquidation/bonus/transfer category export batch；啟用前要確認日報平衡、archive manifest restore smoke 與告警流程。
+- `ArchiveExporterScheduler` 預設 `archive.exporter.enabled=false`，啟用後會產生 historical orders、trades、ledger archive plan skeleton；啟用前要確認 object storage、manifest review、restore smoke 與 delete guard 流程。
 - `MarketMakerQuoteRepairScheduler` 預設 `market-maker.quote-repair.enabled=false`，啟用後會定期撤掉未追蹤的殘留 quote order，並對缺失單邊 tracked leg 的 quote state fail-closed 停用；啟用前要確認 cancel use case、告警與 operator reconciliation 流程。
 - `MarketMakerHedgeExecutionScheduler` 預設 `market-maker.hedge-execution.enabled=false`，production 可開 `market-maker.hedge-execution.lock-enabled=true` 使用 durable worker lock，也可開 `approval-required=true` 要求 operator approval token；啟用前要確認 venue adapter、global halt、告警與對帳策略。
 - `MatchingWorkerLeaseRenewalScheduler` 預設 `matching-worker.enabled=false`，啟用前要確認 symbol routing、readiness、舊 REST path halt/fencing 與告警策略。
