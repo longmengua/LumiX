@@ -58,5 +58,11 @@ public record OperationalMetricsSnapshot(
         /** 平均 Redis operation latency，單位毫秒。 */
         long redisLatencyAvgMs,
         /** 最大 Redis operation latency，單位毫秒。 */
-        long redisLatencyMaxMs
+        long redisLatencyMaxMs,
+        /** 已採樣 Kafka consumer partitions 數。 */
+        long kafkaLagPartitions,
+        /** Kafka consumer lag 總和，單位為 messages。 */
+        long kafkaLagTotal,
+        /** 最大單 partition Kafka consumer lag，單位為 messages。 */
+        long kafkaLagMax
 ) {}

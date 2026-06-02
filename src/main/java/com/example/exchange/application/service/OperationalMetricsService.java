@@ -38,6 +38,9 @@ public class OperationalMetricsService {
     private final LongAdder redisLatencyCount = new LongAdder();
     private final LongAdder redisLatencyTotalMs = new LongAdder();
     private final AtomicLong redisLatencyMaxMs = new AtomicLong();
+    private final LongAdder kafkaLagPartitions = new LongAdder();
+    private final LongAdder kafkaLagTotal = new LongAdder();
+    private final AtomicLong kafkaLagMax = new AtomicLong();
 
     /** 回傳 monotonic timer 起點，呼叫方應在同一流程完成後交給 recordOrderResult。 */
     public long startTimer() {
@@ -97,6 +100,24 @@ public class OperationalMetricsService {
         recordLatency(redisLatencyCount, redisLatencyTotalMs, redisLatencyMaxMs, elapsedMs);
     }
 
+    /** 記錄單一 Kafka consumer partition lag；負值代表 offset 資料不可用，會被忽略。 */
+    public void recordKafkaLag(long lag) {
+        if (lag < 0) {
+            return;
+        }
+        kafkaLagPartitions.increment();
+        kafkaLagTotal.add(lag);
+        kafkaLagMax.accumulateAndGet(lag, Math::max);
+    }
+
+    /** 用 consumer current offset 與 log end offset 計算 lag，避免呼叫方重複處理負數防護。 */
+    public void recordKafkaLagOffsets(long currentOffset, long endOffset) {
+        if (currentOffset < 0 || endOffset < 0) {
+            return;
+        }
+        recordKafkaLag(Math.max(0, endOffset - currentOffset));
+    }
+
     /** 建立即時快照；不會重置 counters。 */
     public OperationalMetricsSnapshot snapshot() {
         long latencyCount = orderLatencyCount.sum();
@@ -110,6 +131,8 @@ public class OperationalMetricsService {
         long databaseLatencyTotal = databaseLatencyTotalMs.sum();
         long redisLatencySamples = redisLatencyCount.sum();
         long redisLatencyTotal = redisLatencyTotalMs.sum();
+        long kafkaPartitionSamples = kafkaLagPartitions.sum();
+        long kafkaLagTotalCount = kafkaLagTotal.sum();
         return new OperationalMetricsSnapshot(
                 orderRequests.sum(),
                 orderNew.sum(),
@@ -135,7 +158,10 @@ public class OperationalMetricsService {
                 databaseLatencyMaxMs.get(),
                 redisLatencySamples,
                 redisLatencySamples == 0 ? 0 : redisLatencyTotal / redisLatencySamples,
-                redisLatencyMaxMs.get()
+                redisLatencyMaxMs.get(),
+                kafkaPartitionSamples,
+                kafkaLagTotalCount,
+                kafkaLagMax.get()
         );
     }
 

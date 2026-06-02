@@ -134,7 +134,7 @@
 
 - [x] 補上 `/api/ops/metrics` baseline，涵蓋訂單狀態、下單延遲、撤單數與成交事件數。
 - [ ] 補 metrics backend，以及撮合延遲、Kafka lag、DB latency、Redis latency、拒單率、成交率 collectors。
-  - Baseline 已完成：`/api/ops/metrics` 已暴露 in-process matching latency、rejection rate、fill rate、DB operation latency 與 Redis operation latency counters。Remaining：Kafka lag collector 與 production metrics backend/export。
+  - Baseline 已完成：`/api/ops/metrics` 已暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters。Remaining：production metrics backend/export。
 - [x] 補上 request id / correlation id header、MDC、outbox、Kafka、外部 API 傳遞 baseline。
 - [ ] 補 distributed tracing export、dashboard 與 sampling policy。
 - [x] 補 request/security audit structured logging baseline。

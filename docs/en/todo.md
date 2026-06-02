@@ -134,7 +134,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 - [x] Add `/api/ops/metrics` baseline for order status, order latency, cancel count, and trade-event count.
 - [ ] Add metrics backend plus matching, Kafka lag, DB latency, Redis latency, rejection-rate, and fill-rate collectors.
-  - Baseline done: `/api/ops/metrics` exposes in-process matching latency, rejection rate, fill rate, DB operation latency, and Redis operation latency counters. Remaining: Kafka lag collector and production metrics backend/export.
+  - Baseline done: `/api/ops/metrics` exposes in-process matching latency, rejection rate, fill rate, DB operation latency, Redis operation latency, and Kafka consumer lag counters. Remaining: production metrics backend/export.
 - [x] Add request id / correlation id propagation through headers, MDC, outbox, Kafka, and external API clients.
 - [ ] Add distributed tracing export, dashboards, and sampling policy.
 - [x] Add request/security audit structured logging baseline.

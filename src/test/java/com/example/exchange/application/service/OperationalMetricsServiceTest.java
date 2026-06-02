@@ -87,4 +87,23 @@ class OperationalMetricsServiceTest {
         assertThat(snapshot.redisLatencyAvgMs()).isEqualTo(6);
         assertThat(snapshot.redisLatencyMaxMs()).isEqualTo(9);
     }
+
+    @Test
+    @DisplayName("Kafka lag collector 會彙總 partitions lag 並保留最大值")
+    /**
+     * 流程：送入一筆直接 lag 與一筆 current/end offset；
+     * 期望：snapshot 彙總總 lag、partition 樣本數與最大單 partition lag。
+     */
+    void recordsKafkaLagMetrics() {
+        OperationalMetricsService service = new OperationalMetricsService();
+
+        service.recordKafkaLag(7);
+        service.recordKafkaLagOffsets(10, 15);
+        service.recordKafkaLagOffsets(20, 18);
+
+        var snapshot = service.snapshot();
+        assertThat(snapshot.kafkaLagPartitions()).isEqualTo(3);
+        assertThat(snapshot.kafkaLagTotal()).isEqualTo(12);
+        assertThat(snapshot.kafkaLagMax()).isEqualTo(7);
+    }
 }
