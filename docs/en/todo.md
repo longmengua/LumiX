@@ -122,7 +122,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Database and Storage
 
 - [ ] Add production indexes for orders, positions, ledger, events, and prediction orders.
-  - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. Remaining: first-class SQL indexes for live order/position hot-state once those Redis-owned models are moved or mirrored into durable tables.
+  - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. [Live order SQL mirror](live-order-sql-mirror.md) design chooses `order_lifecycle_projection` as the durable live-order mirror and treats Redis order keys as hot projections. Remaining: live position SQL mirror/index decision and archive exporter skeleton.
 - [x] Document Redis key schema, namespace prefix, versioning, and migration strategy.
 - [x] Add final TTL/archive rules for Redis hot-state keys.
   - Baseline done: `docs/en/redis-key-schema.md` defines per-key-family production TTL, archive/delete rule, and authoritative rebuild source for account, position, order, snapshot, ledger, outbox/DLQ, and idempotency keys.

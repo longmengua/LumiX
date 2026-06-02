@@ -41,6 +41,7 @@ Config:
 ## Redis And Kafka Docs
 
 - Redis key contract and hot-state TTL/archive policy: `docs/en/redis-key-schema.md`
+- Live order SQL mirror/index decision: `docs/en/live-order-sql-mirror.md`
 - Historical data archive strategy: `docs/en/archive-strategy.md`
 - Kafka topic contract: `docs/en/kafka-topics.md`
 - Observability baseline: `docs/en/observability.md`
