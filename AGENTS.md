@@ -67,12 +67,14 @@ Suggested user commands:
 When multiple humans or agents are working at the same time:
 
 1. Read `docs/ai/team-collaboration.md` before editing.
-2. Read `docs/tasks/active.md` and existing handoff notes before choosing work.
-3. Work from one task file or one `docs/ai/maps/*.md` area at a time.
-4. Claim the lane in `docs/tasks/active.md`, commit, and push that claim before implementation.
-5. State the selected lane, expected files, and focused tests before making edits.
-6. Avoid parallel edits to shared coordination files until the end of the task.
-7. Leave unfinished work as a short handoff note under `docs/tasks/handoffs/`.
+2. One git worktree may have only one writer agent. Do not run two coding agents in the same worktree.
+3. For parallel agent work, each agent must use a separate `git worktree` directory and a separate branch.
+4. Read `docs/tasks/active.md` and existing handoff notes before choosing work.
+5. Work from one task file or one `docs/ai/maps/*.md` area at a time.
+6. Claim the lane in `docs/tasks/active.md`, commit, and push that claim before implementation.
+7. State the selected lane, worktree path, branch, expected files, and focused tests before making edits.
+8. Avoid parallel edits to shared coordination files until the end of the task.
+9. Leave unfinished work as a short handoff note under `docs/tasks/handoffs/`.
 
 ## Common Commands
 

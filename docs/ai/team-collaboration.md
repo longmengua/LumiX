@@ -6,11 +6,37 @@ Use this mode when multiple people or agents work in this repository at the same
 
 - Work from one Markdown task entry point whenever possible: a file under `docs/tasks/`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, or a specific `docs/ai/maps/*.md` file.
 - Use `docs/tasks/active.md` as the shared active-work registry before implementation starts.
-- Treat one terminal window as one lane: one agent, one task entry point, one active registry row, and one narrow expected file set.
+- Treat one git worktree as one writer lane: one agent, one task entry point, one active registry row, one branch, and one narrow expected file set.
+- Do not run two coding agents in the same git worktree. The working tree, index/staging area, uncommitted changes, and generated test state are shared and will make ownership ambiguous.
+- For parallel agent work, create separate `git worktree` directories and separate branches before either agent edits files.
 - Prefer one agent per task file or one agent per code-map area. If two agents need the same area, split the task into smaller files before both start coding.
 - Keep ownership temporary and narrow: own a task, package, or migration while working; do not claim broad directories for longer than needed.
 - Treat shared docs as coordination surfaces, not scratchpads. Update them at the end after code and tests are stable.
 - Do not revert or rewrite changes from another agent. If a file changed unexpectedly, re-read it and adapt the current patch.
+
+## Worktree Isolation
+
+Use a separate worktree for each parallel writer agent. Example from the primary repo directory:
+
+```bash
+git worktree add ../java21-match-hub-agent-a -b agent-a/p1-market-data
+git worktree add ../java21-match-hub-agent-b -b agent-b/p1-polymarket
+```
+
+Then start each agent with its own `cwd`:
+
+```text
+/Users/waltor/project/java21-match-hub-agent-a
+/Users/waltor/project/java21-match-hub-agent-b
+```
+
+Rules:
+
+- The original repo directory is also a worktree; it may have only one writer agent.
+- Each parallel writer agent must commit and push on its own branch.
+- `docs/tasks/active.md` coordinates lanes across worktrees and branches; it does not make same-worktree concurrent edits safe.
+- Shared external services such as MySQL, Redis, Kafka, and fixed local ports are not isolated by `git worktree`; agents that run integration services must coordinate ports, profiles, and database names.
+- Merge back to `main` only after the lane's focused tests pass and the completion commit is pushed.
 
 ## Multi-Terminal Lane Rules
 
@@ -26,6 +52,7 @@ T4 docs-task-splitter
 Each terminal agent must follow this contract:
 
 - Own exactly one lane at a time.
+- Use its own git worktree and branch when any other writer agent is active.
 - Start from exactly one task file, TODO section, or code-map area.
 - Register expected files or package areas before editing code.
 - Avoid files listed in another active lane's expected areas.
@@ -49,12 +76,13 @@ Commit and push the active.md claim before implementation.
 ## Startup Checklist
 
 1. Pull the latest branch state.
-2. Run `./shells/ai-context.sh`.
-3. Run `git status --short`.
-4. Read `docs/tasks/active.md` and `docs/tasks/handoffs/`.
-5. Read the chosen task file or TODO section.
-6. Open only the relevant `docs/ai/maps/*.md` file.
-7. State the selected lane, expected files, and focused tests before editing.
+2. Confirm this worktree is not being used by another writer agent.
+3. Run `./shells/ai-context.sh`.
+4. Run `git status --short`.
+5. Read `docs/tasks/active.md` and `docs/tasks/handoffs/`.
+6. Read the chosen task file or TODO section.
+7. Open only the relevant `docs/ai/maps/*.md` file.
+8. State the selected lane, worktree path, branch, expected files, and focused tests before editing.
 
 ## Claim Before Coding
 
@@ -89,6 +117,8 @@ If the registry says another owner is `doing`, avoid that lane unless the user e
 
 ## Parallel Work Rules
 
+- Parallel writer agents must use separate git worktrees and separate branches.
+- Never use `git add .` in a shared worktree while another writer agent is active there; same-worktree parallel writing is disallowed.
 - Avoid parallel edits to these high-conflict files unless the task is explicitly about them: `AGENTS.md`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, `docs/en/current-state.md`, `docs/zh-TW/current-state.md`, `docs/ai/code-map.md`, Flyway migrations, and global config files.
 - Avoid overlapping expected areas. If two tasks both need the same controller, service, migration, or map file, split the tasks further or define a dependency order before both agents code.
 - If a task needs a schema migration, use the next migration number only after checking `src/main/resources/db/migration`.
