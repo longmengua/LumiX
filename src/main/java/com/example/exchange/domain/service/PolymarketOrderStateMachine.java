@@ -28,6 +28,12 @@ public class PolymarketOrderStateMachine {
                     "REJECTED"
             );
 
+    private static final Set<String> FILLED_STATUSES =
+            Set.of("FILLED", "ORDER_STATUS_FILLED");
+
+    private static final Set<String> SETTLED_STATUSES =
+            Set.of("SETTLED", "ORDER_STATUS_SETTLED");
+
     private static final Set<String> TRADE_MATCH_STATUSES =
             Set.of("MATCHED", "TRADE_STATUS_MATCHED", "FILL", "FILLED", "ORDER_STATUS_MATCHED");
 
@@ -52,10 +58,14 @@ public class PolymarketOrderStateMachine {
                             "User-channel trade event confirms order execution before settlement."),
                     new TransitionRule(LifecycleStage.SETTLEMENT, "ORDER_STATUS_MATCHED", "SETTLED", "ORDER_STATUS_SETTLED", true, false,
                             "Settlement/redeem event closes the local lifecycle."),
+                    new TransitionRule(LifecycleStage.SETTLEMENT, "ORDER_STATUS_FILLED", "REDEEMED", "ORDER_STATUS_SETTLED", true, false,
+                            "Settlement/redeem event can advance a filled local order into settled."),
                     new TransitionRule(LifecycleStage.CLOB_ORDER, "ORDER_STATUS_FILLED", "ORDER_STATUS_LIVE", "ORDER_STATUS_FILLED", true, true,
                             "Stale active CLOB payload cannot downgrade a local terminal fill."),
                     new TransitionRule(LifecycleStage.CLOB_ORDER, "ORDER_STATUS_SETTLED", "ORDER_STATUS_MATCHED", "ORDER_STATUS_SETTLED", true, true,
-                            "Stale active CLOB payload cannot downgrade local settlement.")
+                            "Stale active CLOB payload cannot downgrade local settlement."),
+                    new TransitionRule(LifecycleStage.CLOB_ORDER, "ORDER_STATUS_SETTLED", "ORDER_STATUS_CANCELED", "ORDER_STATUS_SETTLED", true, true,
+                            "Late terminal CLOB payload cannot downgrade local settlement.")
             );
 
     public List<TransitionRule> transitionMatrix() {
@@ -71,10 +81,8 @@ public class PolymarketOrderStateMachine {
 
         String normalizedCurrent =
                 normalize(currentStatus);
-        if (normalizedCurrent != null
-                && TERMINAL_STATUSES.contains(normalizedCurrent)
-                && ACTIVE_REMOTE_STATUSES.contains(normalizedRemote)) {
-            return currentStatus;
+        if (normalizedCurrent != null && TERMINAL_STATUSES.contains(normalizedCurrent)) {
+            return resolveTerminalRemoteStatus(currentStatus, remoteStatus, normalizedCurrent, normalizedRemote);
         }
 
         return remoteStatus;
@@ -136,19 +144,32 @@ public class PolymarketOrderStateMachine {
                 normalize(currentStatus);
         String normalizedRemote =
                 normalize(remoteStatus);
-        return normalizedCurrent == null
-                || normalizedRemote == null
-                || !TERMINAL_STATUSES.contains(normalizedCurrent)
-                || !ACTIVE_REMOTE_STATUSES.contains(normalizedRemote);
+        if (normalizedCurrent == null || normalizedRemote == null) {
+            return true;
+        }
+        if (!TERMINAL_STATUSES.contains(normalizedCurrent)) {
+            return true;
+        }
+        return FILLED_STATUSES.contains(normalizedCurrent)
+                && SETTLED_STATUSES.contains(normalizedRemote);
     }
 
     private String resolveSettlementStatus(String currentStatus, String eventStatus) {
-        String normalizedCurrent =
-                normalize(currentStatus);
-        if (normalizedCurrent != null && TERMINAL_STATUSES.contains(normalizedCurrent)) {
+        if (!SETTLEMENT_STATUSES.contains(normalize(eventStatus))) {
             return currentStatus;
         }
-        return SETTLEMENT_STATUSES.contains(normalize(eventStatus)) ? "ORDER_STATUS_SETTLED" : currentStatus;
+
+        String normalizedCurrent =
+                normalize(currentStatus);
+        if (normalizedCurrent != null && SETTLED_STATUSES.contains(normalizedCurrent)) {
+            return currentStatus;
+        }
+        if (normalizedCurrent != null
+                && TERMINAL_STATUSES.contains(normalizedCurrent)
+                && !FILLED_STATUSES.contains(normalizedCurrent)) {
+            return currentStatus;
+        }
+        return "ORDER_STATUS_SETTLED";
     }
 
     private boolean shouldPromoteTradeMatch(String currentStatus, String eventStatus) {
@@ -158,6 +179,22 @@ public class PolymarketOrderStateMachine {
             return false;
         }
         return TRADE_MATCH_STATUSES.contains(normalize(eventStatus));
+    }
+
+    private String resolveTerminalRemoteStatus(
+            String currentStatus,
+            String remoteStatus,
+            String normalizedCurrent,
+            String normalizedRemote
+    ) {
+        if (SETTLED_STATUSES.contains(normalizedCurrent)) {
+            return currentStatus;
+        }
+        if (FILLED_STATUSES.contains(normalizedCurrent)
+                && SETTLED_STATUSES.contains(normalizedRemote)) {
+            return "ORDER_STATUS_SETTLED";
+        }
+        return currentStatus;
     }
 
     private static boolean equalsNormalized(String left, String right) {

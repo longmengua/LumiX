@@ -106,12 +106,12 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Polymarket Integration
 
-- [ ] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
-  - Baseline progress: `PolymarketOrderStateMachine` now exposes a local/CLOB/trade/settlement transition matrix, routes user-channel trade events through the matrix, promotes matched trade events into local matched lifecycle, and preserves settled terminal status against later stale active order events.
+- [x] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
+  - Baseline done: `PolymarketOrderStateMachine` now exposes a local/CLOB/trade/settlement transition matrix, routes user-channel trade events through the matrix, promotes matched trade events into local matched lifecycle, lets settlement/redeem events advance matched or filled local orders to settled, and preserves settled/filled terminal status against later stale active or terminal downgrade events.
 - [x] Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
   - Baseline done: Gamma `/events` and `/markets` responses are validated through versioned schema reports before DTO parsing, Gamma event/market DTOs ignore unknown remote fields, and CLOB order-operation responses record `clob.order-operations.v1` metadata while warning on incompatible shapes.
 - [x] Make CLOB place, cancel, sync, and reconcile commands idempotent.
-  - Baseline done: place can use `clientRequestId`; cancel can use durable `commandId`; cancel locally replays already-recorded cancel/uncertain statuses; reconcile can resolve uncertain cancel from remote CLOB status; sync/reconcile skip unchanged local writes; stale active CLOB payloads cannot downgrade local filled/settled terminal orders or matched size; user-channel trade payloads now resolve order/trade ids from top-level fields or payload and persist matched lifecycle/lastTradeId into the local `PredictionPolymarketOrder` projection. Remaining: settlement terminal downgrade tests.
+  - Baseline done: place can use `clientRequestId`; cancel can use durable `commandId`; cancel locally replays already-recorded cancel/uncertain statuses; reconcile can resolve uncertain cancel from remote CLOB status; sync/reconcile skip unchanged local writes; stale active CLOB payloads cannot downgrade local filled/settled terminal orders or matched size; user-channel trade payloads now resolve order/trade ids from top-level fields or payload and persist matched lifecycle/lastTradeId into the local `PredictionPolymarketOrder` projection; settlement terminal downgrade tests cover filled-to-settled progression and settled downgrade rejection.
   - Baseline done: place supports `clientRequestId` duplicate replay, payload conflict rejection, and uncertain local-order retry blocking.
 - [ ] Deploy the user WebSocket service independently with reconnect, checkpoint, event deduplication, persistence, and replay.
 - [x] Add cache and expiry policy for allowance / approval checks to avoid overloading RPC endpoints.

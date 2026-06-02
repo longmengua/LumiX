@@ -106,12 +106,12 @@
 
 ### Polymarket 整合
 
-- [ ] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
-  - Baseline 進度：`PolymarketOrderStateMachine` 現在會輸出 local/CLOB/trade/settlement transition matrix，user-channel trade event 會經過該 matrix，matched trade event 會推進 local matched lifecycle，且 settled terminal status 不會被後續 stale active order event 降級。
+- [x] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
+  - Baseline 已完成：`PolymarketOrderStateMachine` 現在會輸出 local/CLOB/trade/settlement transition matrix，user-channel trade event 會經過該 matrix，matched trade event 會推進 local matched lifecycle，settlement/redeem event 可將 matched 或 filled local order 推進到 settled，且 settled/filled terminal status 不會被後續 stale active 或 terminal downgrade event 降級。
 - [x] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
   - Baseline 已完成：Gamma `/events` 與 `/markets` response 會在 DTO 解析前經過 versioned schema report 驗證，Gamma event/market DTO 可忽略未知遠端欄位，CLOB order-operation response 會記錄 `clob.order-operations.v1` metadata，並在 schema shape 不相容時產生 warning。
 - [x] 對 CLOB 下單、取消、同步、reconcile 做 idempotent command 設計。
-  - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes；stale active CLOB payload 不會降級 local filled/settled terminal order 或 matched size；user-channel trade payload 現在會從 top-level 欄位或 payload 解析 order/trade ids，並把 matched lifecycle / lastTradeId 持久化到 local `PredictionPolymarketOrder` projection。Remaining：settlement terminal downgrade tests。
+  - Baseline 已完成：place 可用 `clientRequestId`；cancel 可用 durable `commandId`；cancel 會 local replay 已記錄的 cancel/uncertain 狀態；reconcile 可用遠端 CLOB status 解除 uncertain cancel；sync/reconcile 會跳過未變更 local writes；stale active CLOB payload 不會降級 local filled/settled terminal order 或 matched size；user-channel trade payload 現在會從 top-level 欄位或 payload 解析 order/trade ids，並把 matched lifecycle / lastTradeId 持久化到 local `PredictionPolymarketOrder` projection；settlement terminal downgrade tests 已覆蓋 filled-to-settled progression 與 settled downgrade rejection。
   - Baseline 已完成：place 支援 `clientRequestId` duplicate replay、payload conflict rejection 與 uncertain local-order retry blocking。
 - [ ] User WebSocket 服務獨立部署，支援自動重連、checkpoint、事件去重、落庫與 replay。
 - [x] allowance / approval 查詢加入 cache 與過期策略，避免 RPC 被打爆。

@@ -8,7 +8,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Fine-Grained Progress
 
-`9/22` done.
+`10/22` done.
 
 ## Market Data Gateway
 
@@ -28,7 +28,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 - [x] Add local/CLOB/trade/settlement state machine transition matrix.
 - [x] Persist Polymarket trade events into local order lifecycle projection.
-- [ ] Add settlement state transition and terminal-state downgrade protection tests.
+- [x] Add settlement state transition and terminal-state downgrade protection tests.
 - [x] Add Gamma response schema version wrapper for market discovery.
 - [x] Add CLOB response schema version wrapper for order operations.
 - [ ] Add user WebSocket checkpoint persistence and replay test.
