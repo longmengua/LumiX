@@ -7,6 +7,7 @@ REST controllers。
 - `MarginController`：入金、入金 callback、出金、manual-review claim、transfer reconciliation、margin transfer、account、ledger、risk snapshot、bonus-credit user/campaign report/export/clawback、turnover summary/records/export/reconciliation。
 - `MarketDataController` / `DepthController`：ticker、trades、trade cursor replay、klines、depth、depth delta、depth delta backfill、recovery cursor。
 - `AdminMarketConfigController`：admin market-config read-only list/detail screen data。
+- `AdminRiskParametersController`：admin risk switches、symbol risk tiers 與 oracle state read-only screen data。
 - `RiskController`：funding、liquidation、insurance fund、insurance fund movement report、ADL queue inspection、stuck-claim report、open/stuck alert report、claim/release/execution、recent ADL execution report、ADL insurance reconciliation。
 - `MarketMakerController`：做市商 profile、risk limit 後台管理、quote placement/active state/reconciliation 查詢與 repair、hedge fill 查詢/venue callback、hedge reconciliation 與手動 hedge execution。
 - `RecoveryController`：snapshot recovery、matching worker readiness、account-position restore consistency、reconciliation、ledger replay comparison、daily/category finance report、category export batch、ledger archive delete guard / restore smoke / replay validation、reconciliation issue workflow、outbox DLQ replay/compensation、outbox/domain-state consistency report。

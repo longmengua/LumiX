@@ -1,6 +1,6 @@
 # Task: Admin Risk Parameter Screen
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -27,8 +27,14 @@ Add an admin screen for risk tiers, global risk switches, liquidation controls, 
 - Mutating actions cannot be triggered without explicit confirmation and operator identity.
 - Risk pages show stale or missing oracle data distinctly from normal values.
 
+## Implementation Notes
+
+- Read-only API: `GET /api/admin/risk-parameters`.
+- Static page: `src/main/resources/static/admin-risk-parameters.html`.
+- Curl script: `shells/api-curls/exchange/admin-risk-parameters-get.sh`.
+- Writes remain disabled and documented through response capabilities.
+
 ## Read First
 
 - [../web/02-admin-web.md](../web/02-admin-web.md)
 - [../../ai/maps/risk-ledger-funds.md](../../ai/maps/risk-ledger-funds.md)
-
