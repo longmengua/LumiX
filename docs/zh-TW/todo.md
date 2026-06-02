@@ -101,7 +101,7 @@
 - [x] 定義高流量 market-data depth、trade 與 kline history 的 retention/archive policy。
   - Baseline 已完成：DB retention job 依獨立 window 清理 depth delta、trade tape 與 1m kline history；production archive export/storage 仍屬於後續營運任務。
 - [ ] WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
-  - Baseline 進度：gateway heartbeat contract 會向 SSE/WebSocket channel 發送 `gateway.heartbeat`，payload 包含 channel 與 timestamp，會清理已關閉 WebSocket session，並提供預設關閉的 scheduler config。Private user SSE/WebSocket stream 在 `api-auth.enabled=true` 時需要 API key 或 Bearer credentials；admin principal 可供營運訂閱，user principal 則需要 uid ownership 與 stream read scope。SSE/WebSocket stream 訂閱嘗試現在會通過 `push-gateway.rate-limit.*` per-client fixed-window limiter。Client 可讀取 `GET /api/market-data/{symbol}/recovery-cursor`，用 `afterVersion` replay depth，並用 `afterTs` 加 `afterMatchId` replay trades。
+  - Baseline 進度：gateway heartbeat contract 會向 SSE/WebSocket channel 發送 `gateway.heartbeat`，payload 包含 channel 與 timestamp，會清理已關閉 WebSocket session，並提供預設關閉的 scheduler config。Private user SSE/WebSocket stream 在 `api-auth.enabled=true` 時需要 API key 或 Bearer credentials；admin principal 可供營運訂閱，user principal 則需要 uid ownership 與 stream read scope。SSE/WebSocket stream 訂閱嘗試現在會通過 `push-gateway.rate-limit.*` per-client fixed-window limiter。Client 可讀取 `GET /api/market-data/{symbol}/recovery-cursor`，用 `afterVersion` replay depth，並用 `afterTs` 加 `afterMatchId` replay trades。[Market data gateway scaling](market-data-gateway-scaling.md) 已記錄 independent gateway role、broadcast fanout、load-balancer draining、shared rate-limit options、heartbeat policy 與 rollback。
 - [ ] 在 P0 做市商 interface baseline 完成後，補齊 market maker / liquidity provider API hardening 與節流策略。
 
 ### Polymarket 整合

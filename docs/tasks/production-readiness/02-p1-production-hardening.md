@@ -8,7 +8,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Fine-Grained Progress
 
-`7/22` done.
+`8/22` done.
 
 ## Market Data Gateway
 
@@ -16,7 +16,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 - [x] Add subscription authorization check baseline for private user streams.
 - [x] Add per-client market-data rate limiter.
 - [x] Add disconnect recovery cursor contract for depth/trade streams.
-- [ ] Add deployment notes for horizontally scaled market-data gateway instances.
+- [x] Add deployment notes for horizontally scaled market-data gateway instances.
 
 ## Market Maker API Hardening
 
