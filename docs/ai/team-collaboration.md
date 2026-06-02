@@ -61,6 +61,8 @@ Each terminal agent must follow this contract:
 
 Good first prompts for a new terminal:
 
+When a user asks how to start parallel work, the answering agent should first read root `README.md`, this file, and `docs/tasks/README.md`, then return copy-paste-ready prompts like the examples below. Do not start implementation while generating these prompts unless the user explicitly asks to start in the same turn.
+
 ```text
 讀一下 AGENTS.md、docs/ai/team-collaboration.md、docs/tasks/active.md。
 認領 docs/tasks/core-kernel/01-replayable-matching-core.md 這條 lane。

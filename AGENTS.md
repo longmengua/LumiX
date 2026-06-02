@@ -25,6 +25,18 @@ Run this before broad exploration:
 
 It prints git status, TODO progress, key package paths, and test classes. Prefer that output over reading every Markdown file.
 
+## Work Kickoff Helper Protocol
+
+When the user asks how to start work, says they will open multiple terminals, or asks for parallel-agent instructions:
+
+1. Read root `README.md` first.
+2. For task-based work, also read `docs/tasks/README.md`.
+3. For parallel-agent work, also read `docs/ai/team-collaboration.md`.
+4. Do not start implementation yet unless the user explicitly asks you to start in this same turn.
+5. Give the user copy-paste-ready prompts or shell commands for each terminal, including worktree path, branch, lane/task source, claim/push requirement, and the instruction not to write code in the current worktree.
+
+The expected output is practical command text the user can paste into separate AI terminals, not a broad explanation.
+
 ## Task Intake Protocol
 
 When the user says `讀一下 <file>.md`, `read <file>.md`, or otherwise points to a Markdown file as the work entry point:

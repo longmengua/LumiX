@@ -38,6 +38,8 @@ docker compose up -d
 
 For parallel AI work, read `AGENTS.md`, `docs/ai/team-collaboration.md`, and `docs/tasks/active.md` first, then claim one task in `docs/tasks/active.md`, commit and push that claim before implementation.
 
+When asking an AI how to start work or how to open multiple terminals, ask it to read this `README.md` first and return copy-paste-ready prompts for each terminal. For parallel work, those prompts must include a separate `git worktree` path, separate branch, task lane, claim/push requirement, and an explicit instruction not to write code in the current worktree.
+
 | Language | How To Use |
 | --- | --- |
 | English | Use these prompts when asking Codex to work from the maintained documentation. |
