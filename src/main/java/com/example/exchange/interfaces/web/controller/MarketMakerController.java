@@ -24,6 +24,7 @@ import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerProfileRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerQuoteRequest;
+import com.example.exchange.interfaces.web.security.MarketMakerHedgeExecutionRateLimiter;
 import com.example.exchange.interfaces.web.security.MarketMakerQuoteRateLimiter;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -54,6 +55,7 @@ public class MarketMakerController {
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
     private final MarketMakerQuoteReconciliationService quoteReconciliationService;
     private final MarketMakerQuoteRateLimiter marketMakerQuoteRateLimiter;
+    private final MarketMakerHedgeExecutionRateLimiter marketMakerHedgeExecutionRateLimiter;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -177,22 +179,37 @@ public class MarketMakerController {
     public ApiResponse<HedgeExecutionReport> executeHedgeByMarketMaker(
             @PathVariable String marketMakerId,
             @RequestParam(defaultValue = "manual") String refPrefix,
-            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
+            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken,
+            HttpServletRequest httpRequest
     ) {
+        enforceHedgeExecutionRateLimit(httpRequest, marketMakerId);
         return ApiResponse.ok(hedgeExecutionService.executeForMarketMaker(marketMakerId, refPrefix, approvalToken));
     }
 
     @PostMapping("/hedge-execution/enabled")
     public ApiResponse<List<HedgeExecutionReport>> executeHedgeForEnabledMarketMakers(
             @RequestParam(defaultValue = "manual") String refPrefix,
-            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
+            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken,
+            HttpServletRequest httpRequest
     ) {
+        enforceHedgeExecutionRateLimit(
+                httpRequest,
+                MarketMakerHedgeExecutionRateLimiter.ENABLED_MARKET_MAKERS_SCOPE
+        );
         return ApiResponse.ok(hedgeExecutionService.executeForEnabledMarketMakers(refPrefix, approvalToken));
     }
 
     private void enforceQuoteRateLimit(HttpServletRequest httpRequest, MarketMakerQuoteRequest request) {
         MarketMakerQuoteRateLimiter.RateLimitDecision decision =
                 marketMakerQuoteRateLimiter.consume(httpRequest, request);
+        if (!decision.allowed()) {
+            throw new ResponseStatusException(decision.status(), decision.reason());
+        }
+    }
+
+    private void enforceHedgeExecutionRateLimit(HttpServletRequest httpRequest, String executionScope) {
+        MarketMakerHedgeExecutionRateLimiter.RateLimitDecision decision =
+                marketMakerHedgeExecutionRateLimiter.consume(httpRequest, executionScope);
         if (!decision.allowed()) {
             throw new ResponseStatusException(decision.status(), decision.reason());
         }
