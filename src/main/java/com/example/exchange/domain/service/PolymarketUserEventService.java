@@ -44,6 +44,10 @@ public class PolymarketUserEventService {
 
         PredictionPolymarketWsEvent entity =
                 new PredictionPolymarketWsEvent();
+        String resolvedOrderId =
+                resolveOrderId(event);
+        String resolvedTradeId =
+                resolveTradeId(event);
 
         entity.setEventKey(eventKey);
         entity.setEventType(event.getEventType());
@@ -51,8 +55,8 @@ public class PolymarketUserEventService {
         entity.setWalletAddress(event.getWalletAddress());
         entity.setMarket(event.getMarket());
         entity.setAssetId(event.getAssetId());
-        entity.setOrderId(event.getOrderId());
-        entity.setTradeId(event.getTradeId());
+        entity.setOrderId(resolvedOrderId);
+        entity.setTradeId(resolvedTradeId);
         entity.setPayload(toJson(event.getPayload()));
         entity.setReceivedAt(
                 event.getReceivedAt() == null
@@ -75,12 +79,7 @@ public class PolymarketUserEventService {
 
     private void applyToOrder(PolymarketUserWsEvent event) {
         String orderId =
-                event.getOrderId();
-
-        if ((orderId == null || orderId.isBlank())
-                && event.getPayload() != null) {
-            orderId = firstText(event.getPayload(), "orderID", "orderId", "id", "taker_order_id");
-        }
+                resolveOrderId(event);
 
         if (orderId == null || orderId.isBlank()) {
             return;
@@ -106,8 +105,10 @@ public class PolymarketUserEventService {
             order.setTradeStatus(transition.tradeStatus());
         }
 
-        if (event.getTradeId() != null && !event.getTradeId().isBlank()) {
-            order.setLastTradeId(event.getTradeId());
+        String tradeId =
+                resolveTradeId(event);
+        if (tradeId != null && !tradeId.isBlank()) {
+            order.setLastTradeId(tradeId);
         }
 
         order.setLastClobPayload(toJson(event.getPayload()));
@@ -122,15 +123,41 @@ public class PolymarketUserEventService {
         String status =
                 safe(event.getStatus());
         String orderId =
-                safe(event.getOrderId());
+                safe(resolveOrderId(event));
         String tradeId =
-                safe(event.getTradeId());
+                safe(resolveTradeId(event));
         String market =
                 safe(event.getMarket());
         String assetId =
                 safe(event.getAssetId());
 
         return eventType + ":" + status + ":" + orderId + ":" + tradeId + ":" + market + ":" + assetId;
+    }
+
+    private String resolveOrderId(PolymarketUserWsEvent event) {
+        if (event == null) {
+            return null;
+        }
+        if (event.getOrderId() != null && !event.getOrderId().isBlank()) {
+            return event.getOrderId().trim();
+        }
+        if (event.getPayload() == null) {
+            return null;
+        }
+        return firstText(event.getPayload(), "orderID", "orderId", "order_id", "id", "taker_order_id");
+    }
+
+    private String resolveTradeId(PolymarketUserWsEvent event) {
+        if (event == null) {
+            return null;
+        }
+        if (event.getTradeId() != null && !event.getTradeId().isBlank()) {
+            return event.getTradeId().trim();
+        }
+        if (event.getPayload() == null) {
+            return null;
+        }
+        return firstText(event.getPayload(), "tradeID", "tradeId", "trade_id");
     }
 
     private String firstText(
