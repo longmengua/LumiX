@@ -137,6 +137,7 @@
   - Baseline 已完成：`/api/ops/metrics` 已暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters。Remaining：production metrics backend/export。
 - [x] 補上 request id / correlation id header、MDC、outbox、Kafka、外部 API 傳遞 baseline。
 - [ ] 補 distributed tracing export、dashboard 與 sampling policy。
+  - Baseline 已完成：`tracing.export.*` 已定義預設關閉的 OTLP endpoint、service name、ratio sampling、critical-flow always-sample，以及 health/metrics drop policy。Remaining：實際 exporter dependency/wiring 與 dashboards。
 - [x] 補 request/security audit structured logging baseline。
 - [x] 補核心事件 structured logging，能按 uid、orderId、clientOrderId、symbol 搜尋。
   - Baseline 已完成：order lifecycle projection 會寫 `CORE_EVENT eventType=ORDER_LIFECYCLE` log line，包含穩定的 `uid`、`orderId`、`clientOrderId`、`symbol`、`stage`、`status`、`reasonCode`、`eventTs` 欄位。

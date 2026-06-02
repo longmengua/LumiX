@@ -19,6 +19,7 @@ import com.example.exchange.infra.config.ReconciliationProperties;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import com.example.exchange.infra.config.RiskSnapshotProperties;
 import com.example.exchange.infra.config.SecurityControlsProperties;
+import com.example.exchange.infra.config.TracingExportProperties;
 import com.example.exchange.infra.config.TurnoverReconciliationProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -52,6 +53,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         RiskControlsProperties.class,
         RiskSnapshotProperties.class,
         SecurityControlsProperties.class,
+        TracingExportProperties.class,
         TurnoverReconciliationProperties.class
 })
 public class ExchangeApplication {

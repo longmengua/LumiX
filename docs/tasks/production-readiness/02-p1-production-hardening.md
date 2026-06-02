@@ -8,7 +8,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Fine-Grained Progress
 
-`20/22` done.
+`21/22` done.
 
 ## Market Data Gateway
 
@@ -44,7 +44,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 - [x] Add metrics collectors for DB latency and Redis latency.
 - [x] Add metrics collectors for matching latency, rejection rate, and fill rate.
 - [x] Add Kafka lag metric collector.
-- [ ] Add tracing export configuration and sampling policy doc.
+- [x] Add tracing export configuration and sampling policy doc.
 - [ ] Add alert rules for matching halt, DLQ buildup, reconciliation failure, and unbalanced assets.
 
 ## Read First

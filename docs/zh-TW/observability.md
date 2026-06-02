@@ -27,3 +27,16 @@ Order lifecycle projection 會輸出 structured `CORE_EVENT eventType=ORDER_LIFE
 ## Operations Metrics
 
 `GET /api/ops/metrics` 會回傳 in-process snapshot，包含訂單狀態計數、下單延遲平均/最大值、撤單數、送出的成交事件數、matching latency 平均/最大值、matching rejection rate、matching fill rate、DB operation latency 平均/最大值、Redis operation latency 平均/最大值，以及 Kafka consumer lag total/max。這是本機營運基線；production 仍應匯出到專用 metrics backend。
+
+## Tracing Export And Sampling
+
+`tracing.export.*` 定義未來 OpenTelemetry/OTLP bridge 使用的 export contract，預設關閉：
+
+- `enabled`：collector endpoint、retention 與資料分級 review 完成前維持 `false`。
+- `otlp-endpoint`：target collector endpoint，production 由環境變數或 secret-backed config 提供。
+- `service-name`：trace backend 搜尋用的穩定 service identifier。
+- `sample-rate`：一般 request ratio sampling；production 預設 `0.10`。
+- `always-sample-critical-flows`：error、security audit、settlement、reconciliation、liquidation、external command traces 即使 ratio sampling 會丟棄也要保留。
+- `drop-health-and-metrics`：跳過 `/actuator/health`、readiness 與 metrics reads，避免低價值 trace volume。
+
+Dashboard 應按 service name、route、status、external venue、Kafka topic 與 matching symbol 分組。實際 exporter wiring 仍是後續工作；目前 repo 提供 config 與 policy baseline。

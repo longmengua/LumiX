@@ -27,3 +27,16 @@ Order lifecycle projection emits structured `CORE_EVENT eventType=ORDER_LIFECYCL
 ## Operations Metrics
 
 `GET /api/ops/metrics` returns an in-process snapshot for order status counts, order latency average/max, canceled order count, emitted trade-event count, matching latency average/max, matching rejection rate, matching fill rate, DB operation latency average/max, Redis operation latency average/max, and Kafka consumer lag total/max. This is a lightweight baseline for local operation; production should still export metrics through a dedicated metrics backend.
+
+## Tracing Export And Sampling
+
+`tracing.export.*` defines the disabled-by-default export contract for a future OpenTelemetry/OTLP bridge:
+
+- `enabled`: remains `false` until the collector endpoint, retention, and data classification review are ready.
+- `otlp-endpoint`: target collector endpoint, supplied from environment/secret-backed config in production.
+- `service-name`: stable service identifier for trace backend search.
+- `sample-rate`: default ratio sampling for ordinary requests; production default is `0.10`.
+- `always-sample-critical-flows`: keep error, security audit, settlement, reconciliation, liquidation, and external command traces even when ratio sampling would drop them.
+- `drop-health-and-metrics`: skip `/actuator/health`, readiness, and metrics reads to avoid low-value trace volume.
+
+Dashboards should group by service name, route, status, external venue, Kafka topic, and matching symbol. Actual exporter wiring remains future work; this repo currently provides the config and policy baseline.

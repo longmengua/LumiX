@@ -137,6 +137,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
   - Baseline done: `/api/ops/metrics` exposes in-process matching latency, rejection rate, fill rate, DB operation latency, Redis operation latency, and Kafka consumer lag counters. Remaining: production metrics backend/export.
 - [x] Add request id / correlation id propagation through headers, MDC, outbox, Kafka, and external API clients.
 - [ ] Add distributed tracing export, dashboards, and sampling policy.
+  - Baseline done: `tracing.export.*` defines disabled-by-default OTLP endpoint, service name, ratio sampling, critical-flow always-sample, and health/metrics drop policy. Remaining: actual exporter dependency/wiring and dashboards.
 - [x] Add request/security audit structured logging baseline.
 - [x] Add structured core-event logging searchable by uid, orderId, clientOrderId, and symbol.
   - Baseline done: order lifecycle projection writes `CORE_EVENT eventType=ORDER_LIFECYCLE` log lines with stable `uid`, `orderId`, `clientOrderId`, `symbol`, `stage`, `status`, `reasonCode`, and `eventTs` fields.

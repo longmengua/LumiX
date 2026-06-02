@@ -134,6 +134,15 @@ archive:
     trades-enabled: ${ARCHIVE_EXPORTER_TRADES_ENABLED:true}
     ledger-enabled: ${ARCHIVE_EXPORTER_LEDGER_ENABLED:true}
 
+tracing:
+  export:
+    enabled: ${TRACING_EXPORT_ENABLED:false}
+    otlp-endpoint: ${TRACING_EXPORT_OTLP_ENDPOINT:http://localhost:4318/v1/traces}
+    service-name: ${TRACING_EXPORT_SERVICE_NAME:java21-match-hub}
+    sample-rate: ${TRACING_EXPORT_SAMPLE_RATE:0.10}
+    always-sample-critical-flows: ${TRACING_EXPORT_ALWAYS_SAMPLE_CRITICAL_FLOWS:true}
+    drop-health-and-metrics: ${TRACING_EXPORT_DROP_HEALTH_AND_METRICS:true}
+
 finance:
   export:
     enabled: ${FINANCE_EXPORT_ENABLED:false}

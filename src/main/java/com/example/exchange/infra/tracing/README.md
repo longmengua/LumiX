@@ -7,7 +7,8 @@ Tracing helper。
 
 目前狀態：
 - 已有 header/MDC/outbox/Kafka/external API 傳遞 baseline。
-- production 仍需接 distributed tracing export、dashboard、sampling policy。
+- 已有 `tracing.export.*` disabled-by-default export/sampling policy config。
+- production 仍需接實際 OpenTelemetry/OTLP exporter dependency 與 dashboard。
 
 注意：
 - request 結束要清 MDC，避免 servlet thread reuse 污染下一個請求。
