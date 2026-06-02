@@ -8,7 +8,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 
 ## Fine-Grained Progress
 
-`16/22` done.
+`17/22` done.
 
 ## Market Data Gateway
 
@@ -36,7 +36,7 @@ Split remaining P1 hardening items into small implementation slices for market d
 ## Database And Storage
 
 - [x] Add live order SQL mirror/index design note or implementation decision.
-- [ ] Add live position SQL mirror/index design note or implementation decision.
+- [x] Add live position SQL mirror/index design note or implementation decision.
 - [ ] Add archive exporter job skeleton for historical orders/trades/ledger.
 
 ## Observability And Alerts
