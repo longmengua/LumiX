@@ -29,6 +29,7 @@ If context is lost, the next agent must read this file and `docs/tasks/handoffs/
 | --- | --- | --- | --- | --- | --- |
 | done | docs/tasks/production-readiness/02-p1-production-hardening.md#polymarket-integration | T1 polymarket-schema-versioning | 2026-06-03 | `src/main/java/com/example/exchange/domain/model/dto`, `src/main/java/com/example/exchange/domain/service/Polymarket*`, `src/test/java/com/example/exchange/domain/service/Polymarket*`, `docs/ai/maps/polymarket-security.md` |  |
 | done | docs/tasks/production-readiness/02-p1-production-hardening.md#observability-matching-metrics | T2 observability-matching-metrics | 2026-06-03 | `src/main/java/com/example/exchange/application/service/OperationalMetricsService.java`, `src/main/java/com/example/exchange/domain/model/dto/OperationalMetricsSnapshot.java`, `src/test/java/com/example/exchange/application/service/OperationalMetricsServiceTest.java`, `docs/en/observability.md`, `docs/zh-TW/observability.md` |  |
+| doing | docs/tasks/production-readiness/02-p1-production-hardening.md#market-data-gateway-scaling-notes | T1 market-data-gateway | 2026-06-03 | `docs/en/market-data-gateway-scaling.md`, `docs/zh-TW/market-data-gateway-scaling.md`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, `docs/tasks/production-readiness/02-p1-production-hardening.md`, `docs/ai/maps/reliability-market-data.md` |  |
 
 Replace the `_none_` row with real claim rows when work starts.
 
