@@ -24,6 +24,10 @@ import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.HedgeVenueFillCallbackRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerProfileRequest;
 import com.example.exchange.interfaces.web.dto.MarketMakerQuoteRequest;
+import com.example.exchange.interfaces.web.security.MarketMakerEndpointAuditLogger;
+import com.example.exchange.interfaces.web.security.MarketMakerHedgeExecutionRateLimiter;
+import com.example.exchange.interfaces.web.security.MarketMakerQuoteRateLimiter;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,6 +38,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 
@@ -50,6 +55,9 @@ public class MarketMakerController {
     private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
     private final MarketMakerQuoteReconciliationService quoteReconciliationService;
+    private final MarketMakerQuoteRateLimiter marketMakerQuoteRateLimiter;
+    private final MarketMakerHedgeExecutionRateLimiter marketMakerHedgeExecutionRateLimiter;
+    private final MarketMakerEndpointAuditLogger marketMakerEndpointAuditLogger;
 
     @PostMapping("/profiles")
     public ApiResponse<MarketMakerProfile> saveProfile(
@@ -75,9 +83,33 @@ public class MarketMakerController {
 
     @PostMapping("/quotes")
     public ApiResponse<MarketMakerQuoteLifecycleReport> placeQuote(
-            @Valid @RequestBody MarketMakerQuoteRequest request
+            @Valid @RequestBody MarketMakerQuoteRequest request,
+            HttpServletRequest httpRequest
     ) {
-        return ApiResponse.ok(quoteLifecycleService.placeQuote(request.toCommand()));
+        try {
+            enforceQuoteRateLimit(httpRequest, request);
+            MarketMakerQuoteLifecycleReport report =
+                    quoteLifecycleService.placeQuote(request.toCommand());
+            auditEndpoint(
+                    httpRequest,
+                    "QUOTE_PLACEMENT",
+                    request.marketMakerId() + ":" + request.symbol(),
+                    MarketMakerEndpointAuditLogger.APPROVAL_NOT_APPLICABLE,
+                    "SUCCESS",
+                    "PLACED"
+            );
+            return ApiResponse.ok(report);
+        } catch (RuntimeException ex) {
+            auditEndpoint(
+                    httpRequest,
+                    "QUOTE_PLACEMENT",
+                    request.marketMakerId() + ":" + request.symbol(),
+                    MarketMakerEndpointAuditLogger.APPROVAL_NOT_APPLICABLE,
+                    "FAILED",
+                    ex.getClass().getSimpleName()
+            );
+            throw ex;
+        }
     }
 
     @GetMapping("/quotes/active")
@@ -171,16 +203,101 @@ public class MarketMakerController {
     public ApiResponse<HedgeExecutionReport> executeHedgeByMarketMaker(
             @PathVariable String marketMakerId,
             @RequestParam(defaultValue = "manual") String refPrefix,
-            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
+            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken,
+            HttpServletRequest httpRequest
     ) {
-        return ApiResponse.ok(hedgeExecutionService.executeForMarketMaker(marketMakerId, refPrefix, approvalToken));
+        try {
+            enforceHedgeExecutionRateLimit(httpRequest, marketMakerId);
+            HedgeExecutionReport report =
+                    hedgeExecutionService.executeForMarketMaker(marketMakerId, refPrefix, approvalToken);
+            auditEndpoint(
+                    httpRequest,
+                    "HEDGE_EXECUTION_PROFILE",
+                    marketMakerId,
+                    MarketMakerEndpointAuditLogger.approvalOutcome(approvalToken, true, null),
+                    "SUCCESS",
+                    "EXECUTED"
+            );
+            return ApiResponse.ok(report);
+        } catch (RuntimeException ex) {
+            auditEndpoint(
+                    httpRequest,
+                    "HEDGE_EXECUTION_PROFILE",
+                    marketMakerId,
+                    MarketMakerEndpointAuditLogger.approvalOutcome(approvalToken, false, ex),
+                    "FAILED",
+                    ex.getClass().getSimpleName()
+            );
+            throw ex;
+        }
     }
 
     @PostMapping("/hedge-execution/enabled")
     public ApiResponse<List<HedgeExecutionReport>> executeHedgeForEnabledMarketMakers(
             @RequestParam(defaultValue = "manual") String refPrefix,
-            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken
+            @RequestHeader(value = "X-Operator-Approval", required = false) String approvalToken,
+            HttpServletRequest httpRequest
     ) {
-        return ApiResponse.ok(hedgeExecutionService.executeForEnabledMarketMakers(refPrefix, approvalToken));
+        try {
+            enforceHedgeExecutionRateLimit(
+                    httpRequest,
+                    MarketMakerHedgeExecutionRateLimiter.ENABLED_MARKET_MAKERS_SCOPE
+            );
+            List<HedgeExecutionReport> reports =
+                    hedgeExecutionService.executeForEnabledMarketMakers(refPrefix, approvalToken);
+            auditEndpoint(
+                    httpRequest,
+                    "HEDGE_EXECUTION_ENABLED",
+                    MarketMakerHedgeExecutionRateLimiter.ENABLED_MARKET_MAKERS_SCOPE,
+                    MarketMakerEndpointAuditLogger.approvalOutcome(approvalToken, true, null),
+                    "SUCCESS",
+                    "EXECUTED"
+            );
+            return ApiResponse.ok(reports);
+        } catch (RuntimeException ex) {
+            auditEndpoint(
+                    httpRequest,
+                    "HEDGE_EXECUTION_ENABLED",
+                    MarketMakerHedgeExecutionRateLimiter.ENABLED_MARKET_MAKERS_SCOPE,
+                    MarketMakerEndpointAuditLogger.approvalOutcome(approvalToken, false, ex),
+                    "FAILED",
+                    ex.getClass().getSimpleName()
+            );
+            throw ex;
+        }
+    }
+
+    private void enforceQuoteRateLimit(HttpServletRequest httpRequest, MarketMakerQuoteRequest request) {
+        MarketMakerQuoteRateLimiter.RateLimitDecision decision =
+                marketMakerQuoteRateLimiter.consume(httpRequest, request);
+        if (!decision.allowed()) {
+            throw new ResponseStatusException(decision.status(), decision.reason());
+        }
+    }
+
+    private void enforceHedgeExecutionRateLimit(HttpServletRequest httpRequest, String executionScope) {
+        MarketMakerHedgeExecutionRateLimiter.RateLimitDecision decision =
+                marketMakerHedgeExecutionRateLimiter.consume(httpRequest, executionScope);
+        if (!decision.allowed()) {
+            throw new ResponseStatusException(decision.status(), decision.reason());
+        }
+    }
+
+    private void auditEndpoint(
+            HttpServletRequest httpRequest,
+            String endpoint,
+            String resource,
+            String approvalTokenOutcome,
+            String result,
+            String reason
+    ) {
+        marketMakerEndpointAuditLogger.audit(
+                httpRequest,
+                endpoint,
+                resource,
+                approvalTokenOutcome,
+                result,
+                reason
+        );
     }
 }

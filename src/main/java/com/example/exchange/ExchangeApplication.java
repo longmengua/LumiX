@@ -11,6 +11,7 @@ import com.example.exchange.infra.config.LedgerArchiveProperties;
 import com.example.exchange.infra.config.MatchingWorkerProperties;
 import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import com.example.exchange.infra.config.MarketDataRetentionProperties;
+import com.example.exchange.infra.config.MarketMakerApiProperties;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.example.exchange.infra.config.PushGatewayProperties;
 import com.example.exchange.infra.config.ReconciliationProperties;
@@ -42,6 +43,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         MatchingWorkerProperties.class,
         MarkPriceOracleProperties.class,
         MarketDataRetentionProperties.class,
+        MarketMakerApiProperties.class,
         PolymarketConfigs.class,
         PushGatewayProperties.class,
         ReconciliationProperties.class,
