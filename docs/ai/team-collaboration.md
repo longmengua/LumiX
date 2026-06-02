@@ -181,7 +181,17 @@ Every agent final response should include:
 - Task or lane handled.
 - Files changed.
 - Tests run, including failures or skipped tests.
+- Token usage for the completed fine task or lane. If exact usage is not available from the current interface, write `exact unavailable` and include an estimated range.
 - Remaining TODOs or blockers.
+
+Use this compact format when possible:
+
+```text
+Fine task: observability-kafka-lag
+Commit: 0aab238
+Tests: ./mvnw -Dtest=OperationalMetricsServiceTest test
+Token usage: exact unavailable; estimated 25k-40k
+```
 
 If work is intentionally left unfinished, create a handoff note under `docs/tasks/handoffs/` using that directory's template. Keep the note short and specific enough that the next agent can continue without rediscovery.
 

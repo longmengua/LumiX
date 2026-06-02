@@ -109,6 +109,19 @@ When the user asks to commit, submit, or push completed work:
 4. Push after a successful commit when the user asks to submit/send out.
 5. Report any tests that could not run and the exact blocker.
 
+## Fine Task Completion Report
+
+When completing a fine task or claimed lane, include token usage in the final report when available. If exact usage is not available from the current interface, state `exact unavailable` and give a conservative estimate range.
+
+Suggested format:
+
+```text
+Fine task: observability-kafka-lag
+Commit: 0aab238
+Tests: ./mvnw -Dtest=OperationalMetricsServiceTest test
+Token usage: exact unavailable; estimated 25k-40k
+```
+
 ## Architecture
 
 Dependencies flow from interface adapters toward application/domain contracts:
