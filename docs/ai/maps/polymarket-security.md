@@ -26,12 +26,13 @@
 Implemented baselines:
 - Fuller CLOB trade/settlement state machine; `PolymarketOrderStateMachine` prevents stale active CLOB payloads from downgrading local filled/settled terminal orders or matched size, place has a `clientRequestId` local idempotency baseline, cancel can use durable `commandId` records, cancel replays already-recorded cancel/uncertain statuses locally, and reconcile can resolve uncertain cancel from remote CLOB status while sync/reconcile skip unchanged local writes.
 - `PolymarketUserEventService` persists user-channel events by `eventKey`, no-ops duplicate replays, and treats unique-key save races as duplicate replay before applying order side effects.
+- `docs/en/polymarket-order-transition-matrix.md` and `docs/zh-TW/polymarket-order-transition-matrix.md` define the local/CLOB/trade/settlement transition contract, including terminal downgrade guards, trade event replay behavior, settlement terminal rules, and remaining implementation TODOs.
 - Approval reads already have TTL cache and owner-scoped clear.
 - `RpcTransactionTrackingService` persists backend-observed RPC transaction command/chain/wallet/fingerprint/txHash/status records, rejects command conflicts, and exposes unresolved outcome reporting.
 - `PolymarketResponseSchemaValidator` produces versioned Gamma `/events` and `/markets` schema reports plus CLOB order-operation schema reports; Gamma DTOs ignore unknown remote fields while the reports keep remote-field drift visible in logs/tests.
 
 Remaining production TODO:
-- Local/CLOB/trade/settlement order state machine completion.
+- Complete trade-event lifecycle projection and settlement replay/test implementation against the transition matrix.
 - Independent user WebSocket worker with checkpoint, dedup, persistence, replay.
 
 ## Signing And External APIs

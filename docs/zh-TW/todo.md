@@ -108,6 +108,7 @@
 ### Polymarket 整合
 
 - [ ] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
+  - Baseline 進度：[Polymarket order transition matrix](polymarket-order-transition-matrix.md) 已定義 local/CLOB/trade/settlement state columns、allowed transitions、terminal downgrade guards、trade replay behavior、settlement terminal rules 與剩餘 trade/settlement implementation TODOs。
 - [x] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
   - Baseline 已完成：Gamma `/events` 與 `/markets` response 會在 DTO 解析前經過 versioned schema report 驗證，Gamma event/market DTO 可忽略未知遠端欄位，CLOB order-operation response 會記錄 `clob.order-operations.v1` metadata，並在 schema shape 不相容時產生 warning。
 - [x] 對 CLOB 下單、取消、同步、reconcile 做 idempotent command 設計。

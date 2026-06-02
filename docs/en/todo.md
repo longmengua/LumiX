@@ -108,6 +108,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Polymarket Integration
 
 - [ ] Build a Polymarket order state machine that tracks local order, CLOB order, trade, and settlement lifecycle.
+  - Baseline progress: [Polymarket order transition matrix](polymarket-order-transition-matrix.md) now defines local/CLOB/trade/settlement state columns, allowed transitions, terminal downgrade guards, trade replay behavior, settlement terminal rules, and remaining trade/settlement implementation TODOs.
 - [x] Version Gamma/CLOB response schemas to reduce breakage when remote fields change.
   - Baseline done: Gamma `/events` and `/markets` responses are validated through versioned schema reports before DTO parsing, Gamma event/market DTOs ignore unknown remote fields, and CLOB order-operation responses record `clob.order-operations.v1` metadata while warning on incompatible shapes.
 - [x] Make CLOB place, cancel, sync, and reconcile commands idempotent.

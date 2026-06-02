@@ -71,10 +71,12 @@ When multiple humans or agents are working at the same time:
 3. For parallel agent work, each agent must use a separate `git worktree` directory and a separate branch.
 4. Read `docs/tasks/active.md` and existing handoff notes before choosing work.
 5. Work from one task file or one `docs/ai/maps/*.md` area at a time.
-6. Claim the lane in `docs/tasks/active.md`, commit, and push that claim before implementation.
-7. State the selected lane, worktree path, branch, expected files, and focused tests before making edits.
-8. Avoid parallel edits to shared coordination files until the end of the task.
-9. Leave unfinished work as a short handoff note under `docs/tasks/handoffs/`.
+6. Before each new "continue work" / next-lane start, merge or rebase the latest `main` into the agent branch so the agent sees claims completed by others.
+7. Claim the lane in `docs/tasks/active.md`, commit, push that claim, and sync the claim to `main` before implementation.
+8. State the selected lane, worktree path, branch, expected files, and focused tests before making edits.
+9. Avoid parallel edits to shared coordination files until the end of the task.
+10. After a lane is completed, merge/push the completion back to `main` before claiming another lane.
+11. Leave unfinished work as a short handoff note under `docs/tasks/handoffs/`.
 
 ## Common Commands
 

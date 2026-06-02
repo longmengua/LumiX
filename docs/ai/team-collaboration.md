@@ -34,9 +34,10 @@ Rules:
 
 - The original repo directory is also a worktree; it may have only one writer agent.
 - Each parallel writer agent must commit and push on its own branch.
-- `docs/tasks/active.md` coordinates lanes across worktrees and branches; it does not make same-worktree concurrent edits safe.
+- `docs/tasks/active.md` coordinates lanes across worktrees and branches only after the claim/completion commits are visible on `main`; branch-only registry rows are not enough for agents that start from `main`.
 - Shared external services such as MySQL, Redis, Kafka, and fixed local ports are not isolated by `git worktree`; agents that run integration services must coordinate ports, profiles, and database names.
-- Merge back to `main` only after the lane's focused tests pass and the completion commit is pushed.
+- Before every new lane or "continue work" start, merge or rebase latest `main` into the agent branch.
+- Merge/push the claim commit to `main` before implementation so other agents can see the lane. Merge/push the completion commit back to `main` after focused tests pass and before claiming another lane.
 
 ## Multi-Terminal Lane Rules
 
@@ -75,7 +76,7 @@ Commit and push the active.md claim before implementation.
 
 ## Startup Checklist
 
-1. Pull the latest branch state.
+1. Pull the latest branch state and merge or rebase the latest `main` into this work branch.
 2. Confirm this worktree is not being used by another writer agent.
 3. Run `./shells/ai-context.sh`.
 4. Run `git status --short`.
@@ -91,8 +92,9 @@ Use a small claim commit to prevent duplicate starts:
 1. Add one row to `docs/tasks/active.md` with `doing`, the task or lane, owner label, date, expected file areas, and handoff link if one exists.
 2. Commit only the claim row, for example `docs: claim market data gateway work`.
 3. Push the claim commit before implementation.
-4. If the push is rejected or the remote registry changed, pull/re-read `docs/tasks/active.md` and choose again.
-5. Start coding only after the claim is visible on the remote branch.
+4. Merge or fast-forward the claim commit to `main` and push `main` before implementation.
+5. If the push is rejected or the remote registry changed, pull/re-read `docs/tasks/active.md` from latest `main` and choose again.
+6. Start coding only after the claim is visible on `origin/main`, not only on the agent branch.
 
 Do not claim broad roadmap buckets such as "P1 hardening". Claim the smallest useful task file, package, or code-map area.
 
@@ -102,6 +104,16 @@ Claim commit messages should stay boring and specific:
 docs: claim replayable matching core lane
 docs: claim external api idempotency lane
 ```
+
+## Sync With Main
+
+Parallel branches isolate worktrees; they do not by themselves broadcast coordination state. Every agent must use `main` as the shared registry source:
+
+1. Before starting or continuing with a new lane, merge or rebase latest `main` into the agent branch.
+2. After adding a `doing` row to `docs/tasks/active.md`, push that claim and land it on `main` before coding.
+3. After finishing the lane, update the registry row to `done` or remove it, push the completion, and land it on `main` before claiming more work.
+
+If `active.md` exists only on an agent branch, other agents starting from `main` may not see it and may duplicate the lane.
 
 ## Context Loss Recovery
 
@@ -118,6 +130,7 @@ If the registry says another owner is `doing`, avoid that lane unless the user e
 ## Parallel Work Rules
 
 - Parallel writer agents must use separate git worktrees and separate branches.
+- Agents must not claim another lane while their previous claim or completion is still branch-only and not visible on `main`.
 - Never use `git add .` in a shared worktree while another writer agent is active there; same-worktree parallel writing is disallowed.
 - Avoid parallel edits to these high-conflict files unless the task is explicitly about them: `AGENTS.md`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, `docs/en/current-state.md`, `docs/zh-TW/current-state.md`, `docs/ai/code-map.md`, Flyway migrations, and global config files.
 - Avoid overlapping expected areas. If two tasks both need the same controller, service, migration, or map file, split the tasks further or define a dependency order before both agents code.
