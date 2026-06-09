@@ -2,7 +2,7 @@
 
 This file is the shared starting point for parallel AI work. Update it before starting implementation work, commit it, and push it so other agents can see the active lane before they choose a task.
 
-Keep entries short. Long notes belong in `docs/tasks/handoffs/`.
+Keep entries short. Long notes belong in `docs/tasks/handoffs/`. For management metrics and token-budget guidance, use `docs/ai/team-management.md`.
 
 ## Protocol
 
@@ -10,6 +10,7 @@ Keep entries short. Long notes belong in `docs/tasks/handoffs/`.
 2. Run `./shells/ai-context.sh` and `git status --short`.
 3. Read this registry before selecting work.
 4. Add or update one row with `doing`, expected file areas, and a timestamp.
+   For non-trivial work, include compact metadata in the row: `size=S|M|L`, `budget=<token range>`, `eta=<timebox>`, `risk=low|medium|high`, and focused tests.
 5. Commit and push only the registry claim before coding.
 6. Merge or fast-forward that claim commit to `main` and push `main`.
 7. Start implementation only after the claim is visible on `origin/main`, not only on the agent branch.
@@ -58,7 +59,7 @@ Replace the `_none_` row with real claim rows when work starts.
 Use one row per terminal agent. Keep `Expected Areas` narrow enough that another agent can safely choose unrelated work.
 
 ```markdown
-| doing | docs/tasks/core-kernel/01-replayable-matching-core.md | T1 matching-command-log | 2026-06-02 | `src/main/java/com/example/exchange/infra/matching`, `src/test/java/com/example/exchange/infra/matching`, `docs/ai/maps/order-matching.md` |  |
+| doing | docs/tasks/core-kernel/01-replayable-matching-core.md size=M budget=25k-60k eta=0.5d risk=medium | T1 matching-command-log | 2026-06-02 | `src/main/java/com/example/exchange/infra/matching`, `src/test/java/com/example/exchange/infra/matching`, `docs/ai/maps/order-matching.md` | tests=`./mvnw -Dtest=InMemoryMatchingEngineTest test` |
 ```
 
 Terminal labels should be stable for the session, for example `T1 matching-command-log` or `T2 polymarket-clob-state`.

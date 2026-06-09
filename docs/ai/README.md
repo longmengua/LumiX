@@ -5,6 +5,7 @@ This directory contains compact, agent-facing context. It is intentionally split
 Start here:
 - [code-map.md](code-map.md)
 - [team-collaboration.md](team-collaboration.md) when multiple agents are working in parallel.
+- [team-management.md](team-management.md) for token budgets, lane sizing, cadence, and team metrics.
 
 Sub-maps live in [maps/](maps/).
 
@@ -35,3 +36,7 @@ Then choose the generated file:
 ```text
 讀一下 docs/tasks/core-kernel/05-market-maker-hedging.md，開始做。
 ```
+
+## Team Management
+
+Use [team-management.md](team-management.md) when assigning work across a Codex-heavy team. It defines lane sizes, token budget ranges, timeboxes, active-registry metadata, code-map upkeep, and weekly metrics.

@@ -12,6 +12,7 @@ This page links to compact agent-facing maps. The shared source files live under
 | [AI README](../ai/README.md) | How to ask Codex to use Markdown files as task entry points. |
 | [Code Map Index](../ai/code-map.md) | Map directory for task-specific code maps. |
 | [Team AI Collaboration](../ai/team-collaboration.md) | Parallel-agent ownership, conflict handling, and handoff rules. |
+| [AI Team Management](../ai/team-management.md) | Lane sizing, token budgets, timeboxes, code-map upkeep, and weekly metrics. |
 
 ## Code Comment Standard
 

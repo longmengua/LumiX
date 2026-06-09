@@ -2,6 +2,8 @@
 
 Use this mode when multiple people or agents work in this repository at the same time. The goal is to keep each agent's work reviewable, avoid overwriting another lane, and make unfinished work easy to resume.
 
+For team-level metrics, token budgets, lane sizing, and weekly operating cadence, also use [team-management.md](team-management.md).
+
 ## Operating Model
 
 - Work from one Markdown task entry point whenever possible: a file under `docs/tasks/`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, or a specific `docs/ai/maps/*.md` file.
@@ -56,6 +58,7 @@ Each terminal agent must follow this contract:
 - Use its own git worktree and branch when any other writer agent is active.
 - Start from exactly one task file, TODO section, or code-map area.
 - Register expected files or package areas before editing code.
+- Include size, token budget, ETA, risk, and focused tests in the active row when the lane is not trivial.
 - Avoid files listed in another active lane's expected areas.
 - Do not edit shared coordination docs during implementation unless the lane is specifically about those docs.
 - If the lane needs another active lane's files, stop and write the dependency or conflict in `docs/tasks/active.md` or a handoff note.
@@ -124,6 +127,7 @@ Shorter direct prompts:
 Use a small claim commit to prevent duplicate starts:
 
 1. Add one row to `docs/tasks/active.md` with `doing`, the task or lane, owner label, date, expected file areas, and handoff link if one exists.
+   For non-trivial lanes, include compact management metadata such as `size=M budget=25k-60k eta=0.5d risk=medium`.
 2. Commit only the claim row, for example `docs: claim market data gateway work`.
 3. Push the claim commit before implementation.
 4. Merge or fast-forward the claim commit to `main` and push `main` before implementation.
@@ -182,6 +186,7 @@ Every agent final response should include:
 - Files changed.
 - Tests run, including failures or skipped tests.
 - Token usage for the completed fine task or lane. If exact usage is not available from the current interface, write `exact unavailable` and include an estimated range.
+- Estimated elapsed time and one context note if discovery was expensive or reusable.
 - Remaining TODOs or blockers.
 
 Use this compact format when possible:

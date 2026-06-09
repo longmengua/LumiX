@@ -16,6 +16,7 @@
 | TODO Documentation | Production-readiness roadmap: required work before real funds or production traffic, grouped by priority and domain. | 正式環境待辦清單：真實資金或正式流量前需要補齊的工作，依優先級與領域分類。 | [docs/en/todo.md](docs/en/todo.md) | [docs/zh-TW/todo.md](docs/zh-TW/todo.md) |
 | AI Documentation | Compact startup guide and code map for coding agents. | 給 Codex/代理使用的精簡開工入口與程式碼地圖。 | [docs/en/ai.md](docs/en/ai.md) | [docs/zh-TW/ai.md](docs/zh-TW/ai.md) |
 | Task Documentation | Selectable task files for roadmap and interrupt work. | roadmap 與插單工作的可點名 task md。 | [docs/en/tasks.md](docs/en/tasks.md) | [docs/zh-TW/tasks.md](docs/zh-TW/tasks.md) |
+| AI Team Management | Team operating rules for lane sizing, token budgets, timeboxes, code-map upkeep, and metrics. | 管理 Codex 團隊的 lane 粒度、token budget、時程、code map 與量化指標規範。 | [docs/ai/team-management.md](docs/ai/team-management.md) | [docs/ai/team-management.md](docs/ai/team-management.md) |
 
 ## Local Startup
 
@@ -37,6 +38,8 @@ docker compose up -d
 ## AI Usage
 
 For parallel AI work, read `AGENTS.md`, `docs/ai/team-collaboration.md`, and `docs/tasks/active.md` first, then claim one task in `docs/tasks/active.md`, commit and push that claim before implementation.
+
+For team management, use `docs/ai/team-management.md` to size lanes, set token budgets, timebox work, record focused tests, and review weekly metrics.
 
 When asking an AI how to start work or how to open multiple terminals, ask it to read this `README.md` first and return copy-paste-ready prompts for each terminal. For parallel work, those prompts must include a separate `git worktree` path, separate branch, task lane, claim/push requirement, and an explicit instruction not to write code in the current worktree.
 

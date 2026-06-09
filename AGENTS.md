@@ -14,6 +14,7 @@ Primary docs:
 - Production TODO: `docs/en/todo.md` / `docs/zh-TW/todo.md`
 - Agent code map index: `docs/ai/code-map.md`
 - Team AI collaboration mode: `docs/ai/team-collaboration.md`
+- Team AI management metrics: `docs/ai/team-management.md`
 
 ## Fast Context
 
@@ -150,6 +151,7 @@ Important packages:
 - New API endpoints need docs, curl script coverage when practical, and security classifier review.
 - Secrets must come from environment variables or a secret manager, not committed config.
 - Keep docs concise; update the relevant `docs/ai/maps/*.md` file when changing core flows or ownership.
+- For Codex team management, use `docs/ai/team-management.md` to size lanes, estimate token budgets, timebox work, and record metrics.
 - AI-generated or AI-modified code must include clear comments where they help a reader understand intent, state transitions, replay/recovery behavior, accounting effects, risk decisions, or test flow.
 - Test code should explain the scenario in comments or `@DisplayName`, so a reader can understand setup, action, and expected result without reverse-engineering the assertions.
 - Avoid noisy comments that restate obvious syntax; prefer comments that clarify business rules, invariants, edge cases, and why the test exists.

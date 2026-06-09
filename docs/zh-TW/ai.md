@@ -12,6 +12,7 @@ English version：[../en/ai.md](../en/ai.md)
 | [AI README](../ai/README.md) | 說明如何用 Markdown 文件當 Codex 任務入口。 |
 | [Code Map Index](../ai/code-map.md) | 依任務分類的 code map 目錄。 |
 | [Team AI Collaboration](../ai/team-collaboration.md) | 多 AI 並行時的 ownership、衝突處理與交接規則。 |
+| [AI Team Management](../ai/team-management.md) | lane sizing、token budget、timebox、code map 維護與週期指標。 |
 
 ## 程式註解標準
 
