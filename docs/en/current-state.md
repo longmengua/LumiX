@@ -3,7 +3,7 @@
 
 This document answers one question: how complete is this repository right now?
 
-Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The core-v1 freeze checklist is now closed and post-v1 production hardening tasks are split out; the next step is to tag or hand off the bounded core-v1 baseline, then work through transaction boundaries and the other post-v1 blockers in order.
+Short answer: this is a runnable and testable trading-core MVP, not a production-ready exchange. The core-v1 freeze checklist is now closed, the P0 production baseline is complete, and post-v1 hardening task files are split out; the next step is to tag or hand off the bounded core-v1 baseline, then finish the remaining P1 production hardening blockers.
 
 中文版本：[../zh-TW/current-state.md](../zh-TW/current-state.md)
 
@@ -14,13 +14,13 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
 | P0 Required | 43 | 0 | Core production baseline items are closed; post-v1 hardening still remains. |
-| P1 Strongly Recommended | 19 | 3 | Operations, market data, Polymarket, and data governance still need hardening. |
+| P1 Strongly Recommended | 16 | 6 | Operations, market data, Polymarket, and data governance still need hardening. |
 | P2 Evolution | 0 | 5 | Admin market-config and risk-parameters have read-only API/static page baselines; broader admin, reporting, load testing, compliance, and rollout controls remain incomplete. |
-| Total | 62 | 8 | The core baseline is closed, but production hardening and evolution work remain. |
+| Total | 59 | 11 | The core baseline is closed, but production hardening and evolution work remain. |
 
 ## Current Priority Override
 
-The next work should tag or hand off the baseline defined by [core-v1-release-checklist.md](core-v1-release-checklist.md). The freeze checklist, smoke runbook, and [post-v1 production hardening tasks](../tasks/post-v1/README.md) are complete. Do not expand web, Polymarket, reporting, compliance, or observability scope until core-v1 is tagged.
+The next work should tag or hand off the baseline defined by [core-v1-release-checklist.md](core-v1-release-checklist.md). The freeze checklist and smoke runbook are complete, and the [post-v1 production hardening tasks](../tasks/post-v1/README.md) are split out. Do not expand web, Polymarket, reporting, compliance, or observability scope until core-v1 is tagged.
 
 The frozen core-v1 baseline includes:
 
@@ -92,9 +92,8 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 ## Recommended Next Work
 
 1. Tag or hand off the bounded core-v1 baseline.
-2. Work through P0 production hardening via [post-v1 production hardening tasks](../tasks/post-v1/README.md).
-3. Prioritize transaction boundaries, ADL forced execution, market data durability, and external API idempotency.
-4. Defer new product surfaces until core-v1 is tagged.
+2. Finish the remaining P1 blockers: independently deployed WebSocket/SSE gateway, independently deployed Polymarket user WebSocket worker, future position SQL mirror schema, production metrics export, tracing exporter/dashboard wiring, and alert backend integration.
+3. Continue P2 only after the core-v1 baseline is tagged or explicitly handed off.
 
 ## Reading Order
 

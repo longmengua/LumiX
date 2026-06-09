@@ -3,7 +3,7 @@
 
 這份文件回答一個問題：目前這個 repo 到底完成到哪裡？
 
-結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 core-v1 freeze checklist 已關閉，post-v1 production hardening task 也已拆出；下一步是 tag / hand off 有邊界的 core-v1 baseline，然後依 post-v1 task 順序推進 transaction boundaries 等 production blocker。
+結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 core-v1 freeze checklist 已關閉，P0 production baseline 已完成，post-v1 production hardening task 也已拆出；下一步是 tag / hand off 有邊界的 core-v1 baseline，然後收斂剩餘 P1 production hardening blockers。
 
 English version: [../en/current-state.md](../en/current-state.md)
 
@@ -14,13 +14,13 @@ English version: [../en/current-state.md](../en/current-state.md)
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
 | P0 必做 | 43 | 0 | 核心 production baseline 項目已關閉；post-v1 hardening 仍需推進。 |
-| P1 強烈建議 | 19 | 3 | 營運、market data、Polymarket、資料治理仍需強化。 |
+| P1 強烈建議 | 16 | 6 | 營運、market data、Polymarket、資料治理仍需強化。 |
 | P2 演進項 | 0 | 5 | Admin market-config 與 risk-parameters 已有 read-only API / 靜態頁 baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
-| 合計 | 62 | 8 | 核心 baseline 已關閉，但 production hardening 與演進工作仍待推進。 |
+| 合計 | 59 | 11 | 核心 baseline 已關閉，但 production hardening 與演進工作仍待推進。 |
 
 ## 目前插單優先順序
 
-接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist、smoke runbook 與 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 已完成拆分；在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
+接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist 與 smoke runbook 已完成，[post-v1 production hardening tasks](../tasks/post-v1/README.md) 也已完成拆分；在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
 
 凍結的 core-v1 baseline 包含：
 
@@ -92,9 +92,8 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 ## 建議接下來先做什麼
 
 1. Tag 或 hand off 有邊界的 core-v1 baseline。
-2. 依 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 推進 P0 production hardening。
-3. 優先處理 transaction boundaries、ADL forced execution、market data durability 與外部 API idempotency。
-4. 新產品面延後到 core-v1 tag 之後。
+2. 收斂剩餘 P1 blockers：WebSocket/SSE gateway 獨立部署、Polymarket user WebSocket worker 獨立部署、future position SQL mirror schema、production metrics export、tracing exporter/dashboard wiring，以及 alert backend integration。
+3. core-v1 baseline tag 或明確 hand off 後，再繼續 P2。
 
 ## 閱讀順序
 
