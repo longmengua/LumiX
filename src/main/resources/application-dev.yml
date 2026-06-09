@@ -152,6 +152,11 @@ tracing:
     drop-health-and-metrics: true
 
 push-gateway:
+  runtime:
+    role: ${PUSH_GATEWAY_RUNTIME_ROLE:MONOLITH}
+    instance-id: ${PUSH_GATEWAY_INSTANCE_ID:${HOSTNAME:local-dev}}
+    accept-new-streams: ${PUSH_GATEWAY_ACCEPT_NEW_STREAMS:true}
+    draining: ${PUSH_GATEWAY_DRAINING:false}
   rate-limit:
     enabled: true
     subscriptions-per-minute: 120

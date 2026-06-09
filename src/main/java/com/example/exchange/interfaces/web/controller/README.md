@@ -12,7 +12,7 @@ REST controllers。
 - `MarketMakerController`：做市商 profile、risk limit 後台管理、quote placement/active state/reconciliation 查詢與 repair、hedge fill 查詢/venue callback、hedge reconciliation 與手動 hedge execution。
 - `RecoveryController`：snapshot recovery、matching worker readiness、account-position restore consistency、reconciliation、ledger replay comparison、daily/category finance report、category export batch、ledger archive delete guard / restore smoke / replay validation、reconciliation issue workflow、outbox DLQ replay/compensation、outbox/domain-state consistency report。
 - `PredictionOrderController`：Polymarket order/session/market operations、approval cache 與 RPC transaction unresolved report。
-- `OperationsController`：輕量 metrics。
+- `OperationsController`：輕量 metrics 與 push gateway runtime status。
 
 注意：
 - controller 只做 HTTP 轉換、validation、呼叫 use case/service。

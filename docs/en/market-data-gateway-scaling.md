@@ -9,6 +9,15 @@ Run gateway instances with only HTTP, SSE, WebSocket, auth, stream rate limiting
 
 Each gateway instance owns only its local connected clients. `PushGatewayService` keeps subscriber sessions in memory, so a gateway restart or node loss drops only connections pinned to that node. Clients must reconnect and use the recovery cursor contract instead of relying on server-side session migration.
 
+Configure the runtime role explicitly:
+
+- `push-gateway.runtime.role=${PUSH_GATEWAY_RUNTIME_ROLE:GATEWAY}` for gateway instances.
+- `push-gateway.runtime.instance-id=${PUSH_GATEWAY_INSTANCE_ID:${HOSTNAME}}` for logs/readiness.
+- `push-gateway.runtime.accept-new-streams=${PUSH_GATEWAY_ACCEPT_NEW_STREAMS:true}` to stop new streams during controlled maintenance.
+- `push-gateway.runtime.draining=${PUSH_GATEWAY_DRAINING:false}` to reject new SSE/WebSocket streams with `503` while existing streams drain.
+
+`GET /api/ops/push-gateway/status` returns the instance id, role, accepting/draining flags, active SSE channel/subscriber counts, and active WebSocket channel/session counts.
+
 ## Fanout Topology
 
 Use a broadcast feed for public market-data events:
@@ -52,6 +61,6 @@ If the replay window was purged by market-data retention, clients must reload a 
 
 ## Readiness And Rollback
 
-A gateway instance is ready when auth config is loaded, the broadcast consumer is connected, market-data stores are reachable for recovery endpoints, and heartbeat publication succeeds locally.
+A gateway instance is ready when auth config is loaded, `GET /api/ops/push-gateway/status` reports `acceptingNewStreams=true`, the broadcast consumer is connected, market-data stores are reachable for recovery endpoints, and heartbeat publication succeeds locally.
 
 For rollback, drain the new gateway pool, route new connections back to the previous pool, and keep durable market-data stores untouched. Clients reconnect through the same recovery cursor contract, so rollback should not require order or matching worker changes.

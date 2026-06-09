@@ -179,6 +179,10 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
                     WebSocketHandler wsHandler,
                     Map<String, Object> attributes
             ) {
+                if (!pushGatewayService.acceptingNewStreams()) {
+                    response.setStatusCode(HttpStatus.SERVICE_UNAVAILABLE);
+                    return false;
+                }
                 MarketDataStreamRateLimiter.RateLimitDecision decision =
                         marketDataStreamRateLimiter.consume(
                                 request,

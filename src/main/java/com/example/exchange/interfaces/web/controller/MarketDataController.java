@@ -15,6 +15,7 @@ import com.example.exchange.interfaces.web.security.MarketDataStreamRateLimiter;
 import com.example.exchange.interfaces.web.security.UserStreamSubscriptionAuthorizer;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -84,12 +85,14 @@ public class MarketDataController {
 
     @GetMapping(path = "/{symbol}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter marketStream(@PathVariable String symbol, HttpServletRequest request) {
+        enforceAcceptingNewStreams();
         enforceRateLimit(request, "market", symbol);
         return pushGatewayService.subscribeMarket(symbol);
     }
 
     @GetMapping(path = "/user/{uid}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter userStream(@PathVariable long uid, HttpServletRequest request) {
+        enforceAcceptingNewStreams();
         enforceRateLimit(request, "user", Long.toString(uid));
         UserStreamSubscriptionAuthorizer.UserStreamAuthorizationDecision decision =
                 userStreamSubscriptionAuthorizer.authorize(
@@ -108,6 +111,12 @@ public class MarketDataController {
                 marketDataStreamRateLimiter.consume(request, streamType, streamId);
         if (!decision.allowed()) {
             throw new ResponseStatusException(decision.status(), decision.reason());
+        }
+    }
+
+    private void enforceAcceptingNewStreams() {
+        if (!pushGatewayService.acceptingNewStreams()) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "PUSH_GATEWAY_DRAINING");
         }
     }
 }

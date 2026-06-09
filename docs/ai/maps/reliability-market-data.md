@@ -72,10 +72,11 @@ Current behavior:
 - 1m klines can be persisted and read back after service restart when `MarketDataKlineStore` is configured.
 - High-volume depth delta, trade tape, and 1m kline history can be purged through disabled-by-default market-data retention config; ticker latest state and sequence checkpoints are not purged by that job.
 - `PushGatewayService.publishHeartbeat(...)` emits `gateway.heartbeat` to all active SSE/WebSocket channels with channel/timestamp payload and removes closed WebSocket sessions; `PushGatewayHeartbeatScheduler` can run it through disabled-by-default `push-gateway.heartbeat.*` config.
+- `push-gateway.runtime.*` exposes MONOLITH/GATEWAY role, instance id, accepting-new-streams, and draining controls. `GET /api/ops/push-gateway/status` returns local channel/session counts for readiness and load-balancer drain checks.
 - `UserStreamSubscriptionAuthorizer` protects private user SSE/WebSocket streams when `api-auth.enabled=true`; admin principals may subscribe to any uid, while user principals must own the requested uid and carry `stream:read`, `user:stream`, or `user:read` scope. WebSocket handshakes also accept `apiKey`, `access_token`, or `token` query parameters for browser clients.
 - `MarketDataStreamRateLimiter` applies per-client fixed-window limits to market/user SSE subscriptions and WebSocket handshakes through `push-gateway.rate-limit.*`.
 - `docs/en/market-data-gateway-scaling.md` and `docs/zh-TW/market-data-gateway-scaling.md` document the independently deployable gateway role, broadcast fanout requirement for horizontally scaled instances, load-balancer draining, shared rate-limit options, heartbeat policy, reconnect replay flow, readiness, and rollback.
 
 Remaining production TODO:
 - Production archive export/storage for market-data history beyond local DB retention.
-- Execute the WebSocket/SSE gateway split in production infrastructure using the documented horizontal-scaling runbook.
+- Production infrastructure still needs to point gateway-role deployments and load balancer pools at the documented runtime/status/drain controls.

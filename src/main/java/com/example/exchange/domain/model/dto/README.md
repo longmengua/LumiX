@@ -4,6 +4,7 @@
 
 目前重點：
 - Market data：`DepthDelta`、`MarketDataRecoveryCursor`、`MarketTicker`、`MarketKline`、`TradeTapeItem`。
+- Push gateway：`PushGatewayRuntimeStatus` 回報 gateway role、drain flags 與本機 stream/session counts。
 - 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`AdlOperationalAlertReport`、`AdlOperationalAlert`、`AdlInsuranceReconciliationReport`、`AdlInsuranceReconciliationIssue`、`InsuranceFundMovement`、`BonusCreditGrant`、`BonusCreditReport`、`BonusCreditCampaignReport`、`BonusCreditCampaignExport`、`TurnoverRecord`、`TurnoverSummary`、`TurnoverExportReport`、`TurnoverReconciliationReport`；`TurnoverReconciliationIssue` 會攜帶 order tag 與 ledger-ref presence 方便營運對帳。
 - Snapshot read model：account risk snapshots、reconciliation reports、wallet ledger replay。
 - Observability command result：`OperationalAlert` 與 `AlertDispatchResult` 定義送往 alert backend 的 payload 與 dispatch result。

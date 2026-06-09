@@ -4,7 +4,9 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.service.OperationalMetricsService;
+import com.example.exchange.application.service.PushGatewayService;
 import com.example.exchange.domain.model.dto.OperationalMetricsSnapshot;
+import com.example.exchange.domain.model.dto.PushGatewayRuntimeStatus;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,9 +19,15 @@ import org.springframework.web.bind.annotation.RestController;
 public class OperationsController {
 
     private final OperationalMetricsService operationalMetricsService;
+    private final PushGatewayService pushGatewayService;
 
     @GetMapping("/metrics")
     public ApiResponse<OperationalMetricsSnapshot> metrics() {
         return ApiResponse.ok(operationalMetricsService.snapshot());
+    }
+
+    @GetMapping("/push-gateway/status")
+    public ApiResponse<PushGatewayRuntimeStatus> pushGatewayStatus() {
+        return ApiResponse.ok(pushGatewayService.runtimeStatus());
     }
 }

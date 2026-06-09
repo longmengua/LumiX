@@ -3,6 +3,8 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.domain.model.dto.PushGatewayRuntimeStatus;
+import com.example.exchange.infra.config.PushGatewayProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.socket.TextMessage;
@@ -27,9 +29,11 @@ public class PushGatewayService {
     private final Map<String, Set<SseEmitter>> subscribers = new ConcurrentHashMap<>();
     private final Map<String, Set<WebSocketSession>> websocketSubscribers = new ConcurrentHashMap<>();
     private final ObjectMapper objectMapper;
+    private final PushGatewayProperties properties;
 
-    public PushGatewayService(ObjectMapper objectMapper) {
+    public PushGatewayService(ObjectMapper objectMapper, PushGatewayProperties properties) {
         this.objectMapper = objectMapper;
+        this.properties = properties;
     }
 
     public SseEmitter subscribeMarket(String symbol) {
@@ -65,10 +69,12 @@ public class PushGatewayService {
     }
 
     public void registerMarketWebSocket(String symbol, WebSocketSession session) {
+        ensureAcceptingNewStreams();
         registerWebSocket("market:" + normalize(symbol), session);
     }
 
     public void registerUserWebSocket(long uid, WebSocketSession session) {
+        ensureAcceptingNewStreams();
         registerWebSocket("user:" + uid, session);
     }
 
@@ -76,7 +82,32 @@ public class PushGatewayService {
         websocketSubscribers.values().forEach(sessions -> sessions.remove(session));
     }
 
+    public boolean acceptingNewStreams() {
+        PushGatewayProperties.RuntimeSettings runtime = properties.getRuntime();
+        return runtime.isAcceptNewStreams() && !runtime.isDraining();
+    }
+
+    public void ensureAcceptingNewStreams() {
+        if (!acceptingNewStreams()) {
+            throw new IllegalStateException("PUSH_GATEWAY_NOT_ACCEPTING_NEW_STREAMS");
+        }
+    }
+
+    public PushGatewayRuntimeStatus runtimeStatus() {
+        return new PushGatewayRuntimeStatus(
+                properties.getRuntime().getInstanceId(),
+                properties.getRuntime().getRole(),
+                acceptingNewStreams(),
+                properties.getRuntime().isDraining(),
+                activeChannelCount(subscribers),
+                activeSubscriberCount(subscribers),
+                activeChannelCount(websocketSubscribers),
+                activeSubscriberCount(websocketSubscribers)
+        );
+    }
+
     private SseEmitter subscribe(String channel) {
+        ensureAcceptingNewStreams();
         SseEmitter emitter = new SseEmitter(TIMEOUT_MS);
         subscribers.computeIfAbsent(channel, ignored -> new CopyOnWriteArraySet<>()).add(emitter);
         emitter.onCompletion(() -> remove(channel, emitter));
@@ -148,6 +179,18 @@ public class PushGatewayService {
 
     private static String normalize(String symbol) {
         return symbol == null ? "" : symbol.trim().toUpperCase();
+    }
+
+    private static int activeChannelCount(Map<String, ? extends Set<?>> channels) {
+        return (int) channels.values().stream()
+                .filter(sessions -> !sessions.isEmpty())
+                .count();
+    }
+
+    private static int activeSubscriberCount(Map<String, ? extends Set<?>> channels) {
+        return channels.values().stream()
+                .mapToInt(Set::size)
+                .sum();
     }
 
     public record PushGatewayHeartbeat(

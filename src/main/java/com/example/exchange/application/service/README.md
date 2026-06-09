@@ -24,7 +24,7 @@
 - `AlertDispatchService`：把 production alert payload 送往預設關閉的 webhook backend；dispatch 失敗只回報結果，不改交易狀態。
 - `RpcTransactionTrackingService`：backend-observed RPC transaction 的 durable idempotency / lifecycle tracking 與 unresolved outcome report。
 - `MarketDataService` / `MarketDataSequenceCheckpointService` / `MarketDataRetentionService`：ticker、kline、depth delta、durable depth sequence checkpoint、reconnect backfill/recovery cursor、durable trade tape、durable ticker latest-state、durable 1m kline 與 history retention baseline。
-- `PushGatewayService`：SSE/WebSocket market/user channel registration、publish path、`gateway.heartbeat` contract 與 closed WebSocket cleanup baseline。
+- `PushGatewayService`：SSE/WebSocket market/user channel registration、publish path、`gateway.heartbeat` contract、closed WebSocket cleanup、runtime role/drain status baseline。
 
 目前狀態：
 - 這層承擔 MVP orchestration，尚未具備 production transaction boundary。

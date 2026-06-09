@@ -3,6 +3,7 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.infra.config.PushGatewayProperties;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PushGatewayServiceTest {
 
@@ -31,7 +33,7 @@ class PushGatewayServiceTest {
     @Test
     @DisplayName("publishHeartbeat 會向 WebSocket client 發送 gateway.heartbeat contract")
     void publishHeartbeatSendsGatewayHeartbeatToWebSocketClients() throws Exception {
-        PushGatewayService service = new PushGatewayService(objectMapper);
+        PushGatewayService service = new PushGatewayService(objectMapper, new PushGatewayProperties());
         RecordingWebSocketSession session = new RecordingWebSocketSession("ws-1", true);
         service.registerMarketWebSocket("btcusdt", session);
 
@@ -52,7 +54,7 @@ class PushGatewayServiceTest {
     @Test
     @DisplayName("publishHeartbeat 會清理已關閉 WebSocket session")
     void publishHeartbeatRemovesClosedWebSocketSessions() throws Exception {
-        PushGatewayService service = new PushGatewayService(objectMapper);
+        PushGatewayService service = new PushGatewayService(objectMapper, new PushGatewayProperties());
         RecordingWebSocketSession closed = new RecordingWebSocketSession("ws-closed", false);
         service.registerUserWebSocket(42L, closed);
 
@@ -69,6 +71,46 @@ class PushGatewayServiceTest {
         assertThat(second.channels()).isEqualTo(1);
         assertThat(second.delivered()).isZero();
         assertThat(second.failed()).isZero();
+    }
+
+    @Test
+    @DisplayName("runtimeStatus 會回報 gateway role、drain 狀態與本機連線數")
+    void runtimeStatusReportsGatewayRoleAndLocalConnections() {
+        PushGatewayProperties properties = new PushGatewayProperties();
+        properties.getRuntime().setRole("GATEWAY");
+        properties.getRuntime().setInstanceId("gateway-a");
+        PushGatewayService service = new PushGatewayService(objectMapper, properties);
+        service.subscribeMarket("BTCUSDT");
+        service.registerUserWebSocket(42L, new RecordingWebSocketSession("ws-1", true));
+
+        // 場景：獨立 gateway 需要讓 readiness/LB 查到 role、drain 狀態與本機長連線數。
+        var status = service.runtimeStatus();
+
+        assertThat(status.instanceId()).isEqualTo("gateway-a");
+        assertThat(status.role()).isEqualTo("GATEWAY");
+        assertThat(status.acceptingNewStreams()).isTrue();
+        assertThat(status.draining()).isFalse();
+        assertThat(status.activeSseChannels()).isEqualTo(1);
+        assertThat(status.activeSseSubscribers()).isEqualTo(1);
+        assertThat(status.activeWebSocketChannels()).isEqualTo(1);
+        assertThat(status.activeWebSocketSessions()).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("draining gateway 會拒絕新的 SSE/WebSocket stream registration")
+    void drainingGatewayRejectsNewStreamRegistration() {
+        PushGatewayProperties properties = new PushGatewayProperties();
+        properties.getRuntime().setDraining(true);
+        PushGatewayService service = new PushGatewayService(objectMapper, properties);
+
+        // 場景：部署或 scale-in 前，gateway 要先停止接受新 stream，讓 LB drain 既有連線。
+        assertThat(service.acceptingNewStreams()).isFalse();
+        assertThatThrownBy(() -> service.subscribeMarket("BTCUSDT"))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("PUSH_GATEWAY_NOT_ACCEPTING_NEW_STREAMS");
+        assertThatThrownBy(() -> service.registerUserWebSocket(42L, new RecordingWebSocketSession("ws-1", true)))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessage("PUSH_GATEWAY_NOT_ACCEPTING_NEW_STREAMS");
     }
 
     private static final class RecordingWebSocketSession implements WebSocketSession {
