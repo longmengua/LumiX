@@ -150,6 +150,7 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
   - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split admin market config, risk parameters, DLQ replay, and reconciliation report screens into implementable lanes.
   - Baseline progress: read-only admin market-config API and static screen are available at `GET /api/admin/market-config` and `src/main/resources/static/admin-market-config.html`; write actions remain disabled pending permissioned backend endpoints.
   - Baseline progress: read-only admin risk-parameters API and static screen are available at `GET /api/admin/risk-parameters` and `src/main/resources/static/admin-risk-parameters.html`; write actions remain disabled pending permissioned backend endpoints.
+  - Baseline progress: read-only admin DLQ API and static screen are available at `GET /api/admin/dlq` and `src/main/resources/static/admin-dlq.html`; payload/header previews are sanitized and replay/compensation actions remain disabled pending permissioned operator workflow wiring.
 - [ ] Reporting: user asset reports, trade reports, fee reports, operations and finance daily reports.
   - Task specs ready: [P2 evolution tasks](../tasks/p2/README.md) split user asset, trade, fee, and operations/finance daily report exports into implementable lanes.
 - [ ] Load testing tools: order-entry TPS, matching TPS, market-data fanout, Polymarket sync pressure.

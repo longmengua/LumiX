@@ -15,7 +15,7 @@ English version: [../en/current-state.md](../en/current-state.md)
 | --- | ---: | ---: | --- |
 | P0 必做 | 43 | 0 | 核心 production baseline 項目已關閉；post-v1 hardening 仍需推進。 |
 | P1 強烈建議 | 22 | 0 | 強烈建議的 production-hardening baselines 已關閉。 |
-| P2 演進項 | 0 | 5 | Admin market-config 與 risk-parameters 已有 read-only API / 靜態頁 baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
+| P2 演進項 | 0 | 5 | Admin market-config、risk-parameters 與 DLQ 已有 read-only API / 靜態頁 baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
 | 合計 | 65 | 5 | Production-hardening baselines 已關閉；剩 P2 evolution 工作。 |
 
 ## 目前插單優先順序
@@ -87,7 +87,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - WebSocket/SSE gateway 已有 heartbeat contract、預設關閉的 heartbeat scheduler、private user SSE/WebSocket stream 訂閱授權、per-client stream 訂閱限流、depth/trade recovery cursor contract、支援 MONOLITH/GATEWAY 部署的 `push-gateway.runtime.*` role/drain controls、`GET /api/ops/push-gateway/status` runtime status endpoint，以及水平擴展部署 runbook。
 - Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，已有文件化的 local/CLOB/trade/settlement transition matrix 會防止 stale active 或 terminal downgrade payload 降級 local filled/settled terminal order 或 matched size，settlement/redeem event 可將 matched 或 filled order 推進到 settled，並把 user-channel trade match 推進到 local matched lifecycle，user-channel trade payload 會把 matched lifecycle 與 lastTradeId 持久化到 local `PredictionPolymarketOrder` projection，user WebSocket worker checkpoint/replay 已有 wallet-scoped durable baseline，也有 `polymarket.ws.user-worker-*` runtime identity、啟動 bounded replay、status checkpoint visibility 與 manual replay control，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op，backend-observed RPC transaction 也已有 durable command / txHash tracking envelope 與 unresolved outcome report，Gamma/CLOB response 也已有 versioned schema report 追蹤遠端欄位漂移。
 - Alert backend integration 已有 `OperationalAlert`、`AlertDispatchService` 與 `OkHttpAlertTransport`，並透過預設關閉的 `alerts.backend.*` 設定接線；alert payload 會帶 severity、route、entity id、runbook、details，以及可用的 request/correlation ids，dispatch skipped/failed 不會改動交易狀態。Tracing export/sampling policy config 已在 `tracing.export.*` 提供，Micrometer Tracing OTLP export 已透過 Actuator management properties 接線，tracing dashboard docs 也已涵蓋第一版 Grafana/Tempo panels。
-- Admin market-config 與 risk-parameters 已有 read-only API / 靜態頁 baseline，write actions 仍停用；更完整的 admin console、報表、壓測、灰度與合規功能都還沒完成。
+- Admin market-config、risk-parameters 與 DLQ 已有 read-only API / 靜態頁 baseline，write/replay actions 仍停用；更完整的 admin console、報表、壓測、灰度與合規功能都還沒完成。
 
 ## 建議接下來先做什麼
 

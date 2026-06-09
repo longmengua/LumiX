@@ -7,6 +7,7 @@ This map covers future client-facing and admin-facing web applications.
 - Current static page: `src/main/resources/static/index.html`
 - Current static admin page: `src/main/resources/static/admin-market-config.html`
 - Current static admin risk page: `src/main/resources/static/admin-risk-parameters.html`
+- Current static admin DLQ page: `src/main/resources/static/admin-dlq.html`
 - Current static README: `src/main/resources/static/README.md`
 - There is no full production frontend app yet.
 
@@ -29,6 +30,7 @@ This map covers future client-facing and admin-facing web applications.
 Implemented baseline:
 - `AdminMarketConfigController` exposes read-only `/api/admin/market-config` market configuration data for the static admin market-config page; write actions remain disabled until permissioned backend endpoints exist.
 - `AdminRiskParametersController` exposes read-only `/api/admin/risk-parameters` risk switches, symbol tiers, and oracle state for the static admin risk-parameters page; write actions remain disabled until permissioned backend endpoints exist.
+- `AdminDlqController` exposes read-only `/api/admin/dlq` DLQ rows with sanitized payload/header previews for the static admin DLQ page; replay/compensation actions remain disabled in UI pending permissioned operator workflow wiring.
 
 ## Design Constraints
 

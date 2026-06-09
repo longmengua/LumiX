@@ -1,6 +1,6 @@
 # Task: Admin DLQ Replay Screen
 
-Status: `todo`
+Status: `done`
 
 ## Goal
 
@@ -33,3 +33,9 @@ Add an admin screen for inspecting outbox/DLQ records and initiating permissione
 - [../../ai/maps/web-apps.md](../../ai/maps/web-apps.md)
 - [../../ai/maps/persistence-tests.md](../../ai/maps/persistence-tests.md)
 
+## Implementation Notes
+
+- Read-only API: `GET /api/admin/dlq`.
+- Static page: `src/main/resources/static/admin-dlq.html`.
+- Curl script: `shells/api-curls/exchange/admin-dlq-get.sh`.
+- Replay/compensation UI actions remain disabled until permissioned operator workflow wiring is added.

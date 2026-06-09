@@ -150,6 +150,7 @@
   - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 admin market config、risk parameters、DLQ replay、reconciliation report screens 拆成可實作 lane。
   - Baseline 進度：read-only admin market-config API 與靜態頁已可用，位置為 `GET /api/admin/market-config` 與 `src/main/resources/static/admin-market-config.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin risk-parameters API 與靜態頁已可用，位置為 `GET /api/admin/risk-parameters` 與 `src/main/resources/static/admin-risk-parameters.html`；write actions 仍停用，等待 permissioned backend endpoints。
+  - Baseline 進度：read-only admin DLQ API 與靜態頁已可用，位置為 `GET /api/admin/dlq` 與 `src/main/resources/static/admin-dlq.html`；payload/header preview 會遮罩敏感資訊，replay/compensation actions 仍停用，等待 permissioned operator workflow 接線。
 - [ ] 報表系統：用戶資產報表、交易報表、手續費報表、營運與財務日報。
   - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 user asset、trade、fee、operations/finance daily report exports 拆成可實作 lane。
 - [ ] 壓測工具：下單 TPS、撮合 TPS、行情推送 fanout、Polymarket sync 壓力。

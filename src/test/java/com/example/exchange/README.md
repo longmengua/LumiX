@@ -21,6 +21,7 @@
 | `OperationalMetricsMeterBinderTest` | Operational metrics snapshot 的 Micrometer / Prometheus meter binding。 |
 | `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event、pre-trade frequency limit 的整合流程。 |
 | `OutboxServiceTest` / `OutboxDomainStateConsistencyServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers，以及 outbox/domain-state consistency report。 |
+| `AdminDlqControllerTest` | Admin DLQ read-only API mapping、payload/header redaction 與 replay eligibility。 |
 | `RpcTransactionTrackingServiceTest` | RPC transaction commandId replay、fingerprint/txHash conflict 與 unresolved outcome report。 |
 | `PolymarketApprovalServiceTest` | RPC approval read cache、owner clear 與 TTL refresh。 |
 | `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |

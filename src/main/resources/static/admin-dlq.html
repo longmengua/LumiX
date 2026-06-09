@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin DLQ</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f4f6f8;
+            --panel: #ffffff;
+            --line: #cfd8df;
+            --text: #1c252c;
+            --muted: #63717b;
+            --accent: #0f5e78;
+            --accent-soft: #dff0f6;
+            --warn: #8a4b10;
+            --warn-soft: #fff2d8;
+            --danger: #9b1c1c;
+            --danger-soft: #fee2e2;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 22px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(360px, 1fr) 440px;
+            gap: 18px;
+            padding: 18px 24px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            min-height: 34px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: #fff;
+            padding: 0 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            border-color: var(--line);
+            background: #edf1f3;
+            color: #82909a;
+            cursor: not-allowed;
+        }
+
+        input, select, textarea {
+            min-height: 34px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+            padding: 0 10px;
+        }
+
+        input { width: 90px; }
+        textarea {
+            width: 100%;
+            min-height: 64px;
+            padding: 8px 10px;
+            resize: vertical;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: var(--panel);
+            border: 1px solid var(--line);
+        }
+
+        th, td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--line);
+            white-space: nowrap;
+        }
+
+        th {
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+            background: #edf2f5;
+        }
+
+        tr { cursor: pointer; }
+        tr.selected { background: var(--accent-soft); }
+
+        .status {
+            display: inline-block;
+            padding: 3px 8px;
+            border: 1px solid #f2a5a5;
+            background: var(--danger-soft);
+            color: var(--danger);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .detail {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            padding: 16px;
+            min-height: 560px;
+        }
+
+        .detail h2 {
+            margin: 0 0 12px;
+            font-size: 18px;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 14px;
+            margin-bottom: 14px;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        .value {
+            overflow-wrap: anywhere;
+            font-weight: 700;
+        }
+
+        pre {
+            max-height: 180px;
+            overflow: auto;
+            border: 1px solid var(--line);
+            background: #f8fafb;
+            padding: 10px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
+        .notice {
+            border: 1px solid #e5bf71;
+            background: var(--warn-soft);
+            color: var(--warn);
+            padding: 10px;
+            margin: 12px 0;
+            line-height: 1.4;
+        }
+
+        .error {
+            border: 1px solid #f2a5a5;
+            background: var(--danger-soft);
+            color: var(--danger);
+            padding: 10px;
+            margin: 12px 0;
+        }
+
+        @media (max-width: 980px) {
+            header { align-items: flex-start; flex-direction: column; }
+            main { grid-template-columns: 1fr; padding: 14px; }
+            .table-wrap { overflow-x: auto; }
+        }
+    </style>
+</head>
+<body>
+<header>
+    <h1>Admin DLQ</h1>
+    <div class="toolbar">
+        <label for="limit">Limit</label>
+        <input id="limit" type="number" min="1" max="200" value="50"/>
+        <button id="refresh">Refresh</button>
+    </div>
+</header>
+<main>
+    <section>
+        <div id="error" class="error" hidden></div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>Status</th>
+                    <th>Type</th>
+                    <th>Aggregate</th>
+                    <th>Attempts</th>
+                    <th>Error</th>
+                    <th>Created</th>
+                </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+            </table>
+        </div>
+    </section>
+    <aside class="detail" id="detail">
+        <h2>No DLQ item selected</h2>
+        <div class="notice">Select a row to inspect sanitized payload, trace ids, and action eligibility.</div>
+    </aside>
+</main>
+<script>
+    const rows = document.getElementById('rows');
+    const detail = document.getElementById('detail');
+    const error = document.getElementById('error');
+    const limit = document.getElementById('limit');
+    const refresh = document.getElementById('refresh');
+    let state = {items: [], capabilities: null, selected: null};
+
+    function text(value) {
+        return value === null || value === undefined || value === '' ? '-' : String(value);
+    }
+
+    function short(value, max = 96) {
+        const raw = text(value);
+        return raw.length > max ? raw.slice(0, max) + '...' : raw;
+    }
+
+    function renderRows() {
+        rows.innerHTML = '';
+        state.items.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            if (state.selected === index) tr.classList.add('selected');
+            tr.innerHTML = `
+                <td><span class="status">${text(item.status)}</span></td>
+                <td>${text(item.eventType)}</td>
+                <td>${text(item.eventKey)}</td>
+                <td>${text(item.attempts)}</td>
+                <td>${short(item.errorSummary, 72)}</td>
+                <td>${text(item.createdAt)}</td>
+            `;
+            tr.addEventListener('click', () => {
+                state.selected = index;
+                renderRows();
+                renderDetail(item);
+            });
+            rows.appendChild(tr);
+        });
+        if (state.items.length === 0) {
+            rows.innerHTML = '<tr><td colspan="6">No DLQ records</td></tr>';
+        }
+    }
+
+    function renderDetail(item) {
+        const capabilities = state.capabilities || {};
+        detail.innerHTML = `
+            <h2>${text(item.eventType)}</h2>
+            <div class="kv">
+                <div><div class="label">DLQ ID</div><div class="value">${text(item.dlqId)}</div></div>
+                <div><div class="label">Outbox ID</div><div class="value">${text(item.outboxId)}</div></div>
+                <div><div class="label">Topic</div><div class="value">${text(item.topic)}</div></div>
+                <div><div class="label">Event key</div><div class="value">${text(item.eventKey)}</div></div>
+                <div><div class="label">Request ID</div><div class="value">${text(item.requestId)}</div></div>
+                <div><div class="label">Correlation ID</div><div class="value">${text(item.correlationId)}</div></div>
+                <div><div class="label">Replay eligible</div><div class="value">${item.replayEligible ? 'Yes' : 'No'}</div></div>
+                <div><div class="label">Compensation eligible</div><div class="value">${item.compensationEligible ? 'Yes' : 'No'}</div></div>
+            </div>
+            <div class="label">Operator reason</div>
+            <textarea placeholder="Required before replay or compensation is enabled"></textarea>
+            <div class="actions">
+                <button disabled>Replay</button>
+                <button disabled>Mark compensated</button>
+            </div>
+            <div class="notice">Actions are disabled in this screen. Backend endpoints exist, but UI replay requires operator permission, reason capture, confirmation, and audit wiring. Requirements: ${text((capabilities.actionRequirements || []).join(', '))}</div>
+            <div class="label">Error summary</div>
+            <pre>${text(item.errorSummary)}</pre>
+            <div class="label">Sanitized payload preview</div>
+            <pre>${text(item.payloadPreview)}</pre>
+            <div class="label">Sanitized headers preview</div>
+            <pre>${text(item.headerPreview)}</pre>
+        `;
+    }
+
+    async function load() {
+        error.hidden = true;
+        refresh.disabled = true;
+        try {
+            const response = await fetch(`/api/admin/dlq?limit=${encodeURIComponent(limit.value || '50')}`);
+            const body = await response.json();
+            if (!response.ok || !body.ok) throw new Error(body.error || `HTTP ${response.status}`);
+            state = {items: body.data.items || [], capabilities: body.data.capabilities, selected: null};
+            renderRows();
+            detail.innerHTML = '<h2>No DLQ item selected</h2><div class="notice">Select a row to inspect sanitized payload, trace ids, and action eligibility.</div>';
+        } catch (err) {
+            error.textContent = err.message;
+            error.hidden = false;
+        } finally {
+            refresh.disabled = false;
+        }
+    }
+
+    refresh.addEventListener('click', load);
+    load();
+</script>
+</body>
+</html>
