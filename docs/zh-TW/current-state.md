@@ -14,9 +14,9 @@ English version: [../en/current-state.md](../en/current-state.md)
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
 | P0 必做 | 43 | 0 | 核心 production baseline 項目已關閉；post-v1 hardening 仍需推進。 |
-| P1 強烈建議 | 17 | 5 | 營運、market data、Polymarket、observability 仍需強化。 |
+| P1 強烈建議 | 18 | 4 | 營運、market data、Polymarket、observability 仍需強化。 |
 | P2 演進項 | 0 | 5 | Admin market-config 與 risk-parameters 已有 read-only API / 靜態頁 baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
-| 合計 | 60 | 10 | 核心 baseline 已關閉，但 production hardening 與演進工作仍待推進。 |
+| 合計 | 61 | 9 | 核心 baseline 已關閉，但 production hardening 與演進工作仍待推進。 |
 
 ## 目前插單優先順序
 
@@ -81,18 +81,18 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - 做市商對沖已有 durable profile/risk-limit storage、profile admin API、bounded hedge fill query API、venue fill callback ingestion、venue fill idempotent replay 與可選 HMAC/timestamp verification、manual 與預設關閉的 scheduled hedge execution API 且限制安全 ref prefix、durable scheduled-worker lock、operator approval token gate、manual hedge execution API frequency limiting、含 operator identity 與 approval token outcome 的 effectful endpoint audit fields、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、enabled-profile batch 共用的 per-run execution route/notional cap policy、quote command validation、quote API frequency limiting、stale quote cleanup、post-only internal order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage、quote/open-order reconciliation 與預設關閉的 fail-closed quote repair baseline、hedge venue adapter contract、real venue signed-request/lookup HTTP transport、uncertain submit reconciliation 的 venue outcome lookup contract、retryable venue result classification、durable refId idempotency claim/result storage、未解 hedge venue idempotency 營運報告與 reconcile trigger、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、含 internal trade 與 ledger refs 的 durable hedge decision/fill audit trails、decision-vs-fill hedge reconciliation，以及 trade/ledger ref issue reporting；自動 hedge reconciliation repair job 仍未完成。
 - outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。
 - Database indexing 已有 Flyway baseline，涵蓋 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction order/user-event 查詢，以及 `position_lifecycle_projection` live-position mirror schema / indexes；live order SQL mirror design 已決定使用 `order_lifecycle_projection`，archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Object-storage archive writers、delete jobs 與 live-position projection update/rebuild wiring 仍未完成。
-- Operations metrics 已暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters；production metrics export 仍未完成。
+- Operations metrics 已透過 `/api/ops/metrics` 與 `/actuator/prometheus` 的 Micrometer Prometheus export 暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters。
 - MySQL、Redis、Kafka 之間已有 order commands、liquidation、ADL execution 與 hedge execution 的 command-boundary/outbox baseline，並有 order-place outbox insert failure、cancel ledger-release failure、hedge audit/outbox failure rollback coverage、cross-store MySQL/Redis/Kafka failure drill，以及 outbox/domain-state consistency recovery report。
 - market data 已有 durable depth sequence checkpoints、reconnect backfill depth deltas、durable trade tape、trade replay cursors、durable ticker latest state、durable 1m klines，以及預設關閉的高流量 depth/trade/kline history DB retention windows。
 - WebSocket/SSE gateway 已有 heartbeat contract、預設關閉的 heartbeat scheduler、private user SSE/WebSocket stream 訂閱授權、per-client stream 訂閱限流、depth/trade recovery cursor contract，以及水平擴展部署 runbook；仍缺實際 production infrastructure split。
 - Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，已有文件化的 local/CLOB/trade/settlement transition matrix 會防止 stale active 或 terminal downgrade payload 降級 local filled/settled terminal order 或 matched size，settlement/redeem event 可將 matched 或 filled order 推進到 settled，並把 user-channel trade match 推進到 local matched lifecycle，user-channel trade payload 會把 matched lifecycle 與 lastTradeId 持久化到 local `PredictionPolymarketOrder` projection，user WebSocket gateway checkpoint/replay 已有 wallet-scoped durable baseline，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op，backend-observed RPC transaction 也已有 durable command / txHash tracking envelope 與 unresolved outcome report，Gamma/CLOB response 也已有 versioned schema report 追蹤遠端欄位漂移；獨立部署的 user WebSocket worker 仍待辦。
-- metrics backend、實際 tracing exporter wiring、dashboard、alert backend integration 還不完整；tracing export/sampling policy config 已在 `tracing.export.*` 提供，alert-rule baseline docs 也已涵蓋 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets。
+- 實際 tracing exporter wiring、dashboard、alert backend integration 還不完整；tracing export/sampling policy config 已在 `tracing.export.*` 提供，alert-rule baseline docs 也已涵蓋 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets。
 - Admin market-config 與 risk-parameters 已有 read-only API / 靜態頁 baseline，write actions 仍停用；更完整的 admin console、報表、壓測、灰度與合規功能都還沒完成。
 
 ## 建議接下來先做什麼
 
 1. Tag 或 hand off 有邊界的 core-v1 baseline。
-2. 收斂剩餘 P1 blockers：WebSocket/SSE gateway 獨立部署、Polymarket user WebSocket worker 獨立部署、production metrics export、tracing exporter/dashboard wiring，以及 alert backend integration。
+2. 收斂剩餘 P1 blockers：WebSocket/SSE gateway 獨立部署、Polymarket user WebSocket worker 獨立部署、tracing exporter/dashboard wiring，以及 alert backend integration。
 3. core-v1 baseline tag 或明確 hand off 後，再繼續 P2。
 
 ## 閱讀順序

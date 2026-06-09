@@ -8,6 +8,19 @@ spring:
     baseline-on-migrate: true
     locations: classpath:db/migration
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: ${MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE:health,info,prometheus}
+  endpoint:
+    prometheus:
+      enabled: ${MANAGEMENT_PROMETHEUS_ENABLED:true}
+  prometheus:
+    metrics:
+      export:
+        enabled: ${MANAGEMENT_PROMETHEUS_EXPORT_ENABLED:true}
+
 api-auth:
   # Production 預設啟用 authentication / authorization。
   enabled: ${API_AUTH_ENABLED:true}

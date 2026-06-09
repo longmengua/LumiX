@@ -26,7 +26,16 @@ Order lifecycle projection emits structured `CORE_EVENT eventType=ORDER_LIFECYCL
 
 ## Operations Metrics
 
-`GET /api/ops/metrics` returns an in-process snapshot for order status counts, order latency average/max, canceled order count, emitted trade-event count, matching latency average/max, matching rejection rate, matching fill rate, DB operation latency average/max, Redis operation latency average/max, and Kafka consumer lag total/max. This is a lightweight baseline for local operation; production should still export metrics through a dedicated metrics backend.
+`GET /api/ops/metrics` returns an in-process JSON snapshot for order status counts, order latency average/max, canceled order count, emitted trade-event count, matching latency average/max, matching rejection rate, matching fill rate, DB operation latency average/max, Redis operation latency average/max, and Kafka consumer lag total/max.
+
+Production metrics export is available through Spring Boot Actuator and Micrometer Prometheus:
+
+- Scrape endpoint: `GET /actuator/prometheus`.
+- Exposure config: `management.endpoints.web.exposure.include=health,info,prometheus`.
+- Export toggle: `MANAGEMENT_PROMETHEUS_EXPORT_ENABLED`.
+- `OperationalMetricsMeterBinder` maps the in-process snapshot into `exchange.*` Prometheus meters.
+
+Protect `/actuator/prometheus` at the deployment edge or management network; the app exposes the endpoint so Prometheus can scrape it.
 
 ## Tracing Export And Sampling
 

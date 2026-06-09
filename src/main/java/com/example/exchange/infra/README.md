@@ -1,5 +1,9 @@
 # infra
 
+Infrastructure adapters and platform integrations.
+
+- `metrics/OperationalMetricsMeterBinder` exports the in-process operational metrics snapshot to Micrometer / Prometheus.
+
 Infrastructure adapters。
 
 目錄：
@@ -12,4 +16,4 @@ Infrastructure adapters。
 
 目前狀態：
 - 多數 adapter 是 MVP / local dev baseline。
-- production 前要補 durable storage、metrics、distributed tracing、transaction boundary。
+- production 前仍要補更完整 durable storage、distributed tracing exporter、alert backend 與 transaction boundary 營運強化。

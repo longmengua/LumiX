@@ -133,8 +133,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 ### Observability
 
 - [x] Add `/api/ops/metrics` baseline for order status, order latency, cancel count, and trade-event count.
-- [ ] Add metrics backend plus matching, Kafka lag, DB latency, Redis latency, rejection-rate, and fill-rate collectors.
-  - Baseline done: `/api/ops/metrics` exposes in-process matching latency, rejection rate, fill rate, DB operation latency, Redis operation latency, and Kafka consumer lag counters. Remaining: production metrics backend/export.
+- [x] Add metrics backend plus matching, Kafka lag, DB latency, Redis latency, rejection-rate, and fill-rate collectors.
+  - Baseline done: `/api/ops/metrics` exposes in-process matching latency, rejection rate, fill rate, DB operation latency, Redis operation latency, and Kafka consumer lag counters. Spring Boot Actuator and Micrometer Prometheus export are enabled, and `OperationalMetricsMeterBinder` maps the in-process snapshot to Prometheus meters under `/actuator/prometheus`.
 - [x] Add request id / correlation id propagation through headers, MDC, outbox, Kafka, and external API clients.
 - [ ] Add distributed tracing export, dashboards, and sampling policy.
   - Baseline done: `tracing.export.*` defines disabled-by-default OTLP endpoint, service name, ratio sampling, critical-flow always-sample, and health/metrics drop policy. Remaining: actual exporter dependency/wiring and dashboards.

@@ -26,7 +26,16 @@ Order lifecycle projection 會輸出 structured `CORE_EVENT eventType=ORDER_LIFE
 
 ## Operations Metrics
 
-`GET /api/ops/metrics` 會回傳 in-process snapshot，包含訂單狀態計數、下單延遲平均/最大值、撤單數、送出的成交事件數、matching latency 平均/最大值、matching rejection rate、matching fill rate、DB operation latency 平均/最大值、Redis operation latency 平均/最大值，以及 Kafka consumer lag total/max。這是本機營運基線；production 仍應匯出到專用 metrics backend。
+`GET /api/ops/metrics` 會回傳 in-process JSON snapshot，包含訂單狀態計數、下單延遲平均/最大值、撤單數、送出的成交事件數、matching latency 平均/最大值、matching rejection rate、matching fill rate、DB operation latency 平均/最大值、Redis operation latency 平均/最大值，以及 Kafka consumer lag total/max。
+
+Production metrics export 已透過 Spring Boot Actuator 與 Micrometer Prometheus 提供：
+
+- Scrape endpoint：`GET /actuator/prometheus`。
+- Exposure config：`management.endpoints.web.exposure.include=health,info,prometheus`。
+- Export toggle：`MANAGEMENT_PROMETHEUS_EXPORT_ENABLED`。
+- `OperationalMetricsMeterBinder` 會把 in-process snapshot 映射成 `exchange.*` Prometheus meters。
+
+`/actuator/prometheus` 應在 deployment edge 或 management network 做保護；app 端負責提供 Prometheus 可 scrape 的 endpoint。
 
 ## Tracing Export And Sampling
 

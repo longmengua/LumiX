@@ -48,6 +48,7 @@ Config:
 - Archive exporter skeleton: `ArchiveExporterService`, `ArchiveExporterScheduler`, `ArchiveExporterServiceTest`
 - Kafka topic contract: `docs/en/kafka-topics.md`
 - Observability baseline: `docs/en/observability.md`
+- Metrics export: `OperationalMetricsMeterBinder`, `/actuator/prometheus`
 - Outbox runbook: `docs/en/outbox-runbook.md`
 
 ## Focused Tests
