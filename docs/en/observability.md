@@ -39,7 +39,7 @@ Protect `/actuator/prometheus` at the deployment edge or management network; the
 
 ## Tracing Export And Sampling
 
-`tracing.export.*` defines the disabled-by-default export contract for a future OpenTelemetry/OTLP bridge:
+`tracing.export.*` defines the disabled-by-default OpenTelemetry/OTLP export contract:
 
 - `enabled`: remains `false` until the collector endpoint, retention, and data classification review are ready.
 - `otlp-endpoint`: target collector endpoint, supplied from environment/secret-backed config in production.
@@ -48,7 +48,15 @@ Protect `/actuator/prometheus` at the deployment edge or management network; the
 - `always-sample-critical-flows`: keep error, security audit, settlement, reconciliation, liquidation, and external command traces even when ratio sampling would drop them.
 - `drop-health-and-metrics`: skip `/actuator/health`, readiness, and metrics reads to avoid low-value trace volume.
 
-Dashboards should group by service name, route, status, external venue, Kafka topic, and matching symbol. Actual exporter wiring remains future work; this repo currently provides the config and policy baseline.
+Dashboards should group by service name, route, status, external venue, Kafka topic, and matching symbol.
+
+Exporter wiring is present through `micrometer-tracing-bridge-otel`, `opentelemetry-exporter-otlp`, and Spring Boot Actuator management properties:
+
+- `management.tracing.enabled=${TRACING_EXPORT_ENABLED:false}`
+- `management.tracing.sampling.probability=${TRACING_EXPORT_SAMPLE_RATE:0.10}`
+- `management.otlp.tracing.endpoint=${TRACING_EXPORT_OTLP_ENDPOINT:http://localhost:4318/v1/traces}`
+
+The first dashboard contract is documented in [Tracing Dashboard](tracing-dashboard.md).
 
 ## Alert Rules
 

@@ -23,6 +23,7 @@ English version: [../en/technical.md](../en/technical.md)
 | [Finance Operator Runbook](finance-operator-runbook.md) | 每日財務匯出、ledger archive restore smoke、delete guard、replay validation 與不平衡日報處理。 |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
 | [Alert Rules Baseline](alert-rules.md) | Matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced-asset alert rules。 |
+| [Tracing Dashboard](tracing-dashboard.md) | OTLP tracing exporter wiring、dashboard panels 與 sampling controls。 |
 | [Cross-Store Failure Drill](cross-store-failure-drill.md) | MySQL/Redis/Kafka failure drill 與 outbox/domain-state consistency checks。 |
 | [Disaster Recovery Runbook](disaster-recovery-runbook.md) | Matching/order/account/position restore 順序、worker takeover、authenticated reconnect replay 與 smoke commands。 |
 | [ADL 營運手冊](adl-operator-runbook.md) | ADL queue claim、execution、partial retry、no-candidate retry 與 insurance reconciliation 操作流程。 |

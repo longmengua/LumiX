@@ -39,7 +39,7 @@ Production metrics export 已透過 Spring Boot Actuator 與 Micrometer Promethe
 
 ## Tracing Export And Sampling
 
-`tracing.export.*` 定義未來 OpenTelemetry/OTLP bridge 使用的 export contract，預設關閉：
+`tracing.export.*` 定義 OpenTelemetry/OTLP export contract，預設關閉：
 
 - `enabled`：collector endpoint、retention 與資料分級 review 完成前維持 `false`。
 - `otlp-endpoint`：target collector endpoint，production 由環境變數或 secret-backed config 提供。
@@ -48,7 +48,15 @@ Production metrics export 已透過 Spring Boot Actuator 與 Micrometer Promethe
 - `always-sample-critical-flows`：error、security audit、settlement、reconciliation、liquidation、external command traces 即使 ratio sampling 會丟棄也要保留。
 - `drop-health-and-metrics`：跳過 `/actuator/health`、readiness 與 metrics reads，避免低價值 trace volume。
 
-Dashboard 應按 service name、route、status、external venue、Kafka topic 與 matching symbol 分組。實際 exporter wiring 仍是後續工作；目前 repo 提供 config 與 policy baseline。
+Dashboard 應按 service name、route、status、external venue、Kafka topic 與 matching symbol 分組。
+
+Exporter wiring 已透過 `micrometer-tracing-bridge-otel`、`opentelemetry-exporter-otlp` 與 Spring Boot Actuator management properties 接上：
+
+- `management.tracing.enabled=${TRACING_EXPORT_ENABLED:false}`
+- `management.tracing.sampling.probability=${TRACING_EXPORT_SAMPLE_RATE:0.10}`
+- `management.otlp.tracing.endpoint=${TRACING_EXPORT_OTLP_ENDPOINT:http://localhost:4318/v1/traces}`
+
+第一版 dashboard contract 已整理在 [Tracing Dashboard](tracing-dashboard.md)。
 
 ## Alert Rules
 

@@ -23,6 +23,7 @@ Technical documentation is for engineers who need to understand how the system i
 | [Finance Operator Runbook](finance-operator-runbook.md) | Daily finance export, ledger archive restore smoke, delete guard, replay validation, and unbalanced report handling. |
 | [Outbox Runbook](outbox-runbook.md) | Durable outbox, DLQ replay, and manual compensation operations. |
 | [Alert Rules Baseline](alert-rules.md) | Matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced-asset alert rules. |
+| [Tracing Dashboard](tracing-dashboard.md) | OTLP tracing exporter wiring, dashboard panels, and sampling controls. |
 | [Cross-Store Failure Drill](cross-store-failure-drill.md) | MySQL/Redis/Kafka failure drill and outbox/domain-state consistency checks. |
 | [Disaster Recovery Runbook](disaster-recovery-runbook.md) | Matching/order/account/position restore order, worker takeover, authenticated reconnect replay, and smoke commands. |
 | [ADL Operator Runbook](adl-operator-runbook.md) | ADL queue claim, execution, partial retry, no-candidate retry, and insurance reconciliation operations. |

@@ -136,8 +136,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add metrics backend plus matching, Kafka lag, DB latency, Redis latency, rejection-rate, and fill-rate collectors.
   - Baseline done: `/api/ops/metrics` exposes in-process matching latency, rejection rate, fill rate, DB operation latency, Redis operation latency, and Kafka consumer lag counters. Spring Boot Actuator and Micrometer Prometheus export are enabled, and `OperationalMetricsMeterBinder` maps the in-process snapshot to Prometheus meters under `/actuator/prometheus`.
 - [x] Add request id / correlation id propagation through headers, MDC, outbox, Kafka, and external API clients.
-- [ ] Add distributed tracing export, dashboards, and sampling policy.
-  - Baseline done: `tracing.export.*` defines disabled-by-default OTLP endpoint, service name, ratio sampling, critical-flow always-sample, and health/metrics drop policy. Remaining: actual exporter dependency/wiring and dashboards.
+- [x] Add distributed tracing export, dashboards, and sampling policy.
+  - Baseline done: `tracing.export.*` defines disabled-by-default OTLP endpoint, service name, ratio sampling, critical-flow always-sample, and health/metrics drop policy. Micrometer Tracing OpenTelemetry bridge and OTLP exporter dependencies are wired through `management.tracing.*` and `management.otlp.tracing.*`; [Tracing Dashboard](tracing-dashboard.md) defines the first Grafana/Tempo panels and trace/log/metrics links.
 - [x] Add request/security audit structured logging baseline.
 - [x] Add structured core-event logging searchable by uid, orderId, clientOrderId, and symbol.
   - Baseline done: order lifecycle projection writes `CORE_EVENT eventType=ORDER_LIFECYCLE` log lines with stable `uid`, `orderId`, `clientOrderId`, `symbol`, `stage`, `status`, `reasonCode`, and `eventTs` fields.
