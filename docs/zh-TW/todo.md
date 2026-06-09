@@ -141,8 +141,8 @@
 - [x] 補 request/security audit structured logging baseline。
 - [x] 補核心事件 structured logging，能按 uid、orderId、clientOrderId、symbol 搜尋。
   - Baseline 已完成：order lifecycle projection 會寫 `CORE_EVENT eventType=ORDER_LIFECYCLE` log line，包含穩定的 `uid`、`orderId`、`clientOrderId`、`symbol`、`stage`、`status`、`reasonCode`、`eventTs` 欄位。
-- [ ] 建立 alert：撮合停止、Kafka lag、DLQ 堆積、對帳失敗、外部 API 錯誤率、資產不平。
-  - Baseline 已完成：[Alert Rules Baseline](alert-rules.md) 已定義 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets 的 signal、threshold、severity、route、runbook、routing rules 與 noise controls。Remaining：接入實際 alert backend。
+- [x] 建立 alert：撮合停止、Kafka lag、DLQ 堆積、對帳失敗、外部 API 錯誤率、資產不平。
+  - Baseline 已完成：[Alert Rules Baseline](alert-rules.md) 已定義 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets 的 signal、threshold、severity、route、runbook、routing rules 與 noise controls。`AlertDispatchService` 與 `OkHttpAlertTransport` 提供預設關閉的 `alerts.backend.*` webhook backend，payload 會補 request/correlation ids，dispatch skipped/failed 只回報結果、不改交易狀態。
 
 ## P2 可逐步演進
 

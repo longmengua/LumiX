@@ -61,3 +61,11 @@ The first dashboard contract is documented in [Tracing Dashboard](tracing-dashbo
 ## Alert Rules
 
 The production alert baseline is documented in [Alert Rules Baseline](alert-rules.md). It covers matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets, with routes and first runbooks for each alert.
+
+`AlertDispatchService` sends `OperationalAlert` payloads through the configured backend. The default is disabled:
+
+- `alerts.backend.enabled=${ALERT_BACKEND_ENABLED:false}`
+- `alerts.backend.webhook-url=${ALERT_BACKEND_WEBHOOK_URL:}`
+- `alerts.backend.timeout-ms=${ALERT_BACKEND_TIMEOUT_MS:3000}`
+
+When disabled or unconfigured, dispatch returns `SKIPPED` and logs `OPERATIONAL_ALERT`. Backend failures return `FAILED` and do not mutate trading state.

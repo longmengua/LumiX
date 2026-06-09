@@ -141,8 +141,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 - [x] Add request/security audit structured logging baseline.
 - [x] Add structured core-event logging searchable by uid, orderId, clientOrderId, and symbol.
   - Baseline done: order lifecycle projection writes `CORE_EVENT eventType=ORDER_LIFECYCLE` log lines with stable `uid`, `orderId`, `clientOrderId`, `symbol`, `stage`, `status`, `reasonCode`, and `eventTs` fields.
-- [ ] Add alerts for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
-  - Baseline done: [Alert Rules Baseline](alert-rules.md) defines signals, thresholds, severity, routes, runbooks, routing rules, and noise controls for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets. Remaining: wire rules into the chosen alert backend.
+- [x] Add alerts for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
+  - Baseline done: [Alert Rules Baseline](alert-rules.md) defines signals, thresholds, severity, routes, runbooks, routing rules, and noise controls for matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets. `AlertDispatchService` and `OkHttpAlertTransport` provide a disabled-by-default webhook backend under `alerts.backend.*`, enrich payloads with request/correlation ids, and report skipped/failed dispatch without mutating trading state.
 
 ## P2 Incremental Evolution
 

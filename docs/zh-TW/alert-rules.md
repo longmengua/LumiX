@@ -20,6 +20,7 @@
 - Warning Kafka、DLQ、external API alerts 先建立 operations tickets；若超過 critical window 未解除再升級 paging。
 - 每個 alert payload 應盡量帶 `requestId` 或 `correlationId`，並依情境帶 symbol、topic、partition、outbox id、report id、command id 或 account id。
 - Acknowledge alert 不應改動交易狀態；recovery actions 必須走對應 runbook/API。
+- `AlertDispatchService` 是 application dispatch boundary；`alerts.backend.*` 控制預設關閉的 webhook transport。
 
 ## Noise Controls
 

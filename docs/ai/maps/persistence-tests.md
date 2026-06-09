@@ -50,6 +50,7 @@ Config:
 - Observability baseline: `docs/en/observability.md`
 - Metrics export: `OperationalMetricsMeterBinder`, `/actuator/prometheus`
 - Tracing export: Micrometer Tracing OpenTelemetry bridge, OTLP exporter, `docs/en/tracing-dashboard.md`
+- Alert backend: `OperationalAlert`, `AlertDispatchService`, `OkHttpAlertTransport`, `alerts.backend.*`
 - Outbox runbook: `docs/en/outbox-runbook.md`
 
 ## Focused Tests

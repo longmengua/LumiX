@@ -20,6 +20,7 @@ These rules are the production alert contract for the current MVP signals. They 
 - Warning Kafka, DLQ, and external API alerts create operations tickets and escalate to paging if they remain open past the critical window.
 - Every alert payload should include `requestId` or `correlationId` when available, plus symbol, topic, partition, outbox id, report id, command id, or account id as applicable.
 - Acknowledging an alert must not mutate trading state; recovery actions must use the relevant runbook/API.
+- `AlertDispatchService` is the application dispatch boundary; `alerts.backend.*` controls the disabled-by-default webhook transport.
 
 ## Noise Controls
 

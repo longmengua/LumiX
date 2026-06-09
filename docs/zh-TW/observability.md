@@ -61,3 +61,11 @@ Exporter wiring 已透過 `micrometer-tracing-bridge-otel`、`opentelemetry-expo
 ## Alert Rules
 
 Production alert baseline 已整理在 [Alert Rules Baseline](alert-rules.md)。內容涵蓋 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets，並定義每個 alert 的 route 與 first runbook。
+
+`AlertDispatchService` 會把 `OperationalAlert` payload 送往設定的 backend。預設關閉：
+
+- `alerts.backend.enabled=${ALERT_BACKEND_ENABLED:false}`
+- `alerts.backend.webhook-url=${ALERT_BACKEND_WEBHOOK_URL:}`
+- `alerts.backend.timeout-ms=${ALERT_BACKEND_TIMEOUT_MS:3000}`
+
+未啟用或未設定時，dispatch 回傳 `SKIPPED` 並寫 `OPERATIONAL_ALERT` log。Backend 失敗時回傳 `FAILED`，不改動交易狀態。

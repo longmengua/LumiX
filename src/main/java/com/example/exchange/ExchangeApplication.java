@@ -5,6 +5,7 @@ package com.example.exchange;
 
 import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.ArchiveExporterProperties;
+import com.example.exchange.infra.config.AlertBackendProperties;
 import com.example.exchange.infra.config.BonusCreditProperties;
 import com.example.exchange.infra.config.FundingRateProperties;
 import com.example.exchange.infra.config.HedgeVenueCallbackProperties;
@@ -39,6 +40,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableConfigurationProperties({
         ApiAuthProperties.class,
         ArchiveExporterProperties.class,
+        AlertBackendProperties.class,
         BonusCreditProperties.class,
         FundingRateProperties.class,
         HedgeVenueCallbackProperties.class,

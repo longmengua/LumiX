@@ -14,9 +14,9 @@ The counts below come from the `[x]` / `[ ]` status in [todo.md](todo.md).
 | Scope | Completed Baseline | Open Production Work | Reading |
 | --- | ---: | ---: | --- |
 | P0 Required | 43 | 0 | Core production baseline items are closed; post-v1 hardening still remains. |
-| P1 Strongly Recommended | 19 | 3 | Operations, market data, Polymarket, and observability still need hardening. |
+| P1 Strongly Recommended | 20 | 2 | Operations, market data, and Polymarket still need hardening. |
 | P2 Evolution | 0 | 5 | Admin market-config and risk-parameters have read-only API/static page baselines; broader admin, reporting, load testing, compliance, and rollout controls remain incomplete. |
-| Total | 62 | 8 | The core baseline is closed, but production hardening and evolution work remain. |
+| Total | 63 | 7 | The core baseline is closed, but production hardening and evolution work remain. |
 
 ## Current Priority Override
 
@@ -86,13 +86,13 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 - Market data now has durable depth sequence checkpoints, reconnect backfill depth deltas, durable trade tape, trade replay cursors, durable ticker latest state, durable 1m klines, and disabled-by-default DB retention windows for high-volume depth/trade/kline history.
 - The WebSocket/SSE gateway now has a heartbeat contract, disabled-by-default heartbeat scheduler, private user stream subscription authorization for SSE/WebSocket, per-client stream subscription rate limiting, a depth/trade recovery cursor contract, and a horizontal-scaling deployment runbook; it still needs the actual production infrastructure split.
 - Polymarket CLOB place now has a `clientRequestId` local idempotency baseline, CLOB cancel can use durable `commandId` records, CLOB cancel replays already-recorded cancel/uncertain statuses locally, reconcile can resolve uncertain cancel from remote CLOB status, sync/reconcile skip unchanged local writes, a documented local/CLOB/trade/settlement transition matrix prevents stale active or terminal downgrade payloads from downgrading local filled/settled terminal orders or matched size, lets settlement/redeem events advance matched or filled orders to settled, routes user-channel trade matches into the local matched lifecycle, user-channel trade payloads persist matched lifecycle and lastTradeId into the local `PredictionPolymarketOrder` projection, user WebSocket gateway checkpoint/replay has a durable wallet-scoped baseline, approval reads have TTL cache coverage, session signer lifecycle guards cover expiration/revocation/abnormal-use warnings, user-channel callbacks no-op duplicate `eventKey` replays including save-race duplicates, backend-observed RPC transactions have a durable command/txHash tracking envelope with unresolved outcome reporting, and Gamma/CLOB responses now have versioned schema reports for remote-field drift; the independently deployed user WebSocket worker is still TODO.
-- Alert backend integration is incomplete; tracing export/sampling policy config now exists under `tracing.export.*`, Micrometer Tracing OTLP export is wired through Actuator management properties, and tracing dashboard docs cover the first Grafana/Tempo panels. Alert-rule baseline docs cover matching halt, Kafka lag, DLQ buildup, reconciliation failure, external API error rate, and unbalanced assets.
+- Alert backend integration now has `OperationalAlert`, `AlertDispatchService`, and `OkHttpAlertTransport` wired through disabled-by-default `alerts.backend.*` config; alert payloads carry severity, route, entity id, runbook, details, and request/correlation ids when available, and skipped/failed dispatch does not mutate trading state. Tracing export/sampling policy config exists under `tracing.export.*`, Micrometer Tracing OTLP export is wired through Actuator management properties, and tracing dashboard docs cover the first Grafana/Tempo panels.
 - Admin market-config and risk-parameters have read-only API/static page baselines with disabled write actions; broader admin console, reporting, load testing, rollout, and compliance features are not complete.
 
 ## Recommended Next Work
 
 1. Tag or hand off the bounded core-v1 baseline.
-2. Finish the remaining P1 blockers: independently deployed WebSocket/SSE gateway, independently deployed Polymarket user WebSocket worker, and alert backend integration.
+2. Finish the remaining P1 blockers: independently deployed WebSocket/SSE gateway and independently deployed Polymarket user WebSocket worker.
 3. Continue P2 only after the core-v1 baseline is tagged or explicitly handed off.
 
 ## Reading Order
