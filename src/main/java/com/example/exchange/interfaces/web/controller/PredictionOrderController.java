@@ -343,6 +343,18 @@ public class PredictionOrderController {
     }
 
     /**
+     * 從 durable checkpoint 後補送 Polymarket user WebSocket 事件。
+     *
+     * POST /api/prediction/ws/user/replay?maxEvents=500
+     */
+    @PostMapping("/ws/user/replay")
+    public int replayUserWebSocketEvents(
+            @RequestParam(defaultValue = "500") int maxEvents
+    ) {
+        return polymarketUserWebSocketService.replayPersistedEventsFromCheckpoint(maxEvents);
+    }
+
+    /**
      * 查 ERC20 allowance。
      *
      * GET /api/prediction/approve/collateral/allowance?owner=0x...

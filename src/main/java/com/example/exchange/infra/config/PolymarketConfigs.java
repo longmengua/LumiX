@@ -158,6 +158,23 @@ public class PolymarketConfigs {
         private Boolean userEnabled = false;
 
         /**
+         * 部署角色識別：MONOLITH 或 USER_WS_WORKER。
+         */
+        private String userWorkerRole = "MONOLITH";
+
+        /**
+         * 獨立 user WebSocket worker instance identity，供 status/readiness 與 log 使用。
+         */
+        private String userWorkerInstanceId = "local";
+
+        /**
+         * 啟動或手動補送 checkpoint 後事件時的單批上限。
+         */
+        @NotNull
+        @Min(1)
+        private Integer userReplayBatchSize = 500;
+
+        /**
          * 可選：只訂閱特定 condition id。
          * 空陣列代表 user channel 按 API key 接收全部個人 order/trade 更新。
          */

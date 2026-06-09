@@ -88,6 +88,15 @@ public class PolymarketUserWebSocketService {
     @EventListener(ApplicationReadyEvent.class)
     public void autoStart() {
         if (Boolean.TRUE.equals(polymarketConfigs.getWs().getUserEnabled())) {
+            int replayed =
+                    replayPersistedEventsFromCheckpoint(polymarketConfigs.getWs().getUserReplayBatchSize());
+            if (replayed > 0) {
+                log.info(
+                        "[PolymarketUserWS] replayed persisted events before start. workerInstanceId={}, replayed={}",
+                        polymarketConfigs.getWs().getUserWorkerInstanceId(),
+                        replayed
+                );
+            }
             startUserChannel();
         }
     }
@@ -127,12 +136,23 @@ public class PolymarketUserWebSocketService {
     }
 
     public PolymarketUserWsStatusResponse status() {
+        PredictionPolymarketUserWsCheckpoint checkpoint =
+                checkpointRepository.findByStreamKey(streamKey()).orElse(null);
         return PolymarketUserWsStatusResponse.builder()
                 .shouldRun(shouldRun.get())
                 .connecting(connecting.get())
                 .connected(webSocketRef.get() != null)
+                .workerRole(polymarketConfigs.getWs().getUserWorkerRole())
+                .workerInstanceId(polymarketConfigs.getWs().getUserWorkerInstanceId())
                 .url(polymarketConfigs.getWs().getUserUrl())
                 .walletAddress(polymarketConfigs.getWallet().getFunderAddress())
+                .streamKey(streamKey())
+                .checkpointEventKey(checkpoint == null ? null : checkpoint.getLastEventKey())
+                .checkpointEventType(checkpoint == null ? null : checkpoint.getLastEventType())
+                .checkpointReceivedAt(checkpoint == null || checkpoint.getLastReceivedAt() == null
+                        ? null
+                        : checkpoint.getLastReceivedAt().atZone(ZoneId.systemDefault()).toInstant())
+                .replayBatchSize(polymarketConfigs.getWs().getUserReplayBatchSize())
                 .marketConditionIds(
                         List.copyOf(
                                 polymarketConfigs

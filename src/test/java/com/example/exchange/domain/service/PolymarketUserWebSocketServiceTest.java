@@ -122,14 +122,59 @@ class PolymarketUserWebSocketServiceTest {
                 .send(eq("polymarket.user.events"), eq("clob-2"), any(PolymarketUserWsEvent.class));
     }
 
+    @Test
+    @DisplayName("status 會回報獨立 user WebSocket worker identity 與 durable checkpoint")
+    /**
+     * 流程：獨立 worker 部署時，營運需要從 status 判斷 instance identity、stream key 與 checkpoint 位置。
+     * 期望：status 帶出 role、instance id、replay batch size 以及目前 checkpoint event。
+     */
+    void statusReportsWorkerRuntimeAndCheckpoint() {
+        LocalDateTime receivedAt =
+                LocalDateTime.of(2026, 6, 4, 10, 30);
+        PredictionPolymarketUserWsCheckpoint checkpoint =
+                checkpoint("trade:MATCHED:clob-1:trade-1:condition-1:asset-1", receivedAt);
+        checkpoint.setLastEventType("trade");
+        CheckpointRepository checkpointRepository =
+                new CheckpointRepository(checkpoint);
+        EventRepository eventRepository =
+                new EventRepository(List.of());
+        PolymarketConfigs configs =
+                configs();
+        configs.getWs().setUserWorkerRole("USER_WS_WORKER");
+        configs.getWs().setUserWorkerInstanceId("poly-ws-a");
+        configs.getWs().setUserReplayBatchSize(250);
+        PolymarketUserWebSocketService service =
+                service(mock(KafkaTemplate.class), checkpointRepository, eventRepository, configs);
+
+        var status =
+                service.status();
+
+        assertThat(status.getWorkerRole()).isEqualTo("USER_WS_WORKER");
+        assertThat(status.getWorkerInstanceId()).isEqualTo("poly-ws-a");
+        assertThat(status.getStreamKey()).isEqualTo("user:" + WALLET);
+        assertThat(status.getCheckpointEventKey())
+                .isEqualTo("trade:MATCHED:clob-1:trade-1:condition-1:asset-1");
+        assertThat(status.getCheckpointEventType()).isEqualTo("trade");
+        assertThat(status.getCheckpointReceivedAt()).isNotNull();
+        assertThat(status.getReplayBatchSize()).isEqualTo(250);
+    }
+
     private static PolymarketUserWebSocketService service(
             KafkaTemplate<String, Object> kafkaTemplate,
             CheckpointRepository checkpointRepository,
             EventRepository eventRepository
     ) {
         PolymarketConfigs configs =
-                new PolymarketConfigs();
-        configs.getWallet().setFunderAddress(WALLET);
+                configs();
+        return service(kafkaTemplate, checkpointRepository, eventRepository, configs);
+    }
+
+    private static PolymarketUserWebSocketService service(
+            KafkaTemplate<String, Object> kafkaTemplate,
+            CheckpointRepository checkpointRepository,
+            EventRepository eventRepository,
+            PolymarketConfigs configs
+    ) {
         return new PolymarketUserWebSocketService(
                 new ObjectMapper(),
                 configs,
@@ -137,6 +182,13 @@ class PolymarketUserWebSocketServiceTest {
                 checkpointRepository.proxy(),
                 eventRepository.proxy()
         );
+    }
+
+    private static PolymarketConfigs configs() {
+        PolymarketConfigs configs =
+                new PolymarketConfigs();
+        configs.getWallet().setFunderAddress(WALLET);
+        return configs;
     }
 
     private static PredictionPolymarketUserWsCheckpoint checkpoint(

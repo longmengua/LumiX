@@ -22,9 +22,23 @@ public class PolymarketUserWsStatusResponse {
 
     private boolean connected;
 
+    private String workerRole;
+
+    private String workerInstanceId;
+
     private String url;
 
     private String walletAddress;
+
+    private String streamKey;
+
+    private String checkpointEventKey;
+
+    private String checkpointEventType;
+
+    private Instant checkpointReceivedAt;
+
+    private int replayBatchSize;
 
     private List<String> marketConditionIds;
 

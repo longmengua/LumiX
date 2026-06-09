@@ -204,6 +204,9 @@ polymarket:
   ws:
     user-url: ${POLYMARKET_WS_USER_URL:wss://ws-subscriptions-clob.polymarket.com/ws/user}
     user-enabled: ${POLYMARKET_WS_USER_ENABLED:false}
+    user-worker-role: ${POLYMARKET_WS_USER_WORKER_ROLE:MONOLITH}
+    user-worker-instance-id: ${POLYMARKET_WS_USER_WORKER_INSTANCE_ID:${HOSTNAME:local}}
+    user-replay-batch-size: ${POLYMARKET_WS_USER_REPLAY_BATCH_SIZE:500}
     user-market-condition-ids: []
     ping-interval-ms: ${POLYMARKET_WS_PING_INTERVAL_MS:10000}
     reconnect-delay-ms: ${POLYMARKET_WS_RECONNECT_DELAY_MS:5000}

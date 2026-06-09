@@ -211,6 +211,9 @@ polymarket:
 
     # 開發環境建議先用 POST /api/prediction/ws/user/start 手動啟動。
     user-enabled: false
+    user-worker-role: ${POLYMARKET_WS_USER_WORKER_ROLE:MONOLITH}
+    user-worker-instance-id: ${POLYMARKET_WS_USER_WORKER_INSTANCE_ID:${HOSTNAME:local-dev}}
+    user-replay-batch-size: ${POLYMARKET_WS_USER_REPLAY_BATCH_SIZE:500}
 
     # 可選：填 condition id 才會只訂閱特定市場；空陣列代表全部個人更新。
     user-market-condition-ids: []
