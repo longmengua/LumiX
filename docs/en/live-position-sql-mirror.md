@@ -5,19 +5,19 @@ This document closes the P1 live-position SQL mirror/index design decision.
 
 ## Decision
 
-Add a dedicated durable live-position projection in a later implementation slice. Do not use `account_risk_snapshots` as the live-position mirror.
+Use a dedicated durable live-position projection. Do not use `account_risk_snapshots` as the live-position mirror.
 
 Why:
 - Redis `pos:{uid}` and `pos:open:index` are still the current low-latency hot state for individual positions.
 - `account_risk_snapshots` stores account-level aggregates such as margin, equity, risk ratio, and open-position count. It does not store per-symbol quantity, entry price, realized PnL, or side.
 - Liquidation scanning, ADL, funding, and market-maker exposure all need per-position rows with deterministic open-position indexes.
 
-## Proposed Table
+## Implemented Table
 
-Future migration name:
+Migration:
 
 ```text
-V{next}__position_lifecycle_projection.sql
+V23__position_lifecycle_projection.sql
 ```
 
 Table:
@@ -75,14 +75,20 @@ Redis repair rule:
 2. Rebuild Redis `pos:{uid}` and `pos:open:index` from non-zero SQL projection rows.
 3. Do not rerun original trade/liquidation/funding commands to repair Redis drift.
 
-## Acceptance Gate For Implementation
+## Implemented Baseline
 
-The implementation slice should add:
+This slice adds:
 
 - Flyway migration for `position_lifecycle_projection`.
-- JPA entity/repository or a store adapter.
+- Production query indexes for symbol open-position scans, user position reads, and stale projection scans.
+- JPA entity/repository baseline: `PositionLifecycleProjection` and `PositionLifecycleProjectionJpaRepository`.
+
+## Remaining Implementation Gate
+
+Future implementation slices should add:
+
 - Projection update path from trade/funding/liquidation/ADL state changes.
 - A rebuild or reconciliation service that compares Redis open positions against SQL projection rows.
 - Focused tests for open-position scan, zero-quantity close/removal, Redis rebuild source, and account-position consistency.
 
-Until that implementation lands, Redis remains the serving hot state and the SQL mirror remains a documented production-hardening backlog item.
+Until that wiring lands, Redis remains the serving hot state and the SQL mirror is a durable schema/query baseline.

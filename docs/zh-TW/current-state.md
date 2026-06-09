@@ -14,9 +14,9 @@ English version: [../en/current-state.md](../en/current-state.md)
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
 | P0 必做 | 43 | 0 | 核心 production baseline 項目已關閉；post-v1 hardening 仍需推進。 |
-| P1 強烈建議 | 16 | 6 | 營運、market data、Polymarket、資料治理仍需強化。 |
+| P1 強烈建議 | 17 | 5 | 營運、market data、Polymarket、observability 仍需強化。 |
 | P2 演進項 | 0 | 5 | Admin market-config 與 risk-parameters 已有 read-only API / 靜態頁 baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
-| 合計 | 59 | 11 | 核心 baseline 已關閉，但 production hardening 與演進工作仍待推進。 |
+| 合計 | 60 | 10 | 核心 baseline 已關閉，但 production hardening 與演進工作仍待推進。 |
 
 ## 目前插單優先順序
 
@@ -80,7 +80,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、durable ledger hash-chain tamper-evidence、SQL-enforced wallet ledger invariants、trial-balance 計算與 daily snapshot persistence、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API、workflow audit events、durable-ledger daily finance report baseline、預設關閉的 finance category exporter job、fee/funding/liquidation/bonus/transfer finance category exports、ledger archive/delete eligibility checks、manifest restore smoke、archived date-range replay validation，以及不平衡報表 operator runbook。
 - 做市商對沖已有 durable profile/risk-limit storage、profile admin API、bounded hedge fill query API、venue fill callback ingestion、venue fill idempotent replay 與可選 HMAC/timestamp verification、manual 與預設關閉的 scheduled hedge execution API 且限制安全 ref prefix、durable scheduled-worker lock、operator approval token gate、manual hedge execution API frequency limiting、含 operator identity 與 approval token outcome 的 effectful endpoint audit fields、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、enabled-profile batch 共用的 per-run execution route/notional cap policy、quote command validation、quote API frequency limiting、stale quote cleanup、post-only internal order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage、quote/open-order reconciliation 與預設關閉的 fail-closed quote repair baseline、hedge venue adapter contract、real venue signed-request/lookup HTTP transport、uncertain submit reconciliation 的 venue outcome lookup contract、retryable venue result classification、durable refId idempotency claim/result storage、未解 hedge venue idempotency 營運報告與 reconcile trigger、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、含 internal trade 與 ledger refs 的 durable hedge decision/fill audit trails、decision-vs-fill hedge reconciliation，以及 trade/ledger ref issue reporting；自動 hedge reconciliation repair job 仍未完成。
 - outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。
-- Database indexing 已有 Flyway baseline，涵蓋 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events 與 prediction order/user-event 查詢；live order SQL mirror design 已決定使用 `order_lifecycle_projection`，live position mirror design 已定義未來 `position_lifecycle_projection`，archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Object-storage archive writers、delete jobs 與 future position mirror schema 仍未完成。
+- Database indexing 已有 Flyway baseline，涵蓋 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction order/user-event 查詢，以及 `position_lifecycle_projection` live-position mirror schema / indexes；live order SQL mirror design 已決定使用 `order_lifecycle_projection`，archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Object-storage archive writers、delete jobs 與 live-position projection update/rebuild wiring 仍未完成。
 - Operations metrics 已暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters；production metrics export 仍未完成。
 - MySQL、Redis、Kafka 之間已有 order commands、liquidation、ADL execution 與 hedge execution 的 command-boundary/outbox baseline，並有 order-place outbox insert failure、cancel ledger-release failure、hedge audit/outbox failure rollback coverage、cross-store MySQL/Redis/Kafka failure drill，以及 outbox/domain-state consistency recovery report。
 - market data 已有 durable depth sequence checkpoints、reconnect backfill depth deltas、durable trade tape、trade replay cursors、durable ticker latest state、durable 1m klines，以及預設關閉的高流量 depth/trade/kline history DB retention windows。
@@ -92,7 +92,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 ## 建議接下來先做什麼
 
 1. Tag 或 hand off 有邊界的 core-v1 baseline。
-2. 收斂剩餘 P1 blockers：WebSocket/SSE gateway 獨立部署、Polymarket user WebSocket worker 獨立部署、future position SQL mirror schema、production metrics export、tracing exporter/dashboard wiring，以及 alert backend integration。
+2. 收斂剩餘 P1 blockers：WebSocket/SSE gateway 獨立部署、Polymarket user WebSocket worker 獨立部署、production metrics export、tracing exporter/dashboard wiring，以及 alert backend integration。
 3. core-v1 baseline tag 或明確 hand off 後，再繼續 P2。
 
 ## 閱讀順序

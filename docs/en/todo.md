@@ -121,8 +121,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
 
 ### Database and Storage
 
-- [ ] Add production indexes for orders, positions, ledger, events, and prediction orders.
-  - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. [Live order SQL mirror](live-order-sql-mirror.md) design chooses `order_lifecycle_projection` as the durable live-order mirror, [live position SQL mirror](live-position-sql-mirror.md) defines future `position_lifecycle_projection`, and the archive exporter skeleton covers historical order/trade/ledger export plans. Remaining: implement the future position mirror schema.
+- [x] Add production indexes for orders, positions, ledger, events, and prediction orders.
+  - Baseline done: Flyway `V12__production_query_indexes.sql` adds query indexes for durable order lifecycle projections/events, ledger entries/postings, outbox/DLQ/matching events, and prediction orders/user events. [Live order SQL mirror](live-order-sql-mirror.md) design chooses `order_lifecycle_projection` as the durable live-order mirror. Flyway `V23__position_lifecycle_projection.sql` adds the `position_lifecycle_projection` live-position mirror schema and query indexes, with `PositionLifecycleProjectionJpaRepository` as the JPA query baseline. The archive exporter skeleton covers historical order/trade/ledger export plans. Projection update/rebuild wiring remains separate live-position operational hardening, not part of this index baseline.
 - [x] Document Redis key schema, namespace prefix, versioning, and migration strategy.
 - [x] Add final TTL/archive rules for Redis hot-state keys.
   - Baseline done: `docs/en/redis-key-schema.md` defines per-key-family production TTL, archive/delete rule, and authoritative rebuild source for account, position, order, snapshot, ledger, outbox/DLQ, and idempotency keys.

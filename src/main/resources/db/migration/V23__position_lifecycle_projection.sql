@@ -1,0 +1,25 @@
+-- Durable live-position SQL mirror schema and production query indexes.
+CREATE TABLE IF NOT EXISTS position_lifecycle_projection (
+    uid BIGINT NOT NULL,
+    symbol VARCHAR(64) NOT NULL,
+    schema_version INT NOT NULL DEFAULT 1,
+    mode VARCHAR(32) NOT NULL,
+    leverage DECIMAL(38, 18) NOT NULL DEFAULT 1.000000000000000000,
+    qty DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    entry_price DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    margin DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    realized_pnl DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    fee_paid DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    rebate_earned DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    funding_paid DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    funding_received DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    insurance_fund_covered DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    adl_covered DECIMAL(38, 18) NOT NULL DEFAULT 0.000000000000000000,
+    last_trade_ref VARCHAR(128),
+    updated_at DATETIME(6) NOT NULL,
+    created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    PRIMARY KEY (uid, symbol),
+    KEY idx_position_projection_symbol_qty_updated (symbol, qty, updated_at),
+    KEY idx_position_projection_uid_updated (uid, updated_at),
+    KEY idx_position_projection_updated (updated_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

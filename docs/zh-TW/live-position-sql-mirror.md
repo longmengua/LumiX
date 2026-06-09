@@ -5,19 +5,19 @@
 
 ## 決策
 
-後續 implementation slice 應新增專用的 durable live-position projection。本 slice 不使用 `account_risk_snapshots` 取代 live-position mirror。
+使用專用的 durable live-position projection，不使用 `account_risk_snapshots` 取代 live-position mirror。
 
 原因：
 - Redis `pos:{uid}` 與 `pos:open:index` 目前仍是 individual positions 的低延遲 hot state。
 - `account_risk_snapshots` 保存的是帳戶級 aggregates，例如 margin、equity、risk ratio 與 open-position count，不保存單一 symbol 的 quantity、entry price、realized PnL 或 side。
 - Liquidation scanning、ADL、funding 與 market-maker exposure 都需要 per-position rows 與 deterministic open-position indexes。
 
-## 建議資料表
+## 已落地資料表
 
-後續 migration 名稱：
+Migration：
 
 ```text
-V{next}__position_lifecycle_projection.sql
+V23__position_lifecycle_projection.sql
 ```
 
 資料表：
@@ -75,14 +75,20 @@ Redis 修復規則：
 2. 再從非零 SQL projection rows 重建 Redis `pos:{uid}` 與 `pos:open:index`。
 3. 不要為了修 Redis drift 而重跑原始 trade / liquidation / funding command。
 
-## Implementation Acceptance Gate
+## 已完成 Baseline
+
+本 slice 已新增：
+
+- `position_lifecycle_projection` 的 Flyway migration。
+- 支援 symbol open-position scan、user position read、stale projection scan 的 production query indexes。
+- JPA entity/repository baseline：`PositionLifecycleProjection` 與 `PositionLifecycleProjectionJpaRepository`。
+
+## 剩餘 Implementation Gate
 
 後續 implementation slice 應新增：
 
-- `position_lifecycle_projection` 的 Flyway migration。
-- JPA entity/repository 或 store adapter。
 - 由 trade/funding/liquidation/ADL state changes 更新 projection 的路徑。
 - 比對 Redis open positions 與 SQL projection rows 的 rebuild / reconciliation service。
 - 覆蓋 open-position scan、zero-quantity close/removal、Redis rebuild source 與 account-position consistency 的 focused tests。
 
-在 implementation 落地前，Redis 仍是 serving hot state，SQL mirror 則維持為已定義清楚的 production-hardening backlog item。
+在 update/rebuild wiring 落地前，Redis 仍是 serving hot state，SQL mirror 則是 durable schema/query baseline。

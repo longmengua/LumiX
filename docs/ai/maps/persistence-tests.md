@@ -33,6 +33,7 @@ Migrations:
 - `V10__rpc_transaction_records.sql`: post-core-v1 backend-observed RPC transaction outcome tracking.
 - `V11__adl_queue_entries.sql`: post-core-v1 durable ADL queue and operator claim state.
 - `V12__production_query_indexes.sql`: post-core-v1 production query indexes for order projections, ledger, events, and prediction orders.
+- `V23__position_lifecycle_projection.sql`: post-core-v1 live position SQL mirror schema and production query indexes.
 
 Config:
 - `src/main/resources/application-dev.yml`
@@ -42,7 +43,7 @@ Config:
 
 - Redis key contract and hot-state TTL/archive policy: `docs/en/redis-key-schema.md`
 - Live order SQL mirror/index decision: `docs/en/live-order-sql-mirror.md`
-- Live position SQL mirror/index decision: `docs/en/live-position-sql-mirror.md`
+- Live position SQL mirror/index baseline: `docs/en/live-position-sql-mirror.md`, `PositionLifecycleProjection`, `PositionLifecycleProjectionJpaRepository`
 - Historical data archive strategy: `docs/en/archive-strategy.md`
 - Archive exporter skeleton: `ArchiveExporterService`, `ArchiveExporterScheduler`, `ArchiveExporterServiceTest`
 - Kafka topic contract: `docs/en/kafka-topics.md`

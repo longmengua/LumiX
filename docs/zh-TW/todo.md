@@ -121,8 +121,8 @@
 
 ### 資料庫與儲存
 
-- [ ] 為 orders、positions、ledger、events、prediction orders 補齊 production index。
-  - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror，[Live position SQL mirror](live-position-sql-mirror.md) 定義未來 `position_lifecycle_projection`，archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Remaining：實作 future position mirror schema。
+- [x] 為 orders、positions、ledger、events、prediction orders 補齊 production index。
+  - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror。Flyway `V23__position_lifecycle_projection.sql` 已新增 `position_lifecycle_projection` live-position mirror schema 與 query indexes，並以 `PositionLifecycleProjectionJpaRepository` 作為 JPA 查詢 baseline。Archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Projection update/rebuild wiring 仍屬於獨立 live-position 營運強化，不算在本 index baseline。
 - [x] 文件化 Redis key schema、namespace prefix、版本與 migration 策略。
 - [x] 補 Redis hot-state key 的最終 TTL / archive rules。
   - Baseline 已完成：`docs/zh-TW/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。

@@ -22,6 +22,7 @@ Flyway migration scripts。
 - `V20__wallet_ledger_journal_constraints.sql`：wallet ledger schema version、asset/reason、posting line/account/asset SQL constraints。
 - `V21__insurance_fund_movements.sql`：insurance fund capital movement records for liquidation / ADL operations。
 - `V22__polymarket_user_ws_checkpoints.sql`：Polymarket user WebSocket gateway durable replay checkpoint。
+- `V23__position_lifecycle_projection.sql`：live position SQL mirror schema 與 production query indexes。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。
