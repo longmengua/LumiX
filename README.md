@@ -30,6 +30,12 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
 
+Browser E2E smoke:
+
+```bash
+./shells/e2e-browser.sh
+```
+
 | Language | API Endpoint |
 | --- | --- |
 | English | The default API endpoint is `http://localhost:8080`. |

@@ -5,6 +5,7 @@ package com.example.exchange.interfaces.web.security;
 
 import com.example.exchange.infra.config.MarketMakerApiProperties;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -24,6 +25,7 @@ public class MarketMakerHedgeExecutionRateLimiter {
     private final ConcurrentMap<String, WindowCounter> windows = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
 
+    @Autowired
     public MarketMakerHedgeExecutionRateLimiter(MarketMakerApiProperties properties) {
         this(properties, Clock.systemUTC());
     }

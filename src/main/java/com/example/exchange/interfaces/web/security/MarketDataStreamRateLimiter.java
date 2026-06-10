@@ -5,6 +5,7 @@ package com.example.exchange.interfaces.web.security;
 
 import com.example.exchange.infra.config.PushGatewayProperties;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.stereotype.Component;
@@ -23,6 +24,7 @@ public class MarketDataStreamRateLimiter {
     private final ConcurrentMap<String, WindowCounter> windows = new ConcurrentHashMap<>();
     private final AtomicLong sequence = new AtomicLong();
 
+    @Autowired
     public MarketDataStreamRateLimiter(PushGatewayProperties properties) {
         this(properties, Clock.systemUTC());
     }

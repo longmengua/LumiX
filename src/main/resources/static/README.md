@@ -11,3 +11,4 @@
 注意：
 - 這不是 production 前端。
 - 若新增正式前端，應先確認 build pipeline、auth flow、secret handling。
+- 靜態頁新增或改版時，應補 `tests/e2e/` 的 Playwright browser smoke，至少覆蓋頁面載入、主要控制項、API 成功資料渲染與錯誤可視狀態。

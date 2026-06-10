@@ -5,10 +5,12 @@
 目前狀態：
 - `api-curls/` 是主要 API 操作入口。
 - `codex-usage.sh` 讀取本機 `~/.codex/sessions` 的 Codex token_count 事件，可自動輸出目前 usage，並用 `start <label>` / `end <label>` 計算任務前後差值。
+- `e2e-browser.sh` 會啟動本機 docker 依賴、安裝 Playwright Chromium，並執行瀏覽器 E2E smoke suite。
 - `order.sh`、`transfer.sh`、`snapshot.sh` 是較早期的本機操作腳本。
 - `gen-folders.sh` 用於產生或檢查目錄結構。
 
 注意：
 - curl 腳本預設打 `http://localhost:8080`。
+- 瀏覽器 E2E 預設打 `http://localhost:8080`；已有服務時可用 `E2E_SKIP_DOCKER=true E2E_SKIP_WEBSERVER=true npm run e2e`。
 - `codex-usage.sh` 的快照預設寫到 `/tmp/codex-usage-$USER`，不會弄髒 repo；可用 `CODEX_USAGE_STATE_DIR` 覆蓋。
 - 真實私鑰、API key、JWT 不應寫入腳本。

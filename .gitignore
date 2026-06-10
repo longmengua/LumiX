@@ -1,6 +1,10 @@
 # 檔案用途：專案設定檔，說明 .gitignore 的用途與本機開發設定。
 HELP.md
 target/
+node_modules/
+.playwright-browsers/
+playwright-report/
+test-results/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/

@@ -9,6 +9,8 @@ This map covers future client-facing and admin-facing web applications.
 - Current static admin risk page: `src/main/resources/static/admin-risk-parameters.html`
 - Current static admin DLQ page: `src/main/resources/static/admin-dlq.html`
 - Current static README: `src/main/resources/static/README.md`
+- Browser smoke tests: `tests/e2e/static-admin-pages.spec.js`
+- E2E runner: `shells/e2e-browser.sh`
 - There is no full production frontend app yet.
 
 ## Client Web Scope
@@ -38,6 +40,7 @@ Implemented baseline:
 - Prefer read-only views before adding mutating controls.
 - Mutating admin actions need confirmation, audit context, and trace id display.
 - Frontend must not contain private keys, API secrets, or long-lived privileged tokens.
+- Static page changes should include Playwright E2E smoke coverage for page load, core controls, mocked API render paths, and mobile/desktop viewport sanity.
 
 ## Likely Backend Areas
 
