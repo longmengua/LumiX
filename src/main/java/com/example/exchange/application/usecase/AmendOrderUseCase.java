@@ -178,6 +178,8 @@ public class AmendOrderUseCase {
                 .leverage(order.getLeverage())
                 .marginMode(order.getMarginMode())
                 .reservedAmount(order.getReservedAmount())
+                .makerFeeRateSnapshot(order.getMakerFeeRateSnapshot())
+                .takerFeeRateSnapshot(order.getTakerFeeRateSnapshot())
                 .clientOrderId(newClientOrderId)
                 .strategyId(order.getStrategyId())
                 .marketMakerId(order.getMarketMakerId())

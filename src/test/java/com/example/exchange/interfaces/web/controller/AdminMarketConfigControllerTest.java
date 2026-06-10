@@ -1,5 +1,5 @@
 /*
- * File purpose: Verify read-only admin market-config API mapping.
+ * File purpose: Verify admin market-config API mapping.
  */
 package com.example.exchange.interfaces.web.controller;
 
@@ -19,16 +19,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 class AdminMarketConfigControllerTest {
 
     @Test
-    @DisplayName("admin market config API returns sorted read-only market rows")
+    @DisplayName("admin market config API returns sorted market rows and fee-write capability")
     /**
-     * Scenario: repository has two symbol configs -> admin API returns sorted rows and disables write actions.
+     * Scenario: repository has two symbol configs -> admin API returns sorted rows and advertises audited fee writes.
      */
-    void returnsReadOnlyMarketConfigRows() {
+    void returnsMarketConfigRowsWithFeeWriteCapability() {
         AdminMarketConfigController controller =
                 new AdminMarketConfigController(new StubSymbolConfigRepository(List.of(
                         config("ETHUSDT", "ETH", "USDT", "0.01", 100),
                         config("BTCUSDT", "BTC", "USDT", "0.10", 125)
-                )));
+                )), null);
 
         ApiResponse<AdminMarketConfigResponse> response = controller.list();
 
@@ -38,10 +38,10 @@ class AdminMarketConfigControllerTest {
                 .containsExactly("BTCUSDT", "ETHUSDT");
         assertThat(response.getData().markets().get(0).status()).isEqualTo("TRADING_ENABLED");
         assertThat(response.getData().markets().get(0).matchingEnabled()).isTrue();
-        assertThat(response.getData().capabilities().readOnly()).isTrue();
-        assertThat(response.getData().capabilities().writesEnabled()).isFalse();
+        assertThat(response.getData().capabilities().readOnly()).isFalse();
+        assertThat(response.getData().capabilities().writesEnabled()).isTrue();
         assertThat(response.getData().capabilities().requiredWriteEndpoints())
-                .contains("POST /api/admin/market-config/{symbol}/changes");
+                .contains("POST /api/admin/market-config/{symbol}/fees");
     }
 
     private SymbolConfig config(String symbol, String base, String quote, String priceTick, int leverage) {

@@ -146,6 +146,8 @@ public class PlaceOrderUseCase {
                 .postOnly(cmd.postOnly())
                 .leverage(cmd.leverage())
                 .marginMode(marginMode)
+                .makerFeeRateSnapshot(symbolConfig.makerFeeRateOrDefault())
+                .takerFeeRateSnapshot(symbolConfig.takerFeeRateOrDefault())
                 .clientOrderId(cmd.clientOrderId())
                 .strategyId(cmd.strategyId())
                 .marketMakerId(cmd.marketMakerId())

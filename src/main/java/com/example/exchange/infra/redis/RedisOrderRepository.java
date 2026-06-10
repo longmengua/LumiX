@@ -42,6 +42,8 @@ public class RedisOrderRepository implements OrderRepository {
 
     private String setKey(long uid) { return keys.key("ord:set:" + uid); } // 取得用戶訂單集合(Set)的 key，例如 ord:set:1001
 
+    private String allOrderIdsKey() { return keys.key("ord:all"); } // 全域訂單 ID 集合，用於啟動時重建 matching book
+
     private String orderKey(UUID id) { return keys.key("order:" + id); } // 取得單筆訂單本體的 key，例如 order:550e8400-e29b-41d4-a716-446655440000
 
     // ========================= 介面實作 =========================
@@ -61,6 +63,7 @@ public class RedisOrderRepository implements OrderRepository {
         String idStr = o.getId().toString(); // 將 UUID 轉為字串存入索引
 
         redis.opsForValue().set(orderKey, o); // 1) 先寫入訂單本體（SET order:{uuid} -> Order）
+        redis.opsForSet().add(allOrderIdsKey(), idStr); // 全域索引用於 restart recovery；重複 save 由 Set 去重。
 
         Long added = redis.opsForSet().add(uidSetKey, idStr); // 2) 嘗試加入 Set 做去重（SADD 回傳 1 表示成功新增、0 表示已存在）
         if (added != null && added > 0) { // 如果成功加入 Set（代表先前不存在）
@@ -80,6 +83,25 @@ public class RedisOrderRepository implements OrderRepository {
         return map.values().stream()
                 .filter(Objects::nonNull) // 移除 null
                 .filter(this::isOpen) // 過濾掉已終態訂單
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<Order> openOrders() {
+        Set<Object> rawIds = redis.opsForSet().members(allOrderIdsKey());
+        List<String> ids = rawIds == null
+                ? new ArrayList<>()
+                : rawIds.stream().filter(Objects::nonNull).map(String::valueOf).collect(Collectors.toCollection(ArrayList::new));
+        // 舊版資料可能尚未寫入 ord:all；掃描既有 user list key 作為相容性 fallback。
+        if (ids.isEmpty()) {
+            ids.addAll(scanOrderIdsFromUserLists());
+        }
+        if (ids.isEmpty()) return List.of();
+
+        Map<String, Order> map = batchGetOrders(ids.stream().distinct().toList());
+        return map.values().stream()
+                .filter(Objects::nonNull)
+                .filter(this::isOpen)
                 .collect(Collectors.toList());
     }
 
@@ -146,6 +168,18 @@ public class RedisOrderRepository implements OrderRepository {
             map.put(ids.get(i), (v instanceof Order) ? (Order) v : null);
         }
         return map;
+    }
+
+    private List<String> scanOrderIdsFromUserLists() {
+        Set<String> listKeys = redis.keys(keys.key("ord:list:*"));
+        if (listKeys == null || listKeys.isEmpty()) return List.of();
+        List<String> ids = new ArrayList<>();
+        for (String key : listKeys) {
+            List<Object> raw = redis.opsForList().range(key, 0, -1);
+            if (raw == null) continue;
+            raw.stream().filter(Objects::nonNull).map(String::valueOf).forEach(ids::add);
+        }
+        return ids;
     }
 
     private void removeDanglingIds(long uid, List<String> ids, Map<String, Order> id2Order) { // 清除沒有本體的 ID

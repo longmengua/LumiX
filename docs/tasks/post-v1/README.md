@@ -9,6 +9,7 @@ This task group is the next implementation lane after the bounded core-v1 freeze
 3. [03-adl-forced-execution.md](03-adl-forced-execution.md)
 4. [04-market-data-durability.md](04-market-data-durability.md)
 5. [05-external-api-idempotency.md](05-external-api-idempotency.md)
+6. [06-custodial-polymarket-routing.md](06-custodial-polymarket-routing.md)
 
 ## Relevant Maps
 
@@ -18,3 +19,4 @@ This task group is the next implementation lane after the bounded core-v1 freeze
 - [../../ai/maps/reliability-market-data.md](../../ai/maps/reliability-market-data.md)
 - [../../ai/maps/market-maker-hedging.md](../../ai/maps/market-maker-hedging.md)
 - [../../ai/maps/persistence-tests.md](../../ai/maps/persistence-tests.md)
+- [../../ai/maps/polymarket-security.md](../../ai/maps/polymarket-security.md)

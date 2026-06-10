@@ -194,6 +194,18 @@ public class Order {
     private BigDecimal reservedAmount = BigDecimal.ZERO;
 
     /**
+     * 下單當下的 maker fee rate 快照。
+     * - 後台調整 symbol fee 後，既有掛單仍應依下單時看到的費率結算。
+     */
+    private BigDecimal makerFeeRateSnapshot;
+
+    /**
+     * 下單當下的 taker fee rate 快照。
+     * - 委託凍結與成交手續費使用此值，避免後台改費率 retroactively 影響舊單。
+     */
+    private BigDecimal takerFeeRateSnapshot;
+
+    /**
      * 客戶端自定義訂單 ID
      * - 通常用來做冪等控制或讓前端/策略端對帳
      * - 例如 strategy-20260319-0001
@@ -230,6 +242,14 @@ public class Order {
      */
     @Builder.Default
     private Instant ctime = Instant.now();
+
+    public BigDecimal makerFeeRateSnapshotOrDefault(SymbolConfig config) {
+        return makerFeeRateSnapshot == null ? config.makerFeeRateOrDefault() : makerFeeRateSnapshot;
+    }
+
+    public BigDecimal takerFeeRateSnapshotOrDefault(SymbolConfig config) {
+        return takerFeeRateSnapshot == null ? config.takerFeeRateOrDefault() : takerFeeRateSnapshot;
+    }
 
     /**
      * 轉換成 API 回傳 DTO

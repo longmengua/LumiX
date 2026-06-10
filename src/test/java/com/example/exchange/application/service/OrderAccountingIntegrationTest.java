@@ -153,6 +153,67 @@ class OrderAccountingIntegrationTest {
     }
 
     @Test
+    @DisplayName("費率調整後舊掛單沿用下單快照，新訂單使用新費率")
+    /**
+     * 情境：maker 先用舊費率掛單，後台調高 symbol fee，再由 taker 吃單；舊 maker 不應被新費率 retroactively 影響。
+     */
+    void feeChangeDoesNotAffectExistingRestingOrderSnapshots() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+
+        walletLedgerService.deposit(1, "USDT", new BigDecimal("10000"), "deposit-1");
+        walletLedgerService.deposit(2, "USDT", new BigDecimal("10000"), "deposit-2");
+
+        // Seller rests on the book while BTCUSDT maker/taker rates are still 0.0002 / 0.0005.
+        Order restingMaker = placeOrderUseCase.place(command(2, OrderSide.SELL, "100.00", "1.000"));
+        SymbolConfig config = symbolRepo.findBySymbol("BTCUSDT").orElseThrow();
+        config.setMakerFeeRate(new BigDecimal("0.0010"));
+        config.setTakerFeeRate(new BigDecimal("0.0020"));
+        symbolRepo.save(config);
+
+        // Buyer enters after the fee change, so the taker fee snapshot should use the new 0.0020 rate.
+        Order incomingTaker = placeOrderUseCase.place(command(1, OrderSide.BUY, "100.00", "1.000"));
+
+        Symbol symbol = Symbol.builder().base("BTC").quote("USDT").priceScale(1).qtyScale(3).build();
+        Position buyerPosition = positionRepo.find(1, symbol).orElseThrow();
+        Position sellerPosition = positionRepo.find(2, symbol).orElseThrow();
+
+        assertThat(restingMaker.getMakerFeeRateSnapshot()).isEqualByComparingTo("0.0002");
+        assertThat(restingMaker.getTakerFeeRateSnapshot()).isEqualByComparingTo("0.0005");
+        assertThat(incomingTaker.getMakerFeeRateSnapshot()).isEqualByComparingTo("0.0010");
+        assertThat(incomingTaker.getTakerFeeRateSnapshot()).isEqualByComparingTo("0.0020");
+        assertThat(sellerPosition.getFeePaid()).isEqualByComparingTo("0.020000000000000000");
+        assertThat(buyerPosition.getFeePaid()).isEqualByComparingTo("0.200000000000000000");
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
     @DisplayName("風控預檢拒單時發布 CREATED 和 REJECTED lifecycle event")
     /**
      * 流程：不給帳戶入金 -> 直接下買單觸發 balance pre-check -> 驗證 CREATED 後接 REJECTED 且不落訂單。

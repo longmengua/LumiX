@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Console</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #eef2f7;
+            --panel: #ffffff;
+            --line: #d4dee9;
+            --text: #162032;
+            --muted: #647386;
+            --accent: #0a8f7b;
+            --brand: #19233a;
+            --brand-2: #263757;
+            --shadow: 0 14px 40px rgba(26, 37, 56, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: linear-gradient(180deg, #f8fafc 0, var(--bg) 260px);
+            color: var(--text);
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            color: white;
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 21px;
+        }
+
+        .subtitle {
+            color: #c5d0de;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .nav-link {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.10);
+            padding: 0 12px;
+            font-weight: 700;
+        }
+
+        main {
+            padding: 16px 24px 24px;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .tab {
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #fff;
+            color: var(--muted);
+            cursor: pointer;
+            font-weight: 800;
+            min-height: 38px;
+            padding: 0 14px;
+            white-space: nowrap;
+        }
+
+        .tab[aria-selected="true"] {
+            border-color: var(--accent);
+            background: #e0f6f2;
+            color: #086c61;
+        }
+
+        .frame-shell {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            min-height: calc(100vh - 132px);
+        }
+
+        iframe {
+            border: 0;
+            display: block;
+            height: calc(100vh - 132px);
+            min-height: 720px;
+            width: 100%;
+        }
+
+        @media (max-width: 760px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            main {
+                padding: 12px;
+            }
+
+            iframe {
+                height: calc(100vh - 166px);
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- This page consolidates privileged MVP tools while preserving the older direct admin URLs for tests/bookmarks. -->
+<header>
+    <div>
+        <h1>Admin Console</h1>
+        <div class="subtitle">Operator tools grouped as tabs: test funds, market config, risk parameters, and DLQ.</div>
+    </div>
+    <a class="nav-link" href="/exchange.html">Client Exchange</a>
+</header>
+
+<main>
+    <nav class="tabs" aria-label="Admin sections">
+        <button class="tab" type="button" data-src="/admin-test-funds.html" aria-selected="true">Test Funds</button>
+        <button class="tab" type="button" data-src="/admin-market-config.html" aria-selected="false">Market Config</button>
+        <button class="tab" type="button" data-src="/admin-risk-parameters.html" aria-selected="false">Risk Parameters</button>
+        <button class="tab" type="button" data-src="/admin-dlq.html" aria-selected="false">DLQ</button>
+    </nav>
+    <section class="frame-shell" aria-label="Selected admin page">
+        <iframe id="adminFrame" title="Admin Test Funds" src="/admin-test-funds.html"></iframe>
+    </section>
+</main>
+
+<script>
+    // Tabs are a thin shell over existing admin pages so each tool keeps its own focused API and tests.
+    const frame = document.getElementById('adminFrame');
+    const titles = {
+        '/admin-test-funds.html': 'Admin Test Funds',
+        '/admin-market-config.html': 'Admin Market Config',
+        '/admin-risk-parameters.html': 'Admin Risk Parameters',
+        '/admin-dlq.html': 'Admin DLQ'
+    };
+
+    document.querySelectorAll('.tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+            document.querySelectorAll('.tab').forEach((candidate) => {
+                candidate.setAttribute('aria-selected', String(candidate === tab));
+            });
+            const src = tab.dataset.src;
+            frame.src = src;
+            frame.title = titles[src] || 'Admin Console';
+        });
+    });
+</script>
+</body>
+</html>

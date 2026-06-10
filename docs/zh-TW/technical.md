@@ -28,6 +28,7 @@ English version: [../en/technical.md](../en/technical.md)
 | [Disaster Recovery Runbook](disaster-recovery-runbook.md) | Matching/order/account/position restore 順序、worker takeover、authenticated reconnect replay 與 smoke commands。 |
 | [ADL 營運手冊](adl-operator-runbook.md) | ADL queue claim、execution、partial retry、no-candidate retry 與 insurance reconciliation 操作流程。 |
 | [Matching Sequencer Runbook](matching-sequencer-runbook.md) | 單 symbol sequencer 的 production ownership、partition、啟動與 failover 規則。 |
+| [代管式 Polymarket 路由與金鑰安全](custodial-polymarket-routing-security.md) | 使用者不連 EOA 的後端 Polymarket routing、signer isolation、CLOB credential 與 audit controls 目標架構。 |
 | [產品總覽](README.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |
 | [待辦清單](todo.md) | Production readiness 的工程待辦路線圖。 |
 

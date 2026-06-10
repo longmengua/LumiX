@@ -136,7 +136,8 @@ public class RiskService {
                 RoundingMode.HALF_UP
         );
         BigDecimal tierInitialMarginRate = config.initialMarginRateForNotional(worstNotional);
-        BigDecimal feeReserve = notional.multiply(config.takerFeeRateOrDefault());
+        // Reserve uses the order's taker-fee snapshot so later admin fee edits do not change old resting orders.
+        BigDecimal feeReserve = notional.multiply(order.takerFeeRateSnapshotOrDefault(config));
         BigDecimal marginReserve = order.isReduceOnly()
                 ? BigDecimal.ZERO
                 : notional.multiply(leverageMarginRate.max(tierInitialMarginRate));

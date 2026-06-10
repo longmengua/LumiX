@@ -49,6 +49,13 @@
             font-size: 22px;
         }
 
+        .subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            max-width: 760px;
+            line-height: 1.4;
+        }
+
         h2 {
             font-size: 17px;
             margin-bottom: 12px;
@@ -238,10 +245,17 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/admin-console.css"/>
 </head>
-<body>
+<body class="admin-risk-page">
 <header>
-    <h1>Admin Risk Parameters</h1>
+    <div>
+        <h1>Admin Risk Parameters</h1>
+        <div class="subtitle">Monitor exchange-wide risk switches, suspended symbols, oracle health, margin tiers, leverage caps, and liquidation controls. This screen is read-only until protected write workflows are enabled.</div>
+        <nav class="admin-nav" aria-label="Admin navigation">
+            <a class="active" href="/admin-console.html">Admin Console</a>
+        </nav>
+    </div>
     <div class="toolbar">
         <input id="filter" placeholder="Symbol filter" aria-label="Symbol filter"/>
         <button id="refresh" type="button">Refresh</button>

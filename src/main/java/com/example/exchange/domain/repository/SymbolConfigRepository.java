@@ -12,6 +12,14 @@ public interface SymbolConfigRepository {
 
     Optional<SymbolConfig> findBySymbol(String symbol);
 
+    /**
+     * Persist the runtime market configuration after an operator change.
+     * Implementations that are read-only should fail clearly instead of silently discarding fee edits.
+     */
+    default SymbolConfig save(SymbolConfig config) {
+        throw new UnsupportedOperationException("symbol config writes are not supported");
+    }
+
     default List<SymbolConfig> findAll() {
         return List.of();
     }

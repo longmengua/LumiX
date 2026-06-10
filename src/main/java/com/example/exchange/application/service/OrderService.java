@@ -223,7 +223,7 @@ public class OrderService {
                 );
             }
 
-            FeeCalculation fee = feeService.calculate(withSeq, config);
+            FeeCalculation fee = feeService.calculate(withSeq, config, relatedOrder);
             BigDecimal feeConsumed = walletLedgerService.collectFee(
                     trade.uid(),
                     config.getQuoteAsset(),

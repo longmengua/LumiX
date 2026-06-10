@@ -119,5 +119,7 @@ Remaining: <next task or blocker>
 - Use focused tests for new behavior.
 - Update relevant docs when status, ownership, commands, or workflows change.
 - Keep folder and file names aligned with `doc/ai/project-structure.md`.
+- Add clear comments in every touched code artifact, including application code, tests, SQL migrations, scripts, and frontend code.
+- Keep comments focused on intent, state transitions, replay/recovery behavior, accounting effects, risk decisions, security decisions, schema ownership, and test flow.
 - Keep docs concise and task-oriented.
 - Secrets must come from environment variables or secret managers, not committed config.

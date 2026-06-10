@@ -91,3 +91,16 @@ When adding a new behavior area, update the smallest useful AI-readable document
 - Update `AGENTS.md` only when the rule affects agent startup behavior.
 
 Do not duplicate long design explanations across files. Link to the primary doc instead.
+
+## Comment Policy
+
+Every new or modified code artifact must include useful comments. This includes application code, tests, SQL migrations, scripts, and frontend code.
+
+Comments should explain why the code exists and what operational or business rule it protects:
+
+- Application code: intent, state transitions, accounting effects, security decisions, idempotency, replay, and recovery behavior.
+- Tests: scenario, setup, action, and expected result.
+- SQL migrations: table ownership, non-obvious columns, indexes, constraints, and operational assumptions.
+- Frontend code: user workflow, API contract assumptions, auth/session handling, and error states.
+
+Avoid comments that only restate syntax.

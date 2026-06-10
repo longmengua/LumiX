@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Exchange Console</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #edf1f7;
+            --panel: #ffffff;
+            --panel-soft: #f7f9fc;
+            --line: #d6dee8;
+            --text: #151d2a;
+            --muted: #687789;
+            --accent: #0a8f7b;
+            --accent-strong: #086c61;
+            --accent-soft: #e0f6f2;
+            --brand: #19233a;
+            --brand-2: #253454;
+            --buy: #078768;
+            --sell: #d64545;
+            --violet: #6d5bd0;
+            --gold: #b7791f;
+            --warn: #8a4b10;
+            --warn-bg: #fff7df;
+            --error: #991b1b;
+            --error-bg: #fee2e2;
+            --shadow: 0 14px 40px rgba(26, 37, 56, 0.10);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background:
+                radial-gradient(circle at 16% -8%, rgba(10, 143, 123, 0.14), transparent 34%),
+                linear-gradient(180deg, #f8fafc 0, var(--bg) 260px, #e8edf5 100%);
+            color: var(--text);
+            font-family: Inter, Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--brand), var(--brand-2));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(15, 23, 42, 0.18);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1, h2 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 21px;
+            letter-spacing: 0;
+        }
+
+        h2 {
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(280px, 0.95fr) minmax(420px, 1.35fr) minmax(330px, 0.9fr);
+            gap: 16px;
+            padding: 16px 24px 24px;
+            align-items: start;
+        }
+
+        section, aside {
+            min-width: 0;
+        }
+
+        .panel, .market-hero {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .panel {
+            padding: 14px;
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 14px;
+            margin-bottom: 12px;
+        }
+
+        .helper, .brand-subtitle {
+            color: var(--muted);
+            font-size: 12px;
+            margin-top: 4px;
+            line-height: 1.35;
+        }
+
+        .brand-subtitle {
+            color: #c5d0de;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .market-controls {
+            justify-content: flex-start;
+            min-width: 0;
+        }
+
+        .market-controls input {
+            width: 140px;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            min-height: 36px;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #fff;
+            color: var(--text);
+            padding: 0 10px;
+            width: 100%;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(10, 143, 123, 0.14);
+            outline: none;
+        }
+
+        button {
+            min-height: 36px;
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            background: linear-gradient(180deg, #12a58f, var(--accent-strong));
+            color: white;
+            padding: 0 13px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            background: #fff;
+            color: var(--accent);
+        }
+
+        button.sell {
+            border-color: var(--sell);
+            background: linear-gradient(180deg, #ef6b6b, var(--sell));
+        }
+
+        .buy-action {
+            border-color: var(--buy);
+            background: linear-gradient(180deg, #12a77e, var(--buy));
+        }
+
+        a.nav-link {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.10);
+            color: #fff;
+            padding: 0 12px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 8px 10px;
+            border-bottom: 1px solid #edf1f5;
+            text-align: left;
+            white-space: nowrap;
+        }
+
+        th {
+            background: var(--panel-soft);
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tbody tr:hover {
+            background: #f8fbfd;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .account-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .metric {
+            border: 1px solid #e5ebf2;
+            border-radius: 8px;
+            padding: 10px;
+            background: var(--panel-soft);
+            min-width: 0;
+        }
+
+        .metric .value {
+            margin-top: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .buy-text {
+            color: var(--buy);
+            font-weight: 700;
+        }
+
+        .sell-text {
+            color: var(--sell);
+            font-weight: 700;
+        }
+
+        .status {
+            display: inline-block;
+            padding: 3px 7px;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #eef3f6;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .notice, .error {
+            padding: 9px 10px;
+            margin-top: 10px;
+            line-height: 1.4;
+            border-radius: 6px;
+        }
+
+        .notice {
+            border: 1px solid #e2bf62;
+            background: var(--warn-bg);
+            color: var(--warn);
+        }
+
+        .notice.inline {
+            margin-top: 0;
+            background: var(--accent-soft);
+            color: var(--accent);
+            border-color: #8ccfca;
+        }
+
+        .error {
+            border: 1px solid #ef9a9a;
+            background: var(--error-bg);
+            color: var(--error);
+        }
+
+        .empty {
+            color: var(--muted);
+            padding: 14px 10px;
+        }
+
+        pre {
+            max-height: 170px;
+            overflow: auto;
+            background: #101827;
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            color: #dbeafe;
+            padding: 10px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        .compact-pre {
+            max-height: 120px;
+            margin-bottom: 0;
+        }
+
+        .market-hero {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: minmax(250px, 0.8fr) minmax(420px, 1.2fr);
+            gap: 16px;
+            padding: 14px;
+            background: linear-gradient(135deg, #ffffff, #f4fbf9 62%, #eef1ff);
+        }
+
+        .symbol-card {
+            display: grid;
+            gap: 10px;
+            align-content: center;
+        }
+
+        .symbol-row {
+            display: flex;
+            align-items: end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .symbol-pill {
+            border-radius: 999px;
+            background: var(--accent-soft);
+            color: var(--accent-strong);
+            padding: 5px 9px;
+            font-size: 12px;
+            font-weight: 800;
+        }
+
+        .symbol-title {
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .book-panel {
+            padding-bottom: 8px;
+        }
+
+        .book-panel h2 {
+            margin-bottom: 2px;
+        }
+
+        .book-spread {
+            display: grid;
+            gap: 8px;
+        }
+
+        .spread-mid {
+            border-block: 1px solid #e5ebf2;
+            color: var(--violet);
+            font-weight: 800;
+            padding: 9px 10px;
+            text-align: center;
+            background: linear-gradient(90deg, #f8fafc, #f1efff, #f8fafc);
+        }
+
+        .orders-panel {
+            min-height: 360px;
+        }
+
+        .order-entry {
+            border-top: 4px solid var(--accent);
+        }
+
+        .account-panel {
+            border-top: 4px solid var(--gold);
+        }
+
+        .mini-title {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        @media (max-width: 1160px) {
+            main {
+                grid-template-columns: minmax(300px, 0.9fr) minmax(360px, 1.1fr);
+            }
+
+            .trade-column {
+                grid-column: 1 / -1;
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (max-width: 820px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            main, .market-hero, .trade-column, .form-grid, .metric-row {
+                grid-template-columns: 1fr;
+            }
+
+            .panel-heading {
+                flex-direction: column;
+            }
+
+            .market-controls {
+                width: 100%;
+            }
+
+            .market-controls input {
+                width: 100%;
+            }
+
+            main {
+                padding: 12px;
+            }
+
+            .symbol-title {
+                font-size: 24px;
+            }
+
+            .table-wrap {
+                overflow-x: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Exchange console is the first-party trading surface; Polymarket remains a backend venue, not a wallet UI. -->
+<header>
+    <div>
+        <h1>Exchange Console</h1>
+        <div class="brand-subtitle">Internal exchange MVP: order book, order entry, open orders, and account risk.</div>
+    </div>
+    <div class="toolbar">
+        <a class="nav-link" href="/admin-console.html">Admin Console</a>
+    </div>
+</header>
+
+<main>
+    <section class="market-hero">
+        <div class="symbol-card">
+            <div class="symbol-row">
+                <div id="symbolTitle" class="symbol-title">BTCUSDT</div>
+                <div class="symbol-pill">Perpetual MVP</div>
+            </div>
+            <div class="helper">Select the trading market for depth, open orders, and order entry.</div>
+            <div class="toolbar market-controls">
+                <label for="symbol">Market</label>
+                <input id="symbol" value="BTCUSDT"/>
+                <button id="reloadMarket" type="button" class="secondary">Reload Market</button>
+            </div>
+        </div>
+        <div>
+            <div class="metric-row">
+                <div class="metric">
+                    <label>Best Bid</label>
+                    <div id="bestBid" class="value buy-text">-</div>
+                </div>
+                <div class="metric">
+                    <label>Best Ask</label>
+                    <div id="bestAsk" class="value sell-text">-</div>
+                </div>
+                <div class="metric">
+                    <label>Version</label>
+                    <div id="bookVersion" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Checksum</label>
+                    <div id="checksum" class="value">-</div>
+                </div>
+            </div>
+            <div id="marketStateNotice" class="notice" hidden></div>
+        </div>
+    </section>
+
+    <section class="stack">
+        <div class="panel book-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Order Book</h2>
+                    <div class="helper">Runtime matching depth for the selected market.</div>
+                </div>
+            </div>
+            <div class="book-spread">
+                <div>
+                    <div class="mini-title">
+                        <h2>Asks</h2>
+                        <span class="sell-text">Sell liquidity</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Notional</th>
+                            </tr>
+                            </thead>
+                            <tbody id="asks"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="spread-mid">Spread: best ask - best bid</div>
+                <div>
+                    <div class="mini-title">
+                        <h2>Bids</h2>
+                        <span class="buy-text">Buy liquidity</span>
+                    </div>
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                            <tr>
+                                <th>Price</th>
+                                <th>Qty</th>
+                                <th>Notional</th>
+                            </tr>
+                            </thead>
+                            <tbody id="bids"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="stack">
+        <div class="panel orders-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Open Orders</h2>
+                    <div class="helper">Current user's live orders for the selected market.</div>
+                </div>
+                <button id="reloadOrders" type="button" class="secondary">Reload Orders</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Market</th>
+                        <th>Side</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Filled</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="orders"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <aside class="stack trade-column">
+        <div class="panel account-panel">
+            <div class="panel-heading">
+                <h2>User Account</h2>
+                <button id="reloadAccount" type="button" class="secondary">Reload Account</button>
+            </div>
+            <div class="notice inline">Client trading page. Admin test funds are separated under the admin console.</div>
+            <div class="form-grid">
+                <div class="full">
+                    <label for="authEmail">Email</label>
+                    <input id="authEmail" value="demo@example.com"/>
+                </div>
+                <div class="full">
+                    <label for="authPassword">Password</label>
+                    <input id="authPassword" type="password" value="password123"/>
+                </div>
+                <div class="full toolbar">
+                    <button id="register" type="button">Register</button>
+                    <button id="login" type="button" class="secondary">Login</button>
+                    <button id="logout" type="button" class="secondary">Logout</button>
+                </div>
+                <div class="metric">
+                    <label for="uid">UID</label>
+                    <input id="uid" value="10001"/>
+                </div>
+            </div>
+            <div class="metric-row account-metrics">
+                <div class="metric">
+                    <label>Balance</label>
+                    <div id="balance" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Available</label>
+                    <div id="available" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Frozen</label>
+                    <div id="frozen" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Position Margin</label>
+                    <div id="positionMargin" class="value">-</div>
+                </div>
+            </div>
+            <div class="notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
+            <div id="authError" class="error" hidden></div>
+            <div id="accountError" class="error" hidden></div>
+            <pre id="authState" class="compact-pre">Not logged in.</pre>
+            <pre id="accountRaw" class="compact-pre">No account loaded.</pre>
+        </div>
+
+        <div class="panel order-entry">
+            <h2>Place Order</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="side">Side</label>
+                    <select id="side">
+                        <option>BUY</option>
+                        <option>SELL</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="type">Type</label>
+                    <select id="type">
+                        <option>LIMIT</option>
+                        <option>MARKET</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="price">Price</label>
+                    <input id="price" value="100.00"/>
+                </div>
+                <div>
+                    <label for="qty">Qty</label>
+                    <input id="qty" value="1.000"/>
+                </div>
+                <div>
+                    <label for="leverage">Leverage</label>
+                    <input id="leverage" type="number" min="1" max="125" value="1"/>
+                </div>
+                <div>
+                    <label for="marginMode">Margin</label>
+                    <select id="marginMode">
+                        <option>CROSS</option>
+                        <option>ISOLATED</option>
+                    </select>
+                </div>
+                <div class="full">
+                    <label for="clientOrderId">Client Order ID</label>
+                    <input id="clientOrderId"/>
+                </div>
+                <div class="full toolbar">
+                    <button id="placeBuy" type="button" class="buy-action">Place Buy</button>
+                    <button id="placeSell" type="button" class="sell">Place Sell</button>
+                </div>
+            </div>
+            <div id="orderError" class="error" hidden></div>
+            <pre id="orderResult">No order submitted.</pre>
+        </div>
+
+    </aside>
+</main>
+
+<script>
+    // DOM helper keeps the static MVP page dependency-free while the app is still backend-first.
+    const $ = (id) => document.getElementById(id);
+
+    // Form fields mirror the current exchange REST API request shape.
+    const fields = {
+        symbol: $('symbol'),
+        uid: $('uid'),
+        side: $('side'),
+        type: $('type'),
+        price: $('price'),
+        qty: $('qty'),
+        leverage: $('leverage'),
+        marginMode: $('marginMode'),
+        clientOrderId: $('clientOrderId')
+    };
+
+    // Tokens are stored only for local MVP browser testing; production should move to hardened session storage.
+    const auth = {
+        accessToken: localStorage.getItem('exchangeAccessToken') || '',
+        refreshToken: localStorage.getItem('exchangeRefreshToken') || ''
+    };
+
+    // Page state compares runtime order book depth with persisted open orders for clearer MVP diagnostics.
+    const marketState = {
+        depthEmpty: true,
+        openOrderCount: 0
+    };
+
+    // Display helpers keep empty numeric fields readable when the matching book has no resting liquidity.
+    function text(value) {
+        return value === null || value === undefined || value === '' ? '-' : String(value);
+    }
+
+    function money(value) {
+        if (value === null || value === undefined || value === '') return '-';
+        const num = Number(value);
+        return Number.isFinite(num) ? num.toLocaleString(undefined, { maximumFractionDigits: 8 }) : String(value);
+    }
+
+    function notional(level) {
+        const price = Number(level.price);
+        const qty = Number(level.qty);
+        return Number.isFinite(price) && Number.isFinite(qty) ? money(price * qty) : '-';
+    }
+
+    function selectedSymbol() {
+        return fields.symbol.value.trim().toUpperCase();
+    }
+
+    function syncSymbolTitle() {
+        $('symbolTitle').textContent = selectedSymbol() || '-';
+    }
+
+    function showError(el, error) {
+        el.textContent = error.message || String(error);
+        el.hidden = false;
+    }
+
+    function clearError(el) {
+        el.textContent = '';
+        el.hidden = true;
+    }
+
+    // Session-bound data must disappear on logout so the next person at the browser cannot see stale account state.
+    function clearSessionUi() {
+        $('authState').textContent = 'Not logged in.';
+        $('accountRaw').textContent = 'No account loaded.';
+        $('balance').textContent = '-';
+        $('available').textContent = '-';
+        $('frozen').textContent = '-';
+        $('positionMargin').textContent = '-';
+        $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">Login and refresh to load open orders</div></td></tr>';
+        $('orderResult').textContent = 'No order submitted.';
+        marketState.openOrderCount = 0;
+        updateMarketStateNotice();
+        clearError($('accountError'));
+        clearError($('orderError'));
+    }
+
+    // API wrapper attaches the first-party JWT when present; auth is optional in dev but required in prod.
+    async function api(path, options = {}) {
+        const headers = {'Accept': 'application/json', 'Content-Type': 'application/json'};
+        if (auth.accessToken) {
+            headers.Authorization = `Bearer ${auth.accessToken}`;
+        }
+        const response = await fetch(path, {
+            headers,
+            ...options
+        });
+        const body = await response.json();
+        if (!response.ok || !body.ok) {
+            throw new Error(body.error || `HTTP ${response.status}`);
+        }
+        return body.data;
+    }
+
+    // Register/login share the same response contract: access JWT, refresh token, and user identity.
+    async function authenticate(mode) {
+        clearError($('authError'));
+        try {
+            const result = await api(`/api/auth/${mode}`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: $('authEmail').value.trim(),
+                    password: $('authPassword').value
+                })
+            });
+            auth.accessToken = result.accessToken;
+            auth.refreshToken = result.refreshToken;
+            localStorage.setItem('exchangeAccessToken', auth.accessToken);
+            localStorage.setItem('exchangeRefreshToken', auth.refreshToken);
+            fields.uid.value = result.user.uid;
+            renderAuth(result.user);
+            await refreshAll();
+        } catch (error) {
+            showError($('authError'), error);
+        }
+    }
+
+    // Logout revokes the refresh session server-side and clears local browser state regardless of API outcome.
+    async function logout() {
+        clearError($('authError'));
+        try {
+            await api('/api/auth/logout', {
+                method: 'POST',
+                body: JSON.stringify({ refreshToken: auth.refreshToken })
+            });
+        } catch (error) {
+            showError($('authError'), error);
+        } finally {
+            auth.accessToken = '';
+            auth.refreshToken = '';
+            localStorage.removeItem('exchangeAccessToken');
+            localStorage.removeItem('exchangeRefreshToken');
+            clearSessionUi();
+        }
+    }
+
+    // On reload, /me hydrates the UI from the access token without asking the user to login again.
+    async function loadCurrentUser() {
+        if (!auth.accessToken) {
+            clearSessionUi();
+            return;
+        }
+        try {
+            const user = await api('/api/auth/me');
+            if (user) {
+                fields.uid.value = user.uid;
+                renderAuth(user);
+            } else {
+                clearSessionUi();
+                $('authState').textContent = 'Session unavailable. Please login again.';
+            }
+        } catch (error) {
+            clearSessionUi();
+            showError($('authError'), error);
+        }
+    }
+
+    // Auth state intentionally shows roles/scopes so MVP testers can inspect authorization claims.
+    function renderAuth(user) {
+        $('authState').textContent = JSON.stringify({
+            uid: user.uid,
+            email: user.email,
+            roles: user.roles,
+            scopes: user.scopes
+        }, null, 2);
+    }
+
+    // Depth is read-only market data and may legitimately be empty in a fresh local environment.
+    async function loadDepth() {
+        const symbol = selectedSymbol();
+        syncSymbolTitle();
+        const depth = await api(`/api/depth/${encodeURIComponent(symbol)}?depth=10`);
+        $('bestBid').textContent = money(depth.bestBid);
+        $('bestAsk').textContent = money(depth.bestAsk);
+        $('bookVersion').textContent = text(depth.version);
+        $('checksum').textContent = text(depth.checksum);
+        renderLevels($('bids'), depth.bids || [], 'bid');
+        renderLevels($('asks'), depth.asks || [], 'ask');
+        marketState.depthEmpty = (depth.bids || []).length === 0 && (depth.asks || []).length === 0;
+        updateMarketStateNotice();
+    }
+
+    function updateMarketStateNotice() {
+        const notice = $('marketStateNotice');
+        if (marketState.depthEmpty && marketState.openOrderCount > 0) {
+            notice.textContent = 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.';
+            notice.hidden = false;
+            return;
+        }
+        notice.textContent = '';
+        notice.hidden = true;
+    }
+
+    // Bids and asks share rendering but keep side-specific color for scanning.
+    function renderLevels(target, levels, side) {
+        if (levels.length === 0) {
+            target.innerHTML = '<tr><td colspan="3"><div class="empty">Runtime order book is empty</div></td></tr>';
+            return;
+        }
+        target.innerHTML = levels.map(level => `
+            <tr>
+                <td class="${side === 'bid' ? 'buy-text' : 'sell-text'}">${money(level.price)}</td>
+                <td>${money(level.qty)}</td>
+                <td>${notional(level)}</td>
+            </tr>
+        `).join('');
+    }
+
+    // Open orders are scoped by uid and symbol; future auth hardening should verify uid ownership server-side.
+    async function loadOrders() {
+        const uid = encodeURIComponent(fields.uid.value.trim());
+        const symbol = encodeURIComponent(selectedSymbol());
+        const orders = await api(`/api/order/open?uid=${uid}&symbol=${symbol}`);
+        marketState.openOrderCount = orders ? orders.length : 0;
+        updateMarketStateNotice();
+        if (!orders || orders.length === 0) {
+            $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">No open orders</div></td></tr>';
+            return;
+        }
+        $('orders').innerHTML = orders.map(order => `
+            <tr>
+                <td>${text(order.orderId).slice(0, 12)}</td>
+                <td>${text(order.symbol)}</td>
+                <td class="${order.side === 'BUY' ? 'buy-text' : 'sell-text'}">${text(order.side)}</td>
+                <td>${text(order.type)}</td>
+                <td>${money(order.price)}</td>
+                <td>${money(order.qty)}</td>
+                <td>${money(order.executedQty)}</td>
+                <td><span class="status">${text(order.status)}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    // Account lookup is read-only here; deposit/withdraw remain separate explicit workflows.
+    async function loadAccount() {
+        clearError($('accountError'));
+        try {
+            const account = await api(`/api/margin/account?uid=${encodeURIComponent(fields.uid.value.trim())}`);
+            $('accountRaw').textContent = JSON.stringify(account, null, 2);
+            $('balance').textContent = money(account?.balance);
+            $('available').textContent = money(account?.available);
+            $('frozen').textContent = money(account?.frozen);
+            $('positionMargin').textContent = money(account?.positionMargin);
+        } catch (error) {
+            $('accountRaw').textContent = 'Account unavailable.';
+            $('balance').textContent = '-';
+            $('available').textContent = '-';
+            $('frozen').textContent = '-';
+            $('positionMargin').textContent = '-';
+            showError($('accountError'), error);
+        }
+    }
+
+    // Refresh runs independent panes concurrently so one failing API does not blank the entire console.
+    async function refreshAll() {
+        await Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
+    }
+
+    // Order entry sends internal exchange orders only; backend venue routing decides whether Polymarket is used.
+    async function placeOrder(side) {
+        clearError($('orderError'));
+        fields.side.value = side;
+        const payload = {
+            uid: Number(fields.uid.value),
+            symbol: selectedSymbol(),
+            side,
+            type: fields.type.value,
+            price: fields.type.value === 'MARKET' ? null : fields.price.value,
+            qty: fields.qty.value,
+            leverage: Number(fields.leverage.value),
+            marginMode: fields.marginMode.value,
+            clientOrderId: fields.clientOrderId.value.trim() || `web-${Date.now()}`,
+            timeInForce: 'GTC',
+            reduceOnly: false,
+            postOnly: false
+        };
+        try {
+            const result = await api('/api/order/place', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            $('orderResult').textContent = JSON.stringify({ request: payload, result }, null, 2);
+            await refreshAll();
+        } catch (error) {
+            $('orderResult').textContent = JSON.stringify(payload, null, 2);
+            showError($('orderError'), error);
+        }
+    }
+
+    $('register').addEventListener('click', () => authenticate('register'));
+    $('login').addEventListener('click', () => authenticate('login'));
+    $('logout').addEventListener('click', logout);
+    $('reloadMarket').addEventListener('click', () => Promise.allSettled([loadDepth(), loadOrders()]));
+    $('reloadAccount').addEventListener('click', loadAccount);
+    $('reloadOrders').addEventListener('click', loadOrders);
+    $('placeBuy').addEventListener('click', () => placeOrder('BUY'));
+    $('placeSell').addEventListener('click', () => placeOrder('SELL'));
+    fields.symbol.addEventListener('change', () => {
+        syncSymbolTitle();
+        Promise.allSettled([loadDepth(), loadOrders()]);
+    });
+    fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadAccount()]));
+
+    syncSymbolTitle();
+    loadCurrentUser().finally(refreshAll);
+</script>
+</body>
+</html>

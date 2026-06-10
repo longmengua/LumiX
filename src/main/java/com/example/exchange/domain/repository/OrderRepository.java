@@ -60,6 +60,16 @@ public interface OrderRepository {
     List<Order> openOrders(long uid);
 
     /**
+     * 查詢所有使用者尚未完成的訂單。
+     *
+     * <p>啟動時重建 in-memory order book 會用到這個全域 open-order 視圖，避免 Redis
+     * 仍有掛單但 matching engine runtime 是空的。</p>
+     */
+    default List<Order> openOrders() {
+        return List.of();
+    }
+
+    /**
      * 查詢使用者在指定交易對的「未完成」訂單
      *
      * @param uid 使用者 ID

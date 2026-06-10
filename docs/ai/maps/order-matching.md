@@ -64,6 +64,8 @@ Current behavior:
 - `CancelReplaceOrderUseCase` remains an accounting-safe cancel + replacement-submit orchestration; when worker context is ready, both legs are fenced worker commands.
 - `matching-worker.fence-legacy-routing` rejects fallback to legacy in-process routing for configured symbols when worker readiness is missing.
 - `MatchingWorkerStartupListener` starts configured symbols on `ApplicationReadyEvent` when `matching-worker.enabled=true`.
+- `MatchingBookRecoveryStartupListener` rebuilds local in-memory books on `ApplicationReadyEvent` when REST-mode matching is active (`matching-worker.enabled=false`), first via durable recovery and then, if needed, with persisted open-order fallback from `OrderRepository.openOrders()`.
+- `RedisOrderRepository` maintains a global order id index for open-order fallback recovery; legacy Redis data without that index can be scanned from per-user lists during MVP startup compatibility.
 - `InMemoryMatchingEngine.applyLoggedCommand(...)` propagates command owner/epoch to matching event logs during worker execution.
 - Worker owner configuration is exposed through `matching-worker.*` / `MatchingWorkerProperties`; runbook documents `MATCHING_WORKER_ENABLED`, `MATCHING_WORKER_OWNER_ID`, `MATCHING_WORKER_SYMBOLS`, lease TTL, and renew interval.
 - Matching command replay supports `CANCEL_REPLACE` with replacement order payload.

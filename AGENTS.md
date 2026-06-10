@@ -152,8 +152,10 @@ Important packages:
 - Secrets must come from environment variables or a secret manager, not committed config.
 - Keep docs concise; update the relevant `docs/ai/maps/*.md` file when changing core flows or ownership.
 - For Codex team management, use `docs/ai/team-management.md` to size lanes, estimate token budgets, timebox work, and record metrics.
-- AI-generated or AI-modified code must include clear comments where they help a reader understand intent, state transitions, replay/recovery behavior, accounting effects, risk decisions, or test flow.
-- Test code should explain the scenario in comments or `@DisplayName`, so a reader can understand setup, action, and expected result without reverse-engineering the assertions.
+- AI-generated or AI-modified code must include clear comments in every touched code artifact, including application code, tests, SQL migrations, scripts, and frontend code.
+- Comments must explain intent, state transitions, replay/recovery behavior, accounting effects, risk decisions, security decisions, schema/data ownership, or test flow.
+- Test code must explain the scenario in comments or `@DisplayName`, so a reader can understand setup, action, and expected result without reverse-engineering the assertions.
+- SQL migrations must include comments for table purpose and non-obvious columns, indexes, constraints, or operational assumptions.
 - Avoid noisy comments that restate obvious syntax; prefer comments that clarify business rules, invariants, edge cases, and why the test exists.
 
 ## Current High-Value TODO Areas

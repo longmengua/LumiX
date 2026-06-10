@@ -28,6 +28,7 @@ Technical documentation is for engineers who need to understand how the system i
 | [Disaster Recovery Runbook](disaster-recovery-runbook.md) | Matching/order/account/position restore order, worker takeover, authenticated reconnect replay, and smoke commands. |
 | [ADL Operator Runbook](adl-operator-runbook.md) | ADL queue claim, execution, partial retry, no-candidate retry, and insurance reconciliation operations. |
 | [Matching Sequencer Runbook](matching-sequencer-runbook.md) | Production ownership, partitioning, startup, and failover rules for per-symbol sequencers. |
+| [Custodial Polymarket Routing And Key Security](custodial-polymarket-routing-security.md) | Target architecture for backend-managed Polymarket routing, signer isolation, CLOB credentials, and audit controls. |
 | [Product overview](README.md) | Business features, modules, order placement flow, APIs, and Kafka topics. |
 | [Production TODO](todo.md) | Engineering roadmap for production readiness. |
 

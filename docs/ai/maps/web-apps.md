@@ -5,6 +5,8 @@ This map covers future client-facing and admin-facing web applications.
 ## Existing Frontend State
 
 - Current static page: `src/main/resources/static/index.html`
+- Current client exchange console: `src/main/resources/static/exchange.html`
+- Current admin test-funds page: `src/main/resources/static/admin-test-funds.html`
 - Current static admin page: `src/main/resources/static/admin-market-config.html`
 - Current static admin risk page: `src/main/resources/static/admin-risk-parameters.html`
 - Current static admin DLQ page: `src/main/resources/static/admin-dlq.html`
@@ -19,7 +21,7 @@ This map covers future client-facing and admin-facing web applications.
 - Account dashboard: balances, frozen funds, margin risk, ledger, transfers.
 - Order workflows: place, amend, cancel, cancel-replace, bulk cancel.
 - User notifications: order lifecycle, fills, funding, liquidation, risk alerts.
-- Auth: API key/JWT-compatible flow without committing secrets.
+- Auth: first-party register/login/logout, API key/JWT-compatible flow without committing secrets, and deferred third-party OAuth/passkey/wallet login.
 
 ## Admin Web Scope
 
@@ -30,7 +32,9 @@ This map covers future client-facing and admin-facing web applications.
 - Market-maker operations: inventory, kill switch, hedge status, audit trail.
 
 Implemented baseline:
-- `AdminMarketConfigController` exposes read-only `/api/admin/market-config` market configuration data for the static admin market-config page; write actions remain disabled until permissioned backend endpoints exist.
+- `exchange.html` is the client exchange console for first-party auth, depth, order entry, open orders, and account lookup through `/api/auth`, `/api/depth`, `/api/order`, and `/api/margin`.
+- `admin-test-funds.html` is the admin MVP funding page for issuing test funds through `/api/admin/test-funds/airdrop`; this keeps privileged operator actions separate from the client trading workflow.
+- `AdminMarketConfigController` exposes `/api/admin/market-config` market configuration data and audited fee updates through `POST /api/admin/market-config/{symbol}/fees`; the static admin market-config page explains that fee edits apply only to new orders because existing orders carry fee snapshots.
 - `AdminRiskParametersController` exposes read-only `/api/admin/risk-parameters` risk switches, symbol tiers, and oracle state for the static admin risk-parameters page; write actions remain disabled until permissioned backend endpoints exist.
 - `AdminDlqController` exposes read-only `/api/admin/dlq` DLQ rows with sanitized payload/header previews for the static admin DLQ page; replay/compensation actions remain disabled in UI pending permissioned operator workflow wiring.
 

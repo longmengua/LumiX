@@ -45,6 +45,16 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
                 .toList();
     }
 
+    @Override
+    public SymbolConfig save(SymbolConfig config) {
+        if (config == null || config.getSymbol() == null || config.getSymbol().isBlank()) {
+            throw new IllegalArgumentException("symbol config is required");
+        }
+        // The MVP repository is in-memory, so writes update the live runtime config immediately.
+        put(config);
+        return config;
+    }
+
     private void put(SymbolConfig config) {
         configs.put(config.getSymbol().toUpperCase(), config);
     }

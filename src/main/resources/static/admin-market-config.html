@@ -48,6 +48,13 @@
             font-weight: 700;
         }
 
+        .subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            max-width: 760px;
+            line-height: 1.4;
+        }
+
         main {
             display: grid;
             grid-template-columns: minmax(320px, 1fr) 360px;
@@ -85,6 +92,31 @@
             color: var(--text);
             padding: 0 10px;
             width: 240px;
+        }
+
+        textarea {
+            min-height: 72px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+            padding: 8px 10px;
+            resize: vertical;
+            width: 100%;
+        }
+
+        .stack {
+            display: grid;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .form-grid input {
+            width: 100%;
         }
 
         table {
@@ -218,14 +250,21 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/admin-console.css"/>
 </head>
-<body>
+<body class="admin-market-page">
 <header>
-    <h1>Admin Market Config</h1>
+    <div>
+        <h1>Admin Market Config</h1>
+        <div class="subtitle">Inspect listed markets, tick sizes, leverage limits, and audited maker/taker fee settings. Fee edits apply to new orders only; existing open orders keep their original fee snapshots.</div>
+        <nav class="admin-nav" aria-label="Admin navigation">
+            <a class="active" href="/admin-console.html">Admin Console</a>
+        </nav>
+    </div>
     <div class="toolbar">
         <input id="filter" placeholder="Symbol filter" aria-label="Symbol filter"/>
         <button id="refresh" type="button">Refresh</button>
-        <span id="mode" class="status">READ ONLY</span>
+        <span id="mode" class="status">LOADING</span>
     </div>
 </header>
 
@@ -269,6 +308,7 @@
     const detailBody = document.getElementById('detailBody');
     const filterEl = document.getElementById('filter');
     const errorEl = document.getElementById('error');
+    const modeEl = document.getElementById('mode');
 
     document.getElementById('refresh').addEventListener('click', loadMarkets);
     filterEl.addEventListener('input', renderMarkets);
@@ -302,6 +342,7 @@
             }
             state.markets = payload.data.markets || [];
             state.capabilities = payload.data.capabilities || null;
+            modeEl.textContent = state.capabilities?.writesEnabled ? 'FEE EDITS ON' : 'READ ONLY';
             if (!state.selectedSymbol && state.markets.length > 0) {
                 state.selectedSymbol = state.markets[0].symbol;
             }
@@ -349,52 +390,109 @@
         }
 
         const disabledActions = state.capabilities?.disabledActions || [];
+        const writesEnabled = Boolean(state.capabilities?.writesEnabled);
         detailTitle.textContent = market.symbol;
         detailBody.innerHTML = `
-            <div class="kv">
-                ${field('Trading Mode', market.tradingMode)}
-                ${field('Session Window', market.sessionWindow)}
-                ${field('Matching', market.matchingEnabled ? 'ENABLED' : 'DISABLED')}
-                ${field('Market Data', market.marketDataEnabled ? 'ENABLED' : 'DISABLED')}
-                ${field('Min Qty', market.minQty)}
-                ${field('Max Open Orders', market.maxOpenOrders)}
-                ${field('Max Order Notional', market.maxOrderNotional)}
-                ${field('Max Position Notional', market.maxPositionNotional)}
-                ${field('Maker Fee', market.makerFeeRate)}
-                ${field('Taker Fee', market.takerFeeRate)}
-                ${field('Initial Margin', market.initialMarginRate)}
-                ${field('Maintenance Margin', market.maintenanceMarginRate)}
+            <div class="stack">
+                <div class="kv">
+                    ${field('Trading Mode', market.tradingMode)}
+                    ${field('Session Window', market.sessionWindow)}
+                    ${field('Matching', market.matchingEnabled ? 'ENABLED' : 'DISABLED')}
+                    ${field('Market Data', market.marketDataEnabled ? 'ENABLED' : 'DISABLED')}
+                    ${field('Min Qty', market.minQty)}
+                    ${field('Max Open Orders', market.maxOpenOrders)}
+                    ${field('Max Order Notional', market.maxOrderNotional)}
+                    ${field('Max Position Notional', market.maxPositionNotional)}
+                    ${field('Maker Fee', market.makerFeeRate)}
+                    ${field('Taker Fee', market.takerFeeRate)}
+                    ${field('Initial Margin', market.initialMarginRate)}
+                    ${field('Maintenance Margin', market.maintenanceMarginRate)}
+                </div>
+                <div class="notice">
+                    Fee changes are audited. Existing open orders keep the maker/taker fee snapshot captured when they were placed.
+                </div>
+                <form id="feeForm" class="stack">
+                    <div class="form-grid">
+                        <label>
+                            <div class="label">Maker Fee Rate</div>
+                            <input id="makerFeeRate" value="${esc(market.makerFeeRate)}" ${writesEnabled ? '' : 'disabled'}/>
+                        </label>
+                        <label>
+                            <div class="label">Taker Fee Rate</div>
+                            <input id="takerFeeRate" value="${esc(market.takerFeeRate)}" ${writesEnabled ? '' : 'disabled'}/>
+                        </label>
+                    </div>
+                    <label>
+                        <div class="label">Operator ID</div>
+                        <input id="operatorId" value="local-admin" ${writesEnabled ? '' : 'disabled'}/>
+                    </label>
+                    <label>
+                        <div class="label">Reason</div>
+                        <textarea id="feeReason" ${writesEnabled ? '' : 'disabled'}>MVP fee schedule update</textarea>
+                    </label>
+                    <button id="saveFees" type="submit" ${writesEnabled ? '' : 'disabled'}>Save Fee Settings</button>
+                </form>
+                <div class="actions">
+                    <button type="button" disabled>Edit Core Limits</button>
+                    <button type="button" disabled>Manual Suspension</button>
+                </div>
+                <div class="notice">
+                    Other writes disabled: ${disabledActions.map(esc).join(', ') || '-'}
+                </div>
+                <table class="tiers">
+                    <thead>
+                    <tr>
+                        <th>Tier</th>
+                        <th>Max Position</th>
+                        <th>Initial</th>
+                        <th>Maintenance</th>
+                        <th>Leverage</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        ${(market.riskTiers || []).map(tier => `
+                            <tr>
+                                <td>${esc(tier.tier)}</td>
+                                <td>${esc(tier.maxPositionNotional)}</td>
+                                <td>${esc(tier.initialMarginRate)}</td>
+                                <td>${esc(tier.maintenanceMarginRate)}</td>
+                                <td>${esc(tier.maxLeverage)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
             </div>
-            <div class="actions">
-                <button type="button" disabled>Edit Config</button>
-                <button type="button" disabled>Manual Suspension</button>
-            </div>
-            <div class="notice">
-                Writes disabled: ${disabledActions.map(esc).join(', ')}
-            </div>
-            <table class="tiers">
-                <thead>
-                <tr>
-                    <th>Tier</th>
-                    <th>Max Position</th>
-                    <th>Initial</th>
-                    <th>Maintenance</th>
-                    <th>Leverage</th>
-                </tr>
-                </thead>
-                <tbody>
-                    ${(market.riskTiers || []).map(tier => `
-                        <tr>
-                            <td>${esc(tier.tier)}</td>
-                            <td>${esc(tier.maxPositionNotional)}</td>
-                            <td>${esc(tier.initialMarginRate)}</td>
-                            <td>${esc(tier.maintenanceMarginRate)}</td>
-                            <td>${esc(tier.maxLeverage)}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
         `;
+        document.getElementById('feeForm')?.addEventListener('submit', event => saveFees(event, market.symbol));
+    }
+
+    async function saveFees(event, symbol) {
+        event.preventDefault();
+        errorEl.hidden = true;
+        const button = document.getElementById('saveFees');
+        button.disabled = true;
+        try {
+            const response = await fetch(`/api/admin/market-config/${encodeURIComponent(symbol)}/fees`, {
+                method: 'POST',
+                headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    makerFeeRate: document.getElementById('makerFeeRate').value.trim(),
+                    takerFeeRate: document.getElementById('takerFeeRate').value.trim(),
+                    operatorId: document.getElementById('operatorId').value.trim(),
+                    reason: document.getElementById('feeReason').value.trim()
+                })
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                throw new Error(payload.error || `HTTP ${response.status}`);
+            }
+            await loadMarkets();
+        } catch (error) {
+            errorEl.textContent = error.message;
+            errorEl.hidden = false;
+        } finally {
+            button.disabled = false;
+        }
     }
 
     function field(label, value) {

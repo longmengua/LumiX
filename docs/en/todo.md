@@ -159,6 +159,8 @@ Documentation categories: [Product Documentation](README.md) / [Technical Docume
   - Task spec ready: [feature flag, canary, and rollback](../tasks/p2/12-feature-flag-canary-rollback.md).
 - [ ] Compliance hooks: KYC/AML integration, sanctions screening, trade surveillance, suspicious-activity reports.
   - Task specs ready: [KYC/AML/sanctions](../tasks/p2/13-kyc-aml-sanctions-integration.md) and [trade surveillance/SAR](../tasks/p2/14-trade-surveillance-sar.md).
+- [ ] Auth expansion: third-party OAuth, passkeys/WebAuthn, wallet login, MFA, device/session management, and production-grade password reset.
+  - Baseline progress: local first-party register/login/logout exists for MVP; users start unfunded, and the separated admin test-funds page covers trading tests until real deposit/withdraw rails are implemented.
 
 ## Suggested Near-Term Order
 

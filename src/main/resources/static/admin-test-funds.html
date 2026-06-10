@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Test Funds</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #eef2f5;
+            --panel: #ffffff;
+            --line: #c9d3dc;
+            --text: #17212b;
+            --muted: #667482;
+            --accent: #0f766e;
+            --success: #047857;
+            --warn: #8a4b10;
+            --warn-bg: #fff7df;
+            --error: #991b1b;
+            --error-bg: #fee2e2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 22px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--line);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        h1, h2 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 24px;
+        }
+
+        h2 {
+            font-size: 17px;
+            margin-bottom: 12px;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(340px, 0.75fr) minmax(420px, 1.25fr);
+            gap: 16px;
+            padding: 16px 22px;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            padding: 14px;
+            min-width: 0;
+        }
+
+        .stack {
+            display: grid;
+            gap: 16px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        input {
+            min-height: 34px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+            padding: 0 9px;
+            width: 100%;
+        }
+
+        button {
+            min-height: 34px;
+            border: 1px solid var(--accent);
+            background: var(--accent);
+            color: white;
+            padding: 0 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button.secondary, a.nav-link {
+            min-height: 34px;
+            display: inline-flex;
+            align-items: center;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+            padding: 0 12px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .metric {
+            border: 1px solid var(--line);
+            padding: 10px;
+            background: #f8fafb;
+            min-width: 0;
+        }
+
+        .metric .value {
+            margin-top: 4px;
+            font-size: 18px;
+            font-weight: 700;
+            overflow-wrap: anywhere;
+        }
+
+        .notice {
+            border: 1px solid #e2bf62;
+            background: var(--warn-bg);
+            color: var(--warn);
+            padding: 9px 10px;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .error {
+            border: 1px solid #ef9a9a;
+            background: var(--error-bg);
+            color: var(--error);
+            padding: 9px 10px;
+            margin-top: 10px;
+            line-height: 1.4;
+        }
+
+        .success-text {
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        pre {
+            max-height: 360px;
+            overflow: auto;
+            background: #f8fafb;
+            border: 1px solid var(--line);
+            padding: 10px;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 900px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            main, .form-grid, .metric-row {
+                grid-template-columns: 1fr;
+            }
+
+            main {
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Admin test-funds page is separated from the client trading page to keep privileged actions out of user workflow. -->
+<header>
+    <div>
+        <h1>Admin Test Funds</h1>
+        <div class="notice">MVP operator console for funding test accounts before real deposit and withdrawal rails exist.</div>
+    </div>
+    <div class="toolbar">
+        <a class="nav-link" href="/exchange.html">Client Exchange</a>
+        <a class="nav-link" href="/admin-console.html">Admin Console</a>
+    </div>
+</header>
+
+<main>
+    <section class="stack">
+        <div class="panel">
+            <h2>Airdrop</h2>
+            <div class="form-grid">
+                <div>
+                    <label for="uid">UID</label>
+                    <input id="uid" value="1"/>
+                </div>
+                <div>
+                    <label for="amount">Amount</label>
+                    <input id="amount" value="10000.00"/>
+                </div>
+                <div class="full toolbar">
+                    <button id="airdropFunds" type="button">Airdrop USDT</button>
+                    <button id="loadAccount" type="button" class="secondary">Load Account</button>
+                </div>
+            </div>
+            <div id="airdropError" class="error" hidden></div>
+            <pre id="airdropResult">No test funds issued.</pre>
+        </div>
+    </section>
+
+    <section class="stack">
+        <div class="panel">
+            <h2>Account Snapshot</h2>
+            <div class="metric-row">
+                <div class="metric">
+                    <label>Balance</label>
+                    <div id="balance" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Available</label>
+                    <div id="available" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Frozen</label>
+                    <div id="frozen" class="value">-</div>
+                </div>
+            </div>
+            <div id="accountError" class="error" hidden></div>
+            <pre id="accountRaw">No account loaded.</pre>
+        </div>
+    </section>
+</main>
+
+<script>
+    // DOM helper keeps this operator page dependency-free while the production admin app is still pending.
+    const $ = (id) => document.getElementById(id);
+
+    function money(value) {
+        if (value === null || value === undefined || value === '') return '-';
+        const num = Number(value);
+        return Number.isFinite(num) ? num.toLocaleString(undefined, { maximumFractionDigits: 8 }) : String(value);
+    }
+
+    function showError(el, error) {
+        el.textContent = error.message || String(error);
+        el.hidden = false;
+    }
+
+    function clearError(el) {
+        el.textContent = '';
+        el.hidden = true;
+    }
+
+    // Admin API wrapper intentionally mirrors the MVP ApiResponse contract used by backend controllers.
+    async function api(path, options = {}) {
+        const response = await fetch(path, {
+            headers: {'Accept': 'application/json', 'Content-Type': 'application/json'},
+            ...options
+        });
+        const body = await response.json();
+        if (!response.ok || !body.ok) {
+            throw new Error(body.error || body.message || `HTTP ${response.status}`);
+        }
+        return body.data;
+    }
+
+    // Account loading validates that test-fund grants reached the user-visible balance projection.
+    async function loadAccount() {
+        clearError($('accountError'));
+        try {
+            const uid = encodeURIComponent($('uid').value.trim());
+            const account = await api(`/api/margin/account?uid=${uid}`);
+            $('balance').textContent = money(account?.balance);
+            $('available').textContent = money(account?.available);
+            $('frozen').textContent = money(account?.frozen);
+            $('accountRaw').textContent = JSON.stringify(account, null, 2);
+        } catch (error) {
+            $('balance').textContent = '-';
+            $('available').textContent = '-';
+            $('frozen').textContent = '-';
+            $('accountRaw').textContent = 'Account unavailable.';
+            showError($('accountError'), error);
+        }
+    }
+
+    // Test-fund airdrop reuses backend deposit ledger flow; direct balance mutation is intentionally avoided.
+    async function airdropFunds() {
+        clearError($('airdropError'));
+        const payload = {
+            uid: Number($('uid').value),
+            amount: $('amount').value
+        };
+        try {
+            const result = await api('/api/admin/test-funds/airdrop', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            $('airdropResult').innerHTML = `<span class="success-text">CONFIRMED</span>\n${JSON.stringify({request: payload, result}, null, 2)}`;
+            await loadAccount();
+        } catch (error) {
+            $('airdropResult').textContent = JSON.stringify(payload, null, 2);
+            showError($('airdropError'), error);
+        }
+    }
+
+    $('airdropFunds').addEventListener('click', airdropFunds);
+    $('loadAccount').addEventListener('click', loadAccount);
+    $('uid').addEventListener('change', loadAccount);
+
+    loadAccount();
+</script>
+</body>
+</html>

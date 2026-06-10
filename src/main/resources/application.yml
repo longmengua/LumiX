@@ -52,6 +52,8 @@ security-controls:
   ip-allowlist: ${SECURITY_CONTROLS_IP_ALLOWLIST:}
   client-ip-header: ${SECURITY_CONTROLS_CLIENT_IP_HEADER:X-Forwarded-For}
   protected-path-patterns:
+    # Admin routes include test-funds airdrop and operational screens, so they must require admin credentials in prod.
+    - /api/admin/**
     - /api/order/**
     - /api/margin/**
     - /api/risk/**
@@ -82,6 +84,12 @@ risk-controls:
     max-routed-orders-per-run: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_POLICY_MAX_ROUTED_ORDERS_PER_RUN:0}
     max-routed-notional-per-run: ${RISK_CONTROLS_MARKET_MAKER_HEDGE_EXECUTION_POLICY_MAX_ROUTED_NOTIONAL_PER_RUN:0}
   suspended-symbols: ${RISK_CONTROLS_SUSPENDED_SYMBOLS:}
+
+matching-book-recovery:
+  # REST-mode MVP uses an in-process order book; recover it on startup so depth matches persisted open orders.
+  enabled: ${MATCHING_BOOK_RECOVERY_ENABLED:true}
+  symbols: ${MATCHING_BOOK_RECOVERY_SYMBOLS:}
+  open-order-fallback-enabled: ${MATCHING_BOOK_RECOVERY_OPEN_ORDER_FALLBACK_ENABLED:true}
 bonus-credit:
   expiry-enabled: ${BONUS_CREDIT_EXPIRY_ENABLED:false}
   expiry-fixed-delay-ms: ${BONUS_CREDIT_EXPIRY_FIXED_DELAY_MS:300000}

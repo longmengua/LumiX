@@ -45,6 +45,13 @@
             font-size: 22px;
         }
 
+        .subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            max-width: 760px;
+            line-height: 1.4;
+        }
+
         main {
             display: grid;
             grid-template-columns: minmax(360px, 1fr) 440px;
@@ -196,10 +203,17 @@
             .table-wrap { overflow-x: auto; }
         }
     </style>
+    <link rel="stylesheet" href="/admin-console.css"/>
 </head>
-<body>
+<body class="admin-dlq-page">
 <header>
-    <h1>Admin DLQ</h1>
+    <div>
+        <h1>Admin DLQ</h1>
+        <div class="subtitle">Inspect dead-letter events from failed async processing, sanitized payloads, retry eligibility, and trace ids before an operator decides whether to replay, quarantine, or escalate.</div>
+        <nav class="admin-nav" aria-label="Admin navigation">
+            <a class="active" href="/admin-console.html">Admin Console</a>
+        </nav>
+    </div>
     <div class="toolbar">
         <label for="limit">Limit</label>
         <input id="limit" type="number" min="1" max="200" value="50"/>

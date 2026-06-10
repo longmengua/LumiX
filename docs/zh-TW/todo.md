@@ -159,6 +159,8 @@
   - Task spec 已就緒：[feature flag, canary, and rollback](../tasks/p2/12-feature-flag-canary-rollback.md)。
 - [ ] 合規能力：KYC/AML hook、制裁名單、交易監控、可疑行為報表。
   - Task specs 已就緒：[KYC/AML/sanctions](../tasks/p2/13-kyc-aml-sanctions-integration.md) 與 [trade surveillance/SAR](../tasks/p2/14-trade-surveillance-sar.md)。
+- [ ] Auth 擴充：第三方 OAuth、passkeys/WebAuthn、錢包登入、MFA、device/session 管理、正式密碼重設。
+  - Baseline 進度：MVP 已有本地 first-party 註冊/登入/登出；新用戶預設沒有資金，正式充值/提幣完成前先用分離的後台 test-funds 頁發測試金。
 
 ## 近期落地順序建議
 

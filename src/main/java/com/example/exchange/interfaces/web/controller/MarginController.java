@@ -26,6 +26,7 @@ import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
+import com.example.exchange.interfaces.web.dto.AccountResponse;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.BonusCreditClawbackRequest;
 import com.example.exchange.interfaces.web.dto.DepositCallbackRequest;
@@ -100,8 +101,9 @@ public class MarginController {
     }
 
     @GetMapping("/account")
-    public ApiResponse<Account> account(@RequestParam Long uid) {
-        return ApiResponse.ok(marginService.findAccount(uid).orElse(null));
+    public ApiResponse<AccountResponse> account(@RequestParam Long uid) {
+        // Return a web DTO instead of the Account domain object so JSON fields stay stable for clients.
+        return ApiResponse.ok(marginService.findAccount(uid).map(AccountResponse::from).orElse(null));
     }
 
     @GetMapping("/ledger")

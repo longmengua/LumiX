@@ -1,0 +1,16 @@
+/*
+ * File purpose: Local exchange registration request DTO.
+ */
+package com.example.exchange.interfaces.web.dto;
+
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
+
+public record RegisterRequest(
+        // Email is the local login identifier; it is normalized before persistence.
+        @Email @NotBlank String email,
+        // Password is accepted only at registration time and is immediately hashed server-side.
+        @NotBlank @Size(min = 8, max = 128) String password
+) {
+}
