@@ -4,7 +4,7 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.service.OrderLifecycleProjectionService;
-import com.example.exchange.application.usecase.OrderUserCase;
+import com.example.exchange.application.usecase.OrderUseCase;
 import com.example.exchange.application.usecase.AmendOrderUseCase;
 import com.example.exchange.application.usecase.CancelOrderUseCase;
 import com.example.exchange.application.usecase.CancelReplaceOrderUseCase;
@@ -41,7 +41,7 @@ public class OrderController {
     private final PlaceOrderUseCase placeOrderUseCase;
 
     // Order Case：查詢訂單（DDD：領域層）
-    private final OrderUserCase orderUserCase;
+    private final OrderUseCase orderUseCase;
     private final CancelOrderUseCase cancelOrderUseCase;
     private final AmendOrderUseCase amendOrderUseCase;
     private final CancelReplaceOrderUseCase cancelReplaceOrderUseCase;
@@ -80,7 +80,7 @@ public class OrderController {
             @RequestParam(required = false) String symbol
     ) {
         // 查詢使用者掛單
-        List<Order> orders = orderUserCase.findOpenOrders(uid, symbol);
+        List<Order> orders = orderUseCase.findOpenOrders(uid, symbol);
 
         // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
         List<OrderInfoResponse> result = orders.stream()
@@ -106,7 +106,7 @@ public class OrderController {
             @RequestParam(required = false) String symbol
     ) {
         // 查詢所有訂單（含歷史）
-        List<Order> orders = orderUserCase.findAllOrders(uid, symbol);
+        List<Order> orders = orderUseCase.findAllOrders(uid, symbol);
 
         // 將領域物件 Order 轉換成 API 回應物件 OrderInfoResponse
         List<OrderInfoResponse> result = orders.stream()

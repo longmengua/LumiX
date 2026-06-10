@@ -44,6 +44,7 @@ Current usage:
 ├── doc/
 │   ├── AGENTS.md
 │   ├── ai/
+│   │   ├── project-structure.md
 │   │   ├── team-collaboration.md
 │   │   └── team-management.md
 │   ├── tasks/
@@ -59,8 +60,8 @@ Current usage:
 ## What This Kit Standardizes
 
 - One-writer-per-worktree collaboration.
+- AI-readable project structure and naming rules for new code.
 - Claim-before-code workflow for parallel agents.
 - Focused task files with goal, scope, acceptance criteria, and read-first links.
 - Automatic local Codex usage reporting from `~/.codex/sessions`.
 - Final reports with commit, tests, remaining TODOs, and usage delta.
-

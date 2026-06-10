@@ -10,6 +10,7 @@ Replace this section with the project name, runtime, framework, and high-level p
 Primary docs:
 
 - Product overview: `README.md`
+- Project structure and naming: `doc/ai/project-structure.md`
 - Task intake: `doc/tasks/README.md`
 - Active work registry: `doc/tasks/active.md`
 - Team collaboration: `doc/ai/team-collaboration.md`
@@ -56,6 +57,15 @@ When the user points to a Markdown task file:
 4. If it gives one clear next task, implement it without asking for a plan first.
 5. If it leaves multiple plausible tasks, ask which one to start.
 6. After implementation, update task status, current-state docs, and relevant maps.
+
+## Structure and Naming Protocol
+
+When adding or moving code:
+
+1. Read `doc/ai/project-structure.md` before introducing a new folder, package family, suffix, or ownership boundary.
+2. Prefer the narrowest existing location and naming style that already owns the behavior.
+3. If the change creates a new convention, update `doc/ai/project-structure.md` in the same task.
+4. If the change creates a new functional area, add or update the relevant AI-readable code map or task doc.
 
 ## Team AI Collaboration Protocol
 
@@ -108,6 +118,6 @@ Remaining: <next task or blocker>
 - Check `git status --short` before editing.
 - Use focused tests for new behavior.
 - Update relevant docs when status, ownership, commands, or workflows change.
+- Keep folder and file names aligned with `doc/ai/project-structure.md`.
 - Keep docs concise and task-oriented.
 - Secrets must come from environment variables or secret managers, not committed config.
-

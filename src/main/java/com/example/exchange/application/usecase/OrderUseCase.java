@@ -12,7 +12,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class OrderUserCase {
+public class OrderUseCase {
 
     // Order: 查詢訂單
     private final OrderRepository orderRepository;
