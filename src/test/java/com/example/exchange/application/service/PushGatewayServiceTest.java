@@ -52,6 +52,22 @@ class PushGatewayServiceTest {
     }
 
     @Test
+    @DisplayName("publishUser 會把 order lifecycle signal 送到 user WebSocket channel")
+    void publishUserSendsOrderLifecycleSignalToUserWebSocketClients() throws Exception {
+        PushGatewayService service = new PushGatewayService(objectMapper, new PushGatewayProperties());
+        RecordingWebSocketSession session = new RecordingWebSocketSession("ws-user", true);
+        service.registerUserWebSocket(42L, session);
+
+        // 場景：order lifecycle event 寫入 projection 後，前端 user stream 會收到 signal 並刷新 open orders。
+        service.publishUser(42L, "order.lifecycle", Map.of("orderId", "order-1", "status", "NEW"));
+
+        JsonNode json = objectMapper.readTree(session.messages.getFirst());
+        assertThat(json.path("event").asText()).isEqualTo("order.lifecycle");
+        assertThat(json.path("data").path("orderId").asText()).isEqualTo("order-1");
+        assertThat(json.path("data").path("status").asText()).isEqualTo("NEW");
+    }
+
+    @Test
     @DisplayName("publishHeartbeat 會清理已關閉 WebSocket session")
     void publishHeartbeatRemovesClosedWebSocketSessions() throws Exception {
         PushGatewayService service = new PushGatewayService(objectMapper, new PushGatewayProperties());

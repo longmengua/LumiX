@@ -6,6 +6,7 @@ package com.example.exchange.infra.kafka;
 import com.example.exchange.application.event.DomainEventPublisher;
 import com.example.exchange.application.service.OrderLifecycleProjectionService;
 import com.example.exchange.application.service.OutboxService;
+import com.example.exchange.application.service.PushGatewayService;
 import com.example.exchange.domain.event.OrderLifecycleEvent;
 import com.example.exchange.infra.tracing.TraceContext;
 import org.apache.kafka.clients.producer.ProducerRecord;
@@ -26,21 +27,26 @@ public class KafkaDomainEventPublisher<T> implements DomainEventPublisher<T> {
     private final KafkaTemplate<String, Object> kafka;
     private final OutboxService outboxService;
     private final OrderLifecycleProjectionService orderLifecycleProjectionService;
+    private final PushGatewayService pushGatewayService;
 
     public KafkaDomainEventPublisher(
             KafkaTemplate<String, Object> kafka,
             OutboxService outboxService,
-            OrderLifecycleProjectionService orderLifecycleProjectionService
+            OrderLifecycleProjectionService orderLifecycleProjectionService,
+            PushGatewayService pushGatewayService
     ) {
         this.kafka = kafka;
         this.outboxService = outboxService;
         this.orderLifecycleProjectionService = orderLifecycleProjectionService;
+        this.pushGatewayService = pushGatewayService;
     }
 
     @Override
     public void publish(T event) {
         if (event instanceof OrderLifecycleEvent orderLifecycleEvent) {
             orderLifecycleProjectionService.record(orderLifecycleEvent);
+            // User-channel WebSocket clients use this event as the low-latency signal to refresh order state.
+            pushGatewayService.publishUser(orderLifecycleEvent.uid(), "order.lifecycle", orderLifecycleEvent);
         }
         KafkaEventRoute route = KafkaEventRoute.from(event);
         outboxService.publish(route.topic(), route.key(), event, TraceContext.currentHeaders(), this::send);

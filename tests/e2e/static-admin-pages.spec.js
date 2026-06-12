@@ -17,6 +17,27 @@ test('exchange console renders client trading workflow without admin funding con
   await page.addInitScript(() => {
     localStorage.setItem('exchangeAccessToken', 'test-access-token');
     localStorage.setItem('exchangeRefreshToken', 'test-refresh-token');
+    // Scenario: the client should prefer user WebSocket signals and use polling only after stream loss.
+    window.__exchangeWebSocketUrls = [];
+    window.WebSocket = class MockUserWebSocket {
+      constructor(url) {
+        this.url = url;
+        window.__exchangeWebSocketUrls.push(url);
+        this.readyState = 0;
+        setTimeout(() => {
+          this.readyState = 1;
+          this.onopen?.();
+          setTimeout(() => {
+            this.onmessage?.({ data: JSON.stringify({ event: 'order.lifecycle', data: { orderId: 'order-live-refresh' } }) });
+          }, 50);
+        }, 20);
+      }
+
+      close() {
+        this.readyState = 3;
+        this.onclose?.();
+      }
+    };
   });
   await page.route('**/api/markets', async (route) => {
     await route.fulfill({
@@ -90,7 +111,7 @@ test('exchange console renders client trading workflow without admin funding con
       }
     ];
     if (openOrderRequests > 1) {
-      // Scenario: live polling should refresh open orders without the client pressing Reload Orders.
+      // Scenario: user WebSocket lifecycle signals should refresh open orders without pressing Reload Orders.
       orders.push({
         orderId: 'order-live-refresh',
         symbol: 'BTCUSDT',
@@ -152,6 +173,12 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#mmStatus')).toHaveText('1 active');
   await expect(page.locator('#mmLatestRef')).toHaveText('mm-flow-e2e-1');
   await expect(page.locator('.depth-fill').first()).toBeVisible();
+  await expect.poll(() => page.evaluate(() => window.__exchangeWebSocketUrls)).toEqual(
+    expect.arrayContaining([
+      expect.stringContaining('/ws/market/BTCUSDT'),
+      expect.stringContaining('/ws/user/10001')
+    ])
+  );
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'order-live-r' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BTCUSDT' }).first()).toBeVisible();
