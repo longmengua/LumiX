@@ -73,9 +73,17 @@ public class PushGatewayService {
         registerWebSocket("market:" + normalize(symbol), session);
     }
 
+    public void unregisterMarketWebSocket(String symbol, WebSocketSession session) {
+        remove("market:" + normalize(symbol), session);
+    }
+
     public void registerUserWebSocket(long uid, WebSocketSession session) {
         ensureAcceptingNewStreams();
         registerWebSocket("user:" + uid, session);
+    }
+
+    public void unregisterUserWebSocket(long uid, WebSocketSession session) {
+        remove("user:" + uid, session);
     }
 
     public void removeWebSocket(WebSocketSession session) {

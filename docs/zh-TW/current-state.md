@@ -36,7 +36,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 - 本機可用 Docker Compose 啟動 MySQL、Redis、Kafka、Kafka UI。
 - 內部交易所下單鏈路已有 MVP：基本驗證、pre-trade risk、in-memory matching、帳務更新、事件發布。
-- 前台 exchange console 會從 `/api/markets` 載入可選市場，只提供後台配置且啟用的 symbols，並以登入 session UID 取代可編輯 UID 欄位，也會顯示動態 order-book 深度條與客戶端可見的做市商 quote flow；公開 market refresh 未登入也會使用 `/ws/market/{symbol}`，登入後 open orders 再使用 `/ws/user/{uid}` 推送 signal 更新，斷線或重連期間才退回 1 秒 polling。
+- 前台 exchange console 會從 `/api/markets` 載入可選市場，只提供後台配置且啟用的 symbols，並以登入 session UID 取代可編輯 UID 欄位，也會顯示動態 order-book 深度條與客戶端可見的做市商 quote flow；公開 market 與登入後 private user refresh 共用單一 `/ws/exchange` multiplex WebSocket，斷線或重連期間才退回 1 秒 polling，並支援 opt-in cancel-on-disconnect resume metadata。
 - 撮合核心已覆蓋 FIFO、post-only、自成交防護、IOC/FOK、市價單流動性不足等 deterministic tests。
 - 已有 in-process 單 symbol sequencer baseline，避免同一 symbol 在單進程內並行改狀態。
 - 已文件化單 symbol sequencer ownership 的 production 部署與 failover 規則。

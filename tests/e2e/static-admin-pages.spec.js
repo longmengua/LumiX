@@ -17,9 +17,10 @@ test('exchange console renders client trading workflow without admin funding con
   await page.addInitScript(() => {
     localStorage.setItem('exchangeAccessToken', 'test-access-token');
     localStorage.setItem('exchangeRefreshToken', 'test-refresh-token');
-    // Scenario: the client should prefer user WebSocket signals and use polling only after stream loss.
+    // Scenario: the client should multiplex public market and private user subscriptions over one WebSocket.
     window.__exchangeWebSocketUrls = [];
-    window.WebSocket = class MockUserWebSocket {
+    window.__exchangeWebSocketCommands = [];
+    window.WebSocket = class MockExchangeWebSocket {
       constructor(url) {
         this.url = url;
         window.__exchangeWebSocketUrls.push(url);
@@ -27,10 +28,21 @@ test('exchange console renders client trading workflow without admin funding con
         setTimeout(() => {
           this.readyState = 1;
           this.onopen?.();
+        }, 20);
+      }
+
+      send(raw) {
+        const command = JSON.parse(raw);
+        window.__exchangeWebSocketCommands.push(command);
+        if (command.type === 'subscribe.market') {
+          this.onmessage?.({ data: JSON.stringify({ event: 'subscribed.market', data: { symbol: command.symbol } }) });
+        }
+        if (command.type === 'subscribe.user') {
+          this.onmessage?.({ data: JSON.stringify({ event: 'subscribed.user', data: { uid: command.uid, connectionId: 'ws-e2e-1' } }) });
           setTimeout(() => {
             this.onmessage?.({ data: JSON.stringify({ event: 'order.lifecycle', data: { orderId: 'order-live-refresh' } }) });
           }, 50);
-        }, 20);
+        }
       }
 
       close() {
@@ -174,9 +186,12 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#mmLatestRef')).toHaveText('mm-flow-e2e-1');
   await expect(page.locator('.depth-fill').first()).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.__exchangeWebSocketUrls)).toEqual(
+    [expect.stringContaining('/ws/exchange')]
+  );
+  await expect.poll(() => page.evaluate(() => window.__exchangeWebSocketCommands)).toEqual(
     expect.arrayContaining([
-      expect.stringContaining('/ws/market/BTCUSDT'),
-      expect.stringContaining('/ws/user/10001')
+      expect.objectContaining({ type: 'subscribe.market', symbol: 'BTCUSDT' }),
+      expect.objectContaining({ type: 'subscribe.user', uid: 10001, cancelOnDisconnect: false })
     ])
   );
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();

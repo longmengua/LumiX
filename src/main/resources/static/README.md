@@ -4,7 +4,7 @@
 
 目前內容：
 - `index.html`：本機真實交易測試控制台。
-- `exchange.html`：前台內部交易所操作台，覆蓋註冊/登入/登出、order book、下單、掛單、帳戶查詢；market selector 必須從 `/api/markets` 載入後台配置出的可交易市場，不讓使用者自由輸入未配置幣種。前台版型應把使用者摘要放在上方，`Place Order` / `Order Book` / `Open Orders` 放在同一個訂單工作區；UID 只能由登入狀態帶出，不做可輸入欄位。Order book 會顯示動態深度條，並用 `/api/market-maker/quotes/active` 的 quote leg 價量標記客戶端可見的做市商掛單；公開 market view 未登入也會連 `/ws/market/{symbol}`，登入後再連 `/ws/user/{uid}` 用 `order.lifecycle` / `trade` signal 更新 open orders，任一必要 WebSocket 斷線或重連前才退回 1 秒 polling。
+- `exchange.html`：前台內部交易所操作台，覆蓋註冊/登入/登出、order book、下單、掛單、帳戶查詢；market selector 必須從 `/api/markets` 載入後台配置出的可交易市場，不讓使用者自由輸入未配置幣種。前台版型應把使用者摘要放在上方，`Place Order` / `Order Book` / `Open Orders` 放在同一個訂單工作區；UID 只能由登入狀態帶出，不做可輸入欄位。Order book 會顯示動態深度條，並用 `/api/market-maker/quotes/active` 的 quote leg 價量標記客戶端可見的做市商掛單；前台使用單一 `/ws/exchange` multiplex WebSocket，未登入先送 `subscribe.market`，登入後同線路再送 `subscribe.user` 用 `order.lifecycle` / `trade` signal 更新 open orders，斷線或重連前才退回 1 秒 polling；`subscribe.user` 支援 opt-in `cancelOnDisconnect` 與 `resumeConnectionId`。
 - `admin-console.html`：後台主入口，以 tabs 集中測試金、market config、risk parameters、market makers、DLQ；使用者導覽應只暴露這一個後台頁。
 - `admin-test-funds.html`：後台 MVP 測試金發放頁，搭配 `/api/admin/test-funds/airdrop` 與 `/api/margin/account`。
 - `admin-market-config.html`：admin market-config / fee settings 頁，搭配 `/api/admin/market-config` 與 `POST /api/admin/market-config/{symbol}/fees`。

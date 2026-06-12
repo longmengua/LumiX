@@ -942,13 +942,14 @@
         activeQuotes: [],
         refreshTimer: null,
         refreshInFlight: false,
-        marketSocket: null,
-        marketSocketReconnectTimer: null,
-        marketSocketConnected: false,
-        marketSocketSymbol: '',
-        userSocket: null,
-        userSocketReconnectTimer: null,
-        userSocketConnected: false
+        exchangeSocket: null,
+        exchangeSocketReconnectTimer: null,
+        exchangeSocketConnected: false,
+        exchangeMarketSymbol: '',
+        exchangeUserUid: '',
+        exchangeUserSubscribed: false,
+        exchangeLastConnectionId: '',
+        cancelOnDisconnect: false
     };
 
     // Display helpers keep empty numeric fields readable when the matching book has no resting liquidity.
@@ -1028,8 +1029,8 @@
         $('positionMargin').textContent = '-';
         $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">Login and refresh to load open orders</div></td></tr>';
         $('orderResult').textContent = 'No order submitted.';
+        unsubscribeCurrentUser();
         setUserIdentity(null);
-        stopUserStream();
         updateFallbackPolling();
         marketState.openOrderCount = 0;
         updateMarketStateNotice();
@@ -1072,7 +1073,7 @@
             setUserIdentity(result.user);
             renderAuth(result.user);
             await refreshAll();
-            startUserStream();
+            subscribeCurrentUser();
         } catch (error) {
             showError($('authError'), error);
         }
@@ -1093,7 +1094,7 @@
             auth.refreshToken = '';
             localStorage.removeItem('exchangeAccessToken');
             localStorage.removeItem('exchangeRefreshToken');
-            stopUserStream();
+            unsubscribeCurrentUser();
             clearSessionUi();
         }
     }
@@ -1109,7 +1110,7 @@
             if (user) {
                 setUserIdentity(user);
                 renderAuth(user);
-                startUserStream();
+                subscribeCurrentUser();
             } else {
                 clearSessionUi();
                 $('authState').textContent = 'Session unavailable. Please login again.';
@@ -1292,8 +1293,7 @@
     }
 
     function startMarketRefresh() {
-        startMarketStream();
-        startUserStream();
+        startExchangeStream();
         updateFallbackPolling();
     }
 
@@ -1314,8 +1314,10 @@
 
     function updateFallbackPolling() {
         const userStreamRequired = Boolean(auth.accessToken && fields.uid.value.trim());
-        const websocketReady = marketState.marketSocketConnected
-            && (!userStreamRequired || marketState.userSocketConnected);
+        const marketReady = marketState.exchangeSocketConnected && marketState.exchangeMarketSymbol === selectedSymbol();
+        const userReady = !userStreamRequired
+            || (marketState.exchangeUserSubscribed && marketState.exchangeUserUid === fields.uid.value.trim());
+        const websocketReady = marketReady && userReady;
         if (websocketReady) {
             stopFallbackPolling();
         } else {
@@ -1336,131 +1338,123 @@
         }
     }
 
-    function startMarketStream() {
+    function startExchangeStream() {
+        if (marketState.exchangeSocket || marketState.exchangeSocketConnected) {
+            return;
+        }
+        window.clearTimeout(marketState.exchangeSocketReconnectTimer);
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const url = `${protocol}//${window.location.host}/ws/exchange`;
+        try {
+            const socket = new WebSocket(url);
+            marketState.exchangeSocket = socket;
+            socket.onopen = () => {
+                marketState.exchangeSocketConnected = true;
+                subscribeCurrentMarket();
+                subscribeCurrentUser();
+                refreshLivePanes();
+            };
+            socket.onmessage = event => handleExchangeStreamMessage(event.data);
+            socket.onerror = () => reconnectExchangeStream();
+            socket.onclose = () => reconnectExchangeStream();
+        } catch (error) {
+            reconnectExchangeStream();
+        }
+    }
+
+    function handleExchangeStreamMessage(raw) {
+        try {
+            const message = JSON.parse(raw);
+            if (message.event === 'subscribed.market') {
+                marketState.exchangeMarketSymbol = text(message.data?.symbol);
+                updateFallbackPolling();
+                return;
+            }
+            if (message.event === 'subscribed.user') {
+                marketState.exchangeUserUid = text(message.data?.uid);
+                marketState.exchangeUserSubscribed = true;
+                marketState.exchangeLastConnectionId = text(message.data?.connectionId);
+                updateFallbackPolling();
+                return;
+            }
+            if (message.event === 'unsubscribed.user') {
+                marketState.exchangeUserUid = '';
+                marketState.exchangeUserSubscribed = false;
+                updateFallbackPolling();
+                return;
+            }
+            if (message.event === 'error') {
+                updateFallbackPolling();
+                return;
+            }
+            if (['depth-delta', 'ticker', 'trade', 'order.lifecycle', 'gateway.heartbeat'].includes(message.event)) {
+                refreshLivePanes();
+            }
+        } catch (error) {
+            refreshLivePanes();
+        }
+    }
+
+    function reconnectExchangeStream() {
+        marketState.exchangeSocketConnected = false;
+        marketState.exchangeSocket = null;
+        marketState.exchangeMarketSymbol = '';
+        marketState.exchangeUserUid = '';
+        marketState.exchangeUserSubscribed = false;
+        updateFallbackPolling();
+        window.clearTimeout(marketState.exchangeSocketReconnectTimer);
+        marketState.exchangeSocketReconnectTimer = window.setTimeout(startExchangeStream, 1500);
+    }
+
+    function sendExchangeCommand(command) {
+        if (!marketState.exchangeSocket || marketState.exchangeSocket.readyState !== 1) {
+            updateFallbackPolling();
+            return false;
+        }
+        marketState.exchangeSocket.send(JSON.stringify(command));
+        return true;
+    }
+
+    function subscribeCurrentMarket() {
         const symbol = selectedSymbol();
         if (!symbol) {
             updateFallbackPolling();
             return;
         }
-        if (marketState.marketSocket && marketState.marketSocketSymbol === symbol) {
-            return;
+        if (marketState.exchangeMarketSymbol && marketState.exchangeMarketSymbol !== symbol) {
+            sendExchangeCommand({type: 'unsubscribe.market', symbol: marketState.exchangeMarketSymbol});
         }
-        stopMarketStream(false);
-        window.clearTimeout(marketState.marketSocketReconnectTimer);
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const url = `${protocol}//${window.location.host}/ws/market/${encodeURIComponent(symbol)}`;
-        try {
-            const socket = new WebSocket(url);
-            marketState.marketSocket = socket;
-            marketState.marketSocketSymbol = symbol;
-            socket.onopen = () => {
-                marketState.marketSocketConnected = true;
-                updateFallbackPolling();
-                refreshLivePanes();
-            };
-            socket.onmessage = event => handleMarketStreamMessage(event.data);
-            socket.onerror = () => reconnectMarketStream();
-            socket.onclose = () => reconnectMarketStream();
-        } catch (error) {
-            reconnectMarketStream();
-        }
+        sendExchangeCommand({type: 'subscribe.market', symbol});
     }
 
-    function handleMarketStreamMessage(raw) {
-        try {
-            const message = JSON.parse(raw);
-            if (['depth-delta', 'ticker', 'trade', 'gateway.heartbeat'].includes(message.event)) {
-                refreshLivePanes();
-            }
-        } catch (error) {
-            refreshLivePanes();
-        }
-    }
-
-    function reconnectMarketStream() {
-        marketState.marketSocketConnected = false;
-        marketState.marketSocket = null;
-        updateFallbackPolling();
-        window.clearTimeout(marketState.marketSocketReconnectTimer);
-        const symbol = selectedSymbol();
-        if (symbol) {
-            marketState.marketSocketReconnectTimer = window.setTimeout(startMarketStream, 1500);
-        }
-    }
-
-    function stopMarketStream(reconnect = false) {
-        window.clearTimeout(marketState.marketSocketReconnectTimer);
-        marketState.marketSocketReconnectTimer = null;
-        marketState.marketSocketConnected = false;
-        marketState.marketSocketSymbol = '';
-        if (marketState.marketSocket) {
-            marketState.marketSocket.onclose = reconnect ? marketState.marketSocket.onclose : null;
-            marketState.marketSocket.onerror = reconnect ? marketState.marketSocket.onerror : null;
-            marketState.marketSocket.close();
-            marketState.marketSocket = null;
-        }
-        updateFallbackPolling();
-    }
-
-    function startUserStream() {
+    function subscribeCurrentUser() {
         const uid = fields.uid.value.trim();
-        if (!auth.accessToken || !uid || marketState.userSocketConnected || marketState.userSocket) {
-            if (!auth.accessToken || !uid) {
-                updateFallbackPolling();
-            }
+        if (!auth.accessToken || !uid) {
+            updateFallbackPolling();
             return;
         }
-        window.clearTimeout(marketState.userSocketReconnectTimer);
-        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const token = encodeURIComponent(auth.accessToken);
-        const url = `${protocol}//${window.location.host}/ws/user/${encodeURIComponent(uid)}?token=${token}`;
-        try {
-            const socket = new WebSocket(url);
-            marketState.userSocket = socket;
-            socket.onopen = () => {
-                marketState.userSocketConnected = true;
-                updateFallbackPolling();
-                refreshLivePanes();
-            };
-            socket.onmessage = event => handleUserStreamMessage(event.data);
-            socket.onerror = () => reconnectUserStream();
-            socket.onclose = () => reconnectUserStream();
-        } catch (error) {
-            reconnectUserStream();
+        if (marketState.exchangeUserUid && marketState.exchangeUserUid !== uid) {
+            sendExchangeCommand({type: 'unsubscribe.user', uid: Number(marketState.exchangeUserUid)});
+            marketState.exchangeUserSubscribed = false;
         }
+        sendExchangeCommand({
+            type: 'subscribe.user',
+            uid: Number(uid),
+            token: auth.accessToken,
+            symbol: selectedSymbol(),
+            cancelOnDisconnect: marketState.cancelOnDisconnect,
+            resumeConnectionId: marketState.cancelOnDisconnect ? marketState.exchangeLastConnectionId : ''
+        });
     }
 
-    function handleUserStreamMessage(raw) {
-        try {
-            const message = JSON.parse(raw);
-            if (['order.lifecycle', 'trade', 'gateway.heartbeat'].includes(message.event)) {
-                refreshLivePanes();
-            }
-        } catch (error) {
-            refreshLivePanes();
+    function unsubscribeCurrentUser() {
+        const uid = fields.uid.value.trim() || marketState.exchangeUserUid;
+        if (uid) {
+            sendExchangeCommand({type: 'unsubscribe.user', uid: Number(uid)});
         }
-    }
-
-    function reconnectUserStream() {
-        marketState.userSocketConnected = false;
-        marketState.userSocket = null;
-        updateFallbackPolling();
-        window.clearTimeout(marketState.userSocketReconnectTimer);
-        if (auth.accessToken && fields.uid.value.trim()) {
-            marketState.userSocketReconnectTimer = window.setTimeout(startUserStream, 1500);
-        }
-    }
-
-    function stopUserStream() {
-        window.clearTimeout(marketState.userSocketReconnectTimer);
-        marketState.userSocketReconnectTimer = null;
-        marketState.userSocketConnected = false;
-        if (marketState.userSocket) {
-            marketState.userSocket.onclose = null;
-            marketState.userSocket.onerror = null;
-            marketState.userSocket.close();
-            marketState.userSocket = null;
-        }
+        marketState.exchangeUserUid = '';
+        marketState.exchangeUserSubscribed = false;
+        marketState.exchangeLastConnectionId = '';
         updateFallbackPolling();
     }
 
@@ -1511,7 +1505,7 @@
     $('placeSell').addEventListener('click', () => placeOrder('SELL'));
     fields.symbol.addEventListener('change', () => {
         syncSymbolTitle();
-        startMarketStream();
+        subscribeCurrentMarket();
         Promise.allSettled([loadMarketMakerQuotes().then(loadDepth), loadOrders()]);
     });
     fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadAccount()]));
