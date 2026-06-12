@@ -474,6 +474,19 @@ test('exchange console shows generic login error for unknown accounts', async ({
       })
     });
   });
+  let pendingRegisterPayload;
+  await page.route('**/api/auth/register', async (route) => {
+    pendingRegisterPayload = route.request().postDataJSON();
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 'AUTH_REGISTRATION_PENDING',
+        message: '發生異常',
+        traceId: 'test-trace-id'
+      })
+    });
+  });
 
   await page.goto('/exchange.html');
   await page.getByRole('button', { name: 'Open Profile' }).click();
@@ -483,5 +496,14 @@ test('exchange console shows generic login error for unknown accounts', async ({
 
   await expect(page.locator('#authError')).toContainText('Account not found or password is incorrect.');
   await expect(page.locator('#authError')).not.toContainText('HTTP');
+  await expect(page.locator('#authError')).not.toContainText('發生異常');
+
+  await page.locator('#register').click();
+  await expect.poll(() => pendingRegisterPayload).toMatchObject({
+    email: 'missing@example.com',
+    password: 'wrong-password',
+    preferredLanguage: 'en'
+  });
+  await expect(page.locator('#authError')).toContainText('Registration verification is already in progress');
   await expect(page.locator('#authError')).not.toContainText('發生異常');
 });

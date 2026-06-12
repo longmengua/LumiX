@@ -207,6 +207,14 @@ class AuthServiceTest {
         assertThat(registration.uid()).isNull();
         assertThat(registration.expiresAt()).isNotNull();
         assertThat(registration.verificationUrl()).contains("verifyEmailToken=");
+        when(fixture.registrations.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                "alice@example.com",
+                CustomerRegistrationRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(savedRegistration.get()));
+        assertThatThrownBy(() -> fixture.service.register("alice@example.com", "correct-password", "", "ko"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getErrorCode())
+                .isEqualTo(BusinessErrorCode.AUTH_REGISTRATION_PENDING);
         assertThatThrownBy(() -> fixture.service.login("alice@example.com", "correct-password"))
                 .isInstanceOf(BusinessException.class)
                 .extracting(error -> ((BusinessException) error).getErrorCode())

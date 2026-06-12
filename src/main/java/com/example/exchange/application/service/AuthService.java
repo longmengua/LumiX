@@ -113,7 +113,8 @@ public class AuthService {
             Optional<CustomerRegistrationRecord> existingPending = registrations
                     .findFirstByEmailAndStatusOrderByCreatedAtDesc(normalizedEmail, CustomerRegistrationRecord.STATUS_PENDING);
             if (existingPending.isPresent() && !existingPending.get().isExpired(now)) {
-                throw new IllegalStateException("registration verification already pending");
+                // A pending request is a normal customer flow state; expose a stable enum so the UI can guide code entry.
+                throw new BusinessException(BusinessErrorCode.AUTH_REGISTRATION_PENDING);
             }
             existingPending.filter(record -> record.isExpired(now)).ifPresent(record -> {
                 record.expire();

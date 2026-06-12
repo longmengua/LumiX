@@ -12,6 +12,7 @@ import org.springframework.http.HttpStatus;
 public enum BusinessErrorCode {
 
     AUTH_INVALID_CREDENTIAL(HttpStatus.UNAUTHORIZED, "帳號或密碼錯誤"),
+    AUTH_REGISTRATION_PENDING(HttpStatus.CONFLICT, "註冊驗證進行中"),
     AUTH_TOKEN_EXPIRED(HttpStatus.UNAUTHORIZED, "登入已過期"),
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "不合法憑證"),
     USER_DISABLED(HttpStatus.FORBIDDEN, "帳號已停權"),

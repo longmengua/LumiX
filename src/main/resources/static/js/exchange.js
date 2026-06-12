@@ -40,7 +40,7 @@ const translations = {
         'metric.available': 'Available to Trade',
         'metric.frozen': 'Frozen',
         'metric.positionMargin': 'Used Margin',
-        'account.createAccount': 'Create an account',
+        'account.createAccount': 'Register',
         'account.assetsTitle': 'Assets',
         'book.title': 'Order Book',
         'book.helper': 'Runtime matching depth for the selected market.',
@@ -81,6 +81,7 @@ const translations = {
         'error.passwordTooShort': 'Password must be at least 8 characters.',
         'error.verificationCodeRequired': 'Enter the email verification code.',
         'error.invalidCredentials': 'Account not found or password is incorrect.',
+        'error.registrationPending': 'Registration verification is already in progress. Enter the email code or try again later.',
         'notice.bookRecovered': 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
         'error.loginBeforeOrder': 'Please login before placing orders.'
     },
@@ -121,7 +122,7 @@ const translations = {
         'metric.available': '可下單餘額',
         'metric.frozen': '凍結',
         'metric.positionMargin': '已用保證金',
-        'account.createAccount': '建立新帳號',
+        'account.createAccount': '註冊',
         'account.assetsTitle': '資產',
         'book.title': '訂單簿',
         'book.helper': '所選市場的即時撮合深度。',
@@ -162,6 +163,7 @@ const translations = {
         'error.passwordTooShort': '密碼至少需要 8 個字元。',
         'error.verificationCodeRequired': '請輸入信箱驗證碼。',
         'error.invalidCredentials': '查無此帳號或密碼錯誤。',
+        'error.registrationPending': '此帳號已有註冊驗證進行中，請輸入信箱驗證碼或稍後再試。',
         'notice.bookRecovered': '開放訂單已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
         'error.loginBeforeOrder': '下單前請先登入。'
     },
@@ -202,7 +204,7 @@ const translations = {
         'metric.available': 'Tersedia untuk Dagangan',
         'metric.frozen': 'Dibekukan',
         'metric.positionMargin': 'Margin Digunakan',
-        'account.createAccount': 'Cipta akaun',
+        'account.createAccount': 'Daftar',
         'account.assetsTitle': 'Aset',
         'book.title': 'Buku Pesanan',
         'book.helper': 'Kedalaman padanan runtime untuk pasaran dipilih.',
@@ -243,6 +245,7 @@ const translations = {
         'error.passwordTooShort': 'Kata laluan mesti sekurang-kurangnya 8 aksara.',
         'error.verificationCodeRequired': 'Masukkan kod pengesahan e-mel.',
         'error.invalidCredentials': 'Akaun tidak ditemui atau kata laluan salah.',
+        'error.registrationPending': 'Pengesahan pendaftaran sedang berjalan. Masukkan kod e-mel atau cuba lagi kemudian.',
         'notice.bookRecovered': 'Pesanan terbuka telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
         'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
     },
@@ -283,7 +286,7 @@ const translations = {
         'metric.available': '거래 가능 잔고',
         'metric.frozen': '동결',
         'metric.positionMargin': '사용 중인 증거금',
-        'account.createAccount': '계정 만들기',
+        'account.createAccount': '가입',
         'account.assetsTitle': '자산',
         'book.title': '호가창',
         'book.helper': '선택한 시장의 런타임 매칭 깊이입니다.',
@@ -324,6 +327,7 @@ const translations = {
         'error.passwordTooShort': '비밀번호는 최소 8자여야 합니다.',
         'error.verificationCodeRequired': '이메일 인증 코드를 입력하세요.',
         'error.invalidCredentials': '계정을 찾을 수 없거나 비밀번호가 올바르지 않습니다.',
+        'error.registrationPending': '가입 인증이 이미 진행 중입니다. 이메일 코드를 입력하거나 나중에 다시 시도하세요.',
         'notice.bookRecovered': '미체결 주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
         'error.loginBeforeOrder': '주문 전에 로그인하세요.'
     }
@@ -638,6 +642,9 @@ function authDisplayError(mode, error) {
     // Login failures intentionally collapse unknown email and wrong password into one customer-facing message.
     if (mode === 'login' && (error.code === 'AUTH_INVALID_CREDENTIAL' || [400, 401, 403].includes(error.status))) {
         return new Error(t('error.invalidCredentials'));
+    }
+    if (mode === 'register' && error.code === 'AUTH_REGISTRATION_PENDING') {
+        return new Error(t('error.registrationPending'));
     }
     return error;
 }
