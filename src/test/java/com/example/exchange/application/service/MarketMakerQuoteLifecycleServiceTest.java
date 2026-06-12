@@ -14,6 +14,7 @@ import com.example.exchange.domain.repository.MarketMakerProfileStore;
 import com.example.exchange.domain.repository.MarketMakerQuoteStateStore;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -28,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 class MarketMakerQuoteLifecycleServiceTest {
@@ -86,6 +88,26 @@ class MarketMakerQuoteLifecycleServiceTest {
                 });
         assertThat(fixture.gateway.requests).isEmpty();
         verify(fixture.pushGatewayService).publishMarket(eq("BTCUSDT"), eq("market-maker.quote"), any(MarketMakerQuoteState.class));
+    }
+
+    @Test
+    @DisplayName("placeQuote 在交易 commit 後才推送 market-maker.quote，避免前端刷新讀到舊 quote")
+    void placeQuotePublishesAfterCommitWhenTransactionSynchronizationIsActive() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false));
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            // 流程：controller 交易尚未 commit 前不推 WebSocket；commit 後前端再查 REST 才能讀到新 quote state。
+            fixture.service.placeQuote(quote("99.00", "101.00"));
+
+            verify(fixture.pushGatewayService, never()).publishMarket(eq("BTCUSDT"), eq("market-maker.quote"), any(MarketMakerQuoteState.class));
+            TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(synchronization -> synchronization.afterCommit());
+            verify(fixture.pushGatewayService).publishMarket(eq("BTCUSDT"), eq("market-maker.quote"), any(MarketMakerQuoteState.class));
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 
     @Test

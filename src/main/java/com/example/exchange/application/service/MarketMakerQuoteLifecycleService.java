@@ -12,6 +12,8 @@ import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.repository.MarketMakerQuoteStateStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
@@ -58,7 +60,16 @@ public class MarketMakerQuoteLifecycleService {
     }
 
     private void publishQuoteState(MarketMakerQuoteState state) {
-        // Client exchange screens subscribe by symbol and use this signal to refresh visible maker liquidity.
+        // WebSocket clients refresh from REST after this signal, so publish only after DB commit to avoid stale quote reads.
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    pushGatewayService.publishMarket(state.symbol(), "market-maker.quote", state);
+                }
+            });
+            return;
+        }
         pushGatewayService.publishMarket(state.symbol(), "market-maker.quote", state);
     }
 

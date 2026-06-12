@@ -84,8 +84,17 @@ test('exchange console renders client trading workflow without admin funding con
         checksum: 123456,
         bestBid: '99.50',
         bestAsk: '100.50',
-        bids: [{ price: '99.50', qty: '2.000' }],
-        asks: [{ price: '100.50', qty: '1.500' }]
+        // Scenario: backend or replay order may arrive unsorted; the client should render Binance-style high-to-low ticks.
+        bids: [
+          { price: '98.70', qty: '0.500' },
+          { price: '99.50', qty: '2.000' },
+          { price: '99.00', qty: '1.000' }
+        ],
+        asks: [
+          { price: '100.50', qty: '1.500' },
+          { price: '101.20', qty: '0.300' },
+          { price: '100.80', qty: '0.700' }
+        ]
       }))
     });
   });
@@ -182,6 +191,8 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#sessionDisplay')).toContainText('demo@example.com');
   await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '99.5' }).first()).toBeVisible();
+  await expect(page.locator('#orderBook tr.depth-row td:first-child')).toHaveText(['101.2', '100.8', '100.5', '99.5', '99']);
+  await expect(page.locator('#orderBook tr.depth-row')).toHaveCount(5);
   await expect(page.getByRole('heading', { name: 'Market Maker Flow' })).toBeVisible();
   await expect(page.locator('#mmStatus')).toHaveText('1 active');
   await expect(page.locator('#mmLatestRef')).toHaveText('mm-flow-e2e-1');

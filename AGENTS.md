@@ -100,6 +100,18 @@ When multiple humans or agents are working at the same time:
 docker compose up -d
 ```
 
+## Demo And WebSocket Verification Protocol
+
+When the user asks to restart, run a demo, or verify live push behavior:
+
+1. Stop stale Spring Boot/browser/demo processes first, then confirm port `8080` is free before starting `./mvnw spring-boot:run`.
+2. After backend restart, explicitly tell the user to reload `http://127.0.0.1:8080/exchange.html`; an already-open tab can keep old JavaScript and miss newly added WebSocket handlers.
+3. Verify WebSocket behavior from the same origin as the app page. Prefer Playwright loading `http://127.0.0.1:8080/exchange.html` before using `fetch` or `WebSocket`; avoid `about:blank` tests because CORS/origin differences can create false failures.
+4. For market-maker quote demos, prepare the required business state before judging push behavior: enabled profile, risk limit, mark/top-of-book-compatible quote prices, and enough test funds for the market-maker uid.
+5. Confirm the full path, not only REST state: subscribe to `/ws/exchange`, wait for `subscribed.market`, trigger a fresh quote, and verify receipt of `market-maker.quote`.
+6. Close every temporary browser page, WebSocket client, curl upgrade connection, and demo script session after verification.
+7. Report exact evidence: backend health, quote ref id, observed WebSocket event names, and any process/session left intentionally running.
+
 ## Commit Protocol
 
 When the user asks to commit, submit, or push completed work:

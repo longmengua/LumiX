@@ -429,8 +429,17 @@
         }
 
         .book-spread {
-            display: grid;
+            display: block;
             gap: 8px;
+        }
+
+        .book-legend {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 6px;
+            font-size: 12px;
+            font-weight: 800;
         }
 
         .spread-mid {
@@ -759,42 +768,22 @@
                 </div>
             </div>
             <div class="book-spread">
-                <div>
-                    <div class="mini-title">
-                        <h2>Asks</h2>
-                        <span class="sell-text">Sell liquidity</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>Price</th>
-                                <th>Qty</th>
-                                <th>Notional</th>
-                            </tr>
-                            </thead>
-                            <tbody id="asks"></tbody>
-                        </table>
-                    </div>
+                <div class="book-legend">
+                    <span class="sell-text">Asks</span>
+                    <span id="spreadMid">Spread: best ask - best bid</span>
+                    <span class="buy-text">Bids</span>
                 </div>
-                <div class="spread-mid">Spread: best ask - best bid</div>
-                <div>
-                    <div class="mini-title">
-                        <h2>Bids</h2>
-                        <span class="buy-text">Buy liquidity</span>
-                    </div>
-                    <div class="table-wrap">
-                        <table>
-                            <thead>
-                            <tr>
-                                <th>Price</th>
-                                <th>Qty</th>
-                                <th>Notional</th>
-                            </tr>
-                            </thead>
-                            <tbody id="bids"></tbody>
-                        </table>
-                    </div>
+                <div class="table-wrap">
+                    <table id="orderBook">
+                        <thead>
+                        <tr>
+                            <th>Price</th>
+                            <th>Qty</th>
+                            <th>Notional</th>
+                        </tr>
+                        </thead>
+                        <tbody id="orderBookRows"></tbody>
+                    </table>
                 </div>
             </div>
             <div class="mm-flow">
@@ -951,6 +940,7 @@
         exchangeLastConnectionId: '',
         cancelOnDisconnect: false
     };
+    const MAX_VISIBLE_TICKS = 5;
 
     // Display helpers keep empty numeric fields readable when the matching book has no resting liquidity.
     function text(value) {
@@ -1140,8 +1130,8 @@
         $('bestAsk').textContent = money(depth.bestAsk);
         $('bookVersion').textContent = text(depth.version);
         $('checksum').textContent = text(depth.checksum);
-        renderLevels($('bids'), depth.bids || [], 'bid');
-        renderLevels($('asks'), depth.asks || [], 'ask');
+        $('spreadMid').textContent = `Spread: ${money(Math.max(0, numeric(depth.bestAsk) - numeric(depth.bestBid)))}`;
+        renderOrderBook(depth);
         renderMarketMakerFlow(depth);
         marketState.depthEmpty = (depth.bids || []).length === 0 && (depth.asks || []).length === 0;
         updateMarketStateNotice();
@@ -1158,22 +1148,43 @@
         notice.hidden = true;
     }
 
-    // Bids and asks share rendering but keep side-specific color for scanning.
-    function renderLevels(target, levels, side) {
-        if (levels.length === 0) {
+    // The visible book is capped for demo readability, but sorting still considers both ask and bid levels together.
+    function renderOrderBook(depth) {
+        const levels = [
+            ...(depth.asks || []).map(level => ({...level, side: 'ask'})),
+            ...(depth.bids || []).map(level => ({...level, side: 'bid'}))
+        ];
+        renderLevels($('orderBookRows'), levels);
+    }
+
+    // Binance-style reading order: all visible ticks are sorted by price high-to-low, regardless of ask/bid side.
+    function renderLevels(target, levels) {
+        const sortedLevels = sortedDepthLevels(levels).slice(0, MAX_VISIBLE_TICKS);
+        if (sortedLevels.length === 0) {
             target.innerHTML = '<tr><td colspan="3"><div class="empty">Runtime order book is empty</div></td></tr>';
             return;
         }
-        const maxQty = levels.reduce((max, level) => Math.max(max, numeric(level.qty)), 0) || 1;
+        const maxQty = sortedLevels.reduce((max, level) => Math.max(max, numeric(level.qty)), 0) || 1;
         const activeQuotes = activeQuotesForSymbol();
         // The quote-state API carries the latest submitted leg price, allowing the client to mark the actual visible maker levels.
-        target.innerHTML = levels.map(level => `
-            <tr class="depth-row ${side} ${makerLevelMatches(activeQuotes, level, side) ? 'maker-visible' : ''}" style="--depth-pct: ${Math.max(4, Math.min(100, (numeric(level.qty) / maxQty) * 100)).toFixed(2)}%;">
-                <td class="${side === 'bid' ? 'buy-text' : 'sell-text'}"><span class="depth-fill" aria-hidden="true"></span>${money(level.price)}</td>
+        target.innerHTML = sortedLevels.map(level => `
+            <tr class="depth-row ${level.side} ${makerLevelMatches(activeQuotes, level, level.side) ? 'maker-visible' : ''}" style="--depth-pct: ${Math.max(4, Math.min(100, (numeric(level.qty) / maxQty) * 100)).toFixed(2)}%;">
+                <td class="${level.side === 'bid' ? 'buy-text' : 'sell-text'}"><span class="depth-fill" aria-hidden="true"></span>${money(level.price)}</td>
                 <td>${money(level.qty)}</td>
                 <td>${notional(level)}</td>
             </tr>
         `).join('');
+    }
+
+    function sortedDepthLevels(levels) {
+        return [...levels].sort((left, right) => {
+            const priceDiff = numeric(right.price) - numeric(left.price);
+            if (Math.abs(priceDiff) > 0.00000001) {
+                return priceDiff;
+            }
+            // Same-price aggregate rows stay deterministic when replayed from snapshots or WebSocket deltas.
+            return numeric(right.qty) - numeric(left.qty);
+        });
     }
 
     function activeQuotesForSymbol() {
