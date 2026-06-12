@@ -32,6 +32,10 @@
             font-size: 14px;
         }
 
+        body.embedded {
+            background: transparent;
+        }
+
         header {
             display: flex;
             align-items: center;
@@ -77,6 +81,14 @@
             padding: 16px 24px 24px;
             align-items: start;
             min-width: 0;
+        }
+
+        body.embedded header {
+            display: none;
+        }
+
+        body.embedded main {
+            padding: 16px;
         }
 
         main > * {
@@ -743,6 +755,7 @@
             'status.off': 'OFF'
         }
     };
+    const embeddedMode = new URLSearchParams(window.location.search).get('embed') === '1';
     let currentLanguage = localStorage.getItem(I18N_STORAGE_KEY) || 'en';
 
     function t(key) {
@@ -1020,6 +1033,11 @@
         } catch (error) {
             showError($('opsError'), error);
         }
+    }
+
+    if (embeddedMode) {
+        // Embedded mode lets admin-console own the outer navigation, avoiding a second nested admin screen.
+        document.body.classList.add('embedded');
     }
 
     $('reload').addEventListener('click', reloadAll);

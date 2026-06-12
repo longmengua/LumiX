@@ -190,7 +190,7 @@
         <button class="tab" type="button" data-src="/admin-test-funds.html" data-i18n="tab.testFunds" aria-selected="true">Test Funds</button>
         <button class="tab" type="button" data-src="/admin-market-config.html" data-i18n="tab.marketConfig" aria-selected="false">Market Config</button>
         <button class="tab" type="button" data-src="/admin-risk-parameters.html" data-i18n="tab.riskParameters" aria-selected="false">Risk Parameters</button>
-        <button class="tab" type="button" data-src="/exchange-admin.html" data-i18n="tab.marketMakers" aria-selected="false">Market Makers</button>
+        <button class="tab" type="button" data-src="/exchange-admin.html?embed=1" data-i18n="tab.marketMakers" aria-selected="false">Market Makers</button>
         <button class="tab" type="button" data-src="/admin-dlq.html" data-i18n="tab.dlq" aria-selected="false">DLQ</button>
     </nav>
     <section class="frame-shell" data-i18n-aria-label="section.selectedAdminPage" aria-label="Selected admin page">
@@ -289,6 +289,11 @@
         return document.querySelector('.tab[aria-selected="true"]');
     }
 
+    function titleKeyFor(src) {
+        // Embedded admin tools may include query flags; title routing is keyed by the stable page path.
+        return titles[new URL(src, window.location.origin).pathname] || 'page.title';
+    }
+
     function applyTranslations() {
         document.documentElement.lang = currentLanguage;
         document.title = t('page.title');
@@ -299,7 +304,7 @@
             el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
         });
         const src = selectedTab()?.dataset.src || frame.getAttribute('src');
-        frame.title = t(titles[src] || 'page.title');
+        frame.title = t(titleKeyFor(src));
     }
 
     function syncFrameLanguage() {
@@ -315,7 +320,7 @@
             });
             const src = tab.dataset.src;
             frame.src = src;
-            frame.title = t(titles[src] || 'page.title');
+            frame.title = t(titleKeyFor(src));
         });
     });
 

@@ -171,9 +171,10 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
   // Scenario: the prod-facing client shell must not expose privileged admin navigation.
   await expect(page.getByRole('link', { name: 'Admin Console' })).toHaveCount(0);
-  await expect(page.locator('#symbol')).toHaveValue('BTCUSDT');
-  await expect(page.locator('#symbol option')).toHaveText(['BTCUSDT', 'ETHUSDT']);
-  await expect(page.getByRole('button', { name: 'Reload Market' }).locator('svg')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Trade' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('.order-entry #symbol')).toHaveValue('BTCUSDT');
+  await expect(page.locator('.order-entry #symbol option')).toHaveText(['BTCUSDT', 'ETHUSDT']);
+  await expect(page.getByRole('button', { name: 'Reload Market' })).toHaveCount(0);
   await expect(page.getByText('Checksum')).toHaveCount(0);
   await expect(page.getByText('Book Version')).toHaveCount(0);
   await expect(page.locator('#uid')).toHaveAttribute('type', 'hidden');
@@ -181,7 +182,6 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#authEmail')).toHaveValue('');
   await expect(page.locator('#authPassword')).toHaveValue('');
   await expect(page.locator('#sessionDisplay')).toContainText('demo@example.com');
-  await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
   // Scenario: account data refreshes from auth/session flow, so the prod-facing account panel has no manual reload button.
   await expect(page.getByRole('button', { name: 'Reload Account' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Reload Orders' }).locator('svg')).toBeVisible();
@@ -204,10 +204,26 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'order-live-r' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BTCUSDT' }).first()).toBeVisible();
+  // Scenario: the profile drawer exposes real account/order snapshots and lets users choose visible sections.
+  await page.getByRole('button', { name: 'Open Profile' }).click();
+  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await expect(page.locator('#profileBalance')).toContainText('10,000');
+  await expect(page.locator('#profileFrozen')).toContainText('250');
+  await expect(page.locator('[data-profile-panel="orders"]')).toContainText('order-live-r');
+  await page.getByLabel('Frozen funds').uncheck();
+  await expect(page.locator('[data-profile-panel="frozen"]')).toBeHidden();
+  await page.getByLabel('Frozen funds').check();
+  await expect(page.locator('[data-profile-panel="frozen"]')).toBeVisible();
+  await page.locator('#profileClose').click();
+  await expect(page.locator('#profilePanel')).toBeHidden();
+  await page.getByRole('button', { name: 'Account' }).click();
+  await expect(page.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
   await expect(page.locator('#balance')).toContainText('10,000');
   await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#positionMargin')).toContainText('0');
-  // Layout guard: client trading keeps book/order entry first, then open orders, then account/position details.
+  await page.getByRole('button', { name: 'Trade' }).click();
+  // Layout guard: client trading keeps book/order entry first, then open orders, with account details behind a tab.
   const layout = await page.evaluate(() => {
     const rect = (selector) => {
       const box = document.querySelector(selector).getBoundingClientRect();
@@ -218,8 +234,7 @@ test('exchange console renders client trading workflow without admin funding con
       scrollWidth: document.documentElement.scrollWidth,
       book: rect('.book-panel'),
       entry: rect('.order-entry'),
-      orders: rect('.orders-panel'),
-      account: rect('.account-panel')
+      orders: rect('.orders-panel')
     };
   });
   expect(layout.scrollWidth).toBeLessThanOrEqual(layout.innerWidth + 2);
@@ -228,18 +243,18 @@ test('exchange console renders client trading workflow without admin funding con
     expect(layout.entry.left).toBeGreaterThan(layout.book.left);
   }
   expect(layout.orders.top).toBeGreaterThan(Math.max(layout.book.top, layout.entry.top));
-  expect(layout.account.top).toBeGreaterThan(layout.orders.top);
-  await expect(page.getByText('Frozen = order hold + position margin')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Airdrop USDT' })).toHaveCount(0);
 
   await page.getByRole('button', { name: 'Place Buy' }).click();
   await expect(page.locator('#orderResult')).toContainText('accepted');
 
   // Logout clears stale account/order state so shared browsers do not display the previous user's snapshot.
+  await page.getByRole('button', { name: 'Account' }).click();
   await page.getByRole('button', { name: 'Logout' }).click();
   await expect(page.locator('#balance')).toHaveText('-');
   await expect(page.locator('#available')).toHaveText('-');
   await expect(page.locator('#frozen')).toHaveText('-');
+  await expect(page.locator('#profileBalance')).toHaveText('-');
   await expect(page.locator('#accountRaw')).toContainText('No account loaded');
   await expect(page.locator('#orders')).toContainText('Login and refresh to load open orders');
   await expect(page.locator('#orderResult')).toContainText('No order submitted');
@@ -294,7 +309,9 @@ test('admin console groups operator pages behind tabs', async ({ page }) => {
   await page.getByRole('button', { name: 'Risk Parameters' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-risk-parameters.html');
   await page.getByRole('button', { name: 'Market Makers' }).click();
-  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/exchange-admin.html');
+  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/exchange-admin.html?embed=1');
+  await expect(page.frameLocator('#adminFrame').getByRole('heading', { name: 'Admin Market Maker', level: 1 })).toBeHidden();
+  await expect(page.frameLocator('#adminFrame').getByRole('heading', { name: 'Market Maker Strategy' })).toBeVisible();
   await page.getByRole('button', { name: 'DLQ' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-dlq.html');
 });
