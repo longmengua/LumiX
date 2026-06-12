@@ -33,10 +33,11 @@ public record AuthResponse(
             Long uid,
             String email,
             String roles,
-            String scopes
+            String scopes,
+            String preferredLanguage
     ) {
         public static User from(AuthService.CurrentUser user) {
-            return new User(user.uid(), user.email(), user.roles(), user.scopes());
+            return new User(user.uid(), user.email(), user.roles(), user.scopes(), user.preferredLanguage());
         }
     }
 }

@@ -13,6 +13,8 @@ public record RegisterRequest(
         // Password is accepted only at registration time and is immediately hashed server-side.
         @NotBlank @Size(min = 8, max = 128) String password,
         // Public registration can require a free human-verification provider token such as Cloudflare Turnstile.
-        String humanVerificationToken
+        String humanVerificationToken,
+        // Browser locale at registration time localizes verification email and becomes the user's saved preference.
+        String preferredLanguage
 ) {
 }

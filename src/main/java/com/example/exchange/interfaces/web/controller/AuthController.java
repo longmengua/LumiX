@@ -11,6 +11,7 @@ import com.example.exchange.interfaces.web.dto.AuthConfigResponse;
 import com.example.exchange.interfaces.web.dto.AuthResponse;
 import com.example.exchange.interfaces.web.dto.LoginRequest;
 import com.example.exchange.interfaces.web.dto.LogoutRequest;
+import com.example.exchange.interfaces.web.dto.PreferredLanguageRequest;
 import com.example.exchange.interfaces.web.dto.RegisterRequest;
 import com.example.exchange.interfaces.web.dto.RegistrationResponse;
 import com.example.exchange.interfaces.web.dto.VerifyEmailRequest;
@@ -50,7 +51,8 @@ public class AuthController {
         return ApiResponse.ok(RegistrationResponse.from(authService.register(
                 request.email(),
                 request.password(),
-                request.humanVerificationToken()
+                request.humanVerificationToken(),
+                request.preferredLanguage()
         )));
     }
 
@@ -75,19 +77,40 @@ public class AuthController {
         return ApiResponse.ok(authService.logout(request == null ? null : request.refreshToken()));
     }
 
+    /** Authenticated clients call this whenever the language selector changes so profile locale follows the browser UI. */
+    @PostMapping("/language")
+    public ApiResponse<AuthResponse.User> updateLanguage(
+            @RequestHeader(value = "Authorization", required = false) String authorization,
+            @RequestBody PreferredLanguageRequest request
+    ) {
+        String token = bearerToken(authorization);
+        String preferredLanguage = request == null ? null : request.preferredLanguage();
+        return ApiResponse.ok(authService.updatePreferredLanguage(
+                        token,
+                        apiAuthProperties.getClockSkewSeconds(),
+                        preferredLanguage
+                )
+                .map(AuthResponse.User::from)
+                .orElse(null));
+    }
+
     /** Current user endpoint lets the exchange console restore local session state after refresh. */
     @GetMapping("/me")
     public ApiResponse<AuthResponse.User> me(
             @RequestHeader(value = "Authorization", required = false) String authorization
     ) {
-        String token = authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7)
-                ? authorization.substring(7)
-                : "";
+        String token = bearerToken(authorization);
         return ApiResponse.ok(authService.currentUser(
                         token,
                         apiAuthProperties.getClockSkewSeconds()
                 )
                 .map(AuthResponse.User::from)
                 .orElse(null));
+    }
+
+    private String bearerToken(String authorization) {
+        return authorization != null && authorization.regionMatches(true, 0, "Bearer ", 0, 7)
+                ? authorization.substring(7)
+                : "";
     }
 }

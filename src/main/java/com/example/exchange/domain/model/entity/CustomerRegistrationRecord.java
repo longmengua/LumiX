@@ -41,6 +41,10 @@ public class CustomerRegistrationRecord {
     @Column(nullable = false, length = 32)
     private String status = STATUS_PENDING;
 
+    // Captures the browser language at registration time before an app_users row exists.
+    @Column(nullable = false, length = 16)
+    private String preferredLanguage = "en";
+
     @Column(nullable = false)
     private Instant expiresAt;
 
@@ -60,12 +64,14 @@ public class CustomerRegistrationRecord {
             String email,
             String passwordHash,
             String verificationTokenHash,
-            Instant expiresAt
+            Instant expiresAt,
+            String preferredLanguage
     ) {
         this.email = AppUserRecord.normalizeEmail(email);
         this.passwordHash = passwordHash;
         this.verificationTokenHash = verificationTokenHash;
         this.expiresAt = expiresAt;
+        this.preferredLanguage = AppUserRecord.normalizePreferredLanguage(preferredLanguage);
     }
 
     @PrePersist
@@ -106,6 +112,10 @@ public class CustomerRegistrationRecord {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public String getPreferredLanguage() {
+        return preferredLanguage;
     }
 
     public boolean isPending() {

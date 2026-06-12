@@ -23,8 +23,25 @@ public class CustomerAuthProperties {
         private int registrationTtlHours = 24;
         private String publicBaseUrl = "http://127.0.0.1:8080/exchange.html";
         private boolean returnVerificationUrl = false;
+        /** Optional localized email templates; blank values fall back to built-in customer copy. */
+        private EmailTemplates templates = new EmailTemplates();
         /** Optional first-party SMTP delivery; when disabled, local/dev falls back to logging the URL. */
         private Smtp smtp = new Smtp();
+    }
+
+    @Data
+    public static class EmailTemplates {
+        // English is the fallback template when the saved customer locale is unsupported.
+        private EmailTemplate en = new EmailTemplate();
+        private EmailTemplate zhTw = new EmailTemplate();
+        private EmailTemplate ms = new EmailTemplate();
+        private EmailTemplate ko = new EmailTemplate();
+    }
+
+    @Data
+    public static class EmailTemplate {
+        private String subject = "";
+        private String body = "";
     }
 
     @Data

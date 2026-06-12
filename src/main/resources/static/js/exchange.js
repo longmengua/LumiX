@@ -330,8 +330,23 @@ const translations = {
 };
 let currentLanguage = localStorage.getItem(I18N_STORAGE_KEY) || 'en';
 
+function normalizeLanguage(language) {
+    return translations[language] ? language : 'en';
+}
+
 function t(key) {
     return translations[currentLanguage]?.[key] || translations.en[key] || key;
+}
+
+function setCurrentLanguage(language, { persist = true, render = true } = {}) {
+    currentLanguage = normalizeLanguage(language);
+    $('language').value = currentLanguage;
+    if (persist) {
+        localStorage.setItem(I18N_STORAGE_KEY, currentLanguage);
+    }
+    if (render) {
+        applyTranslations();
+    }
 }
 
 function applyTranslations() {
@@ -585,7 +600,8 @@ async function authenticate(mode) {
                 body: JSON.stringify({
                     email: $('authEmail').value.trim(),
                     password: $('authPassword').value,
-                    humanVerificationToken: fields.humanVerificationToken.value.trim()
+                    humanVerificationToken: fields.humanVerificationToken.value.trim(),
+                    preferredLanguage: currentLanguage
                 })
             });
             fields.humanVerificationToken.value = '';
@@ -608,6 +624,7 @@ async function authenticate(mode) {
         auth.refreshToken = result.refreshToken;
         localStorage.setItem('exchangeAccessToken', auth.accessToken);
         localStorage.setItem('exchangeRefreshToken', auth.refreshToken);
+        applyUserLanguage(result.user);
         setUserIdentity(result.user);
         renderAuth(result.user);
         await refreshAll();
@@ -780,6 +797,7 @@ async function loadCurrentUser() {
     try {
         const user = await api('/api/auth/me');
         if (user) {
+            applyUserLanguage(user);
             setUserIdentity(user);
             renderAuth(user);
             subscribeCurrentUser();
@@ -799,8 +817,34 @@ function renderAuth(user) {
         uid: user.uid,
         email: user.email,
         roles: user.roles,
-        scopes: user.scopes
+        scopes: user.scopes,
+        preferredLanguage: user.preferredLanguage
     }, null, 2);
+}
+
+function applyUserLanguage(user) {
+    if (user?.preferredLanguage && user.preferredLanguage !== currentLanguage) {
+        // Server preference wins after login/session restore so returning customers see their saved locale.
+        setCurrentLanguage(user.preferredLanguage);
+    }
+}
+
+async function syncPreferredLanguage() {
+    if (!auth.accessToken) {
+        return;
+    }
+    try {
+        const user = await api('/api/auth/language', {
+            method: 'POST',
+            body: JSON.stringify({ preferredLanguage: currentLanguage })
+        });
+        if (user) {
+            setUserIdentity(user);
+            renderAuth(user);
+        }
+    } catch (error) {
+        showError($('authError'), error);
+    }
 }
 
 function renderAccountSnapshot(account) {
@@ -1223,14 +1267,13 @@ document.querySelectorAll('[data-tab]').forEach(button => {
 });
 $('profileToggle').addEventListener('click', () => toggleProfilePanel());
 $('profileClose').addEventListener('click', () => toggleProfilePanel(false));
-$('language').value = currentLanguage;
+setCurrentLanguage(currentLanguage, { render: false });
 $('language').addEventListener('change', () => {
-    currentLanguage = $('language').value;
-    localStorage.setItem(I18N_STORAGE_KEY, currentLanguage);
-    applyTranslations();
+    setCurrentLanguage($('language').value);
     toggleProfilePanel(!$('profilePanel').hidden);
     renderProfileOrders(marketState.latestOrders);
     setUserIdentity(fields.uid.value ? { uid: fields.uid.value, email: $('sessionDisplay').textContent } : null);
+    syncPreferredLanguage();
     Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
 });
 fields.symbol.addEventListener('change', () => {

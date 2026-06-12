@@ -352,7 +352,8 @@ test('exchange console registers with on-screen email code before login', async 
         uid: 10011,
         email: 'new-user@example.com',
         roles: 'USER',
-        scopes: 'trade funds:write user:read'
+        scopes: 'trade funds:write user:read',
+        preferredLanguage: 'zh-TW'
       }))
     });
   });
@@ -370,42 +371,59 @@ test('exchange console registers with on-screen email code before login', async 
           uid: 10011,
           email: 'new-user@example.com',
           roles: 'USER',
-          scopes: 'trade funds:write user:read'
+          scopes: 'trade funds:write user:read',
+          preferredLanguage: 'zh-TW'
         }
+      }))
+    });
+  });
+  let languagePayload;
+  await page.route('**/api/auth/language', async (route) => {
+    languagePayload = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        uid: 10011,
+        email: 'new-user@example.com',
+        roles: 'USER',
+        scopes: 'trade funds:write user:read',
+        preferredLanguage: languagePayload.preferredLanguage
       }))
     });
   });
 
   await page.goto('/exchange.html');
   await expect.poll(() => configRequests).toBeGreaterThan(0);
-  await page.getByRole('button', { name: 'Open Profile' }).click();
+  await page.locator('#language').selectOption('zh-TW');
+  await page.locator('#profileToggle').click();
   await expect(page.getByText('Sign in to view balances')).toHaveCount(0);
   await page.locator('#authEmail').fill('new-user@example.com');
   await page.locator('#authPassword').fill('correct-password');
-  await page.getByRole('button', { name: 'Create an account' }).click();
+  await page.locator('#register').click();
   await expect.poll(() => registerPayload).toMatchObject({
     email: 'new-user@example.com',
     password: 'correct-password',
-    humanVerificationToken: ''
+    humanVerificationToken: '',
+    preferredLanguage: 'zh-TW'
   });
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
   await expect(page.locator('#emailVerificationCode')).toBeFocused();
-  await expect(page.getByRole('button', { name: 'Login' })).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Create an account' })).toBeHidden();
-  await expect(page.locator('#authNotice')).toContainText('Enter the email verification code');
+  await expect(page.locator('#login')).toBeHidden();
+  await expect(page.locator('#register')).toBeHidden();
+  await expect(page.locator('#authNotice')).toContainText('請輸入信箱驗證碼');
   await expect(page.locator('#authNotice')).not.toContainText('verifyEmailToken');
 
   await page.locator('#emailVerificationCode').fill('123456');
-  await page.getByRole('button', { name: 'Verify Registration' }).click();
+  await page.locator('#verifyEmailCode').click();
   await expect.poll(() => verifyPayload).toMatchObject({
     email: 'new-user@example.com',
     code: '123456'
   });
   await expect(page.locator('#emailVerificationStep')).toBeHidden();
-  await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
-  await expect(page.locator('#authNotice')).toContainText('Registration verified');
+  await expect(page.locator('#login')).toBeVisible();
+  await expect(page.locator('#authNotice')).toContainText('註冊已完成驗證');
 
-  await page.getByRole('button', { name: 'Login' }).click();
+  await page.locator('#login').click();
   await expect.poll(() => loginPayload).toMatchObject({
     email: 'new-user@example.com',
     password: 'correct-password'
@@ -413,6 +431,8 @@ test('exchange console registers with on-screen email code before login', async 
   await expect(page.locator('#profileContent')).toBeVisible();
   await expect(page.locator('#sessionDisplay')).toContainText('new-user@example.com');
   await expect(page.locator('#uidDisplay')).toHaveText('10011');
+  await page.locator('#language').selectOption('ms');
+  await expect.poll(() => languagePayload).toMatchObject({ preferredLanguage: 'ms' });
 });
 
 test('exchange console shows generic login error for unknown accounts', async ({ page }) => {

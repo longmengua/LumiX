@@ -54,3 +54,16 @@ CUSTOMER_AUTH_EMAIL_SMTP_SSL=false \
 5. 郵件連結只作備案流程。
 
 如果 `CUSTOMER_AUTH_EMAIL_SMTP_ENABLED=false`，app 不會寄信，只會在 Spring application log 印出驗證碼，供本機 demo 使用。
+
+## 多國語系信件樣板
+
+驗證信會使用前台註冊當下保存的語言。系統內建 `en`、`zh-TW`、`ms`、`ko` 四種文案。
+
+正式環境可以用設定覆蓋信件樣板，不需要改 code。Body 支援 `{code}`、`{verificationUrl}`、`{expiresAt}` 三個 placeholder。
+
+```bash
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_ZH_TW_SUBJECT="註冊驗證碼"
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_ZH_TW_BODY="你的驗證碼是 {code}\n備援連結：{verificationUrl}\n到期時間：{expiresAt}"
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_EN_SUBJECT="Registration verification code"
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_EN_BODY="Your verification code is {code}\nBackup link: {verificationUrl}\nExpires at: {expiresAt}"
+```

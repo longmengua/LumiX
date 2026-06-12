@@ -54,3 +54,16 @@ CUSTOMER_AUTH_EMAIL_SMTP_SSL=false \
 5. The email link is only a backup path.
 
 If `CUSTOMER_AUTH_EMAIL_SMTP_ENABLED=false`, the app does not send email. It logs the verification code in the Spring application logs for local demos.
+
+## Localized Email Templates
+
+Verification emails use the registration language saved by the frontend. Built-in templates exist for `en`, `zh-TW`, `ms`, and `ko`.
+
+Override any template from configuration without code changes. Body placeholders are `{code}`, `{verificationUrl}`, and `{expiresAt}`.
+
+```bash
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_ZH_TW_SUBJECT="註冊驗證碼"
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_ZH_TW_BODY="你的驗證碼是 {code}\n備援連結：{verificationUrl}\n到期時間：{expiresAt}"
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_EN_SUBJECT="Registration verification code"
+CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_EN_BODY="Your verification code is {code}\nBackup link: {verificationUrl}\nExpires at: {expiresAt}"
+```

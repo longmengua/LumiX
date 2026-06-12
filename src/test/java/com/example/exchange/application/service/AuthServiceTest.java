@@ -52,7 +52,7 @@ class AuthServiceTest {
         when(fixture.users.save(any(AppUserRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(fixture.sessions.save(any(AuthRefreshSessionRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        AuthService.RegistrationResult registration = fixture.service.register("Alice@Example.com", "correct-password", "");
+        AuthService.RegistrationResult registration = fixture.service.register("Alice@Example.com", "correct-password", "", "zh-TW");
         when(fixture.users.findByEmail("alice@example.com")).thenReturn(Optional.of(savedUser.get()));
         AuthService.AuthResult result = fixture.service.login("alice@example.com", "correct-password");
 
@@ -61,6 +61,7 @@ class AuthServiceTest {
         assertThat(registration.verificationUrl()).isNull();
         assertThat(result.user().uid()).isEqualTo(10001L);
         assertThat(result.user().email()).isEqualTo("alice@example.com");
+        assertThat(result.user().preferredLanguage()).isEqualTo("zh-TW");
         assertThat(result.accessToken()).isNotBlank();
         assertThat(result.refreshToken()).isNotBlank();
         assertThat(new JwtAuthenticator(fixture.objectMapper, fixture.properties.getJwtHmacSecret(), 60)
@@ -79,7 +80,7 @@ class AuthServiceTest {
         // Scenario: registration must not allow duplicate login identifiers.
         when(fixture.users.existsByEmail("alice@example.com")).thenReturn(true);
 
-        assertThatThrownBy(() -> fixture.service.register("alice@example.com", "correct-password", ""))
+        assertThatThrownBy(() -> fixture.service.register("alice@example.com", "correct-password", "", "en"))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("email already registered");
     }
@@ -120,7 +121,7 @@ class AuthServiceTest {
             return session;
         });
 
-        fixture.service.register("alice@example.com", "correct-password", "");
+        fixture.service.register("alice@example.com", "correct-password", "", "en");
         when(fixture.users.findByEmail("alice@example.com")).thenReturn(Optional.of(savedUser.get()));
         AuthService.AuthResult result = fixture.service.login("alice@example.com", "correct-password");
         when(fixture.sessions.findByRefreshTokenHash(savedSession.get().getRefreshTokenHash()))
@@ -128,6 +129,41 @@ class AuthServiceTest {
 
         assertThat(fixture.service.logout(result.refreshToken())).isTrue();
         assertThat(savedSession.get().getRevokedAt()).isBeforeOrEqualTo(Instant.now());
+    }
+
+    @Test
+    @DisplayName("authenticated language update persists customer locale")
+    void authenticatedLanguageUpdatePersistsCustomerLocale() {
+        Fixture fixture = new Fixture();
+        AtomicReference<AppUserRecord> savedUser = new AtomicReference<>();
+        AtomicReference<AuthRefreshSessionRecord> savedSession = new AtomicReference<>();
+        // Scenario: customers can change the UI language after login and the preference follows later sessions.
+        when(fixture.users.existsByEmail("alice@example.com")).thenReturn(false);
+        when(fixture.users.saveAndFlush(any(AppUserRecord.class))).thenAnswer(invocation -> {
+            AppUserRecord user = invocation.getArgument(0);
+            user.setId(10003L);
+            savedUser.set(user);
+            return user;
+        });
+        when(fixture.users.save(any(AppUserRecord.class))).thenAnswer(invocation -> {
+            savedUser.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
+        when(fixture.sessions.save(any(AuthRefreshSessionRecord.class))).thenAnswer(invocation -> {
+            savedSession.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
+
+        fixture.service.register("alice@example.com", "correct-password", "", "en");
+        when(fixture.users.findByEmail("alice@example.com")).thenReturn(Optional.of(savedUser.get()));
+        AuthService.AuthResult login = fixture.service.login("alice@example.com", "correct-password");
+        when(fixture.users.findById(10003L)).thenReturn(Optional.of(savedUser.get()));
+
+        Optional<AuthService.CurrentUser> updated = fixture.service.updatePreferredLanguage(login.accessToken(), 60, "ko");
+
+        assertThat(updated).isPresent();
+        assertThat(updated.get().preferredLanguage()).isEqualTo("ko");
+        assertThat(savedUser.get().getPreferredLanguage()).isEqualTo("ko");
     }
 
     @Test
@@ -163,9 +199,9 @@ class AuthServiceTest {
         org.mockito.Mockito.doAnswer(invocation -> {
             verificationUrl.set(invocation.getArgument(1));
             return null;
-        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
+        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any(), anyString());
 
-        AuthService.RegistrationResult registration = fixture.service.register("alice@example.com", "correct-password", "");
+        AuthService.RegistrationResult registration = fixture.service.register("alice@example.com", "correct-password", "", "ko");
 
         assertThat(registration.emailVerificationRequired()).isTrue();
         assertThat(registration.uid()).isNull();
@@ -189,12 +225,14 @@ class AuthServiceTest {
         AuthService.CurrentUser verified = fixture.service.verifyEmail(rawToken);
 
         assertThat(verified.email()).isEqualTo("alice@example.com");
+        assertThat(verified.preferredLanguage()).isEqualTo("ko");
         assertThat(savedUser.get().isEmailVerified()).isTrue();
+        assertThat(savedUser.get().getPreferredLanguage()).isEqualTo("ko");
         assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
         assertThat(savedCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_VERIFIED);
         assertThat(savedCode.get().getAppUserId()).isEqualTo(10001L);
         verify(fixture.accountRepository).save(any());
-        verify(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
+        verify(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any(), anyString());
     }
 
     @Test
@@ -229,9 +267,9 @@ class AuthServiceTest {
         org.mockito.Mockito.doAnswer(invocation -> {
             verificationCode.set(invocation.getArgument(2));
             return null;
-        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
+        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any(), anyString());
 
-        fixture.service.register("alice@example.com", "correct-password", "");
+        fixture.service.register("alice@example.com", "correct-password", "", "ms");
         when(fixture.registrations.findFirstByEmailAndStatusOrderByCreatedAtDesc(
                 "alice@example.com",
                 CustomerRegistrationRecord.STATUS_PENDING
@@ -245,6 +283,7 @@ class AuthServiceTest {
 
         assertThat(verified.uid()).isEqualTo(10002L);
         assertThat(verified.email()).isEqualTo("alice@example.com");
+        assertThat(verified.preferredLanguage()).isEqualTo("ms");
         assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
         assertThat(savedCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_VERIFIED);
     }

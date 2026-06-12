@@ -100,9 +100,10 @@ public class AuthService {
 
     /** Registers a first-party exchange user, runs anti-bot verification, and starts email verification when enabled. */
     @Transactional
-    public RegistrationResult register(String email, String password, String humanVerificationToken) {
+    public RegistrationResult register(String email, String password, String humanVerificationToken, String preferredLanguage) {
         humanVerificationService.verifyRegistration(humanVerificationToken);
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
+        String normalizedLanguage = AppUserRecord.normalizePreferredLanguage(preferredLanguage);
         requireEmail(normalizedEmail);
         if (users.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException("email already registered");
@@ -125,7 +126,8 @@ public class AuthService {
                     normalizedEmail,
                     passwordHashService.hash(password),
                     sha256Hex(token),
-                    expiresAt
+                    expiresAt,
+                    normalizedLanguage
             ));
             // Verification codes live in their own table so operators can later resend or inspect code state by email/account.
             verificationCodes.save(new CustomerVerificationCodeRecord(
@@ -136,7 +138,7 @@ public class AuthService {
                     expiresAt
             ));
             String verificationUrl = verificationUrl(token);
-            emailVerificationNotifier.sendVerification(registration.getEmail(), verificationUrl, code, expiresAt);
+            emailVerificationNotifier.sendVerification(registration.getEmail(), verificationUrl, code, expiresAt, normalizedLanguage);
             return new RegistrationResult(
                     null,
                     registration.getEmail(),
@@ -147,6 +149,7 @@ public class AuthService {
         }
         // saveAndFlush guarantees an IDENTITY-generated uid before creating the matching exchange account.
         AppUserRecord user = users.saveAndFlush(new AppUserRecord(normalizedEmail, passwordHashService.hash(password)));
+        user.updatePreferredLanguage(normalizedLanguage);
         user.verifyEmail(Instant.now(clock));
         users.save(user);
         accountRepository.save(new Account(user.getId()));
@@ -157,6 +160,21 @@ public class AuthService {
                 null,
                 null
         );
+    }
+
+    /** Stores the signed-in customer's current UI language so later sessions and verification email use the same locale. */
+    @Transactional
+    public Optional<CurrentUser> updatePreferredLanguage(String bearerToken, long clockSkewSeconds, String preferredLanguage) {
+        Optional<ApiPrincipal> principal = new JwtAuthenticator(objectMapper, jwtTokenService.effectiveSecret(), clockSkewSeconds)
+                .authenticate(bearerToken);
+        Optional<AppUserRecord> user = principal.flatMap(apiPrincipal -> parseUserId(apiPrincipal.subject()))
+                .flatMap(users::findById)
+                .filter(AppUserRecord::isActive);
+        user.ifPresent(record -> {
+            record.updatePreferredLanguage(preferredLanguage);
+            users.save(record);
+        });
+        return user.map(this::toCurrentUser);
     }
 
     /** Authenticates local email/password credentials and creates a new refresh session. */
@@ -264,7 +282,7 @@ public class AuthService {
 
     /** Keeps API responses from exposing password hashes or persistence-only session fields. */
     private CurrentUser toCurrentUser(AppUserRecord user) {
-        return new CurrentUser(user.getId(), user.getEmail(), user.getRoles(), user.getScopes());
+        return new CurrentUser(user.getId(), user.getEmail(), user.getRoles(), user.getScopes(), user.getPreferredLanguage());
     }
 
     /** Generates the raw refresh token returned once to the client; only its hash is stored. */
@@ -318,6 +336,7 @@ public class AuthService {
             throw new IllegalArgumentException("email already registered");
         }
         AppUserRecord user = users.saveAndFlush(new AppUserRecord(registration.getEmail(), registration.getPasswordHash()));
+        user.updatePreferredLanguage(registration.getPreferredLanguage());
         user.verifyEmail(now);
         users.save(user);
         accountRepository.save(new Account(user.getId()));
@@ -402,7 +421,8 @@ public class AuthService {
             Long uid,
             String email,
             String roles,
-            String scopes
+            String scopes,
+            String preferredLanguage
     ) {
     }
 }

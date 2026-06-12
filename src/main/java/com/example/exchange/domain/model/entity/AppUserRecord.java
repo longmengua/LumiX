@@ -53,6 +53,10 @@ public class AppUserRecord {
     @Column(nullable = false, length = 255)
     private String scopes = "trade funds:write user:read";
 
+    // Preferred UI language is captured at registration and updated whenever the signed-in customer switches locale.
+    @Column(nullable = false, length = 16)
+    private String preferredLanguage = "en";
+
     @Column(nullable = false)
     private Instant createdAt;
 
@@ -110,6 +114,10 @@ public class AppUserRecord {
         return scopes;
     }
 
+    public String getPreferredLanguage() {
+        return preferredLanguage;
+    }
+
     public Instant getEmailVerifiedAt() {
         return emailVerifiedAt;
     }
@@ -158,8 +166,23 @@ public class AppUserRecord {
         emailVerificationExpiresAt = null;
     }
 
+    /** Stores only supported frontend locale keys so downstream email/UI rendering can trust the value. */
+    public void updatePreferredLanguage(String preferredLanguage) {
+        this.preferredLanguage = normalizePreferredLanguage(preferredLanguage);
+    }
+
     /** Email comparison is case-insensitive for login and uniqueness checks. */
     public static String normalizeEmail(String email) {
         return email == null ? "" : email.trim().toLowerCase();
+    }
+
+    public static String normalizePreferredLanguage(String preferredLanguage) {
+        if (preferredLanguage == null) {
+            return "en";
+        }
+        return switch (preferredLanguage.trim()) {
+            case "zh-TW", "ms", "ko" -> preferredLanguage.trim();
+            default -> "en";
+        };
     }
 }

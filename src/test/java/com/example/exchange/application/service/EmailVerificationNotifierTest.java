@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class EmailVerificationNotifierTest {
@@ -26,8 +27,28 @@ class EmailVerificationNotifierTest {
                         "alice@example.com",
                         "http://127.0.0.1/verify",
                         "123456",
-                        Instant.parse("2026-06-13T00:00:00Z")))
+                        Instant.parse("2026-06-13T00:00:00Z"),
+                        "zh-TW"))
                 .doesNotThrowAnyException();
+    }
+
+    @Test
+    @DisplayName("configured localized template overrides built-in email copy")
+    void configuredLocalizedTemplateOverridesBuiltInCopy() {
+        CustomerAuthProperties properties = new CustomerAuthProperties();
+        properties.getEmailVerification().getTemplates().getZhTw().setSubject("自訂驗證信");
+        properties.getEmailVerification().getTemplates().getZhTw().setBody("代碼 {code} 連結 {verificationUrl} 到期 {expiresAt}");
+        EmailVerificationNotifier notifier = new EmailVerificationNotifier(properties);
+
+        // Scenario: production operators can update customer-facing email copy through config without changing code.
+        EmailVerificationNotifier.EmailContent content = notifier.previewContent(
+                "zh-TW",
+                "654321",
+                "http://127.0.0.1/verify",
+                Instant.parse("2026-06-13T00:00:00Z"));
+
+        assertThat(content.subject()).isEqualTo("自訂驗證信");
+        assertThat(content.body()).contains("654321", "http://127.0.0.1/verify", "2026-06-13T00:00:00Z");
     }
 
     @Test
@@ -43,7 +64,8 @@ class EmailVerificationNotifierTest {
                         "alice@example.com",
                         "http://127.0.0.1/verify",
                         "123456",
-                        Instant.parse("2026-06-13T00:00:00Z")))
+                        Instant.parse("2026-06-13T00:00:00Z"),
+                        "en"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("smtp host is not configured");
 
@@ -52,7 +74,8 @@ class EmailVerificationNotifierTest {
                         "alice@example.com",
                         "http://127.0.0.1/verify",
                         "123456",
-                        Instant.parse("2026-06-13T00:00:00Z")))
+                        Instant.parse("2026-06-13T00:00:00Z"),
+                        "en"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("smtp from is not configured");
     }
