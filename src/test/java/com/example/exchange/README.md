@@ -3,57 +3,37 @@
 測試 package root。
 
 目前測試範圍：
-- `ExchangeApplicationTests`：Spring context smoke test。
-- `application/service/`：帳務、風控、outbox、metrics、risk snapshot。
-- `infra/matching/`：in-memory matching engine。
-- `domain/util/`：checksum、log sanitizer。
-- `interfaces/web/`：security、interceptor。
+- `ExchangeApplicationTests`：P0 application class smoke test。
+- `application/service/`：P0 帳務、風控、認證、做市商報價、command transaction boundary。
+- `infra/matching/`：P0 in-memory matching engine。
+- `domain/util/`：P0 log sanitizer。
+- `interfaces/web/`：P0 API auth、protected API security、WebSocket 與 public market API。
+
+只保留 P0 可執行測試；P1-P5 的已刪測試與恢復依據記錄在 `docs/ai/test-priority.md`。
 
 測試類別索引：
 
 | 測試類別 | 主要驗證 |
 | --- | --- |
 | `ExchangeApplicationTests` | application class 能載入，避免啟動入口破壞 Spring 掃描。 |
-| `ArchiveExporterServiceTest` | Historical orders/trades/ledger archive exporter skeleton 與 disabled-by-default 行為。 |
 | `AccountRiskServiceTest` | risk snapshot 的 equity、PNL、maintenance margin、risk ratio。 |
-| `MarginServiceTest` | deposit/withdraw transfer state machine、callback idempotency、manual-review owner、transfer reconciliation projection 與 ledger side effect。 |
-| `OperationalMetricsServiceTest` | 下單結果、撤單、成交事件、延遲統計。 |
-| `OperationalMetricsMeterBinderTest` | Operational metrics snapshot 的 Micrometer / Prometheus meter binding。 |
+| `AuthServiceTest` | local registration/login/logout、email verification token 與 session revocation。 |
+| `CommandTransactionBoundaryTest` | command body 失敗時 rollback command transaction。 |
+| `HumanVerificationServiceTest` | 註冊真人驗證 disabled/dev bypass/fail-closed 行為。 |
+| `MarginServiceTest` | deposit/withdraw transfer state machine、callback idempotency、manual-review owner 與 ledger side effect。 |
+| `MarketMakerAutoQuoteServiceTest` | 自動做市 quote runner baseline。 |
+| `MarketMakerQuoteLifecycleServiceTest` | 做市 quote state lifecycle。 |
+| `MarketMakerQuoteServiceTest` | 做市 quote command validation 與 kill switch。 |
 | `OrderAccountingIntegrationTest` | 下單到撮合、帳務、position、market data、lifecycle event、pre-trade frequency limit 的整合流程。 |
-| `OutboxServiceTest` / `OutboxDomainStateConsistencyServiceTest` | outbox retry、DLQ、replay、manual compensation、trace headers，以及 outbox/domain-state consistency report。 |
-| `AdminDlqControllerTest` | Admin DLQ read-only API mapping、payload/header redaction 與 replay eligibility。 |
-| `RpcTransactionTrackingServiceTest` | RPC transaction commandId replay、fingerprint/txHash conflict 與 unresolved outcome report。 |
-| `PolymarketApprovalServiceTest` | RPC approval read cache、owner clear 與 TTL refresh。 |
-| `PolymarketOrderServiceTest` | CLOB place `clientRequestId` idempotency、payload conflict 與 uncertain local-order retry blocking。 |
-| `PolymarketOrderTrackingServiceTest` | CLOB cancel local idempotency replay、durable commandId replay/conflict、第一次 cancel 成功 marker、exception/5xx uncertain outcome、uncertain cancel reconcile resolution、sync/reconcile unchanged no-op replay、terminal status/matched-size downgrade guard。 |
-| `PolymarketOrderStateMachineTest` | Local/CLOB/trade/settlement state-machine matrix、settlement progression 與 terminal downgrade guard。 |
-| `PolymarketSessionServiceTest` | Session signer revoke-all 覆蓋 pending/active、過期使用拒絕與 EXPIRED 標記。 |
-| `PolymarketUserEventServiceTest` | User-channel callback `eventKey` replay、duplicate-key race no-op、payload-only trade projection 與 order side effect 去重。 |
-| `PolymarketUserWebSocketServiceTest` | User WebSocket worker publish checkpoint、checkpoint 後 durable event replay、worker identity/status 與 checkpoint visibility。 |
-| `RiskSettlementServiceTest` | funding、liquidation、liquidation scanner batch/failure isolation、insurance fund movement、account reconciliation。 |
-| `InsuranceFundServiceTest` | ADL queue enqueue by liquidation id、duplicate replay、operator claim preservation、ADL alert report、insurance fund movement。 |
-| `AdlInsuranceReconciliationServiceTest` | ADL queue shortfall 與 liquidated-position insurance/ADL coverage 對帳。 |
-| `AdlForcedExecutionServiceTest` | ADL forced execution、ledger postings、idempotency、operator halt 與 recent execution report。 |
-| `AdlQueueExecutionServiceTest` | ADL queue 到 ranking/planning/execution 的 orchestration，含 restart-style partial retry。 |
-| `IdempotentHedgeVenueAdapterTest` | Hedge venue submit refId idempotency、payload conflict、pending/uncertain timeout duplicate blocking。 |
-| `RealHedgeVenueAdapterTest` | Real hedge venue 的 disabled safety、signed request contract、HTTP transport 與 response mapping。 |
-| `MarketDataSequenceCheckpointServiceTest` | Market-data depth sequence checkpoint、backfill、recovery cursor、durable trade tape、ticker latest-state 與 1m kline baseline。 |
-| `MarketDataRetentionServiceTest` | Market-data high-volume history retention baseline。 |
-| `PushGatewayServiceTest` | Push gateway heartbeat event contract and closed WebSocket cleanup. |
-| `AccountPositionConsistencyServiceTest` | Restore 後檢查 account/open-position consistency issue 與 valid report。 |
-| `ExecuteAdlUseCaseTest` | ADL forced execution 入口的 transaction boundary commit/rollback。 |
-| `CommandTransactionBoundaryTest` / `OrderCommandTransactionBoundaryTest` | command body 與 place/cancel/amend/cancel-replace 指令入口失敗時 rollback command transaction。 |
-| `OrderBookChecksumTest` | order book checksum 的 BigDecimal scale normalization。 |
 | `SensitiveLogSanitizerTest` | query、JSON、Authorization header、known sensitive header 遮罩。 |
 | `InMemoryMatchingEngineTest` | FIFO、post-only、自成交拒絕、FOK/IOC、市價單流動性不足、snapshot/replay、multi-symbol replay validation。 |
+| `WebSocketPushConfigTest` | `/ws/exchange` user subscription、resume 與 cancel-on-disconnect。 |
+| `MarketControllerTest` | public market API sorted symbols and no admin-only fields。 |
 | `ApiAuthenticationInterceptorTest` | API auth 開關、401、403、role/scope 授權、principal 寫入。 |
 | `ProtectedApiSecurityInterceptorTest` | IP allowlist 與 per-IP rate limit。 |
-| `RequestLoggingInterceptorTest` | request/correlation id、response headers、MDC lifecycle。 |
 | `ApiKeyAuthenticatorTest` | API key hash 驗證與 roles/scopes 解析。 |
-| `MarketDataStreamRateLimiterTest` | Market/user SSE/WebSocket stream per-client 訂閱限流。 |
-| `UserStreamSubscriptionAuthorizerTest` | Private user SSE/WebSocket stream subscription authorization。 |
-| `IpAllowlistTest` | 精確 IP、萬用字元、IPv4 CIDR、拒絕分支。 |
 | `JwtAuthenticatorTest` | HS256 JWT 簽章、exp、roles/scopes。 |
+| `ProtectedApiClassifierTest` | protected endpoint classification。 |
 
 目前狀態：
 - 測試偏 focused unit/integration style，避免依賴完整外部服務。
