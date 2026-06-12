@@ -283,7 +283,9 @@ test('exchange console registers with on-screen email code before login', async 
       }
     };
   });
+  let configRequests = 0;
   await page.route('**/api/auth/config', async (route) => {
+    configRequests += 1;
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok({
@@ -375,6 +377,7 @@ test('exchange console registers with on-screen email code before login', async 
   });
 
   await page.goto('/exchange.html');
+  await expect.poll(() => configRequests).toBeGreaterThan(0);
   await page.getByRole('button', { name: 'Open Profile' }).click();
   await expect(page.getByText('Sign in to view balances')).toHaveCount(0);
   await page.locator('#authEmail').fill('new-user@example.com');
@@ -387,6 +390,8 @@ test('exchange console registers with on-screen email code before login', async 
   });
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
   await expect(page.locator('#emailVerificationCode')).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Login' })).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Create an account' })).toBeHidden();
   await expect(page.locator('#authNotice')).toContainText('Enter the email verification code');
   await expect(page.locator('#authNotice')).not.toContainText('verifyEmailToken');
 
@@ -397,6 +402,7 @@ test('exchange console registers with on-screen email code before login', async 
     code: '123456'
   });
   await expect(page.locator('#emailVerificationStep')).toBeHidden();
+  await expect(page.getByRole('button', { name: 'Login' })).toBeVisible();
   await expect(page.locator('#authNotice')).toContainText('Registration verified');
 
   await page.getByRole('button', { name: 'Login' }).click();

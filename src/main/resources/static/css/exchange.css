@@ -640,6 +640,10 @@ pre {
     gap: 8px;
 }
 
+.auth-actions[hidden] {
+    display: none;
+}
+
 .human-verification[hidden] {
     display: none;
 }

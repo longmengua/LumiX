@@ -519,11 +519,18 @@ function clearNotice() {
     $('authNotice').hidden = true;
 }
 
+function setRegistrationVerificationMode(active) {
+    // The verification-code step is a distinct registration state; showing login/register beside it creates duplicate CTAs.
+    $('emailVerificationStep').hidden = !active;
+    $('authActions').hidden = active;
+}
+
 // Session-bound data must disappear on logout so the next person at the browser cannot see stale account state.
 function clearSessionUi() {
     $('authState').textContent = t('empty.authState');
     $('accountRaw').textContent = t('empty.accountRaw');
     $('sessionDisplay').textContent = t('status.notLoggedIn');
+    setRegistrationVerificationMode(false);
     renderAccountSnapshot(null);
     marketState.latestOrders = [];
     renderProfileOrders([]);
@@ -577,7 +584,7 @@ async function authenticate(mode) {
             });
             fields.humanVerificationToken.value = '';
             fields.emailVerificationCode.value = '';
-            $('emailVerificationStep').hidden = !result.emailVerificationRequired;
+            setRegistrationVerificationMode(result.emailVerificationRequired);
             showNotice(result.emailVerificationRequired ? t('status.registrationPending') : t('status.registrationCreated'));
             if (result.emailVerificationRequired) {
                 fields.emailVerificationCode.focus();
@@ -646,7 +653,7 @@ async function verifyRegistrationCode() {
         });
         showNotice(t('status.registrationVerified'));
         fields.emailVerificationCode.value = '';
-        $('emailVerificationStep').hidden = true;
+        setRegistrationVerificationMode(false);
     } catch (error) {
         showError($('authError'), error);
     }
@@ -723,7 +730,7 @@ async function verifyEmailFromUrl() {
             body: JSON.stringify({ token })
         });
         showNotice(t('status.emailVerified'));
-        $('emailVerificationStep').hidden = true;
+        setRegistrationVerificationMode(false);
         window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
         showError($('authError'), error);
