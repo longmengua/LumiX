@@ -5,6 +5,8 @@
 目前狀態：
 - Funding settlement、snapshot、reconciliation、outbox relay、prediction market sync、bonus credit expiry/clawback、market-maker hedge execution、market-maker quote repair、matching worker lease renewal、market-data retention 都有 scheduler baseline。
 - 部分 scheduler 在 MVP 階段可能保留註解掉的 `@Scheduled`，避免本機啟動後自動改動狀態。
+- `MarketMakerAutoQuoteRunner` 不依賴全域 `@EnableScheduling`，只在 `market-maker.auto-quote.enabled=true`
+  時啟動獨立 lifecycle loop；它會透過既有 quote lifecycle 做撤舊單、風控 state 與 WebSocket 推送。
 - `BonusCreditExpiryScheduler` 預設 `bonus-credit.expiry-enabled=false`，啟用前要確認 ledger/retry/告警策略。
 - `BonusCreditClawbackScheduler` 預設 `bonus-credit.clawback-policy.enabled=false`，啟用前要確認 campaign/asset/max-amount 設定、營運核准、worker lock 與告警策略。
 - `FinanceExportScheduler` 預設 `finance.export.enabled=false`，啟用後會依 cron 產生前一 UTC 日 fee/funding/liquidation/bonus/transfer category export batch；啟用前要確認日報平衡、archive manifest restore smoke 與告警流程。

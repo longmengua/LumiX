@@ -75,7 +75,7 @@ test('exchange console renders client trading workflow without admin funding con
       }))
     });
   });
-  await page.route('**/api/depth/BTCUSDT?depth=10', async (route) => {
+  await page.route('**/api/depth/BTCUSDT?depth=*', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok({
@@ -98,23 +98,12 @@ test('exchange console renders client trading workflow without admin funding con
       }))
     });
   });
+  let clientActiveQuoteRequests = 0;
   await page.route('**/api/market-maker/quotes/active?limit=50', async (route) => {
+    clientActiveQuoteRequests += 1;
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify(ok([
-        {
-          marketMakerId: 'mm-client-flow',
-          uid: 91001,
-          symbol: 'BTCUSDT',
-          refId: 'mm-flow-e2e-1',
-          active: true,
-          accepted: true,
-          bidPrice: '99.50',
-          bidQuantity: '2.000',
-          askPrice: '100.50',
-          askQuantity: '1.500'
-        }
-      ]))
+      body: JSON.stringify(ok([]))
     });
   });
   let openOrderRequests = 0;
@@ -180,22 +169,28 @@ test('exchange console renders client trading workflow without admin funding con
 
   await expect(page).toHaveTitle(/Exchange Console/);
   await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Admin Console' })).toHaveAttribute('href', '/admin-console.html');
-  await expect(page.locator('#symbolTitle')).toHaveText('BTCUSDT');
+  // Scenario: the prod-facing client shell must not expose privileged admin navigation.
+  await expect(page.getByRole('link', { name: 'Admin Console' })).toHaveCount(0);
   await expect(page.locator('#symbol')).toHaveValue('BTCUSDT');
   await expect(page.locator('#symbol option')).toHaveText(['BTCUSDT', 'ETHUSDT']);
+  await expect(page.getByRole('button', { name: 'Reload Market' }).locator('svg')).toBeVisible();
+  await expect(page.getByText('Checksum')).toHaveCount(0);
+  await expect(page.getByText('Book Version')).toHaveCount(0);
   await expect(page.locator('#uid')).toHaveAttribute('type', 'hidden');
   await expect(page.locator('#uidDisplay')).toHaveText('10001');
   await expect(page.locator('#authEmail')).toHaveValue('');
   await expect(page.locator('#authPassword')).toHaveValue('');
   await expect(page.locator('#sessionDisplay')).toContainText('demo@example.com');
   await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
+  // Scenario: account data refreshes from auth/session flow, so the prod-facing account panel has no manual reload button.
+  await expect(page.getByRole('button', { name: 'Reload Account' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Reload Orders' }).locator('svg')).toBeVisible();
   await expect(page.getByRole('cell', { name: '99.5' }).first()).toBeVisible();
-  await expect(page.locator('#orderBook tr.depth-row td:first-child')).toHaveText(['101.2', '100.8', '100.5', '99.5', '99']);
-  await expect(page.locator('#orderBook tr.depth-row')).toHaveCount(5);
-  await expect(page.getByRole('heading', { name: 'Market Maker Flow' })).toBeVisible();
-  await expect(page.locator('#mmStatus')).toHaveText('1 active');
-  await expect(page.locator('#mmLatestRef')).toHaveText('mm-flow-e2e-1');
+  await expect(page.locator('#orderBook tr.depth-row td:first-child')).toHaveText(['101.2', '100.8', '100.5', '99.5', '99', '98.7']);
+  await expect(page.locator('#orderBook tr.depth-row')).toHaveCount(6);
+  // Scenario: market-maker telemetry is operator-only and must not appear or be fetched on the customer exchange.
+  await expect(page.getByRole('heading', { name: 'Market Maker Flow' })).toHaveCount(0);
+  expect(clientActiveQuoteRequests).toBe(0);
   await expect(page.locator('.depth-fill').first()).toBeVisible();
   await expect.poll(() => page.evaluate(() => window.__exchangeWebSocketUrls)).toEqual(
     [expect.stringContaining('/ws/exchange')]
@@ -212,6 +207,28 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#balance')).toContainText('10,000');
   await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#positionMargin')).toContainText('0');
+  // Layout guard: client trading keeps book/order entry first, then open orders, then account/position details.
+  const layout = await page.evaluate(() => {
+    const rect = (selector) => {
+      const box = document.querySelector(selector).getBoundingClientRect();
+      return { top: Math.round(box.top), left: Math.round(box.left), width: Math.round(box.width) };
+    };
+    return {
+      innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+      book: rect('.book-panel'),
+      entry: rect('.order-entry'),
+      orders: rect('.orders-panel'),
+      account: rect('.account-panel')
+    };
+  });
+  expect(layout.scrollWidth).toBeLessThanOrEqual(layout.innerWidth + 2);
+  if (layout.innerWidth >= 900) {
+    expect(Math.abs(layout.book.top - layout.entry.top)).toBeLessThanOrEqual(2);
+    expect(layout.entry.left).toBeGreaterThan(layout.book.left);
+  }
+  expect(layout.orders.top).toBeGreaterThan(Math.max(layout.book.top, layout.entry.top));
+  expect(layout.account.top).toBeGreaterThan(layout.orders.top);
   await expect(page.getByText('Frozen = order hold + position margin')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Airdrop USDT' })).toHaveCount(0);
 
@@ -226,6 +243,16 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#accountRaw')).toContainText('No account loaded');
   await expect(page.locator('#orders')).toContainText('Login and refresh to load open orders');
   await expect(page.locator('#orderResult')).toContainText('No order submitted');
+
+  // Locale switching should translate the client console without changing the default English test flow.
+  await page.locator('#language').selectOption('zh-TW');
+  await expect(page.getByRole('heading', { name: '交易所前台' })).toBeVisible();
+  await page.locator('#language').selectOption('ms');
+  await expect(page.getByRole('heading', { name: 'Konsol Bursa' })).toBeVisible();
+  await page.locator('#language').selectOption('ko');
+  await expect(page.getByRole('heading', { name: '거래소 콘솔' })).toBeVisible();
+  await page.locator('#language').selectOption('en');
+  await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
 });
 
 test('admin console groups operator pages behind tabs', async ({ page }) => {
@@ -255,13 +282,19 @@ test('admin console groups operator pages behind tabs', async ({ page }) => {
   await page.frameLocator('#adminFrame').getByRole('button', { name: 'Airdrop USDT' }).click();
   await expect(page.frameLocator('#adminFrame').locator('#airdropResult')).toContainText('CONFIRMED');
 
+  // Scenario: the admin shell itself is localized, not only the embedded market-maker page.
+  await page.locator('#language').selectOption('zh-TW');
+  await expect(page.getByRole('heading', { name: '後台管理' })).toBeVisible();
+  await expect(page.getByRole('button', { name: '做市商' })).toBeVisible();
+  await page.locator('#language').selectOption('en');
+
   // Funding, market settings, risk, market makers, and DLQ stay discoverable from the single admin page shell.
   await page.getByRole('button', { name: 'Market Config' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-config.html');
   await page.getByRole('button', { name: 'Risk Parameters' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-risk-parameters.html');
   await page.getByRole('button', { name: 'Market Makers' }).click();
-  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-maker.html');
+  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/exchange-admin.html');
   await page.getByRole('button', { name: 'DLQ' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-dlq.html');
 });
@@ -368,6 +401,20 @@ test('admin market config page renders mocked market data and supports filtering
       }))
     });
   });
+  await page.route('**/api/depth/BTCUSDT?depth=5', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        symbol: 'BTCUSDT',
+        version: 88,
+        checksum: 445566,
+        bestBid: '99.50',
+        bestAsk: '100.50',
+        bids: [],
+        asks: []
+      }))
+    });
+  });
 
   await page.goto('/admin-market-config.html');
 
@@ -375,6 +422,9 @@ test('admin market config page renders mocked market data and supports filtering
   await expect(page.getByText('Fee edits apply to new orders only')).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BTCUSDT' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'BTCUSDT' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Market Data Diagnostics' })).toBeVisible();
+  await expect(page.getByText('Book Version')).toBeVisible();
+  await expect(page.getByText('445566')).toBeVisible();
   await page.getByLabel('Maker Fee Rate').fill('0.0015');
   await page.getByLabel('Taker Fee Rate').fill('0.0025');
   await page.getByRole('button', { name: 'Save Fee Settings' }).click();
@@ -442,6 +492,7 @@ test('admin market maker page manages strategy and hedge operations', async ({ p
   let savedProfile = null;
   let hedgeExecutionSeen = false;
   let idempotencyReconcileSeen = false;
+  let autoQuoteSeen = false;
   const profile = {
     marketMakerId: 'mm-alpha',
     uid: 90001,
@@ -499,6 +550,34 @@ test('admin market maker page manages strategy and hedge operations', async ({ p
       body: JSON.stringify(ok({ issueCount: 2, issues: [] }))
     });
   });
+  await page.route('**/api/market-maker/auto-quote/status', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        enabled: false,
+        fixedDelayMs: 300,
+        maxProfilesPerRun: 20,
+        quoteQuantity: '0.100',
+        halfSpreadTicks: 2,
+        pulseTicks: 1,
+        refPrefix: 'auto-mm'
+      }))
+    });
+  });
+  await page.route('**/api/market-maker/auto-quote/run-once', async (route) => {
+    autoQuoteSeen = true;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        sequence: 7,
+        placedCount: 1,
+        skippedCount: 0,
+        results: [
+          { marketMakerId: 'mm-alpha', symbol: 'BTCUSDT', placed: true, reason: 'PLACED', refId: 'auto-mm-mm-alpha-BTCUSDT-7' }
+        ]
+      }))
+    });
+  });
   await page.route('**/api/market-maker/profiles/mm-alpha/hedge-reconciliation?limit=50', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -535,7 +614,7 @@ test('admin market maker page manages strategy and hedge operations', async ({ p
     });
   });
 
-  await page.goto('/admin-market-maker.html');
+  await page.goto('/exchange-admin.html');
 
   await expect(page.getByRole('heading', { name: 'Admin Market Maker' })).toBeVisible();
   await expect(page.locator('#profiles').getByRole('cell', { name: 'mm-alpha' })).toBeVisible();
@@ -543,12 +622,17 @@ test('admin market maker page manages strategy and hedge operations', async ({ p
   await expect(page.locator('#quoteIssueCount')).toHaveText('1');
   await expect(page.locator('#hedgeIssueCount')).toHaveText('1');
   await expect(page.locator('#idempotencyIssueCount')).toHaveText('2');
+  await expect(page.locator('#autoQuoteStatus')).toHaveText('OFF / 300ms');
   await expect(page.getByRole('cell', { name: 'manual-1' })).toBeVisible();
 
   await page.getByLabel('Max Order Notional').fill('12000');
   await page.getByRole('button', { name: 'Save Strategy' }).click();
   await expect.poll(() => savedProfile?.riskLimits?.[0]?.maxOrderNotional).toBe('12000');
   await expect(page.locator('#profileResult')).toContainText('"maxOrderNotional": "12000"');
+
+  await page.getByRole('button', { name: 'Run Auto Quote Once' }).click();
+  await expect.poll(() => autoQuoteSeen).toBe(true);
+  await expect(page.locator('#opsResult')).toContainText('"placedCount": 1');
 
   await page.getByRole('button', { name: 'Run Hedge' }).click();
   await expect.poll(() => hedgeExecutionSeen).toBe(true);
@@ -557,6 +641,14 @@ test('admin market maker page manages strategy and hedge operations', async ({ p
   await page.getByRole('button', { name: 'Reconcile Idempotency' }).click();
   await expect.poll(() => idempotencyReconcileSeen).toBe(true);
   await expect(page.locator('#opsResult')).toContainText('"issueCount": 0');
+
+  // The market-maker admin page shares the same locale preference as the client exchange console.
+  await page.locator('#language').selectOption('zh-TW');
+  await expect(page.getByRole('heading', { name: '交易所做市後台' })).toBeVisible();
+  await page.locator('#language').selectOption('ko');
+  await expect(page.getByRole('heading', { name: '마켓메이커 관리자' })).toBeVisible();
+  await page.locator('#language').selectOption('en');
+  await expect(page.getByRole('heading', { name: 'Admin Market Maker' })).toBeVisible();
 });
 
 test('admin DLQ page renders rows and opens sanitized detail', async ({ page }) => {

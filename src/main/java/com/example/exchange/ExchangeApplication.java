@@ -14,6 +14,7 @@ import com.example.exchange.infra.config.MatchingWorkerProperties;
 import com.example.exchange.infra.config.MarkPriceOracleProperties;
 import com.example.exchange.infra.config.MarketDataRetentionProperties;
 import com.example.exchange.infra.config.MarketMakerApiProperties;
+import com.example.exchange.infra.config.MarketMakerAutoQuoteProperties;
 import com.example.exchange.infra.config.MatchingBookRecoveryProperties;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.example.exchange.infra.config.PushGatewayProperties;
@@ -50,6 +51,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
         MarkPriceOracleProperties.class,
         MarketDataRetentionProperties.class,
         MarketMakerApiProperties.class,
+        MarketMakerAutoQuoteProperties.class,
         MatchingBookRecoveryProperties.class,
         PolymarketConfigs.class,
         PushGatewayProperties.class,

@@ -9,7 +9,7 @@ This map covers future client-facing and admin-facing web applications.
 - Current admin test-funds page: `src/main/resources/static/admin-test-funds.html`
 - Current static admin page: `src/main/resources/static/admin-market-config.html`
 - Current static admin risk page: `src/main/resources/static/admin-risk-parameters.html`
-- Current static admin market-maker page: `src/main/resources/static/admin-market-maker.html`
+- Current static admin market-maker page: `src/main/resources/static/exchange-admin.html`
 - Current static admin DLQ page: `src/main/resources/static/admin-dlq.html`
 - Current static README: `src/main/resources/static/README.md`
 - Browser smoke tests: `tests/e2e/static-admin-pages.spec.js`
@@ -33,11 +33,14 @@ This map covers future client-facing and admin-facing web applications.
 - Market-maker operations: inventory, kill switch, hedge status, audit trail.
 
 Implemented baseline:
-- `exchange.html` is the client exchange console for first-party auth, admin-configured market selection, depth, order entry, open orders, and account lookup through `/api/auth`, `/api/markets`, `/api/depth`, `/api/order`, and `/api/margin`; client UID is derived from the authenticated session rather than editable form input. The order book renders animated depth bars and a Market Maker Flow panel that reads `/api/market-maker/quotes/active` to mark visible maker quote legs; the page uses one `/ws/exchange` multiplex WebSocket, sends `subscribe.market` before login, adds `subscribe.user` after login, reacts to `market-maker.quote` / order lifecycle / trade signals, supports opt-in cancel-on-disconnect resume metadata, and falls back to one-second polling while the exchange stream is disconnected or reconnecting.
+- `exchange.html` is the prod-facing client exchange console for first-party auth, admin-configured market selection, depth, order entry, open orders, and account lookup through `/api/auth`, `/api/markets`, `/api/depth`, `/api/order`, and `/api/margin`; client UID is derived from the authenticated session rather than editable form input. The order book renders public market depth bars with independent ask/bid tick depth controls for 5, 10, 20, or 50 ticks per side, and it must not expose market-maker telemetry, privileged admin links, checksum, or book version diagnostics; the page uses one `/ws/exchange` multiplex WebSocket, sends `subscribe.market` before login, adds `subscribe.user` after login, reacts to public market / order lifecycle / trade signals, supports opt-in cancel-on-disconnect resume metadata, and falls back to one-second polling while the exchange stream is disconnected or reconnecting.
+- `admin-market-config.html` is where operators inspect market-data diagnostics such as best bid/ask, book version, and checksum.
+- `exchange.html`, `admin-console.html`, and `exchange-admin.html` share the `localStorage.exchangeLanguage` locale preference for English, Traditional Chinese, Bahasa Malaysia, and Korean; English remains the default for first-load demos and browser tests.
+- `exchange.html` is the prod-facing customer trading entry and must not expose links to privileged admin pages; operator navigation starts from `admin-console.html`.
 - `admin-test-funds.html` is the admin MVP funding page for issuing test funds through `/api/admin/test-funds/airdrop`; this keeps privileged operator actions separate from the client trading workflow.
 - `AdminMarketConfigController` exposes `/api/admin/market-config` market configuration data and audited fee updates through `POST /api/admin/market-config/{symbol}/fees`; the static admin market-config page explains that fee edits apply only to new orders because existing orders carry fee snapshots.
 - `AdminRiskParametersController` exposes read-only `/api/admin/risk-parameters` risk switches, symbol tiers, and oracle state for the static admin risk-parameters page; write actions remain disabled until permissioned backend endpoints exist.
-- `admin-market-maker.html` exposes the existing `/api/market-maker` operator surface for creating/updating market-maker profiles, per-symbol strategy limits, quote state inspection, hedge reconciliation, hedge fills, idempotency reports, and guarded manual hedge execution.
+- `exchange-admin.html` exposes the existing `/api/market-maker` operator surface for creating/updating market-maker profiles, per-symbol strategy limits, auto quote status/run-once diagnostics, quote state inspection, hedge reconciliation, hedge fills, idempotency reports, and guarded manual hedge execution.
 - `AdminDlqController` exposes read-only `/api/admin/dlq` DLQ rows with sanitized payload/header previews for the static admin DLQ page; replay/compensation actions remain disabled in UI pending permissioned operator workflow wiring.
 
 ## Design Constraints

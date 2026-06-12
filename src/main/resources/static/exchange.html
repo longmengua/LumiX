@@ -84,7 +84,7 @@
             min-width: 0;
         }
 
-        .panel, .market-hero {
+        .panel {
             background: var(--panel);
             border: 1px solid var(--line);
             border-radius: 8px;
@@ -128,13 +128,10 @@
             flex-wrap: wrap;
         }
 
-        .market-controls {
-            justify-content: flex-start;
-            min-width: 0;
-        }
-
-        .market-controls select {
-            width: 190px;
+        .market-select-field {
+            display: grid;
+            gap: 4px;
+            min-width: 132px;
         }
 
         label {
@@ -179,6 +176,20 @@
         button.sell {
             border-color: var(--sell);
             background: linear-gradient(180deg, #ef6b6b, var(--sell));
+        }
+
+        .icon-button {
+            align-items: center;
+            display: inline-flex;
+            justify-content: center;
+            min-width: 36px;
+            padding: 0;
+            width: 36px;
+        }
+
+        .icon-button svg {
+            height: 18px;
+            width: 18px;
         }
 
         .buy-action {
@@ -250,21 +261,6 @@
 
         .depth-row.ask .depth-fill {
             background: linear-gradient(90deg, rgba(214, 69, 69, 0.06), rgba(214, 69, 69, 0.42));
-        }
-
-        .depth-row.maker-visible td:first-of-type::after {
-            content: "MM";
-            display: inline-flex;
-            align-items: center;
-            height: 16px;
-            margin-left: 6px;
-            padding: 0 5px;
-            border-radius: 999px;
-            background: #101827;
-            color: #e5eefb;
-            font-size: 10px;
-            font-weight: 800;
-            vertical-align: middle;
         }
 
         .form-grid {
@@ -370,54 +366,11 @@
             margin-bottom: 0;
         }
 
-        .top-row {
-            display: grid;
-            grid-template-columns: minmax(360px, 0.85fr) minmax(620px, 1.15fr);
-            gap: 16px;
-            align-items: stretch;
-        }
-
         .trading-workspace {
             display: grid;
-            grid-template-columns: minmax(280px, 0.82fr) minmax(320px, 0.9fr) minmax(420px, 1.28fr);
+            grid-template-columns: minmax(360px, 1fr) minmax(320px, 0.76fr);
             gap: 16px;
             align-items: start;
-        }
-
-        .market-hero {
-            display: grid;
-            grid-template-columns: minmax(210px, 0.72fr) minmax(360px, 1fr);
-            gap: 16px;
-            padding: 14px;
-            background: linear-gradient(135deg, #ffffff, #f4fbf9 62%, #eef1ff);
-        }
-
-        .symbol-card {
-            display: grid;
-            gap: 10px;
-            align-content: center;
-        }
-
-        .symbol-row {
-            display: flex;
-            align-items: end;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .symbol-pill {
-            border-radius: 999px;
-            background: var(--accent-soft);
-            color: var(--accent-strong);
-            padding: 5px 9px;
-            font-size: 12px;
-            font-weight: 800;
-        }
-
-        .symbol-title {
-            font-size: 30px;
-            font-weight: 800;
-            line-height: 1;
         }
 
         .book-panel {
@@ -431,6 +384,14 @@
         .book-spread {
             display: block;
             gap: 8px;
+        }
+
+        .book-controls {
+            display: flex;
+            align-items: end;
+            flex-wrap: wrap;
+            gap: 8px;
+            justify-content: flex-end;
         }
 
         .book-legend {
@@ -451,97 +412,6 @@
             background: linear-gradient(90deg, #f8fafc, #f1efff, #f8fafc);
         }
 
-        .mm-flow {
-            margin-top: 12px;
-            border: 1px solid #dbe6ef;
-            border-radius: 8px;
-            background: linear-gradient(135deg, #ffffff, #f4f8fb);
-            padding: 10px;
-        }
-
-        .mm-flow .helper {
-            margin: 0;
-        }
-
-        .mm-bars {
-            display: grid;
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .mm-meter {
-            display: grid;
-            grid-template-columns: minmax(84px, 0.45fr) minmax(120px, 1fr) minmax(76px, 0.35fr);
-            align-items: center;
-            gap: 8px;
-        }
-
-        .mm-meter label {
-            color: var(--text);
-            text-transform: none;
-        }
-
-        .mm-track {
-            position: relative;
-            height: 12px;
-            overflow: hidden;
-            border-radius: 999px;
-            background: #e6edf4;
-        }
-
-        .mm-fill {
-            position: absolute;
-            inset: 0 auto 0 0;
-            width: var(--mm-pct, 0%);
-            min-width: 10px;
-            border-radius: inherit;
-            transition: width 260ms ease;
-        }
-
-        .mm-fill::after {
-            content: "";
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
-            transform: translateX(-100%);
-            animation: liquiditySweep 1.15s linear infinite;
-        }
-
-        .mm-fill.bid {
-            background: linear-gradient(90deg, #0a8f7b, #2fba96);
-        }
-
-        .mm-fill.ask {
-            background: linear-gradient(90deg, #d64545, #f1876d);
-        }
-
-        .mm-tape {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 8px;
-            margin-top: 10px;
-        }
-
-        .mm-tick {
-            border: 1px solid #e4ebf3;
-            border-radius: 6px;
-            background: #fff;
-            padding: 8px;
-            min-width: 0;
-        }
-
-        .mm-tick strong {
-            display: block;
-            margin-top: 4px;
-            overflow-wrap: anywhere;
-        }
-
-        @keyframes liquiditySweep {
-            to {
-                transform: translateX(120%);
-            }
-        }
-
         @keyframes depthPulse {
             50% {
                 opacity: 0.42;
@@ -550,6 +420,7 @@
 
         .orders-panel {
             min-height: 360px;
+            grid-column: 1 / -1;
         }
 
         .order-entry {
@@ -558,26 +429,6 @@
 
         .account-panel {
             border-top: 4px solid var(--gold);
-        }
-
-        .tech-details {
-            margin-top: 10px;
-        }
-
-        .tech-details summary {
-            color: var(--muted);
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 800;
-            text-transform: uppercase;
-        }
-
-        .tech-details .metric {
-            margin-top: 8px;
-        }
-
-        .market-hero .metric-row {
-            grid-template-columns: repeat(3, minmax(0, 1fr));
         }
 
         .account-panel .form-grid {
@@ -605,7 +456,6 @@
         }
 
         @media (max-width: 1160px) {
-            .top-row,
             .trading-workspace {
                 grid-template-columns: 1fr;
             }
@@ -617,7 +467,7 @@
                 flex-direction: column;
             }
 
-            main, .market-hero, .form-grid, .metric-row, .identity-row, .account-panel .form-grid, .mm-tape {
+            main, .form-grid, .metric-row, .identity-row, .account-panel .form-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -651,247 +501,148 @@
 <!-- Exchange console is the first-party trading surface; Polymarket remains a backend venue, not a wallet UI. -->
 <header>
     <div>
-        <h1>Exchange Console</h1>
-        <div class="brand-subtitle">Internal exchange MVP: order book, order entry, open orders, and account risk.</div>
+        <h1 data-i18n="page.title">Exchange Console</h1>
+        <div class="brand-subtitle" data-i18n="page.subtitle">Internal exchange MVP: order book, order entry, open orders, and account risk.</div>
     </div>
     <div class="toolbar">
-        <a class="nav-link" href="/admin-console.html">Admin Console</a>
+        <label for="language" data-i18n="language.label">Language</label>
+        <select id="language" aria-label="Language">
+            <option value="en">English</option>
+            <option value="zh-TW">中文</option>
+            <option value="ms">Bahasa Malaysia</option>
+            <option value="ko">한국어</option>
+        </select>
     </div>
 </header>
 
 <main>
-    <section class="top-row">
-        <div class="market-hero">
-            <div class="symbol-card">
-                <div class="symbol-row">
-                    <div id="symbolTitle" class="symbol-title">BTCUSDT</div>
-                    <div class="symbol-pill">Perpetual MVP</div>
-                </div>
-                <div class="helper">Markets are configured by Admin Console; clients can only select enabled symbols.</div>
-                <div class="toolbar market-controls">
-                    <label for="symbol">Market</label>
-                    <select id="symbol">
-                        <option value="BTCUSDT">BTCUSDT</option>
-                    </select>
-                    <button id="reloadMarket" type="button" class="secondary">Reload Market</button>
-                </div>
-            </div>
-            <div>
-                <div class="metric-row">
-                    <div class="metric">
-                        <label>Best Bid</label>
-                        <div id="bestBid" class="value buy-text">-</div>
-                    </div>
-                    <div class="metric">
-                        <label>Best Ask</label>
-                        <div id="bestAsk" class="value sell-text">-</div>
-                    </div>
-                    <div class="metric">
-                        <label>Book Version</label>
-                        <div id="bookVersion" class="value">-</div>
-                    </div>
-                </div>
-                <details class="tech-details">
-                    <summary>Technical</summary>
-                    <div class="metric">
-                        <label>Checksum</label>
-                        <div id="checksum" class="value">-</div>
-                    </div>
-                </details>
-                <div id="marketStateNotice" class="notice" hidden></div>
-            </div>
-        </div>
-
-        <div class="panel account-panel">
-            <div class="panel-heading">
-                <h2>User Account</h2>
-                <button id="reloadAccount" type="button" class="secondary">Reload Account</button>
-            </div>
-            <div class="form-grid">
-                <div>
-                    <label for="authEmail">Email</label>
-                    <input id="authEmail" autocomplete="off" data-lpignore="true"/>
-                </div>
-                <div>
-                    <label for="authPassword">Password</label>
-                    <input id="authPassword" type="password" autocomplete="new-password" data-lpignore="true"/>
-                </div>
-                <div class="toolbar">
-                    <button id="register" type="button">Register</button>
-                    <button id="login" type="button" class="secondary">Login</button>
-                    <button id="logout" type="button" class="secondary">Logout</button>
-                </div>
-            </div>
-            <input id="uid" type="hidden" value=""/>
-            <div class="identity-row">
-                <div class="metric">
-                    <label>UID</label>
-                    <div id="uidDisplay" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Session</label>
-                    <div id="sessionDisplay" class="value">Not logged in</div>
-                </div>
-            </div>
-            <div class="metric-row account-metrics">
-                <div class="metric">
-                    <label>Balance</label>
-                    <div id="balance" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Available</label>
-                    <div id="available" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Frozen</label>
-                    <div id="frozen" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Position Margin</label>
-                    <div id="positionMargin" class="value">-</div>
-                </div>
-            </div>
-            <div class="notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
-            <div id="authError" class="error" hidden></div>
-            <div id="accountError" class="error" hidden></div>
-            <pre id="authState" class="compact-pre">Not logged in.</pre>
-            <pre id="accountRaw" class="compact-pre">No account loaded.</pre>
-        </div>
-    </section>
-
     <section class="trading-workspace">
         <div class="panel book-panel">
             <div class="panel-heading">
                 <div>
-                    <h2>Order Book</h2>
-                    <div class="helper">Runtime matching depth for the selected market.</div>
+                    <h2 data-i18n="book.title">Order Book</h2>
+                    <div class="helper" data-i18n="book.helper">Runtime matching depth for the selected market.</div>
+                </div>
+                <div class="book-controls">
+                    <div class="market-select-field">
+                        <label for="symbol" data-i18n="field.market">Market</label>
+                        <select id="symbol">
+                            <option value="BTCUSDT">BTCUSDT</option>
+                        </select>
+                    </div>
+                    <!-- Market refresh syncs enabled symbols without exposing admin diagnostics on the customer surface. -->
+                    <button id="reloadMarket" type="button" class="secondary icon-button" data-i18n-aria-label="action.reloadMarket" data-i18n-title="action.reloadMarket" aria-label="Reload Market" title="Reload Market">
+                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                            <path d="M21 12a9 9 0 0 1-15.36 6.36l1.42-1.42A7 7 0 0 0 19 12h-3l4-4 4 4h-3ZM3 12A9 9 0 0 1 18.36 5.64l-1.42 1.42A7 7 0 0 0 5 12h3l-4 4-4-4h3Z" fill="currentColor"/>
+                        </svg>
+                    </button>
+                    <div class="market-select-field">
+                        <label for="bookDepth" data-i18n="book.depth">Ticks / side</label>
+                        <select id="bookDepth">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
                 </div>
             </div>
             <div class="book-spread">
                 <div class="book-legend">
-                    <span class="sell-text">Asks</span>
+                    <span class="sell-text" data-i18n="book.asks">Asks</span>
                     <span id="spreadMid">Spread: best ask - best bid</span>
-                    <span class="buy-text">Bids</span>
+                    <span class="buy-text" data-i18n="book.bids">Bids</span>
                 </div>
                 <div class="table-wrap">
                     <table id="orderBook">
                         <thead>
                         <tr>
-                            <th>Price</th>
-                            <th>Qty</th>
-                            <th>Notional</th>
+                            <th data-i18n="table.price">Price</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.notional">Notional</th>
                         </tr>
                         </thead>
                         <tbody id="orderBookRows"></tbody>
                     </table>
                 </div>
             </div>
-            <div class="mm-flow">
-                <div class="mini-title">
-                    <div>
-                        <h2>Market Maker Flow</h2>
-                        <p class="helper">Active quote-command liquidity visible in the client book.</p>
-                    </div>
-                    <span id="mmStatus" class="status">No signal</span>
-                </div>
-                <div class="mm-bars">
-                    <div class="mm-meter">
-                        <label>Bid flow</label>
-                        <div class="mm-track"><span id="mmBidBar" class="mm-fill bid"></span></div>
-                        <strong id="mmBidText" class="buy-text">-</strong>
-                    </div>
-                    <div class="mm-meter">
-                        <label>Ask flow</label>
-                        <div class="mm-track"><span id="mmAskBar" class="mm-fill ask"></span></div>
-                        <strong id="mmAskText" class="sell-text">-</strong>
-                    </div>
-                </div>
-                <div class="mm-tape">
-                    <div class="mm-tick">
-                        <label>Active Quotes</label>
-                        <strong id="mmActiveCount">0</strong>
-                    </div>
-                    <div class="mm-tick">
-                        <label>Latest Ref</label>
-                        <strong id="mmLatestRef">-</strong>
-                    </div>
-                    <div class="mm-tick">
-                        <label>Quote Mode</label>
-                        <strong id="mmMode">Command driven</strong>
-                    </div>
-                </div>
-            </div>
+            <div id="marketStateNotice" class="notice" hidden></div>
         </div>
 
         <div class="panel order-entry">
-            <h2>Place Order</h2>
+            <h2 data-i18n="order.title">Place Order</h2>
             <div class="form-grid">
                 <div>
-                    <label for="side">Side</label>
+                    <label for="side" data-i18n="table.side">Side</label>
                     <select id="side">
                         <option>BUY</option>
                         <option>SELL</option>
                     </select>
                 </div>
                 <div>
-                    <label for="type">Type</label>
+                    <label for="type" data-i18n="table.type">Type</label>
                     <select id="type">
                         <option>LIMIT</option>
                         <option>MARKET</option>
                     </select>
                 </div>
                 <div>
-                    <label for="price">Price</label>
+                    <label for="price" data-i18n="table.price">Price</label>
                     <input id="price" value="100.00"/>
                 </div>
                 <div>
-                    <label for="qty">Qty</label>
+                    <label for="qty" data-i18n="table.qty">Qty</label>
                     <input id="qty" value="1.000"/>
                 </div>
                 <div>
-                    <label for="leverage">Leverage</label>
+                    <label for="leverage" data-i18n="field.leverage">Leverage</label>
                     <input id="leverage" type="number" min="1" max="125" value="1"/>
                 </div>
                 <div>
-                    <label for="marginMode">Margin</label>
+                    <label for="marginMode" data-i18n="field.margin">Margin</label>
                     <select id="marginMode">
                         <option>CROSS</option>
                         <option>ISOLATED</option>
                     </select>
                 </div>
                 <div class="full">
-                    <label for="clientOrderId">Client Order ID</label>
+                    <label for="clientOrderId" data-i18n="field.clientOrderId">Client Order ID</label>
                     <input id="clientOrderId"/>
                 </div>
                 <div class="full toolbar">
-                    <button id="placeBuy" type="button" class="buy-action">Place Buy</button>
-                    <button id="placeSell" type="button" class="sell">Place Sell</button>
+                    <button id="placeBuy" type="button" class="buy-action" data-i18n="action.placeBuy">Place Buy</button>
+                    <button id="placeSell" type="button" class="sell" data-i18n="action.placeSell">Place Sell</button>
                 </div>
             </div>
             <div id="orderError" class="error" hidden></div>
-            <pre id="orderResult">No order submitted.</pre>
+            <pre id="orderResult" data-i18n="empty.orderResult">No order submitted.</pre>
         </div>
 
         <div class="panel orders-panel">
             <div class="panel-heading">
                 <div>
-                    <h2>Open Orders</h2>
-                    <div class="helper">Current user's live orders for the selected market.</div>
+                    <h2 data-i18n="orders.title">Open Orders</h2>
+                    <div class="helper" data-i18n="orders.helper">Current user's live orders for the selected market.</div>
                 </div>
-                <button id="reloadOrders" type="button" class="secondary">Reload Orders</button>
+                <!-- Open-order refresh is icon-only for the trading workspace while keeping a localized accessible name. -->
+                <button id="reloadOrders" type="button" class="secondary icon-button" data-i18n-aria-label="action.reloadOrders" data-i18n-title="action.reloadOrders" aria-label="Reload Orders" title="Reload Orders">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                        <path d="M21 12a9 9 0 0 1-15.36 6.36l1.42-1.42A7 7 0 0 0 19 12h-3l4-4 4 4h-3ZM3 12A9 9 0 0 1 18.36 5.64l-1.42 1.42A7 7 0 0 0 5 12h3l-4 4-4-4h3Z" fill="currentColor"/>
+                    </svg>
+                </button>
             </div>
             <div class="table-wrap">
                 <table>
                     <thead>
                     <tr>
-                        <th>Order ID</th>
-                        <th>Market</th>
-                        <th>Side</th>
-                        <th>Type</th>
-                        <th>Price</th>
-                        <th>Qty</th>
-                        <th>Filled</th>
-                        <th>Status</th>
+                        <th data-i18n="table.orderId">Order ID</th>
+                        <th data-i18n="field.market">Market</th>
+                        <th data-i18n="table.side">Side</th>
+                        <th data-i18n="table.type">Type</th>
+                        <th data-i18n="table.price">Price</th>
+                        <th data-i18n="table.qty">Qty</th>
+                        <th data-i18n="table.filled">Filled</th>
+                        <th data-i18n="table.status">Status</th>
                     </tr>
                     </thead>
                     <tbody id="orders"></tbody>
@@ -899,11 +650,308 @@
             </div>
         </div>
     </section>
+
+    <section class="panel account-panel">
+        <div class="panel-heading">
+            <h2 data-i18n="account.title">User Account</h2>
+        </div>
+        <div class="form-grid">
+            <div>
+                <label for="authEmail" data-i18n="field.email">Email</label>
+                <input id="authEmail" autocomplete="off" data-lpignore="true"/>
+            </div>
+            <div>
+                <label for="authPassword" data-i18n="field.password">Password</label>
+                <input id="authPassword" type="password" autocomplete="new-password" data-lpignore="true"/>
+            </div>
+            <div class="toolbar">
+                <button id="register" type="button" data-i18n="action.register">Register</button>
+                <button id="login" type="button" class="secondary" data-i18n="action.login">Login</button>
+                <button id="logout" type="button" class="secondary" data-i18n="action.logout">Logout</button>
+            </div>
+        </div>
+        <input id="uid" type="hidden" value=""/>
+        <div class="identity-row">
+            <div class="metric">
+                <label>UID</label>
+                <div id="uidDisplay" class="value">-</div>
+            </div>
+            <div class="metric">
+                <label data-i18n="metric.session">Session</label>
+                <div id="sessionDisplay" class="value">Not logged in</div>
+            </div>
+        </div>
+        <div class="metric-row account-metrics">
+            <div class="metric">
+                <label data-i18n="metric.balance">Balance</label>
+                <div id="balance" class="value">-</div>
+            </div>
+            <div class="metric">
+                <label data-i18n="metric.available">Available</label>
+                <div id="available" class="value">-</div>
+            </div>
+            <div class="metric">
+                <label data-i18n="metric.frozen">Frozen</label>
+                <div id="frozen" class="value">-</div>
+            </div>
+            <div class="metric">
+                <label data-i18n="metric.positionMargin">Position Margin</label>
+                <div id="positionMargin" class="value">-</div>
+            </div>
+        </div>
+        <div class="notice" data-i18n="account.notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
+        <div id="authError" class="error" hidden></div>
+        <div id="accountError" class="error" hidden></div>
+        <pre id="authState" class="compact-pre" data-i18n="empty.authState">Not logged in.</pre>
+        <pre id="accountRaw" class="compact-pre" data-i18n="empty.accountRaw">No account loaded.</pre>
+    </section>
 </main>
 
 <script>
     // DOM helper keeps the static MVP page dependency-free while the app is still backend-first.
     const $ = (id) => document.getElementById(id);
+    const I18N_STORAGE_KEY = 'exchangeLanguage';
+    const translations = {
+        en: {
+            'page.title': 'Exchange Console',
+            'page.subtitle': 'Trade perpetual markets with live order book depth, order entry, open orders, and account risk.',
+            'language.label': 'Language',
+            'market.helper': 'Select an available market and trade against live book liquidity.',
+            'field.market': 'Market',
+            'field.email': 'Email',
+            'field.password': 'Password',
+            'field.leverage': 'Leverage',
+            'field.margin': 'Margin',
+            'field.clientOrderId': 'Client Order ID',
+            'action.reloadMarket': 'Reload Market',
+            'action.reloadOrders': 'Reload Orders',
+            'action.register': 'Register',
+            'action.login': 'Login',
+            'action.logout': 'Logout',
+            'action.placeBuy': 'Place Buy',
+            'action.placeSell': 'Place Sell',
+            'metric.session': 'Session',
+            'metric.balance': 'Balance',
+            'metric.available': 'Available',
+            'metric.frozen': 'Frozen',
+            'metric.positionMargin': 'Position Margin',
+            'account.title': 'User Account',
+            'account.notice': 'Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.',
+            'book.title': 'Order Book',
+            'book.helper': 'Runtime matching depth for the selected market.',
+            'book.asks': 'Asks',
+            'book.bids': 'Bids',
+            'book.spread': 'Spread',
+            'book.depth': 'Ticks / side',
+            'order.title': 'Place Order',
+            'orders.title': 'Open Orders',
+            'orders.helper': "Current user's live orders for the selected market.",
+            'table.orderId': 'Order ID',
+            'table.side': 'Side',
+            'table.type': 'Type',
+            'table.price': 'Price',
+            'table.qty': 'Qty',
+            'table.notional': 'Notional',
+            'table.filled': 'Filled',
+            'table.status': 'Status',
+            'empty.authState': 'Not logged in.',
+            'empty.accountRaw': 'No account loaded.',
+            'empty.orderResult': 'No order submitted.',
+            'empty.loginForOrders': 'Login and refresh to load open orders',
+            'empty.book': 'Runtime order book is empty',
+            'empty.noOpenOrders': 'No open orders',
+            'status.authenticated': 'Authenticated',
+            'status.notLoggedIn': 'Not logged in',
+            'status.sessionUnavailable': 'Session unavailable. Please login again.',
+            'status.accountUnavailable': 'Account unavailable.',
+            'notice.bookRecovered': 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
+            'error.loginBeforeOrder': 'Please login before placing orders.'
+        },
+        'zh-TW': {
+            'page.title': '交易所前台',
+            'page.subtitle': '交易永續合約市場，查看即時訂單簿深度、下單、開放訂單與帳戶風險。',
+            'language.label': '語言',
+            'market.helper': '選擇可用市場，並直接與即時訂單簿流動性交易。',
+            'field.market': '市場',
+            'field.email': '電子信箱',
+            'field.password': '密碼',
+            'field.leverage': '槓桿',
+            'field.margin': '保證金',
+            'field.clientOrderId': '客戶訂單 ID',
+            'action.reloadMarket': '重新載入市場',
+            'action.reloadOrders': '重新載入訂單',
+            'action.register': '註冊',
+            'action.login': '登入',
+            'action.logout': '登出',
+            'action.placeBuy': '下買單',
+            'action.placeSell': '下賣單',
+            'metric.session': '登入狀態',
+            'metric.balance': '餘額',
+            'metric.available': '可用',
+            'metric.frozen': '凍結',
+            'metric.positionMargin': '倉位保證金',
+            'account.title': '使用者帳戶',
+            'account.notice': '凍結 = 訂單占用 + 倉位保證金。訂單占用包含保證金預留與預估 taker fee，因此小數是正常現象。',
+            'book.title': '訂單簿',
+            'book.helper': '所選市場的即時撮合深度。',
+            'book.asks': '賣盤',
+            'book.bids': '買盤',
+            'book.spread': '價差',
+            'book.depth': '每邊 ticks',
+            'order.title': '下單',
+            'orders.title': '開放訂單',
+            'orders.helper': '目前使用者在所選市場的即時訂單。',
+            'table.orderId': '訂單 ID',
+            'table.side': '方向',
+            'table.type': '類型',
+            'table.price': '價格',
+            'table.qty': '數量',
+            'table.notional': '名目',
+            'table.filled': '已成交',
+            'table.status': '狀態',
+            'empty.authState': '尚未登入。',
+            'empty.accountRaw': '尚未載入帳戶。',
+            'empty.orderResult': '尚未送出訂單。',
+            'empty.loginForOrders': '登入並重新整理以載入開放訂單',
+            'empty.book': '即時訂單簿為空',
+            'empty.noOpenOrders': '沒有開放訂單',
+            'status.authenticated': '已驗證',
+            'status.notLoggedIn': '尚未登入',
+            'status.sessionUnavailable': 'Session 不可用，請重新登入。',
+            'status.accountUnavailable': '帳戶不可用。',
+            'notice.bookRecovered': '開放訂單已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
+            'error.loginBeforeOrder': '下單前請先登入。'
+        },
+        ms: {
+            'page.title': 'Konsol Bursa',
+            'page.subtitle': 'Dagangkan pasaran perpetual dengan kedalaman buku langsung, kemasukan pesanan, pesanan terbuka dan risiko akaun.',
+            'language.label': 'Bahasa',
+            'market.helper': 'Pilih pasaran tersedia dan berdagang dengan kecairan buku langsung.',
+            'field.market': 'Pasaran',
+            'field.email': 'E-mel',
+            'field.password': 'Kata Laluan',
+            'field.leverage': 'Leveraj',
+            'field.margin': 'Margin',
+            'field.clientOrderId': 'ID Pesanan Klien',
+            'action.reloadMarket': 'Muat Semula Pasaran',
+            'action.reloadOrders': 'Muat Semula Pesanan',
+            'action.register': 'Daftar',
+            'action.login': 'Log Masuk',
+            'action.logout': 'Log Keluar',
+            'action.placeBuy': 'Buat Belian',
+            'action.placeSell': 'Buat Jualan',
+            'metric.session': 'Sesi',
+            'metric.balance': 'Baki',
+            'metric.available': 'Tersedia',
+            'metric.frozen': 'Dibekukan',
+            'metric.positionMargin': 'Margin Posisi',
+            'account.title': 'Akaun Pengguna',
+            'account.notice': 'Dibekukan = pegangan pesanan + margin posisi. Pegangan pesanan termasuk rizab margin dan anggaran yuran taker.',
+            'book.title': 'Buku Pesanan',
+            'book.helper': 'Kedalaman padanan runtime untuk pasaran dipilih.',
+            'book.asks': 'Ask',
+            'book.bids': 'Bid',
+            'book.spread': 'Spread',
+            'book.depth': 'Ticks / sisi',
+            'order.title': 'Buat Pesanan',
+            'orders.title': 'Pesanan Terbuka',
+            'orders.helper': 'Pesanan langsung pengguna semasa untuk pasaran dipilih.',
+            'table.orderId': 'ID Pesanan',
+            'table.side': 'Arah',
+            'table.type': 'Jenis',
+            'table.price': 'Harga',
+            'table.qty': 'Kuantiti',
+            'table.notional': 'Notional',
+            'table.filled': 'Diisi',
+            'table.status': 'Status',
+            'empty.authState': 'Belum log masuk.',
+            'empty.accountRaw': 'Tiada akaun dimuatkan.',
+            'empty.orderResult': 'Tiada pesanan dihantar.',
+            'empty.loginForOrders': 'Log masuk dan muat semula untuk memuat pesanan terbuka',
+            'empty.book': 'Buku pesanan runtime kosong',
+            'empty.noOpenOrders': 'Tiada pesanan terbuka',
+            'status.authenticated': 'Disahkan',
+            'status.notLoggedIn': 'Belum log masuk',
+            'status.sessionUnavailable': 'Sesi tidak tersedia. Sila log masuk semula.',
+            'status.accountUnavailable': 'Akaun tidak tersedia.',
+            'notice.bookRecovered': 'Pesanan terbuka telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
+            'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
+        },
+        ko: {
+            'page.title': '거래소 콘솔',
+            'page.subtitle': '실시간 호가창 깊이, 주문 입력, 미체결 주문, 계정 리스크로 무기한 시장을 거래하세요.',
+            'language.label': '언어',
+            'market.helper': '사용 가능한 시장을 선택하고 실시간 호가창 유동성과 거래하세요.',
+            'field.market': '시장',
+            'field.email': '이메일',
+            'field.password': '비밀번호',
+            'field.leverage': '레버리지',
+            'field.margin': '마진',
+            'field.clientOrderId': '클라이언트 주문 ID',
+            'action.reloadMarket': '시장 새로고침',
+            'action.reloadOrders': '주문 새로고침',
+            'action.register': '가입',
+            'action.login': '로그인',
+            'action.logout': '로그아웃',
+            'action.placeBuy': '매수 주문',
+            'action.placeSell': '매도 주문',
+            'metric.session': '세션',
+            'metric.balance': '잔고',
+            'metric.available': '사용 가능',
+            'metric.frozen': '동결',
+            'metric.positionMargin': '포지션 마진',
+            'account.title': '사용자 계정',
+            'account.notice': '동결 = 주문 증거금 + 포지션 마진. 주문 증거금에는 마진 예약과 예상 taker fee가 포함됩니다.',
+            'book.title': '호가창',
+            'book.helper': '선택한 시장의 런타임 매칭 깊이입니다.',
+            'book.asks': '매도',
+            'book.bids': '매수',
+            'book.spread': '스프레드',
+            'book.depth': '한쪽 ticks',
+            'order.title': '주문 입력',
+            'orders.title': '미체결 주문',
+            'orders.helper': '선택한 시장에서 현재 사용자의 실시간 주문입니다.',
+            'table.orderId': '주문 ID',
+            'table.side': '방향',
+            'table.type': '유형',
+            'table.price': '가격',
+            'table.qty': '수량',
+            'table.notional': '명목',
+            'table.filled': '체결',
+            'table.status': '상태',
+            'empty.authState': '로그인하지 않았습니다.',
+            'empty.accountRaw': '계정이 로드되지 않았습니다.',
+            'empty.orderResult': '아직 주문을 제출하지 않았습니다.',
+            'empty.loginForOrders': '로그인 후 새로고침하여 미체결 주문을 불러오세요',
+            'empty.book': '런타임 호가창이 비어 있습니다',
+            'empty.noOpenOrders': '미체결 주문 없음',
+            'status.authenticated': '인증됨',
+            'status.notLoggedIn': '로그인하지 않음',
+            'status.sessionUnavailable': '세션을 사용할 수 없습니다. 다시 로그인하세요.',
+            'status.accountUnavailable': '계정을 사용할 수 없습니다.',
+            'notice.bookRecovered': '미체결 주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
+            'error.loginBeforeOrder': '주문 전에 로그인하세요.'
+        }
+    };
+    let currentLanguage = localStorage.getItem(I18N_STORAGE_KEY) || 'en';
+
+    function t(key) {
+        return translations[currentLanguage]?.[key] || translations.en[key] || key;
+    }
+
+    function applyTranslations() {
+        document.documentElement.lang = currentLanguage;
+        document.title = t('page.title');
+        document.querySelectorAll('[data-i18n]').forEach((el) => {
+            el.textContent = t(el.dataset.i18n);
+        });
+        document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
+            el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
+        });
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            el.setAttribute('title', t(el.dataset.i18nTitle));
+        });
+    }
 
     // Form fields mirror the current exchange REST API request shape.
     const fields = {
@@ -928,7 +976,6 @@
     const marketState = {
         depthEmpty: true,
         openOrderCount: 0,
-        activeQuotes: [],
         refreshTimer: null,
         refreshInFlight: false,
         exchangeSocket: null,
@@ -940,7 +987,7 @@
         exchangeLastConnectionId: '',
         cancelOnDisconnect: false
     };
-    const MAX_VISIBLE_TICKS = 5;
+    const DEFAULT_VISIBLE_TICKS_PER_SIDE = 5;
 
     // Display helpers keep empty numeric fields readable when the matching book has no resting liquidity.
     function text(value) {
@@ -969,14 +1016,14 @@
     }
 
     function syncSymbolTitle() {
-        $('symbolTitle').textContent = selectedSymbol() || '-';
+        document.title = `${t('page.title')} - ${selectedSymbol() || 'Market'}`;
     }
 
     function setUserIdentity(user) {
         const uid = user?.uid || '';
         fields.uid.value = uid;
         $('uidDisplay').textContent = text(uid);
-        $('sessionDisplay').textContent = user?.email || (auth.accessToken ? 'Authenticated' : 'Not logged in');
+        $('sessionDisplay').textContent = user?.email || (auth.accessToken ? t('status.authenticated') : t('status.notLoggedIn'));
     }
 
     function renderMarketOptions(markets) {
@@ -1010,15 +1057,15 @@
 
     // Session-bound data must disappear on logout so the next person at the browser cannot see stale account state.
     function clearSessionUi() {
-        $('authState').textContent = 'Not logged in.';
-        $('accountRaw').textContent = 'No account loaded.';
-        $('sessionDisplay').textContent = 'Not logged in';
+        $('authState').textContent = t('empty.authState');
+        $('accountRaw').textContent = t('empty.accountRaw');
+        $('sessionDisplay').textContent = t('status.notLoggedIn');
         $('balance').textContent = '-';
         $('available').textContent = '-';
         $('frozen').textContent = '-';
         $('positionMargin').textContent = '-';
-        $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">Login and refresh to load open orders</div></td></tr>';
-        $('orderResult').textContent = 'No order submitted.';
+        $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
+        $('orderResult').textContent = t('empty.orderResult');
         unsubscribeCurrentUser();
         setUserIdentity(null);
         updateFallbackPolling();
@@ -1103,7 +1150,7 @@
                 subscribeCurrentUser();
             } else {
                 clearSessionUi();
-                $('authState').textContent = 'Session unavailable. Please login again.';
+                $('authState').textContent = t('status.sessionUnavailable');
             }
         } catch (error) {
             clearSessionUi();
@@ -1125,14 +1172,9 @@
     async function loadDepth() {
         const symbol = selectedSymbol();
         syncSymbolTitle();
-        const depth = await api(`/api/depth/${encodeURIComponent(symbol)}?depth=10`);
-        $('bestBid').textContent = money(depth.bestBid);
-        $('bestAsk').textContent = money(depth.bestAsk);
-        $('bookVersion').textContent = text(depth.version);
-        $('checksum').textContent = text(depth.checksum);
-        $('spreadMid').textContent = `Spread: ${money(Math.max(0, numeric(depth.bestAsk) - numeric(depth.bestBid)))}`;
+        const depth = await api(`/api/depth/${encodeURIComponent(symbol)}?depth=${visibleTicksPerSide()}`);
+        $('spreadMid').textContent = `${t('book.spread')}: ${money(Math.max(0, numeric(depth.bestAsk) - numeric(depth.bestBid)))}`;
         renderOrderBook(depth);
-        renderMarketMakerFlow(depth);
         marketState.depthEmpty = (depth.bids || []).length === 0 && (depth.asks || []).length === 0;
         updateMarketStateNotice();
     }
@@ -1140,7 +1182,7 @@
     function updateMarketStateNotice() {
         const notice = $('marketStateNotice');
         if (marketState.depthEmpty && marketState.openOrderCount > 0) {
-            notice.textContent = 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.';
+            notice.textContent = t('notice.bookRecovered');
             notice.hidden = false;
             return;
         }
@@ -1148,32 +1190,40 @@
         notice.hidden = true;
     }
 
-    // The visible book is capped for demo readability, but sorting still considers both ask and bid levels together.
+    // The visible book is capped independently per side, matching common exchange depth controls.
     function renderOrderBook(depth) {
-        const levels = [
-            ...(depth.asks || []).map(level => ({...level, side: 'ask'})),
-            ...(depth.bids || []).map(level => ({...level, side: 'bid'}))
-        ];
-        renderLevels($('orderBookRows'), levels);
+        renderLevels($('orderBookRows'), depth.asks || [], depth.bids || []);
     }
 
-    // Binance-style reading order: all visible ticks are sorted by price high-to-low, regardless of ask/bid side.
-    function renderLevels(target, levels) {
-        const sortedLevels = sortedDepthLevels(levels).slice(0, MAX_VISIBLE_TICKS);
-        if (sortedLevels.length === 0) {
-            target.innerHTML = '<tr><td colspan="3"><div class="empty">Runtime order book is empty</div></td></tr>';
+    function visibleTicksPerSide() {
+        const value = Number($('bookDepth')?.value || DEFAULT_VISIBLE_TICKS_PER_SIDE);
+        return [5, 10, 20, 50].includes(value) ? value : DEFAULT_VISIBLE_TICKS_PER_SIDE;
+    }
+
+    // Ask and bid ticks are rendered separately so a 5-tick view means 5 asks plus 5 bids.
+    function renderLevels(target, asks, bids) {
+        const visibleAsks = sortedDepthLevels(asks.map(level => ({...level, side: 'ask'}))).slice(0, visibleTicksPerSide());
+        const visibleBids = sortedDepthLevels(bids.map(level => ({...level, side: 'bid'}))).slice(0, visibleTicksPerSide());
+        const sortedLevels = [...visibleAsks, ...visibleBids];
+        if (visibleAsks.length === 0 && visibleBids.length === 0) {
+            target.innerHTML = `<tr><td colspan="3"><div class="empty">${t('empty.book')}</div></td></tr>`;
             return;
         }
         const maxQty = sortedLevels.reduce((max, level) => Math.max(max, numeric(level.qty)), 0) || 1;
-        const activeQuotes = activeQuotesForSymbol();
-        // The quote-state API carries the latest submitted leg price, allowing the client to mark the actual visible maker levels.
-        target.innerHTML = sortedLevels.map(level => `
-            <tr class="depth-row ${level.side} ${makerLevelMatches(activeQuotes, level, level.side) ? 'maker-visible' : ''}" style="--depth-pct: ${Math.max(4, Math.min(100, (numeric(level.qty) / maxQty) * 100)).toFixed(2)}%;">
+        target.innerHTML = [
+            ...visibleAsks.map(level => depthRow(level, maxQty)),
+            ...visibleBids.map(level => depthRow(level, maxQty))
+        ].join('');
+    }
+
+    function depthRow(level, maxQty) {
+        return `
+            <tr class="depth-row ${level.side}" style="--depth-pct: ${Math.max(4, Math.min(100, (numeric(level.qty) / maxQty) * 100)).toFixed(2)}%;">
                 <td class="${level.side === 'bid' ? 'buy-text' : 'sell-text'}"><span class="depth-fill" aria-hidden="true"></span>${money(level.price)}</td>
                 <td>${money(level.qty)}</td>
                 <td>${notional(level)}</td>
             </tr>
-        `).join('');
+        `;
     }
 
     function sortedDepthLevels(levels) {
@@ -1187,50 +1237,10 @@
         });
     }
 
-    function activeQuotesForSymbol() {
-        const symbol = selectedSymbol();
-        return marketState.activeQuotes.filter(quote => quote.symbol === symbol && quote.active && quote.accepted);
-    }
-
-    function makerLevelMatches(quotes, level, side) {
-        const price = numeric(level.price);
-        return quotes.some(quote => {
-            const quotePrice = side === 'bid' ? numeric(quote.bidPrice) : numeric(quote.askPrice);
-            return quotePrice > 0 && Math.abs(quotePrice - price) < 0.00000001;
-        });
-    }
-
-    async function loadMarketMakerQuotes() {
-        try {
-            const quotes = await api('/api/market-maker/quotes/active?limit=50');
-            marketState.activeQuotes = quotes || [];
-        } catch (error) {
-            marketState.activeQuotes = [];
-        }
-    }
-
-    function renderMarketMakerFlow(depth) {
-        const quotes = activeQuotesForSymbol();
-        const bidQty = quotes.reduce((sum, quote) => sum + numeric(quote.bidQuantity), 0);
-        const askQty = quotes.reduce((sum, quote) => sum + numeric(quote.askQuantity), 0);
-        const maxSideQty = Math.max(bidQty, askQty, 1);
-        const bidPct = quotes.length === 0 ? 0 : Math.max(8, Math.min(100, (bidQty / maxSideQty) * 100));
-        const askPct = quotes.length === 0 ? 0 : Math.max(8, Math.min(100, (askQty / maxSideQty) * 100));
-        const latest = quotes[0];
-
-        $('mmStatus').textContent = quotes.length > 0 ? `${quotes.length} active` : 'No active quote';
-        $('mmActiveCount').textContent = `${quotes.length}`;
-        $('mmLatestRef').textContent = text(latest?.refId || latest?.marketMakerId);
-        $('mmBidText').textContent = quotes.length > 0 ? money(bidQty) : '-';
-        $('mmAskText').textContent = quotes.length > 0 ? money(askQty) : '-';
-        $('mmBidBar').style.setProperty('--mm-pct', `${bidPct.toFixed(2)}%`);
-        $('mmAskBar').style.setProperty('--mm-pct', `${askPct.toFixed(2)}%`);
-    }
-
     // Open orders are scoped by uid and symbol; future auth hardening should verify uid ownership server-side.
     async function loadOrders() {
         if (!auth.accessToken || !fields.uid.value.trim()) {
-            $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">Login and refresh to load open orders</div></td></tr>';
+            $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
             marketState.openOrderCount = 0;
             updateMarketStateNotice();
             return;
@@ -1241,7 +1251,7 @@
         marketState.openOrderCount = orders ? orders.length : 0;
         updateMarketStateNotice();
         if (!orders || orders.length === 0) {
-            $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">No open orders</div></td></tr>';
+            $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.noOpenOrders')}</div></td></tr>`;
             return;
         }
         $('orders').innerHTML = orders.map(order => `
@@ -1262,7 +1272,7 @@
     async function loadAccount() {
         clearError($('accountError'));
         if (!auth.accessToken || !fields.uid.value.trim()) {
-            $('accountRaw').textContent = 'No account loaded.';
+            $('accountRaw').textContent = t('empty.accountRaw');
             $('balance').textContent = '-';
             $('available').textContent = '-';
             $('frozen').textContent = '-';
@@ -1277,7 +1287,7 @@
             $('frozen').textContent = money(account?.frozen);
             $('positionMargin').textContent = money(account?.positionMargin);
         } catch (error) {
-            $('accountRaw').textContent = 'Account unavailable.';
+            $('accountRaw').textContent = t('status.accountUnavailable');
             $('balance').textContent = '-';
             $('available').textContent = '-';
             $('frozen').textContent = '-';
@@ -1299,7 +1309,6 @@
     // Refresh runs independent panes concurrently so one failing API does not blank the entire console.
     async function refreshAll() {
         await loadMarketOptions();
-        await loadMarketMakerQuotes();
         await Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
     }
 
@@ -1342,7 +1351,6 @@
         }
         marketState.refreshInFlight = true;
         try {
-            await loadMarketMakerQuotes();
             await Promise.allSettled([loadDepth(), loadOrders()]);
         } finally {
             marketState.refreshInFlight = false;
@@ -1398,7 +1406,12 @@
                 updateFallbackPolling();
                 return;
             }
-            if (['depth-delta', 'ticker', 'trade', 'order.lifecycle', 'market-maker.quote', 'gateway.heartbeat'].includes(message.event)) {
+            if (message.event === 'market-maker.quote') {
+                // Market-maker identity is an operator concern; clients refresh only the public book impact.
+                Promise.allSettled([loadDepth(), loadOrders()]);
+                return;
+            }
+            if (['depth-delta', 'ticker', 'trade', 'order.lifecycle', 'gateway.heartbeat'].includes(message.event)) {
                 refreshLivePanes();
             }
         } catch (error) {
@@ -1473,8 +1486,8 @@
     async function placeOrder(side) {
         clearError($('orderError'));
         if (!auth.accessToken) {
-            const error = new Error('Please login before placing orders.');
-            $('orderResult').textContent = 'No order submitted.';
+            const error = new Error(t('error.loginBeforeOrder'));
+            $('orderResult').textContent = t('empty.orderResult');
             showError($('orderError'), error);
             return;
         }
@@ -1509,18 +1522,27 @@
     $('register').addEventListener('click', () => authenticate('register'));
     $('login').addEventListener('click', () => authenticate('login'));
     $('logout').addEventListener('click', logout);
-    $('reloadMarket').addEventListener('click', () => Promise.allSettled([loadMarketMakerQuotes().then(loadDepth), loadOrders()]));
-    $('reloadAccount').addEventListener('click', loadAccount);
+    $('reloadMarket').addEventListener('click', () => Promise.allSettled([loadMarketOptions().then(loadDepth), loadOrders()]));
     $('reloadOrders').addEventListener('click', loadOrders);
     $('placeBuy').addEventListener('click', () => placeOrder('BUY'));
     $('placeSell').addEventListener('click', () => placeOrder('SELL'));
+    $('language').value = currentLanguage;
+    $('language').addEventListener('change', () => {
+        currentLanguage = $('language').value;
+        localStorage.setItem(I18N_STORAGE_KEY, currentLanguage);
+        applyTranslations();
+        setUserIdentity(fields.uid.value ? { uid: fields.uid.value, email: $('sessionDisplay').textContent } : null);
+        Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
+    });
     fields.symbol.addEventListener('change', () => {
         syncSymbolTitle();
         subscribeCurrentMarket();
-        Promise.allSettled([loadMarketMakerQuotes().then(loadDepth), loadOrders()]);
+        Promise.allSettled([loadDepth(), loadOrders()]);
     });
+    $('bookDepth').addEventListener('change', () => Promise.allSettled([loadDepth()]));
     fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadAccount()]));
 
+    applyTranslations();
     syncSymbolTitle();
     setUserIdentity(null);
     loadCurrentUser().finally(() => refreshAll().finally(startMarketRefresh));

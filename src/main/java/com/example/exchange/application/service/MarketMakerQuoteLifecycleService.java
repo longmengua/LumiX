@@ -17,6 +17,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -57,6 +58,53 @@ public class MarketMakerQuoteLifecycleService {
         quoteStateStore.save(currentState);
         publishQuoteState(currentState);
         return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 2, bidOrderId, askOrderId);
+    }
+
+    @Transactional
+    public List<MarketMakerQuoteLifecycleReport> placeQuoteLadder(List<MarketMakerQuoteCommand> commands) {
+        if (commands == null || commands.isEmpty()) {
+            throw new IllegalArgumentException("market maker quote ladder cannot be empty");
+        }
+        MarketMakerQuoteCommand first = commands.getFirst();
+        validate(first);
+        MarketMakerProfile profile = profileService.findByMarketMakerId(first.marketMakerId())
+                .orElseThrow(() -> new IllegalArgumentException("market maker profile not found"));
+        if (profile.uid() != first.uid()) {
+            throw new IllegalArgumentException("market maker uid mismatch");
+        }
+        int canceledCount = orderGateway.cancelOpenQuoteOrders(first);
+        List<MarketMakerQuoteLifecycleReport> reports = new ArrayList<>();
+        MarketMakerQuoteState previousState = quoteStateStore.find(first.marketMakerId(), first.symbol()).orElse(null);
+        MarketMakerQuoteState latestState = null;
+        MarketMakerQuoteState visibleState = null;
+        boolean canceledCountConsumed = false;
+        for (MarketMakerQuoteCommand command : commands) {
+            validateSameLadder(first, command);
+            MarketMakerQuoteDecision decision = quoteService.validateQuote(profile, command);
+            if (!decision.accepted()) {
+                latestState = state(command, decision, canceledCountConsumed ? 0 : canceledCount, null, null, latestState == null ? previousState : latestState);
+                if (visibleState == null) {
+                    visibleState = latestState;
+                }
+                reports.add(new MarketMakerQuoteLifecycleReport(decision, canceledCountConsumed ? 0 : canceledCount, 0, null, null));
+                canceledCountConsumed = true;
+                continue;
+            }
+            UUID bidOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.BUY);
+            UUID askOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.SELL);
+            latestState = state(command, decision, canceledCountConsumed ? 0 : canceledCount, bidOrderId, askOrderId, latestState == null ? previousState : latestState);
+            if (visibleState == null) {
+                visibleState = latestState;
+            }
+            reports.add(new MarketMakerQuoteLifecycleReport(decision, canceledCountConsumed ? 0 : canceledCount, 2, bidOrderId, askOrderId));
+            canceledCountConsumed = true;
+        }
+        if (visibleState != null) {
+            // Ladder state records the nearest visible leg pair; deeper levels still exist as internal mmq orders.
+            quoteStateStore.save(visibleState);
+            publishQuoteState(visibleState);
+        }
+        return reports;
     }
 
     private void publishQuoteState(MarketMakerQuoteState state) {
@@ -133,6 +181,15 @@ public class MarketMakerQuoteLifecycleService {
         }
         if (command.symbol() == null || command.symbol().isBlank()) {
             throw new IllegalArgumentException("symbol is required");
+        }
+    }
+
+    private static void validateSameLadder(MarketMakerQuoteCommand first, MarketMakerQuoteCommand command) {
+        validate(command);
+        if (!first.marketMakerId().trim().equals(command.marketMakerId().trim())
+                || first.uid() != command.uid()
+                || !first.symbol().trim().equalsIgnoreCase(command.symbol().trim())) {
+            throw new IllegalArgumentException("market maker quote ladder must use one market maker, uid, and symbol");
         }
     }
 }

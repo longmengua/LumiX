@@ -204,6 +204,17 @@
             margin: 14px 0;
         }
 
+        .diagnostics {
+            border: 1px solid var(--line);
+            background: #f7faf8;
+            padding: 12px;
+        }
+
+        .diagnostics h3 {
+            margin: 0 0 10px;
+            font-size: 15px;
+        }
+
         .notice {
             border: 1px solid #e5bf71;
             background: var(--warn-soft);
@@ -411,6 +422,15 @@
                 <div class="notice">
                     Fee changes are audited. Existing open orders keep the maker/taker fee snapshot captured when they were placed.
                 </div>
+                <section class="diagnostics" aria-label="Market data diagnostics">
+                    <h3>Market Data Diagnostics</h3>
+                    <div class="kv">
+                        ${diagnosticField('Best Bid', 'diagBestBid')}
+                        ${diagnosticField('Best Ask', 'diagBestAsk')}
+                        ${diagnosticField('Book Version', 'diagBookVersion')}
+                        ${diagnosticField('Checksum', 'diagChecksum')}
+                    </div>
+                </section>
                 <form id="feeForm" class="stack">
                     <div class="form-grid">
                         <label>
@@ -464,6 +484,38 @@
             </div>
         `;
         document.getElementById('feeForm')?.addEventListener('submit', event => saveFees(event, market.symbol));
+        loadDepthDiagnostics(market.symbol);
+    }
+
+    async function loadDepthDiagnostics(symbol) {
+        // Depth version and checksum are operator diagnostics; they live in admin instead of the customer exchange.
+        for (const id of ['diagBestBid', 'diagBestAsk', 'diagBookVersion', 'diagChecksum']) {
+            const el = document.getElementById(id);
+            if (el) {
+                el.textContent = 'LOADING';
+            }
+        }
+        try {
+            const response = await fetch(`/api/depth/${encodeURIComponent(symbol)}?depth=5`, {
+                headers: {'Accept': 'application/json'}
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                throw new Error(payload.error || `HTTP ${response.status}`);
+            }
+            const depth = payload.data || {};
+            document.getElementById('diagBestBid').textContent = fmt(depth.bestBid);
+            document.getElementById('diagBestAsk').textContent = fmt(depth.bestAsk);
+            document.getElementById('diagBookVersion').textContent = fmt(depth.version);
+            document.getElementById('diagChecksum').textContent = fmt(depth.checksum);
+        } catch (error) {
+            for (const id of ['diagBestBid', 'diagBestAsk', 'diagBookVersion', 'diagChecksum']) {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.textContent = 'UNAVAILABLE';
+                }
+            }
+        }
     }
 
     async function saveFees(event, symbol) {
@@ -500,6 +552,16 @@
             <div>
                 <div class="label">${label}</div>
                 <div class="value">${esc(value)}</div>
+            </div>
+        `;
+    }
+
+    function diagnosticField(label, id) {
+        // Diagnostic values are populated after the selected symbol depth endpoint returns.
+        return `
+            <div>
+                <div class="label">${label}</div>
+                <div id="${id}" class="value">-</div>
             </div>
         `;
     }

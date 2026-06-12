@@ -129,6 +129,44 @@ class MarketMakerQuoteLifecycleServiceTest {
     }
 
     @Test
+    @DisplayName("placeQuoteLadder 只撤舊 quote 一次，然後掛出多層 BUY/SELL quote")
+    void placeQuoteLadderCancelsOnceAndPlacesMultipleLevels() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false));
+        fixture.gateway.cancelCount = 2;
+
+        // 流程：多層做市 ladder 不能逐層呼叫單 quote，否則下一層會撤掉上一層；這裡只允許先撤一次再批量掛單。
+        List<MarketMakerQuoteLifecycleReport> reports = fixture.service.placeQuoteLadder(List.of(
+                quote("99.00", "101.00"),
+                new MarketMakerQuoteCommand(
+                        "mm-quote-1",
+                        9101,
+                        "BTCUSDT",
+                        new BigDecimal("98.90"),
+                        new BigDecimal("1.000"),
+                        new BigDecimal("101.10"),
+                        new BigDecimal("1.000"),
+                        "quote-ref-2"
+                )
+        ));
+
+        assertThat(reports).hasSize(2);
+        assertThat(reports).extracting(MarketMakerQuoteLifecycleReport::placedCount)
+                .containsExactly(2, 2);
+        assertThat(fixture.gateway.cancelRequests).containsExactly("quote-ref-1");
+        assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
+                .containsExactly(OrderSide.BUY, OrderSide.SELL, OrderSide.BUY, OrderSide.SELL);
+        assertThat(fixture.quoteStateStore.find("mm-quote-1", "BTCUSDT"))
+                .get()
+                .satisfies(state -> {
+                    // 對外 quote state 保存最接近盤口的一層，讓前台 top-of-book 能標記做市商正在掛單。
+                    assertThat(state.refId()).isEqualTo("quote-ref-1");
+                    assertThat(state.bidPrice()).isEqualByComparingTo("99.00");
+                    assertThat(state.askPrice()).isEqualByComparingTo("101.00");
+                });
+    }
+
+    @Test
     @DisplayName("placeQuote 連續 replacement 會遞增 bid/ask version 並保留上一輪 order id")
     void placeQuoteIncrementsPerSideVersionsAndTracksReplacedOrderIds() {
         Fixture fixture = new Fixture();

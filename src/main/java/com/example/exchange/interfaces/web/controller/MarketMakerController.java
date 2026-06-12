@@ -8,6 +8,7 @@ import com.example.exchange.application.service.HedgeVenueCallbackVerifier;
 import com.example.exchange.application.service.MarketMakerHedgeExecutionService;
 import com.example.exchange.application.service.MarketMakerHedgeReconciliationService;
 import com.example.exchange.application.service.MarketMakerHedgeVenueIdempotencyService;
+import com.example.exchange.application.service.MarketMakerAutoQuoteService;
 import com.example.exchange.application.service.MarketMakerProfileService;
 import com.example.exchange.application.service.MarketMakerQuoteLifecycleService;
 import com.example.exchange.application.service.MarketMakerQuoteReconciliationService;
@@ -15,6 +16,8 @@ import com.example.exchange.domain.model.dto.HedgeFillRecord;
 import com.example.exchange.domain.model.dto.HedgeExecutionReport;
 import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
+import com.example.exchange.domain.model.dto.MarketMakerAutoQuoteRunReport;
+import com.example.exchange.domain.model.dto.MarketMakerAutoQuoteStatus;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteReconciliationReport;
@@ -27,6 +30,7 @@ import com.example.exchange.interfaces.web.dto.MarketMakerQuoteRequest;
 import com.example.exchange.interfaces.web.security.MarketMakerEndpointAuditLogger;
 import com.example.exchange.interfaces.web.security.MarketMakerHedgeExecutionRateLimiter;
 import com.example.exchange.interfaces.web.security.MarketMakerQuoteRateLimiter;
+import com.example.exchange.infra.config.MarketMakerAutoQuoteProperties;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -52,6 +56,8 @@ public class MarketMakerController {
     private final MarketMakerHedgeReconciliationService hedgeReconciliationService;
     private final MarketMakerHedgeExecutionService hedgeExecutionService;
     private final MarketMakerHedgeVenueIdempotencyService hedgeVenueIdempotencyService;
+    private final MarketMakerAutoQuoteService autoQuoteService;
+    private final MarketMakerAutoQuoteProperties autoQuoteProperties;
     private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
     private final MarketMakerQuoteReconciliationService quoteReconciliationService;
@@ -147,6 +153,26 @@ public class MarketMakerController {
             @RequestParam(defaultValue = "50") int limit
     ) {
         return ApiResponse.ok(quoteReconciliationService.repairActiveQuotes(limit));
+    }
+
+    @GetMapping("/auto-quote/status")
+    public ApiResponse<MarketMakerAutoQuoteStatus> autoQuoteStatus() {
+        return ApiResponse.ok(new MarketMakerAutoQuoteStatus(
+                autoQuoteProperties.isEnabled(),
+                autoQuoteProperties.getFixedDelayMs(),
+                autoQuoteProperties.getMaxProfilesPerRun(),
+                autoQuoteProperties.getQuoteQuantity(),
+                autoQuoteProperties.getHalfSpreadTicks(),
+                autoQuoteProperties.getLadderLevelsPerSide(),
+                autoQuoteProperties.getPulseTicks(),
+                autoQuoteProperties.getRefPrefix()
+        ));
+    }
+
+    @PostMapping("/auto-quote/run-once")
+    public ApiResponse<MarketMakerAutoQuoteRunReport> runAutoQuoteOnce() {
+        // Operator-triggered run uses the same strategy service as the background runner for deterministic diagnostics.
+        return ApiResponse.ok(autoQuoteService.runOnce());
     }
 
     @GetMapping("/profiles/{marketMakerId}/hedge-fills")
