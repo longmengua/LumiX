@@ -7,6 +7,7 @@ import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -30,6 +31,10 @@ class MarketMakerQuoteStateRecordTest {
                 true,
                 "ACCEPTED",
                 2,
+                new BigDecimal("99.50"),
+                new BigDecimal("1.250"),
+                new BigDecimal("100.50"),
+                new BigDecimal("1.125"),
                 bidOrderId,
                 askOrderId,
                 3,

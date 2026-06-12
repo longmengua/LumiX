@@ -23,6 +23,7 @@ Flyway migration scripts。
 - `V21__insurance_fund_movements.sql`：insurance fund capital movement records for liquidation / ADL operations。
 - `V22__polymarket_user_ws_checkpoints.sql`：Polymarket user WebSocket gateway durable replay checkpoint。
 - `V23__position_lifecycle_projection.sql`：live position SQL mirror schema 與 production query indexes。
+- `V26__market_maker_quote_state_prices.sql`：market-maker active quote visible bid/ask price and quantity。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。

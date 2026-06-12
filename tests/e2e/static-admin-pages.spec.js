@@ -55,6 +55,25 @@ test('exchange console renders client trading workflow without admin funding con
       }))
     });
   });
+  await page.route('**/api/market-maker/quotes/active?limit=50', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([
+        {
+          marketMakerId: 'mm-client-flow',
+          uid: 91001,
+          symbol: 'BTCUSDT',
+          refId: 'mm-flow-e2e-1',
+          active: true,
+          accepted: true,
+          bidPrice: '99.50',
+          bidQuantity: '2.000',
+          askPrice: '100.50',
+          askQuantity: '1.500'
+        }
+      ]))
+    });
+  });
   await page.route('**/api/order/open?uid=10001&symbol=BTCUSDT', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -108,9 +127,15 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#symbol option')).toHaveText(['BTCUSDT', 'ETHUSDT']);
   await expect(page.locator('#uid')).toHaveAttribute('type', 'hidden');
   await expect(page.locator('#uidDisplay')).toHaveText('10001');
+  await expect(page.locator('#authEmail')).toHaveValue('');
+  await expect(page.locator('#authPassword')).toHaveValue('');
   await expect(page.locator('#sessionDisplay')).toContainText('demo@example.com');
   await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '99.5' }).first()).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Market Maker Flow' })).toBeVisible();
+  await expect(page.locator('#mmStatus')).toHaveText('1 active');
+  await expect(page.locator('#mmLatestRef')).toHaveText('mm-flow-e2e-1');
+  await expect(page.locator('.depth-fill').first()).toBeVisible();
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BTCUSDT' })).toBeVisible();
   await expect(page.locator('#balance')).toContainText('10,000');

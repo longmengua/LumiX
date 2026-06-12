@@ -3,6 +3,7 @@
  */
 package com.example.exchange.domain.model.dto;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -15,6 +16,10 @@ public record MarketMakerQuoteState(
         boolean accepted,
         String reason,
         int canceledCount,
+        BigDecimal bidPrice,
+        BigDecimal bidQuantity,
+        BigDecimal askPrice,
+        BigDecimal askQuantity,
         UUID bidOrderId,
         UUID askOrderId,
         long bidVersion,

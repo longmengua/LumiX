@@ -222,6 +222,51 @@
             background: #f8fbfd;
         }
 
+        .depth-row {
+            --depth-pct: 0%;
+            position: relative;
+        }
+
+        .depth-row td {
+            position: relative;
+            z-index: 1;
+        }
+
+        .depth-fill {
+            position: absolute;
+            inset: 3px 0 3px auto;
+            width: var(--depth-pct);
+            min-width: 3px;
+            border-radius: 4px 0 0 4px;
+            opacity: 0.28;
+            transform-origin: right center;
+            transition: width 240ms ease;
+            animation: depthPulse 1.6s ease-in-out infinite;
+        }
+
+        .depth-row.bid .depth-fill {
+            background: linear-gradient(90deg, rgba(7, 135, 104, 0.06), rgba(7, 135, 104, 0.42));
+        }
+
+        .depth-row.ask .depth-fill {
+            background: linear-gradient(90deg, rgba(214, 69, 69, 0.06), rgba(214, 69, 69, 0.42));
+        }
+
+        .depth-row.maker-visible td:first-of-type::after {
+            content: "MM";
+            display: inline-flex;
+            align-items: center;
+            height: 16px;
+            margin-left: 6px;
+            padding: 0 5px;
+            border-radius: 999px;
+            background: #101827;
+            color: #e5eefb;
+            font-size: 10px;
+            font-weight: 800;
+            vertical-align: middle;
+        }
+
         .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -397,6 +442,103 @@
             background: linear-gradient(90deg, #f8fafc, #f1efff, #f8fafc);
         }
 
+        .mm-flow {
+            margin-top: 12px;
+            border: 1px solid #dbe6ef;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #ffffff, #f4f8fb);
+            padding: 10px;
+        }
+
+        .mm-flow .helper {
+            margin: 0;
+        }
+
+        .mm-bars {
+            display: grid;
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .mm-meter {
+            display: grid;
+            grid-template-columns: minmax(84px, 0.45fr) minmax(120px, 1fr) minmax(76px, 0.35fr);
+            align-items: center;
+            gap: 8px;
+        }
+
+        .mm-meter label {
+            color: var(--text);
+            text-transform: none;
+        }
+
+        .mm-track {
+            position: relative;
+            height: 12px;
+            overflow: hidden;
+            border-radius: 999px;
+            background: #e6edf4;
+        }
+
+        .mm-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: var(--mm-pct, 0%);
+            min-width: 10px;
+            border-radius: inherit;
+            transition: width 260ms ease;
+        }
+
+        .mm-fill::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.65), transparent);
+            transform: translateX(-100%);
+            animation: liquiditySweep 1.15s linear infinite;
+        }
+
+        .mm-fill.bid {
+            background: linear-gradient(90deg, #0a8f7b, #2fba96);
+        }
+
+        .mm-fill.ask {
+            background: linear-gradient(90deg, #d64545, #f1876d);
+        }
+
+        .mm-tape {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 10px;
+        }
+
+        .mm-tick {
+            border: 1px solid #e4ebf3;
+            border-radius: 6px;
+            background: #fff;
+            padding: 8px;
+            min-width: 0;
+        }
+
+        .mm-tick strong {
+            display: block;
+            margin-top: 4px;
+            overflow-wrap: anywhere;
+        }
+
+        @keyframes liquiditySweep {
+            to {
+                transform: translateX(120%);
+            }
+        }
+
+        @keyframes depthPulse {
+            50% {
+                opacity: 0.42;
+            }
+        }
+
         .orders-panel {
             min-height: 360px;
         }
@@ -466,7 +608,7 @@
                 flex-direction: column;
             }
 
-            main, .market-hero, .form-grid, .metric-row, .identity-row, .account-panel .form-grid {
+            main, .market-hero, .form-grid, .metric-row, .identity-row, .account-panel .form-grid, .mm-tape {
                 grid-template-columns: 1fr;
             }
 
@@ -559,11 +701,11 @@
             <div class="form-grid">
                 <div>
                     <label for="authEmail">Email</label>
-                    <input id="authEmail" value="demo@example.com"/>
+                    <input id="authEmail" autocomplete="off" data-lpignore="true"/>
                 </div>
                 <div>
                     <label for="authPassword">Password</label>
-                    <input id="authPassword" type="password" value="password123"/>
+                    <input id="authPassword" type="password" autocomplete="new-password" data-lpignore="true"/>
                 </div>
                 <div class="toolbar">
                     <button id="register" type="button">Register</button>
@@ -571,11 +713,11 @@
                     <button id="logout" type="button" class="secondary">Logout</button>
                 </div>
             </div>
-            <input id="uid" type="hidden" value="10001"/>
+            <input id="uid" type="hidden" value=""/>
             <div class="identity-row">
                 <div class="metric">
                     <label>UID</label>
-                    <div id="uidDisplay" class="value">10001</div>
+                    <div id="uidDisplay" class="value">-</div>
                 </div>
                 <div class="metric">
                     <label>Session</label>
@@ -652,6 +794,41 @@
                             </thead>
                             <tbody id="bids"></tbody>
                         </table>
+                    </div>
+                </div>
+            </div>
+            <div class="mm-flow">
+                <div class="mini-title">
+                    <div>
+                        <h2>Market Maker Flow</h2>
+                        <p class="helper">Active quote-command liquidity visible in the client book.</p>
+                    </div>
+                    <span id="mmStatus" class="status">No signal</span>
+                </div>
+                <div class="mm-bars">
+                    <div class="mm-meter">
+                        <label>Bid flow</label>
+                        <div class="mm-track"><span id="mmBidBar" class="mm-fill bid"></span></div>
+                        <strong id="mmBidText" class="buy-text">-</strong>
+                    </div>
+                    <div class="mm-meter">
+                        <label>Ask flow</label>
+                        <div class="mm-track"><span id="mmAskBar" class="mm-fill ask"></span></div>
+                        <strong id="mmAskText" class="sell-text">-</strong>
+                    </div>
+                </div>
+                <div class="mm-tape">
+                    <div class="mm-tick">
+                        <label>Active Quotes</label>
+                        <strong id="mmActiveCount">0</strong>
+                    </div>
+                    <div class="mm-tick">
+                        <label>Latest Ref</label>
+                        <strong id="mmLatestRef">-</strong>
+                    </div>
+                    <div class="mm-tick">
+                        <label>Quote Mode</label>
+                        <strong id="mmMode">Command driven</strong>
                     </div>
                 </div>
             </div>
@@ -761,7 +938,9 @@
     // Page state compares runtime order book depth with persisted open orders for clearer MVP diagnostics.
     const marketState = {
         depthEmpty: true,
-        openOrderCount: 0
+        openOrderCount: 0,
+        activeQuotes: [],
+        refreshTimer: null
     };
 
     // Display helpers keep empty numeric fields readable when the matching book has no resting liquidity.
@@ -781,6 +960,11 @@
         return Number.isFinite(price) && Number.isFinite(qty) ? money(price * qty) : '-';
     }
 
+    function numeric(value) {
+        const number = Number(value);
+        return Number.isFinite(number) ? number : 0;
+    }
+
     function selectedSymbol() {
         return fields.symbol.value.trim().toUpperCase();
     }
@@ -790,7 +974,7 @@
     }
 
     function setUserIdentity(user) {
-        const uid = user?.uid || fields.uid.value || '10001';
+        const uid = user?.uid || '';
         fields.uid.value = uid;
         $('uidDisplay').textContent = text(uid);
         $('sessionDisplay').textContent = user?.email || (auth.accessToken ? 'Authenticated' : 'Not logged in');
@@ -836,6 +1020,7 @@
         $('positionMargin').textContent = '-';
         $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">Login and refresh to load open orders</div></td></tr>';
         $('orderResult').textContent = 'No order submitted.';
+        setUserIdentity(null);
         marketState.openOrderCount = 0;
         updateMarketStateNotice();
         clearError($('accountError'));
@@ -943,6 +1128,7 @@
         $('checksum').textContent = text(depth.checksum);
         renderLevels($('bids'), depth.bids || [], 'bid');
         renderLevels($('asks'), depth.asks || [], 'ask');
+        renderMarketMakerFlow(depth);
         marketState.depthEmpty = (depth.bids || []).length === 0 && (depth.asks || []).length === 0;
         updateMarketStateNotice();
     }
@@ -964,17 +1150,66 @@
             target.innerHTML = '<tr><td colspan="3"><div class="empty">Runtime order book is empty</div></td></tr>';
             return;
         }
+        const maxQty = levels.reduce((max, level) => Math.max(max, numeric(level.qty)), 0) || 1;
+        const activeQuotes = activeQuotesForSymbol();
+        // The quote-state API carries the latest submitted leg price, allowing the client to mark the actual visible maker levels.
         target.innerHTML = levels.map(level => `
-            <tr>
-                <td class="${side === 'bid' ? 'buy-text' : 'sell-text'}">${money(level.price)}</td>
+            <tr class="depth-row ${side} ${makerLevelMatches(activeQuotes, level, side) ? 'maker-visible' : ''}" style="--depth-pct: ${Math.max(4, Math.min(100, (numeric(level.qty) / maxQty) * 100)).toFixed(2)}%;">
+                <td class="${side === 'bid' ? 'buy-text' : 'sell-text'}"><span class="depth-fill" aria-hidden="true"></span>${money(level.price)}</td>
                 <td>${money(level.qty)}</td>
                 <td>${notional(level)}</td>
             </tr>
         `).join('');
     }
 
+    function activeQuotesForSymbol() {
+        const symbol = selectedSymbol();
+        return marketState.activeQuotes.filter(quote => quote.symbol === symbol && quote.active && quote.accepted);
+    }
+
+    function makerLevelMatches(quotes, level, side) {
+        const price = numeric(level.price);
+        return quotes.some(quote => {
+            const quotePrice = side === 'bid' ? numeric(quote.bidPrice) : numeric(quote.askPrice);
+            return quotePrice > 0 && Math.abs(quotePrice - price) < 0.00000001;
+        });
+    }
+
+    async function loadMarketMakerQuotes() {
+        try {
+            const quotes = await api('/api/market-maker/quotes/active?limit=50');
+            marketState.activeQuotes = quotes || [];
+        } catch (error) {
+            marketState.activeQuotes = [];
+        }
+    }
+
+    function renderMarketMakerFlow(depth) {
+        const quotes = activeQuotesForSymbol();
+        const bidQty = quotes.reduce((sum, quote) => sum + numeric(quote.bidQuantity), 0);
+        const askQty = quotes.reduce((sum, quote) => sum + numeric(quote.askQuantity), 0);
+        const maxSideQty = Math.max(bidQty, askQty, 1);
+        const bidPct = quotes.length === 0 ? 0 : Math.max(8, Math.min(100, (bidQty / maxSideQty) * 100));
+        const askPct = quotes.length === 0 ? 0 : Math.max(8, Math.min(100, (askQty / maxSideQty) * 100));
+        const latest = quotes[0];
+
+        $('mmStatus').textContent = quotes.length > 0 ? `${quotes.length} active` : 'No active quote';
+        $('mmActiveCount').textContent = `${quotes.length}`;
+        $('mmLatestRef').textContent = text(latest?.refId || latest?.marketMakerId);
+        $('mmBidText').textContent = quotes.length > 0 ? money(bidQty) : '-';
+        $('mmAskText').textContent = quotes.length > 0 ? money(askQty) : '-';
+        $('mmBidBar').style.setProperty('--mm-pct', `${bidPct.toFixed(2)}%`);
+        $('mmAskBar').style.setProperty('--mm-pct', `${askPct.toFixed(2)}%`);
+    }
+
     // Open orders are scoped by uid and symbol; future auth hardening should verify uid ownership server-side.
     async function loadOrders() {
+        if (!auth.accessToken || !fields.uid.value.trim()) {
+            $('orders').innerHTML = '<tr><td colspan="8"><div class="empty">Login and refresh to load open orders</div></td></tr>';
+            marketState.openOrderCount = 0;
+            updateMarketStateNotice();
+            return;
+        }
         const uid = encodeURIComponent(fields.uid.value.trim());
         const symbol = encodeURIComponent(selectedSymbol());
         const orders = await api(`/api/order/open?uid=${uid}&symbol=${symbol}`);
@@ -1001,6 +1236,14 @@
     // Account lookup is read-only here; deposit/withdraw remain separate explicit workflows.
     async function loadAccount() {
         clearError($('accountError'));
+        if (!auth.accessToken || !fields.uid.value.trim()) {
+            $('accountRaw').textContent = 'No account loaded.';
+            $('balance').textContent = '-';
+            $('available').textContent = '-';
+            $('frozen').textContent = '-';
+            $('positionMargin').textContent = '-';
+            return;
+        }
         try {
             const account = await api(`/api/margin/account?uid=${encodeURIComponent(fields.uid.value.trim())}`);
             $('accountRaw').textContent = JSON.stringify(account, null, 2);
@@ -1031,7 +1274,16 @@
     // Refresh runs independent panes concurrently so one failing API does not blank the entire console.
     async function refreshAll() {
         await loadMarketOptions();
+        await loadMarketMakerQuotes();
         await Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
+    }
+
+    function startMarketRefresh() {
+        if (marketState.refreshTimer) {
+            window.clearInterval(marketState.refreshTimer);
+        }
+        // The client polls while WebSocket depth streaming is still outside this MVP screen.
+        marketState.refreshTimer = window.setInterval(() => Promise.allSettled([loadMarketMakerQuotes().then(loadDepth)]), 1500);
     }
 
     // Order entry sends internal exchange orders only; backend venue routing decides whether Polymarket is used.
@@ -1074,20 +1326,20 @@
     $('register').addEventListener('click', () => authenticate('register'));
     $('login').addEventListener('click', () => authenticate('login'));
     $('logout').addEventListener('click', logout);
-    $('reloadMarket').addEventListener('click', () => Promise.allSettled([loadDepth(), loadOrders()]));
+    $('reloadMarket').addEventListener('click', () => Promise.allSettled([loadMarketMakerQuotes().then(loadDepth), loadOrders()]));
     $('reloadAccount').addEventListener('click', loadAccount);
     $('reloadOrders').addEventListener('click', loadOrders);
     $('placeBuy').addEventListener('click', () => placeOrder('BUY'));
     $('placeSell').addEventListener('click', () => placeOrder('SELL'));
     fields.symbol.addEventListener('change', () => {
         syncSymbolTitle();
-        Promise.allSettled([loadDepth(), loadOrders()]);
+        Promise.allSettled([loadMarketMakerQuotes().then(loadDepth), loadOrders()]);
     });
     fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadAccount()]));
 
     syncSymbolTitle();
     setUserIdentity(null);
-    loadCurrentUser().finally(refreshAll);
+    loadCurrentUser().finally(() => refreshAll().finally(startMarketRefresh));
 </script>
 </body>
 </html>

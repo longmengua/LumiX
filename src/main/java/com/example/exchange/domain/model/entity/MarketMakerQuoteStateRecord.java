@@ -13,6 +13,7 @@ import jakarta.persistence.UniqueConstraint;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -62,6 +63,18 @@ public class MarketMakerQuoteStateRecord {
     @Column(name = "canceled_count", nullable = false)
     private Integer canceledCount;
 
+    @Column(name = "bid_price", precision = 38, scale = 18)
+    private BigDecimal bidPrice;
+
+    @Column(name = "bid_quantity", precision = 38, scale = 18)
+    private BigDecimal bidQuantity;
+
+    @Column(name = "ask_price", precision = 38, scale = 18)
+    private BigDecimal askPrice;
+
+    @Column(name = "ask_quantity", precision = 38, scale = 18)
+    private BigDecimal askQuantity;
+
     @Column(name = "bid_order_id", length = 36)
     private String bidOrderId;
 
@@ -94,6 +107,10 @@ public class MarketMakerQuoteStateRecord {
         record.setAccepted(state.accepted());
         record.setReason(state.reason());
         record.setCanceledCount(state.canceledCount());
+        record.setBidPrice(state.bidPrice());
+        record.setBidQuantity(state.bidQuantity());
+        record.setAskPrice(state.askPrice());
+        record.setAskQuantity(state.askQuantity());
         record.setBidOrderId(state.bidOrderId() == null ? null : state.bidOrderId().toString());
         record.setAskOrderId(state.askOrderId() == null ? null : state.askOrderId().toString());
         record.setBidVersion(state.bidVersion());
@@ -114,6 +131,10 @@ public class MarketMakerQuoteStateRecord {
                 Boolean.TRUE.equals(accepted),
                 reason,
                 canceledCount == null ? 0 : canceledCount,
+                bidPrice,
+                bidQuantity,
+                askPrice,
+                askQuantity,
                 bidOrderId == null ? null : UUID.fromString(bidOrderId),
                 askOrderId == null ? null : UUID.fromString(askOrderId),
                 bidVersion == null ? 0 : bidVersion,
