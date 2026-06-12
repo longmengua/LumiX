@@ -3,10 +3,11 @@
  */
 package com.example.exchange.interfaces.web.dto;
 
-import jakarta.validation.constraints.NotBlank;
-
 public record VerifyEmailRequest(
-        // Raw token from the verification link; only the hash is stored server-side.
-        @NotBlank String token
+        // Raw token from the email link; only the hash is stored server-side.
+        String token,
+        // Email plus six-digit code supports the in-page registration verification step.
+        String email,
+        String code
 ) {
 }

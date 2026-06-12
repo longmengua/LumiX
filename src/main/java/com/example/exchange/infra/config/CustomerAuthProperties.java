@@ -20,8 +20,26 @@ public class CustomerAuthProperties {
     public static class EmailVerification {
         private boolean enabled = false;
         private int tokenTtlMinutes = 30;
+        private int registrationTtlHours = 24;
         private String publicBaseUrl = "http://127.0.0.1:8080/exchange.html";
         private boolean returnVerificationUrl = false;
+        /** Optional first-party SMTP delivery; when disabled, local/dev falls back to logging the URL. */
+        private Smtp smtp = new Smtp();
+    }
+
+    @Data
+    public static class Smtp {
+        private boolean enabled = false;
+        private String host = "";
+        private int port = 587;
+        private String username = "";
+        private String password = "";
+        private String from = "";
+        private String subject = "Verify your exchange account";
+        private boolean auth = true;
+        private boolean startTls = true;
+        private boolean ssl = false;
+        private int timeoutMs = 5000;
     }
 
     @Data

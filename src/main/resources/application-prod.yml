@@ -42,8 +42,22 @@ customer-auth:
   email-verification:
     enabled: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_ENABLED:true}
     token-ttl-minutes: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_TOKEN_TTL_MINUTES:30}
+    registration-ttl-hours: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_REGISTRATION_TTL_HOURS:24}
     public-base-url: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_PUBLIC_BASE_URL:https://example.com/exchange.html}
     return-verification-url: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_RETURN_URL:false}
+    smtp:
+      # Simple SMTP is enough for the MVP; point these vars at Gmail SMTP, SES SMTP, or any internal relay.
+      enabled: ${CUSTOMER_AUTH_EMAIL_SMTP_ENABLED:true}
+      host: ${CUSTOMER_AUTH_EMAIL_SMTP_HOST:}
+      port: ${CUSTOMER_AUTH_EMAIL_SMTP_PORT:587}
+      username: ${CUSTOMER_AUTH_EMAIL_SMTP_USERNAME:}
+      password: ${CUSTOMER_AUTH_EMAIL_SMTP_PASSWORD:}
+      from: ${CUSTOMER_AUTH_EMAIL_SMTP_FROM:}
+      subject: ${CUSTOMER_AUTH_EMAIL_SMTP_SUBJECT:Verify your exchange account}
+      auth: ${CUSTOMER_AUTH_EMAIL_SMTP_AUTH:true}
+      start-tls: ${CUSTOMER_AUTH_EMAIL_SMTP_START_TLS:true}
+      ssl: ${CUSTOMER_AUTH_EMAIL_SMTP_SSL:false}
+      timeout-ms: ${CUSTOMER_AUTH_EMAIL_SMTP_TIMEOUT_MS:5000}
   captcha:
     # Cloudflare Turnstile is free; prod should inject site key and secret from the deployment secret store.
     enabled: ${CUSTOMER_AUTH_CAPTCHA_ENABLED:true}

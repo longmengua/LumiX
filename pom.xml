@@ -120,6 +120,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
+        <!-- Simple SMTP delivery for customer email verification links. -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
         <!-- Jakarta Bean Validation（@Valid / @NotNull 等） -->
         <dependency>
             <groupId>org.springframework.boot</groupId>

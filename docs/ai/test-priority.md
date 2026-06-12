@@ -17,6 +17,7 @@ This repository keeps only P0 executable tests by default. Lower-priority tests 
 - `src/test/java/com/example/exchange/application/service/AccountRiskServiceTest.java`: P0 account risk checks.
 - `src/test/java/com/example/exchange/application/service/AuthServiceTest.java`: P0 customer registration, login, logout, and email-verification auth contract.
 - `src/test/java/com/example/exchange/application/service/CommandTransactionBoundaryTest.java`: P0 command rollback boundary.
+- `src/test/java/com/example/exchange/application/service/EmailVerificationNotifierTest.java`: P0 SMTP/log email-verification delivery configuration.
 - `src/test/java/com/example/exchange/application/service/HumanVerificationServiceTest.java`: P0 registration abuse-control fail-closed behavior.
 - `src/test/java/com/example/exchange/application/service/MarginServiceTest.java`: P0 margin/account read model.
 - `src/test/java/com/example/exchange/application/service/MarketMakerAutoQuoteServiceTest.java`: P0 automatic quote runner baseline.

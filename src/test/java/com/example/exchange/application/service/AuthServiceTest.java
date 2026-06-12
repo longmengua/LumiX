@@ -5,9 +5,11 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.entity.AppUserRecord;
 import com.example.exchange.domain.model.entity.AuthRefreshSessionRecord;
+import com.example.exchange.domain.model.entity.CustomerRegistrationRecord;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.jpa.AppUserRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.AuthRefreshSessionRecordJpaRepository;
+import com.example.exchange.domain.repository.jpa.CustomerRegistrationRecordJpaRepository;
 import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.CustomerAuthProperties;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
@@ -129,9 +131,10 @@ class AuthServiceTest {
         Fixture fixture = new Fixture();
         AtomicReference<AppUserRecord> savedUser = new AtomicReference<>();
         AtomicReference<String> verificationUrl = new AtomicReference<>();
+        AtomicReference<CustomerRegistrationRecord> savedRegistration = new AtomicReference<>();
         fixture.customerAuthProperties.getEmailVerification().setEnabled(true);
         fixture.customerAuthProperties.getEmailVerification().setReturnVerificationUrl(true);
-        // Scenario: a production-like registration creates a pending account and sends a one-time verification URL.
+        // Scenario: a production-like registration creates a pending request, not a final app user, until email is verified.
         when(fixture.users.existsByEmail("alice@example.com")).thenReturn(false);
         when(fixture.users.saveAndFlush(any(AppUserRecord.class))).thenAnswer(invocation -> {
             AppUserRecord user = invocation.getArgument(0);
@@ -143,34 +146,85 @@ class AuthServiceTest {
             savedUser.set(invocation.getArgument(0));
             return invocation.getArgument(0);
         });
-        when(fixture.users.findByEmail("alice@example.com")).thenReturn(Optional.ofNullable(savedUser.get()));
+        when(fixture.registrations.save(any(CustomerRegistrationRecord.class))).thenAnswer(invocation -> {
+            savedRegistration.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
         org.mockito.Mockito.doAnswer(invocation -> {
             verificationUrl.set(invocation.getArgument(1));
             return null;
-        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString());
+        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
 
         AuthService.RegistrationResult registration = fixture.service.register("alice@example.com", "correct-password", "");
-        when(fixture.users.findByEmail("alice@example.com")).thenReturn(Optional.of(savedUser.get()));
 
         assertThat(registration.emailVerificationRequired()).isTrue();
+        assertThat(registration.uid()).isNull();
+        assertThat(registration.expiresAt()).isNotNull();
         assertThat(registration.verificationUrl()).contains("verifyEmailToken=");
         assertThatThrownBy(() -> fixture.service.login("alice@example.com", "correct-password"))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("email verification required");
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("invalid credentials");
 
         String rawToken = URI.create(verificationUrl.get()).getQuery().replace("verifyEmailToken=", "");
-        when(fixture.users.findByEmailVerificationTokenHash(savedUser.get().getEmailVerificationTokenHash()))
-                .thenReturn(Optional.of(savedUser.get()));
+        when(fixture.registrations.findByVerificationTokenHashAndStatus(
+                savedRegistration.get().getVerificationTokenHash(),
+                CustomerRegistrationRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(savedRegistration.get()));
 
         AuthService.CurrentUser verified = fixture.service.verifyEmail(rawToken);
 
         assertThat(verified.email()).isEqualTo("alice@example.com");
         assertThat(savedUser.get().isEmailVerified()).isTrue();
-        verify(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString());
+        assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
+        verify(fixture.accountRepository).save(any());
+        verify(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
+    }
+
+    @Test
+    @DisplayName("email verification code completes registration")
+    void emailVerificationCodeCompletesRegistration() {
+        Fixture fixture = new Fixture();
+        AtomicReference<AppUserRecord> savedUser = new AtomicReference<>();
+        AtomicReference<CustomerRegistrationRecord> savedRegistration = new AtomicReference<>();
+        AtomicReference<String> verificationCode = new AtomicReference<>();
+        fixture.customerAuthProperties.getEmailVerification().setEnabled(true);
+        // Scenario: a customer can type the six-digit email code in the browser without using the link.
+        when(fixture.users.existsByEmail("alice@example.com")).thenReturn(false);
+        when(fixture.users.saveAndFlush(any(AppUserRecord.class))).thenAnswer(invocation -> {
+            AppUserRecord user = invocation.getArgument(0);
+            user.setId(10002L);
+            savedUser.set(user);
+            return user;
+        });
+        when(fixture.users.save(any(AppUserRecord.class))).thenAnswer(invocation -> {
+            savedUser.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
+        when(fixture.registrations.save(any(CustomerRegistrationRecord.class))).thenAnswer(invocation -> {
+            savedRegistration.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
+        org.mockito.Mockito.doAnswer(invocation -> {
+            verificationCode.set(invocation.getArgument(2));
+            return null;
+        }).when(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
+
+        fixture.service.register("alice@example.com", "correct-password", "");
+        when(fixture.registrations.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                "alice@example.com",
+                CustomerRegistrationRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(savedRegistration.get()));
+
+        AuthService.CurrentUser verified = fixture.service.verifyEmailCode("Alice@Example.com", verificationCode.get());
+
+        assertThat(verified.uid()).isEqualTo(10002L);
+        assertThat(verified.email()).isEqualTo("alice@example.com");
+        assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
     }
 
     private static final class Fixture {
         private final AppUserRecordJpaRepository users = mock(AppUserRecordJpaRepository.class);
+        private final CustomerRegistrationRecordJpaRepository registrations = mock(CustomerRegistrationRecordJpaRepository.class);
         private final AuthRefreshSessionRecordJpaRepository sessions = mock(AuthRefreshSessionRecordJpaRepository.class);
         private final AccountRepository accountRepository = mock(AccountRepository.class);
         private final PasswordHashService passwordHashService = new PasswordHashService();
@@ -187,6 +241,7 @@ class AuthServiceTest {
             jwtTokenService = new JwtTokenService(properties, objectMapper);
             service = new AuthService(
                     users,
+                    registrations,
                     sessions,
                     accountRepository,
                     passwordHashService,

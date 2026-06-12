@@ -6,9 +6,11 @@ package com.example.exchange.application.service;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.AppUserRecord;
 import com.example.exchange.domain.model.entity.AuthRefreshSessionRecord;
+import com.example.exchange.domain.model.entity.CustomerRegistrationRecord;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.jpa.AppUserRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.AuthRefreshSessionRecordJpaRepository;
+import com.example.exchange.domain.repository.jpa.CustomerRegistrationRecordJpaRepository;
 import com.example.exchange.infra.config.CustomerAuthProperties;
 import com.example.exchange.interfaces.web.security.ApiPrincipal;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
@@ -33,6 +35,7 @@ public class AuthService {
     private static final Duration DEFAULT_EMAIL_TOKEN_TTL = Duration.ofMinutes(30);
 
     private final AppUserRecordJpaRepository users;
+    private final CustomerRegistrationRecordJpaRepository registrations;
     private final AuthRefreshSessionRecordJpaRepository sessions;
     private final AccountRepository accountRepository;
     private final PasswordHashService passwordHashService;
@@ -47,6 +50,7 @@ public class AuthService {
     @Autowired
     public AuthService(
             AppUserRecordJpaRepository users,
+            CustomerRegistrationRecordJpaRepository registrations,
             AuthRefreshSessionRecordJpaRepository sessions,
             AccountRepository accountRepository,
             PasswordHashService passwordHashService,
@@ -56,12 +60,13 @@ public class AuthService {
             EmailVerificationNotifier emailVerificationNotifier,
             ObjectMapper objectMapper
     ) {
-        this(users, sessions, accountRepository, passwordHashService, jwtTokenService,
+        this(users, registrations, sessions, accountRepository, passwordHashService, jwtTokenService,
                 customerAuthProperties, humanVerificationService, emailVerificationNotifier, objectMapper, Clock.systemUTC());
     }
 
     AuthService(
             AppUserRecordJpaRepository users,
+            CustomerRegistrationRecordJpaRepository registrations,
             AuthRefreshSessionRecordJpaRepository sessions,
             AccountRepository accountRepository,
             PasswordHashService passwordHashService,
@@ -73,6 +78,7 @@ public class AuthService {
             Clock clock
     ) {
         this.users = users;
+        this.registrations = registrations;
         this.sessions = sessions;
         this.accountRepository = accountRepository;
         this.passwordHashService = passwordHashService;
@@ -93,25 +99,48 @@ public class AuthService {
         if (users.existsByEmail(normalizedEmail)) {
             throw new IllegalArgumentException("email already registered");
         }
+        if (emailVerificationEnabled()) {
+            Instant now = Instant.now(clock);
+            Optional<CustomerRegistrationRecord> existingPending = registrations
+                    .findFirstByEmailAndStatusOrderByCreatedAtDesc(normalizedEmail, CustomerRegistrationRecord.STATUS_PENDING);
+            if (existingPending.isPresent() && !existingPending.get().isExpired(now)) {
+                throw new IllegalStateException("registration verification already pending");
+            }
+            existingPending.filter(record -> record.isExpired(now)).ifPresent(record -> {
+                record.expire();
+                registrations.save(record);
+            });
+            String token = randomToken();
+            String code = verificationCode();
+            Instant expiresAt = now.plus(registrationTtl());
+            CustomerRegistrationRecord registration = registrations.save(new CustomerRegistrationRecord(
+                    normalizedEmail,
+                    passwordHashService.hash(password),
+                    sha256Hex(token),
+                    sha256Hex(normalizedEmail + ":" + code),
+                    expiresAt
+            ));
+            String verificationUrl = verificationUrl(token);
+            emailVerificationNotifier.sendVerification(registration.getEmail(), verificationUrl, code, expiresAt);
+            return new RegistrationResult(
+                    null,
+                    registration.getEmail(),
+                    true,
+                    customerAuthProperties.getEmailVerification().isReturnVerificationUrl() ? verificationUrl : null,
+                    expiresAt
+            );
+        }
         // saveAndFlush guarantees an IDENTITY-generated uid before creating the matching exchange account.
         AppUserRecord user = users.saveAndFlush(new AppUserRecord(normalizedEmail, passwordHashService.hash(password)));
-        String verificationUrl = null;
-        if (emailVerificationEnabled()) {
-            String token = randomToken();
-            user.startEmailVerification(sha256Hex(token), Instant.now(clock).plus(emailTokenTtl()));
-            users.save(user);
-            verificationUrl = verificationUrl(token);
-            emailVerificationNotifier.sendVerification(user.getEmail(), verificationUrl);
-        } else {
-            user.verifyEmail(Instant.now(clock));
-            users.save(user);
-        }
+        user.verifyEmail(Instant.now(clock));
+        users.save(user);
         accountRepository.save(new Account(user.getId()));
         return new RegistrationResult(
                 user.getId(),
                 user.getEmail(),
-                emailVerificationEnabled(),
-                customerAuthProperties.getEmailVerification().isReturnVerificationUrl() ? verificationUrl : null
+                false,
+                null,
+                null
         );
     }
 
@@ -136,20 +165,33 @@ public class AuthService {
         return issueAuth(user);
     }
 
-    /** Activates a pending user when the raw email token matches the stored hash and has not expired. */
+    /** Completes a pending registration when the raw email token matches and has not expired. */
     @Transactional
     public CurrentUser verifyEmail(String token) {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("email verification token is required");
         }
-        AppUserRecord user = users.findByEmailVerificationTokenHash(sha256Hex(token))
+        CustomerRegistrationRecord registration = registrations
+                .findByVerificationTokenHashAndStatus(sha256Hex(token), CustomerRegistrationRecord.STATUS_PENDING)
                 .orElseThrow(() -> new IllegalArgumentException("email verification token is invalid"));
-        if (user.getEmailVerificationExpiresAt() == null || user.getEmailVerificationExpiresAt().isBefore(Instant.now(clock))) {
-            throw new IllegalArgumentException("email verification token is expired");
+        return completeRegistration(registration);
+    }
+
+    /** Completes a pending registration from the six-digit code typed into the registration verification step. */
+    @Transactional
+    public CurrentUser verifyEmailCode(String email, String code) {
+        String normalizedEmail = AppUserRecord.normalizeEmail(email);
+        if (normalizedEmail.isBlank() || code == null || code.isBlank()) {
+            throw new IllegalArgumentException("email and verification code are required");
         }
-        user.verifyEmail(Instant.now(clock));
-        users.save(user);
-        return toCurrentUser(user);
+        CustomerRegistrationRecord registration = registrations
+                .findFirstByEmailAndStatusOrderByCreatedAtDesc(normalizedEmail, CustomerRegistrationRecord.STATUS_PENDING)
+                .orElseThrow(() -> new IllegalArgumentException("registration verification is invalid"));
+        String expectedHash = sha256Hex(normalizedEmail + ":" + code.trim());
+        if (!expectedHash.equals(registration.getVerificationCodeHash())) {
+            throw new IllegalArgumentException("registration verification code is invalid");
+        }
+        return completeRegistration(registration);
     }
 
     /** Revokes the refresh session by token hash; missing tokens are treated as a no-op logout. */
@@ -218,10 +260,40 @@ public class AuthService {
         return minutes > 0 ? Duration.ofMinutes(minutes) : DEFAULT_EMAIL_TOKEN_TTL;
     }
 
+    private Duration registrationTtl() {
+        int hours = customerAuthProperties.getEmailVerification().getRegistrationTtlHours();
+        return hours > 0 ? Duration.ofHours(hours) : Duration.ofHours(24);
+    }
+
     private String verificationUrl(String token) {
         String baseUrl = customerAuthProperties.getEmailVerification().getPublicBaseUrl();
         String separator = baseUrl.contains("?") ? "&" : "?";
         return baseUrl + separator + "verifyEmailToken=" + token;
+    }
+
+    private CurrentUser completeRegistration(CustomerRegistrationRecord registration) {
+        Instant now = Instant.now(clock);
+        if (registration.isExpired(now)) {
+            registration.expire();
+            registrations.save(registration);
+            throw new IllegalArgumentException("registration verification is expired");
+        }
+        if (users.existsByEmail(registration.getEmail())) {
+            registration.expire();
+            registrations.save(registration);
+            throw new IllegalArgumentException("email already registered");
+        }
+        AppUserRecord user = users.saveAndFlush(new AppUserRecord(registration.getEmail(), registration.getPasswordHash()));
+        user.verifyEmail(now);
+        users.save(user);
+        accountRepository.save(new Account(user.getId()));
+        registration.verify(now);
+        registrations.save(registration);
+        return toCurrentUser(user);
+    }
+
+    private String verificationCode() {
+        return String.format("%06d", secureRandom.nextInt(1_000_000));
     }
 
     /** Hashes refresh tokens so a database leak does not expose reusable logout/session credentials. */
@@ -268,7 +340,8 @@ public class AuthService {
             Long uid,
             String email,
             boolean emailVerificationRequired,
-            String verificationUrl
+            String verificationUrl,
+            Instant expiresAt
     ) {
     }
 

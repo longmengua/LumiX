@@ -693,6 +693,19 @@
             gap: 8px;
         }
 
+        .verification-step[hidden] {
+            display: none;
+        }
+
+        .verification-step {
+            background: var(--panel-soft);
+            border: 1px solid #e5ebf2;
+            border-radius: 8px;
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+        }
+
         .auth-actions button {
             width: 100%;
         }
@@ -836,6 +849,12 @@
             <label for="humanVerificationToken" data-i18n="field.humanVerification">Human Verification</label>
             <div id="turnstileWidget"></div>
             <input id="humanVerificationToken" autocomplete="off" data-i18n-placeholder="field.humanVerificationPlaceholder" placeholder="Verification token"/>
+        </div>
+        <div id="emailVerificationStep" class="verification-step" hidden>
+            <div class="helper" data-i18n="account.verificationHelper">Enter the verification code from your email to complete registration.</div>
+            <label for="emailVerificationCode" data-i18n="field.emailVerificationCode">Email Code</label>
+            <input id="emailVerificationCode" inputmode="numeric" autocomplete="one-time-code" data-i18n-placeholder="field.emailVerificationCodePlaceholder" placeholder="6-digit code"/>
+            <button id="verifyEmailCode" type="button" class="secondary" data-i18n="action.verifyRegistration">Verify Registration</button>
         </div>
         <div class="auth-actions">
             <button id="login" type="button" data-i18n="action.login">Login</button>
@@ -1110,6 +1129,8 @@
             'field.password': 'Password',
             'field.humanVerification': 'Human Verification',
             'field.humanVerificationPlaceholder': 'Verification token',
+            'field.emailVerificationCode': 'Email Code',
+            'field.emailVerificationCodePlaceholder': '6-digit code',
             'field.leverage': 'Leverage',
             'field.margin': 'Margin',
             'field.clientOrderId': 'Client Order ID',
@@ -1117,6 +1138,7 @@
             'action.register': 'Register',
             'action.login': 'Login',
             'action.logout': 'Logout',
+            'action.verifyRegistration': 'Verify Registration',
             'action.placeBuy': 'Place Buy',
             'action.placeSell': 'Place Sell',
             'metric.session': 'Session',
@@ -1126,6 +1148,7 @@
             'metric.positionMargin': 'Position Margin',
             'account.signInHelper': 'Sign in to view balances, frozen funds, and positions.',
             'account.createAccount': 'Create an account',
+            'account.verificationHelper': 'Enter the verification code from your email to complete registration.',
             'account.assetsTitle': 'Assets',
             'account.assetsHelper': 'Balances update from your authenticated session.',
             'book.title': 'Order Book',
@@ -1159,6 +1182,7 @@
             'status.accountUnavailable': 'Account unavailable.',
             'status.registrationPending': 'Registration created. Check your email to verify the account before login.',
             'status.emailVerified': 'Email verified. You can log in now.',
+            'status.registrationVerified': 'Registration verified. You can log in now.',
             'notice.bookRecovered': 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
             'error.loginBeforeOrder': 'Please login before placing orders.'
         },
@@ -1196,6 +1220,8 @@
             'field.password': '密碼',
             'field.humanVerification': '真人驗證',
             'field.humanVerificationPlaceholder': '驗證 token',
+            'field.emailVerificationCode': '信箱驗證碼',
+            'field.emailVerificationCodePlaceholder': '6 位數驗證碼',
             'field.leverage': '槓桿',
             'field.margin': '保證金',
             'field.clientOrderId': '客戶訂單 ID',
@@ -1203,6 +1229,7 @@
             'action.register': '註冊',
             'action.login': '登入',
             'action.logout': '登出',
+            'action.verifyRegistration': '完成註冊驗證',
             'action.placeBuy': '下買單',
             'action.placeSell': '下賣單',
             'metric.session': '登入狀態',
@@ -1212,6 +1239,7 @@
             'metric.positionMargin': '倉位保證金',
             'account.signInHelper': '登入後可查看餘額、凍結資金與倉位資訊。',
             'account.createAccount': '建立新帳號',
+            'account.verificationHelper': '輸入信件中的驗證碼以完成註冊。',
             'account.assetsTitle': '資產',
             'account.assetsHelper': '資產會依登入 session 自動更新。',
             'book.title': '訂單簿',
@@ -1245,6 +1273,7 @@
             'status.accountUnavailable': '帳戶不可用。',
             'status.registrationPending': '註冊已建立，請先到信箱完成驗證再登入。',
             'status.emailVerified': 'Email 已驗證，現在可以登入。',
+            'status.registrationVerified': '註冊已完成驗證，現在可以登入。',
             'notice.bookRecovered': '開放訂單已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
             'error.loginBeforeOrder': '下單前請先登入。'
         },
@@ -1282,6 +1311,8 @@
             'field.password': 'Kata Laluan',
             'field.humanVerification': 'Pengesahan Manusia',
             'field.humanVerificationPlaceholder': 'Token pengesahan',
+            'field.emailVerificationCode': 'Kod E-mel',
+            'field.emailVerificationCodePlaceholder': 'Kod 6 digit',
             'field.leverage': 'Leveraj',
             'field.margin': 'Margin',
             'field.clientOrderId': 'ID Pesanan Klien',
@@ -1289,6 +1320,7 @@
             'action.register': 'Daftar',
             'action.login': 'Log Masuk',
             'action.logout': 'Log Keluar',
+            'action.verifyRegistration': 'Sahkan Pendaftaran',
             'action.placeBuy': 'Buat Belian',
             'action.placeSell': 'Buat Jualan',
             'metric.session': 'Sesi',
@@ -1298,6 +1330,7 @@
             'metric.positionMargin': 'Margin Posisi',
             'account.signInHelper': 'Log masuk untuk melihat baki, dana dibekukan dan posisi.',
             'account.createAccount': 'Cipta akaun',
+            'account.verificationHelper': 'Masukkan kod pengesahan daripada e-mel untuk melengkapkan pendaftaran.',
             'account.assetsTitle': 'Aset',
             'account.assetsHelper': 'Baki dikemas kini daripada sesi disahkan anda.',
             'book.title': 'Buku Pesanan',
@@ -1331,6 +1364,7 @@
             'status.accountUnavailable': 'Akaun tidak tersedia.',
             'status.registrationPending': 'Pendaftaran dibuat. Sahkan e-mel sebelum log masuk.',
             'status.emailVerified': 'E-mel disahkan. Anda boleh log masuk sekarang.',
+            'status.registrationVerified': 'Pendaftaran disahkan. Anda boleh log masuk sekarang.',
             'notice.bookRecovered': 'Pesanan terbuka telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
             'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
         },
@@ -1368,6 +1402,8 @@
             'field.password': '비밀번호',
             'field.humanVerification': '사람 인증',
             'field.humanVerificationPlaceholder': '인증 토큰',
+            'field.emailVerificationCode': '이메일 코드',
+            'field.emailVerificationCodePlaceholder': '6자리 코드',
             'field.leverage': '레버리지',
             'field.margin': '마진',
             'field.clientOrderId': '클라이언트 주문 ID',
@@ -1375,6 +1411,7 @@
             'action.register': '가입',
             'action.login': '로그인',
             'action.logout': '로그아웃',
+            'action.verifyRegistration': '가입 인증',
             'action.placeBuy': '매수 주문',
             'action.placeSell': '매도 주문',
             'metric.session': '세션',
@@ -1384,6 +1421,7 @@
             'metric.positionMargin': '포지션 마진',
             'account.signInHelper': '로그인하여 잔고, 동결 자금 및 포지션을 확인하세요.',
             'account.createAccount': '계정 만들기',
+            'account.verificationHelper': '가입을 완료하려면 이메일의 인증 코드를 입력하세요.',
             'account.assetsTitle': '자산',
             'account.assetsHelper': '잔고는 인증된 세션에서 업데이트됩니다.',
             'book.title': '호가창',
@@ -1417,6 +1455,7 @@
             'status.accountUnavailable': '계정을 사용할 수 없습니다.',
             'status.registrationPending': '가입이 생성되었습니다. 로그인 전에 이메일을 인증하세요.',
             'status.emailVerified': '이메일이 인증되었습니다. 이제 로그인할 수 있습니다.',
+            'status.registrationVerified': '가입 인증이 완료되었습니다. 이제 로그인할 수 있습니다.',
             'notice.bookRecovered': '미체결 주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
             'error.loginBeforeOrder': '주문 전에 로그인하세요.'
         }
@@ -1449,6 +1488,7 @@
         symbol: $('symbol'),
         uid: $('uid'),
         humanVerificationToken: $('humanVerificationToken'),
+        emailVerificationCode: $('emailVerificationCode'),
         side: $('side'),
         type: $('type'),
         price: $('price'),
@@ -1694,6 +1734,8 @@
                     ? `${t('status.registrationPending')} ${result.verificationUrl}`
                     : t('status.registrationPending'));
                 fields.humanVerificationToken.value = '';
+                fields.emailVerificationCode.value = '';
+                $('emailVerificationStep').hidden = !result.emailVerificationRequired;
                 return;
             }
             const result = await api(`/api/auth/${mode}`, {
@@ -1711,6 +1753,25 @@
             renderAuth(result.user);
             await refreshAll();
             subscribeCurrentUser();
+        } catch (error) {
+            showError($('authError'), error);
+        }
+    }
+
+    async function verifyRegistrationCode() {
+        clearError($('authError'));
+        clearNotice();
+        try {
+            await api('/api/auth/verify-email', {
+                method: 'POST',
+                body: JSON.stringify({
+                    email: $('authEmail').value.trim(),
+                    code: fields.emailVerificationCode.value.trim()
+                })
+            });
+            showNotice(t('status.registrationVerified'));
+            fields.emailVerificationCode.value = '';
+            $('emailVerificationStep').hidden = true;
         } catch (error) {
             showError($('authError'), error);
         }
@@ -1766,6 +1827,7 @@
                 body: JSON.stringify({ token })
             });
             showNotice(t('status.emailVerified'));
+            $('emailVerificationStep').hidden = true;
             window.history.replaceState({}, document.title, window.location.pathname);
         } catch (error) {
             showError($('authError'), error);
@@ -2234,6 +2296,7 @@
 
     $('register').addEventListener('click', () => authenticate('register'));
     $('login').addEventListener('click', () => authenticate('login'));
+    $('verifyEmailCode').addEventListener('click', verifyRegistrationCode);
     $('logout').addEventListener('click', logout);
     $('reloadOrders').addEventListener('click', loadOrders);
     $('placeBuy').addEventListener('click', () => placeOrder('BUY'));

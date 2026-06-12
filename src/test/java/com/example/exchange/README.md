@@ -19,6 +19,7 @@
 | `AccountRiskServiceTest` | risk snapshot 的 equity、PNL、maintenance margin、risk ratio。 |
 | `AuthServiceTest` | local registration/login/logout、email verification token 與 session revocation。 |
 | `CommandTransactionBoundaryTest` | command body 失敗時 rollback command transaction。 |
+| `EmailVerificationNotifierTest` | email verification SMTP/log delivery 設定與 fail-fast。 |
 | `HumanVerificationServiceTest` | 註冊真人驗證 disabled/dev bypass/fail-closed 行為。 |
 | `MarginServiceTest` | deposit/withdraw transfer state machine、callback idempotency、manual-review owner 與 ledger side effect。 |
 | `MarketMakerAutoQuoteServiceTest` | 自動做市 quote runner baseline。 |
