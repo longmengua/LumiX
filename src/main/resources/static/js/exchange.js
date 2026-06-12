@@ -59,7 +59,7 @@ const translations = {
         'table.type': 'Type',
         'table.price': 'Price',
         'table.qty': 'Qty',
-        'table.notional': 'Notional',
+        'table.notional': 'Order Value',
         'table.filled': 'Filled',
         'table.status': 'Status',
         'empty.authState': 'Not logged in.',
@@ -141,7 +141,7 @@ const translations = {
         'table.type': '類型',
         'table.price': '價格',
         'table.qty': '數量',
-        'table.notional': '名目',
+        'table.notional': '訂單價值',
         'table.filled': '已成交',
         'table.status': '狀態',
         'empty.authState': '尚未登入。',
@@ -223,7 +223,7 @@ const translations = {
         'table.type': 'Jenis',
         'table.price': 'Harga',
         'table.qty': 'Kuantiti',
-        'table.notional': 'Notional',
+        'table.notional': 'Nilai Pesanan',
         'table.filled': 'Diisi',
         'table.status': 'Status',
         'empty.authState': 'Belum log masuk.',
@@ -305,7 +305,7 @@ const translations = {
         'table.type': '유형',
         'table.price': '가격',
         'table.qty': '수량',
-        'table.notional': '명목',
+        'table.notional': '주문 금액',
         'table.filled': '체결',
         'table.status': '상태',
         'empty.authState': '로그인하지 않았습니다.',
@@ -461,8 +461,15 @@ function toggleProfilePanel(forceOpen) {
 
 function promptLogin() {
     // Unauthenticated trade actions open the existing profile auth drawer instead of leaving users at an error.
+    auth.accessToken = '';
+    auth.refreshToken = '';
+    localStorage.removeItem('exchangeAccessToken');
+    localStorage.removeItem('exchangeRefreshToken');
+    setUserIdentity(null);
+    syncAuthenticatedUi();
     toggleProfilePanel(true);
-    window.requestAnimationFrame(() => $('authEmail').focus());
+    $('profilePanel').scrollTo({top: 0, behavior: 'smooth'});
+    window.requestAnimationFrame(() => $('authEmail').focus({preventScroll: true}));
 }
 
 function syncProfileAuthState() {
@@ -552,7 +559,9 @@ async function api(path, options = {}) {
     });
     const body = await response.json();
     if (!response.ok || !body.ok) {
-        throw new Error(body.error || `HTTP ${response.status}`);
+        const error = new Error(body.error || `HTTP ${response.status}`);
+        error.status = response.status;
+        throw error;
     }
     return body.data;
 }
@@ -1150,7 +1159,7 @@ function unsubscribeCurrentUser() {
 // Order entry sends internal exchange orders only; backend venue routing decides whether Polymarket is used.
 async function placeOrder(side) {
     clearError($('orderError'));
-    if (!auth.accessToken) {
+    if (!auth.accessToken || !fields.uid.value.trim()) {
         const error = new Error(t('error.loginBeforeOrder'));
         $('orderResult').textContent = t('empty.orderResult');
         showError($('orderError'), error);
@@ -1182,6 +1191,9 @@ async function placeOrder(side) {
     } catch (error) {
         $('orderResult').textContent = JSON.stringify(payload, null, 2);
         showError($('orderError'), error);
+        if (error.status === 401 || error.status === 403) {
+            promptLogin();
+        }
     }
 }
 
