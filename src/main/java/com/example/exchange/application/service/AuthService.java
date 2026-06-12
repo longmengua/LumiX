@@ -14,6 +14,8 @@ import com.example.exchange.domain.repository.jpa.AuthRefreshSessionRecordJpaRep
 import com.example.exchange.domain.repository.jpa.CustomerRegistrationRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.CustomerVerificationCodeRecordJpaRepository;
 import com.example.exchange.infra.config.CustomerAuthProperties;
+import com.example.exchange.interfaces.web.exception.BusinessErrorCode;
+import com.example.exchange.interfaces.web.exception.BusinessException;
 import com.example.exchange.interfaces.web.security.ApiPrincipal;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -162,15 +164,15 @@ public class AuthService {
     public AuthResult login(String email, String password) {
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
         AppUserRecord user = users.findByEmail(normalizedEmail)
-                .orElseThrow(() -> new IllegalArgumentException("invalid credentials"));
+                .orElseThrow(this::invalidCredentials);
         if (!passwordHashService.matches(password, user.getPasswordHash())) {
-            throw new IllegalArgumentException("invalid credentials");
+            throw invalidCredentials();
         }
         if (emailVerificationEnabled() && user.isPendingEmailVerification() && !user.isEmailVerified()) {
             throw new IllegalStateException("email verification required");
         }
         if (!user.isActive()) {
-            throw new IllegalArgumentException("invalid credentials");
+            throw invalidCredentials();
         }
         if (emailVerificationEnabled() && !user.isEmailVerified()) {
             throw new IllegalStateException("email verification required");
@@ -341,6 +343,10 @@ public class AuthService {
 
     private String verificationCodeHash(String normalizedEmail, String code) {
         return sha256Hex(normalizedEmail + ":" + code.trim());
+    }
+
+    private BusinessException invalidCredentials() {
+        return new BusinessException(BusinessErrorCode.AUTH_INVALID_CREDENTIAL);
     }
 
     /** Hashes refresh tokens so a database leak does not expose reusable logout/session credentials. */

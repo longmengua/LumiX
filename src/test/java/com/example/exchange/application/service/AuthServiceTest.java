@@ -14,6 +14,8 @@ import com.example.exchange.domain.repository.jpa.CustomerRegistrationRecordJpaR
 import com.example.exchange.domain.repository.jpa.CustomerVerificationCodeRecordJpaRepository;
 import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.CustomerAuthProperties;
+import com.example.exchange.interfaces.web.exception.BusinessErrorCode;
+import com.example.exchange.interfaces.web.exception.BusinessException;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.DisplayName;
@@ -92,8 +94,9 @@ class AuthServiceTest {
         when(fixture.users.findByEmail("alice@example.com")).thenReturn(Optional.of(user));
 
         assertThatThrownBy(() -> fixture.service.login("alice@example.com", "wrong-password"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("invalid credentials");
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getErrorCode())
+                .isEqualTo(BusinessErrorCode.AUTH_INVALID_CREDENTIAL);
     }
 
     @Test
@@ -169,8 +172,9 @@ class AuthServiceTest {
         assertThat(registration.expiresAt()).isNotNull();
         assertThat(registration.verificationUrl()).contains("verifyEmailToken=");
         assertThatThrownBy(() -> fixture.service.login("alice@example.com", "correct-password"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("invalid credentials");
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getErrorCode())
+                .isEqualTo(BusinessErrorCode.AUTH_INVALID_CREDENTIAL);
 
         String rawToken = URI.create(verificationUrl.get()).getQuery().replace("verifyEmailToken=", "");
         when(fixture.registrations.findByVerificationTokenHashAndStatus(

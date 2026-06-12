@@ -46,6 +46,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 public class GlobalExceptionHandler {
 
+    private static final String PUBLIC_ERROR_MESSAGE = "發生異常";
+
     /**
      * 處理業務例外（BusinessException）
      *
@@ -72,11 +74,11 @@ public class GlobalExceptionHandler {
                 // HTTP status 由錯誤碼決定（協議層語意）
                 .status(code.getStatus())
                 .body(new ErrorResponse(
-                        // 業務錯誤代碼（前端判斷依據）
-                        code.getStatus().value(),
+                        // Stable enum code for frontend mapping; the text message stays intentionally generic.
+                        code.name(),
 
-                        // 對外顯示訊息（避免直接回傳 ex.getMessage()）
-                        code.getMessage(),
+                        // Do not expose exact backend failure reasons to public clients.
+                        PUBLIC_ERROR_MESSAGE,
 
                         // traceId 用於串接 log（需搭配 MDC 設定）
                         MDC.get("traceId")
@@ -89,8 +91,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(new ErrorResponse(
-                        400,
-                        "參數或業務條件不合法",
+                        BusinessErrorCode.VALIDATION_ERROR.name(),
+                        PUBLIC_ERROR_MESSAGE,
                         MDC.get("traceId")
                 ));
     }
@@ -122,8 +124,8 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(new ErrorResponse(
-                        500,
-                        "系統發生錯誤",
+                        BusinessErrorCode.INTERNAL_ERROR.name(),
+                        PUBLIC_ERROR_MESSAGE,
                         MDC.get("traceId")
                 ));
     }

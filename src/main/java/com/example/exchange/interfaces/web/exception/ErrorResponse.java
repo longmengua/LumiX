@@ -4,7 +4,7 @@
 package com.example.exchange.interfaces.web.exception;
 
 public record ErrorResponse(
-        int code,
+        String code,
         String message,
         String traceId
 ) {}

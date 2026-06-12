@@ -414,3 +414,54 @@ test('exchange console registers with on-screen email code before login', async 
   await expect(page.locator('#sessionDisplay')).toContainText('new-user@example.com');
   await expect(page.locator('#uidDisplay')).toHaveText('10011');
 });
+
+test('exchange console shows generic login error for unknown accounts', async ({ page }) => {
+  // Scenario: login must not reveal whether an email exists, but it still needs a readable customer message.
+  await page.route('**/api/auth/config', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        humanVerificationEnabled: false,
+        humanVerificationProvider: 'turnstile',
+        humanVerificationSiteKey: '',
+        emailVerificationEnabled: true
+      }))
+    });
+  });
+  await page.route('**/api/markets', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ markets: [{ symbol: 'BTCUSDT', tradingEnabled: true }] }))
+    });
+  });
+  await page.route('**/api/depth/BTCUSDT?depth=*', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ symbol: 'BTCUSDT', bestBid: '0', bestAsk: '0', bids: [], asks: [] }))
+    });
+  });
+  await page.route('**/api/auth/me', async (route) => {
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok(null)) });
+  });
+  await page.route('**/api/auth/login', async (route) => {
+    await route.fulfill({
+      status: 401,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 'AUTH_INVALID_CREDENTIAL',
+        message: '發生異常',
+        traceId: 'test-trace-id'
+      })
+    });
+  });
+
+  await page.goto('/exchange.html');
+  await page.getByRole('button', { name: 'Open Profile' }).click();
+  await page.locator('#authEmail').fill('missing@example.com');
+  await page.locator('#authPassword').fill('wrong-password');
+  await page.getByRole('button', { name: 'Login' }).click();
+
+  await expect(page.locator('#authError')).toContainText('Account not found or password is incorrect.');
+  await expect(page.locator('#authError')).not.toContainText('HTTP');
+  await expect(page.locator('#authError')).not.toContainText('發生異常');
+});
