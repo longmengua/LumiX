@@ -135,6 +135,10 @@
             justify-content: flex-end;
         }
 
+        .header-actions .toolbar {
+            flex-wrap: nowrap;
+        }
+
         .market-select-field {
             display: grid;
             gap: 4px;
@@ -489,6 +493,52 @@
             margin-bottom: 12px;
         }
 
+        .profile-section-selector {
+            border-top: 1px solid #e5ebf2;
+            margin-top: 12px;
+            padding-top: 12px;
+        }
+
+        .profile-section-selector summary {
+            align-items: center;
+            background: var(--panel-soft);
+            border: 1px solid #e5ebf2;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            font-weight: 800;
+            justify-content: space-between;
+            min-height: 36px;
+            padding: 0 10px;
+        }
+
+        .profile-section-selector .profile-options {
+            margin: 10px 0 0;
+        }
+
+        .profile-selector-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 10px;
+        }
+
+        .profile-content[hidden], .profile-login-required[hidden] {
+            display: none;
+        }
+
+        .profile-login-required {
+            background: var(--panel-soft);
+            border: 1px solid #e5ebf2;
+            border-radius: 8px;
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+        }
+
+        .profile-login-required strong {
+            font-size: 15px;
+        }
+
         .profile-options label {
             align-items: center;
             background: var(--panel-soft);
@@ -564,6 +614,10 @@
                 width: 100%;
             }
 
+            .header-actions {
+                justify-content: space-between;
+            }
+
             main, .form-grid, .metric-row, .identity-row, .account-panel .form-grid {
                 grid-template-columns: 1fr;
             }
@@ -628,7 +682,6 @@
     <div class="panel-heading">
         <div>
             <h2 data-i18n="profile.title">Profile</h2>
-            <div class="helper" data-i18n="profile.helper">Choose which account and position sections are visible.</div>
         </div>
         <button id="profileClose" type="button" class="secondary icon-button" data-i18n-aria-label="profile.close" data-i18n-title="profile.close" aria-label="Close Profile" title="Close Profile">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -636,39 +689,62 @@
             </svg>
         </button>
     </div>
-    <div class="profile-options" aria-label="Profile sections">
-        <label><input type="checkbox" data-profile-section="funds" checked/> <span data-i18n="profile.showFunds">Funds</span></label>
-        <label><input type="checkbox" data-profile-section="frozen" checked/> <span data-i18n="profile.showFrozen">Frozen funds</span></label>
-        <label><input type="checkbox" data-profile-section="orders" checked/> <span data-i18n="profile.showOrders">Open orders</span></label>
-        <label><input type="checkbox" data-profile-section="heldPositions" checked/> <span data-i18n="profile.showHeld">Held positions</span></label>
-        <label><input type="checkbox" data-profile-section="positionHistory" checked/> <span data-i18n="profile.showHistory">Position history</span></label>
+    <div id="profileLoginRequired" class="profile-login-required">
+        <strong data-i18n="profile.loginRequiredTitle">Login required</strong>
+        <div class="helper" data-i18n="profile.loginRequiredBody">Login to view balances, frozen funds, orders, and positions.</div>
+        <button id="profileLoginAction" type="button" data-i18n="profile.loginAction">Go to Login</button>
     </div>
-    <div class="profile-section" data-profile-panel="funds">
-        <h3 data-i18n="profile.funds">Personal Funds</h3>
-        <div class="metric-row">
-            <div class="metric"><label data-i18n="metric.balance">Balance</label><div id="profileBalance" class="value">-</div></div>
-            <div class="metric"><label data-i18n="metric.available">Available</label><div id="profileAvailable" class="value">-</div></div>
+    <div id="profileContent" class="profile-content" hidden>
+        <div class="profile-section" data-profile-panel="funds">
+            <h3 data-i18n="profile.funds">Personal Funds</h3>
+            <div class="metric-row">
+                <div class="metric"><label data-i18n="metric.balance">Balance</label><div id="profileBalance" class="value">-</div></div>
+                <div class="metric"><label data-i18n="metric.available">Available</label><div id="profileAvailable" class="value">-</div></div>
+            </div>
         </div>
-    </div>
-    <div class="profile-section" data-profile-panel="frozen">
-        <h3 data-i18n="profile.frozen">Frozen Funds</h3>
-        <div class="metric-row">
-            <div class="metric"><label data-i18n="metric.frozen">Frozen</label><div id="profileFrozen" class="value">-</div></div>
-            <div class="metric"><label data-i18n="profile.orderHold">Order Hold</label><div id="profileOrderHold" class="value">-</div></div>
-            <div class="metric"><label data-i18n="metric.positionMargin">Position Margin</label><div id="profilePositionMargin" class="value">-</div></div>
+        <details class="profile-section-selector">
+            <summary id="profileSectionSummary">Display sections (6/6)</summary>
+            <div class="helper" data-i18n="profile.helper">Choose which account and position sections are visible.</div>
+            <div class="profile-selector-actions">
+                <button id="profileSelectAll" type="button" class="secondary" data-i18n="profile.clearAll">Clear All</button>
+            </div>
+            <div class="profile-options" aria-label="Profile sections">
+                <label><input type="checkbox" data-profile-section="funds" checked/> <span data-i18n="profile.showFunds">Funds</span></label>
+                <label><input type="checkbox" data-profile-section="categoryInfo" checked/> <span data-i18n="profile.showCategory">Category info</span></label>
+                <label><input type="checkbox" data-profile-section="frozen" checked/> <span data-i18n="profile.showFrozen">Frozen funds</span></label>
+                <label><input type="checkbox" data-profile-section="orders" checked/> <span data-i18n="profile.showOrders">Open orders</span></label>
+                <label><input type="checkbox" data-profile-section="heldPositions" checked/> <span data-i18n="profile.showHeld">Held positions</span></label>
+                <label><input type="checkbox" data-profile-section="positionHistory" checked/> <span data-i18n="profile.showHistory">Position history</span></label>
+            </div>
+        </details>
+        <div class="profile-section" data-profile-panel="categoryInfo">
+            <h3 data-i18n="profile.categoryInfo">Category Info</h3>
+            <div class="metric-row">
+                <div class="metric"><label data-i18n="profile.currentMarket">Current Market</label><div id="profileCurrentMarket" class="value">-</div></div>
+                <div class="metric"><label data-i18n="profile.openOrderCount">Open Orders</label><div id="profileOpenOrderCount" class="value">0</div></div>
+                <div class="metric"><label data-i18n="profile.visibleSections">Visible Sections</label><div id="profileVisibleSections" class="value">0/0</div></div>
+            </div>
         </div>
-    </div>
-    <div class="profile-section" data-profile-panel="orders">
-        <h3 data-i18n="profile.orders">Open Orders</h3>
-        <div id="profileOrders" class="empty">Login and refresh to load open orders</div>
-    </div>
-    <div class="profile-section" data-profile-panel="heldPositions">
-        <h3 data-i18n="profile.held">Held Positions</h3>
-        <div id="profileHeldPositions" class="empty" data-i18n="empty.noHeldPositions">No held positions loaded.</div>
-    </div>
-    <div class="profile-section" data-profile-panel="positionHistory">
-        <h3 data-i18n="profile.history">Position History</h3>
-        <div id="profilePositionHistory" class="empty" data-i18n="empty.noPositionHistory">No position history loaded.</div>
+        <div class="profile-section" data-profile-panel="frozen">
+            <h3 data-i18n="profile.frozen">Frozen Funds</h3>
+            <div class="metric-row">
+                <div class="metric"><label data-i18n="metric.frozen">Frozen</label><div id="profileFrozen" class="value">-</div></div>
+                <div class="metric"><label data-i18n="profile.orderHold">Order Hold</label><div id="profileOrderHold" class="value">-</div></div>
+                <div class="metric"><label data-i18n="metric.positionMargin">Position Margin</label><div id="profilePositionMargin" class="value">-</div></div>
+            </div>
+        </div>
+        <div class="profile-section" data-profile-panel="orders">
+            <h3 data-i18n="profile.orders">Open Orders</h3>
+            <div id="profileOrders" class="empty">Login and refresh to load open orders</div>
+        </div>
+        <div class="profile-section" data-profile-panel="heldPositions">
+            <h3 data-i18n="profile.held">Held Positions</h3>
+            <div id="profileHeldPositions" class="empty" data-i18n="empty.noHeldPositions">No held positions loaded.</div>
+        </div>
+        <div class="profile-section" data-profile-panel="positionHistory">
+            <h3 data-i18n="profile.history">Position History</h3>
+            <div id="profilePositionHistory" class="empty" data-i18n="empty.noPositionHistory">No position history loaded.</div>
+        </div>
     </div>
 </aside>
 
@@ -858,8 +934,8 @@
         <div class="notice" data-i18n="account.notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
         <div id="authError" class="error" hidden></div>
         <div id="accountError" class="error" hidden></div>
-        <pre id="authState" class="compact-pre" data-i18n="empty.authState">Not logged in.</pre>
-        <pre id="accountRaw" class="compact-pre" data-i18n="empty.accountRaw">No account loaded.</pre>
+        <pre id="authState" class="compact-pre" data-i18n="empty.authState" hidden>Not logged in.</pre>
+        <pre id="accountRaw" class="compact-pre" data-i18n="empty.accountRaw" hidden>No account loaded.</pre>
     </section>
 </main>
 
@@ -878,7 +954,14 @@
             'profile.close': 'Close Profile',
             'profile.title': 'Profile',
             'profile.helper': 'Choose which account and position sections are visible.',
+            'profile.loginRequiredTitle': 'Login required',
+            'profile.loginRequiredBody': 'Login to view balances, frozen funds, orders, and positions.',
+            'profile.loginAction': 'Go to Login',
+            'profile.sectionSelector': 'Display sections',
+            'profile.selectAll': 'Select All',
+            'profile.clearAll': 'Clear All',
             'profile.showFunds': 'Funds',
+            'profile.showCategory': 'Category info',
             'profile.showFrozen': 'Frozen funds',
             'profile.showOrders': 'Open orders',
             'profile.showHeld': 'Held positions',
@@ -888,6 +971,10 @@
             'profile.orders': 'Open Orders',
             'profile.held': 'Held Positions',
             'profile.history': 'Position History',
+            'profile.categoryInfo': 'Category Info',
+            'profile.currentMarket': 'Current Market',
+            'profile.openOrderCount': 'Open Orders',
+            'profile.visibleSections': 'Visible Sections',
             'profile.orderHold': 'Order Hold',
             'market.helper': 'Select an available market and trade against live book liquidity.',
             'field.market': 'Market',
@@ -951,7 +1038,14 @@
             'profile.close': '關閉個人資料',
             'profile.title': '個人資料',
             'profile.helper': '選擇要顯示的資金與倉位資訊。',
+            'profile.loginRequiredTitle': '請先登入',
+            'profile.loginRequiredBody': '登入後才能查看資金、凍結資金、委託與倉位資訊。',
+            'profile.loginAction': '前往登入',
+            'profile.sectionSelector': '顯示資訊',
+            'profile.selectAll': '全部選取',
+            'profile.clearAll': '全部取消',
             'profile.showFunds': '個人資金',
+            'profile.showCategory': '分類資訊',
             'profile.showFrozen': '凍結資金',
             'profile.showOrders': '委託',
             'profile.showHeld': '持有倉位',
@@ -961,6 +1055,10 @@
             'profile.orders': '委託',
             'profile.held': '持有倉位',
             'profile.history': '歷史開關倉位',
+            'profile.categoryInfo': '分類資訊',
+            'profile.currentMarket': '目前市場',
+            'profile.openOrderCount': '開放委託',
+            'profile.visibleSections': '可見資訊',
             'profile.orderHold': '訂單占用',
             'market.helper': '選擇可用市場，並直接與即時訂單簿流動性交易。',
             'field.market': '市場',
@@ -1024,7 +1122,14 @@
             'profile.close': 'Tutup Profil',
             'profile.title': 'Profil',
             'profile.helper': 'Pilih bahagian akaun dan posisi yang kelihatan.',
+            'profile.loginRequiredTitle': 'Log masuk diperlukan',
+            'profile.loginRequiredBody': 'Log masuk untuk melihat baki, dana dibekukan, pesanan dan posisi.',
+            'profile.loginAction': 'Pergi ke Log Masuk',
+            'profile.sectionSelector': 'Paparkan bahagian',
+            'profile.selectAll': 'Pilih Semua',
+            'profile.clearAll': 'Nyahpilih Semua',
             'profile.showFunds': 'Dana',
+            'profile.showCategory': 'Maklumat kategori',
             'profile.showFrozen': 'Dana dibekukan',
             'profile.showOrders': 'Pesanan terbuka',
             'profile.showHeld': 'Posisi dipegang',
@@ -1034,6 +1139,10 @@
             'profile.orders': 'Pesanan Terbuka',
             'profile.held': 'Posisi Dipegang',
             'profile.history': 'Sejarah Posisi',
+            'profile.categoryInfo': 'Maklumat Kategori',
+            'profile.currentMarket': 'Pasaran Semasa',
+            'profile.openOrderCount': 'Pesanan Terbuka',
+            'profile.visibleSections': 'Bahagian Kelihatan',
             'profile.orderHold': 'Pegangan Pesanan',
             'market.helper': 'Pilih pasaran tersedia dan berdagang dengan kecairan buku langsung.',
             'field.market': 'Pasaran',
@@ -1097,7 +1206,14 @@
             'profile.close': '프로필 닫기',
             'profile.title': '프로필',
             'profile.helper': '표시할 계정 및 포지션 섹션을 선택하세요.',
+            'profile.loginRequiredTitle': '로그인이 필요합니다',
+            'profile.loginRequiredBody': '잔고, 동결 자금, 주문 및 포지션을 보려면 로그인하세요.',
+            'profile.loginAction': '로그인으로 이동',
+            'profile.sectionSelector': '섹션 표시',
+            'profile.selectAll': '전체 선택',
+            'profile.clearAll': '전체 해제',
             'profile.showFunds': '자금',
+            'profile.showCategory': '분류 정보',
             'profile.showFrozen': '동결 자금',
             'profile.showOrders': '미체결 주문',
             'profile.showHeld': '보유 포지션',
@@ -1107,6 +1223,10 @@
             'profile.orders': '미체결 주문',
             'profile.held': '보유 포지션',
             'profile.history': '포지션 내역',
+            'profile.categoryInfo': '분류 정보',
+            'profile.currentMarket': '현재 시장',
+            'profile.openOrderCount': '미체결 주문',
+            'profile.visibleSections': '표시 섹션',
             'profile.orderHold': '주문 증거금',
             'market.helper': '사용 가능한 시장을 선택하고 실시간 호가창 유동성과 거래하세요.',
             'field.market': '시장',
@@ -1253,6 +1373,7 @@
         fields.uid.value = uid;
         $('uidDisplay').textContent = text(uid);
         $('sessionDisplay').textContent = user?.email || (auth.accessToken ? t('status.authenticated') : t('status.notLoggedIn'));
+        syncProfileAuthState();
     }
 
     function setActiveTab(tabName) {
@@ -1273,6 +1394,17 @@
         $('profileToggle').setAttribute('aria-expanded', String(open));
         $('profileToggle').setAttribute('aria-label', open ? t('profile.close') : t('profile.open'));
         $('profileToggle').setAttribute('title', open ? t('profile.close') : t('profile.open'));
+        syncProfileAuthState();
+    }
+
+    function syncProfileAuthState() {
+        // Profile details are account-scoped; before login the drawer must not expose stale or empty account panes.
+        const loggedIn = Boolean(auth.accessToken && fields.uid.value.trim());
+        $('profileLoginRequired').hidden = loggedIn;
+        $('profileContent').hidden = !loggedIn;
+        if (loggedIn) {
+            syncProfileSections();
+        }
     }
 
     function syncProfileSections() {
@@ -1283,6 +1415,30 @@
                 section.hidden = !input.checked;
             }
         });
+        renderProfileCategoryInfo();
+        syncProfileSectionSelector();
+    }
+
+    function syncProfileSectionSelector() {
+        const inputs = [...document.querySelectorAll('[data-profile-section]')];
+        const selected = inputs.filter(input => input.checked).length;
+        $('profileSectionSummary').textContent = `${t('profile.sectionSelector')} (${selected}/${inputs.length})`;
+        $('profileSelectAll').textContent = selected === inputs.length ? t('profile.clearAll') : t('profile.selectAll');
+    }
+
+    function toggleAllProfileSections() {
+        const inputs = [...document.querySelectorAll('[data-profile-section]')];
+        const allSelected = inputs.every(input => input.checked);
+        inputs.forEach(input => input.checked = !allSelected);
+        syncProfileSections();
+    }
+
+    function renderProfileCategoryInfo() {
+        const inputs = [...document.querySelectorAll('[data-profile-section]')];
+        const selected = inputs.filter(input => input.checked).length;
+        $('profileCurrentMarket').textContent = selectedSymbol() || '-';
+        $('profileOpenOrderCount').textContent = `${marketState.latestOrders.length}`;
+        $('profileVisibleSections').textContent = `${selected}/${inputs.length}`;
     }
 
     function renderMarketOptions(markets) {
@@ -1320,6 +1476,7 @@
         $('accountRaw').textContent = t('empty.accountRaw');
         $('sessionDisplay').textContent = t('status.notLoggedIn');
         renderAccountSnapshot(null);
+        marketState.latestOrders = [];
         renderProfileOrders([]);
         $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
         $('orderResult').textContent = t('empty.orderResult');
@@ -1526,6 +1683,7 @@
         const orders = await api(`/api/order/open?uid=${uid}&symbol=${symbol}`);
         marketState.latestOrders = orders || [];
         renderProfileOrders(marketState.latestOrders);
+        renderProfileCategoryInfo();
         marketState.openOrderCount = orders ? orders.length : 0;
         updateMarketStateNotice();
         if (!orders || orders.length === 0) {
@@ -1551,11 +1709,13 @@
         if (!auth.accessToken || !fields.uid.value.trim()) {
             target.className = 'empty';
             target.textContent = t('empty.loginForOrders');
+            renderProfileCategoryInfo();
             return;
         }
         if (!orders || orders.length === 0) {
             target.className = 'empty';
             target.textContent = t('empty.noOpenOrders');
+            renderProfileCategoryInfo();
             return;
         }
         target.className = 'table-wrap';
@@ -1585,6 +1745,7 @@
                 </tbody>
             </table>
         `;
+        renderProfileCategoryInfo();
     }
 
     // Account lookup is read-only here; deposit/withdraw remain separate explicit workflows.
@@ -1840,6 +2001,11 @@
     });
     $('profileToggle').addEventListener('click', () => toggleProfilePanel());
     $('profileClose').addEventListener('click', () => toggleProfilePanel(false));
+    $('profileLoginAction').addEventListener('click', () => {
+        toggleProfilePanel(false);
+        setActiveTab('account');
+    });
+    $('profileSelectAll').addEventListener('click', toggleAllProfileSections);
     document.querySelectorAll('[data-profile-section]').forEach(input => {
         input.addEventListener('change', syncProfileSections);
     });
@@ -1856,6 +2022,7 @@
     });
     fields.symbol.addEventListener('change', () => {
         syncSymbolTitle();
+        renderProfileCategoryInfo();
         subscribeCurrentMarket();
         Promise.allSettled([loadDepth(), loadOrders()]);
     });
@@ -1866,6 +2033,7 @@
     syncSymbolTitle();
     setActiveTab('trade');
     syncProfileSections();
+    renderProfileCategoryInfo();
     renderProfileOrders([]);
     setUserIdentity(null);
     loadCurrentUser().finally(() => refreshAll().finally(startMarketRefresh));

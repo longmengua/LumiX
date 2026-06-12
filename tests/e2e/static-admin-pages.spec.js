@@ -207,9 +207,21 @@ test('exchange console renders client trading workflow without admin funding con
   // Scenario: the profile drawer exposes real account/order snapshots and lets users choose visible sections.
   await page.getByRole('button', { name: 'Open Profile' }).click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await expect(page.locator('#profileLoginRequired')).toBeHidden();
+  await expect(page.locator('#profileContent')).toBeVisible();
   await expect(page.locator('#profileBalance')).toContainText('10,000');
   await expect(page.locator('#profileFrozen')).toContainText('250');
   await expect(page.locator('[data-profile-panel="orders"]')).toContainText('order-live-r');
+  await expect(page.locator('[data-profile-panel="categoryInfo"]')).toContainText('BTCUSDT');
+  await expect(page.locator('#profileOpenOrderCount')).toHaveText('2');
+  await expect(page.locator('#profileSectionSummary')).toContainText('6/6');
+  await page.locator('#profileSectionSummary').click();
+  await page.locator('#profileSelectAll').click();
+  await expect(page.locator('[data-profile-panel="funds"]')).toBeHidden();
+  await expect(page.locator('#profileSectionSummary')).toContainText('0/6');
+  await page.locator('#profileSelectAll').click();
+  await expect(page.locator('[data-profile-panel="categoryInfo"]')).toBeVisible();
+  await expect(page.locator('#profileSectionSummary')).toContainText('6/6');
   await page.getByLabel('Frozen funds').uncheck();
   await expect(page.locator('[data-profile-panel="frozen"]')).toBeHidden();
   await page.getByLabel('Frozen funds').check();
@@ -255,9 +267,15 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#available')).toHaveText('-');
   await expect(page.locator('#frozen')).toHaveText('-');
   await expect(page.locator('#profileBalance')).toHaveText('-');
-  await expect(page.locator('#accountRaw')).toContainText('No account loaded');
+  await expect(page.locator('#authState')).toBeHidden();
+  await expect(page.locator('#accountRaw')).toBeHidden();
   await expect(page.locator('#orders')).toContainText('Login and refresh to load open orders');
   await expect(page.locator('#orderResult')).toContainText('No order submitted');
+  await page.getByRole('button', { name: 'Open Profile' }).click();
+  await expect(page.locator('#profileLoginRequired')).toBeVisible();
+  await expect(page.locator('#profileContent')).toBeHidden();
+  await page.getByRole('button', { name: 'Go to Login' }).click();
+  await expect(page.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-selected', 'true');
 
   // Locale switching should translate the client console without changing the default English test flow.
   await page.locator('#language').selectOption('zh-TW');
