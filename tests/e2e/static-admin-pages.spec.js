@@ -36,6 +36,7 @@ test('exchange console renders client trading workflow without admin funding con
         window.__exchangeWebSocketCommands.push(command);
         if (command.type === 'subscribe.market') {
           this.onmessage?.({ data: JSON.stringify({ event: 'subscribed.market', data: { symbol: command.symbol } }) });
+          this.onmessage?.({ data: JSON.stringify({ event: 'market-maker.quote', data: { symbol: command.symbol } }) });
         }
         if (command.type === 'subscribe.user') {
           this.onmessage?.({ data: JSON.stringify({ event: 'subscribed.user', data: { uid: command.uid, connectionId: 'ws-e2e-1' } }) });

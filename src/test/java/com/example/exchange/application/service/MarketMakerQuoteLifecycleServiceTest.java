@@ -25,6 +25,10 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 
 class MarketMakerQuoteLifecycleServiceTest {
 
@@ -56,6 +60,7 @@ class MarketMakerQuoteLifecycleServiceTest {
         assertThat(fixture.gateway.requests).extracting(PlacedQuoteOrder::side)
                 .containsExactly(OrderSide.BUY, OrderSide.SELL);
         assertThat(fixture.published).hasSize(1);
+        verify(fixture.pushGatewayService).publishMarket(eq("BTCUSDT"), eq("market-maker.quote"), any(MarketMakerQuoteState.class));
     }
 
     @Test
@@ -80,6 +85,7 @@ class MarketMakerQuoteLifecycleServiceTest {
                     assertThat(state.askOrderId()).isNull();
                 });
         assertThat(fixture.gateway.requests).isEmpty();
+        verify(fixture.pushGatewayService).publishMarket(eq("BTCUSDT"), eq("market-maker.quote"), any(MarketMakerQuoteState.class));
     }
 
     @Test
@@ -178,11 +184,13 @@ class MarketMakerQuoteLifecycleServiceTest {
         private final MemQuoteStateStore quoteStateStore = new MemQuoteStateStore();
         private final RecordingQuoteOrderGateway gateway = new RecordingQuoteOrderGateway();
         private final List<MarketMakerQuoteDecisionRecorded> published = new ArrayList<>();
+        private final PushGatewayService pushGatewayService = mock(PushGatewayService.class);
         private final MarketMakerQuoteLifecycleService service = new MarketMakerQuoteLifecycleService(
                 new MarketMakerProfileService(profileStore),
                 new MarketMakerQuoteService(published::add),
                 gateway,
-                quoteStateStore
+                quoteStateStore,
+                pushGatewayService
         );
     }
 

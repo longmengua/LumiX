@@ -1387,7 +1387,7 @@
                 updateFallbackPolling();
                 return;
             }
-            if (['depth-delta', 'ticker', 'trade', 'order.lifecycle', 'gateway.heartbeat'].includes(message.event)) {
+            if (['depth-delta', 'ticker', 'trade', 'order.lifecycle', 'market-maker.quote', 'gateway.heartbeat'].includes(message.event)) {
                 refreshLivePanes();
             }
         } catch (error) {

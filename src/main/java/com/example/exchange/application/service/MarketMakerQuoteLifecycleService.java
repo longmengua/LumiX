@@ -27,6 +27,7 @@ public class MarketMakerQuoteLifecycleService {
     private final MarketMakerQuoteService quoteService;
     private final MarketMakerQuoteOrderGateway orderGateway;
     private final MarketMakerQuoteStateStore quoteStateStore;
+    private final PushGatewayService pushGatewayService;
 
     @Transactional
     public MarketMakerQuoteLifecycleReport placeQuote(MarketMakerQuoteCommand command) {
@@ -42,14 +43,23 @@ public class MarketMakerQuoteLifecycleService {
         MarketMakerQuoteDecision decision = quoteService.validateQuote(profile, command);
         int canceledCount = orderGateway.cancelOpenQuoteOrders(command);
         if (!decision.accepted()) {
-            quoteStateStore.save(state(command, decision, canceledCount, null, null, previousState.orElse(null)));
+            MarketMakerQuoteState currentState = state(command, decision, canceledCount, null, null, previousState.orElse(null));
+            quoteStateStore.save(currentState);
+            publishQuoteState(currentState);
             return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 0, null, null);
         }
 
         UUID bidOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.BUY);
         UUID askOrderId = orderGateway.placePostOnlyLimit(command, OrderSide.SELL);
-        quoteStateStore.save(state(command, decision, canceledCount, bidOrderId, askOrderId, previousState.orElse(null)));
+        MarketMakerQuoteState currentState = state(command, decision, canceledCount, bidOrderId, askOrderId, previousState.orElse(null));
+        quoteStateStore.save(currentState);
+        publishQuoteState(currentState);
         return new MarketMakerQuoteLifecycleReport(decision, canceledCount, 2, bidOrderId, askOrderId);
+    }
+
+    private void publishQuoteState(MarketMakerQuoteState state) {
+        // Client exchange screens subscribe by symbol and use this signal to refresh visible maker liquidity.
+        pushGatewayService.publishMarket(state.symbol(), "market-maker.quote", state);
     }
 
     @Transactional(readOnly = true)
