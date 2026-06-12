@@ -2,6 +2,7 @@
 // DOM helper keeps the static MVP page dependency-free while the app is still backend-first.
 const $ = (id) => document.getElementById(id);
 const I18N_STORAGE_KEY = 'exchangeLanguage';
+const PENDING_REGISTRATION_EMAIL_KEY = 'exchangePendingRegistrationEmail';
 const translations = {
     en: {
         'page.title': 'Exchange Console',
@@ -548,6 +549,27 @@ function setRegistrationVerificationMode(active) {
     $('authActions').hidden = active;
 }
 
+function rememberPendingRegistration(email) {
+    const normalized = (email || '').trim();
+    if (normalized) {
+        localStorage.setItem(PENDING_REGISTRATION_EMAIL_KEY, normalized);
+    }
+}
+
+function clearPendingRegistration() {
+    localStorage.removeItem(PENDING_REGISTRATION_EMAIL_KEY);
+}
+
+function continuePendingRegistration(email) {
+    // Pending registration is recoverable: users can return after refresh/offline interruption and type the email code.
+    rememberPendingRegistration(email);
+    $('authEmail').value = (email || $('authEmail').value).trim();
+    fields.emailVerificationCode.value = '';
+    setRegistrationVerificationMode(true);
+    showNotice(t('status.registrationPending'));
+    fields.emailVerificationCode.focus();
+}
+
 // Session-bound data must disappear on logout so the next person at the browser cannot see stale account state.
 function clearSessionUi() {
     $('authState').textContent = t('empty.authState');
@@ -610,11 +632,13 @@ async function authenticate(mode) {
             });
             fields.humanVerificationToken.value = '';
             fields.emailVerificationCode.value = '';
-            setRegistrationVerificationMode(result.emailVerificationRequired);
-            showNotice(result.emailVerificationRequired ? t('status.registrationPending') : t('status.registrationCreated'));
             if (result.emailVerificationRequired) {
-                fields.emailVerificationCode.focus();
+                continuePendingRegistration(result.email || $('authEmail').value);
+                return;
             }
+            clearPendingRegistration();
+            setRegistrationVerificationMode(false);
+            showNotice(result.emailVerificationRequired ? t('status.registrationPending') : t('status.registrationCreated'));
             return;
         }
         const result = await api(`/api/auth/${mode}`, {
@@ -634,6 +658,10 @@ async function authenticate(mode) {
         await refreshAll();
         subscribeCurrentUser();
     } catch (error) {
+        if (mode === 'register' && error.code === 'AUTH_REGISTRATION_PENDING') {
+            continuePendingRegistration($('authEmail').value);
+            return;
+        }
         showError($('authError'), authDisplayError(mode, error));
     }
 }
@@ -691,10 +719,24 @@ async function verifyRegistrationCode() {
         });
         showNotice(t('status.registrationVerified'));
         fields.emailVerificationCode.value = '';
+        clearPendingRegistration();
         setRegistrationVerificationMode(false);
     } catch (error) {
         showError($('authError'), error);
     }
+}
+
+function restorePendingRegistration() {
+    if (auth.accessToken) {
+        return;
+    }
+    const pendingEmail = localStorage.getItem(PENDING_REGISTRATION_EMAIL_KEY);
+    if (!pendingEmail) {
+        return;
+    }
+    $('authEmail').value = pendingEmail;
+    setRegistrationVerificationMode(true);
+    showNotice(t('status.registrationPending'));
 }
 
 function validateEmailCode() {
@@ -799,6 +841,7 @@ async function logout() {
 async function loadCurrentUser() {
     if (!auth.accessToken) {
         clearSessionUi();
+        restorePendingRegistration();
         return;
     }
     try {

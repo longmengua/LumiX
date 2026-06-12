@@ -504,6 +504,14 @@ test('exchange console shows generic login error for unknown accounts', async ({
     password: 'wrong-password',
     preferredLanguage: 'en'
   });
-  await expect(page.locator('#authError')).toContainText('Registration verification is already in progress');
-  await expect(page.locator('#authError')).not.toContainText('發生異常');
+  await expect(page.locator('#authError')).toBeHidden();
+  await expect(page.locator('#emailVerificationStep')).toBeVisible();
+  await expect(page.locator('#emailVerificationCode')).toBeFocused();
+  await expect(page.locator('#authNotice')).toContainText('Enter the email verification code');
+
+  // Scenario: if the tab reloads or network drops after registration starts, the customer can continue code entry.
+  await page.reload();
+  await page.getByRole('button', { name: 'Open Profile' }).click();
+  await expect(page.locator('#authEmail')).toHaveValue('missing@example.com');
+  await expect(page.locator('#emailVerificationStep')).toBeVisible();
 });
