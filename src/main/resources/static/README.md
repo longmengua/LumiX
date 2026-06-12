@@ -20,5 +20,5 @@
 注意：
 - 這不是 production 前端。
 - 若新增正式前端，應先確認 build pipeline、auth flow、secret handling。
-- 客戶註冊安全設定集中在 `customer-auth.*`：本機預設關閉 email verification / captcha，prod profile 預設開啟 email verification、SMTP 與 Turnstile 相容 captcha；captcha secret 不可寫入靜態頁，email verification token 與六位數驗證碼只存 SHA-256 hash。Email verification 可用 `customer-auth.email-verification.smtp.*` 接 Gmail SMTP、SES SMTP 或內部 relay；註冊 pending request 會存在獨立 `customer_registration_requests` 表，24 小時後過期，驗證成功才建立正式帳號與帳戶。
+- 客戶註冊安全設定集中在 `customer-auth.*`：本機預設關閉 email verification / captcha，prod profile 預設開啟 email verification、SMTP 與 Turnstile 相容 captcha；captcha secret 不可寫入靜態頁。註冊 pending request 會存在獨立 `customer_registration_requests` 表並只保存備案 link token hash；六位數信箱驗證碼存在 `customer_verification_codes`，以 email/account 對應而不綁定單一功能，方便後續後台補發或人工處理。Email verification 可用 `customer-auth.email-verification.smtp.*` 接 Gmail SMTP、SES SMTP 或內部 relay；pending registration 24 小時後過期，驗證成功才建立正式帳號與帳戶。
 - 靜態頁新增或改版時，應補 `tests/e2e/` 的 Playwright browser smoke，至少覆蓋頁面載入、主要控制項、API 成功資料渲染與錯誤可視狀態。

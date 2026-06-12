@@ -7,10 +7,12 @@ import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.AppUserRecord;
 import com.example.exchange.domain.model.entity.AuthRefreshSessionRecord;
 import com.example.exchange.domain.model.entity.CustomerRegistrationRecord;
+import com.example.exchange.domain.model.entity.CustomerVerificationCodeRecord;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.jpa.AppUserRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.AuthRefreshSessionRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.CustomerRegistrationRecordJpaRepository;
+import com.example.exchange.domain.repository.jpa.CustomerVerificationCodeRecordJpaRepository;
 import com.example.exchange.infra.config.CustomerAuthProperties;
 import com.example.exchange.interfaces.web.security.ApiPrincipal;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
@@ -36,6 +38,7 @@ public class AuthService {
 
     private final AppUserRecordJpaRepository users;
     private final CustomerRegistrationRecordJpaRepository registrations;
+    private final CustomerVerificationCodeRecordJpaRepository verificationCodes;
     private final AuthRefreshSessionRecordJpaRepository sessions;
     private final AccountRepository accountRepository;
     private final PasswordHashService passwordHashService;
@@ -51,6 +54,7 @@ public class AuthService {
     public AuthService(
             AppUserRecordJpaRepository users,
             CustomerRegistrationRecordJpaRepository registrations,
+            CustomerVerificationCodeRecordJpaRepository verificationCodes,
             AuthRefreshSessionRecordJpaRepository sessions,
             AccountRepository accountRepository,
             PasswordHashService passwordHashService,
@@ -60,13 +64,14 @@ public class AuthService {
             EmailVerificationNotifier emailVerificationNotifier,
             ObjectMapper objectMapper
     ) {
-        this(users, registrations, sessions, accountRepository, passwordHashService, jwtTokenService,
+        this(users, registrations, verificationCodes, sessions, accountRepository, passwordHashService, jwtTokenService,
                 customerAuthProperties, humanVerificationService, emailVerificationNotifier, objectMapper, Clock.systemUTC());
     }
 
     AuthService(
             AppUserRecordJpaRepository users,
             CustomerRegistrationRecordJpaRepository registrations,
+            CustomerVerificationCodeRecordJpaRepository verificationCodes,
             AuthRefreshSessionRecordJpaRepository sessions,
             AccountRepository accountRepository,
             PasswordHashService passwordHashService,
@@ -79,6 +84,7 @@ public class AuthService {
     ) {
         this.users = users;
         this.registrations = registrations;
+        this.verificationCodes = verificationCodes;
         this.sessions = sessions;
         this.accountRepository = accountRepository;
         this.passwordHashService = passwordHashService;
@@ -117,7 +123,14 @@ public class AuthService {
                     normalizedEmail,
                     passwordHashService.hash(password),
                     sha256Hex(token),
-                    sha256Hex(normalizedEmail + ":" + code),
+                    expiresAt
+            ));
+            // Verification codes live in their own table so operators can later resend or inspect code state by email/account.
+            verificationCodes.save(new CustomerVerificationCodeRecord(
+                    normalizedEmail,
+                    null,
+                    registration.getId(),
+                    verificationCodeHash(normalizedEmail, code),
                     expiresAt
             ));
             String verificationUrl = verificationUrl(token);
@@ -174,7 +187,7 @@ public class AuthService {
         CustomerRegistrationRecord registration = registrations
                 .findByVerificationTokenHashAndStatus(sha256Hex(token), CustomerRegistrationRecord.STATUS_PENDING)
                 .orElseThrow(() -> new IllegalArgumentException("email verification token is invalid"));
-        return completeRegistration(registration);
+        return completeRegistration(registration, latestPendingCode(registration.getEmail()).orElse(null));
     }
 
     /** Completes a pending registration from the six-digit code typed into the registration verification step. */
@@ -187,11 +200,19 @@ public class AuthService {
         CustomerRegistrationRecord registration = registrations
                 .findFirstByEmailAndStatusOrderByCreatedAtDesc(normalizedEmail, CustomerRegistrationRecord.STATUS_PENDING)
                 .orElseThrow(() -> new IllegalArgumentException("registration verification is invalid"));
-        String expectedHash = sha256Hex(normalizedEmail + ":" + code.trim());
-        if (!expectedHash.equals(registration.getVerificationCodeHash())) {
+        CustomerVerificationCodeRecord verificationCode = latestPendingCode(normalizedEmail)
+                .orElseThrow(() -> new IllegalArgumentException("registration verification code is invalid"));
+        Instant now = Instant.now(clock);
+        if (verificationCode.isExpired(now)) {
+            verificationCode.expire();
+            verificationCodes.save(verificationCode);
+            throw new IllegalArgumentException("registration verification is expired");
+        }
+        String expectedHash = verificationCodeHash(normalizedEmail, code);
+        if (!expectedHash.equals(verificationCode.getCodeHash())) {
             throw new IllegalArgumentException("registration verification code is invalid");
         }
-        return completeRegistration(registration);
+        return completeRegistration(registration, verificationCode);
     }
 
     /** Revokes the refresh session by token hash; missing tokens are treated as a no-op logout. */
@@ -271,16 +292,27 @@ public class AuthService {
         return baseUrl + separator + "verifyEmailToken=" + token;
     }
 
-    private CurrentUser completeRegistration(CustomerRegistrationRecord registration) {
+    private CurrentUser completeRegistration(
+            CustomerRegistrationRecord registration,
+            CustomerVerificationCodeRecord verificationCode
+    ) {
         Instant now = Instant.now(clock);
         if (registration.isExpired(now)) {
             registration.expire();
             registrations.save(registration);
+            if (verificationCode != null) {
+                verificationCode.expire();
+                verificationCodes.save(verificationCode);
+            }
             throw new IllegalArgumentException("registration verification is expired");
         }
         if (users.existsByEmail(registration.getEmail())) {
             registration.expire();
             registrations.save(registration);
+            if (verificationCode != null) {
+                verificationCode.expire();
+                verificationCodes.save(verificationCode);
+            }
             throw new IllegalArgumentException("email already registered");
         }
         AppUserRecord user = users.saveAndFlush(new AppUserRecord(registration.getEmail(), registration.getPasswordHash()));
@@ -289,11 +321,26 @@ public class AuthService {
         accountRepository.save(new Account(user.getId()));
         registration.verify(now);
         registrations.save(registration);
+        if (verificationCode != null) {
+            verificationCode.verify(now, user.getId());
+            verificationCodes.save(verificationCode);
+        }
         return toCurrentUser(user);
     }
 
     private String verificationCode() {
         return String.format("%06d", secureRandom.nextInt(1_000_000));
+    }
+
+    private Optional<CustomerVerificationCodeRecord> latestPendingCode(String normalizedEmail) {
+        return verificationCodes.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                normalizedEmail,
+                CustomerVerificationCodeRecord.STATUS_PENDING
+        );
+    }
+
+    private String verificationCodeHash(String normalizedEmail, String code) {
+        return sha256Hex(normalizedEmail + ":" + code.trim());
     }
 
     /** Hashes refresh tokens so a database leak does not expose reusable logout/session credentials. */

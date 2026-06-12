@@ -1,5 +1,5 @@
 /*
- * File purpose: Pending customer registration request decoupled from finalized app user accounts.
+ * File purpose: Independent customer email verification code state for registration and future resend flows.
  */
 package com.example.exchange.domain.model.entity;
 
@@ -15,8 +15,8 @@ import jakarta.persistence.Table;
 import java.time.Instant;
 
 @Entity
-@Table(name = "customer_registration_requests")
-public class CustomerRegistrationRecord {
+@Table(name = "customer_verification_codes")
+public class CustomerVerificationCodeRecord {
 
     public static final String STATUS_PENDING = "PENDING";
     public static final String STATUS_VERIFIED = "VERIFIED";
@@ -26,17 +26,21 @@ public class CustomerRegistrationRecord {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Email is normalized before storage so code verification is case-insensitive.
+    // Email is the stable lookup key before an app_users row exists.
     @Column(nullable = false, length = 320)
     private String email;
 
-    // Pending password hash is promoted into app_users only after mailbox ownership is verified.
-    @Column(nullable = false, length = 255)
-    private String passwordHash;
+    // Nullable until a pending registration is promoted into a finalized app user.
+    @Column
+    private Long appUserId;
 
-    // Backup email-link token is separate from the primary code table so registration material stays focused.
+    // Optional association to registration; future admin resend flows can issue account-level codes without it.
+    @Column
+    private Long registrationRequestId;
+
+    // Raw codes are never stored; the hash includes normalized email to reduce cross-account replay risk.
     @Column(nullable = false, length = 64)
-    private String verificationTokenHash;
+    private String codeHash;
 
     @Column(nullable = false, length = 32)
     private String status = STATUS_PENDING;
@@ -53,18 +57,20 @@ public class CustomerRegistrationRecord {
     @Column(nullable = false)
     private Instant updatedAt;
 
-    protected CustomerRegistrationRecord() {
+    protected CustomerVerificationCodeRecord() {
     }
 
-    public CustomerRegistrationRecord(
+    public CustomerVerificationCodeRecord(
             String email,
-            String passwordHash,
-            String verificationTokenHash,
+            Long appUserId,
+            Long registrationRequestId,
+            String codeHash,
             Instant expiresAt
     ) {
         this.email = AppUserRecord.normalizeEmail(email);
-        this.passwordHash = passwordHash;
-        this.verificationTokenHash = verificationTokenHash;
+        this.appUserId = appUserId;
+        this.registrationRequestId = registrationRequestId;
+        this.codeHash = codeHash;
         this.expiresAt = expiresAt;
     }
 
@@ -88,12 +94,16 @@ public class CustomerRegistrationRecord {
         return email;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public Long getAppUserId() {
+        return appUserId;
     }
 
-    public String getVerificationTokenHash() {
-        return verificationTokenHash;
+    public Long getRegistrationRequestId() {
+        return registrationRequestId;
+    }
+
+    public String getCodeHash() {
+        return codeHash;
     }
 
     public String getStatus() {
@@ -104,26 +114,19 @@ public class CustomerRegistrationRecord {
         return expiresAt;
     }
 
-    public Instant getCreatedAt() {
-        return createdAt;
-    }
-
-    public boolean isPending() {
-        return STATUS_PENDING.equals(status);
-    }
-
     public boolean isExpired(Instant now) {
         return !expiresAt.isAfter(now);
     }
 
-    /** Pending registration requests become unusable after the 24-hour verification window. */
+    /** Expired codes cannot be reused by later manual resend or registration completion attempts. */
     public void expire() {
         status = STATUS_EXPIRED;
     }
 
-    /** Marks the request consumed so the same code/link cannot create multiple accounts. */
-    public void verify(Instant now) {
+    /** Consumes the code and optionally links it to the finalized account created by registration. */
+    public void verify(Instant now, Long appUserId) {
         status = STATUS_VERIFIED;
         verifiedAt = now;
+        this.appUserId = appUserId;
     }
 }

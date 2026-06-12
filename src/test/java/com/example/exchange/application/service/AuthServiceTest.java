@@ -6,10 +6,12 @@ package com.example.exchange.application.service;
 import com.example.exchange.domain.model.entity.AppUserRecord;
 import com.example.exchange.domain.model.entity.AuthRefreshSessionRecord;
 import com.example.exchange.domain.model.entity.CustomerRegistrationRecord;
+import com.example.exchange.domain.model.entity.CustomerVerificationCodeRecord;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.jpa.AppUserRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.AuthRefreshSessionRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.CustomerRegistrationRecordJpaRepository;
+import com.example.exchange.domain.repository.jpa.CustomerVerificationCodeRecordJpaRepository;
 import com.example.exchange.infra.config.ApiAuthProperties;
 import com.example.exchange.infra.config.CustomerAuthProperties;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
@@ -132,6 +134,7 @@ class AuthServiceTest {
         AtomicReference<AppUserRecord> savedUser = new AtomicReference<>();
         AtomicReference<String> verificationUrl = new AtomicReference<>();
         AtomicReference<CustomerRegistrationRecord> savedRegistration = new AtomicReference<>();
+        AtomicReference<CustomerVerificationCodeRecord> savedCode = new AtomicReference<>();
         fixture.customerAuthProperties.getEmailVerification().setEnabled(true);
         fixture.customerAuthProperties.getEmailVerification().setReturnVerificationUrl(true);
         // Scenario: a production-like registration creates a pending request, not a final app user, until email is verified.
@@ -148,6 +151,10 @@ class AuthServiceTest {
         });
         when(fixture.registrations.save(any(CustomerRegistrationRecord.class))).thenAnswer(invocation -> {
             savedRegistration.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
+        when(fixture.verificationCodes.save(any(CustomerVerificationCodeRecord.class))).thenAnswer(invocation -> {
+            savedCode.set(invocation.getArgument(0));
             return invocation.getArgument(0);
         });
         org.mockito.Mockito.doAnswer(invocation -> {
@@ -170,12 +177,18 @@ class AuthServiceTest {
                 savedRegistration.get().getVerificationTokenHash(),
                 CustomerRegistrationRecord.STATUS_PENDING
         )).thenReturn(Optional.of(savedRegistration.get()));
+        when(fixture.verificationCodes.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                "alice@example.com",
+                CustomerVerificationCodeRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(savedCode.get()));
 
         AuthService.CurrentUser verified = fixture.service.verifyEmail(rawToken);
 
         assertThat(verified.email()).isEqualTo("alice@example.com");
         assertThat(savedUser.get().isEmailVerified()).isTrue();
         assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
+        assertThat(savedCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_VERIFIED);
+        assertThat(savedCode.get().getAppUserId()).isEqualTo(10001L);
         verify(fixture.accountRepository).save(any());
         verify(fixture.emailVerificationNotifier).sendVerification(anyString(), anyString(), anyString(), any());
     }
@@ -186,6 +199,7 @@ class AuthServiceTest {
         Fixture fixture = new Fixture();
         AtomicReference<AppUserRecord> savedUser = new AtomicReference<>();
         AtomicReference<CustomerRegistrationRecord> savedRegistration = new AtomicReference<>();
+        AtomicReference<CustomerVerificationCodeRecord> savedCode = new AtomicReference<>();
         AtomicReference<String> verificationCode = new AtomicReference<>();
         fixture.customerAuthProperties.getEmailVerification().setEnabled(true);
         // Scenario: a customer can type the six-digit email code in the browser without using the link.
@@ -204,6 +218,10 @@ class AuthServiceTest {
             savedRegistration.set(invocation.getArgument(0));
             return invocation.getArgument(0);
         });
+        when(fixture.verificationCodes.save(any(CustomerVerificationCodeRecord.class))).thenAnswer(invocation -> {
+            savedCode.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
         org.mockito.Mockito.doAnswer(invocation -> {
             verificationCode.set(invocation.getArgument(2));
             return null;
@@ -214,17 +232,23 @@ class AuthServiceTest {
                 "alice@example.com",
                 CustomerRegistrationRecord.STATUS_PENDING
         )).thenReturn(Optional.of(savedRegistration.get()));
+        when(fixture.verificationCodes.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                "alice@example.com",
+                CustomerVerificationCodeRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(savedCode.get()));
 
         AuthService.CurrentUser verified = fixture.service.verifyEmailCode("Alice@Example.com", verificationCode.get());
 
         assertThat(verified.uid()).isEqualTo(10002L);
         assertThat(verified.email()).isEqualTo("alice@example.com");
         assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
+        assertThat(savedCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_VERIFIED);
     }
 
     private static final class Fixture {
         private final AppUserRecordJpaRepository users = mock(AppUserRecordJpaRepository.class);
         private final CustomerRegistrationRecordJpaRepository registrations = mock(CustomerRegistrationRecordJpaRepository.class);
+        private final CustomerVerificationCodeRecordJpaRepository verificationCodes = mock(CustomerVerificationCodeRecordJpaRepository.class);
         private final AuthRefreshSessionRecordJpaRepository sessions = mock(AuthRefreshSessionRecordJpaRepository.class);
         private final AccountRepository accountRepository = mock(AccountRepository.class);
         private final PasswordHashService passwordHashService = new PasswordHashService();
@@ -242,6 +266,7 @@ class AuthServiceTest {
             service = new AuthService(
                     users,
                     registrations,
+                    verificationCodes,
                     sessions,
                     accountRepository,
                     passwordHashService,

@@ -24,6 +24,7 @@ Flyway migration scripts。
 - `V22__polymarket_user_ws_checkpoints.sql`：Polymarket user WebSocket gateway durable replay checkpoint。
 - `V23__position_lifecycle_projection.sql`：live position SQL mirror schema 與 production query indexes。
 - `V26__market_maker_quote_state_prices.sql`：market-maker active quote visible bid/ask price and quantity。
+- `V29__customer_verification_codes.sql`：customer verification code table，將六位數信箱驗證碼從 pending registration request 拆出，保留 link token 作備案流程。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。
