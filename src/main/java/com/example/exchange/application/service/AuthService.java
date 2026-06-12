@@ -9,6 +9,7 @@ import com.example.exchange.domain.model.entity.AuthRefreshSessionRecord;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.jpa.AppUserRecordJpaRepository;
 import com.example.exchange.domain.repository.jpa.AuthRefreshSessionRecordJpaRepository;
+import com.example.exchange.infra.config.CustomerAuthProperties;
 import com.example.exchange.interfaces.web.security.ApiPrincipal;
 import com.example.exchange.interfaces.web.security.JwtAuthenticator;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,12 +30,16 @@ public class AuthService {
 
     // Refresh sessions last longer than access JWTs and are the server-side logout/revocation handle.
     private static final Duration REFRESH_TOKEN_TTL = Duration.ofDays(30);
+    private static final Duration DEFAULT_EMAIL_TOKEN_TTL = Duration.ofMinutes(30);
 
     private final AppUserRecordJpaRepository users;
     private final AuthRefreshSessionRecordJpaRepository sessions;
     private final AccountRepository accountRepository;
     private final PasswordHashService passwordHashService;
     private final JwtTokenService jwtTokenService;
+    private final CustomerAuthProperties customerAuthProperties;
+    private final HumanVerificationService humanVerificationService;
+    private final EmailVerificationNotifier emailVerificationNotifier;
     private final ObjectMapper objectMapper;
     private final SecureRandom secureRandom = new SecureRandom();
     private final Clock clock;
@@ -46,9 +51,13 @@ public class AuthService {
             AccountRepository accountRepository,
             PasswordHashService passwordHashService,
             JwtTokenService jwtTokenService,
+            CustomerAuthProperties customerAuthProperties,
+            HumanVerificationService humanVerificationService,
+            EmailVerificationNotifier emailVerificationNotifier,
             ObjectMapper objectMapper
     ) {
-        this(users, sessions, accountRepository, passwordHashService, jwtTokenService, objectMapper, Clock.systemUTC());
+        this(users, sessions, accountRepository, passwordHashService, jwtTokenService,
+                customerAuthProperties, humanVerificationService, emailVerificationNotifier, objectMapper, Clock.systemUTC());
     }
 
     AuthService(
@@ -57,6 +66,9 @@ public class AuthService {
             AccountRepository accountRepository,
             PasswordHashService passwordHashService,
             JwtTokenService jwtTokenService,
+            CustomerAuthProperties customerAuthProperties,
+            HumanVerificationService humanVerificationService,
+            EmailVerificationNotifier emailVerificationNotifier,
             ObjectMapper objectMapper,
             Clock clock
     ) {
@@ -65,13 +77,17 @@ public class AuthService {
         this.accountRepository = accountRepository;
         this.passwordHashService = passwordHashService;
         this.jwtTokenService = jwtTokenService;
+        this.customerAuthProperties = customerAuthProperties;
+        this.humanVerificationService = humanVerificationService;
+        this.emailVerificationNotifier = emailVerificationNotifier;
         this.objectMapper = objectMapper;
         this.clock = clock;
     }
 
-    /** Registers a first-party exchange user and creates the matching internal account uid. */
+    /** Registers a first-party exchange user, runs anti-bot verification, and starts email verification when enabled. */
     @Transactional
-    public AuthResult register(String email, String password) {
+    public RegistrationResult register(String email, String password, String humanVerificationToken) {
+        humanVerificationService.verifyRegistration(humanVerificationToken);
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
         requireEmail(normalizedEmail);
         if (users.existsByEmail(normalizedEmail)) {
@@ -79,8 +95,24 @@ public class AuthService {
         }
         // saveAndFlush guarantees an IDENTITY-generated uid before creating the matching exchange account.
         AppUserRecord user = users.saveAndFlush(new AppUserRecord(normalizedEmail, passwordHashService.hash(password)));
+        String verificationUrl = null;
+        if (emailVerificationEnabled()) {
+            String token = randomToken();
+            user.startEmailVerification(sha256Hex(token), Instant.now(clock).plus(emailTokenTtl()));
+            users.save(user);
+            verificationUrl = verificationUrl(token);
+            emailVerificationNotifier.sendVerification(user.getEmail(), verificationUrl);
+        } else {
+            user.verifyEmail(Instant.now(clock));
+            users.save(user);
+        }
         accountRepository.save(new Account(user.getId()));
-        return issueAuth(user);
+        return new RegistrationResult(
+                user.getId(),
+                user.getEmail(),
+                emailVerificationEnabled(),
+                customerAuthProperties.getEmailVerification().isReturnVerificationUrl() ? verificationUrl : null
+        );
     }
 
     /** Authenticates local email/password credentials and creates a new refresh session. */
@@ -89,10 +121,35 @@ public class AuthService {
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
         AppUserRecord user = users.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new IllegalArgumentException("invalid credentials"));
-        if (!user.isActive() || !passwordHashService.matches(password, user.getPasswordHash())) {
+        if (!passwordHashService.matches(password, user.getPasswordHash())) {
             throw new IllegalArgumentException("invalid credentials");
         }
+        if (emailVerificationEnabled() && user.isPendingEmailVerification() && !user.isEmailVerified()) {
+            throw new IllegalStateException("email verification required");
+        }
+        if (!user.isActive()) {
+            throw new IllegalArgumentException("invalid credentials");
+        }
+        if (emailVerificationEnabled() && !user.isEmailVerified()) {
+            throw new IllegalStateException("email verification required");
+        }
         return issueAuth(user);
+    }
+
+    /** Activates a pending user when the raw email token matches the stored hash and has not expired. */
+    @Transactional
+    public CurrentUser verifyEmail(String token) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("email verification token is required");
+        }
+        AppUserRecord user = users.findByEmailVerificationTokenHash(sha256Hex(token))
+                .orElseThrow(() -> new IllegalArgumentException("email verification token is invalid"));
+        if (user.getEmailVerificationExpiresAt() == null || user.getEmailVerificationExpiresAt().isBefore(Instant.now(clock))) {
+            throw new IllegalArgumentException("email verification token is expired");
+        }
+        user.verifyEmail(Instant.now(clock));
+        users.save(user);
+        return toCurrentUser(user);
     }
 
     /** Revokes the refresh session by token hash; missing tokens are treated as a no-op logout. */
@@ -117,6 +174,7 @@ public class AuthService {
         return principal.flatMap(apiPrincipal -> parseUserId(apiPrincipal.subject()))
                 .flatMap(users::findById)
                 .filter(AppUserRecord::isActive)
+                .filter(user -> !emailVerificationEnabled() || user.isEmailVerified())
                 .map(this::toCurrentUser);
     }
 
@@ -149,6 +207,21 @@ public class AuthService {
         byte[] bytes = new byte[32];
         secureRandom.nextBytes(bytes);
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    private boolean emailVerificationEnabled() {
+        return customerAuthProperties.getEmailVerification().isEnabled();
+    }
+
+    private Duration emailTokenTtl() {
+        int minutes = customerAuthProperties.getEmailVerification().getTokenTtlMinutes();
+        return minutes > 0 ? Duration.ofMinutes(minutes) : DEFAULT_EMAIL_TOKEN_TTL;
+    }
+
+    private String verificationUrl(String token) {
+        String baseUrl = customerAuthProperties.getEmailVerification().getPublicBaseUrl();
+        String separator = baseUrl.contains("?") ? "&" : "?";
+        return baseUrl + separator + "verifyEmailToken=" + token;
     }
 
     /** Hashes refresh tokens so a database leak does not expose reusable logout/session credentials. */
@@ -188,6 +261,14 @@ public class AuthService {
             String refreshToken,
             Instant refreshTokenExpiresAt,
             CurrentUser user
+    ) {
+    }
+
+    public record RegistrationResult(
+            Long uid,
+            String email,
+            boolean emailVerificationRequired,
+            String verificationUrl
     ) {
     }
 

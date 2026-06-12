@@ -11,6 +11,8 @@ public record RegisterRequest(
         // Email is the local login identifier; it is normalized before persistence.
         @Email @NotBlank String email,
         // Password is accepted only at registration time and is immediately hashed server-side.
-        @NotBlank @Size(min = 8, max = 128) String password
+        @NotBlank @Size(min = 8, max = 128) String password,
+        // Public registration can require a free human-verification provider token such as Cloudflare Turnstile.
+        String humanVerificationToken
 ) {
 }

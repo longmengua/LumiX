@@ -476,27 +476,55 @@
             position: fixed;
             right: 16px;
             top: 72px;
-            width: min(440px, calc(100vw - 24px));
+            width: min(520px, calc(100vw - 24px));
             max-height: calc(100vh - 88px);
             overflow: auto;
             z-index: 30;
+            padding: 0;
         }
 
         .profile-panel[hidden] {
             display: none;
         }
 
+        .profile-panel > .auth-card,
+        .profile-panel > .profile-content,
+        .profile-panel > .error,
+        .profile-panel > .notice {
+            margin: 14px;
+        }
+
+        .profile-header {
+            align-items: center;
+            background: linear-gradient(135deg, #111827, #26344d);
+            color: #fff;
+            margin: 0;
+            padding: 16px;
+        }
+
+        .profile-header h2 {
+            font-size: 18px;
+            margin-bottom: 2px;
+        }
+
+        .profile-header .helper {
+            color: #cbd5e1;
+            margin: 0;
+        }
+
         .profile-options {
             display: grid;
             gap: 8px;
-            grid-template-columns: repeat(2, minmax(0, 1fr));
-            margin-bottom: 12px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            margin-top: 10px;
         }
 
         .profile-section-selector {
-            border-top: 1px solid #e5ebf2;
-            margin-top: 12px;
-            padding-top: 12px;
+            background: #fff;
+            border: 1px solid #e5ebf2;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 10px;
         }
 
         .profile-section-selector summary {
@@ -512,43 +540,28 @@
             padding: 0 10px;
         }
 
-        .profile-section-selector .profile-options {
-            margin: 10px 0 0;
-        }
-
         .profile-selector-actions {
             display: flex;
             justify-content: flex-end;
             margin-top: 10px;
         }
 
-        .profile-content[hidden], .profile-login-required[hidden] {
+        .profile-content[hidden] {
             display: none;
-        }
-
-        .profile-login-required {
-            background: var(--panel-soft);
-            border: 1px solid #e5ebf2;
-            border-radius: 8px;
-            display: grid;
-            gap: 10px;
-            padding: 14px;
-        }
-
-        .profile-login-required strong {
-            font-size: 15px;
         }
 
         .profile-options label {
             align-items: center;
-            background: var(--panel-soft);
+            background: #fff;
             border: 1px solid #e5ebf2;
-            border-radius: 6px;
+            border-radius: 999px;
             color: var(--text);
             display: flex;
             gap: 8px;
+            justify-content: center;
             min-width: 0;
-            padding: 8px;
+            min-height: 34px;
+            padding: 7px 10px;
             text-transform: none;
         }
 
@@ -558,20 +571,106 @@
         }
 
         .profile-section {
-            border-top: 1px solid #e5ebf2;
-            padding-top: 12px;
-            margin-top: 12px;
+            background: #fff;
+            border: 1px solid #e5ebf2;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            padding: 12px;
         }
 
         .profile-section[hidden] {
             display: none;
         }
 
-        .profile-section h3 {
+        .profile-section h3, .profile-card-title {
             font-size: 13px;
             margin: 0 0 8px;
             text-transform: uppercase;
             color: var(--muted);
+        }
+
+        .profile-account-hero {
+            align-items: center;
+            background: linear-gradient(135deg, #f8fafc, #eef6f4);
+            border: 1px solid #dce7ee;
+            border-radius: 8px;
+            display: grid;
+            gap: 12px;
+            grid-template-columns: 44px minmax(0, 1fr) auto;
+            padding: 12px;
+        }
+
+        .profile-avatar {
+            align-items: center;
+            background: #0a8f7b;
+            border-radius: 50%;
+            color: #fff;
+            display: flex;
+            font-size: 18px;
+            font-weight: 800;
+            height: 44px;
+            justify-content: center;
+            width: 44px;
+        }
+
+        .profile-avatar::before {
+            content: "";
+            background: currentColor;
+            height: 20px;
+            mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-9 9a9 9 0 0 1 18 0 1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+            -webkit-mask: url("data:image/svg+xml,%3Csvg viewBox='0 0 24 24' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M12 12a5 5 0 1 0 0-10 5 5 0 0 0 0 10Zm-9 9a9 9 0 0 1 18 0 1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z'/%3E%3C/svg%3E") center / contain no-repeat;
+            width: 20px;
+        }
+
+        .profile-email {
+            color: var(--text);
+            font-size: 16px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-meta {
+            color: var(--muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 3px;
+            font-size: 12px;
+        }
+
+        .profile-meta strong {
+            color: var(--text);
+        }
+
+        .profile-funds-card {
+            background: linear-gradient(135deg, #ffffff, #f4faf8);
+            border-color: #cfe7e1;
+        }
+
+        .profile-balance-hero {
+            display: grid;
+            gap: 2px;
+            margin-bottom: 10px;
+        }
+
+        .profile-balance-hero .value {
+            color: var(--text);
+            font-size: 30px;
+            font-weight: 800;
+            line-height: 1.1;
+            overflow-wrap: anywhere;
+        }
+
+        .profile-compact-metrics {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .profile-section-heading {
+            align-items: center;
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 8px;
         }
 
         .auth-card {
@@ -581,6 +680,15 @@
         }
 
         .auth-actions {
+            display: grid;
+            gap: 8px;
+        }
+
+        .human-verification[hidden] {
+            display: none;
+        }
+
+        .human-verification {
             display: grid;
             gap: 8px;
         }
@@ -643,7 +751,7 @@
                 justify-content: space-between;
             }
 
-            main, .form-grid, .metric-row, .identity-row {
+            main, .form-grid, .metric-row, .identity-row, .profile-account-hero {
                 grid-template-columns: 1fr;
             }
 
@@ -704,9 +812,10 @@
 </header>
 
 <aside id="profilePanel" class="panel profile-panel" hidden>
-    <div class="panel-heading">
+    <div class="panel-heading profile-header">
         <div>
             <h2 data-i18n="profile.title">Profile</h2>
+            <div class="helper" data-i18n="account.signInHelper">Sign in to view balances, frozen funds, and positions.</div>
         </div>
         <button id="profileClose" type="button" class="secondary icon-button" data-i18n-aria-label="profile.close" data-i18n-title="profile.close" aria-label="Close Profile" title="Close Profile">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -714,25 +823,71 @@
             </svg>
         </button>
     </div>
-    <div id="profileLoginRequired" class="profile-login-required">
-        <strong data-i18n="profile.loginRequiredTitle">Login required</strong>
-        <div class="helper" data-i18n="profile.loginRequiredBody">Login to view balances, frozen funds, orders, and positions.</div>
-        <button id="profileLoginAction" type="button" data-i18n="profile.loginAction">Go to Login</button>
+    <div id="authCard" class="auth-card">
+        <div>
+            <label for="authEmail" data-i18n="field.email">Email</label>
+            <input id="authEmail" autocomplete="off" data-lpignore="true"/>
+        </div>
+        <div>
+            <label for="authPassword" data-i18n="field.password">Password</label>
+            <input id="authPassword" type="password" autocomplete="new-password" data-lpignore="true"/>
+        </div>
+        <div id="humanVerification" class="human-verification" hidden>
+            <label for="humanVerificationToken" data-i18n="field.humanVerification">Human Verification</label>
+            <div id="turnstileWidget"></div>
+            <input id="humanVerificationToken" autocomplete="off" data-i18n-placeholder="field.humanVerificationPlaceholder" placeholder="Verification token"/>
+        </div>
+        <div class="auth-actions">
+            <button id="login" type="button" data-i18n="action.login">Login</button>
+            <button id="register" type="button" class="text-button" data-i18n="account.createAccount">Create an account</button>
+        </div>
     </div>
     <div id="profileContent" class="profile-content" hidden>
-        <div class="profile-section" data-profile-panel="funds">
-            <h3 data-i18n="profile.funds">Personal Funds</h3>
-            <div class="metric-row">
-                <div class="metric"><label data-i18n="metric.balance">Balance</label><div id="profileBalance" class="value">-</div></div>
+        <div id="accountSummary" class="account-summary" hidden>
+            <div class="profile-account-hero">
+                <div class="profile-avatar" aria-hidden="true"></div>
+                <div>
+                    <div id="sessionDisplay" class="profile-email">Not logged in</div>
+                    <div class="profile-meta">
+                        <span>UID <strong id="uidDisplay">-</strong></span>
+                        <span data-i18n="account.assetsHelper">Balances update from your authenticated session.</span>
+                    </div>
+                </div>
+                <button id="logout" type="button" class="secondary" data-i18n="action.logout">Logout</button>
+            </div>
+            <input id="uid" type="hidden" value=""/>
+            <div class="metric-row account-metrics" hidden>
+                <div class="metric">
+                    <label data-i18n="metric.balance">Balance</label>
+                    <div id="balance" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.available">Available</label>
+                    <div id="available" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.frozen">Frozen</label>
+                    <div id="frozen" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.positionMargin">Position Margin</label>
+                    <div id="positionMargin" class="value">-</div>
+                </div>
+            </div>
+        </div>
+        <div class="profile-section profile-funds-card" data-profile-panel="funds">
+            <div class="profile-balance-hero">
+                <label data-i18n="metric.balance">Balance</label>
+                <div id="profileBalance" class="value">-</div>
+            </div>
+            <div class="metric-row profile-compact-metrics">
                 <div class="metric"><label data-i18n="metric.available">Available</label><div id="profileAvailable" class="value">-</div></div>
+                <div class="metric"><label data-i18n="metric.frozen">Frozen</label><div id="profileFrozen" class="value">-</div></div>
             </div>
         </div>
         <details class="profile-section-selector">
             <summary id="profileSectionSummary">Display sections (6/6)</summary>
             <div class="helper" data-i18n="profile.helper">Choose which account and position sections are visible.</div>
-            <div class="profile-selector-actions">
-                <button id="profileSelectAll" type="button" class="secondary" data-i18n="profile.clearAll">Clear All</button>
-            </div>
             <div class="profile-options" aria-label="Profile sections">
                 <label><input type="checkbox" data-profile-section="funds" checked/> <span data-i18n="profile.showFunds">Funds</span></label>
                 <label><input type="checkbox" data-profile-section="categoryInfo" checked/> <span data-i18n="profile.showCategory">Category info</span></label>
@@ -741,10 +896,13 @@
                 <label><input type="checkbox" data-profile-section="heldPositions" checked/> <span data-i18n="profile.showHeld">Held positions</span></label>
                 <label><input type="checkbox" data-profile-section="positionHistory" checked/> <span data-i18n="profile.showHistory">Position history</span></label>
             </div>
+            <div class="profile-selector-actions">
+                <button id="profileSelectAll" type="button" class="secondary" data-i18n="profile.clearAll">Clear All</button>
+            </div>
         </details>
         <div class="profile-section" data-profile-panel="categoryInfo">
             <h3 data-i18n="profile.categoryInfo">Category Info</h3>
-            <div class="metric-row">
+            <div class="metric-row profile-compact-metrics">
                 <div class="metric"><label data-i18n="profile.currentMarket">Current Market</label><div id="profileCurrentMarket" class="value">-</div></div>
                 <div class="metric"><label data-i18n="profile.openOrderCount">Open Orders</label><div id="profileOpenOrderCount" class="value">0</div></div>
                 <div class="metric"><label data-i18n="profile.visibleSections">Visible Sections</label><div id="profileVisibleSections" class="value">0/0</div></div>
@@ -752,8 +910,7 @@
         </div>
         <div class="profile-section" data-profile-panel="frozen">
             <h3 data-i18n="profile.frozen">Frozen Funds</h3>
-            <div class="metric-row">
-                <div class="metric"><label data-i18n="metric.frozen">Frozen</label><div id="profileFrozen" class="value">-</div></div>
+            <div class="metric-row profile-compact-metrics">
                 <div class="metric"><label data-i18n="profile.orderHold">Order Hold</label><div id="profileOrderHold" class="value">-</div></div>
                 <div class="metric"><label data-i18n="metric.positionMargin">Position Margin</label><div id="profilePositionMargin" class="value">-</div></div>
             </div>
@@ -771,12 +928,16 @@
             <div id="profilePositionHistory" class="empty" data-i18n="empty.noPositionHistory">No position history loaded.</div>
         </div>
     </div>
+    <div id="authError" class="error" hidden></div>
+    <div id="authNotice" class="notice" hidden></div>
+    <div id="accountError" class="error" hidden></div>
+    <pre id="authState" class="compact-pre" data-i18n="empty.authState" hidden>Not logged in.</pre>
+    <pre id="accountRaw" class="compact-pre" data-i18n="empty.accountRaw" hidden>No account loaded.</pre>
 </aside>
 
 <main>
     <nav class="app-tabs" aria-label="Exchange sections">
         <button type="button" class="tab-button" data-tab="trade" aria-selected="true" data-i18n="tab.trade">Trade</button>
-        <button type="button" class="tab-button" data-tab="account" aria-selected="false" data-i18n="tab.account">Account</button>
     </nav>
 
     <section class="trading-workspace" data-tab-panel="trade">
@@ -908,69 +1069,6 @@
         </div>
     </section>
 
-    <section class="panel account-panel" data-tab-panel="account" hidden>
-        <div class="panel-heading">
-            <h2 data-i18n="account.title">User Account</h2>
-        </div>
-        <div id="authCard" class="auth-card">
-            <div class="helper" data-i18n="account.signInHelper">Sign in to view balances, frozen funds, and positions.</div>
-            <div>
-                <label for="authEmail" data-i18n="field.email">Email</label>
-                <input id="authEmail" autocomplete="off" data-lpignore="true"/>
-            </div>
-            <div>
-                <label for="authPassword" data-i18n="field.password">Password</label>
-                <input id="authPassword" type="password" autocomplete="new-password" data-lpignore="true"/>
-            </div>
-            <div class="auth-actions">
-                <button id="login" type="button" data-i18n="action.login">Login</button>
-                <button id="register" type="button" class="text-button" data-i18n="account.createAccount">Create an account</button>
-            </div>
-        </div>
-        <div id="accountSummary" class="account-summary" hidden>
-            <div class="account-heading-actions">
-                <div>
-                    <h2 data-i18n="account.assetsTitle">Assets</h2>
-                    <div class="helper" data-i18n="account.assetsHelper">Balances update from your authenticated session.</div>
-                </div>
-                <button id="logout" type="button" class="secondary" data-i18n="action.logout">Logout</button>
-            </div>
-            <input id="uid" type="hidden" value=""/>
-            <div class="identity-row">
-                <div class="metric">
-                    <label>UID</label>
-                    <div id="uidDisplay" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.session">Session</label>
-                    <div id="sessionDisplay" class="value">Not logged in</div>
-                </div>
-            </div>
-            <div class="metric-row account-metrics">
-                <div class="metric">
-                    <label data-i18n="metric.balance">Balance</label>
-                    <div id="balance" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.available">Available</label>
-                    <div id="available" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.frozen">Frozen</label>
-                    <div id="frozen" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.positionMargin">Position Margin</label>
-                    <div id="positionMargin" class="value">-</div>
-                </div>
-            </div>
-            <div class="notice" data-i18n="account.notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
-        </div>
-        <div id="authError" class="error" hidden></div>
-        <div id="accountError" class="error" hidden></div>
-        <pre id="authState" class="compact-pre" data-i18n="empty.authState" hidden>Not logged in.</pre>
-        <pre id="accountRaw" class="compact-pre" data-i18n="empty.accountRaw" hidden>No account loaded.</pre>
-    </section>
 </main>
 
 <script>
@@ -983,14 +1081,10 @@
             'page.subtitle': 'Trade perpetual markets with live order book depth, order entry, open orders, and account risk.',
             'language.label': 'Language',
             'tab.trade': 'Trade',
-            'tab.account': 'Account',
             'profile.open': 'Open Profile',
             'profile.close': 'Close Profile',
             'profile.title': 'Profile',
             'profile.helper': 'Choose which account and position sections are visible.',
-            'profile.loginRequiredTitle': 'Login required',
-            'profile.loginRequiredBody': 'Login to view balances, frozen funds, orders, and positions.',
-            'profile.loginAction': 'Go to Login',
             'profile.sectionSelector': 'Display sections',
             'profile.selectAll': 'Select All',
             'profile.clearAll': 'Clear All',
@@ -1014,6 +1108,8 @@
             'field.market': 'Market',
             'field.email': 'Email',
             'field.password': 'Password',
+            'field.humanVerification': 'Human Verification',
+            'field.humanVerificationPlaceholder': 'Verification token',
             'field.leverage': 'Leverage',
             'field.margin': 'Margin',
             'field.clientOrderId': 'Client Order ID',
@@ -1028,12 +1124,10 @@
             'metric.available': 'Available',
             'metric.frozen': 'Frozen',
             'metric.positionMargin': 'Position Margin',
-            'account.title': 'User Account',
             'account.signInHelper': 'Sign in to view balances, frozen funds, and positions.',
             'account.createAccount': 'Create an account',
             'account.assetsTitle': 'Assets',
             'account.assetsHelper': 'Balances update from your authenticated session.',
-            'account.notice': 'Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.',
             'book.title': 'Order Book',
             'book.helper': 'Runtime matching depth for the selected market.',
             'book.asks': 'Asks',
@@ -1063,6 +1157,8 @@
             'status.notLoggedIn': 'Not logged in',
             'status.sessionUnavailable': 'Session unavailable. Please login again.',
             'status.accountUnavailable': 'Account unavailable.',
+            'status.registrationPending': 'Registration created. Check your email to verify the account before login.',
+            'status.emailVerified': 'Email verified. You can log in now.',
             'notice.bookRecovered': 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
             'error.loginBeforeOrder': 'Please login before placing orders.'
         },
@@ -1071,14 +1167,10 @@
             'page.subtitle': '交易永續合約市場，查看即時訂單簿深度、下單、開放訂單與帳戶風險。',
             'language.label': '語言',
             'tab.trade': '交易',
-            'tab.account': '帳戶',
             'profile.open': '開啟個人資料',
             'profile.close': '關閉個人資料',
             'profile.title': '個人資料',
             'profile.helper': '選擇要顯示的資金與倉位資訊。',
-            'profile.loginRequiredTitle': '請先登入',
-            'profile.loginRequiredBody': '登入後才能查看資金、凍結資金、委託與倉位資訊。',
-            'profile.loginAction': '前往登入',
             'profile.sectionSelector': '顯示資訊',
             'profile.selectAll': '全部選取',
             'profile.clearAll': '全部取消',
@@ -1102,6 +1194,8 @@
             'field.market': '市場',
             'field.email': '電子信箱',
             'field.password': '密碼',
+            'field.humanVerification': '真人驗證',
+            'field.humanVerificationPlaceholder': '驗證 token',
             'field.leverage': '槓桿',
             'field.margin': '保證金',
             'field.clientOrderId': '客戶訂單 ID',
@@ -1116,12 +1210,10 @@
             'metric.available': '可用',
             'metric.frozen': '凍結',
             'metric.positionMargin': '倉位保證金',
-            'account.title': '使用者帳戶',
             'account.signInHelper': '登入後可查看餘額、凍結資金與倉位資訊。',
             'account.createAccount': '建立新帳號',
             'account.assetsTitle': '資產',
             'account.assetsHelper': '資產會依登入 session 自動更新。',
-            'account.notice': '凍結 = 訂單占用 + 倉位保證金。訂單占用包含保證金預留與預估 taker fee，因此小數是正常現象。',
             'book.title': '訂單簿',
             'book.helper': '所選市場的即時撮合深度。',
             'book.asks': '賣盤',
@@ -1151,6 +1243,8 @@
             'status.notLoggedIn': '尚未登入',
             'status.sessionUnavailable': 'Session 不可用，請重新登入。',
             'status.accountUnavailable': '帳戶不可用。',
+            'status.registrationPending': '註冊已建立，請先到信箱完成驗證再登入。',
+            'status.emailVerified': 'Email 已驗證，現在可以登入。',
             'notice.bookRecovered': '開放訂單已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
             'error.loginBeforeOrder': '下單前請先登入。'
         },
@@ -1159,14 +1253,10 @@
             'page.subtitle': 'Dagangkan pasaran perpetual dengan kedalaman buku langsung, kemasukan pesanan, pesanan terbuka dan risiko akaun.',
             'language.label': 'Bahasa',
             'tab.trade': 'Dagangan',
-            'tab.account': 'Akaun',
             'profile.open': 'Buka Profil',
             'profile.close': 'Tutup Profil',
             'profile.title': 'Profil',
             'profile.helper': 'Pilih bahagian akaun dan posisi yang kelihatan.',
-            'profile.loginRequiredTitle': 'Log masuk diperlukan',
-            'profile.loginRequiredBody': 'Log masuk untuk melihat baki, dana dibekukan, pesanan dan posisi.',
-            'profile.loginAction': 'Pergi ke Log Masuk',
             'profile.sectionSelector': 'Paparkan bahagian',
             'profile.selectAll': 'Pilih Semua',
             'profile.clearAll': 'Nyahpilih Semua',
@@ -1190,6 +1280,8 @@
             'field.market': 'Pasaran',
             'field.email': 'E-mel',
             'field.password': 'Kata Laluan',
+            'field.humanVerification': 'Pengesahan Manusia',
+            'field.humanVerificationPlaceholder': 'Token pengesahan',
             'field.leverage': 'Leveraj',
             'field.margin': 'Margin',
             'field.clientOrderId': 'ID Pesanan Klien',
@@ -1204,12 +1296,10 @@
             'metric.available': 'Tersedia',
             'metric.frozen': 'Dibekukan',
             'metric.positionMargin': 'Margin Posisi',
-            'account.title': 'Akaun Pengguna',
             'account.signInHelper': 'Log masuk untuk melihat baki, dana dibekukan dan posisi.',
             'account.createAccount': 'Cipta akaun',
             'account.assetsTitle': 'Aset',
             'account.assetsHelper': 'Baki dikemas kini daripada sesi disahkan anda.',
-            'account.notice': 'Dibekukan = pegangan pesanan + margin posisi. Pegangan pesanan termasuk rizab margin dan anggaran yuran taker.',
             'book.title': 'Buku Pesanan',
             'book.helper': 'Kedalaman padanan runtime untuk pasaran dipilih.',
             'book.asks': 'Ask',
@@ -1239,6 +1329,8 @@
             'status.notLoggedIn': 'Belum log masuk',
             'status.sessionUnavailable': 'Sesi tidak tersedia. Sila log masuk semula.',
             'status.accountUnavailable': 'Akaun tidak tersedia.',
+            'status.registrationPending': 'Pendaftaran dibuat. Sahkan e-mel sebelum log masuk.',
+            'status.emailVerified': 'E-mel disahkan. Anda boleh log masuk sekarang.',
             'notice.bookRecovered': 'Pesanan terbuka telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
             'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
         },
@@ -1247,14 +1339,10 @@
             'page.subtitle': '실시간 호가창 깊이, 주문 입력, 미체결 주문, 계정 리스크로 무기한 시장을 거래하세요.',
             'language.label': '언어',
             'tab.trade': '거래',
-            'tab.account': '계정',
             'profile.open': '프로필 열기',
             'profile.close': '프로필 닫기',
             'profile.title': '프로필',
             'profile.helper': '표시할 계정 및 포지션 섹션을 선택하세요.',
-            'profile.loginRequiredTitle': '로그인이 필요합니다',
-            'profile.loginRequiredBody': '잔고, 동결 자금, 주문 및 포지션을 보려면 로그인하세요.',
-            'profile.loginAction': '로그인으로 이동',
             'profile.sectionSelector': '섹션 표시',
             'profile.selectAll': '전체 선택',
             'profile.clearAll': '전체 해제',
@@ -1278,6 +1366,8 @@
             'field.market': '시장',
             'field.email': '이메일',
             'field.password': '비밀번호',
+            'field.humanVerification': '사람 인증',
+            'field.humanVerificationPlaceholder': '인증 토큰',
             'field.leverage': '레버리지',
             'field.margin': '마진',
             'field.clientOrderId': '클라이언트 주문 ID',
@@ -1292,12 +1382,10 @@
             'metric.available': '사용 가능',
             'metric.frozen': '동결',
             'metric.positionMargin': '포지션 마진',
-            'account.title': '사용자 계정',
             'account.signInHelper': '로그인하여 잔고, 동결 자금 및 포지션을 확인하세요.',
             'account.createAccount': '계정 만들기',
             'account.assetsTitle': '자산',
             'account.assetsHelper': '잔고는 인증된 세션에서 업데이트됩니다.',
-            'account.notice': '동결 = 주문 증거금 + 포지션 마진. 주문 증거금에는 마진 예약과 예상 taker fee가 포함됩니다.',
             'book.title': '호가창',
             'book.helper': '선택한 시장의 런타임 매칭 깊이입니다.',
             'book.asks': '매도',
@@ -1327,6 +1415,8 @@
             'status.notLoggedIn': '로그인하지 않음',
             'status.sessionUnavailable': '세션을 사용할 수 없습니다. 다시 로그인하세요.',
             'status.accountUnavailable': '계정을 사용할 수 없습니다.',
+            'status.registrationPending': '가입이 생성되었습니다. 로그인 전에 이메일을 인증하세요.',
+            'status.emailVerified': '이메일이 인증되었습니다. 이제 로그인할 수 있습니다.',
             'notice.bookRecovered': '미체결 주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
             'error.loginBeforeOrder': '주문 전에 로그인하세요.'
         }
@@ -1349,12 +1439,16 @@
         document.querySelectorAll('[data-i18n-title]').forEach((el) => {
             el.setAttribute('title', t(el.dataset.i18nTitle));
         });
+        document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
+            el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
+        });
     }
 
     // Form fields mirror the current exchange REST API request shape.
     const fields = {
         symbol: $('symbol'),
         uid: $('uid'),
+        humanVerificationToken: $('humanVerificationToken'),
         side: $('side'),
         type: $('type'),
         price: $('price'),
@@ -1368,6 +1462,12 @@
     const auth = {
         accessToken: localStorage.getItem('exchangeAccessToken') || '',
         refreshToken: localStorage.getItem('exchangeRefreshToken') || ''
+    };
+    const authConfig = {
+        humanVerificationEnabled: false,
+        humanVerificationProvider: 'turnstile',
+        humanVerificationSiteKey: '',
+        emailVerificationEnabled: false
     };
 
     // Page state compares runtime order book depth with persisted open orders for clearer MVP diagnostics.
@@ -1444,13 +1544,11 @@
         $('profileToggle').setAttribute('aria-expanded', String(open));
         $('profileToggle').setAttribute('aria-label', open ? t('profile.close') : t('profile.open'));
         $('profileToggle').setAttribute('title', open ? t('profile.close') : t('profile.open'));
-        syncProfileAuthState();
+        syncAuthenticatedUi();
     }
 
     function syncProfileAuthState() {
-        // Profile details are account-scoped; before login the drawer must not expose stale or empty account panes.
         const loggedIn = Boolean(auth.accessToken && fields.uid.value.trim());
-        $('profileLoginRequired').hidden = loggedIn;
         $('profileContent').hidden = !loggedIn;
         if (loggedIn) {
             syncProfileSections();
@@ -1531,6 +1629,16 @@
         el.hidden = true;
     }
 
+    function showNotice(message) {
+        $('authNotice').textContent = message;
+        $('authNotice').hidden = false;
+    }
+
+    function clearNotice() {
+        $('authNotice').textContent = '';
+        $('authNotice').hidden = true;
+    }
+
     // Session-bound data must disappear on logout so the next person at the browser cannot see stale account state.
     function clearSessionUi() {
         $('authState').textContent = t('empty.authState');
@@ -1568,10 +1676,26 @@
         return body.data;
     }
 
-    // Register/login share the same response contract: access JWT, refresh token, and user identity.
+    // Registration starts verification, while login is the only path that stores access and refresh tokens.
     async function authenticate(mode) {
         clearError($('authError'));
+        clearNotice();
         try {
+            if (mode === 'register') {
+                const result = await api('/api/auth/register', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        email: $('authEmail').value.trim(),
+                        password: $('authPassword').value,
+                        humanVerificationToken: fields.humanVerificationToken.value.trim()
+                    })
+                });
+                showNotice(result.verificationUrl
+                    ? `${t('status.registrationPending')} ${result.verificationUrl}`
+                    : t('status.registrationPending'));
+                fields.humanVerificationToken.value = '';
+                return;
+            }
             const result = await api(`/api/auth/${mode}`, {
                 method: 'POST',
                 body: JSON.stringify({
@@ -1587,6 +1711,62 @@
             renderAuth(result.user);
             await refreshAll();
             subscribeCurrentUser();
+        } catch (error) {
+            showError($('authError'), error);
+        }
+    }
+
+    async function loadAuthConfig() {
+        try {
+            const config = await api('/api/auth/config');
+            Object.assign(authConfig, config || {});
+            $('humanVerification').hidden = !authConfig.humanVerificationEnabled;
+            if (authConfig.humanVerificationEnabled && authConfig.humanVerificationProvider === 'turnstile' && authConfig.humanVerificationSiteKey) {
+                loadTurnstile();
+            }
+        } catch (error) {
+            $('humanVerification').hidden = true;
+        }
+    }
+
+    function loadTurnstile() {
+        if (window.turnstile) {
+            renderTurnstile();
+            return;
+        }
+        const script = document.createElement('script');
+        script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+        script.async = true;
+        script.defer = true;
+        script.onload = renderTurnstile;
+        document.head.appendChild(script);
+    }
+
+    function renderTurnstile() {
+        if (!window.turnstile || $('turnstileWidget').dataset.rendered === 'true') {
+            return;
+        }
+        window.turnstile.render('#turnstileWidget', {
+            sitekey: authConfig.humanVerificationSiteKey,
+            callback: token => fields.humanVerificationToken.value = token,
+            'expired-callback': () => fields.humanVerificationToken.value = ''
+        });
+        $('turnstileWidget').dataset.rendered = 'true';
+    }
+
+    async function verifyEmailFromUrl() {
+        const token = new URLSearchParams(window.location.search).get('verifyEmailToken');
+        if (!token) {
+            return;
+        }
+        clearError($('authError'));
+        try {
+            await api('/api/auth/verify-email', {
+                method: 'POST',
+                body: JSON.stringify({ token })
+            });
+            showNotice(t('status.emailVerified'));
+            window.history.replaceState({}, document.title, window.location.pathname);
         } catch (error) {
             showError($('authError'), error);
         }
@@ -2063,10 +2243,6 @@
     });
     $('profileToggle').addEventListener('click', () => toggleProfilePanel());
     $('profileClose').addEventListener('click', () => toggleProfilePanel(false));
-    $('profileLoginAction').addEventListener('click', () => {
-        toggleProfilePanel(false);
-        setActiveTab('account');
-    });
     $('profileSelectAll').addEventListener('click', toggleAllProfileSections);
     document.querySelectorAll('[data-profile-section]').forEach(input => {
         input.addEventListener('change', syncProfileSections);
@@ -2099,6 +2275,8 @@
     renderProfileOrders([]);
     setUserIdentity(null);
     syncAuthenticatedUi();
+    loadAuthConfig();
+    verifyEmailFromUrl();
     loadCurrentUser().finally(() => refreshAll().finally(startMarketRefresh));
 </script>
 </body>

@@ -36,7 +36,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 - 本機可用 Docker Compose 啟動 MySQL、Redis、Kafka、Kafka UI。
 - 內部交易所下單鏈路已有 MVP：基本驗證、pre-trade risk、in-memory matching、帳務更新、事件發布。
-- prod-facing 前台 exchange console 會從 `/api/markets` 載入可選市場到下單表單，只提供後台配置且啟用的 symbols，不暴露任何 privileged admin 導覽、做市商營運資訊、checksum、book version 診斷或客戶端市場資訊 reload 按鈕，並以登入 session UID 取代可編輯 UID 欄位，也會顯示可切換每邊 5/10/20/50 ask/bid ticks 的公開 order-book 動態深度條；Trade / Account 分頁讓交易頁保持緊湊，右上 profile 抽屜可用複選顯示個人資金、凍結資金、委託、持有倉位與歷史開關倉位區塊。公開 market 與登入後 private user refresh 共用單一 `/ws/exchange` multiplex WebSocket，斷線或重連期間才退回 1 秒 polling，並支援 opt-in cancel-on-disconnect resume metadata。市場資料診斷集中在後台 market-config 頁。
+- prod-facing 前台 exchange console 會從 `/api/markets` 載入可選市場到下單表單，只提供後台配置且啟用的 symbols，不暴露任何 privileged admin 導覽、做市商營運資訊、checksum、book version 診斷或客戶端市場資訊 reload 按鈕，並以登入 session UID 取代可編輯 UID 欄位，也會顯示可切換每邊 5/10/20/50 ask/bid ticks 的公開 order-book 動態深度條；主畫面聚焦交易，登入、註冊、資產摘要、登出，以及個人資金、凍結資金、委託、持有倉位與歷史開關倉位區塊都集中在右上 profile 抽屜。客戶註冊已具備 email verification 狀態、hashed verification token、`/api/auth/verify-email`，以及由 `/api/auth/config` 控制的 Turnstile 相容真人驗證；本機預設關閉方便 demo，prod profile 透過環境變數 `customer-auth.*` 開啟。公開 market 與登入後 private user refresh 共用單一 `/ws/exchange` multiplex WebSocket，斷線或重連期間才退回 1 秒 polling，並支援 opt-in cancel-on-disconnect resume metadata。市場資料診斷集中在後台 market-config 頁。
 - 前台 exchange console 與做市商後台頁支援英文、繁中、Bahasa Malaysia、韓文語言切換，並共用瀏覽器語言偏好。
 - 撮合核心已覆蓋 FIFO、post-only、自成交防護、IOC/FOK、市價單流動性不足等 deterministic tests。
 - 已有 in-process 單 symbol sequencer baseline，避免同一 symbol 在單進程內並行改狀態。

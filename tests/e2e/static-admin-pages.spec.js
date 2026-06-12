@@ -207,9 +207,12 @@ test('exchange console renders client trading workflow without admin funding con
   // Scenario: the profile drawer exposes real account/order snapshots and lets users choose visible sections.
   await page.getByRole('button', { name: 'Open Profile' }).click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
-  await expect(page.locator('#profileLoginRequired')).toBeHidden();
+  await expect(page.locator('#authCard')).toBeHidden();
+  await expect(page.locator('#accountSummary')).toBeVisible();
   await expect(page.locator('#profileContent')).toBeVisible();
   await expect(page.locator('#profileBalance')).toContainText('10,000');
+  await expect(page.locator('#balance')).toContainText('10,000');
+  await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#profileFrozen')).toContainText('250');
   await expect(page.locator('[data-profile-panel="orders"]')).toContainText('order-live-r');
   await expect(page.locator('[data-profile-panel="categoryInfo"]')).toContainText('BTCUSDT');
@@ -228,15 +231,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('[data-profile-panel="frozen"]')).toBeVisible();
   await page.locator('#profileClose').click();
   await expect(page.locator('#profilePanel')).toBeHidden();
-  await page.getByRole('button', { name: 'Account' }).click();
-  await expect(page.locator('[data-tab="account"]')).toHaveAttribute('aria-selected', 'true');
-  await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
-  await expect(page.locator('#authCard')).toBeHidden();
-  await expect(page.locator('#accountSummary')).toBeVisible();
-  await expect(page.locator('#balance')).toContainText('10,000');
-  await expect(page.locator('#available')).toContainText('9,750');
-  await expect(page.locator('#positionMargin')).toContainText('0');
-  await page.getByRole('button', { name: 'Trade' }).click();
+  await expect(page.locator('[data-tab="account"]')).toHaveCount(0);
   // Layout guard: client trading keeps book/order entry first, then open orders, with account details behind a tab.
   const layout = await page.evaluate(() => {
     const rect = (selector) => {
@@ -263,7 +258,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#orderResult')).toContainText('accepted');
 
   // Logout clears stale account/order state so shared browsers do not display the previous user's snapshot.
-  await page.getByRole('button', { name: 'Account' }).click();
+  await page.getByRole('button', { name: 'Open Profile' }).click();
   await page.getByRole('button', { name: 'Logout' }).click();
   await expect(page.locator('#authCard')).toBeVisible();
   await expect(page.locator('#accountSummary')).toBeHidden();
@@ -272,11 +267,8 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#accountRaw')).toBeHidden();
   await expect(page.locator('#orders')).toContainText('Login and refresh to load open orders');
   await expect(page.locator('#orderResult')).toContainText('No order submitted');
-  await page.getByRole('button', { name: 'Open Profile' }).click();
-  await expect(page.locator('#profileLoginRequired')).toBeVisible();
+  await expect(page.locator('#authCard')).toBeVisible();
   await expect(page.locator('#profileContent')).toBeHidden();
-  await page.getByRole('button', { name: 'Go to Login' }).click();
-  await expect(page.locator('[data-tab="account"]')).toHaveAttribute('aria-selected', 'true');
 
   // Locale switching should translate the client console without changing the default English test flow.
   await page.locator('#language').selectOption('zh-TW');

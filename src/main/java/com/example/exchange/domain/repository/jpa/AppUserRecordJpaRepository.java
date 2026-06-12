@@ -12,5 +12,7 @@ public interface AppUserRecordJpaRepository extends JpaRepository<AppUserRecord,
 
     Optional<AppUserRecord> findByEmail(String email);
 
+    Optional<AppUserRecord> findByEmailVerificationTokenHash(String emailVerificationTokenHash);
+
     boolean existsByEmail(String email);
 }

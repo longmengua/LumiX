@@ -41,6 +41,20 @@ api-auth:
   jwt-hmac-secret: ${API_AUTH_JWT_HMAC_SECRET:}
   clock-skew-seconds: ${API_AUTH_CLOCK_SKEW_SECONDS:60}
 
+customer-auth:
+  email-verification:
+    enabled: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_ENABLED:false}
+    token-ttl-minutes: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_TOKEN_TTL_MINUTES:30}
+    public-base-url: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_PUBLIC_BASE_URL:http://127.0.0.1:8080/exchange.html}
+    return-verification-url: ${CUSTOMER_AUTH_EMAIL_VERIFICATION_RETURN_URL:false}
+  captcha:
+    enabled: ${CUSTOMER_AUTH_CAPTCHA_ENABLED:false}
+    provider: ${CUSTOMER_AUTH_CAPTCHA_PROVIDER:turnstile}
+    site-key: ${CUSTOMER_AUTH_CAPTCHA_SITE_KEY:}
+    secret: ${CUSTOMER_AUTH_CAPTCHA_SECRET:}
+    verify-url: ${CUSTOMER_AUTH_CAPTCHA_VERIFY_URL:https://challenges.cloudflare.com/turnstile/v0/siteverify}
+    dev-bypass-token: ${CUSTOMER_AUTH_CAPTCHA_DEV_BYPASS_TOKEN:}
+
 security-controls:
   # 受保護 API 的安全控制基線：rate limit、IP allowlist、audit log。
   enabled: ${SECURITY_CONTROLS_ENABLED:true}

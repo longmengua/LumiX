@@ -35,6 +35,17 @@ public class AppUserRecord {
     @Column(nullable = false, length = 32)
     private String status = "ACTIVE";
 
+    // Email verification blocks login for real customer registrations until mailbox ownership is proven.
+    @Column
+    private Instant emailVerifiedAt;
+
+    // Raw verification tokens are never stored; this field stores SHA-256 hex only.
+    @Column(length = 64)
+    private String emailVerificationTokenHash;
+
+    @Column
+    private Instant emailVerificationExpiresAt;
+
     // Roles/scopes are stored as space-delimited strings to match the existing JWT authenticator contract.
     @Column(nullable = false, length = 255)
     private String roles = "USER";
@@ -99,6 +110,18 @@ public class AppUserRecord {
         return scopes;
     }
 
+    public Instant getEmailVerifiedAt() {
+        return emailVerifiedAt;
+    }
+
+    public String getEmailVerificationTokenHash() {
+        return emailVerificationTokenHash;
+    }
+
+    public Instant getEmailVerificationExpiresAt() {
+        return emailVerificationExpiresAt;
+    }
+
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -109,6 +132,30 @@ public class AppUserRecord {
 
     public boolean isActive() {
         return "ACTIVE".equals(status);
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerifiedAt != null;
+    }
+
+    public boolean isPendingEmailVerification() {
+        return "PENDING_EMAIL_VERIFICATION".equals(status);
+    }
+
+    /** Moves a new customer into pending verification and stores only the token hash. */
+    public void startEmailVerification(String tokenHash, Instant expiresAt) {
+        status = "PENDING_EMAIL_VERIFICATION";
+        emailVerifiedAt = null;
+        emailVerificationTokenHash = tokenHash;
+        emailVerificationExpiresAt = expiresAt;
+    }
+
+    /** Activates the customer after the verification link proves mailbox ownership. */
+    public void verifyEmail(Instant verifiedAt) {
+        status = "ACTIVE";
+        emailVerifiedAt = verifiedAt;
+        emailVerificationTokenHash = null;
+        emailVerificationExpiresAt = null;
     }
 
     /** Email comparison is case-insensitive for login and uniqueness checks. */
