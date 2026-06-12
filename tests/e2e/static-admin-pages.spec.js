@@ -265,8 +265,8 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
 });
 
-test('exchange console can register then login from the profile drawer', async ({ page }) => {
-  // Scenario: registration and login are the customer P0 path, so the static client must send both API requests correctly.
+test('exchange console registers with on-screen email code before login', async ({ page }) => {
+  // Scenario: registration and login are the customer P0 path; the email link is backup, while the visible code field is primary.
   await page.addInitScript(() => {
     window.WebSocket = class NoopExchangeWebSocket {
       constructor() {
@@ -290,7 +290,7 @@ test('exchange console can register then login from the profile drawer', async (
         humanVerificationEnabled: false,
         humanVerificationProvider: 'turnstile',
         humanVerificationSiteKey: '',
-        emailVerificationEnabled: false
+        emailVerificationEnabled: true
       }))
     });
   });
@@ -335,9 +335,22 @@ test('exchange console can register then login from the profile drawer', async (
       body: JSON.stringify(ok({
         uid: 10011,
         email: 'new-user@example.com',
-        emailVerificationRequired: false,
-        verificationUrl: null,
-        expiresAt: null
+        emailVerificationRequired: true,
+        verificationUrl: 'http://127.0.0.1:8080/exchange.html?verifyEmailToken=backup-token',
+        expiresAt: '2026-06-13T00:00:00Z'
+      }))
+    });
+  });
+  let verifyPayload;
+  await page.route('**/api/auth/verify-email', async (route) => {
+    verifyPayload = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        uid: 10011,
+        email: 'new-user@example.com',
+        roles: 'USER',
+        scopes: 'trade funds:write user:read'
       }))
     });
   });
@@ -372,6 +385,19 @@ test('exchange console can register then login from the profile drawer', async (
     password: 'correct-password',
     humanVerificationToken: ''
   });
+  await expect(page.locator('#emailVerificationStep')).toBeVisible();
+  await expect(page.locator('#emailVerificationCode')).toBeFocused();
+  await expect(page.locator('#authNotice')).toContainText('Enter the email verification code');
+  await expect(page.locator('#authNotice')).not.toContainText('verifyEmailToken');
+
+  await page.locator('#emailVerificationCode').fill('123456');
+  await page.getByRole('button', { name: 'Verify Registration' }).click();
+  await expect.poll(() => verifyPayload).toMatchObject({
+    email: 'new-user@example.com',
+    code: '123456'
+  });
+  await expect(page.locator('#emailVerificationStep')).toBeHidden();
+  await expect(page.locator('#authNotice')).toContainText('Registration verified');
 
   await page.getByRole('button', { name: 'Login' }).click();
   await expect.poll(() => loginPayload).toMatchObject({

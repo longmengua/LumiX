@@ -71,7 +71,8 @@ const translations = {
         'status.notLoggedIn': 'Not logged in',
         'status.sessionUnavailable': 'Session unavailable. Please login again.',
         'status.accountUnavailable': 'Account unavailable.',
-        'status.registrationPending': 'Registration created. Check your email to verify the account before login.',
+        'status.registrationCreated': 'Account created. You can log in now.',
+        'status.registrationPending': 'Enter the email verification code to finish registration.',
         'status.emailVerified': 'Email verified. You can log in now.',
         'status.registrationVerified': 'Registration verified. You can log in now.',
         'error.emailRequired': 'Email is required.',
@@ -150,7 +151,8 @@ const translations = {
         'status.notLoggedIn': '尚未登入',
         'status.sessionUnavailable': 'Session 不可用，請重新登入。',
         'status.accountUnavailable': '帳戶不可用。',
-        'status.registrationPending': '註冊已建立，請先到信箱完成驗證再登入。',
+        'status.registrationCreated': '帳號已建立，現在可以登入。',
+        'status.registrationPending': '請輸入信箱驗證碼完成註冊。',
         'status.emailVerified': 'Email 已驗證，現在可以登入。',
         'status.registrationVerified': '註冊已完成驗證，現在可以登入。',
         'error.emailRequired': '請輸入電子信箱。',
@@ -229,7 +231,8 @@ const translations = {
         'status.notLoggedIn': 'Belum log masuk',
         'status.sessionUnavailable': 'Sesi tidak tersedia. Sila log masuk semula.',
         'status.accountUnavailable': 'Akaun tidak tersedia.',
-        'status.registrationPending': 'Pendaftaran dibuat. Sahkan e-mel sebelum log masuk.',
+        'status.registrationCreated': 'Akaun dibuat. Anda boleh log masuk sekarang.',
+        'status.registrationPending': 'Masukkan kod pengesahan e-mel untuk melengkapkan pendaftaran.',
         'status.emailVerified': 'E-mel disahkan. Anda boleh log masuk sekarang.',
         'status.registrationVerified': 'Pendaftaran disahkan. Anda boleh log masuk sekarang.',
         'error.emailRequired': 'E-mel diperlukan.',
@@ -308,7 +311,8 @@ const translations = {
         'status.notLoggedIn': '로그인하지 않음',
         'status.sessionUnavailable': '세션을 사용할 수 없습니다. 다시 로그인하세요.',
         'status.accountUnavailable': '계정을 사용할 수 없습니다.',
-        'status.registrationPending': '가입이 생성되었습니다. 로그인 전에 이메일을 인증하세요.',
+        'status.registrationCreated': '계정이 생성되었습니다. 이제 로그인할 수 있습니다.',
+        'status.registrationPending': '가입을 완료하려면 이메일 인증 코드를 입력하세요.',
         'status.emailVerified': '이메일이 인증되었습니다. 이제 로그인할 수 있습니다.',
         'status.registrationVerified': '가입 인증이 완료되었습니다. 이제 로그인할 수 있습니다.',
         'error.emailRequired': '이메일을 입력하세요.',
@@ -571,12 +575,13 @@ async function authenticate(mode) {
                     humanVerificationToken: fields.humanVerificationToken.value.trim()
                 })
             });
-            showNotice(result.verificationUrl
-                ? `${t('status.registrationPending')} ${result.verificationUrl}`
-                : t('status.registrationPending'));
             fields.humanVerificationToken.value = '';
             fields.emailVerificationCode.value = '';
             $('emailVerificationStep').hidden = !result.emailVerificationRequired;
+            showNotice(result.emailVerificationRequired ? t('status.registrationPending') : t('status.registrationCreated'));
+            if (result.emailVerificationRequired) {
+                fields.emailVerificationCode.focus();
+            }
             return;
         }
         const result = await api(`/api/auth/${mode}`, {
