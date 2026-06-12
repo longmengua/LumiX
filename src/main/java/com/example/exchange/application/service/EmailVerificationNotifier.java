@@ -77,6 +77,19 @@ public class EmailVerificationNotifier {
                     """.formatted(verificationCode, verificationUrl, expiresAt), false);
             sender.send(message);
         } catch (Exception ex) {
+            Throwable rootCause = rootCause(ex);
+            // SMTP failures must be diagnosable without leaking passwords, raw codes, or backup verification tokens.
+            log.warn(
+                    "Email verification SMTP send failed host={} port={} auth={} startTls={} ssl={} from={} to={} rootCause={}: {}",
+                    smtp.getHost(),
+                    smtp.getPort(),
+                    smtp.isAuth(),
+                    smtp.isStartTls(),
+                    smtp.isSsl(),
+                    smtp.getFrom(),
+                    email,
+                    rootCause.getClass().getName(),
+                    rootCause.getMessage());
             throw new IllegalStateException("email verification smtp send failed", ex);
         }
     }
@@ -95,5 +108,13 @@ public class EmailVerificationNotifier {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value;
+    }
+
+    private Throwable rootCause(Exception ex) {
+        Throwable current = ex;
+        while (current.getCause() != null) {
+            current = current.getCause();
+        }
+        return current;
     }
 }
