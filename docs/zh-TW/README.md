@@ -365,6 +365,8 @@ src/main/java/com/example/exchange
 
 Polymarket 的 `private-key`、CLOB `api-key/api-secret/api-passphrase`、relayer key 不應提交到 Git。正式環境應改用環境變數或 secret manager 注入。
 
+若要用 Gmail SMTP 寄送客戶註冊信箱驗證碼，請看 `docs/zh-TW/gmail-smtp.md`。必須使用 Gmail App Password，不要使用帳號登入密碼，並透過環境變數注入。
+
 敏感設定相關環境變數：
 
 - `POLYMARKET_WALLET_PRIVATE_KEY`

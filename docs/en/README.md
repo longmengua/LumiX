@@ -365,6 +365,8 @@ Main configuration files:
 
 Polymarket `private-key`, CLOB `api-key/api-secret/api-passphrase`, and relayer keys must not be committed to Git. Production should inject them through environment variables or a secret manager.
 
+For customer registration email-code delivery through Gmail SMTP, see `docs/en/gmail-smtp.md`. Use a Gmail App Password, not the account login password, and inject it through environment variables.
+
 Secret-related environment variables:
 
 - `POLYMARKET_WALLET_PRIVATE_KEY`
