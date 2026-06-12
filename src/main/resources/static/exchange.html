@@ -34,10 +34,6 @@
 
 <aside id="profilePanel" class="panel profile-panel" hidden>
     <div class="panel-heading profile-header">
-        <div>
-            <h2 data-i18n="profile.title">Profile</h2>
-            <div class="helper" data-i18n="account.signInHelper">Sign in to view balances, frozen funds, and positions.</div>
-        </div>
         <button id="profileClose" type="button" class="secondary icon-button" data-i18n-aria-label="profile.close" data-i18n-title="profile.close" aria-label="Close Profile" title="Close Profile">
             <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                 <path d="m6.4 5 12.6 12.6-1.4 1.4L5 6.4 6.4 5Zm12.6 1.4L6.4 19 5 17.6 17.6 5 19 6.4Z" fill="currentColor"/>
@@ -59,7 +55,6 @@
             <input id="humanVerificationToken" autocomplete="off" data-i18n-placeholder="field.humanVerificationPlaceholder" placeholder="Verification token"/>
         </div>
         <div id="emailVerificationStep" class="verification-step" hidden>
-            <div class="helper" data-i18n="account.verificationHelper">Enter the verification code from your email to complete registration.</div>
             <label for="emailVerificationCode" data-i18n="field.emailVerificationCode">Email Code</label>
             <input id="emailVerificationCode" inputmode="numeric" autocomplete="one-time-code" data-i18n-placeholder="field.emailVerificationCodePlaceholder" placeholder="6-digit code"/>
             <button id="verifyEmailCode" type="button" class="secondary" data-i18n="action.verifyRegistration">Verify Registration</button>
@@ -77,7 +72,6 @@
                     <div id="sessionDisplay" class="profile-email">Not logged in</div>
                     <div class="profile-meta">
                         <span>UID <strong id="uidDisplay">-</strong></span>
-                        <span data-i18n="account.assetsHelper">Balances update from your authenticated session.</span>
                     </div>
                 </div>
                 <button id="logout" type="button" class="secondary" data-i18n="action.logout">Logout</button>

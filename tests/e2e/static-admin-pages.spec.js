@@ -196,7 +196,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('cell', { name: 'BTCUSDT' }).first()).toBeVisible();
   // Scenario: the profile drawer exposes real account/order snapshots without customer-facing section toggles.
   await page.getByRole('button', { name: 'Open Profile' }).click();
-  await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
+  await expect(page.getByText('Sign in to view balances')).toHaveCount(0);
   await expect(page.locator('#authCard')).toBeHidden();
   await expect(page.locator('#accountSummary')).toBeVisible();
   await expect(page.locator('#profileContent')).toBeVisible();
@@ -263,4 +263,122 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('heading', { name: '거래소 콘솔' })).toBeVisible();
   await page.locator('#language').selectOption('en');
   await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
+});
+
+test('exchange console can register then login from the profile drawer', async ({ page }) => {
+  // Scenario: registration and login are the customer P0 path, so the static client must send both API requests correctly.
+  await page.addInitScript(() => {
+    window.WebSocket = class NoopExchangeWebSocket {
+      constructor() {
+        this.readyState = 1;
+        setTimeout(() => this.onopen?.(), 10);
+      }
+
+      send() {
+      }
+
+      close() {
+        this.readyState = 3;
+        this.onclose?.();
+      }
+    };
+  });
+  await page.route('**/api/auth/config', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        humanVerificationEnabled: false,
+        humanVerificationProvider: 'turnstile',
+        humanVerificationSiteKey: '',
+        emailVerificationEnabled: false
+      }))
+    });
+  });
+  await page.route('**/api/markets', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ markets: [{ symbol: 'BTCUSDT', tradingEnabled: true }] }))
+    });
+  });
+  await page.route('**/api/depth/BTCUSDT?depth=*', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ symbol: 'BTCUSDT', bestBid: '0', bestAsk: '0', bids: [], asks: [] }))
+    });
+  });
+  await page.route('**/api/order/open?uid=10011&symbol=BTCUSDT', async (route) => {
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) });
+  });
+  await page.route('**/api/margin/account?uid=10011', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        uid: 10011,
+        balance: '0.00',
+        available: '0.00',
+        frozen: '0.00',
+        orderHold: '0.00',
+        positionMargin: '0.00'
+      }))
+    });
+  });
+  await page.route('**/api/auth/me', async (route) => {
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok(null)) });
+  });
+
+  let registerPayload;
+  let loginPayload;
+  await page.route('**/api/auth/register', async (route) => {
+    registerPayload = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        uid: 10011,
+        email: 'new-user@example.com',
+        emailVerificationRequired: false,
+        verificationUrl: null,
+        expiresAt: null
+      }))
+    });
+  });
+  await page.route('**/api/auth/login', async (route) => {
+    loginPayload = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        tokenType: 'Bearer',
+        accessToken: 'access-token-after-login',
+        accessTokenExpiresAt: '2026-06-13T00:00:00Z',
+        refreshToken: 'refresh-token-after-login',
+        refreshTokenExpiresAt: '2026-07-13T00:00:00Z',
+        user: {
+          uid: 10011,
+          email: 'new-user@example.com',
+          roles: 'USER',
+          scopes: 'trade funds:write user:read'
+        }
+      }))
+    });
+  });
+
+  await page.goto('/exchange.html');
+  await page.getByRole('button', { name: 'Open Profile' }).click();
+  await expect(page.getByText('Sign in to view balances')).toHaveCount(0);
+  await page.locator('#authEmail').fill('new-user@example.com');
+  await page.locator('#authPassword').fill('correct-password');
+  await page.getByRole('button', { name: 'Create an account' }).click();
+  await expect.poll(() => registerPayload).toMatchObject({
+    email: 'new-user@example.com',
+    password: 'correct-password',
+    humanVerificationToken: ''
+  });
+
+  await page.getByRole('button', { name: 'Login' }).click();
+  await expect.poll(() => loginPayload).toMatchObject({
+    email: 'new-user@example.com',
+    password: 'correct-password'
+  });
+  await expect(page.locator('#profileContent')).toBeVisible();
+  await expect(page.locator('#sessionDisplay')).toContainText('new-user@example.com');
+  await expect(page.locator('#uidDisplay')).toHaveText('10011');
 });

@@ -514,14 +514,8 @@ pre {
     padding: 16px;
 }
 
-.profile-header h2 {
-    font-size: 18px;
-    margin-bottom: 2px;
-}
-
-.profile-header .helper {
-    color: #cbd5e1;
-    margin: 0;
+.profile-header {
+    justify-content: flex-end;
 }
 
 .profile-content[hidden] {
