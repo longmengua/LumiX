@@ -159,11 +159,13 @@ test('admin console groups operator pages behind tabs', async ({ page }) => {
   await page.frameLocator('#adminFrame').getByRole('button', { name: 'Airdrop USDT' }).click();
   await expect(page.frameLocator('#adminFrame').locator('#airdropResult')).toContainText('CONFIRMED');
 
-  // Funding, market settings, risk, and DLQ stay discoverable from the single admin page shell.
+  // Funding, market settings, risk, market makers, and DLQ stay discoverable from the single admin page shell.
   await page.getByRole('button', { name: 'Market Config' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-config.html');
   await page.getByRole('button', { name: 'Risk Parameters' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-risk-parameters.html');
+  await page.getByRole('button', { name: 'Market Makers' }).click();
+  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-maker.html');
   await page.getByRole('button', { name: 'DLQ' }).click();
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-dlq.html');
 });
@@ -337,6 +339,128 @@ test('admin risk parameters page renders switches, symbols, and detail panel', a
   await expect(page.getByRole('cell', { name: 'BTCUSDT' })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'BTCUSDT' })).toBeVisible();
   await expect(page.getByText('Suspended symbols: DOGEUSDT')).toBeVisible();
+});
+
+test('admin market maker page manages strategy and hedge operations', async ({ page }) => {
+  // Scenario: operator edits one market-maker strategy row, sees quote/hedge status, then runs guarded hedge actions.
+  let savedProfile = null;
+  let hedgeExecutionSeen = false;
+  let idempotencyReconcileSeen = false;
+  const profile = {
+    marketMakerId: 'mm-alpha',
+    uid: 90001,
+    enabled: true,
+    riskLimits: [
+      {
+        symbol: 'BTCUSDT',
+        maxLongNotional: '50000',
+        maxShortNotional: '50000',
+        maxOrderNotional: '10000',
+        maxSlippageRate: '0.005',
+        killSwitch: false
+      }
+    ]
+  };
+
+  await page.route('**/api/market-maker/profiles/enabled', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([savedProfile || profile]))
+    });
+  });
+  await page.route('**/api/market-maker/profiles', async (route) => {
+    savedProfile = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok(savedProfile))
+    });
+  });
+  await page.route('**/api/market-maker/quotes/active?limit=50', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([
+        {
+          marketMakerId: 'mm-alpha',
+          uid: 90001,
+          symbol: 'BTCUSDT',
+          active: true,
+          accepted: true,
+          bidOrderId: 'bid-1',
+          askOrderId: 'ask-1'
+        }
+      ]))
+    });
+  });
+  await page.route('**/api/market-maker/quotes/reconciliation?limit=50', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ issueCount: 1, issues: [{ symbol: 'BTCUSDT', reason: 'MISSING_ASK' }] }))
+    });
+  });
+  await page.route('**/api/market-maker/hedge-idempotency/unresolved?limit=50', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ issueCount: 2, issues: [] }))
+    });
+  });
+  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-reconciliation?limit=50', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ marketMakerId: 'mm-alpha', checkedDecisions: 3, issueCount: 1, issues: [] }))
+    });
+  });
+  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-fills?limit=20', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([
+        { symbol: 'BTCUSDT', side: 'BUY', quantity: '0.25', price: '100.5', refId: 'manual-1' }
+      ]))
+    });
+  });
+  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-execution?refPrefix=*', async (route) => {
+    hedgeExecutionSeen = true;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        marketMakerId: 'mm-alpha',
+        exposureCount: 1,
+        plannedCount: 1,
+        routedCount: 1,
+        strategyDecisions: [],
+        hedgeDecisions: []
+      }))
+    });
+  });
+  await page.route('**/api/market-maker/hedge-idempotency/reconcile?limit=50', async (route) => {
+    idempotencyReconcileSeen = true;
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ issueCount: 0, issues: [] }))
+    });
+  });
+
+  await page.goto('/admin-market-maker.html');
+
+  await expect(page.getByRole('heading', { name: 'Admin Market Maker' })).toBeVisible();
+  await expect(page.locator('#profiles').getByRole('cell', { name: 'mm-alpha' })).toBeVisible();
+  await expect(page.locator('#activeQuoteCount')).toHaveText('1');
+  await expect(page.locator('#quoteIssueCount')).toHaveText('1');
+  await expect(page.locator('#hedgeIssueCount')).toHaveText('1');
+  await expect(page.locator('#idempotencyIssueCount')).toHaveText('2');
+  await expect(page.getByRole('cell', { name: 'manual-1' })).toBeVisible();
+
+  await page.getByLabel('Max Order Notional').fill('12000');
+  await page.getByRole('button', { name: 'Save Strategy' }).click();
+  await expect.poll(() => savedProfile?.riskLimits?.[0]?.maxOrderNotional).toBe('12000');
+  await expect(page.locator('#profileResult')).toContainText('"maxOrderNotional": "12000"');
+
+  await page.getByRole('button', { name: 'Run Hedge' }).click();
+  await expect.poll(() => hedgeExecutionSeen).toBe(true);
+  await expect(page.locator('#opsResult')).toContainText('"routedCount": 1');
+
+  await page.getByRole('button', { name: 'Reconcile Idempotency' }).click();
+  await expect.poll(() => idempotencyReconcileSeen).toBe(true);
+  await expect(page.locator('#opsResult')).toContainText('"issueCount": 0');
 });
 
 test('admin DLQ page renders rows and opens sanitized detail', async ({ page }) => {

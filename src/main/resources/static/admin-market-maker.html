@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Admin Market Maker</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f3f6f8;
+            --panel: #ffffff;
+            --line: #d3dde5;
+            --text: #172033;
+            --muted: #667487;
+            --accent: #0a806c;
+            --accent-soft: #dff3ef;
+            --warn: #8a4b10;
+            --warn-soft: #fff2d8;
+            --danger: #9b1c1c;
+            --danger-soft: #fee2e2;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 14px;
+        }
+
+        header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--line);
+            background: var(--panel);
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 22px;
+        }
+
+        h2 {
+            font-size: 18px;
+        }
+
+        h3 {
+            font-size: 15px;
+        }
+
+        .subtitle {
+            margin-top: 4px;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+
+        a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        main {
+            display: grid;
+            grid-template-columns: minmax(360px, 0.86fr) minmax(520px, 1.14fr);
+            gap: 16px;
+            padding: 16px 24px 24px;
+            align-items: start;
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        .stack {
+            display: grid;
+            gap: 12px;
+        }
+
+        .panel-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .toolbar {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        label {
+            color: var(--muted);
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        input {
+            min-height: 34px;
+            border: 1px solid var(--line);
+            background: #fff;
+            color: var(--text);
+            padding: 0 10px;
+            width: 100%;
+        }
+
+        input[type="checkbox"] {
+            min-height: 0;
+            width: auto;
+        }
+
+        button {
+            border: 1px solid var(--accent);
+            border-radius: 6px;
+            background: var(--accent);
+            color: #fff;
+            min-height: 34px;
+            padding: 0 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        button.secondary {
+            background: #fff;
+            color: var(--accent);
+        }
+
+        button:disabled {
+            border-color: var(--line);
+            background: #edf1f4;
+            color: #8793a0;
+            cursor: not-allowed;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .full {
+            grid-column: 1 / -1;
+        }
+
+        .check-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-height: 34px;
+        }
+
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid var(--line);
+            background: #fff;
+        }
+
+        th, td {
+            padding: 9px 10px;
+            border-bottom: 1px solid var(--line);
+            text-align: left;
+            vertical-align: top;
+            white-space: nowrap;
+        }
+
+        th {
+            background: #eef3f6;
+            color: var(--muted);
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        tr {
+            cursor: pointer;
+        }
+
+        tr.selected {
+            background: var(--accent-soft);
+        }
+
+        .pill {
+            display: inline-block;
+            border: 1px solid var(--line);
+            border-radius: 999px;
+            background: #eef3f6;
+            padding: 3px 8px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .pill.enabled {
+            border-color: #93d8c9;
+            background: var(--accent-soft);
+            color: #086b5d;
+        }
+
+        .pill.warn {
+            border-color: #e5bf71;
+            background: var(--warn-soft);
+            color: var(--warn);
+        }
+
+        .notice {
+            border: 1px solid #e5bf71;
+            background: var(--warn-soft);
+            color: var(--warn);
+            padding: 10px;
+            line-height: 1.4;
+            margin-bottom: 12px;
+        }
+
+        .error {
+            border: 1px solid #f2a5a5;
+            background: var(--danger-soft);
+            color: var(--danger);
+            padding: 10px;
+            line-height: 1.4;
+        }
+
+        pre {
+            margin: 10px 0 0;
+            max-height: 220px;
+            overflow: auto;
+            border: 1px solid var(--line);
+            background: #111827;
+            color: #e5e7eb;
+            padding: 10px;
+            white-space: pre-wrap;
+        }
+
+        .metric-row {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .metric {
+            border: 1px solid var(--line);
+            background: #f8fafc;
+            padding: 10px;
+            min-width: 0;
+        }
+
+        .metric .value {
+            font-size: 18px;
+            font-weight: 800;
+            overflow-wrap: anywhere;
+        }
+
+        @media (max-width: 1040px) {
+            main, .strategy-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+
+            main {
+                padding: 12px;
+            }
+
+            .form-grid, .metric-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+<!-- Market-maker admin page stays static and calls existing operator APIs; no secrets are embedded in the frontend. -->
+<header>
+    <div>
+        <h1>Admin Market Maker</h1>
+        <div class="subtitle">Create market-maker profiles, manage per-symbol strategy limits, inspect quote state, and run guarded hedge execution.</div>
+    </div>
+    <div class="toolbar">
+        <button id="reload" type="button" class="secondary">Reload</button>
+        <a href="/admin-console.html">Admin Console</a>
+    </div>
+</header>
+
+<main>
+    <section class="stack">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Market Maker Strategy</h2>
+                <button id="newProfile" type="button" class="secondary">New Profile</button>
+            </div>
+            <div class="notice">Strategy limits are saved as market-maker risk limits. Kill switch stops quote and hedge behavior for that symbol until the operator clears it.</div>
+            <div class="form-grid">
+                <div>
+                    <label for="marketMakerId">Market Maker ID</label>
+                    <input id="marketMakerId" value="mm-alpha"/>
+                </div>
+                <div>
+                    <label for="uid">UID</label>
+                    <input id="uid" type="number" min="1" value="90001"/>
+                </div>
+                <div>
+                    <label for="symbol">Symbol</label>
+                    <input id="symbol" value="BTCUSDT"/>
+                </div>
+                <div class="check-row">
+                    <input id="enabled" type="checkbox" checked/>
+                    <label for="enabled">Profile Enabled</label>
+                </div>
+            </div>
+            <div class="strategy-grid">
+                <div>
+                    <label for="maxLongNotional">Max Long Notional</label>
+                    <input id="maxLongNotional" type="number" min="0" step="0.01" value="50000"/>
+                </div>
+                <div>
+                    <label for="maxShortNotional">Max Short Notional</label>
+                    <input id="maxShortNotional" type="number" min="0" step="0.01" value="50000"/>
+                </div>
+                <div>
+                    <label for="maxOrderNotional">Max Order Notional</label>
+                    <input id="maxOrderNotional" type="number" min="0" step="0.01" value="10000"/>
+                </div>
+                <div>
+                    <label for="maxSlippageRate">Max Slippage Rate</label>
+                    <input id="maxSlippageRate" type="number" min="0" step="0.0001" value="0.005"/>
+                </div>
+                <div class="check-row">
+                    <input id="killSwitch" type="checkbox"/>
+                    <label for="killSwitch">Symbol Kill Switch</label>
+                </div>
+                <div class="toolbar">
+                    <button id="saveProfile" type="button">Save Strategy</button>
+                </div>
+            </div>
+            <div id="profileError" class="error" hidden></div>
+            <pre id="profileResult">No strategy saved yet.</pre>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Enabled Profiles</h2>
+                <span id="profileCount" class="pill">0</span>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>Market Maker</th>
+                    <th>UID</th>
+                    <th>Enabled</th>
+                    <th>Strategies</th>
+                </tr>
+                </thead>
+                <tbody id="profiles"></tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="stack">
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Operations Snapshot</h2>
+                <div class="toolbar">
+                    <button id="runHedge" type="button">Run Hedge</button>
+                    <button id="reconcileIdempotency" type="button" class="secondary">Reconcile Idempotency</button>
+                </div>
+            </div>
+            <div class="metric-row">
+                <div class="metric">
+                    <label>Active Quotes</label>
+                    <div id="activeQuoteCount" class="value">0</div>
+                </div>
+                <div class="metric">
+                    <label>Quote Issues</label>
+                    <div id="quoteIssueCount" class="value">0</div>
+                </div>
+                <div class="metric">
+                    <label>Hedge Issues</label>
+                    <div id="hedgeIssueCount" class="value">0</div>
+                </div>
+                <div class="metric">
+                    <label>Idempotency Issues</label>
+                    <div id="idempotencyIssueCount" class="value">0</div>
+                </div>
+            </div>
+            <div class="form-grid">
+                <div>
+                    <label for="selectedMarketMaker">Selected Market Maker</label>
+                    <input id="selectedMarketMaker" value="mm-alpha"/>
+                </div>
+                <div>
+                    <label for="refPrefix">Hedge Ref Prefix</label>
+                    <input id="refPrefix" value="manual"/>
+                </div>
+                <div class="full">
+                    <label for="approvalToken">Operator Approval Token</label>
+                    <input id="approvalToken" placeholder="optional when backend does not require approval"/>
+                </div>
+            </div>
+            <div id="opsError" class="error" hidden></div>
+            <pre id="opsResult">No hedge execution run yet.</pre>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Active Quotes</h2>
+                <span id="quoteCount" class="pill">0</span>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>Market Maker</th>
+                    <th>Symbol</th>
+                    <th>Status</th>
+                    <th>Bid / Ask</th>
+                </tr>
+                </thead>
+                <tbody id="quotes"></tbody>
+            </table>
+        </div>
+
+        <div class="panel">
+            <div class="panel-heading">
+                <h2>Recent Hedge Fills</h2>
+                <span id="fillCount" class="pill">0</span>
+            </div>
+            <table>
+                <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Side</th>
+                    <th>Qty</th>
+                    <th>Price</th>
+                    <th>Ref</th>
+                </tr>
+                </thead>
+                <tbody id="fills"></tbody>
+            </table>
+        </div>
+    </section>
+</main>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+    const fields = {
+        marketMakerId: $('marketMakerId'),
+        uid: $('uid'),
+        enabled: $('enabled'),
+        symbol: $('symbol'),
+        maxLongNotional: $('maxLongNotional'),
+        maxShortNotional: $('maxShortNotional'),
+        maxOrderNotional: $('maxOrderNotional'),
+        maxSlippageRate: $('maxSlippageRate'),
+        killSwitch: $('killSwitch'),
+        selectedMarketMaker: $('selectedMarketMaker'),
+        refPrefix: $('refPrefix'),
+        approvalToken: $('approvalToken')
+    };
+
+    let state = {
+        profiles: [],
+        activeQuotes: [],
+        selectedMarketMakerId: 'mm-alpha'
+    };
+
+    function text(value) {
+        return value === null || value === undefined || value === '' ? '-' : String(value);
+    }
+
+    function numberText(value) {
+        if (value === null || value === undefined || value === '') {
+            return '-';
+        }
+        const n = Number(value);
+        return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 8 }) : String(value);
+    }
+
+    function showError(el, error) {
+        el.textContent = error.message || String(error);
+        el.hidden = false;
+    }
+
+    function clearError(el) {
+        el.textContent = '';
+        el.hidden = true;
+    }
+
+    async function api(path, options = {}) {
+        const response = await fetch(path, {
+            headers: { 'Content-Type': 'application/json', ...(options.headers || {}) },
+            ...options
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+            throw new Error(payload.error || payload.message || `HTTP ${response.status}`);
+        }
+        return payload.data;
+    }
+
+    function profilePayload() {
+        return {
+            marketMakerId: fields.marketMakerId.value.trim(),
+            uid: Number(fields.uid.value),
+            enabled: fields.enabled.checked,
+            riskLimits: [
+                {
+                    symbol: fields.symbol.value.trim().toUpperCase(),
+                    maxLongNotional: fields.maxLongNotional.value,
+                    maxShortNotional: fields.maxShortNotional.value,
+                    maxOrderNotional: fields.maxOrderNotional.value,
+                    maxSlippageRate: fields.maxSlippageRate.value,
+                    killSwitch: fields.killSwitch.checked
+                }
+            ]
+        };
+    }
+
+    function fillProfileForm(profile, limit) {
+        fields.marketMakerId.value = profile?.marketMakerId || '';
+        fields.uid.value = profile?.uid || '';
+        fields.enabled.checked = profile?.enabled !== false;
+        fields.symbol.value = limit?.symbol || 'BTCUSDT';
+        fields.maxLongNotional.value = limit?.maxLongNotional || '0';
+        fields.maxShortNotional.value = limit?.maxShortNotional || '0';
+        fields.maxOrderNotional.value = limit?.maxOrderNotional || '0';
+        fields.maxSlippageRate.value = limit?.maxSlippageRate || '0';
+        fields.killSwitch.checked = Boolean(limit?.killSwitch);
+        fields.selectedMarketMaker.value = profile?.marketMakerId || '';
+        state.selectedMarketMakerId = profile?.marketMakerId || '';
+    }
+
+    function renderProfiles() {
+        $('profileCount').textContent = `${state.profiles.length}`;
+        if (state.profiles.length === 0) {
+            $('profiles').innerHTML = '<tr><td colspan="4">No enabled market makers loaded.</td></tr>';
+            return;
+        }
+        $('profiles').replaceChildren(...state.profiles.map((profile) => {
+            const row = document.createElement('tr');
+            row.className = profile.marketMakerId === state.selectedMarketMakerId ? 'selected' : '';
+            const limits = profile.riskLimits || [];
+            row.innerHTML = `
+                <td>${text(profile.marketMakerId)}</td>
+                <td>${text(profile.uid)}</td>
+                <td><span class="pill ${profile.enabled ? 'enabled' : 'warn'}">${profile.enabled ? 'ENABLED' : 'DISABLED'}</span></td>
+                <td>${limits.map(limit => `${text(limit.symbol)} ${limit.killSwitch ? '(kill)' : ''}`).join(', ') || '-'}</td>
+            `;
+            row.addEventListener('click', () => {
+                state.selectedMarketMakerId = profile.marketMakerId;
+                fillProfileForm(profile, limits[0]);
+                renderProfiles();
+                loadProfileOperations(profile.marketMakerId);
+            });
+            return row;
+        }));
+    }
+
+    function renderQuotes() {
+        $('quoteCount').textContent = `${state.activeQuotes.length}`;
+        $('activeQuoteCount').textContent = `${state.activeQuotes.length}`;
+        if (state.activeQuotes.length === 0) {
+            $('quotes').innerHTML = '<tr><td colspan="4">No active quote states.</td></tr>';
+            return;
+        }
+        $('quotes').replaceChildren(...state.activeQuotes.map((quote) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${text(quote.marketMakerId)}</td>
+                <td>${text(quote.symbol)}</td>
+                <td><span class="pill ${quote.active && quote.accepted ? 'enabled' : 'warn'}">${quote.active ? 'ACTIVE' : 'INACTIVE'} / ${quote.accepted ? 'ACCEPTED' : 'REJECTED'}</span></td>
+                <td>${text(quote.bidOrderId)} / ${text(quote.askOrderId)}</td>
+            `;
+            return row;
+        }));
+    }
+
+    function renderFills(fills) {
+        $('fillCount').textContent = `${fills.length}`;
+        if (fills.length === 0) {
+            $('fills').innerHTML = '<tr><td colspan="5">No hedge fills for selected market maker.</td></tr>';
+            return;
+        }
+        $('fills').replaceChildren(...fills.map((fill) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${text(fill.symbol)}</td>
+                <td>${text(fill.side)}</td>
+                <td>${numberText(fill.quantity)}</td>
+                <td>${numberText(fill.price)}</td>
+                <td>${text(fill.refId)}</td>
+            `;
+            return row;
+        }));
+    }
+
+    async function loadProfiles() {
+        const profiles = await api('/api/market-maker/profiles/enabled');
+        state.profiles = profiles || [];
+        if (!state.selectedMarketMakerId && state.profiles.length > 0) {
+            state.selectedMarketMakerId = state.profiles[0].marketMakerId;
+            fillProfileForm(state.profiles[0], (state.profiles[0].riskLimits || [])[0]);
+        }
+        renderProfiles();
+    }
+
+    async function loadProfileOperations(marketMakerId) {
+        if (!marketMakerId) {
+            renderFills([]);
+            return;
+        }
+        const [hedgeReport, fills] = await Promise.all([
+            api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-reconciliation?limit=50`).catch(() => null),
+            api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-fills?limit=20`).catch(() => [])
+        ]);
+        $('hedgeIssueCount').textContent = `${hedgeReport?.issueCount ?? 0}`;
+        renderFills(fills || []);
+    }
+
+    async function loadOperations() {
+        const [quotes, quoteReconciliation, idempotency] = await Promise.all([
+            api('/api/market-maker/quotes/active?limit=50').catch(() => []),
+            api('/api/market-maker/quotes/reconciliation?limit=50').catch(() => null),
+            api('/api/market-maker/hedge-idempotency/unresolved?limit=50').catch(() => null)
+        ]);
+        state.activeQuotes = quotes || [];
+        $('quoteIssueCount').textContent = `${quoteReconciliation?.issueCount ?? 0}`;
+        $('idempotencyIssueCount').textContent = `${idempotency?.issueCount ?? 0}`;
+        renderQuotes();
+        await loadProfileOperations(fields.selectedMarketMaker.value.trim() || state.selectedMarketMakerId);
+    }
+
+    async function reloadAll() {
+        clearError($('profileError'));
+        clearError($('opsError'));
+        await loadProfiles();
+        await loadOperations();
+    }
+
+    async function saveProfile() {
+        clearError($('profileError'));
+        try {
+            const payload = profilePayload();
+            // Strategy writes are operator actions; backend persists profile and per-symbol risk-limit intent.
+            const saved = await api('/api/market-maker/profiles', {
+                method: 'POST',
+                body: JSON.stringify(payload)
+            });
+            $('profileResult').textContent = JSON.stringify(saved, null, 2);
+            state.selectedMarketMakerId = saved.marketMakerId;
+            fillProfileForm(saved, (saved.riskLimits || [])[0]);
+            await reloadAll();
+        } catch (error) {
+            showError($('profileError'), error);
+        }
+    }
+
+    async function runHedge() {
+        clearError($('opsError'));
+        const marketMakerId = fields.selectedMarketMaker.value.trim();
+        const refPrefix = fields.refPrefix.value.trim() || 'manual';
+        const approvalToken = fields.approvalToken.value.trim();
+        if (!marketMakerId) {
+            showError($('opsError'), new Error('Select a market maker before running hedge execution.'));
+            return;
+        }
+        try {
+            // Manual hedge execution uses the existing guarded endpoint and optional approval token.
+            const result = await api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-execution?refPrefix=${encodeURIComponent(refPrefix)}`, {
+                method: 'POST',
+                headers: approvalToken ? { 'X-Operator-Approval': approvalToken } : {}
+            });
+            $('opsResult').textContent = JSON.stringify(result, null, 2);
+            await loadOperations();
+        } catch (error) {
+            showError($('opsError'), error);
+        }
+    }
+
+    async function reconcileIdempotency() {
+        clearError($('opsError'));
+        try {
+            const result = await api('/api/market-maker/hedge-idempotency/reconcile?limit=50', { method: 'POST' });
+            $('opsResult').textContent = JSON.stringify(result, null, 2);
+            await loadOperations();
+        } catch (error) {
+            showError($('opsError'), error);
+        }
+    }
+
+    $('reload').addEventListener('click', reloadAll);
+    $('newProfile').addEventListener('click', () => {
+        state.selectedMarketMakerId = '';
+        fillProfileForm({ marketMakerId: 'mm-new', uid: 90001, enabled: true, riskLimits: [] }, {
+            symbol: 'BTCUSDT',
+            maxLongNotional: '50000',
+            maxShortNotional: '50000',
+            maxOrderNotional: '10000',
+            maxSlippageRate: '0.005',
+            killSwitch: false
+        });
+        renderProfiles();
+    });
+    $('saveProfile').addEventListener('click', saveProfile);
+    $('runHedge').addEventListener('click', runHedge);
+    $('reconcileIdempotency').addEventListener('click', reconcileIdempotency);
+
+    reloadAll();
+</script>
+</body>
+</html>

@@ -9,6 +9,7 @@ This map covers future client-facing and admin-facing web applications.
 - Current admin test-funds page: `src/main/resources/static/admin-test-funds.html`
 - Current static admin page: `src/main/resources/static/admin-market-config.html`
 - Current static admin risk page: `src/main/resources/static/admin-risk-parameters.html`
+- Current static admin market-maker page: `src/main/resources/static/admin-market-maker.html`
 - Current static admin DLQ page: `src/main/resources/static/admin-dlq.html`
 - Current static README: `src/main/resources/static/README.md`
 - Browser smoke tests: `tests/e2e/static-admin-pages.spec.js`
@@ -36,6 +37,7 @@ Implemented baseline:
 - `admin-test-funds.html` is the admin MVP funding page for issuing test funds through `/api/admin/test-funds/airdrop`; this keeps privileged operator actions separate from the client trading workflow.
 - `AdminMarketConfigController` exposes `/api/admin/market-config` market configuration data and audited fee updates through `POST /api/admin/market-config/{symbol}/fees`; the static admin market-config page explains that fee edits apply only to new orders because existing orders carry fee snapshots.
 - `AdminRiskParametersController` exposes read-only `/api/admin/risk-parameters` risk switches, symbol tiers, and oracle state for the static admin risk-parameters page; write actions remain disabled until permissioned backend endpoints exist.
+- `admin-market-maker.html` exposes the existing `/api/market-maker` operator surface for creating/updating market-maker profiles, per-symbol strategy limits, quote state inspection, hedge reconciliation, hedge fills, idempotency reports, and guarded manual hedge execution.
 - `AdminDlqController` exposes read-only `/api/admin/dlq` DLQ rows with sanitized payload/header previews for the static admin DLQ page; replay/compensation actions remain disabled in UI pending permissioned operator workflow wiring.
 
 ## Design Constraints

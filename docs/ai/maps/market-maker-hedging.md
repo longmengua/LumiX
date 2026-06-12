@@ -28,6 +28,7 @@ This map is part of the current core-kernel priority lane. It should be read whe
 - Hedge fill store: `HedgeFillStore`, `JpaHedgeFillStore`, `HedgeFillRecord`, `HedgeFillRecordEntity`.
 - Profile service: `MarketMakerProfileService`.
 - Admin API: `interfaces.web.controller.MarketMakerController`, request DTOs `MarketMakerProfileRequest`, `MarketMakerRiskLimitRequest`.
+- Admin UI: `src/main/resources/static/admin-market-maker.html` lets operators create/update market-maker profiles, edit one per-symbol strategy/risk-limit row, inspect active quotes/fills/reconciliation/idempotency status, and trigger guarded manual hedge execution.
 - Quote API frequency limit: `MarketMakerQuoteRateLimiter` protects `POST /api/market-maker/quotes` before quote replacement side effects; config keys are `market-maker.api.quote-rate-limit.enabled`, `quotes-per-minute`, `max-tracked-keys`, and `client-ip-header`.
 - Hedge execution API frequency limit: `MarketMakerHedgeExecutionRateLimiter` protects manual hedge execution endpoints before external venue routing; config keys are `market-maker.api.hedge-execution-rate-limit.enabled`, `executions-per-minute`, `max-tracked-keys`, and `client-ip-header`.
 - Endpoint audit fields: `MarketMakerEndpointAuditLogger` emits `MARKET_MAKER_ENDPOINT_AUDIT` for quote placement and manual hedge execution with operator subject, credential type, optional `X-Operator-Id`, request id, endpoint/resource, result/reason, and approval token outcome without logging token values.
