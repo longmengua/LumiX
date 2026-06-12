@@ -229,8 +229,10 @@ test('exchange console renders client trading workflow without admin funding con
   await page.locator('#profileClose').click();
   await expect(page.locator('#profilePanel')).toBeHidden();
   await page.getByRole('button', { name: 'Account' }).click();
-  await expect(page.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('[data-tab="account"]')).toHaveAttribute('aria-selected', 'true');
   await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
+  await expect(page.locator('#authCard')).toBeHidden();
+  await expect(page.locator('#accountSummary')).toBeVisible();
   await expect(page.locator('#balance')).toContainText('10,000');
   await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#positionMargin')).toContainText('0');
@@ -263,9 +265,8 @@ test('exchange console renders client trading workflow without admin funding con
   // Logout clears stale account/order state so shared browsers do not display the previous user's snapshot.
   await page.getByRole('button', { name: 'Account' }).click();
   await page.getByRole('button', { name: 'Logout' }).click();
-  await expect(page.locator('#balance')).toHaveText('-');
-  await expect(page.locator('#available')).toHaveText('-');
-  await expect(page.locator('#frozen')).toHaveText('-');
+  await expect(page.locator('#authCard')).toBeVisible();
+  await expect(page.locator('#accountSummary')).toBeHidden();
   await expect(page.locator('#profileBalance')).toHaveText('-');
   await expect(page.locator('#authState')).toBeHidden();
   await expect(page.locator('#accountRaw')).toBeHidden();
@@ -275,7 +276,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#profileLoginRequired')).toBeVisible();
   await expect(page.locator('#profileContent')).toBeHidden();
   await page.getByRole('button', { name: 'Go to Login' }).click();
-  await expect(page.getByRole('button', { name: 'Account' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('[data-tab="account"]')).toHaveAttribute('aria-selected', 'true');
 
   // Locale switching should translate the client console without changing the default English test flow.
   await page.locator('#language').selectOption('zh-TW');

@@ -574,13 +574,38 @@
             color: var(--muted);
         }
 
-        .account-panel .form-grid {
-            grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.85fr) auto;
-            align-items: end;
+        .auth-card {
+            display: grid;
+            gap: 12px;
+            max-width: 440px;
         }
 
-        .account-panel .toolbar {
-            align-self: end;
+        .auth-actions {
+            display: grid;
+            gap: 8px;
+        }
+
+        .auth-actions button {
+            width: 100%;
+        }
+
+        .text-button {
+            background: transparent;
+            border-color: transparent;
+            color: var(--accent);
+            min-height: 30px;
+            padding: 0;
+        }
+
+        .account-summary[hidden], .auth-card[hidden] {
+            display: none;
+        }
+
+        .account-heading-actions {
+            align-items: center;
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
         }
 
         .identity-row {
@@ -618,7 +643,7 @@
                 justify-content: space-between;
             }
 
-            main, .form-grid, .metric-row, .identity-row, .account-panel .form-grid {
+            main, .form-grid, .metric-row, .identity-row {
                 grid-template-columns: 1fr;
             }
 
@@ -887,7 +912,8 @@
         <div class="panel-heading">
             <h2 data-i18n="account.title">User Account</h2>
         </div>
-        <div class="form-grid">
+        <div id="authCard" class="auth-card">
+            <div class="helper" data-i18n="account.signInHelper">Sign in to view balances, frozen funds, and positions.</div>
             <div>
                 <label for="authEmail" data-i18n="field.email">Email</label>
                 <input id="authEmail" autocomplete="off" data-lpignore="true"/>
@@ -896,42 +922,50 @@
                 <label for="authPassword" data-i18n="field.password">Password</label>
                 <input id="authPassword" type="password" autocomplete="new-password" data-lpignore="true"/>
             </div>
-            <div class="toolbar">
-                <button id="register" type="button" data-i18n="action.register">Register</button>
-                <button id="login" type="button" class="secondary" data-i18n="action.login">Login</button>
+            <div class="auth-actions">
+                <button id="login" type="button" data-i18n="action.login">Login</button>
+                <button id="register" type="button" class="text-button" data-i18n="account.createAccount">Create an account</button>
+            </div>
+        </div>
+        <div id="accountSummary" class="account-summary" hidden>
+            <div class="account-heading-actions">
+                <div>
+                    <h2 data-i18n="account.assetsTitle">Assets</h2>
+                    <div class="helper" data-i18n="account.assetsHelper">Balances update from your authenticated session.</div>
+                </div>
                 <button id="logout" type="button" class="secondary" data-i18n="action.logout">Logout</button>
             </div>
+            <input id="uid" type="hidden" value=""/>
+            <div class="identity-row">
+                <div class="metric">
+                    <label>UID</label>
+                    <div id="uidDisplay" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.session">Session</label>
+                    <div id="sessionDisplay" class="value">Not logged in</div>
+                </div>
+            </div>
+            <div class="metric-row account-metrics">
+                <div class="metric">
+                    <label data-i18n="metric.balance">Balance</label>
+                    <div id="balance" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.available">Available</label>
+                    <div id="available" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.frozen">Frozen</label>
+                    <div id="frozen" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label data-i18n="metric.positionMargin">Position Margin</label>
+                    <div id="positionMargin" class="value">-</div>
+                </div>
+            </div>
+            <div class="notice" data-i18n="account.notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
         </div>
-        <input id="uid" type="hidden" value=""/>
-        <div class="identity-row">
-            <div class="metric">
-                <label>UID</label>
-                <div id="uidDisplay" class="value">-</div>
-            </div>
-            <div class="metric">
-                <label data-i18n="metric.session">Session</label>
-                <div id="sessionDisplay" class="value">Not logged in</div>
-            </div>
-        </div>
-        <div class="metric-row account-metrics">
-            <div class="metric">
-                <label data-i18n="metric.balance">Balance</label>
-                <div id="balance" class="value">-</div>
-            </div>
-            <div class="metric">
-                <label data-i18n="metric.available">Available</label>
-                <div id="available" class="value">-</div>
-            </div>
-            <div class="metric">
-                <label data-i18n="metric.frozen">Frozen</label>
-                <div id="frozen" class="value">-</div>
-            </div>
-            <div class="metric">
-                <label data-i18n="metric.positionMargin">Position Margin</label>
-                <div id="positionMargin" class="value">-</div>
-            </div>
-        </div>
-        <div class="notice" data-i18n="account.notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
         <div id="authError" class="error" hidden></div>
         <div id="accountError" class="error" hidden></div>
         <pre id="authState" class="compact-pre" data-i18n="empty.authState" hidden>Not logged in.</pre>
@@ -995,6 +1029,10 @@
             'metric.frozen': 'Frozen',
             'metric.positionMargin': 'Position Margin',
             'account.title': 'User Account',
+            'account.signInHelper': 'Sign in to view balances, frozen funds, and positions.',
+            'account.createAccount': 'Create an account',
+            'account.assetsTitle': 'Assets',
+            'account.assetsHelper': 'Balances update from your authenticated session.',
             'account.notice': 'Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.',
             'book.title': 'Order Book',
             'book.helper': 'Runtime matching depth for the selected market.',
@@ -1079,6 +1117,10 @@
             'metric.frozen': '凍結',
             'metric.positionMargin': '倉位保證金',
             'account.title': '使用者帳戶',
+            'account.signInHelper': '登入後可查看餘額、凍結資金與倉位資訊。',
+            'account.createAccount': '建立新帳號',
+            'account.assetsTitle': '資產',
+            'account.assetsHelper': '資產會依登入 session 自動更新。',
             'account.notice': '凍結 = 訂單占用 + 倉位保證金。訂單占用包含保證金預留與預估 taker fee，因此小數是正常現象。',
             'book.title': '訂單簿',
             'book.helper': '所選市場的即時撮合深度。',
@@ -1163,6 +1205,10 @@
             'metric.frozen': 'Dibekukan',
             'metric.positionMargin': 'Margin Posisi',
             'account.title': 'Akaun Pengguna',
+            'account.signInHelper': 'Log masuk untuk melihat baki, dana dibekukan dan posisi.',
+            'account.createAccount': 'Cipta akaun',
+            'account.assetsTitle': 'Aset',
+            'account.assetsHelper': 'Baki dikemas kini daripada sesi disahkan anda.',
             'account.notice': 'Dibekukan = pegangan pesanan + margin posisi. Pegangan pesanan termasuk rizab margin dan anggaran yuran taker.',
             'book.title': 'Buku Pesanan',
             'book.helper': 'Kedalaman padanan runtime untuk pasaran dipilih.',
@@ -1247,6 +1293,10 @@
             'metric.frozen': '동결',
             'metric.positionMargin': '포지션 마진',
             'account.title': '사용자 계정',
+            'account.signInHelper': '로그인하여 잔고, 동결 자금 및 포지션을 확인하세요.',
+            'account.createAccount': '계정 만들기',
+            'account.assetsTitle': '자산',
+            'account.assetsHelper': '잔고는 인증된 세션에서 업데이트됩니다.',
             'account.notice': '동결 = 주문 증거금 + 포지션 마진. 주문 증거금에는 마진 예약과 예상 taker fee가 포함됩니다.',
             'book.title': '호가창',
             'book.helper': '선택한 시장의 런타임 매칭 깊이입니다.',
@@ -1373,7 +1423,7 @@
         fields.uid.value = uid;
         $('uidDisplay').textContent = text(uid);
         $('sessionDisplay').textContent = user?.email || (auth.accessToken ? t('status.authenticated') : t('status.notLoggedIn'));
-        syncProfileAuthState();
+        syncAuthenticatedUi();
     }
 
     function setActiveTab(tabName) {
@@ -1405,6 +1455,17 @@
         if (loggedIn) {
             syncProfileSections();
         }
+    }
+
+    function syncAccountAuthState() {
+        const loggedIn = Boolean(auth.accessToken && fields.uid.value.trim());
+        $('authCard').hidden = loggedIn;
+        $('accountSummary').hidden = !loggedIn;
+    }
+
+    function syncAuthenticatedUi() {
+        syncAccountAuthState();
+        syncProfileAuthState();
     }
 
     function syncProfileSections() {
@@ -1487,6 +1548,7 @@
         updateMarketStateNotice();
         clearError($('accountError'));
         clearError($('orderError'));
+        syncAuthenticatedUi();
     }
 
     // API wrapper attaches the first-party JWT when present; auth is optional in dev but required in prod.
@@ -2036,6 +2098,7 @@
     renderProfileCategoryInfo();
     renderProfileOrders([]);
     setUserIdentity(null);
+    syncAuthenticatedUi();
     loadCurrentUser().finally(() => refreshAll().finally(startMarketRefresh));
 </script>
 </body>
