@@ -74,21 +74,37 @@ test('exchange console renders client trading workflow without admin funding con
       ]))
     });
   });
+  let openOrderRequests = 0;
   await page.route('**/api/order/open?uid=10001&symbol=BTCUSDT', async (route) => {
+    openOrderRequests += 1;
+    const orders = [
+      {
+        orderId: 'order-1234567890',
+        symbol: 'BTCUSDT',
+        side: 'BUY',
+        type: 'LIMIT',
+        price: '99.50',
+        qty: '2.000',
+        executedQty: '0.000',
+        status: 'NEW'
+      }
+    ];
+    if (openOrderRequests > 1) {
+      // Scenario: live polling should refresh open orders without the client pressing Reload Orders.
+      orders.push({
+        orderId: 'order-live-refresh',
+        symbol: 'BTCUSDT',
+        side: 'SELL',
+        type: 'LIMIT',
+        price: '100.50',
+        qty: '1.500',
+        executedQty: '0.000',
+        status: 'NEW'
+      });
+    }
     await route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify(ok([
-        {
-          orderId: 'order-1234567890',
-          symbol: 'BTCUSDT',
-          side: 'BUY',
-          type: 'LIMIT',
-          price: '99.50',
-          qty: '2.000',
-          executedQty: '0.000',
-          status: 'NEW'
-        }
-      ]))
+      body: JSON.stringify(ok(orders))
     });
   });
   await page.route('**/api/margin/account?uid=10001', async (route) => {
@@ -137,7 +153,8 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#mmLatestRef')).toHaveText('mm-flow-e2e-1');
   await expect(page.locator('.depth-fill').first()).toBeVisible();
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'BTCUSDT' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'order-live-r' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: 'BTCUSDT' }).first()).toBeVisible();
   await expect(page.locator('#balance')).toContainText('10,000');
   await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#positionMargin')).toContainText('0');

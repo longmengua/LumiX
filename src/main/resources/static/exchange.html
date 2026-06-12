@@ -940,7 +940,8 @@
         depthEmpty: true,
         openOrderCount: 0,
         activeQuotes: [],
-        refreshTimer: null
+        refreshTimer: null,
+        refreshInFlight: false
     };
 
     // Display helpers keep empty numeric fields readable when the matching book has no resting liquidity.
@@ -1282,8 +1283,21 @@
         if (marketState.refreshTimer) {
             window.clearInterval(marketState.refreshTimer);
         }
-        // The client polls while WebSocket depth streaming is still outside this MVP screen.
-        marketState.refreshTimer = window.setInterval(() => Promise.allSettled([loadMarketMakerQuotes().then(loadDepth)]), 1500);
+        // The client polls visible market data and open orders until a user-event WebSocket stream is added.
+        marketState.refreshTimer = window.setInterval(refreshLivePanes, 1000);
+    }
+
+    async function refreshLivePanes() {
+        if (marketState.refreshInFlight) {
+            return;
+        }
+        marketState.refreshInFlight = true;
+        try {
+            await loadMarketMakerQuotes();
+            await Promise.allSettled([loadDepth(), loadOrders()]);
+        } finally {
+            marketState.refreshInFlight = false;
+        }
     }
 
     // Order entry sends internal exchange orders only; backend venue routing decides whether Polymarket is used.
