@@ -74,7 +74,7 @@
 
         main {
             display: grid;
-            grid-template-columns: minmax(280px, 0.95fr) minmax(420px, 1.35fr) minmax(330px, 0.9fr);
+            grid-template-columns: 1fr;
             gap: 16px;
             padding: 16px 24px 24px;
             align-items: start;
@@ -133,8 +133,8 @@
             min-width: 0;
         }
 
-        .market-controls input {
-            width: 140px;
+        .market-controls select {
+            width: 190px;
         }
 
         label {
@@ -239,7 +239,7 @@
         }
 
         .account-metrics {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
         }
 
         .metric {
@@ -325,10 +325,23 @@
             margin-bottom: 0;
         }
 
-        .market-hero {
-            grid-column: 1 / -1;
+        .top-row {
             display: grid;
-            grid-template-columns: minmax(250px, 0.8fr) minmax(420px, 1.2fr);
+            grid-template-columns: minmax(360px, 0.85fr) minmax(620px, 1.15fr);
+            gap: 16px;
+            align-items: stretch;
+        }
+
+        .trading-workspace {
+            display: grid;
+            grid-template-columns: minmax(280px, 0.82fr) minmax(320px, 0.9fr) minmax(420px, 1.28fr);
+            gap: 16px;
+            align-items: start;
+        }
+
+        .market-hero {
+            display: grid;
+            grid-template-columns: minmax(210px, 0.72fr) minmax(360px, 1fr);
             gap: 16px;
             padding: 14px;
             background: linear-gradient(135deg, #ffffff, #f4fbf9 62%, #eef1ff);
@@ -396,6 +409,42 @@
             border-top: 4px solid var(--gold);
         }
 
+        .tech-details {
+            margin-top: 10px;
+        }
+
+        .tech-details summary {
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .tech-details .metric {
+            margin-top: 8px;
+        }
+
+        .market-hero .metric-row {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .account-panel .form-grid {
+            grid-template-columns: minmax(180px, 1fr) minmax(160px, 0.85fr) auto;
+            align-items: end;
+        }
+
+        .account-panel .toolbar {
+            align-self: end;
+        }
+
+        .identity-row {
+            display: grid;
+            grid-template-columns: minmax(120px, 0.4fr) minmax(180px, 0.6fr);
+            gap: 8px;
+            margin-top: 10px;
+        }
+
         .mini-title {
             display: flex;
             align-items: center;
@@ -405,13 +454,9 @@
         }
 
         @media (max-width: 1160px) {
-            main {
-                grid-template-columns: minmax(300px, 0.9fr) minmax(360px, 1.1fr);
-            }
-
-            .trade-column {
-                grid-column: 1 / -1;
-                grid-template-columns: repeat(2, minmax(0, 1fr));
+            .top-row,
+            .trading-workspace {
+                grid-template-columns: 1fr;
             }
         }
 
@@ -421,7 +466,7 @@
                 flex-direction: column;
             }
 
-            main, .market-hero, .trade-column, .form-grid, .metric-row {
+            main, .market-hero, .form-grid, .metric-row, .identity-row, .account-panel .form-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -433,7 +478,7 @@
                 width: 100%;
             }
 
-            .market-controls input {
+            .market-controls select {
                 width: 100%;
             }
 
@@ -464,43 +509,106 @@
 </header>
 
 <main>
-    <section class="market-hero">
-        <div class="symbol-card">
-            <div class="symbol-row">
-                <div id="symbolTitle" class="symbol-title">BTCUSDT</div>
-                <div class="symbol-pill">Perpetual MVP</div>
+    <section class="top-row">
+        <div class="market-hero">
+            <div class="symbol-card">
+                <div class="symbol-row">
+                    <div id="symbolTitle" class="symbol-title">BTCUSDT</div>
+                    <div class="symbol-pill">Perpetual MVP</div>
+                </div>
+                <div class="helper">Markets are configured by Admin Console; clients can only select enabled symbols.</div>
+                <div class="toolbar market-controls">
+                    <label for="symbol">Market</label>
+                    <select id="symbol">
+                        <option value="BTCUSDT">BTCUSDT</option>
+                    </select>
+                    <button id="reloadMarket" type="button" class="secondary">Reload Market</button>
+                </div>
             </div>
-            <div class="helper">Select the trading market for depth, open orders, and order entry.</div>
-            <div class="toolbar market-controls">
-                <label for="symbol">Market</label>
-                <input id="symbol" value="BTCUSDT"/>
-                <button id="reloadMarket" type="button" class="secondary">Reload Market</button>
+            <div>
+                <div class="metric-row">
+                    <div class="metric">
+                        <label>Best Bid</label>
+                        <div id="bestBid" class="value buy-text">-</div>
+                    </div>
+                    <div class="metric">
+                        <label>Best Ask</label>
+                        <div id="bestAsk" class="value sell-text">-</div>
+                    </div>
+                    <div class="metric">
+                        <label>Book Version</label>
+                        <div id="bookVersion" class="value">-</div>
+                    </div>
+                </div>
+                <details class="tech-details">
+                    <summary>Technical</summary>
+                    <div class="metric">
+                        <label>Checksum</label>
+                        <div id="checksum" class="value">-</div>
+                    </div>
+                </details>
+                <div id="marketStateNotice" class="notice" hidden></div>
             </div>
         </div>
-        <div>
-            <div class="metric-row">
-                <div class="metric">
-                    <label>Best Bid</label>
-                    <div id="bestBid" class="value buy-text">-</div>
+
+        <div class="panel account-panel">
+            <div class="panel-heading">
+                <h2>User Account</h2>
+                <button id="reloadAccount" type="button" class="secondary">Reload Account</button>
+            </div>
+            <div class="form-grid">
+                <div>
+                    <label for="authEmail">Email</label>
+                    <input id="authEmail" value="demo@example.com"/>
                 </div>
-                <div class="metric">
-                    <label>Best Ask</label>
-                    <div id="bestAsk" class="value sell-text">-</div>
+                <div>
+                    <label for="authPassword">Password</label>
+                    <input id="authPassword" type="password" value="password123"/>
                 </div>
-                <div class="metric">
-                    <label>Version</label>
-                    <div id="bookVersion" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Checksum</label>
-                    <div id="checksum" class="value">-</div>
+                <div class="toolbar">
+                    <button id="register" type="button">Register</button>
+                    <button id="login" type="button" class="secondary">Login</button>
+                    <button id="logout" type="button" class="secondary">Logout</button>
                 </div>
             </div>
-            <div id="marketStateNotice" class="notice" hidden></div>
+            <input id="uid" type="hidden" value="10001"/>
+            <div class="identity-row">
+                <div class="metric">
+                    <label>UID</label>
+                    <div id="uidDisplay" class="value">10001</div>
+                </div>
+                <div class="metric">
+                    <label>Session</label>
+                    <div id="sessionDisplay" class="value">Not logged in</div>
+                </div>
+            </div>
+            <div class="metric-row account-metrics">
+                <div class="metric">
+                    <label>Balance</label>
+                    <div id="balance" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Available</label>
+                    <div id="available" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Frozen</label>
+                    <div id="frozen" class="value">-</div>
+                </div>
+                <div class="metric">
+                    <label>Position Margin</label>
+                    <div id="positionMargin" class="value">-</div>
+                </div>
+            </div>
+            <div class="notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
+            <div id="authError" class="error" hidden></div>
+            <div id="accountError" class="error" hidden></div>
+            <pre id="authState" class="compact-pre">Not logged in.</pre>
+            <pre id="accountRaw" class="compact-pre">No account loaded.</pre>
         </div>
     </section>
 
-    <section class="stack">
+    <section class="trading-workspace">
         <div class="panel book-panel">
             <div class="panel-heading">
                 <div>
@@ -547,87 +655,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <section class="stack">
-        <div class="panel orders-panel">
-            <div class="panel-heading">
-                <div>
-                    <h2>Open Orders</h2>
-                    <div class="helper">Current user's live orders for the selected market.</div>
-                </div>
-                <button id="reloadOrders" type="button" class="secondary">Reload Orders</button>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th>Order ID</th>
-                        <th>Market</th>
-                        <th>Side</th>
-                        <th>Type</th>
-                        <th>Price</th>
-                        <th>Qty</th>
-                        <th>Filled</th>
-                        <th>Status</th>
-                    </tr>
-                    </thead>
-                    <tbody id="orders"></tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <aside class="stack trade-column">
-        <div class="panel account-panel">
-            <div class="panel-heading">
-                <h2>User Account</h2>
-                <button id="reloadAccount" type="button" class="secondary">Reload Account</button>
-            </div>
-            <div class="notice inline">Client trading page. Admin test funds are separated under the admin console.</div>
-            <div class="form-grid">
-                <div class="full">
-                    <label for="authEmail">Email</label>
-                    <input id="authEmail" value="demo@example.com"/>
-                </div>
-                <div class="full">
-                    <label for="authPassword">Password</label>
-                    <input id="authPassword" type="password" value="password123"/>
-                </div>
-                <div class="full toolbar">
-                    <button id="register" type="button">Register</button>
-                    <button id="login" type="button" class="secondary">Login</button>
-                    <button id="logout" type="button" class="secondary">Logout</button>
-                </div>
-                <div class="metric">
-                    <label for="uid">UID</label>
-                    <input id="uid" value="10001"/>
-                </div>
-            </div>
-            <div class="metric-row account-metrics">
-                <div class="metric">
-                    <label>Balance</label>
-                    <div id="balance" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Available</label>
-                    <div id="available" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Frozen</label>
-                    <div id="frozen" class="value">-</div>
-                </div>
-                <div class="metric">
-                    <label>Position Margin</label>
-                    <div id="positionMargin" class="value">-</div>
-                </div>
-            </div>
-            <div class="notice">Frozen = order hold + position margin. Order hold includes margin reserve plus estimated taker fee, so decimals are expected.</div>
-            <div id="authError" class="error" hidden></div>
-            <div id="accountError" class="error" hidden></div>
-            <pre id="authState" class="compact-pre">Not logged in.</pre>
-            <pre id="accountRaw" class="compact-pre">No account loaded.</pre>
         </div>
 
         <div class="panel order-entry">
@@ -679,7 +706,33 @@
             <pre id="orderResult">No order submitted.</pre>
         </div>
 
-    </aside>
+        <div class="panel orders-panel">
+            <div class="panel-heading">
+                <div>
+                    <h2>Open Orders</h2>
+                    <div class="helper">Current user's live orders for the selected market.</div>
+                </div>
+                <button id="reloadOrders" type="button" class="secondary">Reload Orders</button>
+            </div>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Market</th>
+                        <th>Side</th>
+                        <th>Type</th>
+                        <th>Price</th>
+                        <th>Qty</th>
+                        <th>Filled</th>
+                        <th>Status</th>
+                    </tr>
+                    </thead>
+                    <tbody id="orders"></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </main>
 
 <script>
@@ -736,6 +789,32 @@
         $('symbolTitle').textContent = selectedSymbol() || '-';
     }
 
+    function setUserIdentity(user) {
+        const uid = user?.uid || fields.uid.value || '10001';
+        fields.uid.value = uid;
+        $('uidDisplay').textContent = text(uid);
+        $('sessionDisplay').textContent = user?.email || (auth.accessToken ? 'Authenticated' : 'Not logged in');
+    }
+
+    function renderMarketOptions(markets) {
+        const current = selectedSymbol() || 'BTCUSDT';
+        const configuredSymbols = (markets || [])
+            .filter(market => market && market.symbol && market.tradingEnabled !== false)
+            .map(market => market.symbol.toUpperCase());
+        const symbols = [...new Set(configuredSymbols.length > 0 ? configuredSymbols : [current])];
+        if (!symbols.includes(current)) {
+            symbols.unshift(current);
+        }
+        fields.symbol.replaceChildren(...symbols.map(symbol => {
+            const option = document.createElement('option');
+            option.value = symbol;
+            option.textContent = symbol;
+            return option;
+        }));
+        fields.symbol.value = current;
+        syncSymbolTitle();
+    }
+
     function showError(el, error) {
         el.textContent = error.message || String(error);
         el.hidden = false;
@@ -750,6 +829,7 @@
     function clearSessionUi() {
         $('authState').textContent = 'Not logged in.';
         $('accountRaw').textContent = 'No account loaded.';
+        $('sessionDisplay').textContent = 'Not logged in';
         $('balance').textContent = '-';
         $('available').textContent = '-';
         $('frozen').textContent = '-';
@@ -794,7 +874,7 @@
             auth.refreshToken = result.refreshToken;
             localStorage.setItem('exchangeAccessToken', auth.accessToken);
             localStorage.setItem('exchangeRefreshToken', auth.refreshToken);
-            fields.uid.value = result.user.uid;
+            setUserIdentity(result.user);
             renderAuth(result.user);
             await refreshAll();
         } catch (error) {
@@ -830,7 +910,7 @@
         try {
             const user = await api('/api/auth/me');
             if (user) {
-                fields.uid.value = user.uid;
+                setUserIdentity(user);
                 renderAuth(user);
             } else {
                 clearSessionUi();
@@ -938,14 +1018,31 @@
         }
     }
 
+    // Market selection is controlled by admin market config; the client cannot type arbitrary symbols.
+    async function loadMarketOptions() {
+        try {
+            const config = await api('/api/markets');
+            renderMarketOptions(config?.markets || []);
+        } catch (error) {
+            renderMarketOptions([{ symbol: selectedSymbol() || 'BTCUSDT', tradingEnabled: true }]);
+        }
+    }
+
     // Refresh runs independent panes concurrently so one failing API does not blank the entire console.
     async function refreshAll() {
+        await loadMarketOptions();
         await Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
     }
 
     // Order entry sends internal exchange orders only; backend venue routing decides whether Polymarket is used.
     async function placeOrder(side) {
         clearError($('orderError'));
+        if (!auth.accessToken) {
+            const error = new Error('Please login before placing orders.');
+            $('orderResult').textContent = 'No order submitted.';
+            showError($('orderError'), error);
+            return;
+        }
         fields.side.value = side;
         const payload = {
             uid: Number(fields.uid.value),
@@ -989,6 +1086,7 @@
     fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadAccount()]));
 
     syncSymbolTitle();
+    setUserIdentity(null);
     loadCurrentUser().finally(refreshAll);
 </script>
 </body>

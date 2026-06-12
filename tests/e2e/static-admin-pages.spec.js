@@ -13,6 +13,34 @@ test('trading console loads the core workflow controls', async ({ page }) => {
 });
 
 test('exchange console renders client trading workflow without admin funding controls', async ({ page }) => {
+  // Scenario: authenticated client loads markets from admin config and cannot type arbitrary symbols or UIDs.
+  await page.addInitScript(() => {
+    localStorage.setItem('exchangeAccessToken', 'test-access-token');
+    localStorage.setItem('exchangeRefreshToken', 'test-refresh-token');
+  });
+  await page.route('**/api/markets', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        markets: [
+          { symbol: 'BTCUSDT', tradingEnabled: true },
+          { symbol: 'ETHUSDT', tradingEnabled: true },
+          { symbol: 'DOGEUSDT', tradingEnabled: false }
+        ]
+      }))
+    });
+  });
+  await page.route('**/api/auth/me', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        uid: 10001,
+        email: 'demo@example.com',
+        roles: ['USER'],
+        scopes: ['TRADE']
+      }))
+    });
+  });
   await page.route('**/api/depth/BTCUSDT?depth=10', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -76,6 +104,11 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Admin Console' })).toHaveAttribute('href', '/admin-console.html');
   await expect(page.locator('#symbolTitle')).toHaveText('BTCUSDT');
+  await expect(page.locator('#symbol')).toHaveValue('BTCUSDT');
+  await expect(page.locator('#symbol option')).toHaveText(['BTCUSDT', 'ETHUSDT']);
+  await expect(page.locator('#uid')).toHaveAttribute('type', 'hidden');
+  await expect(page.locator('#uidDisplay')).toHaveText('10001');
+  await expect(page.locator('#sessionDisplay')).toContainText('demo@example.com');
   await expect(page.getByRole('heading', { name: 'User Account' })).toBeVisible();
   await expect(page.getByRole('cell', { name: '99.5' }).first()).toBeVisible();
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();

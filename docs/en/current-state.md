@@ -36,6 +36,7 @@ Polymarket worker split, WebSocket gateway scaling, and broader observability wo
 
 - Local MySQL, Redis, Kafka, and Kafka UI can be started with Docker Compose.
 - Internal exchange order entry has an MVP chain: validation, pre-trade risk, in-memory matching, accounting updates, and event publishing.
+- The client exchange console loads selectable markets from `/api/markets`, only offers enabled admin-configured symbols, and uses the authenticated session UID instead of an editable UID field.
 - Matching behavior has deterministic tests for FIFO, post-only, self-match prevention, IOC/FOK, and insufficient market-order liquidity.
 - An in-process per-symbol sequencer baseline serializes same-symbol matching operations within one process.
 - Production deployment and failover rules for per-symbol sequencer ownership are documented.
