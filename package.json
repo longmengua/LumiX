@@ -4,9 +4,10 @@
   "private": true,
   "description": "Browser E2E smoke tests for Java21 Match Hub static web screens.",
   "scripts": {
-    "smoke:exchange": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers node scripts/exchange-order-entry-smoke.js",
-    "e2e": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
-    "e2e:headed": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers PLAYWRIGHT_HEADLESS=false playwright test --headed"
+    "prepare:e2e": "./mvnw -q process-resources",
+    "smoke:exchange": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers node tests/e2e/exchange-order-entry-smoke.js",
+    "e2e": "npm run prepare:e2e && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
+    "e2e:headed": "npm run prepare:e2e && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers PLAYWRIGHT_HEADLESS=false playwright test --headed"
   },
   "devDependencies": {
     "@playwright/test": "^1.49.1"

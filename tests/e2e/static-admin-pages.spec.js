@@ -194,7 +194,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'order-live-r' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BTCUSDT' }).first()).toBeVisible();
-  // Scenario: the profile drawer exposes real account/order snapshots and lets users choose visible sections.
+  // Scenario: the profile drawer exposes real account/order snapshots without customer-facing section toggles.
   await page.getByRole('button', { name: 'Open Profile' }).click();
   await expect(page.getByRole('heading', { name: 'Profile' })).toBeVisible();
   await expect(page.locator('#authCard')).toBeHidden();
@@ -204,21 +204,15 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#balance')).toContainText('10,000');
   await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#profileFrozen')).toContainText('250');
+  await expect(page.locator('#profileOrderHold')).toContainText('250');
+  await expect(page.locator('#profilePositionMargin')).toContainText('0');
   await expect(page.locator('[data-profile-panel="orders"]')).toContainText('order-live-r');
-  await expect(page.locator('[data-profile-panel="categoryInfo"]')).toContainText('BTCUSDT');
-  await expect(page.locator('#profileOpenOrderCount')).toHaveText('2');
-  await expect(page.locator('#profileSectionSummary')).toContainText('6/6');
-  await page.locator('#profileSectionSummary').click();
-  await page.locator('#profileSelectAll').click();
-  await expect(page.locator('[data-profile-panel="funds"]')).toBeHidden();
-  await expect(page.locator('#profileSectionSummary')).toContainText('0/6');
-  await page.locator('#profileSelectAll').click();
-  await expect(page.locator('[data-profile-panel="categoryInfo"]')).toBeVisible();
-  await expect(page.locator('#profileSectionSummary')).toContainText('6/6');
-  await page.getByLabel('Frozen funds').uncheck();
-  await expect(page.locator('[data-profile-panel="frozen"]')).toBeHidden();
-  await page.getByLabel('Frozen funds').check();
-  await expect(page.locator('[data-profile-panel="frozen"]')).toBeVisible();
+  await expect(page.locator('[data-profile-panel="heldPositions"]')).toBeVisible();
+  await expect(page.locator('[data-profile-panel="positionHistory"]')).toBeVisible();
+  await expect(page.locator('[data-profile-panel="categoryInfo"]')).toHaveCount(0);
+  await expect(page.locator('[data-profile-panel="frozen"]')).toHaveCount(0);
+  await expect(page.locator('#profileSectionSummary')).toHaveCount(0);
+  await expect(page.locator('#profileSelectAll')).toHaveCount(0);
   await page.locator('#profileClose').click();
   await expect(page.locator('#profilePanel')).toBeHidden();
   await expect(page.locator('[data-tab="account"]')).toHaveCount(0);

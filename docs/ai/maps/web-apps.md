@@ -12,7 +12,7 @@ This map covers future client-facing and admin-facing web applications.
 - Current static admin market-maker page: `src/main/resources/static/exchange-admin.html`
 - Current static admin DLQ page: `src/main/resources/static/admin-dlq.html`
 - Current static README: `src/main/resources/static/README.md`
-- Browser smoke tests: `tests/e2e/static-admin-pages.spec.js`
+- Browser smoke tests: `tests/e2e/static-admin-pages.spec.js`, `tests/e2e/exchange-order-entry-smoke.js`
 - E2E runner: `shells/e2e-browser.sh`
 - There is no full production frontend app yet.
 
