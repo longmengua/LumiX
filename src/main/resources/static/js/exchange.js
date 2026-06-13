@@ -74,6 +74,8 @@ const translations = {
         'table.unrealizedPnl': 'Unrealized PnL',
         'table.realizedPnl': 'Realized PnL',
         'table.time': 'Time',
+        'table.action': 'Action',
+        'action.cancelOrder': 'Cancel',
         'empty.authState': 'Not logged in.',
         'empty.accountRaw': 'No account loaded.',
         'empty.orderResult': 'No order submitted.',
@@ -173,6 +175,8 @@ const translations = {
         'table.unrealizedPnl': '未實現損益',
         'table.realizedPnl': '已實現損益',
         'table.time': '時間',
+        'table.action': '操作',
+        'action.cancelOrder': '取消',
         'empty.authState': '尚未登入。',
         'empty.accountRaw': '尚未載入帳戶。',
         'empty.orderResult': '尚未送出訂單。',
@@ -272,6 +276,8 @@ const translations = {
         'table.unrealizedPnl': 'PnL Belum Direalisasi',
         'table.realizedPnl': 'PnL Direalisasi',
         'table.time': 'Masa',
+        'table.action': 'Tindakan',
+        'action.cancelOrder': 'Batal',
         'empty.authState': 'Belum log masuk.',
         'empty.accountRaw': 'Tiada akaun dimuatkan.',
         'empty.orderResult': 'Tiada pesanan dihantar.',
@@ -371,6 +377,8 @@ const translations = {
         'table.unrealizedPnl': '미실현 손익',
         'table.realizedPnl': '실현 손익',
         'table.time': '시간',
+        'table.action': '작업',
+        'action.cancelOrder': '취소',
         'empty.authState': '로그인하지 않았습니다.',
         'empty.accountRaw': '계정이 로드되지 않았습니다.',
         'empty.orderResult': '아직 주문을 제출하지 않았습니다.',
@@ -683,7 +691,7 @@ function clearSessionUi() {
     renderAccountSnapshot(null);
     marketState.latestOrders = [];
     renderProfileOrders([]);
-    $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
+    $('orders').innerHTML = `<tr><td colspan="9"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
     $('orderResult').textContent = t('empty.orderResult');
     unsubscribeCurrentUser();
     setUserIdentity(null);
@@ -1130,7 +1138,7 @@ function sortedDepthLevels(levels) {
 // Open orders are scoped by uid and symbol; future auth hardening should verify uid ownership server-side.
 async function loadOrders() {
     if (!auth.accessToken || !fields.uid.value.trim()) {
-        $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
+        $('orders').innerHTML = `<tr><td colspan="9"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
         marketState.latestOrders = [];
         renderProfileOrders([]);
         marketState.openOrderCount = 0;
@@ -1145,7 +1153,7 @@ async function loadOrders() {
     marketState.openOrderCount = orders ? orders.length : 0;
     updateMarketStateNotice();
     if (!orders || orders.length === 0) {
-        $('orders').innerHTML = `<tr><td colspan="8"><div class="empty">${t('empty.noOpenOrders')}</div></td></tr>`;
+        $('orders').innerHTML = `<tr><td colspan="9"><div class="empty">${t('empty.noOpenOrders')}</div></td></tr>`;
         return;
     }
     $('orders').innerHTML = orders.map(order => `
@@ -1158,6 +1166,7 @@ async function loadOrders() {
             <td>${money(order.qty)}</td>
             <td>${money(order.executedQty)}</td>
             <td><span class="status">${text(order.status)}</span></td>
+            <td><button type="button" class="secondary compact-action" data-cancel-order-id="${text(order.orderId)}">${t('action.cancelOrder')}</button></td>
         </tr>
     `).join('');
 }
@@ -1165,11 +1174,11 @@ async function loadOrders() {
 function renderProfileOrders(orders) {
     const target = $('profileOrders');
     if (!auth.accessToken || !fields.uid.value.trim()) {
-        target.innerHTML = `<tr><td colspan="6"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
+        target.innerHTML = `<tr><td colspan="7"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
         return;
     }
     if (!orders || orders.length === 0) {
-        target.innerHTML = `<tr><td colspan="6"><div class="empty">${t('empty.noOpenOrders')}</div></td></tr>`;
+        target.innerHTML = `<tr><td colspan="7"><div class="empty">${t('empty.noOpenOrders')}</div></td></tr>`;
         return;
     }
     // Profile orders share the static table header with the empty state; only tbody rows change on live updates.
@@ -1181,8 +1190,27 @@ function renderProfileOrders(orders) {
             <td>${money(order.price)}</td>
             <td>${money(order.qty)}</td>
             <td><span class="status">${text(order.status)}</span></td>
+            <td><button type="button" class="secondary compact-action" data-cancel-order-id="${text(order.orderId)}">${t('action.cancelOrder')}</button></td>
         </tr>
     `).join('');
+}
+
+async function cancelOrder(orderId) {
+    clearError($('orderError'));
+    if (!auth.accessToken || !fields.uid.value.trim()) {
+        promptLogin();
+        return;
+    }
+    try {
+        // Cancel is an explicit customer order-management action; refresh all dependent views after the reserve release.
+        await api(`/api/order/${encodeURIComponent(orderId)}`, { method: 'DELETE' });
+        await Promise.allSettled([loadOrders(), loadAccount(), loadDepth()]);
+    } catch (error) {
+        showError($('orderError'), error);
+        if (error.status === 401 || error.status === 403) {
+            promptLogin();
+        }
+    }
 }
 
 // Account lookup is read-only here; deposit/withdraw remain separate explicit workflows.
@@ -1439,6 +1467,18 @@ $('logout').addEventListener('click', logout);
 $('reloadOrders').addEventListener('click', loadOrders);
 $('placeBuy').addEventListener('click', () => placeOrder('BUY'));
 $('placeSell').addEventListener('click', () => placeOrder('SELL'));
+$('orders').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-cancel-order-id]');
+    if (button) {
+        cancelOrder(button.dataset.cancelOrderId);
+    }
+});
+$('profileOrders').addEventListener('click', (event) => {
+    const button = event.target.closest('[data-cancel-order-id]');
+    if (button) {
+        cancelOrder(button.dataset.cancelOrderId);
+    }
+});
 document.querySelectorAll('[data-tab]').forEach(button => {
     button.addEventListener('click', () => setActiveTab(button.dataset.tab));
 });

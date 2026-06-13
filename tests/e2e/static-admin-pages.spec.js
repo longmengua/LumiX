@@ -5,12 +5,23 @@ const ok = (data) => ({ ok: true, data });
 test('exchange admin shell is the unified operator entry', async ({ page }) => {
   // Scenario: operator navigation starts from exchange-admin.html and embeds tool pages as tabs.
   await page.goto('/exchange-admin.html', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: 'Admin Console' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Exchange Admin' })).toBeVisible();
   await expect(page.getByRole('link', { name: 'Client Exchange' })).toHaveAttribute('href', '/exchange.html');
   await expect(page.getByRole('button', { name: 'Test Funds' })).toHaveAttribute('aria-selected', 'true');
-  await page.getByRole('button', { name: 'Market Makers' }).click();
-  await expect(page.getByRole('button', { name: 'Market Makers' })).toHaveAttribute('aria-selected', 'true');
-  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-maker.html?embed=1');
+  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-test-funds.html?embed=1');
+  await expect(page.frameLocator('#adminFrame').locator('header')).toBeHidden();
+
+  for (const [tabName, src] of [
+    ['Market Config', '/admin-market-config.html?embed=1'],
+    ['Risk Parameters', '/admin-risk-parameters.html?embed=1'],
+    ['Market Makers', '/admin-market-maker.html?embed=1'],
+    ['DLQ', '/admin-dlq.html?embed=1']
+  ]) {
+    await page.getByRole('button', { name: tabName }).click();
+    await expect(page.getByRole('button', { name: tabName })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.locator('#adminFrame')).toHaveAttribute('src', src);
+    await expect(page.frameLocator('#adminFrame').locator('header')).toBeHidden();
+  }
 });
 
 test('exchange console renders client trading workflow without admin funding controls', async ({ page }) => {
@@ -108,11 +119,14 @@ test('exchange console renders client trading workflow without admin funding con
     });
   });
   let openOrderRequests = 0;
+  let canceledOrderId;
   await page.route('**/api/order/open?uid=10001&symbol=BTCUSDT', async (route) => {
     openOrderRequests += 1;
-    const orders = [
+    const orders = [];
+    if (canceledOrderId !== '11111111-1111-4111-8111-111111111111') {
+      orders.push(
       {
-        orderId: 'order-1234567890',
+        orderId: '11111111-1111-4111-8111-111111111111',
         symbol: 'BTCUSDT',
         side: 'BUY',
         type: 'LIMIT',
@@ -121,11 +135,12 @@ test('exchange console renders client trading workflow without admin funding con
         executedQty: '0.000',
         status: 'NEW'
       }
-    ];
+      );
+    }
     if (openOrderRequests > 1) {
       // Scenario: user WebSocket lifecycle signals should refresh active orders without pressing Reload Orders.
       orders.push({
-        orderId: 'order-live-refresh',
+        orderId: '22222222-2222-4222-8222-222222222222',
         symbol: 'BTCUSDT',
         side: 'SELL',
         type: 'LIMIT',
@@ -138,6 +153,13 @@ test('exchange console renders client trading workflow without admin funding con
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok(orders))
+    });
+  });
+  await page.route('**/api/order/11111111-1111-4111-8111-111111111111', async (route) => {
+    canceledOrderId = '11111111-1111-4111-8111-111111111111';
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok(true))
     });
   });
   await page.route('**/api/margin/account?uid=10001', async (route) => {
@@ -217,8 +239,12 @@ test('exchange console renders client trading workflow without admin funding con
       expect.objectContaining({ type: 'subscribe.user', uid: 10001, cancelOnDisconnect: false })
     ])
   );
-  await expect(page.getByRole('cell', { name: 'order-123456' })).toBeVisible();
-  await expect(page.getByRole('cell', { name: 'order-live-r' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '11111111-111' })).toBeVisible();
+  await expect(page.getByRole('cell', { name: '22222222-222' })).toBeVisible();
+  await page.locator('#orders').getByRole('button', { name: 'Cancel' }).first().click();
+  await expect.poll(() => canceledOrderId).toBe('11111111-1111-4111-8111-111111111111');
+  await expect(page.getByRole('cell', { name: '11111111-111' })).toHaveCount(0);
+  await expect(page.getByRole('cell', { name: '22222222-222' })).toBeVisible();
   await expect(page.getByRole('cell', { name: 'BTCUSDT' }).first()).toBeVisible();
   // Scenario: the profile drawer exposes real account/order snapshots without customer-facing section toggles.
   await page.getByRole('button', { name: 'Open Profile' }).click();
@@ -242,7 +268,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Unrealized PnL');
   await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="orders"]').click();
   await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"] thead')).toContainText('Order ID');
-  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"]')).toContainText('order-live-r');
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"]')).toContainText('22222222-222');
   await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="tradeHistory"]').click();
   await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Realized PnL');
   await expect(page.locator('#profilePositionHistory')).toBeVisible();

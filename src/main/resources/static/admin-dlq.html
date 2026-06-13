@@ -245,6 +245,11 @@
     </aside>
 </main>
 <script>
+    if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        // Embedded mode lets exchange-admin own navigation and keeps this page focused on DLQ inspection.
+        document.body.classList.add('embedded');
+    }
+
     const rows = document.getElementById('rows');
     const detail = document.getElementById('detail');
     const error = document.getElementById('error');

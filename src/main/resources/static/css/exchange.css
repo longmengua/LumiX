@@ -183,6 +183,12 @@ button.secondary {
     color: var(--accent);
 }
 
+.compact-action {
+    min-height: 28px;
+    padding: 0 10px;
+    white-space: nowrap;
+}
+
 button.sell {
     border-color: var(--sell);
     background: linear-gradient(180deg, #ef6b6b, var(--sell));

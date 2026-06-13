@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Admin Console</title>
+    <title>Exchange Admin</title>
     <style>
         :root {
             color-scheme: light;
@@ -168,8 +168,8 @@
 <!-- This page consolidates privileged MVP tools while preserving the older direct admin URLs for tests/bookmarks. -->
 <header>
     <div>
-        <h1 data-i18n="page.title">Admin Console</h1>
-        <div class="subtitle" data-i18n="page.subtitle">Operator tools grouped as tabs: test funds, market config, risk parameters, market makers, and DLQ.</div>
+        <h1 data-i18n="page.title">Exchange Admin</h1>
+        <div class="subtitle" data-i18n="page.subtitle">Unified operator console for funding, markets, risk, market making, and DLQ review.</div>
     </div>
     <div class="header-actions">
         <div class="language-field">
@@ -187,14 +187,14 @@
 
 <main>
     <nav class="tabs" aria-label="Admin sections">
-        <button class="tab" type="button" data-src="/admin-test-funds.html" data-i18n="tab.testFunds" aria-selected="true">Test Funds</button>
-        <button class="tab" type="button" data-src="/admin-market-config.html" data-i18n="tab.marketConfig" aria-selected="false">Market Config</button>
-        <button class="tab" type="button" data-src="/admin-risk-parameters.html" data-i18n="tab.riskParameters" aria-selected="false">Risk Parameters</button>
+        <button class="tab" type="button" data-src="/admin-test-funds.html?embed=1" data-i18n="tab.testFunds" aria-selected="true">Test Funds</button>
+        <button class="tab" type="button" data-src="/admin-market-config.html?embed=1" data-i18n="tab.marketConfig" aria-selected="false">Market Config</button>
+        <button class="tab" type="button" data-src="/admin-risk-parameters.html?embed=1" data-i18n="tab.riskParameters" aria-selected="false">Risk Parameters</button>
         <button class="tab" type="button" data-src="/admin-market-maker.html?embed=1" data-i18n="tab.marketMakers" aria-selected="false">Market Makers</button>
-        <button class="tab" type="button" data-src="/admin-dlq.html" data-i18n="tab.dlq" aria-selected="false">DLQ</button>
+        <button class="tab" type="button" data-src="/admin-dlq.html?embed=1" data-i18n="tab.dlq" aria-selected="false">DLQ</button>
     </nav>
     <section class="frame-shell" data-i18n-aria-label="section.selectedAdminPage" aria-label="Selected admin page">
-        <iframe id="adminFrame" title="Admin Test Funds" src="/admin-test-funds.html"></iframe>
+        <iframe id="adminFrame" title="Admin Test Funds" src="/admin-test-funds.html?embed=1"></iframe>
     </section>
 </main>
 
@@ -203,8 +203,8 @@
     const I18N_STORAGE_KEY = 'exchangeLanguage';
     const translations = {
         en: {
-            'page.title': 'Admin Console',
-            'page.subtitle': 'Operator tools grouped as tabs: test funds, market config, risk parameters, market makers, and DLQ.',
+            'page.title': 'Exchange Admin',
+            'page.subtitle': 'Unified operator console for funding, markets, risk, market making, and DLQ review.',
             'language.label': 'Language',
             'nav.clientExchange': 'Client Exchange',
             'tab.testFunds': 'Test Funds',
@@ -220,8 +220,8 @@
             'title.adminDlq': 'Admin DLQ'
         },
         'zh-TW': {
-            'page.title': '後台管理',
-            'page.subtitle': '營運工具以分頁管理：測試資金、市場設定、風控參數、做市商與 DLQ。',
+            'page.title': '交易所後台',
+            'page.subtitle': '統一管理測試資金、市場、風控、做市與 DLQ 審查。',
             'language.label': '語言',
             'nav.clientExchange': '前台交易',
             'tab.testFunds': '測試資金',
@@ -237,8 +237,8 @@
             'title.adminDlq': 'DLQ 後台'
         },
         ms: {
-            'page.title': 'Konsol Admin',
-            'page.subtitle': 'Alat operator dikumpulkan sebagai tab: dana ujian, konfigurasi pasaran, parameter risiko, pembuat pasaran dan DLQ.',
+            'page.title': 'Admin Bursa',
+            'page.subtitle': 'Konsol operator bersatu untuk dana, pasaran, risiko, pembuat pasaran dan semakan DLQ.',
             'language.label': 'Bahasa',
             'nav.clientExchange': 'Bursa Klien',
             'tab.testFunds': 'Dana Ujian',
@@ -254,8 +254,8 @@
             'title.adminDlq': 'Admin DLQ'
         },
         ko: {
-            'page.title': '관리 콘솔',
-            'page.subtitle': '운영 도구를 테스트 자금, 시장 설정, 리스크 파라미터, 마켓메이커, DLQ 탭으로 묶었습니다.',
+            'page.title': '거래소 관리자',
+            'page.subtitle': '자금, 시장, 리스크, 마켓메이킹, DLQ 검토를 위한 통합 운영 콘솔입니다.',
             'language.label': '언어',
             'nav.clientExchange': '클라이언트 거래소',
             'tab.testFunds': '테스트 자금',

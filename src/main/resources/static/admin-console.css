@@ -44,6 +44,21 @@ header {
     backdrop-filter: blur(12px);
 }
 
+/* Embedded admin tools are hosted by exchange-admin.html, so the shell owns navigation, locale, and page title. */
+body.embedded {
+    background: transparent !important;
+}
+
+body.embedded header {
+    display: none !important;
+}
+
+body.embedded main {
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 16px !important;
+}
+
 h1 {
     color: var(--admin-text);
     font-size: 24px !important;

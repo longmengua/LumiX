@@ -301,6 +301,11 @@
 </main>
 
 <script>
+    if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        // Embedded mode lets exchange-admin own navigation and keeps this page focused on risk review.
+        document.body.classList.add('embedded');
+    }
+
     const state = {
         switches: null,
         symbols: [],

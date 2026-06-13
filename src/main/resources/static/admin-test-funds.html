@@ -200,6 +200,7 @@
             }
         }
     </style>
+    <link rel="stylesheet" href="/admin-console.css"/>
 </head>
 <body>
 <!-- Admin test-funds page is separated from the client trading page to keep privileged actions out of user workflow. -->
@@ -261,6 +262,11 @@
 </main>
 
 <script>
+    if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        // Embedded mode lets exchange-admin own navigation while this page keeps test-fund operations isolated.
+        document.body.classList.add('embedded');
+    }
+
     // DOM helper keeps this operator page dependency-free while the production admin app is still pending.
     const $ = (id) => document.getElementById(id);
 

@@ -308,6 +308,11 @@
 </main>
 
 <script>
+    if (new URLSearchParams(window.location.search).get('embed') === '1') {
+        // Embedded mode lets exchange-admin own navigation and keeps this page focused on market operations.
+        document.body.classList.add('embedded');
+    }
+
     const state = {
         markets: [],
         capabilities: null,

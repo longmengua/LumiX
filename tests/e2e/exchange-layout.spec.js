@@ -27,4 +27,26 @@ test.describe('exchange responsive layout', () => {
       expect(metrics.rememberLoginWidth, 'keep-login row should fit profile panel').toBeLessThanOrEqual(metrics.profilePanelWidth);
     }
   });
+
+  test('exchange admin shell and embedded tools stay within the viewport', async ({ page }, testInfo) => {
+    // Scenario: the production admin entry owns navigation while embedded tools must not create nested horizontal overflow.
+    await page.goto('/exchange-admin.html');
+
+    for (const tabName of ['Test Funds', 'Market Config', 'Risk Parameters', 'Market Makers', 'DLQ']) {
+      await page.getByRole('button', { name: tabName }).click();
+      await expect(page.frameLocator('#adminFrame').locator('header')).toBeHidden();
+      const metrics = await page.evaluate(() => ({
+        innerWidth: window.innerWidth,
+        scrollWidth: document.documentElement.scrollWidth,
+        bodyScrollWidth: document.body.scrollWidth,
+        tabsWidth: document.querySelector('.tabs')?.getBoundingClientRect().width || 0,
+        frameWidth: document.querySelector('#adminFrame')?.getBoundingClientRect().width || 0
+      }));
+
+      expect(metrics.scrollWidth, `${testInfo.project.name} ${tabName} admin document width`).toBeLessThanOrEqual(metrics.innerWidth + 2);
+      expect(metrics.bodyScrollWidth, `${testInfo.project.name} ${tabName} admin body width`).toBeLessThanOrEqual(metrics.innerWidth + 2);
+      expect(metrics.tabsWidth, 'admin tabs should fit viewport').toBeLessThanOrEqual(metrics.innerWidth);
+      expect(metrics.frameWidth, 'admin iframe should fit viewport').toBeLessThanOrEqual(metrics.innerWidth);
+    }
+  });
 });
