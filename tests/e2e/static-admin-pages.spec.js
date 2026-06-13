@@ -162,6 +162,44 @@ test('exchange console renders client trading workflow without admin funding con
       body: JSON.stringify(ok(true))
     });
   });
+  await page.route('**/api/order/all?uid=10001&symbol=BTCUSDT', async (route) => {
+    // Scenario: filled orders disappear from open orders but remain visible as customer trade history.
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([
+        {
+          orderId: '33333333-3333-4333-8333-333333333333',
+          symbol: 'BTCUSDT',
+          side: 'BUY',
+          type: 'LIMIT',
+          price: '99.75',
+          avgPrice: '99.75',
+          qty: '0.000',
+          executedQty: '0.250',
+          status: 'FILLED',
+          ctime: '2026-06-14T03:00:00Z'
+        }
+      ]))
+    });
+  });
+  await page.route('**/api/margin/positions?uid=10001&symbol=BTCUSDT', async (route) => {
+    // Scenario: a matched order should surface as live exposure instead of making the customer think it vanished.
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([
+        {
+          uid: 10001,
+          symbol: 'BTCUSDT',
+          side: 'LONG',
+          qty: '0.250',
+          entryPrice: '99.75',
+          margin: '24.9375',
+          realizedPnl: '0.00',
+          updatedAt: '2026-06-14T03:00:01Z'
+        }
+      ]))
+    });
+  });
   await page.route('**/api/margin/account?uid=10001', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -270,8 +308,8 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"] thead')).toContainText('Order ID');
   await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"]')).toContainText('22222222-222');
   await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="tradeHistory"]').click();
-  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Realized PnL');
-  await expect(page.locator('#profilePositionHistory')).toBeVisible();
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Status');
+  await expect(page.locator('#profilePositionHistory')).toContainText('FILLED');
   await expect(page.locator('[data-profile-panel="categoryInfo"]')).toHaveCount(0);
   await expect(page.locator('[data-profile-panel="frozen"]')).toHaveCount(0);
   await expect(page.locator('#profileSectionSummary')).toHaveCount(0);
@@ -285,8 +323,10 @@ test('exchange console renders client trading workflow without admin funding con
   await page.locator('[data-segmented-tabs="tradingActivity"] [data-segmented-tab="positions"]').click();
   await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Entry Price');
   await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Unrealized PnL');
+  await expect(page.locator('#positions')).toContainText('LONG');
   await page.locator('[data-segmented-tabs="tradingActivity"] [data-segmented-tab="tradeHistory"]').click();
-  await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Realized PnL');
+  await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Status');
+  await expect(page.locator('#tradeHistory')).toContainText('FILLED');
   await page.locator('[data-segmented-tabs="tradingActivity"] [data-segmented-tab="orders"]').click();
   // Layout guard: client trading keeps book/order entry first, then trading activity below, with account details behind profile.
   const layout = await page.evaluate(() => {

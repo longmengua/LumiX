@@ -4,7 +4,7 @@ REST controllers。
 
 目前重點：
 - `OrderController`：下單、查單、撤單、amend、cancel-replace、bulk cancel。
-- `MarginController`：入金、入金 callback、出金、manual-review claim、transfer reconciliation、margin transfer、account、ledger、risk snapshot、bonus-credit user/campaign report/export/clawback、turnover summary/records/export/reconciliation。
+- `MarginController`：入金、入金 callback、出金、manual-review claim、transfer reconciliation、margin transfer、account、positions、ledger、risk snapshot、bonus-credit user/campaign report/export/clawback、turnover summary/records/export/reconciliation。
 - `MarketDataController` / `DepthController`：ticker、trades、trade cursor replay、klines、depth、depth delta、depth delta backfill、recovery cursor；stream endpoints 會在 gateway drain 時拒絕新連線。
 - `AdminMarketConfigController`：admin market-config list/detail screen data，以及 audited maker/taker fee update endpoint；既有掛單靠 order fee snapshot 不受新費率影響。
 - `AdminRiskParametersController`：admin risk switches、symbol risk tiers 與 oracle state read-only screen data。

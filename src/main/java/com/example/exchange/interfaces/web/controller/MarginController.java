@@ -26,11 +26,13 @@ import com.example.exchange.domain.model.dto.WalletLedgerReplayResult;
 import com.example.exchange.domain.model.entity.Account;
 import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletTransfer;
+import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.interfaces.web.dto.AccountResponse;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.BonusCreditClawbackRequest;
 import com.example.exchange.interfaces.web.dto.DepositCallbackRequest;
 import com.example.exchange.interfaces.web.dto.DepositRequest;
+import com.example.exchange.interfaces.web.dto.PositionResponse;
 import com.example.exchange.interfaces.web.dto.TransferRequest;
 import com.example.exchange.interfaces.web.dto.TransferReviewClaimRequest;
 import com.example.exchange.interfaces.web.dto.WithdrawalRequest;
@@ -54,6 +56,7 @@ public class MarginController {
     private final BonusCreditService bonusCreditService;
     private final TurnoverService turnoverService;
     private final TurnoverReconciliationService turnoverReconciliationService;
+    private final PositionRepository positionRepository;
 
     public MarginController(
             TransferMarginUseCase usecase,
@@ -63,7 +66,8 @@ public class MarginController {
             WalletLedgerReplayService walletLedgerReplayService,
             BonusCreditService bonusCreditService,
             TurnoverService turnoverService,
-            TurnoverReconciliationService turnoverReconciliationService
+            TurnoverReconciliationService turnoverReconciliationService,
+            PositionRepository positionRepository
     ) {
         this.usecase = usecase;
         this.marginService = marginService;
@@ -73,6 +77,7 @@ public class MarginController {
         this.bonusCreditService = bonusCreditService;
         this.turnoverService = turnoverService;
         this.turnoverReconciliationService = turnoverReconciliationService;
+        this.positionRepository = positionRepository;
     }
 
     @PostMapping("/deposit")
@@ -104,6 +109,21 @@ public class MarginController {
     public ApiResponse<AccountResponse> account(@RequestParam Long uid) {
         // Return a web DTO instead of the Account domain object so JSON fields stay stable for clients.
         return ApiResponse.ok(marginService.findAccount(uid).map(AccountResponse::from).orElse(null));
+    }
+
+    @GetMapping("/positions")
+    public ApiResponse<List<PositionResponse>> positions(
+            @RequestParam Long uid,
+            @RequestParam(required = false) String symbol
+    ) {
+        String normalizedSymbol = symbol == null || symbol.isBlank() ? null : symbol.trim().toUpperCase();
+        // The client needs filled orders to move from "委託" into a current-position view after matching.
+        return ApiResponse.ok(positionRepository.findAllByUid(uid).stream()
+                .filter(position -> position.getQty() != null && position.getQty().signum() != 0)
+                .filter(position -> normalizedSymbol == null
+                        || (position.getSymbol() != null && normalizedSymbol.equals(position.getSymbol().code())))
+                .map(PositionResponse::from)
+                .toList());
     }
 
     @GetMapping("/ledger")

@@ -510,7 +510,9 @@ const marketState = {
     exchangeUserSubscribed: false,
     exchangeLastConnectionId: '',
     cancelOnDisconnect: false,
-    latestOrders: []
+    latestOrders: [],
+    latestPositions: [],
+    latestTradeHistory: []
 };
 const DEFAULT_VISIBLE_TICKS_PER_SIDE = 5;
 
@@ -690,7 +692,11 @@ function clearSessionUi() {
     setRegistrationVerificationMode(false);
     renderAccountSnapshot(null);
     marketState.latestOrders = [];
+    marketState.latestPositions = [];
+    marketState.latestTradeHistory = [];
     renderProfileOrders([]);
+    renderPositions([]);
+    renderTradeHistory([]);
     $('orders').innerHTML = `<tr><td colspan="9"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
     $('orderResult').textContent = t('empty.orderResult');
     unsubscribeCurrentUser();
@@ -1135,6 +1141,78 @@ function sortedDepthLevels(levels) {
     });
 }
 
+function renderPositions(positions) {
+    const rows = !auth.accessToken || !fields.uid.value.trim()
+        ? `<tr><td colspan="6"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`
+        : !positions || positions.length === 0
+            ? `<tr><td colspan="6"><div class="empty">${t('empty.noPositions')}</div></td></tr>`
+            : positions.map(position => `
+                <tr>
+                    <td>${text(position.symbol)}</td>
+                    <td class="${position.side === 'LONG' ? 'buy-text' : 'sell-text'}">${text(position.side)}</td>
+                    <td>${money(position.qty)}</td>
+                    <td>${money(position.entryPrice)}</td>
+                    <td>${money(position.margin)}</td>
+                    <td>${money(position.realizedPnl)}</td>
+                </tr>
+            `).join('');
+    // Filled orders leave the open-order list; these panes show the resulting live exposure in both customer contexts.
+    $('positions').innerHTML = rows;
+    $('profileHeldPositions').innerHTML = rows;
+}
+
+async function loadPositions() {
+    if (!auth.accessToken || !fields.uid.value.trim()) {
+        marketState.latestPositions = [];
+        renderPositions([]);
+        return;
+    }
+    const uid = encodeURIComponent(fields.uid.value.trim());
+    const symbol = encodeURIComponent(selectedSymbol());
+    const positions = await api(`/api/margin/positions?uid=${uid}&symbol=${symbol}`);
+    marketState.latestPositions = positions || [];
+    renderPositions(marketState.latestPositions);
+}
+
+function filledOrders(orders) {
+    return (orders || [])
+        .filter(order => numeric(order.executedQty) > 0 || ['FILLED', 'PARTIALLY_FILLED'].includes(text(order.status)))
+        .sort((left, right) => new Date(right.ctime || 0).getTime() - new Date(left.ctime || 0).getTime());
+}
+
+function renderTradeHistory(orders) {
+    const rows = !auth.accessToken || !fields.uid.value.trim()
+        ? `<tr><td colspan="6"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`
+        : !orders || orders.length === 0
+            ? `<tr><td colspan="6"><div class="empty">${t('empty.noTradeHistory')}</div></td></tr>`
+            : orders.map(order => `
+                <tr>
+                    <td>${text(order.ctime ? new Date(order.ctime).toLocaleString() : '')}</td>
+                    <td>${text(order.symbol)}</td>
+                    <td class="${order.side === 'BUY' ? 'buy-text' : 'sell-text'}">${text(order.side)}</td>
+                    <td>${money(order.avgPrice || order.price)}</td>
+                    <td>${money(order.executedQty)}</td>
+                    <td>${text(order.status)}</td>
+                </tr>
+            `).join('');
+    // MVP trade history is derived from filled order snapshots until per-fill realized-PnL rows are promoted to the client API.
+    $('tradeHistory').innerHTML = rows;
+    $('profilePositionHistory').innerHTML = rows;
+}
+
+async function loadTradeHistory() {
+    if (!auth.accessToken || !fields.uid.value.trim()) {
+        marketState.latestTradeHistory = [];
+        renderTradeHistory([]);
+        return;
+    }
+    const uid = encodeURIComponent(fields.uid.value.trim());
+    const symbol = encodeURIComponent(selectedSymbol());
+    const allOrders = await api(`/api/order/all?uid=${uid}&symbol=${symbol}`);
+    marketState.latestTradeHistory = filledOrders(allOrders).slice(0, 50);
+    renderTradeHistory(marketState.latestTradeHistory);
+}
+
 // Open orders are scoped by uid and symbol; future auth hardening should verify uid ownership server-side.
 async function loadOrders() {
     if (!auth.accessToken || !fields.uid.value.trim()) {
@@ -1204,7 +1282,7 @@ async function cancelOrder(orderId) {
     try {
         // Cancel is an explicit customer order-management action; refresh all dependent views after the reserve release.
         await api(`/api/order/${encodeURIComponent(orderId)}`, { method: 'DELETE' });
-        await Promise.allSettled([loadOrders(), loadAccount(), loadDepth()]);
+        await Promise.allSettled([loadOrders(), loadTradeHistory(), loadPositions(), loadAccount(), loadDepth()]);
     } catch (error) {
         showError($('orderError'), error);
         if (error.status === 401 || error.status === 403) {
@@ -1245,7 +1323,7 @@ async function loadMarketOptions() {
 // Refresh runs independent panes concurrently so one failing API does not blank the entire console.
 async function refreshAll() {
     await loadMarketOptions();
-    await Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
+    await Promise.allSettled([loadDepth(), loadOrders(), loadTradeHistory(), loadPositions(), loadAccount()]);
 }
 
 function startMarketRefresh() {
@@ -1287,7 +1365,7 @@ async function refreshLivePanes() {
     }
     marketState.refreshInFlight = true;
     try {
-        await Promise.allSettled([loadDepth(), loadOrders()]);
+        await Promise.allSettled([loadDepth(), loadOrders(), loadTradeHistory(), loadPositions()]);
     } finally {
         marketState.refreshInFlight = false;
     }
@@ -1344,7 +1422,7 @@ function handleExchangeStreamMessage(raw) {
         }
         if (message.event === 'market-maker.quote') {
             // Market-maker identity is an operator concern; clients refresh only the public book impact.
-            Promise.allSettled([loadDepth(), loadOrders()]);
+            Promise.allSettled([loadDepth(), loadOrders(), loadTradeHistory(), loadPositions()]);
             return;
         }
         if (['depth-delta', 'ticker', 'trade', 'order.lifecycle', 'gateway.heartbeat'].includes(message.event)) {
@@ -1464,7 +1542,7 @@ $('login').addEventListener('click', () => authenticate('login'));
 $('verifyEmailCode').addEventListener('click', verifyRegistrationCode);
 $('resendEmailCode').addEventListener('click', resendRegistrationCode);
 $('logout').addEventListener('click', logout);
-$('reloadOrders').addEventListener('click', loadOrders);
+$('reloadOrders').addEventListener('click', () => Promise.allSettled([loadOrders(), loadTradeHistory(), loadPositions()]));
 $('placeBuy').addEventListener('click', () => placeOrder('BUY'));
 $('placeSell').addEventListener('click', () => placeOrder('SELL'));
 $('orders').addEventListener('click', (event) => {
@@ -1498,17 +1576,19 @@ $('language').addEventListener('change', () => {
     setCurrentLanguage($('language').value);
     toggleProfilePanel(!$('profilePanel').hidden);
     renderProfileOrders(marketState.latestOrders);
+    renderPositions(marketState.latestPositions);
+    renderTradeHistory(marketState.latestTradeHistory);
     setUserIdentity(fields.uid.value ? { uid: fields.uid.value, email: $('sessionDisplay').textContent } : null);
     syncPreferredLanguage();
-    Promise.allSettled([loadDepth(), loadOrders(), loadAccount()]);
+    Promise.allSettled([loadDepth(), loadOrders(), loadTradeHistory(), loadPositions(), loadAccount()]);
 });
 fields.symbol.addEventListener('change', () => {
     syncSymbolTitle();
     subscribeCurrentMarket();
-    Promise.allSettled([loadDepth(), loadOrders()]);
+    Promise.allSettled([loadDepth(), loadOrders(), loadTradeHistory(), loadPositions()]);
 });
 $('bookDepth').addEventListener('change', () => Promise.allSettled([loadDepth()]));
-fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadAccount()]));
+fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), loadTradeHistory(), loadPositions(), loadAccount()]));
 
 applyTranslations();
 syncSymbolTitle();
@@ -1516,6 +1596,8 @@ setActiveTab('trade');
 setSegmentedTab('tradingActivity', 'orders');
 setSegmentedTab('profileActivity', 'positions');
 renderProfileOrders([]);
+renderPositions([]);
+renderTradeHistory([]);
 setUserIdentity(null);
 syncAuthenticatedUi();
 loadAuthConfig();
