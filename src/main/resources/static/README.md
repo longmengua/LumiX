@@ -12,8 +12,8 @@
 - `admin-market-config.html`：後台市場設定頁，額外顯示 depth best bid/ask、book version 與 checksum 等市場資料診斷。
 - `admin-market-config.html`：admin market-config / fee settings 頁，搭配 `/api/admin/market-config` 與 `POST /api/admin/market-config/{symbol}/fees`。
 - `admin-risk-parameters.html`：read-only admin risk parameter / switch 檢視頁，搭配 `/api/admin/risk-parameters`，首屏說明全域風控、oracle、margin tiers 與 liquidation controls 的用途。
-- `exchange-market-maker-admin.html`：交易所做市後台 profile / strategy / hedge operation 內容頁，搭配 `/api/market-maker` profile、quote、hedge execution、reconciliation APIs；從 `admin-console.html` 以 `?embed=1` 開啟時會隱藏內層 header，避免像另一個後台畫面。
-- `exchange.html`、`admin-console.html` 與 `exchange-market-maker-admin.html`：支援 English、中文、Bahasa Malaysia、한국어 語言切換，偏好保存在 `localStorage.exchangeLanguage`；前台交易頁是 prod-facing 客戶入口，不暴露後台導覽。
+- `admin-market-maker.html`：交易所做市後台 profile / strategy / hedge operation 內容頁，搭配 `/api/market-maker` profile、quote、hedge execution、reconciliation APIs；從 `admin-console.html` 以 `?embed=1` 開啟時會隱藏內層 header，避免像另一個後台畫面。
+- `exchange.html`、`admin-console.html` 與 `admin-market-maker.html`：支援 English、中文、Bahasa Malaysia、한국어 語言切換，偏好保存在 `localStorage.exchangeLanguage`；前台交易頁是 prod-facing 客戶入口，不暴露後台導覽。
 - `admin-dlq.html`：read-only admin DLQ 檢視頁，搭配 `/api/admin/dlq`，payload / headers 只顯示 sanitizied preview，首屏說明 replay / quarantine / escalate 前的檢查用途。
 - `admin-console.css`：admin 靜態頁共用視覺系統，統一 header、navigation、panel、table、form、status 與 notice 樣式。
 
