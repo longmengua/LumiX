@@ -991,6 +991,8 @@
             'profiles.subtitle': 'Search market makers, expand a row to inspect strategy limits, or add a new profile.',
             'ops.title': 'Operations Snapshot',
             'quotes.title': 'Market-Making Orders',
+            'makerOrders.title': 'Maker Order Fills',
+            'inventory.title': 'Inventory Skew',
             'fills.title': 'Recent Hedge Fills',
             'action.reload': 'Reload',
             'action.newProfile': 'New Profile',
@@ -1046,9 +1048,16 @@
             'table.bidAsk': 'Bid / Ask',
             'table.side': 'Side',
             'table.qty': 'Qty',
+            'table.filled': 'Filled',
+            'table.remaining': 'Remaining',
+            'table.notional': 'Notional',
+            'table.markPrice': 'Mark Price',
+            'table.skew': 'Skew',
             'table.price': 'Price',
             'empty.profiles': 'No market makers loaded.',
             'empty.quotes': 'No active quote states.',
+            'empty.makerOrders': 'No filled maker orders yet.',
+            'empty.inventory': 'No inventory exposure.',
             'empty.fills': 'No hedge fills for selected market maker.',
             'error.selectMarketMaker': 'Select a market maker before running hedge execution.',
             'status.enabled': 'ENABLED',
@@ -1082,6 +1091,8 @@
             'profiles.subtitle': '搜尋做市商，展開列查看策略限制，或新增 profile。',
             'ops.title': '營運快照',
             'quotes.title': '做市掛單狀態',
+            'makerOrders.title': '做市成交 / 委託紀錄',
+            'inventory.title': '庫存偏向',
             'fills.title': '近期對沖成交',
             'action.reload': '重新整理',
             'action.newProfile': '新增 Profile',
@@ -1137,9 +1148,16 @@
             'table.bidAsk': '買 / 賣',
             'table.side': '方向',
             'table.qty': '數量',
+            'table.filled': '已成交',
+            'table.remaining': '剩餘',
+            'table.notional': '名目',
+            'table.markPrice': '標記價格',
+            'table.skew': '偏向',
             'table.price': '價格',
             'empty.profiles': '尚未載入做市商。',
             'empty.quotes': '目前沒有做市掛單狀態。',
+            'empty.makerOrders': '目前沒有已成交的做市單。',
+            'empty.inventory': '目前沒有庫存曝險。',
             'empty.fills': '所選做市商沒有近期對沖成交。',
             'error.selectMarketMaker': '執行對沖前請先選取做市商。',
             'status.enabled': '已啟用',
@@ -1173,6 +1191,8 @@
             'profiles.subtitle': 'Cari pembuat pasaran, buka baris untuk melihat had strategi, atau tambah profil baharu.',
             'ops.title': 'Ringkasan Operasi',
             'quotes.title': 'Pesanan Pembuat Pasaran',
+            'makerOrders.title': 'Isi Pesanan Maker',
+            'inventory.title': 'Kecondongan Inventori',
             'fills.title': 'Isi Lindung Nilai Terkini',
             'action.reload': 'Muat Semula',
             'action.newProfile': 'Profil Baharu',
@@ -1228,9 +1248,16 @@
             'table.bidAsk': 'Beli / Jual',
             'table.side': 'Arah',
             'table.qty': 'Kuantiti',
+            'table.filled': 'Diisi',
+            'table.remaining': 'Baki',
+            'table.notional': 'Notional',
+            'table.markPrice': 'Harga Mark',
+            'table.skew': 'Condong',
             'table.price': 'Harga',
             'empty.profiles': 'Tiada pembuat pasaran dimuatkan.',
             'empty.quotes': 'Tiada status sebut harga aktif.',
+            'empty.makerOrders': 'Tiada pesanan maker yang diisi.',
+            'empty.inventory': 'Tiada pendedahan inventori.',
             'empty.fills': 'Tiada isi hedge untuk pembuat pasaran dipilih.',
             'error.selectMarketMaker': 'Pilih pembuat pasaran sebelum menjalankan hedge.',
             'status.enabled': 'AKTIF',
@@ -1264,6 +1291,8 @@
             'profiles.subtitle': '마켓메이커를 검색하고 행을 펼쳐 전략 한도를 확인하거나 새 프로필을 추가합니다.',
             'ops.title': '운영 스냅샷',
             'quotes.title': '마켓메이킹 주문',
+            'makerOrders.title': '메이커 주문 체결',
+            'inventory.title': '재고 편향',
             'fills.title': '최근 헤지 체결',
             'action.reload': '새로고침',
             'action.newProfile': '새 프로필',
@@ -1319,9 +1348,16 @@
             'table.bidAsk': '매수 / 매도',
             'table.side': '방향',
             'table.qty': '수량',
+            'table.filled': '체결',
+            'table.remaining': '잔량',
+            'table.notional': '명목',
+            'table.markPrice': '마크 가격',
+            'table.skew': '편향',
             'table.price': '가격',
             'empty.profiles': '마켓메이커가 없습니다.',
             'empty.quotes': '마켓메이킹 주문 상태가 없습니다.',
+            'empty.makerOrders': '체결된 메이커 주문이 없습니다.',
+            'empty.inventory': '재고 익스포저가 없습니다.',
             'empty.fills': '선택한 마켓메이커의 헤지 체결이 없습니다.',
             'error.selectMarketMaker': '헤지를 실행하기 전에 마켓메이커를 선택하세요.',
             'status.enabled': '활성',
@@ -1373,6 +1409,8 @@
         profiles: [],
         activeQuotes: [],
         fillsByMarketMaker: new Map(),
+        makerOrdersByMarketMaker: new Map(),
+        exposuresByMarketMaker: new Map(),
         hedgeIssuesByMarketMaker: new Map(),
         quoteIssueCount: 0,
         idempotencyIssueCount: 0,
@@ -1537,6 +1575,23 @@
         };
     }
 
+    function profileToPayload(profile, enabledOverride = profile?.enabled) {
+        // Toggle writes send only the backend DTO shape; API read models may gain fields that should not be echoed back.
+        return {
+            marketMakerId: text(profile?.marketMakerId).trim(),
+            uid: Number(profile?.uid),
+            enabled: Boolean(enabledOverride),
+            riskLimits: (profile?.riskLimits || []).map(limit => ({
+                symbol: text(limit.symbol).trim().toUpperCase(),
+                maxLongNotional: text(limit.maxLongNotional),
+                maxShortNotional: text(limit.maxShortNotional),
+                maxOrderNotional: text(limit.maxOrderNotional),
+                maxSlippageRate: text(limit.maxSlippageRate),
+                killSwitch: Boolean(limit.killSwitch)
+            }))
+        };
+    }
+
     function fillProfileForm(profile, limit) {
         fields.marketMakerId.value = profile?.marketMakerId || '';
         fields.uid.value = profile?.uid || '';
@@ -1626,6 +1681,8 @@
         const marketMakerId = profile.marketMakerId;
         const quotes = state.activeQuotes.filter(quote => quote.marketMakerId === marketMakerId);
         const fills = state.fillsByMarketMaker.get(marketMakerId) || [];
+        const makerOrders = state.makerOrdersByMarketMaker.get(marketMakerId) || [];
+        const exposures = state.exposuresByMarketMaker.get(marketMakerId) || [];
         const hedgeIssues = state.hedgeIssuesByMarketMaker.get(marketMakerId) ?? 0;
         const autoQuoteStatus = state.autoQuoteStatus || {};
         const autoQuoteLabel = state.autoQuoteStatus
@@ -1665,6 +1722,20 @@
                     <span class="pill">${quotes.length}</span>
                 </div>
                 ${quotesTableHtml(quotes)}
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h3>${t('makerOrders.title')}</h3>
+                    <span class="pill">${makerOrders.length}</span>
+                </div>
+                ${makerOrdersTableHtml(makerOrders)}
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h3>${t('inventory.title')}</h3>
+                    <span class="pill">${exposures.length}</span>
+                </div>
+                ${exposuresTableHtml(exposures)}
             </div>
             <div class="detail-section">
                 <div class="detail-section-header">
@@ -1732,6 +1803,75 @@
         `;
     }
 
+    function makerOrdersTableHtml(orders) {
+        const filledOrders = orders
+            .filter(order => Number(order.executedQty || 0) > 0 || ['FILLED', 'PARTIALLY_FILLED'].includes(text(order.status)))
+            .slice(0, 10);
+        if (filledOrders.length === 0) {
+            return `<table><tbody><tr><td>${t('empty.makerOrders')}</td></tr></tbody></table>`;
+        }
+        return `
+            <table>
+                <thead>
+                <tr>
+                    <th>${t('field.symbol')}</th>
+                    <th>${t('table.side')}</th>
+                    <th>${t('table.status')}</th>
+                    <th>${t('table.price')}</th>
+                    <th>${t('table.filled')}</th>
+                    <th>${t('table.remaining')}</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${filledOrders.map(order => `
+                    <tr>
+                        <td>${text(order.symbol)}</td>
+                        <td>${text(order.side)}</td>
+                        <td>${text(order.status)}</td>
+                        <td>${numberText(order.avgPrice || order.price)}</td>
+                        <td>${numberText(order.executedQty)}</td>
+                        <td>${numberText(order.qty)}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function exposuresTableHtml(exposures) {
+        if (exposures.length === 0) {
+            return `<table><tbody><tr><td>${t('empty.inventory')}</td></tr></tbody></table>`;
+        }
+        return `
+            <table>
+                <thead>
+                <tr>
+                    <th>${t('field.symbol')}</th>
+                    <th>${t('table.skew')}</th>
+                    <th>${t('table.qty')}</th>
+                    <th>${t('table.markPrice')}</th>
+                    <th>${t('table.notional')}</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${exposures.map(exposure => {
+                    const qty = Number(exposure.quantity || 0);
+                    const skew = qty > 0 ? 'LONG' : qty < 0 ? 'SHORT' : '-';
+                    return `
+                        <tr>
+                            <td>${text(exposure.symbol)}</td>
+                            <td><span class="pill ${qty === 0 ? '' : 'warn'}">${skew}</span></td>
+                            <td>${numberText(exposure.quantity)}</td>
+                            <td>${numberText(exposure.markPrice)}</td>
+                            <td>${numberText(exposure.notional)}</td>
+                        </tr>
+                    `;
+                }).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
     async function loadProfiles() {
         const profiles = await api('/api/market-maker/profiles');
         state.profiles = profiles || [];
@@ -1746,12 +1886,20 @@
         if (!marketMakerId) {
             return;
         }
-        const [hedgeReport, fills] = await Promise.all([
+        const profile = state.profiles.find(item => item.marketMakerId === marketMakerId);
+        const symbols = (profile?.riskLimits || []).map(limit => limit.symbol).filter(Boolean);
+        const [hedgeReport, fills, exposures, makerOrders] = await Promise.all([
             api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-reconciliation?limit=50`).catch(() => null),
-            api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-fills?limit=20`).catch(() => [])
+            api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-fills?limit=20`).catch(() => []),
+            api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/exposures`).catch(() => []),
+            Promise.all(symbols.map(symbol => api(`/api/order/all?uid=${encodeURIComponent(profile.uid)}&symbol=${encodeURIComponent(symbol)}`).catch(() => [])))
+                .then(groups => groups.flat())
         ]);
         state.hedgeIssuesByMarketMaker.set(marketMakerId, hedgeReport?.issueCount ?? 0);
         state.fillsByMarketMaker.set(marketMakerId, fills || []);
+        state.exposuresByMarketMaker.set(marketMakerId, exposures || []);
+        state.makerOrdersByMarketMaker.set(marketMakerId, (makerOrders || [])
+            .sort((a, b) => new Date(b.ctime || 0).getTime() - new Date(a.ctime || 0).getTime()));
     }
 
     async function loadOperations() {
@@ -1853,7 +2001,7 @@
             // Disabled profiles stay in the all-profile list, so this toggle can turn market makers back on.
             const saved = await api('/api/market-maker/profiles', {
                 method: 'POST',
-                body: JSON.stringify({ ...profile, enabled: !profile.enabled })
+                body: JSON.stringify(profileToPayload(profile, !profile.enabled))
             });
             state.selectedMarketMakerId = saved.marketMakerId;
             state.expandedMarketMakerIds.add(saved.marketMakerId);

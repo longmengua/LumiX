@@ -9,6 +9,7 @@ import com.example.exchange.application.service.MarketMakerHedgeExecutionService
 import com.example.exchange.application.service.MarketMakerHedgeReconciliationService;
 import com.example.exchange.application.service.MarketMakerHedgeVenueIdempotencyService;
 import com.example.exchange.application.service.MarketMakerAutoQuoteService;
+import com.example.exchange.application.service.MarketMakerExposureService;
 import com.example.exchange.application.service.MarketMakerProfileService;
 import com.example.exchange.application.service.MarketMakerQuoteLifecycleService;
 import com.example.exchange.application.service.MarketMakerQuoteReconciliationService;
@@ -18,6 +19,7 @@ import com.example.exchange.domain.model.dto.HedgeReconciliationReport;
 import com.example.exchange.domain.model.dto.HedgeVenueIdempotencyReport;
 import com.example.exchange.domain.model.dto.MarketMakerAutoQuoteRunReport;
 import com.example.exchange.domain.model.dto.MarketMakerAutoQuoteStatus;
+import com.example.exchange.domain.model.dto.MarketMakerExposure;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteLifecycleReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteReconciliationReport;
@@ -57,6 +59,7 @@ public class MarketMakerController {
     private final MarketMakerHedgeExecutionService hedgeExecutionService;
     private final MarketMakerHedgeVenueIdempotencyService hedgeVenueIdempotencyService;
     private final MarketMakerAutoQuoteService autoQuoteService;
+    private final MarketMakerExposureService exposureService;
     private final MarketMakerAutoQuoteProperties autoQuoteProperties;
     private final HedgeVenueCallbackVerifier hedgeVenueCallbackVerifier;
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
@@ -86,6 +89,14 @@ public class MarketMakerController {
     @GetMapping("/profiles/{marketMakerId}")
     public ApiResponse<MarketMakerProfile> profile(@PathVariable String marketMakerId) {
         return ApiResponse.ok(profileService.findByMarketMakerId(marketMakerId).orElse(null));
+    }
+
+    @GetMapping("/profiles/{marketMakerId}/exposures")
+    public ApiResponse<List<MarketMakerExposure>> exposures(@PathVariable String marketMakerId) {
+        // Operator consoles use exposure to understand inventory skew before adjusting maker quote placement.
+        return ApiResponse.ok(profileService.findByMarketMakerId(marketMakerId)
+                .map(exposureService::exposures)
+                .orElse(List.of()));
     }
 
     @GetMapping("/uids/{uid}/profile")

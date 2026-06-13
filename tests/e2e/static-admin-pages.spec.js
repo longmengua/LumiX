@@ -39,14 +39,24 @@ test('market maker admin uses a production operator console without raw response
       { id: 'new-visible', message: 'Newest visible message', createdAt: now }
     ]));
   });
+  let alphaEnabled = true;
+  let disablePayload;
   await page.route('**/api/market-maker/profiles', async (route) => {
+    if (route.request().method() === 'POST') {
+      disablePayload = route.request().postDataJSON();
+      if (disablePayload.marketMakerId === 'mm-alpha') {
+        alphaEnabled = disablePayload.enabled;
+      }
+      await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok(disablePayload)) });
+      return;
+    }
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok([
         {
           marketMakerId: 'mm-alpha',
           uid: 90001,
-          enabled: true,
+          enabled: alphaEnabled,
           riskLimits: [
             {
               symbol: 'BTCUSDT',
@@ -114,8 +124,35 @@ test('market maker admin uses a production operator console without raw response
       { symbol: 'BTCUSDT', side: 'BUY', quantity: '0.1', price: '100.00', refId: 'hedge-1' }
     ]))
   }));
+  await page.route('**/api/market-maker/profiles/mm-alpha/exposures', async (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(ok([
+      { marketMakerId: 'mm-alpha', uid: 90001, symbol: 'BTCUSDT', quantity: '0.35', markPrice: '101.00', notional: '35.35' }
+    ]))
+  }));
+  await page.route('**/api/order/all?uid=90001&symbol=BTCUSDT', async (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(ok([
+      {
+        orderId: 'maker-filled-1',
+        uid: 90001,
+        symbol: 'BTCUSDT',
+        side: 'SELL',
+        type: 'LIMIT',
+        price: '101.00',
+        origQty: '0.200',
+        qty: '0.050',
+        executedQty: '0.150',
+        avgPrice: '101.00',
+        status: 'PARTIALLY_FILLED',
+        ctime: '2026-06-14T04:00:00Z'
+      }
+    ]))
+  }));
   await page.route('**/api/market-maker/profiles/mm-paused/hedge-reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
   await page.route('**/api/market-maker/profiles/mm-paused/hedge-fills?limit=20', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
+  await page.route('**/api/market-maker/profiles/mm-paused/exposures', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
+  await page.route('**/api/order/all?uid=90002&symbol=ETHUSDT', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
 
   await page.goto('/admin-market-maker.html?embed=1', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Market Makers' })).toBeVisible();
@@ -134,11 +171,18 @@ test('market maker admin uses a production operator console without raw response
   await expect(page.locator('.strategy-detail')).toContainText('50');
   await expect(page.locator('.strategy-detail')).toContainText('bid-1');
   await expect(page.locator('.strategy-detail')).toContainText('hedge-1');
+  await expect(page.locator('.strategy-detail')).toContainText('Maker Order Fills');
+  await expect(page.locator('.strategy-detail')).toContainText('PARTIALLY_FILLED');
+  await expect(page.locator('.strategy-detail')).toContainText('Inventory Skew');
+  await expect(page.locator('.strategy-detail')).toContainText('LONG');
+  await page.getByRole('row', { name: /mm-alpha/ }).getByRole('button', { name: 'Disable' }).click();
+  await expect.poll(() => disablePayload?.enabled).toBe(false);
+  await expect(page.getByRole('row', { name: /mm-alpha/ }).first()).toContainText('DISABLED');
   await page.getByRole('button', { name: 'Open message center' }).click();
   await expect(page.locator('#messageList')).toContainText('Newest visible message');
   await expect(page.locator('#messageList')).toContainText('Older visible message');
   await expect(page.locator('#messageList')).not.toContainText('Expired hidden message');
-  await expect(page.locator('#messageList .message-item').first()).toContainText('Newest visible message');
+  await expect(page.locator('#messageList .message-item').first()).toContainText('Market maker disabled.');
   await page.getByRole('button', { name: 'Open message center' }).click();
   await page.getByRole('button', { name: 'Refresh Maker Quotes' }).click();
   await page.getByRole('button', { name: 'Open message center' }).click();
