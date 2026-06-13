@@ -499,6 +499,11 @@ pre {
 
 .orders-panel .segmented-tabs {
     margin-top: 4px;
+    width: min(420px, 100%);
+}
+
+.orders-panel .segmented-tab {
+    flex: 0 0 132px;
 }
 
 .order-entry {
