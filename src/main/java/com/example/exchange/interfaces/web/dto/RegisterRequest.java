@@ -15,6 +15,8 @@ public record RegisterRequest(
         // Public registration can require a free human-verification provider token such as Cloudflare Turnstile.
         String humanVerificationToken,
         // Browser locale at registration time localizes verification email and becomes the user's saved preference.
-        String preferredLanguage
+        String preferredLanguage,
+        // Browser IANA time zone lets verification emails show expiry in the customer's local time.
+        String timeZone
 ) {
 }

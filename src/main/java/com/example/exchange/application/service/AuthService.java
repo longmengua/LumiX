@@ -100,7 +100,13 @@ public class AuthService {
 
     /** Registers a first-party exchange user, runs anti-bot verification, and starts email verification when enabled. */
     @Transactional
-    public RegistrationResult register(String email, String password, String humanVerificationToken, String preferredLanguage) {
+    public RegistrationResult register(
+            String email,
+            String password,
+            String humanVerificationToken,
+            String preferredLanguage,
+            String timeZone
+    ) {
         humanVerificationService.verifyRegistration(humanVerificationToken);
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
         String normalizedLanguage = AppUserRecord.normalizePreferredLanguage(preferredLanguage);
@@ -139,7 +145,7 @@ public class AuthService {
                     expiresAt
             ));
             String verificationUrl = verificationUrl(token);
-            emailVerificationNotifier.sendVerification(registration.getEmail(), verificationUrl, code, expiresAt, normalizedLanguage);
+            emailVerificationNotifier.sendVerification(registration.getEmail(), verificationUrl, code, expiresAt, normalizedLanguage, timeZone);
             return new RegistrationResult(
                     null,
                     registration.getEmail(),
@@ -201,7 +207,7 @@ public class AuthService {
 
     /** Resends a fresh code for an existing pending registration without extending its original expiry deadline. */
     @Transactional
-    public RegistrationResult resendRegistrationVerification(String email, String preferredLanguage) {
+    public RegistrationResult resendRegistrationVerification(String email, String preferredLanguage, String timeZone) {
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
         requireEmail(normalizedEmail);
         Instant now = Instant.now(clock);
@@ -242,7 +248,8 @@ public class AuthService {
                 verificationUrl,
                 code,
                 registration.getExpiresAt(),
-                language
+                language,
+                timeZone
         );
         return new RegistrationResult(
                 null,

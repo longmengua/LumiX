@@ -49,17 +49,18 @@ CUSTOMER_AUTH_EMAIL_SMTP_SSL=false \
 
 1. The frontend reads `/api/auth/config`.
 2. If email verification is enabled, registration creates a pending request.
-3. The email sends a six-digit code as the primary verification path.
-4. The user enters the code in the profile drawer.
-5. The email link is only a backup path.
+3. The email sends a six-digit code as the primary verification path. Built-in email copy renders the code as a large highlighted HTML block with a plain-text fallback.
+4. The frontend includes the browser IANA time zone, so the email expiry is rendered in the customer's local time down to minutes only.
+5. The user enters the code in the profile drawer.
+6. The email link is only a backup path.
 
 If `CUSTOMER_AUTH_EMAIL_SMTP_ENABLED=false`, the app does not send email. It logs the verification code in the Spring application logs for local demos.
 
 ## Localized Email Templates
 
-Verification emails use the registration language saved by the frontend. Built-in templates exist for `en`, `zh-TW`, `ms`, and `ko`.
+Verification emails use the registration language saved by the frontend. Built-in templates exist for `en`, `zh-TW`, `ms`, and `ko`, and highlight `{code}` as the main visual element.
 
-Override any template from configuration without code changes. Body placeholders are `{code}`, `{verificationUrl}`, and `{expiresAt}`.
+Override any template from configuration without code changes. Body placeholders are `{code}`, `{verificationUrl}`, and `{expiresAt}`. `{expiresAt}` is already localized from the request time zone and does not include seconds.
 
 ```bash
 CUSTOMER_AUTH_EMAIL_VERIFICATION_TEMPLATES_ZH_TW_SUBJECT="註冊驗證碼"

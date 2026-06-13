@@ -404,7 +404,8 @@ test('exchange console registers with on-screen email code before login', async 
     email: 'new-user@example.com',
     password: 'correct-password',
     humanVerificationToken: '',
-    preferredLanguage: 'zh-TW'
+    preferredLanguage: 'zh-TW',
+    timeZone: expect.any(String)
   });
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
   await expect(page.locator('#emailVerificationCode')).toBeFocused();
@@ -516,7 +517,8 @@ test('exchange console shows generic login error for unknown accounts', async ({
   await expect.poll(() => pendingRegisterPayload).toMatchObject({
     email: 'missing@example.com',
     password: 'wrong-password',
-    preferredLanguage: 'en'
+    preferredLanguage: 'en',
+    timeZone: expect.any(String)
   });
   await expect(page.locator('#authError')).toBeHidden();
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
@@ -525,7 +527,8 @@ test('exchange console shows generic login error for unknown accounts', async ({
   await page.locator('#resendEmailCode').click();
   await expect.poll(() => resendPayload).toMatchObject({
     email: 'missing@example.com',
-    preferredLanguage: 'en'
+    preferredLanguage: 'en',
+    timeZone: expect.any(String)
   });
   await expect(page.locator('#authNotice')).toContainText('A new verification code has been sent');
 

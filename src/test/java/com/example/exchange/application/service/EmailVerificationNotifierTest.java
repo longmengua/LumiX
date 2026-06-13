@@ -28,7 +28,8 @@ class EmailVerificationNotifierTest {
                         "http://127.0.0.1/verify",
                         "123456",
                         Instant.parse("2026-06-13T00:00:00Z"),
-                        "zh-TW"))
+                        "zh-TW",
+                        "Asia/Taipei"))
                 .doesNotThrowAnyException();
     }
 
@@ -45,10 +46,34 @@ class EmailVerificationNotifierTest {
                 "zh-TW",
                 "654321",
                 "http://127.0.0.1/verify",
-                Instant.parse("2026-06-13T00:00:00Z"));
+                Instant.parse("2026-06-13T00:00:30.123Z"),
+                "Asia/Taipei");
 
         assertThat(content.subject()).isEqualTo("自訂驗證信");
-        assertThat(content.body()).contains("654321", "http://127.0.0.1/verify", "2026-06-13T00:00:00Z");
+        assertThat(content.plainBody()).contains("654321", "http://127.0.0.1/verify", "2026-06-13 08:00 CST");
+        assertThat(content.plainBody()).doesNotContain("00:00:30", ".123");
+        assertThat(content.htmlBody()).contains("654321", "http://127.0.0.1/verify", "2026-06-13 08:00 CST");
+    }
+
+    @Test
+    @DisplayName("built-in verification email highlights the six-digit code in HTML")
+    void builtInTemplateHighlightsVerificationCode() {
+        CustomerAuthProperties properties = new CustomerAuthProperties();
+        EmailVerificationNotifier notifier = new EmailVerificationNotifier(properties);
+
+        // Scenario: the default customer email must make the primary code obvious at a glance.
+        EmailVerificationNotifier.EmailContent content = notifier.previewContent(
+                "zh-TW",
+                "654321",
+                "http://127.0.0.1/verify?token=a&b=<c>",
+                Instant.parse("2026-06-13T00:00:30.123Z"),
+                "Asia/Taipei");
+
+        assertThat(content.plainBody()).contains("654321", "2026-06-13 08:00 CST");
+        assertThat(content.plainBody()).doesNotContain("00:00:30", ".123");
+        assertThat(content.htmlBody())
+                .contains("background:#fff4cc", "font-size:36px", "font-weight:800", "654321")
+                .contains("http://127.0.0.1/verify?token=a&amp;b=&lt;c&gt;", "2026-06-13 08:00 CST");
     }
 
     @Test
@@ -65,7 +90,8 @@ class EmailVerificationNotifierTest {
                         "http://127.0.0.1/verify",
                         "123456",
                         Instant.parse("2026-06-13T00:00:00Z"),
-                        "en"))
+                        "en",
+                        "UTC"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("smtp host is not configured");
 
@@ -75,7 +101,8 @@ class EmailVerificationNotifierTest {
                         "http://127.0.0.1/verify",
                         "123456",
                         Instant.parse("2026-06-13T00:00:00Z"),
-                        "en"))
+                        "en",
+                        "UTC"))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessageContaining("smtp from is not configured");
     }

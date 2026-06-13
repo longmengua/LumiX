@@ -53,7 +53,8 @@ public class AuthController {
                 request.email(),
                 request.password(),
                 request.humanVerificationToken(),
-                request.preferredLanguage()
+                request.preferredLanguage(),
+                request.timeZone()
         )));
     }
 
@@ -71,7 +72,8 @@ public class AuthController {
     public ApiResponse<RegistrationResponse> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
         return ApiResponse.ok(RegistrationResponse.from(authService.resendRegistrationVerification(
                 request.email(),
-                request.preferredLanguage()
+                request.preferredLanguage(),
+                request.timeZone()
         )));
     }
 

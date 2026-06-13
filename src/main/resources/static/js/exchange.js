@@ -635,7 +635,8 @@ async function authenticate(mode) {
                     email: $('authEmail').value.trim(),
                     password: $('authPassword').value,
                     humanVerificationToken: fields.humanVerificationToken.value.trim(),
-                    preferredLanguage: currentLanguage
+                    preferredLanguage: currentLanguage,
+                    timeZone: browserTimeZone()
                 })
             });
             fields.humanVerificationToken.value = '';
@@ -711,6 +712,11 @@ function validateCredentials(mode) {
     return true;
 }
 
+function browserTimeZone() {
+    // IANA time zones let the backend render email expiry in the customer's local time.
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+}
+
 async function verifyRegistrationCode() {
     clearError($('authError'));
     clearNotice();
@@ -748,7 +754,8 @@ async function resendRegistrationCode() {
             method: 'POST',
             body: JSON.stringify({
                 email,
-                preferredLanguage: currentLanguage
+                preferredLanguage: currentLanguage,
+                timeZone: browserTimeZone()
             })
         });
         continuePendingRegistration(result?.email || email);

@@ -10,6 +10,8 @@ public record ResendVerificationRequest(
         // Email identifies the pending registration; it is normalized by the service before lookup.
         @Email @NotBlank String email,
         // Current browser locale controls resend email copy without extending registration lifetime.
-        String preferredLanguage
+        String preferredLanguage,
+        // Browser IANA time zone localizes the unchanged registration expiry in resend emails.
+        String timeZone
 ) {
 }
