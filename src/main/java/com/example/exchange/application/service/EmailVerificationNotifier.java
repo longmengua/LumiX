@@ -74,7 +74,12 @@ public class EmailVerificationNotifier {
             MimeMessage message = sender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, StandardCharsets.UTF_8.name());
             EmailContent content = previewContent(preferredLanguage, verificationCode, verificationUrl, expiresAt, timeZone);
-            helper.setFrom(smtp.getFrom());
+            // Sender display name makes mailbox lists show the exchange brand instead of a bare Gmail address.
+            if (smtp.getDisplayName() == null || smtp.getDisplayName().isBlank()) {
+                helper.setFrom(smtp.getFrom());
+            } else {
+                helper.setFrom(smtp.getFrom(), smtp.getDisplayName().trim());
+            }
             helper.setTo(email);
             helper.setSubject(content.subject());
             helper.setText(content.plainBody(), content.htmlBody());

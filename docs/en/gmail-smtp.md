@@ -22,6 +22,7 @@ CUSTOMER_AUTH_EMAIL_SMTP_PORT=587
 CUSTOMER_AUTH_EMAIL_SMTP_USERNAME=your-gmail-address@gmail.com
 CUSTOMER_AUTH_EMAIL_SMTP_PASSWORD=your-gmail-app-password
 CUSTOMER_AUTH_EMAIL_SMTP_FROM=your-gmail-address@gmail.com
+CUSTOMER_AUTH_EMAIL_SMTP_DISPLAY_NAME=LumiX
 CUSTOMER_AUTH_EMAIL_SMTP_AUTH=true
 CUSTOMER_AUTH_EMAIL_SMTP_START_TLS=true
 CUSTOMER_AUTH_EMAIL_SMTP_SSL=false
@@ -39,11 +40,14 @@ CUSTOMER_AUTH_EMAIL_SMTP_PORT=587 \
 CUSTOMER_AUTH_EMAIL_SMTP_USERNAME=your-gmail-address@gmail.com \
 CUSTOMER_AUTH_EMAIL_SMTP_PASSWORD=your-gmail-app-password \
 CUSTOMER_AUTH_EMAIL_SMTP_FROM=your-gmail-address@gmail.com \
+CUSTOMER_AUTH_EMAIL_SMTP_DISPLAY_NAME=LumiX \
 CUSTOMER_AUTH_EMAIL_SMTP_AUTH=true \
 CUSTOMER_AUTH_EMAIL_SMTP_START_TLS=true \
 CUSTOMER_AUTH_EMAIL_SMTP_SSL=false \
 ./mvnw spring-boot:run
 ```
+
+`CUSTOMER_AUTH_EMAIL_SMTP_DISPLAY_NAME` is the customer-visible sender name. For example, `LumiX` renders as `LumiX <your-gmail-address@gmail.com>` in common mail clients.
 
 ## Expected Registration Flow
 

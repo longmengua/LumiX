@@ -55,6 +55,7 @@ customer-auth:
       username: ${CUSTOMER_AUTH_EMAIL_SMTP_USERNAME:}
       password: ${CUSTOMER_AUTH_EMAIL_SMTP_PASSWORD:}
       from: ${CUSTOMER_AUTH_EMAIL_SMTP_FROM:}
+      display-name: ${CUSTOMER_AUTH_EMAIL_SMTP_DISPLAY_NAME:LumiX}
       subject: ${CUSTOMER_AUTH_EMAIL_SMTP_SUBJECT:Verify your exchange account}
       auth: ${CUSTOMER_AUTH_EMAIL_SMTP_AUTH:true}
       start-tls: ${CUSTOMER_AUTH_EMAIL_SMTP_START_TLS:true}

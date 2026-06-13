@@ -52,6 +52,8 @@ public class CustomerAuthProperties {
         private String username = "";
         private String password = "";
         private String from = "";
+        /** Customer-visible sender name, encoded into the SMTP From header beside the mailbox address. */
+        private String displayName = "LumiX";
         private String subject = "Verify your exchange account";
         private boolean auth = true;
         private boolean startTls = true;
