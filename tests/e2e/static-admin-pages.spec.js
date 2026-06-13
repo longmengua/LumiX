@@ -481,9 +481,23 @@ test('exchange console shows generic login error for unknown accounts', async ({
     });
   });
   let pendingRegisterPayload;
+  let registerScenario = 'pending';
   let resendPayload;
   await page.route('**/api/auth/register', async (route) => {
     pendingRegisterPayload = route.request().postDataJSON();
+    if (registerScenario === 'duplicate') {
+      // Scenario: backend sends a stable enum while keeping the raw message generic for security.
+      await route.fulfill({
+        status: 409,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          code: 'USER_ALREADY_REGISTERED',
+          message: '發生異常',
+          traceId: 'test-trace-id'
+        })
+      });
+      return;
+    }
     await route.fulfill({
       status: 409,
       contentType: 'application/json',
@@ -518,6 +532,17 @@ test('exchange console shows generic login error for unknown accounts', async ({
   await expect(page.locator('#authError')).not.toContainText('HTTP');
   await expect(page.locator('#authError')).not.toContainText('發生異常');
 
+  registerScenario = 'duplicate';
+  await page.locator('#authEmail').fill('registered@example.com');
+  await page.locator('#authPassword').fill('correct-password');
+  await page.locator('#register').click();
+  await expect(page.locator('#authError')).toContainText('This email is already registered. Please login instead.');
+  await expect(page.locator('#authError')).not.toContainText('HTTP');
+  await expect(page.locator('#authError')).not.toContainText('發生異常');
+
+  registerScenario = 'pending';
+  await page.locator('#authEmail').fill('missing@example.com');
+  await page.locator('#authPassword').fill('wrong-password');
   await page.locator('#register').click();
   await expect.poll(() => pendingRegisterPayload).toMatchObject({
     email: 'missing@example.com',

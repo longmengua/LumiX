@@ -85,6 +85,7 @@ const translations = {
         'error.verificationCodeRequired': 'Enter the email verification code.',
         'error.invalidCredentials': 'Account not found or password is incorrect.',
         'error.registrationPending': 'Registration verification is already in progress. Enter the email code or try again later.',
+        'error.alreadyRegistered': 'This email is already registered. Please login instead.',
         'notice.bookRecovered': 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
         'error.loginBeforeOrder': 'Please login before placing orders.'
     },
@@ -169,6 +170,7 @@ const translations = {
         'error.verificationCodeRequired': '請輸入信箱驗證碼。',
         'error.invalidCredentials': '查無此帳號或密碼錯誤。',
         'error.registrationPending': '此帳號已有註冊驗證進行中，請輸入信箱驗證碼或稍後再試。',
+        'error.alreadyRegistered': '此信箱已註冊，請直接登入。',
         'notice.bookRecovered': '開放訂單已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
         'error.loginBeforeOrder': '下單前請先登入。'
     },
@@ -253,6 +255,7 @@ const translations = {
         'error.verificationCodeRequired': 'Masukkan kod pengesahan e-mel.',
         'error.invalidCredentials': 'Akaun tidak ditemui atau kata laluan salah.',
         'error.registrationPending': 'Pengesahan pendaftaran sedang berjalan. Masukkan kod e-mel atau cuba lagi kemudian.',
+        'error.alreadyRegistered': 'E-mel ini sudah didaftarkan. Sila log masuk.',
         'notice.bookRecovered': 'Pesanan terbuka telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
         'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
     },
@@ -337,6 +340,7 @@ const translations = {
         'error.verificationCodeRequired': '이메일 인증 코드를 입력하세요.',
         'error.invalidCredentials': '계정을 찾을 수 없거나 비밀번호가 올바르지 않습니다.',
         'error.registrationPending': '가입 인증이 이미 진행 중입니다. 이메일 코드를 입력하거나 나중에 다시 시도하세요.',
+        'error.alreadyRegistered': '이미 가입된 이메일입니다. 로그인하세요.',
         'notice.bookRecovered': '미체결 주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
         'error.loginBeforeOrder': '주문 전에 로그인하세요.'
     }
@@ -676,6 +680,10 @@ function authDisplayError(mode, error) {
     }
     if (mode === 'register' && error.code === 'AUTH_REGISTRATION_PENDING') {
         return new Error(t('error.registrationPending'));
+    }
+    if (mode === 'register' && error.code === 'USER_ALREADY_REGISTERED') {
+        // Duplicate registration uses a customer-safe message instead of leaking raw HTTP details.
+        return new Error(t('error.alreadyRegistered'));
     }
     return error;
 }

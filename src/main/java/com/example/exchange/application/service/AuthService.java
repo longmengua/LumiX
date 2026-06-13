@@ -112,7 +112,8 @@ public class AuthService {
         String normalizedLanguage = AppUserRecord.normalizePreferredLanguage(preferredLanguage);
         requireEmail(normalizedEmail);
         if (users.existsByEmail(normalizedEmail)) {
-            throw new IllegalArgumentException("email already registered");
+            // Duplicate registration is a recoverable customer flow, so expose a stable enum for localized UI copy.
+            throw new BusinessException(BusinessErrorCode.USER_ALREADY_REGISTERED);
         }
         if (emailVerificationEnabled()) {
             Instant now = Instant.now(clock);
@@ -395,7 +396,8 @@ public class AuthService {
                 verificationCode.expire();
                 verificationCodes.save(verificationCode);
             }
-            throw new IllegalArgumentException("email already registered");
+            // A race between pending verification and account creation should still return the same duplicate-account code.
+            throw new BusinessException(BusinessErrorCode.USER_ALREADY_REGISTERED);
         }
         AppUserRecord user = users.saveAndFlush(new AppUserRecord(registration.getEmail(), registration.getPasswordHash()));
         user.updatePreferredLanguage(registration.getPreferredLanguage());

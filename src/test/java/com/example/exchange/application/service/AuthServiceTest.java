@@ -81,8 +81,9 @@ class AuthServiceTest {
         when(fixture.users.existsByEmail("alice@example.com")).thenReturn(true);
 
         assertThatThrownBy(() -> fixture.service.register("alice@example.com", "correct-password", "", "en", "UTC"))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("email already registered");
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getErrorCode())
+                .isEqualTo(BusinessErrorCode.USER_ALREADY_REGISTERED);
     }
 
     @Test
