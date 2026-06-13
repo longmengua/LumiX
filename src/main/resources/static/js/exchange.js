@@ -35,6 +35,7 @@ const translations = {
         'action.logout': 'Logout',
         'action.verifyRegistration': 'Verify Registration',
         'action.resendVerification': 'Resend Code',
+        'action.resumeVerification': 'Continue Verification',
         'action.placeBuy': 'Place Buy',
         'action.placeSell': 'Place Sell',
         'metric.session': 'Session',
@@ -75,6 +76,7 @@ const translations = {
         'status.accountUnavailable': 'Account unavailable.',
         'status.registrationCreated': 'Account created. You can log in now.',
         'status.registrationPending': 'Enter the email verification code to finish registration.',
+        'status.registrationResumeAvailable': 'A pending registration is available for this email.',
         'status.verificationResent': 'A new verification code has been sent.',
         'status.emailVerified': 'Email verified. You can log in now.',
         'status.registrationVerified': 'Registration verified. You can log in now.',
@@ -119,6 +121,7 @@ const translations = {
         'action.logout': '登出',
         'action.verifyRegistration': '完成註冊驗證',
         'action.resendVerification': '重新寄送驗證碼',
+        'action.resumeVerification': '繼續驗證',
         'action.placeBuy': '下買單',
         'action.placeSell': '下賣單',
         'metric.session': '登入狀態',
@@ -159,6 +162,7 @@ const translations = {
         'status.accountUnavailable': '帳戶不可用。',
         'status.registrationCreated': '帳號已建立，現在可以登入。',
         'status.registrationPending': '請輸入信箱驗證碼完成註冊。',
+        'status.registrationResumeAvailable': '此信箱有未完成的註冊驗證。',
         'status.verificationResent': '新的驗證碼已寄出。',
         'status.emailVerified': 'Email 已驗證，現在可以登入。',
         'status.registrationVerified': '註冊已完成驗證，現在可以登入。',
@@ -203,6 +207,7 @@ const translations = {
         'action.logout': 'Log Keluar',
         'action.verifyRegistration': 'Sahkan Pendaftaran',
         'action.resendVerification': 'Hantar Semula Kod',
+        'action.resumeVerification': 'Teruskan Pengesahan',
         'action.placeBuy': 'Buat Belian',
         'action.placeSell': 'Buat Jualan',
         'metric.session': 'Sesi',
@@ -243,6 +248,7 @@ const translations = {
         'status.accountUnavailable': 'Akaun tidak tersedia.',
         'status.registrationCreated': 'Akaun dibuat. Anda boleh log masuk sekarang.',
         'status.registrationPending': 'Masukkan kod pengesahan e-mel untuk melengkapkan pendaftaran.',
+        'status.registrationResumeAvailable': 'Pendaftaran tertunda tersedia untuk e-mel ini.',
         'status.verificationResent': 'Kod pengesahan baharu telah dihantar.',
         'status.emailVerified': 'E-mel disahkan. Anda boleh log masuk sekarang.',
         'status.registrationVerified': 'Pendaftaran disahkan. Anda boleh log masuk sekarang.',
@@ -287,6 +293,7 @@ const translations = {
         'action.logout': '로그아웃',
         'action.verifyRegistration': '가입 인증',
         'action.resendVerification': '코드 다시 보내기',
+        'action.resumeVerification': '인증 계속하기',
         'action.placeBuy': '매수 주문',
         'action.placeSell': '매도 주문',
         'metric.session': '세션',
@@ -327,6 +334,7 @@ const translations = {
         'status.accountUnavailable': '계정을 사용할 수 없습니다.',
         'status.registrationCreated': '계정이 생성되었습니다. 이제 로그인할 수 있습니다.',
         'status.registrationPending': '가입을 완료하려면 이메일 인증 코드를 입력하세요.',
+        'status.registrationResumeAvailable': '이 이메일에 대해 진행 중인 가입 인증이 있습니다.',
         'status.verificationResent': '새 인증 코드가 전송되었습니다.',
         'status.emailVerified': '이메일이 인증되었습니다. 이제 로그인할 수 있습니다.',
         'status.registrationVerified': '가입 인증이 완료되었습니다. 이제 로그인할 수 있습니다.',
@@ -555,6 +563,9 @@ function setRegistrationVerificationMode(active) {
     // The verification-code step is a distinct registration state; showing login/register beside it creates duplicate CTAs.
     $('emailVerificationStep').hidden = !active;
     $('authActions').hidden = active;
+    if (active) {
+        $('resumeVerification').hidden = true;
+    }
 }
 
 function rememberPendingRegistration(email) {
@@ -566,6 +577,7 @@ function rememberPendingRegistration(email) {
 
 function clearPendingRegistration() {
     localStorage.removeItem(PENDING_REGISTRATION_EMAIL_KEY);
+    $('resumeVerification').hidden = true;
 }
 
 function continuePendingRegistration(email) {
@@ -576,6 +588,19 @@ function continuePendingRegistration(email) {
     setRegistrationVerificationMode(true);
     showNotice(t('status.registrationPending'));
     fields.emailVerificationCode.focus();
+}
+
+function showPendingRegistrationResume(email) {
+    const pendingEmail = (email || '').trim();
+    if (!pendingEmail || auth.accessToken) {
+        $('resumeVerification').hidden = true;
+        return;
+    }
+    // Reload recovery should not surprise users with a code field; the explicit resume CTA enters verification mode.
+    $('authEmail').value = pendingEmail;
+    setRegistrationVerificationMode(false);
+    $('resumeVerification').hidden = false;
+    showNotice(t('status.registrationResumeAvailable'));
 }
 
 // Session-bound data must disappear on logout so the next person at the browser cannot see stale account state.
@@ -775,9 +800,7 @@ function restorePendingRegistration() {
     if (!pendingEmail) {
         return;
     }
-    $('authEmail').value = pendingEmail;
-    setRegistrationVerificationMode(true);
-    showNotice(t('status.registrationPending'));
+    showPendingRegistrationResume(pendingEmail);
 }
 
 function validateEmailCode() {
@@ -1350,6 +1373,9 @@ $('register').addEventListener('click', () => authenticate('register'));
 $('login').addEventListener('click', () => authenticate('login'));
 $('verifyEmailCode').addEventListener('click', verifyRegistrationCode);
 $('resendEmailCode').addEventListener('click', resendRegistrationCode);
+$('resumeVerification').addEventListener('click', () => continuePendingRegistration(
+    $('authEmail').value.trim() || localStorage.getItem(PENDING_REGISTRATION_EMAIL_KEY) || ''
+));
 $('logout').addEventListener('click', logout);
 $('reloadOrders').addEventListener('click', loadOrders);
 $('placeBuy').addEventListener('click', () => placeOrder('BUY'));

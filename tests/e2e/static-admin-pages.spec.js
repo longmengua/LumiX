@@ -536,6 +536,9 @@ test('exchange console shows generic login error for unknown accounts', async ({
   await page.reload();
   await page.getByRole('button', { name: 'Open Profile' }).click();
   await expect(page.locator('#authEmail')).toHaveValue('missing@example.com');
+  await expect(page.locator('#emailVerificationStep')).toBeHidden();
+  await expect(page.locator('#resumeVerification')).toBeVisible();
+  await page.locator('#resumeVerification').click();
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
   await expect(page.locator('#resendEmailCode')).toBeVisible();
 });
