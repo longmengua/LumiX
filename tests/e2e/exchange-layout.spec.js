@@ -47,6 +47,16 @@ test.describe('exchange responsive layout', () => {
       expect(metrics.bodyScrollWidth, `${testInfo.project.name} ${tabName} admin body width`).toBeLessThanOrEqual(metrics.innerWidth + 2);
       expect(metrics.tabsWidth, 'admin tabs should fit viewport').toBeLessThanOrEqual(metrics.innerWidth);
       expect(metrics.frameWidth, 'admin iframe should fit viewport').toBeLessThanOrEqual(metrics.innerWidth);
+
+      if (tabName === 'Market Makers') {
+        const frame = page.frameLocator('#adminFrame');
+        // Scenario: operators need an in-page guide with screenshots when using market-maker controls from the embedded admin tab.
+        await frame.getByRole('button', { name: 'Open tutorial' }).click();
+        await expect(frame.getByRole('dialog', { name: 'Market Maker Quick Guide' })).toBeVisible();
+        await expect(frame.locator('.tutorial-shot')).toHaveCount(3);
+        await frame.getByRole('button', { name: 'Close tutorial' }).click();
+        await expect(frame.getByRole('dialog', { name: 'Market Maker Quick Guide' })).toBeHidden();
+      }
     }
   });
 });

@@ -118,6 +118,10 @@
             margin-bottom: 12px;
         }
 
+        .panel-heading > div {
+            min-width: 0;
+        }
+
         .toolbar {
             display: flex;
             align-items: center;
@@ -172,6 +176,15 @@
             color: var(--accent);
         }
 
+        .icon-button {
+            width: 34px;
+            min-width: 34px;
+            padding: 0;
+            border-radius: 50%;
+            font-size: 18px;
+            line-height: 1;
+        }
+
         button:disabled {
             border-color: var(--line);
             background: #edf1f4;
@@ -201,6 +214,60 @@
             grid-template-columns: repeat(3, minmax(0, 1fr));
             gap: 10px;
             margin-top: 12px;
+        }
+
+        .search-row {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            gap: 10px;
+            align-items: end;
+            margin-bottom: 12px;
+        }
+
+        .expand-button {
+            width: 28px;
+            min-width: 28px;
+            min-height: 28px;
+            padding: 0;
+            border-color: var(--line);
+            background: #fff;
+            color: var(--text);
+            font-size: 16px;
+        }
+
+        .profile-summary {
+            display: grid;
+            gap: 4px;
+        }
+
+        .profile-summary strong {
+            font-size: 14px;
+        }
+
+        .strategy-detail {
+            display: grid;
+            gap: 10px;
+            border: 1px solid #d8e2ea;
+            border-radius: 8px;
+            background: #f8fafc;
+            padding: 12px;
+        }
+
+        .strategy-detail-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 8px;
+        }
+
+        .detail-item {
+            border: 1px solid var(--line);
+            border-radius: 6px;
+            background: #fff;
+            padding: 8px;
+        }
+
+        .detail-item label {
+            margin: 0 0 3px;
         }
 
         table {
@@ -276,6 +343,179 @@
             line-height: 1.4;
         }
 
+        .tutorial-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 20;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(23, 32, 51, 0.46);
+        }
+
+        .tutorial-backdrop[hidden] {
+            display: none;
+        }
+
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            z-index: 21;
+            display: grid;
+            place-items: center;
+            padding: 24px;
+            background: rgba(23, 32, 51, 0.46);
+        }
+
+        .modal-backdrop[hidden] {
+            display: none;
+        }
+
+        .tutorial-modal,
+        .profile-modal {
+            width: min(960px, 100%);
+            max-height: min(760px, calc(100vh - 48px));
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 20px 60px rgba(23, 32, 51, 0.25);
+        }
+
+        .tutorial-header,
+        .modal-header {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+            background: #fff;
+        }
+
+        .profile-modal {
+            width: min(720px, 100%);
+        }
+
+        .modal-body {
+            padding: 18px;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .tutorial-body {
+            display: grid;
+            gap: 14px;
+            padding: 18px;
+        }
+
+        .tutorial-step {
+            display: grid;
+            grid-template-columns: minmax(0, 0.82fr) minmax(280px, 1.18fr);
+            gap: 14px;
+            align-items: start;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 14px;
+        }
+
+        .tutorial-step p {
+            margin: 8px 0 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .tutorial-shot {
+            border: 1px solid #b9c8d4;
+            border-radius: 8px;
+            background: #f7fafc;
+            overflow: hidden;
+        }
+
+        .shot-bar {
+            display: flex;
+            gap: 5px;
+            padding: 8px;
+            border-bottom: 1px solid #d8e2ea;
+            background: #eaf0f4;
+        }
+
+        .shot-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #91a3b5;
+        }
+
+        .shot-content {
+            display: grid;
+            gap: 8px;
+            padding: 10px;
+        }
+
+        .shot-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .shot-box {
+            min-height: 28px;
+            border: 1px solid #d2dde6;
+            border-radius: 6px;
+            background: #fff;
+            color: #506176;
+            font-size: 11px;
+            font-weight: 700;
+            padding: 7px 8px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .shot-box.accent {
+            border-color: #93d8c9;
+            background: var(--accent-soft);
+            color: var(--accent);
+        }
+
+        .shot-box.warn {
+            border-color: #e5bf71;
+            background: var(--warn-soft);
+            color: var(--warn);
+        }
+
+        .shot-table {
+            display: grid;
+            gap: 5px;
+        }
+
+        .shot-line {
+            height: 14px;
+            border-radius: 999px;
+            background: #dbe5ec;
+        }
+
+        .shot-line.short {
+            width: 62%;
+        }
+
+        .shot-line.accent {
+            background: #82d8c7;
+        }
+
+        .shot-line.warn {
+            background: #e6bd69;
+        }
+
         pre {
             margin: 10px 0 0;
             max-width: 100%;
@@ -332,6 +572,15 @@
             .form-grid, .metric-row {
                 grid-template-columns: 1fr;
             }
+
+            .search-row,
+            .strategy-detail-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .tutorial-step {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -350,74 +599,121 @@
             <option value="ms">Bahasa Malaysia</option>
             <option value="ko">한국어</option>
         </select>
+        <button id="tutorialOpenHeader" type="button" class="secondary icon-button" data-i18n-title="tutorial.open" aria-label="Tutorial" title="Tutorial">?</button>
         <button id="reload" type="button" class="secondary" data-i18n="action.reload">Reload</button>
         <a href="/exchange-admin.html" data-i18n="nav.adminConsole">Admin Console</a>
     </div>
 </header>
 
+<!-- Tutorial modal keeps operator guidance in-page, so the prod admin workflow does not depend on external docs. -->
+<div id="tutorialBackdrop" class="tutorial-backdrop" hidden>
+    <section class="tutorial-modal" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle">
+        <div class="tutorial-header">
+            <div>
+                <h2 id="tutorialTitle" data-i18n="tutorial.title">Market Maker Quick Guide</h2>
+                <div class="subtitle" data-i18n="tutorial.subtitle">Follow these steps to create strategy limits, publish quote ladders, and inspect hedge status.</div>
+            </div>
+            <button id="tutorialClose" type="button" class="secondary icon-button" data-i18n-title="tutorial.close" aria-label="Close tutorial" title="Close">×</button>
+        </div>
+        <div class="tutorial-body">
+            <article class="tutorial-step">
+                <div>
+                    <h3 data-i18n="tutorial.profile.title">1. Save a market-maker strategy</h3>
+                    <p data-i18n="tutorial.profile.body">Enter the market-maker ID, UID, symbol, notional limits, slippage limit, and kill switch state. Save Strategy persists the profile and the per-symbol risk limit.</p>
+                </div>
+                <div class="tutorial-shot" aria-hidden="true">
+                    <div class="shot-bar"><span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span></div>
+                    <div class="shot-content">
+                        <div class="shot-row">
+                            <div class="shot-box accent">Market Maker ID: mm-alpha</div>
+                            <div class="shot-box">UID: 90001</div>
+                        </div>
+                        <div class="shot-row">
+                            <div class="shot-box">Symbol: BTCUSDT</div>
+                            <div class="shot-box warn">Kill Switch: OFF</div>
+                        </div>
+                        <div class="shot-row">
+                            <div class="shot-box">Max Long: 50,000</div>
+                            <div class="shot-box">Max Order: 10,000</div>
+                        </div>
+                        <div class="shot-box accent">Save Strategy</div>
+                    </div>
+                </div>
+            </article>
+            <article class="tutorial-step">
+                <div>
+                    <h3 data-i18n="tutorial.quote.title">2. Run auto quote once</h3>
+                    <p data-i18n="tutorial.quote.body">Run Auto Quote Once generates a bid/ask ladder from the current book midpoint. Active Quotes shows accepted quote state and the bid/ask order IDs.</p>
+                </div>
+                <div class="tutorial-shot" aria-hidden="true">
+                    <div class="shot-bar"><span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span></div>
+                    <div class="shot-content">
+                        <div class="shot-row">
+                            <div class="shot-box accent">Run Auto Quote Once</div>
+                            <div class="shot-box">Auto Quote: OFF / 300ms</div>
+                        </div>
+                        <div class="shot-table">
+                            <div class="shot-line accent"></div>
+                            <div class="shot-line"></div>
+                            <div class="shot-line warn"></div>
+                            <div class="shot-line short"></div>
+                        </div>
+                        <div class="shot-box">Bid / Ask: order-bid... / order-ask...</div>
+                    </div>
+                </div>
+            </article>
+            <article class="tutorial-step">
+                <div>
+                    <h3 data-i18n="tutorial.hedge.title">3. Inspect hedge and repair state</h3>
+                    <p data-i18n="tutorial.hedge.body">Select the market maker, run hedge execution when needed, then check Hedge Issues, Recent Hedge Fills, and Idempotency Issues for unresolved venue outcomes.</p>
+                </div>
+                <div class="tutorial-shot" aria-hidden="true">
+                    <div class="shot-bar"><span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span></div>
+                    <div class="shot-content">
+                        <div class="shot-row">
+                            <div class="shot-box">Selected: mm-alpha</div>
+                            <div class="shot-box">Ref: manual</div>
+                        </div>
+                        <div class="shot-row">
+                            <div class="shot-box accent">Run Hedge</div>
+                            <div class="shot-box warn">Reconcile Idempotency</div>
+                        </div>
+                        <div class="shot-table">
+                            <div class="shot-line"></div>
+                            <div class="shot-line short accent"></div>
+                            <div class="shot-line short warn"></div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
 <main>
     <section class="stack">
         <div class="panel">
             <div class="panel-heading">
-                <h2 data-i18n="strategy.title">Market Maker Strategy</h2>
-                <button id="newProfile" type="button" class="secondary" data-i18n="action.newProfile">New Profile</button>
-            </div>
-            <div class="notice" data-i18n="strategy.notice">Strategy limits are saved as market-maker risk limits. Kill switch stops quote and hedge behavior for that symbol until the operator clears it.</div>
-            <div class="form-grid">
                 <div>
-                    <label for="marketMakerId" data-i18n="field.marketMakerId">Market Maker ID</label>
-                    <input id="marketMakerId" value="mm-alpha"/>
-                </div>
-                <div>
-                    <label for="uid">UID</label>
-                    <input id="uid" type="number" min="1" value="90001"/>
-                </div>
-                <div>
-                    <label for="symbol" data-i18n="field.symbol">Symbol</label>
-                    <input id="symbol" value="BTCUSDT"/>
-                </div>
-                <div class="check-row">
-                    <input id="enabled" type="checkbox" checked/>
-                    <label for="enabled" data-i18n="field.profileEnabled">Profile Enabled</label>
-                </div>
-            </div>
-            <div class="strategy-grid">
-                <div>
-                    <label for="maxLongNotional" data-i18n="field.maxLongNotional">Max Long Notional</label>
-                    <input id="maxLongNotional" type="number" min="0" step="0.01" value="50000"/>
-                </div>
-                <div>
-                    <label for="maxShortNotional" data-i18n="field.maxShortNotional">Max Short Notional</label>
-                    <input id="maxShortNotional" type="number" min="0" step="0.01" value="50000"/>
-                </div>
-                <div>
-                    <label for="maxOrderNotional" data-i18n="field.maxOrderNotional">Max Order Notional</label>
-                    <input id="maxOrderNotional" type="number" min="0" step="0.01" value="10000"/>
-                </div>
-                <div>
-                    <label for="maxSlippageRate" data-i18n="field.maxSlippageRate">Max Slippage Rate</label>
-                    <input id="maxSlippageRate" type="number" min="0" step="0.0001" value="0.005"/>
-                </div>
-                <div class="check-row">
-                    <input id="killSwitch" type="checkbox"/>
-                    <label for="killSwitch" data-i18n="field.symbolKillSwitch">Symbol Kill Switch</label>
+                    <h2 data-i18n="profiles.title">Market Makers</h2>
+                    <div class="subtitle" data-i18n="profiles.subtitle">Search market makers, expand a row to inspect strategy limits, or add a new profile.</div>
                 </div>
                 <div class="toolbar">
-                    <button id="saveProfile" type="button" data-i18n="action.saveStrategy">Save Strategy</button>
+                    <button id="tutorialOpen" type="button" class="secondary icon-button" data-i18n-title="tutorial.open" aria-label="Tutorial" title="Tutorial">?</button>
+                    <button id="newProfile" type="button" data-i18n="action.addMarketMaker">Add Market Maker</button>
                 </div>
             </div>
-            <div id="profileError" class="error" hidden></div>
-            <pre id="profileResult" data-i18n="empty.profileResult">No strategy saved yet.</pre>
-        </div>
-
-        <div class="panel">
-            <div class="panel-heading">
-                <h2 data-i18n="profiles.title">Enabled Profiles</h2>
+            <div class="search-row">
+                <div>
+                    <label for="profileSearch" data-i18n="field.searchMarketMaker">Search</label>
+                    <input id="profileSearch" data-i18n-placeholder="placeholder.searchMarketMaker" placeholder="Search by ID, UID, or symbol"/>
+                </div>
                 <span id="profileCount" class="pill">0</span>
             </div>
             <table>
                 <thead>
                 <tr>
+                    <th></th>
                     <th data-i18n="table.marketMaker">Market Maker</th>
                     <th>UID</th>
                     <th data-i18n="table.enabled">Enabled</th>
@@ -518,6 +814,66 @@
     </section>
 </main>
 
+<div id="profileModalBackdrop" class="modal-backdrop" hidden>
+    <section class="profile-modal" role="dialog" aria-modal="true" aria-labelledby="profileModalTitle">
+        <div class="modal-header">
+            <div>
+                <h2 id="profileModalTitle" data-i18n="modal.profileTitle">Market Maker Form</h2>
+                <div class="subtitle" data-i18n="strategy.notice">Strategy limits are saved as market-maker risk limits. Kill switch stops quote and hedge behavior for that symbol until the operator clears it.</div>
+            </div>
+            <button id="profileModalClose" type="button" class="secondary icon-button" data-i18n-title="modal.close" aria-label="Close form" title="Close">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-grid">
+                <div>
+                    <label for="marketMakerId" data-i18n="field.marketMakerId">Market Maker ID</label>
+                    <input id="marketMakerId" value="mm-alpha"/>
+                </div>
+                <div>
+                    <label for="uid">UID</label>
+                    <input id="uid" type="number" min="1" value="90001"/>
+                </div>
+                <div>
+                    <label for="symbol" data-i18n="field.symbol">Symbol</label>
+                    <input id="symbol" value="BTCUSDT"/>
+                </div>
+                <div class="check-row">
+                    <input id="enabled" type="checkbox" checked/>
+                    <label for="enabled" data-i18n="field.profileEnabled">Profile Enabled</label>
+                </div>
+            </div>
+            <div class="strategy-grid">
+                <div>
+                    <label for="maxLongNotional" data-i18n="field.maxLongNotional">Max Long Notional</label>
+                    <input id="maxLongNotional" type="number" min="0" step="0.01" value="50000"/>
+                </div>
+                <div>
+                    <label for="maxShortNotional" data-i18n="field.maxShortNotional">Max Short Notional</label>
+                    <input id="maxShortNotional" type="number" min="0" step="0.01" value="50000"/>
+                </div>
+                <div>
+                    <label for="maxOrderNotional" data-i18n="field.maxOrderNotional">Max Order Notional</label>
+                    <input id="maxOrderNotional" type="number" min="0" step="0.01" value="10000"/>
+                </div>
+                <div>
+                    <label for="maxSlippageRate" data-i18n="field.maxSlippageRate">Max Slippage Rate</label>
+                    <input id="maxSlippageRate" type="number" min="0" step="0.0001" value="0.005"/>
+                </div>
+                <div class="check-row">
+                    <input id="killSwitch" type="checkbox"/>
+                    <label for="killSwitch" data-i18n="field.symbolKillSwitch">Symbol Kill Switch</label>
+                </div>
+            </div>
+            <div id="profileError" class="error" hidden></div>
+            <pre id="profileResult" data-i18n="empty.profileResult">No strategy saved yet.</pre>
+            <div class="modal-actions">
+                <button id="profileModalCancel" type="button" class="secondary" data-i18n="action.cancel">Cancel</button>
+                <button id="saveProfile" type="button" data-i18n="action.saveStrategy">Save Strategy</button>
+            </div>
+        </div>
+    </section>
+</div>
+
 <script>
     const $ = (id) => document.getElementById(id);
     const I18N_STORAGE_KEY = 'exchangeLanguage';
@@ -525,21 +881,36 @@
         en: {
             'page.title': 'Admin Market Maker',
             'page.subtitle': 'Create market-maker profiles, manage per-symbol strategy limits, inspect quote state, and run guarded hedge execution.',
+            'tutorial.open': 'Open tutorial',
+            'tutorial.close': 'Close tutorial',
+            'tutorial.title': 'Market Maker Quick Guide',
+            'tutorial.subtitle': 'Follow these steps to create strategy limits, publish quote ladders, and inspect hedge status.',
+            'tutorial.profile.title': '1. Save a market-maker strategy',
+            'tutorial.profile.body': 'Enter the market-maker ID, UID, symbol, notional limits, slippage limit, and kill switch state. Save Strategy persists the profile and the per-symbol risk limit.',
+            'tutorial.quote.title': '2. Run auto quote once',
+            'tutorial.quote.body': 'Run Auto Quote Once generates a bid/ask ladder from the current book midpoint. Active Quotes shows accepted quote state and the bid/ask order IDs.',
+            'tutorial.hedge.title': '3. Inspect hedge and repair state',
+            'tutorial.hedge.body': 'Select the market maker, run hedge execution when needed, then check Hedge Issues, Recent Hedge Fills, and Idempotency Issues for unresolved venue outcomes.',
             'language.label': 'Language',
             'nav.adminConsole': 'Admin Console',
             'strategy.title': 'Market Maker Strategy',
             'strategy.notice': 'Strategy limits are saved as market-maker risk limits. Kill switch stops quote and hedge behavior for that symbol until the operator clears it.',
-            'profiles.title': 'Enabled Profiles',
+            'profiles.title': 'Market Makers',
+            'profiles.subtitle': 'Search market makers, expand a row to inspect strategy limits, or add a new profile.',
             'ops.title': 'Operations Snapshot',
             'quotes.title': 'Active Quotes',
             'fills.title': 'Recent Hedge Fills',
             'action.reload': 'Reload',
             'action.newProfile': 'New Profile',
+            'action.addMarketMaker': 'Add Market Maker',
+            'action.edit': 'Edit',
+            'action.cancel': 'Cancel',
             'action.saveStrategy': 'Save Strategy',
             'action.runAutoQuote': 'Run Auto Quote Once',
             'action.runHedge': 'Run Hedge',
             'action.reconcileIdempotency': 'Reconcile Idempotency',
             'field.marketMakerId': 'Market Maker ID',
+            'field.searchMarketMaker': 'Search',
             'field.symbol': 'Symbol',
             'field.profileEnabled': 'Profile Enabled',
             'field.maxLongNotional': 'Max Long Notional',
@@ -551,6 +922,9 @@
             'field.hedgeRefPrefix': 'Hedge Ref Prefix',
             'field.operatorApprovalToken': 'Operator Approval Token',
             'placeholder.approvalToken': 'optional when backend does not require approval',
+            'placeholder.searchMarketMaker': 'Search by ID, UID, or symbol',
+            'modal.profileTitle': 'Market Maker Form',
+            'modal.close': 'Close form',
             'metric.activeQuotes': 'Active Quotes',
             'metric.quoteIssues': 'Quote Issues',
             'metric.hedgeIssues': 'Hedge Issues',
@@ -583,21 +957,36 @@
         'zh-TW': {
             'page.title': '交易所做市後台',
             'page.subtitle': '建立做市商 profile、管理單一交易對策略限制、查看報價狀態，並執行受控對沖。',
+            'tutorial.open': '開啟教學',
+            'tutorial.close': '關閉教學',
+            'tutorial.title': '做市商快速教學',
+            'tutorial.subtitle': '依序建立策略限制、送出報價 ladder，並檢查對沖狀態。',
+            'tutorial.profile.title': '1. 儲存做市商策略',
+            'tutorial.profile.body': '輸入做市商 ID、UID、交易對、名目限制、滑價限制與 kill switch 狀態。儲存策略會保存 profile 與單一交易對風控限制。',
+            'tutorial.quote.title': '2. 執行一次自動報價',
+            'tutorial.quote.body': '執行一次自動報價會用目前訂單簿中間價產生買賣雙邊 ladder。有效報價會顯示已接受的 quote state 與 bid/ask order ID。',
+            'tutorial.hedge.title': '3. 檢查對沖與修復狀態',
+            'tutorial.hedge.body': '選取做市商，需要時執行對沖，接著查看對沖問題、近期對沖成交與冪等問題，確認是否有未解的外部 venue 結果。',
             'language.label': '語言',
             'nav.adminConsole': '管理首頁',
             'strategy.title': '做市商策略',
             'strategy.notice': '策略限制會保存為做市商風控限制。Kill switch 開啟時，該交易對會停止報價與對沖。',
-            'profiles.title': '已啟用 Profile',
+            'profiles.title': '做市商列表',
+            'profiles.subtitle': '搜尋做市商，展開列查看策略限制，或新增 profile。',
             'ops.title': '營運快照',
             'quotes.title': '有效報價',
             'fills.title': '近期對沖成交',
             'action.reload': '重新整理',
             'action.newProfile': '新增 Profile',
+            'action.addMarketMaker': '新增做市商',
+            'action.edit': '編輯',
+            'action.cancel': '取消',
             'action.saveStrategy': '儲存策略',
             'action.runAutoQuote': '執行一次自動報價',
             'action.runHedge': '執行對沖',
             'action.reconcileIdempotency': '重整冪等狀態',
             'field.marketMakerId': '做市商 ID',
+            'field.searchMarketMaker': '搜尋',
             'field.symbol': '交易對',
             'field.profileEnabled': '啟用 Profile',
             'field.maxLongNotional': '最大多方名目',
@@ -609,6 +998,9 @@
             'field.hedgeRefPrefix': '對沖 Ref 前綴',
             'field.operatorApprovalToken': '操作員核准 Token',
             'placeholder.approvalToken': '後端未要求核准時可留空',
+            'placeholder.searchMarketMaker': '依 ID、UID 或交易對搜尋',
+            'modal.profileTitle': '做市商表單',
+            'modal.close': '關閉表單',
             'metric.activeQuotes': '有效報價',
             'metric.quoteIssues': '報價問題',
             'metric.hedgeIssues': '對沖問題',
@@ -641,21 +1033,36 @@
         ms: {
             'page.title': 'Pentadbir Pembuat Pasaran',
             'page.subtitle': 'Cipta profil pembuat pasaran, urus had strategi setiap simbol, semak status sebut harga dan jalankan lindung nilai terkawal.',
+            'tutorial.open': 'Buka panduan',
+            'tutorial.close': 'Tutup panduan',
+            'tutorial.title': 'Panduan Ringkas Pembuat Pasaran',
+            'tutorial.subtitle': 'Ikut langkah ini untuk mencipta had strategi, menerbitkan ladder sebut harga dan menyemak status hedge.',
+            'tutorial.profile.title': '1. Simpan strategi pembuat pasaran',
+            'tutorial.profile.body': 'Masukkan ID pembuat pasaran, UID, simbol, had notional, had slippage dan status kill switch. Save Strategy menyimpan profil dan had risiko setiap simbol.',
+            'tutorial.quote.title': '2. Jalankan auto quote sekali',
+            'tutorial.quote.body': 'Run Auto Quote Once menjana ladder bid/ask daripada midpoint buku pesanan semasa. Active Quotes menunjukkan status sebut harga diterima dan ID pesanan bid/ask.',
+            'tutorial.hedge.title': '3. Semak hedge dan status pembaikan',
+            'tutorial.hedge.body': 'Pilih pembuat pasaran, jalankan hedge bila perlu, kemudian semak Hedge Issues, Recent Hedge Fills dan Idempotency Issues untuk hasil venue yang belum selesai.',
             'language.label': 'Bahasa',
             'nav.adminConsole': 'Konsol Admin',
             'strategy.title': 'Strategi Pembuat Pasaran',
             'strategy.notice': 'Had strategi disimpan sebagai had risiko pembuat pasaran. Kill switch menghentikan sebut harga dan lindung nilai untuk simbol itu.',
-            'profiles.title': 'Profil Diaktifkan',
+            'profiles.title': 'Senarai Pembuat Pasaran',
+            'profiles.subtitle': 'Cari pembuat pasaran, buka baris untuk melihat had strategi, atau tambah profil baharu.',
             'ops.title': 'Ringkasan Operasi',
             'quotes.title': 'Sebut Harga Aktif',
             'fills.title': 'Isi Lindung Nilai Terkini',
             'action.reload': 'Muat Semula',
             'action.newProfile': 'Profil Baharu',
+            'action.addMarketMaker': 'Tambah Pembuat Pasaran',
+            'action.edit': 'Edit',
+            'action.cancel': 'Batal',
             'action.saveStrategy': 'Simpan Strategi',
             'action.runAutoQuote': 'Jalankan Auto Quote Sekali',
             'action.runHedge': 'Jalankan Hedge',
             'action.reconcileIdempotency': 'Selaras Idempotensi',
             'field.marketMakerId': 'ID Pembuat Pasaran',
+            'field.searchMarketMaker': 'Cari',
             'field.symbol': 'Simbol',
             'field.profileEnabled': 'Profil Diaktifkan',
             'field.maxLongNotional': 'Notional Long Maks',
@@ -667,6 +1074,9 @@
             'field.hedgeRefPrefix': 'Awalan Ref Hedge',
             'field.operatorApprovalToken': 'Token Kelulusan Operator',
             'placeholder.approvalToken': 'pilihan jika backend tidak memerlukan kelulusan',
+            'placeholder.searchMarketMaker': 'Cari mengikut ID, UID atau simbol',
+            'modal.profileTitle': 'Borang Pembuat Pasaran',
+            'modal.close': 'Tutup borang',
             'metric.activeQuotes': 'Sebut Harga Aktif',
             'metric.quoteIssues': 'Isu Sebut Harga',
             'metric.hedgeIssues': 'Isu Hedge',
@@ -699,21 +1109,36 @@
         ko: {
             'page.title': '마켓메이커 관리자',
             'page.subtitle': '마켓메이커 프로필을 만들고 심볼별 전략 한도, 호가 상태, 통제된 헤지를 관리합니다.',
+            'tutorial.open': '가이드 열기',
+            'tutorial.close': '가이드 닫기',
+            'tutorial.title': '마켓메이커 빠른 가이드',
+            'tutorial.subtitle': '전략 한도 생성, 호가 ladder 발행, 헤지 상태 점검 순서로 진행합니다.',
+            'tutorial.profile.title': '1. 마켓메이커 전략 저장',
+            'tutorial.profile.body': '마켓메이커 ID, UID, 심볼, 명목 한도, 슬리피지 한도, kill switch 상태를 입력합니다. Save Strategy는 프로필과 심볼별 리스크 한도를 저장합니다.',
+            'tutorial.quote.title': '2. 자동 호가 1회 실행',
+            'tutorial.quote.body': 'Run Auto Quote Once는 현재 호가창 midpoint에서 bid/ask ladder를 생성합니다. Active Quotes에서 승인된 quote state와 bid/ask order ID를 확인합니다.',
+            'tutorial.hedge.title': '3. 헤지와 복구 상태 점검',
+            'tutorial.hedge.body': '마켓메이커를 선택하고 필요할 때 헤지를 실행한 뒤 Hedge Issues, Recent Hedge Fills, Idempotency Issues에서 미해결 venue 결과를 확인합니다.',
             'language.label': '언어',
             'nav.adminConsole': '관리 콘솔',
             'strategy.title': '마켓메이커 전략',
             'strategy.notice': '전략 한도는 마켓메이커 리스크 한도로 저장됩니다. Kill switch는 해당 심볼의 호가와 헤지를 중지합니다.',
-            'profiles.title': '활성 프로필',
+            'profiles.title': '마켓메이커 목록',
+            'profiles.subtitle': '마켓메이커를 검색하고 행을 펼쳐 전략 한도를 확인하거나 새 프로필을 추가합니다.',
             'ops.title': '운영 스냅샷',
             'quotes.title': '활성 호가',
             'fills.title': '최근 헤지 체결',
             'action.reload': '새로고침',
             'action.newProfile': '새 프로필',
+            'action.addMarketMaker': '마켓메이커 추가',
+            'action.edit': '편집',
+            'action.cancel': '취소',
             'action.saveStrategy': '전략 저장',
             'action.runAutoQuote': '자동 호가 1회 실행',
             'action.runHedge': '헤지 실행',
             'action.reconcileIdempotency': '멱등성 조정',
             'field.marketMakerId': '마켓메이커 ID',
+            'field.searchMarketMaker': '검색',
             'field.symbol': '심볼',
             'field.profileEnabled': '프로필 활성화',
             'field.maxLongNotional': '최대 롱 명목금액',
@@ -725,6 +1150,9 @@
             'field.hedgeRefPrefix': '헤지 Ref 접두어',
             'field.operatorApprovalToken': '운영자 승인 Token',
             'placeholder.approvalToken': '백엔드 승인이 필요 없으면 비워두세요',
+            'placeholder.searchMarketMaker': 'ID, UID 또는 심볼로 검색',
+            'modal.profileTitle': '마켓메이커 양식',
+            'modal.close': '양식 닫기',
             'metric.activeQuotes': '활성 호가',
             'metric.quoteIssues': '호가 이슈',
             'metric.hedgeIssues': '헤지 이슈',
@@ -768,11 +1196,16 @@
         document.querySelectorAll('[data-i18n]').forEach((el) => {
             el.textContent = t(el.dataset.i18n);
         });
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            el.setAttribute('title', t(el.dataset.i18nTitle));
+            el.setAttribute('aria-label', t(el.dataset.i18nTitle));
+        });
         document.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
             el.setAttribute('placeholder', t(el.dataset.i18nPlaceholder));
         });
     }
     const fields = {
+        profileSearch: $('profileSearch'),
         marketMakerId: $('marketMakerId'),
         uid: $('uid'),
         enabled: $('enabled'),
@@ -791,7 +1224,8 @@
         profiles: [],
         activeQuotes: [],
         autoQuoteStatus: null,
-        selectedMarketMakerId: 'mm-alpha'
+        selectedMarketMakerId: 'mm-alpha',
+        expandedMarketMakerIds: new Set()
     };
 
     function text(value) {
@@ -814,6 +1248,28 @@
     function clearError(el) {
         el.textContent = '';
         el.hidden = true;
+    }
+
+    function openTutorial() {
+        // Tutorial state is purely presentational; API polling and operator forms continue to keep their current data.
+        $('tutorialBackdrop').hidden = false;
+        $('tutorialClose').focus();
+    }
+
+    function closeTutorial() {
+        $('tutorialBackdrop').hidden = true;
+        $('tutorialOpen').focus();
+    }
+
+    function openProfileModal() {
+        // The form modal keeps list scanning simple while preserving all strategy-risk fields in one operator action.
+        $('profileModalBackdrop').hidden = false;
+        fields.marketMakerId.focus();
+    }
+
+    function closeProfileModal() {
+        $('profileModalBackdrop').hidden = true;
+        clearError($('profileError'));
     }
 
     async function api(path, options = {}) {
@@ -861,29 +1317,68 @@
     }
 
     function renderProfiles() {
-        $('profileCount').textContent = `${state.profiles.length}`;
-        if (state.profiles.length === 0) {
-            $('profiles').innerHTML = `<tr><td colspan="4">${t('empty.profiles')}</td></tr>`;
+        const query = fields.profileSearch.value.trim().toLowerCase();
+        const filteredProfiles = state.profiles.filter(profile => {
+            const limits = profile.riskLimits || [];
+            const haystack = [
+                profile.marketMakerId,
+                profile.uid,
+                profile.enabled ? t('status.enabled') : t('status.disabled'),
+                ...limits.map(limit => limit.symbol)
+            ].join(' ').toLowerCase();
+            return !query || haystack.includes(query);
+        });
+        $('profileCount').textContent = `${filteredProfiles.length}`;
+        if (filteredProfiles.length === 0) {
+            $('profiles').innerHTML = `<tr><td colspan="5">${t('empty.profiles')}</td></tr>`;
             return;
         }
-        $('profiles').replaceChildren(...state.profiles.map((profile) => {
+        const rows = [];
+        filteredProfiles.forEach((profile) => {
+            const expanded = state.expandedMarketMakerIds.has(profile.marketMakerId);
             const row = document.createElement('tr');
             row.className = profile.marketMakerId === state.selectedMarketMakerId ? 'selected' : '';
             const limits = profile.riskLimits || [];
             row.innerHTML = `
-                <td>${text(profile.marketMakerId)}</td>
+                <td><button type="button" class="expand-button" data-expand-market-maker="${text(profile.marketMakerId)}" aria-label="${expanded ? 'Collapse' : 'Expand'}">${expanded ? '⌄' : '›'}</button></td>
+                <td><div class="profile-summary"><strong>${text(profile.marketMakerId)}</strong><span>${limits.map(limit => text(limit.symbol)).join(', ') || '-'}</span></div></td>
                 <td>${text(profile.uid)}</td>
                 <td><span class="pill ${profile.enabled ? 'enabled' : 'warn'}">${profile.enabled ? t('status.enabled') : t('status.disabled')}</span></td>
                 <td>${limits.map(limit => `${text(limit.symbol)} ${limit.killSwitch ? `(${t('status.kill')})` : ''}`).join(', ') || '-'}</td>
             `;
             row.addEventListener('click', () => {
                 state.selectedMarketMakerId = profile.marketMakerId;
-                fillProfileForm(profile, limits[0]);
                 renderProfiles();
                 loadProfileOperations(profile.marketMakerId);
             });
-            return row;
-        }));
+            rows.push(row);
+            if (expanded) {
+                const detailRow = document.createElement('tr');
+                detailRow.className = 'selected';
+                detailRow.innerHTML = `
+                    <td colspan="5">
+                        <div class="strategy-detail">
+                            <div class="toolbar">
+                                <strong>${text(profile.marketMakerId)} ${t('strategy.title')}</strong>
+                                <button type="button" class="secondary" data-edit-market-maker="${text(profile.marketMakerId)}">${t('action.edit')}</button>
+                            </div>
+                            ${limits.length === 0 ? `<div class="empty">${t('empty.profiles')}</div>` : limits.map(limit => `
+                                <div class="strategy-detail-grid">
+                                    <div class="detail-item"><label>${t('field.symbol')}</label><strong>${text(limit.symbol)}</strong></div>
+                                    <div class="detail-item"><label>${t('field.maxLongNotional')}</label><strong>${numberText(limit.maxLongNotional)}</strong></div>
+                                    <div class="detail-item"><label>${t('field.maxShortNotional')}</label><strong>${numberText(limit.maxShortNotional)}</strong></div>
+                                    <div class="detail-item"><label>${t('field.maxOrderNotional')}</label><strong>${numberText(limit.maxOrderNotional)}</strong></div>
+                                    <div class="detail-item"><label>${t('field.maxSlippageRate')}</label><strong>${numberText(limit.maxSlippageRate)}</strong></div>
+                                    <div class="detail-item"><label>${t('field.symbolKillSwitch')}</label><strong>${limit.killSwitch ? t('status.on') : t('status.off')}</strong></div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </td>
+                `;
+                rows.push(detailRow);
+            }
+        });
+        $('profiles').replaceChildren(...rows);
     }
 
     function renderQuotes() {
@@ -983,8 +1478,10 @@
             });
             $('profileResult').textContent = JSON.stringify(saved, null, 2);
             state.selectedMarketMakerId = saved.marketMakerId;
+            state.expandedMarketMakerIds.add(saved.marketMakerId);
             fillProfileForm(saved, (saved.riskLimits || [])[0]);
             await reloadAll();
+            closeProfileModal();
         } catch (error) {
             showError($('profileError'), error);
         }
@@ -1051,12 +1548,63 @@
             maxSlippageRate: '0.005',
             killSwitch: false
         });
+        $('profileResult').textContent = t('empty.profileResult');
         renderProfiles();
+        openProfileModal();
     });
     $('saveProfile').addEventListener('click', saveProfile);
+    $('profileSearch').addEventListener('input', renderProfiles);
+    $('profiles').addEventListener('click', (event) => {
+        const expandButton = event.target.closest('[data-expand-market-maker]');
+        if (expandButton) {
+            event.stopPropagation();
+            const marketMakerId = expandButton.dataset.expandMarketMaker;
+            if (state.expandedMarketMakerIds.has(marketMakerId)) {
+                state.expandedMarketMakerIds.delete(marketMakerId);
+            } else {
+                state.expandedMarketMakerIds.add(marketMakerId);
+            }
+            renderProfiles();
+            return;
+        }
+        const editButton = event.target.closest('[data-edit-market-maker]');
+        if (editButton) {
+            event.stopPropagation();
+            const profile = state.profiles.find(item => item.marketMakerId === editButton.dataset.editMarketMaker);
+            if (profile) {
+                fillProfileForm(profile, (profile.riskLimits || [])[0]);
+                $('profileResult').textContent = JSON.stringify(profile, null, 2);
+                openProfileModal();
+            }
+        }
+    });
     $('runAutoQuote').addEventListener('click', runAutoQuoteOnce);
     $('runHedge').addEventListener('click', runHedge);
     $('reconcileIdempotency').addEventListener('click', reconcileIdempotency);
+    $('tutorialOpen').addEventListener('click', openTutorial);
+    $('tutorialOpenHeader').addEventListener('click', openTutorial);
+    $('tutorialClose').addEventListener('click', closeTutorial);
+    $('profileModalClose').addEventListener('click', closeProfileModal);
+    $('profileModalCancel').addEventListener('click', closeProfileModal);
+    $('profileModalBackdrop').addEventListener('click', (event) => {
+        if (event.target === $('profileModalBackdrop')) {
+            closeProfileModal();
+        }
+    });
+    $('tutorialBackdrop').addEventListener('click', (event) => {
+        if (event.target === $('tutorialBackdrop')) {
+            closeTutorial();
+        }
+    });
+    document.addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && !$('tutorialBackdrop').hidden) {
+            closeTutorial();
+            return;
+        }
+        if (event.key === 'Escape' && !$('profileModalBackdrop').hidden) {
+            closeProfileModal();
+        }
+    });
     $('language').value = currentLanguage;
     $('language').addEventListener('change', () => {
         currentLanguage = $('language').value;

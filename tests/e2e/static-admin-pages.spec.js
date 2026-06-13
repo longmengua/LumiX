@@ -24,6 +24,51 @@ test('exchange admin shell is the unified operator entry', async ({ page }) => {
   }
 });
 
+test('market maker admin uses searchable expandable rows and a profile form modal', async ({ page }) => {
+  // Scenario: operator profile setup should scan as a simple list, with strategy details hidden until expansion.
+  await page.route('**/api/market-maker/profiles/enabled', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok([
+        {
+          marketMakerId: 'mm-alpha',
+          uid: 90001,
+          enabled: true,
+          riskLimits: [
+            {
+              symbol: 'BTCUSDT',
+              maxLongNotional: '50000',
+              maxShortNotional: '50000',
+              maxOrderNotional: '10000',
+              maxSlippageRate: '0.005',
+              killSwitch: false
+            }
+          ]
+        }
+      ]))
+    });
+  });
+  await page.route('**/api/market-maker/quotes/active?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
+  await page.route('**/api/market-maker/quotes/reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
+  await page.route('**/api/market-maker/hedge-idempotency/unresolved?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
+  await page.route('**/api/market-maker/auto-quote/status', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ enabled: false, fixedDelayMs: 300 })) }));
+  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
+  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-fills?limit=20', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
+
+  await page.goto('/admin-market-maker.html?embed=1', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Market Makers' })).toBeVisible();
+  await page.locator('#profileSearch').fill('BTC');
+  await expect(page.locator('#profiles')).toContainText('mm-alpha');
+  await page.getByRole('button', { name: 'Expand' }).click();
+  await expect(page.locator('.strategy-detail')).toContainText('BTCUSDT');
+  await page.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeVisible();
+  await page.getByRole('button', { name: 'Close form' }).click();
+  await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeHidden();
+  await page.getByRole('button', { name: 'Add Market Maker' }).click();
+  await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeVisible();
+});
+
 test('exchange console renders client trading workflow without admin funding controls', async ({ page }) => {
   // Scenario: authenticated client loads markets from admin config and cannot type arbitrary symbols or UIDs.
   await page.addInitScript(() => {
