@@ -98,13 +98,61 @@
                 <button type="button" class="segmented-tab" data-segmented-tab="tradeHistory" aria-selected="false" data-i18n="activity.tradeHistory">Trade History</button>
             </div>
             <div data-segmented-panel="profileActivity" data-segmented-panel-name="positions">
-                <div id="profileHeldPositions" class="empty" data-i18n="empty.noPositions">No positions loaded.</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th data-i18n="field.market">Market</th>
+                            <th data-i18n="table.side">Side</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.entryPrice">Entry Price</th>
+                            <th data-i18n="table.margin">Margin</th>
+                            <th data-i18n="table.unrealizedPnl">Unrealized PnL</th>
+                        </tr>
+                        </thead>
+                        <tbody id="profileHeldPositions">
+                        <tr><td colspan="6"><div class="empty" data-i18n="empty.noPositions">No positions loaded.</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div data-segmented-panel="profileActivity" data-segmented-panel-name="orders" hidden>
-                <div id="profileOrders" class="empty">Login to load orders</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th data-i18n="table.orderId">Order ID</th>
+                            <th data-i18n="field.market">Market</th>
+                            <th data-i18n="table.side">Side</th>
+                            <th data-i18n="table.price">Price</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.status">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="profileOrders">
+                        <tr><td colspan="6"><div class="empty" data-i18n="empty.loginForOrders">Login to load orders</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div data-segmented-panel="profileActivity" data-segmented-panel-name="tradeHistory" hidden>
-                <div id="profilePositionHistory" class="empty" data-i18n="empty.noTradeHistory">No trade history loaded.</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th data-i18n="table.time">Time</th>
+                            <th data-i18n="field.market">Market</th>
+                            <th data-i18n="table.side">Side</th>
+                            <th data-i18n="table.price">Price</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.realizedPnl">Realized PnL</th>
+                        </tr>
+                        </thead>
+                        <tbody id="profilePositionHistory">
+                        <tr><td colspan="6"><div class="empty" data-i18n="empty.noTradeHistory">No trade history loaded.</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -235,7 +283,23 @@
                 <button type="button" class="segmented-tab" data-segmented-tab="tradeHistory" aria-selected="false" data-i18n="activity.tradeHistory">Trade History</button>
             </div>
             <div data-segmented-panel="tradingActivity" data-segmented-panel-name="positions" hidden>
-                <div id="positions" class="empty" data-i18n="empty.noPositions">No positions loaded.</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th data-i18n="field.market">Market</th>
+                            <th data-i18n="table.side">Side</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.entryPrice">Entry Price</th>
+                            <th data-i18n="table.margin">Margin</th>
+                            <th data-i18n="table.unrealizedPnl">Unrealized PnL</th>
+                        </tr>
+                        </thead>
+                        <tbody id="positions">
+                        <tr><td colspan="6"><div class="empty" data-i18n="empty.noPositions">No positions loaded.</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
             <div data-segmented-panel="tradingActivity" data-segmented-panel-name="orders">
                 <div class="table-wrap">
@@ -257,7 +321,23 @@
                 </div>
             </div>
             <div data-segmented-panel="tradingActivity" data-segmented-panel-name="tradeHistory" hidden>
-                <div id="tradeHistory" class="empty" data-i18n="empty.noTradeHistory">No trade history loaded.</div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th data-i18n="table.time">Time</th>
+                            <th data-i18n="field.market">Market</th>
+                            <th data-i18n="table.side">Side</th>
+                            <th data-i18n="table.price">Price</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.realizedPnl">Realized PnL</th>
+                        </tr>
+                        </thead>
+                        <tbody id="tradeHistory">
+                        <tr><td colspan="6"><div class="empty" data-i18n="empty.noTradeHistory">No trade history loaded.</div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </section>

@@ -212,9 +212,13 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('[data-segmented-tabs="profileActivity"]')).toContainText('Positions');
   await expect(page.locator('[data-segmented-tabs="profileActivity"]')).toContainText('Orders');
   await expect(page.locator('[data-segmented-tabs="profileActivity"]')).toContainText('Trade History');
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Entry Price');
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Unrealized PnL');
   await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="orders"]').click();
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"] thead')).toContainText('Order ID');
   await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"]')).toContainText('order-live-r');
   await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="tradeHistory"]').click();
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Realized PnL');
   await expect(page.locator('#profilePositionHistory')).toBeVisible();
   await expect(page.locator('[data-profile-panel="categoryInfo"]')).toHaveCount(0);
   await expect(page.locator('[data-profile-panel="frozen"]')).toHaveCount(0);
@@ -226,6 +230,12 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('[data-segmented-tabs="tradingActivity"]')).toContainText('Positions');
   await expect(page.locator('[data-segmented-tabs="tradingActivity"]')).toContainText('Orders');
   await expect(page.locator('[data-segmented-tabs="tradingActivity"]')).toContainText('Trade History');
+  await page.locator('[data-segmented-tabs="tradingActivity"] [data-segmented-tab="positions"]').click();
+  await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Entry Price');
+  await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="positions"] thead')).toContainText('Unrealized PnL');
+  await page.locator('[data-segmented-tabs="tradingActivity"] [data-segmented-tab="tradeHistory"]').click();
+  await expect(page.locator('[data-segmented-panel="tradingActivity"][data-segmented-panel-name="tradeHistory"] thead')).toContainText('Realized PnL');
+  await page.locator('[data-segmented-tabs="tradingActivity"] [data-segmented-tab="orders"]').click();
   // Layout guard: client trading keeps book/order entry first, then trading activity below, with account details behind profile.
   const layout = await page.evaluate(() => {
     const rect = (selector) => {

@@ -66,6 +66,11 @@ const translations = {
         'table.notional': 'Order Value',
         'table.filled': 'Filled',
         'table.status': 'Status',
+        'table.entryPrice': 'Entry Price',
+        'table.margin': 'Margin',
+        'table.unrealizedPnl': 'Unrealized PnL',
+        'table.realizedPnl': 'Realized PnL',
+        'table.time': 'Time',
         'empty.authState': 'Not logged in.',
         'empty.accountRaw': 'No account loaded.',
         'empty.orderResult': 'No order submitted.',
@@ -158,6 +163,11 @@ const translations = {
         'table.notional': '訂單價值',
         'table.filled': '已成交',
         'table.status': '狀態',
+        'table.entryPrice': '進場價',
+        'table.margin': '保證金',
+        'table.unrealizedPnl': '未實現損益',
+        'table.realizedPnl': '已實現損益',
+        'table.time': '時間',
         'empty.authState': '尚未登入。',
         'empty.accountRaw': '尚未載入帳戶。',
         'empty.orderResult': '尚未送出訂單。',
@@ -250,6 +260,11 @@ const translations = {
         'table.notional': 'Nilai Pesanan',
         'table.filled': 'Diisi',
         'table.status': 'Status',
+        'table.entryPrice': 'Harga Masuk',
+        'table.margin': 'Margin',
+        'table.unrealizedPnl': 'PnL Belum Direalisasi',
+        'table.realizedPnl': 'PnL Direalisasi',
+        'table.time': 'Masa',
         'empty.authState': 'Belum log masuk.',
         'empty.accountRaw': 'Tiada akaun dimuatkan.',
         'empty.orderResult': 'Tiada pesanan dihantar.',
@@ -342,6 +357,11 @@ const translations = {
         'table.notional': '주문 금액',
         'table.filled': '체결',
         'table.status': '상태',
+        'table.entryPrice': '진입가',
+        'table.margin': '증거금',
+        'table.unrealizedPnl': '미실현 손익',
+        'table.realizedPnl': '실현 손익',
+        'table.time': '시간',
         'empty.authState': '로그인하지 않았습니다.',
         'empty.accountRaw': '계정이 로드되지 않았습니다.',
         'empty.orderResult': '아직 주문을 제출하지 않았습니다.',
@@ -1107,42 +1127,24 @@ async function loadOrders() {
 function renderProfileOrders(orders) {
     const target = $('profileOrders');
     if (!auth.accessToken || !fields.uid.value.trim()) {
-        target.className = 'empty';
-        target.textContent = t('empty.loginForOrders');
+        target.innerHTML = `<tr><td colspan="6"><div class="empty">${t('empty.loginForOrders')}</div></td></tr>`;
         return;
     }
     if (!orders || orders.length === 0) {
-        target.className = 'empty';
-        target.textContent = t('empty.noOpenOrders');
+        target.innerHTML = `<tr><td colspan="6"><div class="empty">${t('empty.noOpenOrders')}</div></td></tr>`;
         return;
     }
-    target.className = 'table-wrap';
-    target.innerHTML = `
-        <table>
-            <thead>
-            <tr>
-                <th>${t('table.orderId')}</th>
-                <th>${t('field.market')}</th>
-                <th>${t('table.side')}</th>
-                <th>${t('table.price')}</th>
-                <th>${t('table.qty')}</th>
-                <th>${t('table.status')}</th>
-            </tr>
-            </thead>
-            <tbody>
-            ${orders.map(order => `
-                <tr>
-                    <td>${text(order.orderId).slice(0, 12)}</td>
-                    <td>${text(order.symbol)}</td>
-                    <td class="${order.side === 'BUY' ? 'buy-text' : 'sell-text'}">${text(order.side)}</td>
-                    <td>${money(order.price)}</td>
-                    <td>${money(order.qty)}</td>
-                    <td><span class="status">${text(order.status)}</span></td>
-                </tr>
-            `).join('')}
-            </tbody>
-        </table>
-    `;
+    // Profile orders share the static table header with the empty state; only tbody rows change on live updates.
+    target.innerHTML = orders.map(order => `
+        <tr>
+            <td>${text(order.orderId).slice(0, 12)}</td>
+            <td>${text(order.symbol)}</td>
+            <td class="${order.side === 'BUY' ? 'buy-text' : 'sell-text'}">${text(order.side)}</td>
+            <td>${money(order.price)}</td>
+            <td>${money(order.qty)}</td>
+            <td><span class="status">${text(order.status)}</span></td>
+        </tr>
+    `).join('');
 }
 
 // Account lookup is read-only here; deposit/withdraw remain separate explicit workflows.
