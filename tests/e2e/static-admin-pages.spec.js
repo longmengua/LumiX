@@ -532,13 +532,13 @@ test('exchange console shows generic login error for unknown accounts', async ({
   });
   await expect(page.locator('#authNotice')).toContainText('A new verification code has been sent');
 
-  // Scenario: if the tab reloads or network drops after registration starts, the customer can continue code entry.
+  // Scenario: reload returns to a clean auth form; submitting registration again routes known pending users to code entry.
   await page.reload();
   await page.getByRole('button', { name: 'Open Profile' }).click();
-  await expect(page.locator('#authEmail')).toHaveValue('missing@example.com');
   await expect(page.locator('#emailVerificationStep')).toBeHidden();
-  await expect(page.locator('#resumeVerification')).toBeVisible();
-  await page.locator('#resumeVerification').click();
+  await page.locator('#authEmail').fill('missing@example.com');
+  await page.locator('#authPassword').fill('wrong-password');
+  await page.locator('#register').click();
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
   await expect(page.locator('#resendEmailCode')).toBeVisible();
 });
