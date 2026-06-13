@@ -68,6 +68,111 @@
             font-weight: 700;
         }
 
+        .message-center {
+            position: relative;
+        }
+
+        .message-center-toggle {
+            min-height: 34px;
+            min-width: 38px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.24);
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.10);
+            color: #fff;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .message-center-toggle svg {
+            height: 18px;
+            width: 18px;
+        }
+
+        .message-badge {
+            align-items: center;
+            background: #f05252;
+            border: 2px solid var(--brand-2);
+            border-radius: 999px;
+            color: #fff;
+            display: inline-flex;
+            font-size: 10px;
+            font-weight: 800;
+            height: 18px;
+            justify-content: center;
+            min-width: 18px;
+            padding: 0 4px;
+            position: absolute;
+            right: -7px;
+            top: -7px;
+        }
+
+        .message-badge[hidden] {
+            display: none;
+        }
+
+        .message-panel {
+            background: #fff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            color: var(--text);
+            max-height: min(420px, calc(100vh - 92px));
+            overflow: hidden;
+            padding: 12px;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 10px);
+            width: min(360px, calc(100vw - 32px));
+            z-index: 50;
+        }
+
+        .message-panel h2 {
+            font-size: 14px;
+            margin: 0 0 10px;
+        }
+
+        .message-list {
+            display: grid;
+            gap: 8px;
+            max-height: 330px;
+            overflow: auto;
+        }
+
+        .message-item {
+            align-items: start;
+            background: #f7f9fc;
+            border: 1px solid #e5ebf2;
+            border-radius: 8px;
+            display: grid;
+            gap: 8px;
+            grid-template-columns: 1fr auto;
+            padding: 9px;
+        }
+
+        .message-item small {
+            color: var(--muted);
+            display: block;
+            margin-top: 3px;
+        }
+
+        .message-item button {
+            min-height: 24px;
+            min-width: 24px;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .message-empty {
+            color: var(--muted);
+            padding: 12px 4px;
+        }
+
         .header-actions {
             align-items: center;
             display: flex;
@@ -175,13 +280,26 @@
         <div class="language-field">
             <label for="language" data-i18n="language.label">Language</label>
             <select id="language" aria-label="Language">
-                <option value="en">English</option>
-                <option value="zh-TW">中文</option>
-                <option value="ms">Bahasa Malaysia</option>
-                <option value="ko">한국어</option>
+                <option value="en">🇺🇸 English</option>
+                <option value="zh-TW">🇹🇼 中文</option>
+                <option value="ms">🇲🇾 Bahasa Malaysia</option>
+                <option value="ko">🇰🇷 한국어</option>
             </select>
         </div>
         <a class="nav-link" href="/exchange.html" data-i18n="nav.clientExchange">Client Exchange</a>
+        <!-- Shell-level notifications stay outside iframe pages so every admin module shares one message center. -->
+        <div id="messageCenter" class="message-center">
+            <button id="messageCenterToggle" type="button" class="message-center-toggle" data-i18n-aria-label="message.open" data-i18n-title="message.open" aria-label="Open Messages" title="Open Messages" aria-expanded="false">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path d="M4 6.75A2.75 2.75 0 0 1 6.75 4h10.5A2.75 2.75 0 0 1 20 6.75v7.5A2.75 2.75 0 0 1 17.25 17H9.6l-3.5 2.7A1 1 0 0 1 4.5 18.9V17.5A2.75 2.75 0 0 1 2 14.75v-8ZM6.75 6A.75.75 0 0 0 6 6.75v8A.75.75 0 0 0 6.75 15H7.5a1 1 0 0 1 1 1v.86l2.13-1.64A1 1 0 0 1 11.24 15h6.01a.75.75 0 0 0 .75-.75v-7.5a.75.75 0 0 0-.75-.75H6.75Z" fill="currentColor"/>
+                </svg>
+                <span id="messageBadge" class="message-badge" hidden>0</span>
+            </button>
+            <section id="messagePanel" class="message-panel" hidden>
+                <h2 data-i18n="message.title">Messages</h2>
+                <div id="messageList" class="message-list"></div>
+            </section>
+        </div>
     </div>
 </header>
 
@@ -202,6 +320,9 @@
     // Tabs are a thin shell over existing admin pages so each tool keeps its own focused API and tests.
     const I18N_STORAGE_KEY = 'exchangeLanguage';
     const ADMIN_TAB_STORAGE_KEY = 'exchangeAdminSelectedSrc';
+    const ADMIN_MESSAGE_STORAGE_KEY = 'exchangeAdminMessages';
+    const ADMIN_MESSAGE_TTL_MS = 24 * 60 * 60 * 1000;
+    const ADMIN_MESSAGE_MAX_VISIBLE = 10;
     const translations = {
         en: {
             'page.title': 'Exchange Admin',
@@ -218,7 +339,11 @@
             'title.adminMarketConfig': 'Admin Market Config',
             'title.adminRiskParameters': 'Admin Risk Parameters',
             'title.adminMarketMaker': 'Admin Market Maker',
-            'title.adminDlq': 'Admin DLQ'
+            'title.adminDlq': 'Admin DLQ',
+            'message.open': 'Open Messages',
+            'message.title': 'Messages',
+            'message.empty': 'No messages in the last 24 hours.',
+            'message.close': 'Close message'
         },
         'zh-TW': {
             'page.title': '交易所後台',
@@ -235,7 +360,11 @@
             'title.adminMarketConfig': '市場設定後台',
             'title.adminRiskParameters': '風控參數後台',
             'title.adminMarketMaker': '做市商後台',
-            'title.adminDlq': 'DLQ 後台'
+            'title.adminDlq': 'DLQ 後台',
+            'message.open': '開啟訊息中心',
+            'message.title': '訊息中心',
+            'message.empty': '最近 24 小時沒有訊息。',
+            'message.close': '關閉訊息'
         },
         ms: {
             'page.title': 'Admin Bursa',
@@ -252,7 +381,11 @@
             'title.adminMarketConfig': 'Admin Konfigurasi Pasaran',
             'title.adminRiskParameters': 'Admin Parameter Risiko',
             'title.adminMarketMaker': 'Admin Pembuat Pasaran',
-            'title.adminDlq': 'Admin DLQ'
+            'title.adminDlq': 'Admin DLQ',
+            'message.open': 'Buka Mesej',
+            'message.title': 'Mesej',
+            'message.empty': 'Tiada mesej dalam 24 jam terakhir.',
+            'message.close': 'Tutup mesej'
         },
         ko: {
             'page.title': '거래소 관리자',
@@ -269,10 +402,15 @@
             'title.adminMarketConfig': '시장 설정 관리',
             'title.adminRiskParameters': '리스크 파라미터 관리',
             'title.adminMarketMaker': '마켓메이커 관리',
-            'title.adminDlq': 'DLQ 관리'
+            'title.adminDlq': 'DLQ 관리',
+            'message.open': '메시지 열기',
+            'message.title': '메시지',
+            'message.empty': '최근 24시간 메시지가 없습니다.',
+            'message.close': '메시지 닫기'
         }
     };
     let currentLanguage = localStorage.getItem(I18N_STORAGE_KEY) || 'en';
+    let adminMessages = loadAdminMessages();
     const frame = document.getElementById('adminFrame');
     const titles = {
         '/admin-test-funds.html': 'title.adminTestFunds',
@@ -304,8 +442,79 @@
         document.querySelectorAll('[data-i18n-aria-label]').forEach((el) => {
             el.setAttribute('aria-label', t(el.dataset.i18nAriaLabel));
         });
+        document.querySelectorAll('[data-i18n-title]').forEach((el) => {
+            el.setAttribute('title', t(el.dataset.i18nTitle));
+        });
         const src = selectedTab()?.dataset.src || frame.getAttribute('src');
         frame.title = t(titleKeyFor(src));
+        renderAdminMessages();
+    }
+
+    function text(value) {
+        return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char]));
+    }
+
+    function pruneAdminMessages(items) {
+        const cutoff = Date.now() - ADMIN_MESSAGE_TTL_MS;
+        return (items || [])
+            .filter(item => item && item.createdAt >= cutoff && item.message)
+            .sort((a, b) => b.createdAt - a.createdAt)
+            .slice(0, ADMIN_MESSAGE_MAX_VISIBLE);
+    }
+
+    function loadAdminMessages() {
+        try {
+            return pruneAdminMessages(JSON.parse(localStorage.getItem(ADMIN_MESSAGE_STORAGE_KEY) || '[]'));
+        } catch {
+            return [];
+        }
+    }
+
+    function saveAdminMessages() {
+        localStorage.setItem(ADMIN_MESSAGE_STORAGE_KEY, JSON.stringify(pruneAdminMessages(adminMessages)));
+    }
+
+    function pushAdminMessage(message) {
+        adminMessages = pruneAdminMessages([
+            {
+                id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+                message,
+                createdAt: Date.now()
+            },
+            ...adminMessages
+        ]);
+        saveAdminMessages();
+        renderAdminMessages();
+    }
+
+    function renderAdminMessages() {
+        const badge = document.getElementById('messageBadge');
+        const list = document.getElementById('messageList');
+        if (!badge || !list) return;
+        adminMessages = pruneAdminMessages(adminMessages);
+        badge.textContent = String(adminMessages.length);
+        badge.hidden = adminMessages.length === 0;
+        if (adminMessages.length === 0) {
+            list.innerHTML = `<div class="message-empty">${text(t('message.empty'))}</div>`;
+            saveAdminMessages();
+            return;
+        }
+        list.innerHTML = adminMessages.map(message => `
+            <div class="message-item">
+                <div>
+                    <strong>${text(message.message)}</strong>
+                    <small>${new Date(message.createdAt).toLocaleString()}</small>
+                </div>
+                <button type="button" data-dismiss-message="${text(message.id)}" aria-label="${text(t('message.close'))}" title="${text(t('message.close'))}">×</button>
+            </div>
+        `).join('');
+        saveAdminMessages();
     }
 
     function syncFrameLanguage() {
@@ -344,6 +553,31 @@
         currentLanguage = event.target.value;
         applyTranslations();
         syncFrameLanguage();
+    });
+    document.getElementById('messageCenterToggle').addEventListener('click', () => {
+        const panel = document.getElementById('messagePanel');
+        panel.hidden = !panel.hidden;
+        document.getElementById('messageCenterToggle').setAttribute('aria-expanded', String(!panel.hidden));
+    });
+    document.getElementById('messageList').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-dismiss-message]');
+        if (!button) return;
+        adminMessages = adminMessages.filter(message => message.id !== button.dataset.dismissMessage);
+        saveAdminMessages();
+        renderAdminMessages();
+    });
+    document.addEventListener('click', (event) => {
+        if (!document.getElementById('messageCenter').contains(event.target)) {
+            document.getElementById('messagePanel').hidden = true;
+            document.getElementById('messageCenterToggle').setAttribute('aria-expanded', 'false');
+        }
+    });
+    window.addEventListener('message', (event) => {
+        // Same-origin admin iframes can publish operation results into the shell-level message center.
+        if (event.origin !== window.location.origin || event.data?.type !== 'admin.message') {
+            return;
+        }
+        pushAdminMessage(event.data.message);
     });
     restoreSelectedTab();
     applyTranslations();

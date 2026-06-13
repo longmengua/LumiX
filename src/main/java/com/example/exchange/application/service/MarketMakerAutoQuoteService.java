@@ -8,6 +8,7 @@ import com.example.exchange.domain.model.dto.MarketMakerAutoQuoteRunReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
 import com.example.exchange.domain.model.dto.MarketMakerRiskLimit;
+import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
@@ -34,6 +35,7 @@ public class MarketMakerAutoQuoteService {
     private final MarketMakerQuoteLifecycleService quoteLifecycleService;
     private final MatchingEngine matchingEngine;
     private final SymbolConfigRepository symbolConfigRepository;
+    private final MarketDataService marketDataService;
     private final MarketMakerAutoQuoteProperties properties;
     private final AtomicLong sequence = new AtomicLong();
 
@@ -79,9 +81,10 @@ public class MarketMakerAutoQuoteService {
         BigDecimal tick = positiveOrDefault(config.priceTickOrDefault(), new BigDecimal("0.01"));
         int halfSpreadTicks = Math.max(1, properties.getHalfSpreadTicks());
         BigDecimal pulse = quotePulse(runSequence, tick);
-        BigDecimal mid = top.getBestBid().add(top.getBestAsk()).divide(TWO, 18, RoundingMode.HALF_UP);
-        BigDecimal nearestBid = floorToStep(mid.subtract(tick.multiply(BigDecimal.valueOf(halfSpreadTicks))).add(pulse), tick);
-        BigDecimal nearestAsk = ceilToStep(mid.add(tick.multiply(BigDecimal.valueOf(halfSpreadTicks))).add(pulse), tick);
+        BigDecimal mid = safeFairMid(symbol, top);
+        BigDecimal halfSpread = safeHalfSpread(config, mid, tick, halfSpreadTicks);
+        BigDecimal nearestBid = floorToStep(mid.subtract(halfSpread).add(pulse), tick);
+        BigDecimal nearestAsk = ceilToStep(mid.add(halfSpread).add(pulse), tick);
         if (nearestBid.compareTo(nearestAsk) >= 0) {
             nearestAsk = nearestBid.add(tick);
         }
@@ -132,6 +135,35 @@ public class MarketMakerAutoQuoteService {
             ));
         }
         return commands;
+    }
+
+    private BigDecimal safeFairMid(String symbol, TopOfBook internalTop) {
+        Optional<MarketTicker> ticker = marketDataService.ticker(symbol);
+        if (ticker.isPresent()) {
+            MarketTicker fair = ticker.get();
+            if (fair.bestBid() != null && fair.bestAsk() != null
+                    && fair.bestBid().signum() > 0
+                    && fair.bestAsk().signum() > 0
+                    && fair.bestBid().compareTo(fair.bestAsk()) < 0) {
+                return fair.bestBid().add(fair.bestAsk()).divide(TWO, 18, RoundingMode.HALF_UP);
+            }
+            if (fair.lastPrice() != null && fair.lastPrice().signum() > 0) {
+                return fair.lastPrice();
+            }
+        }
+        return internalTop.getBestBid().add(internalTop.getBestAsk()).divide(TWO, 18, RoundingMode.HALF_UP);
+    }
+
+    private BigDecimal safeHalfSpread(SymbolConfig config, BigDecimal mid, BigDecimal tick, int halfSpreadTicks) {
+        BigDecimal tickSpread = tick.multiply(BigDecimal.valueOf(halfSpreadTicks));
+        BigDecimal effectiveMakerFee = positiveOrZero(config.makerFeeRateOrDefault()
+                .subtract(config.makerRebateRateOrDefault()));
+        BigDecimal hedgeTakerFee = positiveOrZero(config.takerFeeRateOrDefault());
+        BigDecimal hedgeCost = positiveOrZero(properties.getHedgeCostRate());
+        BigDecimal costRate = effectiveMakerFee.add(hedgeTakerFee).add(hedgeCost);
+        // Safe market making first prices around fair mid plus fee/hedge buffer; strategy tweaks happen outside it.
+        BigDecimal costSpread = mid.multiply(costRate).setScale(18, RoundingMode.CEILING);
+        return tickSpread.max(costSpread).max(tick);
     }
 
     private BigDecimal quotePulse(long runSequence, BigDecimal tick) {
@@ -195,6 +227,10 @@ public class MarketMakerAutoQuoteService {
 
     private static BigDecimal positiveOrDefault(BigDecimal value, BigDecimal fallback) {
         return value == null || value.signum() <= 0 ? fallback : value;
+    }
+
+    private static BigDecimal positiveOrZero(BigDecimal value) {
+        return value == null || value.signum() <= 0 ? BigDecimal.ZERO : value;
     }
 
     private static BigDecimal floorToStep(BigDecimal value, BigDecimal step) {

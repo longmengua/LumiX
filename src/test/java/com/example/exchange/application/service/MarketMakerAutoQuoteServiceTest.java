@@ -7,6 +7,7 @@ import com.example.exchange.domain.model.dto.MarketMakerAutoQuoteRunReport;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
 import com.example.exchange.domain.model.dto.MarketMakerRiskLimit;
+import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.entity.SymbolConfig;
 import com.example.exchange.domain.repository.MarketMakerProfileStore;
@@ -18,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,7 +41,7 @@ class MarketMakerAutoQuoteServiceTest {
         fixture.profileStore.save(profile(false, "10000"));
         when(fixture.matchingEngine.top("BTCUSDT")).thenReturn(Optional.of(top("100.00", "101.00")));
 
-        // 場景：策略以目前最佳買賣中點 100.5 為基準，依 0.10 tick 與 2 tick 半價差掛出多層 ladder。
+        // 場景：策略以目前最佳買賣中點 100.5 為基準，至少掛出前台可見的買五檔與賣五檔。
         MarketMakerAutoQuoteRunReport report = fixture.service.runOnce();
 
         @SuppressWarnings("unchecked")
@@ -49,7 +51,7 @@ class MarketMakerAutoQuoteServiceTest {
         MarketMakerQuoteCommand command = commands.getFirst();
         assertThat(report.placedCount()).isEqualTo(1);
         assertThat(report.skippedCount()).isZero();
-        assertThat(commands).hasSize(3);
+        assertThat(commands).hasSize(5);
         assertThat(command.marketMakerId()).isEqualTo("mm-auto-1");
         assertThat(command.uid()).isEqualTo(9301);
         assertThat(command.symbol()).isEqualTo("BTCUSDT");
@@ -60,6 +62,40 @@ class MarketMakerAutoQuoteServiceTest {
         assertThat(command.refId()).isEqualTo("auto-test-mm-auto-1-BTCUSDT-1-1");
         assertThat(commands.get(1).bidPrice()).isEqualByComparingTo("100.20");
         assertThat(commands.get(1).askPrice()).isEqualByComparingTo("100.80");
+        assertThat(commands).allSatisfy(level ->
+                assertThat(level.bidPrice()).isLessThan(level.askPrice()));
+        assertThat(commands.get(4).bidPrice()).isEqualByComparingTo("99.90");
+        assertThat(commands.get(4).askPrice()).isEqualByComparingTo("101.10");
+    }
+
+    @Test
+    @DisplayName("auto quote 優先用 ticker fair value 與費用 buffer 做安全報價")
+    void runOnceUsesTickerFairValueAndFeeBufferBeforeStrategyLadder() {
+        Fixture fixture = new Fixture();
+        fixture.profileStore.save(profile(false, "10000"));
+        fixture.properties.setHalfSpreadTicks(1);
+        fixture.properties.setHedgeCostRate(new BigDecimal("0.0030"));
+        when(fixture.matchingEngine.top("BTCUSDT")).thenReturn(Optional.of(top("90.00", "110.00")));
+        when(fixture.marketDataService.ticker("BTCUSDT")).thenReturn(Optional.of(new MarketTicker(
+                "BTCUSDT",
+                new BigDecimal("100.00"),
+                new BigDecimal("99.90"),
+                new BigDecimal("100.10"),
+                BigDecimal.ZERO,
+                null,
+                null,
+                Instant.now()
+        )));
+
+        // 場景：安全做市先用外部/market-data fair mid 100，再加 maker+hedge 成本，不能只貼著內部簿掛單。
+        fixture.service.runOnce();
+
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<MarketMakerQuoteCommand>> commandCaptor = ArgumentCaptor.forClass(List.class);
+        verify(fixture.quoteLifecycleService).placeQuoteLadder(commandCaptor.capture());
+        MarketMakerQuoteCommand nearest = commandCaptor.getValue().getFirst();
+        assertThat(nearest.bidPrice()).isEqualByComparingTo("99.60");
+        assertThat(nearest.askPrice()).isEqualByComparingTo("100.40");
     }
 
     @Test
@@ -152,6 +188,7 @@ class MarketMakerAutoQuoteServiceTest {
         private final MemProfileStore profileStore = new MemProfileStore();
         private final MarketMakerQuoteLifecycleService quoteLifecycleService = mock(MarketMakerQuoteLifecycleService.class);
         private final MatchingEngine matchingEngine = mock(MatchingEngine.class);
+        private final MarketDataService marketDataService = mock(MarketDataService.class);
         private final SymbolConfigRepository symbolConfigRepository = symbol -> Optional.of(symbolConfig());
         private final MarketMakerAutoQuoteProperties properties = properties();
         private final MarketMakerAutoQuoteService service = new MarketMakerAutoQuoteService(
@@ -159,14 +196,19 @@ class MarketMakerAutoQuoteServiceTest {
                 quoteLifecycleService,
                 matchingEngine,
                 symbolConfigRepository,
+                marketDataService,
                 properties
         );
+
+        private Fixture() {
+            when(marketDataService.ticker("BTCUSDT")).thenReturn(Optional.empty());
+        }
 
         private static MarketMakerAutoQuoteProperties properties() {
             MarketMakerAutoQuoteProperties properties = new MarketMakerAutoQuoteProperties();
             properties.setQuoteQuantity(new BigDecimal("0.010"));
             properties.setHalfSpreadTicks(2);
-            properties.setLadderLevelsPerSide(3);
+            properties.setLadderLevelsPerSide(5);
             properties.setPulseTicks(0);
             properties.setRefPrefix("auto-test");
             return properties;

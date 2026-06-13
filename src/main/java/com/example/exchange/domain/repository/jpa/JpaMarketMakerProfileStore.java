@@ -27,6 +27,8 @@ public class JpaMarketMakerProfileStore implements MarketMakerProfileStore {
     public void save(MarketMakerProfile profile) {
         profileRepository.save(MarketMakerProfileRecord.from(profile, MarketMakerProfileStore.SCHEMA_VERSION));
         riskLimitRepository.deleteByMarketMakerId(profile.marketMakerId());
+        // Replacing limits can reuse the same (market_maker_id, symbol) keys, so flush deletes before inserts.
+        riskLimitRepository.flush();
         riskLimitRepository.saveAll(profile.riskLimits().stream()
                 .map(limit -> MarketMakerRiskLimitRecord.from(profile.marketMakerId(), limit))
                 .toList());

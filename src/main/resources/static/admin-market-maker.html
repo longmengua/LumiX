@@ -237,6 +237,7 @@
             background: #fff;
             color: var(--text);
             line-height: 0;
+            margin-inline: auto;
         }
 
         .expand-button svg {
@@ -257,6 +258,12 @@
         .profile-table td {
             text-align: center;
             vertical-align: middle;
+        }
+
+        .profile-table th:last-child,
+        .profile-table td:last-child {
+            text-align: center;
+            width: 48px;
         }
 
         .profile-summary {
@@ -599,118 +606,10 @@
             gap: 6px;
         }
 
-        .message-center {
-            position: fixed;
-            right: 16px;
-            top: 16px;
-            z-index: 30;
-        }
-
-        .message-center-toggle {
-            position: relative;
-            width: 38px;
-            min-width: 38px;
-            min-height: 38px;
-            padding: 0;
-            border-radius: 50%;
-            box-shadow: 0 10px 24px rgba(23, 32, 51, 0.16);
-            font-size: 18px;
-        }
-
-        .message-badge {
-            position: absolute;
-            right: -4px;
-            top: -4px;
-            min-width: 18px;
-            height: 18px;
-            border: 2px solid #fff;
-            border-radius: 999px;
-            background: var(--danger);
-            color: #fff;
-            font-size: 11px;
-            line-height: 14px;
-            text-align: center;
-        }
-
-        .message-badge[hidden] {
-            display: none;
-        }
-
-        .message-panel {
-            position: absolute;
-            right: 0;
-            top: 46px;
-            display: grid;
-            gap: 8px;
-            width: min(380px, calc(100vw - 32px));
-            max-height: min(620px, calc(100vh - 78px));
-            overflow: auto;
-            border: 1px solid var(--line);
-            border-radius: 8px;
-            background: #fff;
-            box-shadow: 0 18px 48px rgba(23, 32, 51, 0.22);
-            padding: 10px;
-        }
-
-        .message-panel[hidden] {
-            display: none;
-        }
-
-        .message-panel h3 {
-            padding: 2px 4px 6px;
-        }
-
         .action-hint {
             color: var(--muted);
             font-size: 12px;
             line-height: 1.45;
-        }
-
-        .message-list {
-            display: grid;
-            gap: 8px;
-        }
-
-        .message-item {
-            display: grid;
-            grid-template-columns: minmax(0, 1fr) auto;
-            align-items: center;
-            gap: 12px;
-            border: 1px solid #93d8c9;
-            border-left: 5px solid var(--accent);
-            border-radius: 8px;
-            background: #fff;
-            box-shadow: 0 12px 30px rgba(23, 32, 51, 0.18);
-            color: var(--text);
-            padding: 12px 10px 12px 14px;
-            line-height: 1.4;
-        }
-
-        .message-item span {
-            display: grid;
-            gap: 3px;
-        }
-
-        .message-time {
-            color: var(--muted);
-            font-size: 12px;
-        }
-
-        .message-item button {
-            min-width: 28px;
-            min-height: 28px;
-            border: 0;
-            background: transparent;
-            color: var(--muted);
-            padding: 0;
-            font-size: 20px;
-            line-height: 1;
-        }
-
-        .message-empty {
-            color: var(--muted);
-            padding: 8px 4px;
-            line-height: 1.4;
         }
 
         @media (max-width: 1040px) {
@@ -877,13 +776,13 @@
             <table class="profile-table">
                 <thead>
                 <tr>
-                    <th></th>
                     <th data-i18n="table.marketMaker">Market Maker Name</th>
                     <th data-i18n="table.symbols">Symbols</th>
                     <th>UID</th>
                     <th data-i18n="table.enabled">Enabled</th>
                     <th data-i18n="table.strategies">Strategies</th>
                     <th data-i18n="table.actions">Actions</th>
+                    <th></th>
                 </tr>
                 </thead>
                 <tbody id="profiles"></tbody>
@@ -952,23 +851,9 @@
     </section>
 </div>
 
-<!-- Message center persists short operator confirmations without exposing raw API response payloads. -->
-<div id="messageCenter" class="message-center">
-    <button id="messageCenterToggle" type="button" class="message-center-toggle" data-i18n-title="message.open" aria-label="Messages" title="Messages">
-        ✉
-        <span id="messageBadge" class="message-badge" hidden>0</span>
-    </button>
-    <section id="messagePanel" class="message-panel" hidden>
-        <h3 data-i18n="message.title">Messages</h3>
-        <div id="messageList" class="message-list"></div>
-    </section>
-</div>
-
 <script>
     const $ = (id) => document.getElementById(id);
     const I18N_STORAGE_KEY = 'exchangeLanguage';
-    const MESSAGE_STORAGE_KEY = 'marketMakerAdminMessages';
-    const MESSAGE_TTL_MS = 24 * 60 * 60 * 1000;
     const translations = {
         en: {
             'page.title': 'Admin Market Maker',
@@ -1017,10 +902,6 @@
             'placeholder.searchMarketMaker': 'Search by ID, UID, or symbol',
             'modal.profileTitle': 'Market Maker Form',
             'modal.close': 'Close form',
-            'message.open': 'Open message center',
-            'message.title': 'Messages',
-            'message.empty': 'No messages in the last 24 hours.',
-            'message.close': 'Close message',
             'message.reloadSuccess': 'Market-maker console refreshed.',
             'message.profileSaved': 'Market-maker strategy saved.',
             'message.enabled': 'Market maker enabled.',
@@ -1117,10 +998,6 @@
             'placeholder.searchMarketMaker': '依 ID、UID 或交易對搜尋',
             'modal.profileTitle': '做市商表單',
             'modal.close': '關閉表單',
-            'message.open': '開啟訊息中心',
-            'message.title': '訊息中心',
-            'message.empty': '最近 24 小時沒有訊息。',
-            'message.close': '關閉訊息',
             'message.reloadSuccess': '做市商後台已重新整理。',
             'message.profileSaved': '做市商策略已儲存。',
             'message.enabled': '做市商已啟用。',
@@ -1217,10 +1094,6 @@
             'placeholder.searchMarketMaker': 'Cari mengikut ID, UID atau simbol',
             'modal.profileTitle': 'Borang Pembuat Pasaran',
             'modal.close': 'Tutup borang',
-            'message.open': 'Buka pusat mesej',
-            'message.title': 'Mesej',
-            'message.empty': 'Tiada mesej dalam 24 jam terakhir.',
-            'message.close': 'Tutup mesej',
             'message.reloadSuccess': 'Konsol pembuat pasaran dimuat semula.',
             'message.profileSaved': 'Strategi pembuat pasaran disimpan.',
             'message.enabled': 'Pembuat pasaran diaktifkan.',
@@ -1317,10 +1190,6 @@
             'placeholder.searchMarketMaker': 'ID, UID 또는 심볼로 검색',
             'modal.profileTitle': '마켓메이커 양식',
             'modal.close': '양식 닫기',
-            'message.open': '메시지 센터 열기',
-            'message.title': '메시지',
-            'message.empty': '최근 24시간 메시지가 없습니다.',
-            'message.close': '메시지 닫기',
             'message.reloadSuccess': '마켓메이커 콘솔을 새로고침했습니다.',
             'message.profileSaved': '마켓메이커 전략을 저장했습니다.',
             'message.enabled': '마켓메이커를 활성화했습니다.',
@@ -1419,8 +1288,6 @@
         expandedMarketMakerIds: new Set()
     };
 
-    let messages = [];
-
     function text(value) {
         return value === null || value === undefined || value === '' ? '-' : String(value);
     }
@@ -1450,76 +1317,14 @@
     function chevronIcon(expanded) {
         return expanded
             ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>'
-            : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>';
-    }
-
-    function pruneMessages(items) {
-        const cutoff = Date.now() - MESSAGE_TTL_MS;
-        return (items || [])
-            .filter(item => item && item.createdAt >= cutoff && item.message)
-            .sort((a, b) => b.createdAt - a.createdAt);
-    }
-
-    function saveMessages() {
-        localStorage.setItem(MESSAGE_STORAGE_KEY, JSON.stringify(pruneMessages(messages)));
-    }
-
-    function loadMessages() {
-        try {
-            messages = pruneMessages(JSON.parse(localStorage.getItem(MESSAGE_STORAGE_KEY) || '[]'));
-        } catch (error) {
-            messages = [];
-        }
-        saveMessages();
-        renderMessages();
-    }
-
-    function formatMessageTime(createdAt) {
-        return new Date(createdAt).toLocaleString(undefined, {
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
-        });
-    }
-
-    function renderMessages() {
-        messages = pruneMessages(messages);
-        const badge = $('messageBadge');
-        badge.textContent = messages.length > 99 ? '99+' : `${messages.length}`;
-        badge.hidden = messages.length === 0;
-        if (messages.length === 0) {
-            $('messageList').innerHTML = `<div class="message-empty">${t('message.empty')}</div>`;
-            saveMessages();
-            return;
-        }
-        const items = messages.map((message) => {
-            const row = document.createElement('div');
-            row.className = 'message-item';
-            row.innerHTML = `
-                <span>
-                    <strong>${text(message.message)}</strong>
-                    <small class="message-time">${formatMessageTime(message.createdAt)}</small>
-                </span>
-                <button type="button" data-dismiss-message="${text(message.id)}" aria-label="${t('message.close')}" title="${t('message.close')}">×</button>
-            `;
-            return row;
-        });
-        $('messageList').replaceChildren(...items);
-        saveMessages();
+            : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"></path></svg>';
     }
 
     function showToast(message) {
-        // Successful operator actions are persisted for one day so brief confirmations are not missed.
-        messages = pruneMessages([
-            {
-                id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-                message,
-                createdAt: Date.now()
-            },
-            ...messages
-        ]);
-        renderMessages();
+        // Embedded market-maker operations publish confirmations to the admin shell's shared message center.
+        if (window.parent && window.parent !== window) {
+            window.parent.postMessage({type: 'admin.message', message}, window.location.origin);
+        }
     }
 
     function openTutorial() {
@@ -1535,7 +1340,6 @@
 
     function openProfileModal() {
         // The form modal keeps list scanning simple while preserving all strategy-risk fields in one operator action.
-        $('messagePanel').hidden = true;
         $('profileModalBackdrop').hidden = false;
         fields.marketMakerId.focus();
     }
@@ -1629,7 +1433,6 @@
             row.className = profile.marketMakerId === state.selectedMarketMakerId ? 'selected' : '';
             const limits = profile.riskLimits || [];
             row.innerHTML = `
-                <td><button type="button" class="expand-button" data-expand-market-maker="${text(profile.marketMakerId)}" aria-label="${expanded ? 'Collapse' : 'Expand'}">${chevronIcon(expanded)}</button></td>
                 <td><strong>${text(profile.marketMakerId)}</strong></td>
                 <td>${limits.map(limit => text(limit.symbol)).join(', ') || '-'}</td>
                 <td>${text(profile.uid)}</td>
@@ -1641,6 +1444,7 @@
                         <button type="button" class="secondary" data-edit-market-maker="${text(profile.marketMakerId)}">${t('action.edit')}</button>
                     </div>
                 </td>
+                <td><button type="button" class="expand-button" data-expand-market-maker="${text(profile.marketMakerId)}" aria-label="${expanded ? 'Collapse' : 'Expand'}">${chevronIcon(expanded)}</button></td>
             `;
             row.addEventListener('click', async () => {
                 state.selectedMarketMakerId = profile.marketMakerId;
@@ -2094,22 +1898,6 @@
     $('tutorialOpen').addEventListener('click', openTutorial);
     $('tutorialOpenHeader').addEventListener('click', openTutorial);
     $('tutorialClose').addEventListener('click', closeTutorial);
-    $('messageCenterToggle').addEventListener('click', () => {
-        $('messagePanel').hidden = !$('messagePanel').hidden;
-    });
-    $('messageList').addEventListener('click', (event) => {
-        const dismissButton = event.target.closest('[data-dismiss-message]');
-        if (!dismissButton) {
-            return;
-        }
-        messages = messages.filter(message => message.id !== dismissButton.dataset.dismissMessage);
-        renderMessages();
-    });
-    document.addEventListener('click', (event) => {
-        if (!$('messageCenter').contains(event.target)) {
-            $('messagePanel').hidden = true;
-        }
-    });
     $('profileModalClose').addEventListener('click', closeProfileModal);
     $('profileModalCancel').addEventListener('click', closeProfileModal);
     $('profileModalBackdrop').addEventListener('click', (event) => {
@@ -2137,12 +1925,10 @@
         localStorage.setItem(I18N_STORAGE_KEY, currentLanguage);
         applyTranslations();
         renderProfiles();
-        renderMessages();
         loadOperations();
     });
 
     applyTranslations();
-    loadMessages();
     reloadAll();
 </script>
 </body>

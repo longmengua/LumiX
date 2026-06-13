@@ -31,14 +31,7 @@ test('exchange admin shell is the unified operator entry', async ({ page }) => {
 
 test('market maker admin uses a production operator console without raw responses', async ({ page }) => {
   // Scenario: operators need a compact console where disabled makers remain recoverable and row details own ops state.
-  await page.addInitScript(() => {
-    const now = Date.now();
-    localStorage.setItem('marketMakerAdminMessages', JSON.stringify([
-      { id: 'old-visible', message: 'Older visible message', createdAt: now - 60_000 },
-      { id: 'expired-hidden', message: 'Expired hidden message', createdAt: now - 25 * 60 * 60 * 1000 },
-      { id: 'new-visible', message: 'Newest visible message', createdAt: now }
-    ]));
-  });
+  await page.addInitScript(() => localStorage.removeItem('marketMakerAdminMessages'));
   let alphaEnabled = true;
   let disablePayload;
   await page.route('**/api/market-maker/profiles', async (route) => {
@@ -114,7 +107,7 @@ test('market maker admin uses a production operator console without raw response
     }))
   }));
   await page.route('**/api/market-maker/auto-quote/run-once', async (route) => {
-    // Scenario: manual quote refresh should record a durable operator confirmation in the message center.
+    // Scenario: manual quote refresh succeeds without exposing raw response payloads in the operator page.
     await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ refreshed: true })) });
   });
   await page.route('**/api/market-maker/profiles/mm-alpha/hedge-reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
@@ -178,15 +171,10 @@ test('market maker admin uses a production operator console without raw response
   await page.getByRole('row', { name: /mm-alpha/ }).getByRole('button', { name: 'Disable' }).click();
   await expect.poll(() => disablePayload?.enabled).toBe(false);
   await expect(page.getByRole('row', { name: /mm-alpha/ }).first()).toContainText('DISABLED');
-  await page.getByRole('button', { name: 'Open message center' }).click();
-  await expect(page.locator('#messageList')).toContainText('Newest visible message');
-  await expect(page.locator('#messageList')).toContainText('Older visible message');
-  await expect(page.locator('#messageList')).not.toContainText('Expired hidden message');
-  await expect(page.locator('#messageList .message-item').first()).toContainText('Market maker disabled.');
-  await page.getByRole('button', { name: 'Open message center' }).click();
+  await expect(page.locator('#messageCenter')).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => localStorage.getItem('marketMakerAdminMessages'))).toBeNull();
   await page.getByRole('button', { name: 'Refresh Maker Quotes' }).click();
-  await page.getByRole('button', { name: 'Open message center' }).click();
-  await expect(page.locator('#messageList .message-item').first()).toContainText('Quote ladder refresh completed.');
+  await expect(page.locator('#messageCenter')).toHaveCount(0);
   await page.getByRole('row', { name: /mm-alpha/ }).getByRole('button', { name: 'Edit' }).click();
   await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeVisible();
   await page.getByRole('button', { name: 'Close form' }).click();

@@ -138,6 +138,10 @@ section, aside {
     flex-wrap: nowrap;
 }
 
+.language-toolbar {
+    order: 1;
+}
+
 .market-select-field {
     display: grid;
     gap: 4px;

@@ -6,6 +6,7 @@ package com.example.exchange.infra.config;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
@@ -45,6 +46,12 @@ public class MarketMakerAutoQuoteProperties {
      */
     @Min(1)
     private int halfSpreadTicks = 2;
+
+    /**
+     * 外部 venue 對沖額外成本 buffer；安全做市先覆蓋 maker fee、hedge taker fee 與此 buffer。
+     */
+    @PositiveOrZero
+    private BigDecimal hedgeCostRate = new BigDecimal("0.0005");
 
     /**
      * 每邊 ladder 掛單層數；預設買賣各 50 ticks，前台可只顯示較少層數。

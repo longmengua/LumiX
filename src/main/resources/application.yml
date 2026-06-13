@@ -144,6 +144,7 @@ market-maker:
     max-profiles-per-run: ${MARKET_MAKER_AUTO_QUOTE_MAX_PROFILES_PER_RUN:20}
     quote-quantity: ${MARKET_MAKER_AUTO_QUOTE_QUOTE_QUANTITY:0.100}
     half-spread-ticks: ${MARKET_MAKER_AUTO_QUOTE_HALF_SPREAD_TICKS:2}
+    hedge-cost-rate: ${MARKET_MAKER_AUTO_QUOTE_HEDGE_COST_RATE:0.0005}
     ladder-levels-per-side: ${MARKET_MAKER_AUTO_QUOTE_LADDER_LEVELS_PER_SIDE:50}
     pulse-ticks: ${MARKET_MAKER_AUTO_QUOTE_PULSE_TICKS:1}
     ref-prefix: ${MARKET_MAKER_AUTO_QUOTE_REF_PREFIX:auto-mm}
