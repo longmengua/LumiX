@@ -196,6 +196,7 @@ class AuthServiceTest {
             savedCode.set(invocation.getArgument(0));
             return invocation.getArgument(0);
         });
+        when(fixture.sessions.save(any(AuthRefreshSessionRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         org.mockito.Mockito.doAnswer(invocation -> {
             verificationUrl.set(invocation.getArgument(1));
             return null;
@@ -230,10 +231,12 @@ class AuthServiceTest {
                 CustomerVerificationCodeRecord.STATUS_PENDING
         )).thenReturn(Optional.of(savedCode.get()));
 
-        AuthService.CurrentUser verified = fixture.service.verifyEmail(rawToken);
+        AuthService.AuthResult verified = fixture.service.verifyEmail(rawToken);
 
-        assertThat(verified.email()).isEqualTo("alice@example.com");
-        assertThat(verified.preferredLanguage()).isEqualTo("ko");
+        assertThat(verified.user().email()).isEqualTo("alice@example.com");
+        assertThat(verified.user().preferredLanguage()).isEqualTo("ko");
+        assertThat(verified.accessToken()).isNotBlank();
+        assertThat(verified.refreshToken()).isNotBlank();
         assertThat(savedUser.get().isEmailVerified()).isTrue();
         assertThat(savedUser.get().getPreferredLanguage()).isEqualTo("ko");
         assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
@@ -244,7 +247,7 @@ class AuthServiceTest {
     }
 
     @Test
-    @DisplayName("email verification code completes registration")
+    @DisplayName("email verification code completes registration and issues a session")
     void emailVerificationCodeCompletesRegistration() {
         Fixture fixture = new Fixture();
         AtomicReference<AppUserRecord> savedUser = new AtomicReference<>();
@@ -272,6 +275,7 @@ class AuthServiceTest {
             savedCode.set(invocation.getArgument(0));
             return invocation.getArgument(0);
         });
+        when(fixture.sessions.save(any(AuthRefreshSessionRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         org.mockito.Mockito.doAnswer(invocation -> {
             verificationCode.set(invocation.getArgument(2));
             return null;
@@ -287,11 +291,13 @@ class AuthServiceTest {
                 CustomerVerificationCodeRecord.STATUS_PENDING
         )).thenReturn(Optional.of(savedCode.get()));
 
-        AuthService.CurrentUser verified = fixture.service.verifyEmailCode("Alice@Example.com", verificationCode.get());
+        AuthService.AuthResult verified = fixture.service.verifyEmailCode("Alice@Example.com", verificationCode.get());
 
-        assertThat(verified.uid()).isEqualTo(10002L);
-        assertThat(verified.email()).isEqualTo("alice@example.com");
-        assertThat(verified.preferredLanguage()).isEqualTo("ms");
+        assertThat(verified.user().uid()).isEqualTo(10002L);
+        assertThat(verified.user().email()).isEqualTo("alice@example.com");
+        assertThat(verified.user().preferredLanguage()).isEqualTo("ms");
+        assertThat(verified.accessToken()).isNotBlank();
+        assertThat(verified.refreshToken()).isNotBlank();
         assertThat(savedRegistration.get().getStatus()).isEqualTo(CustomerRegistrationRecord.STATUS_VERIFIED);
         assertThat(savedCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_VERIFIED);
     }

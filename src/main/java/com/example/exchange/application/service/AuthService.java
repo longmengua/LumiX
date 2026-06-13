@@ -262,7 +262,7 @@ public class AuthService {
 
     /** Completes a pending registration when the raw email token matches and has not expired. */
     @Transactional
-    public CurrentUser verifyEmail(String token) {
+    public AuthResult verifyEmail(String token) {
         if (token == null || token.isBlank()) {
             throw new IllegalArgumentException("email verification token is required");
         }
@@ -274,7 +274,7 @@ public class AuthService {
 
     /** Completes a pending registration from the six-digit code typed into the registration verification step. */
     @Transactional
-    public CurrentUser verifyEmailCode(String email, String code) {
+    public AuthResult verifyEmailCode(String email, String code) {
         String normalizedEmail = AppUserRecord.normalizeEmail(email);
         if (normalizedEmail.isBlank() || code == null || code.isBlank()) {
             throw new IllegalArgumentException("email and verification code are required");
@@ -374,7 +374,7 @@ public class AuthService {
         return baseUrl + separator + "verifyEmailToken=" + token;
     }
 
-    private CurrentUser completeRegistration(
+    private AuthResult completeRegistration(
             CustomerRegistrationRecord registration,
             CustomerVerificationCodeRecord verificationCode
     ) {
@@ -408,7 +408,7 @@ public class AuthService {
             verificationCode.verify(now, user.getId());
             verificationCodes.save(verificationCode);
         }
-        return toCurrentUser(user);
+        return issueAuth(user);
     }
 
     private String verificationCode() {

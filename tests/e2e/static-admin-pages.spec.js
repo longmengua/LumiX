@@ -349,15 +349,24 @@ test('exchange console registers with on-screen email code before login', async 
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok({
-        uid: 10011,
-        email: 'new-user@example.com',
-        roles: 'USER',
-        scopes: 'trade funds:write user:read',
-        preferredLanguage: 'zh-TW'
+        tokenType: 'Bearer',
+        accessToken: 'access-token-after-verification',
+        accessTokenExpiresAt: '2026-06-13T00:00:00Z',
+        refreshToken: 'refresh-token-after-verification',
+        refreshTokenExpiresAt: '2026-07-13T00:00:00Z',
+        user: {
+          uid: 10011,
+          email: 'new-user@example.com',
+          roles: 'USER',
+          scopes: 'trade funds:write user:read',
+          preferredLanguage: 'zh-TW'
+        }
       }))
     });
   });
+  let loginRequests = 0;
   await page.route('**/api/auth/login', async (route) => {
+    loginRequests += 1;
     loginPayload = route.request().postDataJSON();
     await route.fulfill({
       contentType: 'application/json',
@@ -421,17 +430,11 @@ test('exchange console registers with on-screen email code before login', async 
     code: '123456'
   });
   await expect(page.locator('#emailVerificationStep')).toBeHidden();
-  await expect(page.locator('#login')).toBeVisible();
   await expect(page.locator('#authNotice')).toContainText('註冊已完成驗證');
-
-  await page.locator('#login').click();
-  await expect.poll(() => loginPayload).toMatchObject({
-    email: 'new-user@example.com',
-    password: 'correct-password'
-  });
   await expect(page.locator('#profileContent')).toBeVisible();
   await expect(page.locator('#sessionDisplay')).toContainText('new-user@example.com');
   await expect(page.locator('#uidDisplay')).toHaveText('10011');
+  expect(loginRequests).toBe(0);
   await page.locator('#language').selectOption('ms');
   await expect.poll(() => languagePayload).toMatchObject({ preferredLanguage: 'ms' });
 });

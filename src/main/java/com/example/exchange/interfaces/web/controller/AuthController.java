@@ -58,13 +58,13 @@ public class AuthController {
         )));
     }
 
-    /** Email verification activates a pending customer account before password login can issue tokens. */
+    /** Email verification activates a pending customer account and immediately issues a first session. */
     @PostMapping("/verify-email")
-    public ApiResponse<AuthResponse.User> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
-        AuthService.CurrentUser user = request.token() != null && !request.token().isBlank()
+    public ApiResponse<AuthResponse> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+        AuthService.AuthResult auth = request.token() != null && !request.token().isBlank()
                 ? authService.verifyEmail(request.token())
                 : authService.verifyEmailCode(request.email(), request.code());
-        return ApiResponse.ok(AuthResponse.User.from(user));
+        return ApiResponse.ok(AuthResponse.from(auth));
     }
 
     /** Resends the code for an existing pending registration without extending the original 24-hour deadline. */

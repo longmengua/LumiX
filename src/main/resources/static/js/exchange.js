@@ -657,13 +657,7 @@ async function authenticate(mode) {
                 password: $('authPassword').value
             })
         });
-        auth.accessToken = result.accessToken;
-        auth.refreshToken = result.refreshToken;
-        localStorage.setItem('exchangeAccessToken', auth.accessToken);
-        localStorage.setItem('exchangeRefreshToken', auth.refreshToken);
-        applyUserLanguage(result.user);
-        setUserIdentity(result.user);
-        renderAuth(result.user);
+        applyAuthResult(result);
         await refreshAll();
         subscribeCurrentUser();
     } catch (error) {
@@ -717,6 +711,17 @@ function browserTimeZone() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
 }
 
+function applyAuthResult(result) {
+    // Registration verification and password login both establish the same browser session shape.
+    auth.accessToken = result.accessToken;
+    auth.refreshToken = result.refreshToken;
+    localStorage.setItem('exchangeAccessToken', auth.accessToken);
+    localStorage.setItem('exchangeRefreshToken', auth.refreshToken);
+    applyUserLanguage(result.user);
+    setUserIdentity(result.user);
+    renderAuth(result.user);
+}
+
 async function verifyRegistrationCode() {
     clearError($('authError'));
     clearNotice();
@@ -724,17 +729,20 @@ async function verifyRegistrationCode() {
         return;
     }
     try {
-        await api('/api/auth/verify-email', {
+        const result = await api('/api/auth/verify-email', {
             method: 'POST',
             body: JSON.stringify({
                 email: $('authEmail').value.trim(),
                 code: fields.emailVerificationCode.value.trim()
             })
         });
-        showNotice(t('status.registrationVerified'));
         fields.emailVerificationCode.value = '';
         clearPendingRegistration();
         setRegistrationVerificationMode(false);
+        applyAuthResult(result);
+        showNotice(t('status.registrationVerified'));
+        await refreshAll();
+        subscribeCurrentUser();
     } catch (error) {
         showError($('authError'), error);
     }
@@ -833,12 +841,16 @@ async function verifyEmailFromUrl() {
     }
     clearError($('authError'));
     try {
-        await api('/api/auth/verify-email', {
+        const result = await api('/api/auth/verify-email', {
             method: 'POST',
             body: JSON.stringify({ token })
         });
-        showNotice(t('status.emailVerified'));
+        clearPendingRegistration();
         setRegistrationVerificationMode(false);
+        applyAuthResult(result);
+        showNotice(t('status.emailVerified'));
+        await refreshAll();
+        subscribeCurrentUser();
         window.history.replaceState({}, document.title, window.location.pathname);
     } catch (error) {
         showError($('authError'), error);
