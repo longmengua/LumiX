@@ -34,6 +34,7 @@ const translations = {
         'action.login': 'Login',
         'action.logout': 'Logout',
         'action.verifyRegistration': 'Verify Registration',
+        'action.resendVerification': 'Resend Code',
         'action.placeBuy': 'Place Buy',
         'action.placeSell': 'Place Sell',
         'metric.session': 'Session',
@@ -74,6 +75,7 @@ const translations = {
         'status.accountUnavailable': 'Account unavailable.',
         'status.registrationCreated': 'Account created. You can log in now.',
         'status.registrationPending': 'Enter the email verification code to finish registration.',
+        'status.verificationResent': 'A new verification code has been sent.',
         'status.emailVerified': 'Email verified. You can log in now.',
         'status.registrationVerified': 'Registration verified. You can log in now.',
         'error.emailRequired': 'Email is required.',
@@ -116,6 +118,7 @@ const translations = {
         'action.login': '登入',
         'action.logout': '登出',
         'action.verifyRegistration': '完成註冊驗證',
+        'action.resendVerification': '重新寄送驗證碼',
         'action.placeBuy': '下買單',
         'action.placeSell': '下賣單',
         'metric.session': '登入狀態',
@@ -156,6 +159,7 @@ const translations = {
         'status.accountUnavailable': '帳戶不可用。',
         'status.registrationCreated': '帳號已建立，現在可以登入。',
         'status.registrationPending': '請輸入信箱驗證碼完成註冊。',
+        'status.verificationResent': '新的驗證碼已寄出。',
         'status.emailVerified': 'Email 已驗證，現在可以登入。',
         'status.registrationVerified': '註冊已完成驗證，現在可以登入。',
         'error.emailRequired': '請輸入電子信箱。',
@@ -198,6 +202,7 @@ const translations = {
         'action.login': 'Log Masuk',
         'action.logout': 'Log Keluar',
         'action.verifyRegistration': 'Sahkan Pendaftaran',
+        'action.resendVerification': 'Hantar Semula Kod',
         'action.placeBuy': 'Buat Belian',
         'action.placeSell': 'Buat Jualan',
         'metric.session': 'Sesi',
@@ -238,6 +243,7 @@ const translations = {
         'status.accountUnavailable': 'Akaun tidak tersedia.',
         'status.registrationCreated': 'Akaun dibuat. Anda boleh log masuk sekarang.',
         'status.registrationPending': 'Masukkan kod pengesahan e-mel untuk melengkapkan pendaftaran.',
+        'status.verificationResent': 'Kod pengesahan baharu telah dihantar.',
         'status.emailVerified': 'E-mel disahkan. Anda boleh log masuk sekarang.',
         'status.registrationVerified': 'Pendaftaran disahkan. Anda boleh log masuk sekarang.',
         'error.emailRequired': 'E-mel diperlukan.',
@@ -280,6 +286,7 @@ const translations = {
         'action.login': '로그인',
         'action.logout': '로그아웃',
         'action.verifyRegistration': '가입 인증',
+        'action.resendVerification': '코드 다시 보내기',
         'action.placeBuy': '매수 주문',
         'action.placeSell': '매도 주문',
         'metric.session': '세션',
@@ -320,6 +327,7 @@ const translations = {
         'status.accountUnavailable': '계정을 사용할 수 없습니다.',
         'status.registrationCreated': '계정이 생성되었습니다. 이제 로그인할 수 있습니다.',
         'status.registrationPending': '가입을 완료하려면 이메일 인증 코드를 입력하세요.',
+        'status.verificationResent': '새 인증 코드가 전송되었습니다.',
         'status.emailVerified': '이메일이 인증되었습니다. 이제 로그인할 수 있습니다.',
         'status.registrationVerified': '가입 인증이 완료되었습니다. 이제 로그인할 수 있습니다.',
         'error.emailRequired': '이메일을 입력하세요.',
@@ -722,6 +730,32 @@ async function verifyRegistrationCode() {
         clearPendingRegistration();
         setRegistrationVerificationMode(false);
     } catch (error) {
+        showError($('authError'), error);
+    }
+}
+
+async function resendRegistrationCode() {
+    clearError($('authError'));
+    clearNotice();
+    const email = $('authEmail').value.trim() || localStorage.getItem(PENDING_REGISTRATION_EMAIL_KEY) || '';
+    if (!email) {
+        showError($('authError'), new Error(t('error.emailRequired')));
+        $('authEmail').focus();
+        return;
+    }
+    try {
+        const result = await api('/api/auth/resend-verification', {
+            method: 'POST',
+            body: JSON.stringify({
+                email,
+                preferredLanguage: currentLanguage
+            })
+        });
+        continuePendingRegistration(result?.email || email);
+        showNotice(t('status.verificationResent'));
+    } catch (error) {
+        // Resend may fail when offline; keep the recoverable code-entry state visible for retry.
+        setRegistrationVerificationMode(true);
         showError($('authError'), error);
     }
 }
@@ -1308,6 +1342,7 @@ async function placeOrder(side) {
 $('register').addEventListener('click', () => authenticate('register'));
 $('login').addEventListener('click', () => authenticate('login'));
 $('verifyEmailCode').addEventListener('click', verifyRegistrationCode);
+$('resendEmailCode').addEventListener('click', resendRegistrationCode);
 $('logout').addEventListener('click', logout);
 $('reloadOrders').addEventListener('click', loadOrders);
 $('placeBuy').addEventListener('click', () => placeOrder('BUY'));

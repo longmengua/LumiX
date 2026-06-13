@@ -14,6 +14,7 @@ import com.example.exchange.interfaces.web.dto.LogoutRequest;
 import com.example.exchange.interfaces.web.dto.PreferredLanguageRequest;
 import com.example.exchange.interfaces.web.dto.RegisterRequest;
 import com.example.exchange.interfaces.web.dto.RegistrationResponse;
+import com.example.exchange.interfaces.web.dto.ResendVerificationRequest;
 import com.example.exchange.interfaces.web.dto.VerifyEmailRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -63,6 +64,15 @@ public class AuthController {
                 ? authService.verifyEmail(request.token())
                 : authService.verifyEmailCode(request.email(), request.code());
         return ApiResponse.ok(AuthResponse.User.from(user));
+    }
+
+    /** Resends the code for an existing pending registration without extending the original 24-hour deadline. */
+    @PostMapping("/resend-verification")
+    public ApiResponse<RegistrationResponse> resendVerification(@Valid @RequestBody ResendVerificationRequest request) {
+        return ApiResponse.ok(RegistrationResponse.from(authService.resendRegistrationVerification(
+                request.email(),
+                request.preferredLanguage()
+        )));
     }
 
     /** Password login returns access JWT plus refresh token for server-side logout/revocation. */

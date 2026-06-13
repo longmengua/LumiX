@@ -475,6 +475,7 @@ test('exchange console shows generic login error for unknown accounts', async ({
     });
   });
   let pendingRegisterPayload;
+  let resendPayload;
   await page.route('**/api/auth/register', async (route) => {
     pendingRegisterPayload = route.request().postDataJSON();
     await route.fulfill({
@@ -485,6 +486,19 @@ test('exchange console shows generic login error for unknown accounts', async ({
         message: '發生異常',
         traceId: 'test-trace-id'
       })
+    });
+  });
+  await page.route('**/api/auth/resend-verification', async (route) => {
+    resendPayload = route.request().postDataJSON();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({
+        uid: null,
+        email: resendPayload.email,
+        emailVerificationRequired: true,
+        verificationUrl: null,
+        expiresAt: '2026-06-13T00:00:00Z'
+      }))
     });
   });
 
@@ -508,10 +522,17 @@ test('exchange console shows generic login error for unknown accounts', async ({
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
   await expect(page.locator('#emailVerificationCode')).toBeFocused();
   await expect(page.locator('#authNotice')).toContainText('Enter the email verification code');
+  await page.locator('#resendEmailCode').click();
+  await expect.poll(() => resendPayload).toMatchObject({
+    email: 'missing@example.com',
+    preferredLanguage: 'en'
+  });
+  await expect(page.locator('#authNotice')).toContainText('A new verification code has been sent');
 
   // Scenario: if the tab reloads or network drops after registration starts, the customer can continue code entry.
   await page.reload();
   await page.getByRole('button', { name: 'Open Profile' }).click();
   await expect(page.locator('#authEmail')).toHaveValue('missing@example.com');
   await expect(page.locator('#emailVerificationStep')).toBeVisible();
+  await expect(page.locator('#resendEmailCode')).toBeVisible();
 });

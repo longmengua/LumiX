@@ -199,6 +199,60 @@ public class AuthService {
         return issueAuth(user);
     }
 
+    /** Resends a fresh code for an existing pending registration without extending its original expiry deadline. */
+    @Transactional
+    public RegistrationResult resendRegistrationVerification(String email, String preferredLanguage) {
+        String normalizedEmail = AppUserRecord.normalizeEmail(email);
+        requireEmail(normalizedEmail);
+        Instant now = Instant.now(clock);
+        CustomerRegistrationRecord registration = registrations
+                .findFirstByEmailAndStatusOrderByCreatedAtDesc(normalizedEmail, CustomerRegistrationRecord.STATUS_PENDING)
+                .orElseThrow(() -> new IllegalArgumentException("registration verification is invalid"));
+        if (registration.isExpired(now)) {
+            registration.expire();
+            registrations.save(registration);
+            latestPendingCode(normalizedEmail).ifPresent(code -> {
+                code.expire();
+                verificationCodes.save(code);
+            });
+            throw new IllegalArgumentException("registration verification is expired");
+        }
+        latestPendingCode(normalizedEmail).ifPresent(code -> {
+            code.expire();
+            verificationCodes.save(code);
+        });
+        String token = randomToken();
+        String code = verificationCode();
+        registration.rotateVerificationToken(sha256Hex(token));
+        registrations.save(registration);
+        // Resend creates a new one-time code but keeps the registration deadline anchored to the original request.
+        verificationCodes.save(new CustomerVerificationCodeRecord(
+                normalizedEmail,
+                null,
+                registration.getId(),
+                verificationCodeHash(normalizedEmail, code),
+                registration.getExpiresAt()
+        ));
+        String language = AppUserRecord.normalizePreferredLanguage(
+                preferredLanguage == null || preferredLanguage.isBlank() ? registration.getPreferredLanguage() : preferredLanguage
+        );
+        String verificationUrl = verificationUrl(token);
+        emailVerificationNotifier.sendVerification(
+                registration.getEmail(),
+                verificationUrl,
+                code,
+                registration.getExpiresAt(),
+                language
+        );
+        return new RegistrationResult(
+                null,
+                registration.getEmail(),
+                true,
+                customerAuthProperties.getEmailVerification().isReturnVerificationUrl() ? verificationUrl : null,
+                registration.getExpiresAt()
+        );
+    }
+
     /** Completes a pending registration when the raw email token matches and has not expired. */
     @Transactional
     public CurrentUser verifyEmail(String token) {

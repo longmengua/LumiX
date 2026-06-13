@@ -296,6 +296,53 @@ class AuthServiceTest {
         assertThat(savedCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_VERIFIED);
     }
 
+    @Test
+    @DisplayName("resend registration verification rotates code without extending request expiry")
+    void resendRegistrationVerificationRotatesCodeWithoutExtendingExpiry() {
+        Fixture fixture = new Fixture();
+        AtomicReference<CustomerRegistrationRecord> savedRegistration = new AtomicReference<>();
+        AtomicReference<CustomerVerificationCodeRecord> firstCode = new AtomicReference<>();
+        AtomicReference<CustomerVerificationCodeRecord> resentCode = new AtomicReference<>();
+        fixture.customerAuthProperties.getEmailVerification().setEnabled(true);
+        // Scenario: customers who missed the first email can request a fresh code without restarting registration.
+        when(fixture.users.existsByEmail("alice@example.com")).thenReturn(false);
+        when(fixture.registrations.save(any(CustomerRegistrationRecord.class))).thenAnswer(invocation -> {
+            savedRegistration.set(invocation.getArgument(0));
+            return invocation.getArgument(0);
+        });
+        when(fixture.verificationCodes.save(any(CustomerVerificationCodeRecord.class))).thenAnswer(invocation -> {
+            CustomerVerificationCodeRecord code = invocation.getArgument(0);
+            if (firstCode.get() == null) {
+                firstCode.set(code);
+            } else {
+                resentCode.set(code);
+            }
+            return code;
+        });
+        org.mockito.Mockito.doNothing()
+                .when(fixture.emailVerificationNotifier)
+                .sendVerification(anyString(), anyString(), anyString(), any(), anyString());
+
+        AuthService.RegistrationResult original = fixture.service.register("alice@example.com", "correct-password", "", "zh-TW");
+        when(fixture.registrations.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                "alice@example.com",
+                CustomerRegistrationRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(savedRegistration.get()));
+        when(fixture.verificationCodes.findFirstByEmailAndStatusOrderByCreatedAtDesc(
+                "alice@example.com",
+                CustomerVerificationCodeRecord.STATUS_PENDING
+        )).thenReturn(Optional.of(firstCode.get()));
+
+        AuthService.RegistrationResult resent = fixture.service.resendRegistrationVerification("alice@example.com", "zh-TW");
+
+        assertThat(firstCode.get().getStatus()).isEqualTo(CustomerVerificationCodeRecord.STATUS_EXPIRED);
+        assertThat(resentCode.get()).isNotNull();
+        assertThat(resent.expiresAt()).isEqualTo(original.expiresAt());
+        assertThat(resent.emailVerificationRequired()).isTrue();
+        verify(fixture.emailVerificationNotifier, org.mockito.Mockito.times(2))
+                .sendVerification(anyString(), anyString(), anyString(), any(), anyString());
+    }
+
     private static final class Fixture {
         private final AppUserRecordJpaRepository users = mock(AppUserRecordJpaRepository.class);
         private final CustomerRegistrationRecordJpaRepository registrations = mock(CustomerRegistrationRecordJpaRepository.class);

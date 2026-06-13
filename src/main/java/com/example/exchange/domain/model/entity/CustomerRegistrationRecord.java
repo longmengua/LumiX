@@ -118,6 +118,11 @@ public class CustomerRegistrationRecord {
         return preferredLanguage;
     }
 
+    /** Resend rotates the backup link token while preserving the original registration expiry deadline. */
+    public void rotateVerificationToken(String verificationTokenHash) {
+        this.verificationTokenHash = verificationTokenHash;
+    }
+
     public boolean isPending() {
         return STATUS_PENDING.equals(status);
     }
