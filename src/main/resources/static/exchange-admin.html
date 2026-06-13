@@ -201,6 +201,7 @@
 <script>
     // Tabs are a thin shell over existing admin pages so each tool keeps its own focused API and tests.
     const I18N_STORAGE_KEY = 'exchangeLanguage';
+    const ADMIN_TAB_STORAGE_KEY = 'exchangeAdminSelectedSrc';
     const translations = {
         en: {
             'page.title': 'Exchange Admin',
@@ -313,15 +314,29 @@
         frame.src = frame.getAttribute('src');
     }
 
-    document.querySelectorAll('.tab').forEach((tab) => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach((candidate) => {
-                candidate.setAttribute('aria-selected', String(candidate === tab));
-            });
-            const src = tab.dataset.src;
-            frame.src = src;
-            frame.title = t(titleKeyFor(src));
+    function activateTab(tab, {persist = true} = {}) {
+        document.querySelectorAll('.tab').forEach((candidate) => {
+            candidate.setAttribute('aria-selected', String(candidate === tab));
         });
+        const src = tab.dataset.src;
+        frame.src = src;
+        frame.title = t(titleKeyFor(src));
+        if (persist) {
+            // Persist the operator's current admin workspace so browser refresh returns to the same tool.
+            localStorage.setItem(ADMIN_TAB_STORAGE_KEY, src);
+        }
+    }
+
+    function restoreSelectedTab() {
+        const savedSrc = localStorage.getItem(ADMIN_TAB_STORAGE_KEY);
+        const savedTab = savedSrc ? document.querySelector(`.tab[data-src="${savedSrc}"]`) : null;
+        if (savedTab) {
+            activateTab(savedTab, {persist: false});
+        }
+    }
+
+    document.querySelectorAll('.tab').forEach((tab) => {
+        tab.addEventListener('click', () => activateTab(tab));
     });
 
     document.getElementById('language').value = currentLanguage;
@@ -330,6 +345,7 @@
         applyTranslations();
         syncFrameLanguage();
     });
+    restoreSelectedTab();
     applyTranslations();
 </script>
 </body>

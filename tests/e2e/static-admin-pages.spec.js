@@ -22,6 +22,11 @@ test('exchange admin shell is the unified operator entry', async ({ page }) => {
     await expect(page.locator('#adminFrame')).toHaveAttribute('src', src);
     await expect(page.frameLocator('#adminFrame').locator('header')).toBeHidden();
   }
+
+  await page.getByRole('button', { name: 'Market Makers' }).click();
+  await page.reload({ waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('button', { name: 'Market Makers' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-maker.html?embed=1');
 });
 
 test('market maker admin uses searchable expandable rows and a profile form modal', async ({ page }) => {
