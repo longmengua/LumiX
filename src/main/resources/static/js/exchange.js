@@ -942,10 +942,6 @@ function renderAccountSnapshot(account) {
     const frozen = money(account?.frozen);
     const orderHold = money(account?.orderHold);
     const positionMargin = money(account?.positionMargin);
-    $('balance').textContent = balance;
-    $('available').textContent = available;
-    $('frozen').textContent = frozen;
-    $('positionMargin').textContent = positionMargin;
     $('profileBalance').textContent = balance;
     $('profileAvailable').textContent = available;
     $('profileFrozen').textContent = frozen;

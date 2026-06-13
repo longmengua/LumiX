@@ -23,6 +23,11 @@
     --shadow: 0 14px 40px rgba(26, 37, 56, 0.10);
 }
 
+/* Hidden must beat component display rules such as grid/flex so inactive profile/auth states never leak into view. */
+[hidden] {
+    display: none !important;
+}
+
 * {
     box-sizing: border-box;
 }

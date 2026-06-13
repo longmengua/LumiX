@@ -201,11 +201,13 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#accountSummary')).toBeVisible();
   await expect(page.locator('#profileContent')).toBeVisible();
   await expect(page.locator('#profileBalance')).toContainText('10,000');
-  await expect(page.locator('#balance')).toContainText('10,000');
-  await expect(page.locator('#available')).toContainText('9,750');
   await expect(page.locator('#profileFrozen')).toContainText('250');
   await expect(page.locator('#profileOrderHold')).toContainText('250');
   await expect(page.locator('#profilePositionMargin')).toContainText('0');
+  await expect(page.locator('#balance')).toHaveCount(0);
+  await expect(page.locator('#available')).toHaveCount(0);
+  await expect(page.locator('#frozen')).toHaveCount(0);
+  await expect(page.locator('#positionMargin')).toHaveCount(0);
   await expect(page.locator('[data-profile-panel="orders"]')).toContainText('order-live-r');
   await expect(page.locator('[data-profile-panel="heldPositions"]')).toBeVisible();
   await expect(page.locator('[data-profile-panel="positionHistory"]')).toBeVisible();
