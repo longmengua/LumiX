@@ -7,6 +7,7 @@
     "prepare:e2e": "./mvnw -q process-resources",
     "smoke:exchange": "PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers node tests/e2e/exchange-order-entry-smoke.js",
     "e2e": "npm run prepare:e2e && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test",
+    "e2e:layout": "npm run prepare:e2e && E2E_SKIP_WEBSERVER=true PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers playwright test tests/e2e/exchange-layout.spec.js",
     "e2e:headed": "npm run prepare:e2e && PLAYWRIGHT_BROWSERS_PATH=.playwright-browsers PLAYWRIGHT_HEADLESS=false playwright test --headed"
   },
   "devDependencies": {
