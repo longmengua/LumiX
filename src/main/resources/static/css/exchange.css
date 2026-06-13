@@ -228,6 +228,40 @@ button.sell {
     color: #fff;
 }
 
+.segmented-tabs {
+    align-items: center;
+    background: #f3f6f8;
+    border: 1px solid #dce5ec;
+    border-radius: 8px;
+    display: flex;
+    gap: 4px;
+    margin-bottom: 12px;
+    max-width: 100%;
+    overflow-x: auto;
+    padding: 4px;
+}
+
+.segmented-tab {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
+    flex: 1 0 max-content;
+    min-height: 34px;
+    min-width: 92px;
+    padding: 0 12px;
+}
+
+.segmented-tab[aria-selected="true"] {
+    background: #fff;
+    border-color: #d5e0e8;
+    box-shadow: 0 4px 14px rgba(17, 24, 39, 0.08);
+    color: var(--text);
+}
+
+[data-segmented-panel][hidden] {
+    display: none;
+}
+
 [data-tab-panel][hidden] {
     display: none;
 }
@@ -463,6 +497,10 @@ pre {
     grid-column: 1 / -1;
 }
 
+.orders-panel .segmented-tabs {
+    margin-top: 4px;
+}
+
 .order-entry {
     border-top: 4px solid var(--accent);
     display: flex;
@@ -537,6 +575,10 @@ pre {
 
 .profile-section[hidden] {
     display: none;
+}
+
+.profile-activity-card {
+    min-height: 180px;
 }
 
 .profile-section h3, .profile-card-title {

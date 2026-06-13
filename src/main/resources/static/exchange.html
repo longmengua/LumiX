@@ -11,7 +11,7 @@
 <header>
     <div>
         <h1 data-i18n="page.title">Exchange Console</h1>
-        <div class="brand-subtitle" data-i18n="page.subtitle">Internal exchange MVP: order book, order entry, open orders, and account risk.</div>
+        <div class="brand-subtitle" data-i18n="page.subtitle">Internal exchange MVP: order book, order entry, positions, orders, and account risk.</div>
     </div>
     <div class="header-actions">
         <div class="toolbar">
@@ -91,17 +91,21 @@
                 <div class="metric"><label data-i18n="metric.positionMargin">Position Margin</label><div id="profilePositionMargin" class="value">-</div></div>
             </div>
         </div>
-        <div class="profile-section" data-profile-panel="orders">
-            <h3 data-i18n="profile.orders">Open Orders</h3>
-            <div id="profileOrders" class="empty">Login and refresh to load open orders</div>
-        </div>
-        <div class="profile-section" data-profile-panel="heldPositions">
-            <h3 data-i18n="profile.held">Held Positions</h3>
-            <div id="profileHeldPositions" class="empty" data-i18n="empty.noHeldPositions">No held positions loaded.</div>
-        </div>
-        <div class="profile-section" data-profile-panel="positionHistory">
-            <h3 data-i18n="profile.history">Position History</h3>
-            <div id="profilePositionHistory" class="empty" data-i18n="empty.noPositionHistory">No position history loaded.</div>
+        <div class="profile-section profile-activity-card" data-profile-panel="activity">
+            <div class="segmented-tabs" data-segmented-tabs="profileActivity" role="tablist" aria-label="Profile activity">
+                <button type="button" class="segmented-tab" data-segmented-tab="positions" aria-selected="true" data-i18n="activity.positions">Positions</button>
+                <button type="button" class="segmented-tab" data-segmented-tab="orders" aria-selected="false" data-i18n="activity.orders">Orders</button>
+                <button type="button" class="segmented-tab" data-segmented-tab="tradeHistory" aria-selected="false" data-i18n="activity.tradeHistory">Trade History</button>
+            </div>
+            <div data-segmented-panel="profileActivity" data-segmented-panel-name="positions">
+                <div id="profileHeldPositions" class="empty" data-i18n="empty.noPositions">No positions loaded.</div>
+            </div>
+            <div data-segmented-panel="profileActivity" data-segmented-panel-name="orders" hidden>
+                <div id="profileOrders" class="empty">Login to load orders</div>
+            </div>
+            <div data-segmented-panel="profileActivity" data-segmented-panel-name="tradeHistory" hidden>
+                <div id="profilePositionHistory" class="empty" data-i18n="empty.noTradeHistory">No trade history loaded.</div>
+            </div>
         </div>
     </div>
     <div id="authError" class="error" hidden></div>
@@ -215,32 +219,45 @@
         <div class="panel orders-panel">
             <div class="panel-heading">
                 <div>
-                    <h2 data-i18n="orders.title">Open Orders</h2>
-                    <div class="helper" data-i18n="orders.helper">Current user's live orders for the selected market.</div>
+                    <h2 data-i18n="activity.title">Trading Activity</h2>
+                    <div class="helper" data-i18n="activity.helper">Positions, orders, and trade history for the selected market.</div>
                 </div>
-                <!-- Open-order refresh is icon-only for the trading workspace while keeping a localized accessible name. -->
+                <!-- Order refresh is icon-only for the trading workspace while keeping a localized accessible name. -->
                 <button id="reloadOrders" type="button" class="secondary icon-button" data-i18n-aria-label="action.reloadOrders" data-i18n-title="action.reloadOrders" aria-label="Reload Orders" title="Reload Orders">
                     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
                         <path d="M21 12a9 9 0 0 1-15.36 6.36l1.42-1.42A7 7 0 0 0 19 12h-3l4-4 4 4h-3ZM3 12A9 9 0 0 1 18.36 5.64l-1.42 1.42A7 7 0 0 0 5 12h3l-4 4-4-4h3Z" fill="currentColor"/>
                     </svg>
                 </button>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                    <tr>
-                        <th data-i18n="table.orderId">Order ID</th>
-                        <th data-i18n="field.market">Market</th>
-                        <th data-i18n="table.side">Side</th>
-                        <th data-i18n="table.type">Type</th>
-                        <th data-i18n="table.price">Price</th>
-                        <th data-i18n="table.qty">Qty</th>
-                        <th data-i18n="table.filled">Filled</th>
-                        <th data-i18n="table.status">Status</th>
-                    </tr>
-                    </thead>
-                    <tbody id="orders"></tbody>
-                </table>
+            <div class="segmented-tabs" data-segmented-tabs="tradingActivity" role="tablist" aria-label="Trading activity">
+                <button type="button" class="segmented-tab" data-segmented-tab="positions" aria-selected="false" data-i18n="activity.positions">Positions</button>
+                <button type="button" class="segmented-tab" data-segmented-tab="orders" aria-selected="true" data-i18n="activity.orders">Orders</button>
+                <button type="button" class="segmented-tab" data-segmented-tab="tradeHistory" aria-selected="false" data-i18n="activity.tradeHistory">Trade History</button>
+            </div>
+            <div data-segmented-panel="tradingActivity" data-segmented-panel-name="positions" hidden>
+                <div id="positions" class="empty" data-i18n="empty.noPositions">No positions loaded.</div>
+            </div>
+            <div data-segmented-panel="tradingActivity" data-segmented-panel-name="orders">
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                        <tr>
+                            <th data-i18n="table.orderId">Order ID</th>
+                            <th data-i18n="field.market">Market</th>
+                            <th data-i18n="table.side">Side</th>
+                            <th data-i18n="table.type">Type</th>
+                            <th data-i18n="table.price">Price</th>
+                            <th data-i18n="table.qty">Qty</th>
+                            <th data-i18n="table.filled">Filled</th>
+                            <th data-i18n="table.status">Status</th>
+                        </tr>
+                        </thead>
+                        <tbody id="orders"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div data-segmented-panel="tradingActivity" data-segmented-panel-name="tradeHistory" hidden>
+                <div id="tradeHistory" class="empty" data-i18n="empty.noTradeHistory">No trade history loaded.</div>
             </div>
         </div>
     </section>

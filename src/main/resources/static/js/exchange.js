@@ -6,7 +6,7 @@ const PENDING_REGISTRATION_EMAIL_KEY = 'exchangePendingRegistrationEmail';
 const translations = {
     en: {
         'page.title': 'Exchange Console',
-        'page.subtitle': 'Trade perpetual markets with live order book depth, order entry, open orders, and account risk.',
+        'page.subtitle': 'Trade perpetual markets with live order book depth, order entry, positions, orders, and account risk.',
         'language.label': 'Language',
         'tab.trade': 'Trade',
         'profile.open': 'Open Profile',
@@ -14,10 +14,15 @@ const translations = {
         'profile.title': 'Profile',
         'profile.funds': 'Personal Funds',
         'profile.frozen': 'Frozen Funds',
-        'profile.orders': 'Open Orders',
-        'profile.held': 'Held Positions',
-        'profile.history': 'Position History',
+        'profile.orders': 'Orders',
+        'profile.held': 'Positions',
+        'profile.history': 'Trade History',
         'profile.orderHold': 'Open Order Hold',
+        'activity.title': 'Trading Activity',
+        'activity.helper': 'Positions, orders, and trade history for the selected market.',
+        'activity.positions': 'Positions',
+        'activity.orders': 'Orders',
+        'activity.tradeHistory': 'Trade History',
         'market.helper': 'Select an available market and trade against live book liquidity.',
         'field.market': 'Market',
         'field.email': 'Email',
@@ -51,7 +56,7 @@ const translations = {
         'book.spread': 'Spread',
         'book.depth': 'Ticks / side',
         'order.title': 'Place Order',
-        'orders.title': 'Open Orders',
+        'orders.title': 'Orders',
         'orders.helper': "Current user's live orders for the selected market.",
         'table.orderId': 'Order ID',
         'table.side': 'Side',
@@ -64,11 +69,13 @@ const translations = {
         'empty.authState': 'Not logged in.',
         'empty.accountRaw': 'No account loaded.',
         'empty.orderResult': 'No order submitted.',
-        'empty.loginForOrders': 'Login and refresh to load open orders',
+        'empty.loginForOrders': 'Login to load orders',
         'empty.book': 'Runtime order book is empty',
-        'empty.noOpenOrders': 'No open orders',
-        'empty.noHeldPositions': 'No held positions loaded.',
-        'empty.noPositionHistory': 'No position history loaded.',
+        'empty.noOpenOrders': 'No active orders',
+        'empty.noHeldPositions': 'No positions loaded.',
+        'empty.noPositionHistory': 'No trade history loaded.',
+        'empty.noPositions': 'No positions loaded.',
+        'empty.noTradeHistory': 'No trade history loaded.',
         'status.authenticated': 'Authenticated',
         'status.notLoggedIn': 'Not logged in',
         'status.sessionUnavailable': 'Session unavailable. Please login again.',
@@ -86,12 +93,12 @@ const translations = {
         'error.invalidCredentials': 'Account not found or password is incorrect.',
         'error.registrationPending': 'Registration verification is already in progress. Enter the email code or try again later.',
         'error.alreadyRegistered': 'This email is already registered. Please login instead.',
-        'notice.bookRecovered': 'Open orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
+        'notice.bookRecovered': 'Orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
         'error.loginBeforeOrder': 'Please login before placing orders.'
     },
     'zh-TW': {
         'page.title': '交易所前台',
-        'page.subtitle': '交易永續合約市場，查看即時訂單簿深度、下單、開放訂單與帳戶風險。',
+        'page.subtitle': '交易永續合約市場，查看即時訂單簿深度、下單、倉位、委託與帳戶風險。',
         'language.label': '語言',
         'tab.trade': '交易',
         'profile.open': '開啟個人資料',
@@ -101,8 +108,13 @@ const translations = {
         'profile.frozen': '凍結資金',
         'profile.orders': '委託',
         'profile.held': '持有倉位',
-        'profile.history': '歷史開關倉位',
+        'profile.history': '歷史交易資訊',
         'profile.orderHold': '委託凍結',
+        'activity.title': '交易資訊',
+        'activity.helper': '所選市場的倉位、委託與歷史交易資訊。',
+        'activity.positions': '倉位',
+        'activity.orders': '委託',
+        'activity.tradeHistory': '歷史交易資訊',
         'market.helper': '選擇可用市場，並直接與即時訂單簿流動性交易。',
         'field.market': '市場',
         'field.email': '電子信箱',
@@ -136,7 +148,7 @@ const translations = {
         'book.spread': '價差',
         'book.depth': '每邊 ticks',
         'order.title': '下單',
-        'orders.title': '開放訂單',
+        'orders.title': '委託',
         'orders.helper': '目前使用者在所選市場的即時訂單。',
         'table.orderId': '訂單 ID',
         'table.side': '方向',
@@ -149,11 +161,13 @@ const translations = {
         'empty.authState': '尚未登入。',
         'empty.accountRaw': '尚未載入帳戶。',
         'empty.orderResult': '尚未送出訂單。',
-        'empty.loginForOrders': '登入並重新整理以載入開放訂單',
+        'empty.loginForOrders': '登入後載入委託',
         'empty.book': '即時訂單簿為空',
-        'empty.noOpenOrders': '沒有開放訂單',
-        'empty.noHeldPositions': '尚未載入持有倉位。',
-        'empty.noPositionHistory': '尚未載入歷史開關倉位。',
+        'empty.noOpenOrders': '沒有進行中的委託',
+        'empty.noHeldPositions': '尚未載入倉位。',
+        'empty.noPositionHistory': '尚未載入歷史交易資訊。',
+        'empty.noPositions': '尚未載入倉位。',
+        'empty.noTradeHistory': '尚未載入歷史交易資訊。',
         'status.authenticated': '已驗證',
         'status.notLoggedIn': '尚未登入',
         'status.sessionUnavailable': 'Session 不可用，請重新登入。',
@@ -171,12 +185,12 @@ const translations = {
         'error.invalidCredentials': '查無此帳號或密碼錯誤。',
         'error.registrationPending': '此帳號已有註冊驗證進行中，請輸入信箱驗證碼或稍後再試。',
         'error.alreadyRegistered': '此信箱已註冊，請直接登入。',
-        'notice.bookRecovered': '開放訂單已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
+        'notice.bookRecovered': '委託已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
         'error.loginBeforeOrder': '下單前請先登入。'
     },
     ms: {
         'page.title': 'Konsol Bursa',
-        'page.subtitle': 'Dagangkan pasaran perpetual dengan kedalaman buku langsung, kemasukan pesanan, pesanan terbuka dan risiko akaun.',
+        'page.subtitle': 'Dagangkan pasaran perpetual dengan kedalaman buku langsung, kemasukan pesanan, posisi, pesanan dan risiko akaun.',
         'language.label': 'Bahasa',
         'tab.trade': 'Dagangan',
         'profile.open': 'Buka Profil',
@@ -184,10 +198,15 @@ const translations = {
         'profile.title': 'Profil',
         'profile.funds': 'Dana Peribadi',
         'profile.frozen': 'Dana Dibekukan',
-        'profile.orders': 'Pesanan Terbuka',
-        'profile.held': 'Posisi Dipegang',
-        'profile.history': 'Sejarah Posisi',
+        'profile.orders': 'Pesanan',
+        'profile.held': 'Posisi',
+        'profile.history': 'Sejarah Dagangan',
         'profile.orderHold': 'Pegangan Pesanan Terbuka',
+        'activity.title': 'Aktiviti Dagangan',
+        'activity.helper': 'Posisi, pesanan dan sejarah dagangan untuk pasaran dipilih.',
+        'activity.positions': 'Posisi',
+        'activity.orders': 'Pesanan',
+        'activity.tradeHistory': 'Sejarah Dagangan',
         'market.helper': 'Pilih pasaran tersedia dan berdagang dengan kecairan buku langsung.',
         'field.market': 'Pasaran',
         'field.email': 'E-mel',
@@ -221,7 +240,7 @@ const translations = {
         'book.spread': 'Spread',
         'book.depth': 'Ticks / sisi',
         'order.title': 'Buat Pesanan',
-        'orders.title': 'Pesanan Terbuka',
+        'orders.title': 'Pesanan',
         'orders.helper': 'Pesanan langsung pengguna semasa untuk pasaran dipilih.',
         'table.orderId': 'ID Pesanan',
         'table.side': 'Arah',
@@ -234,11 +253,13 @@ const translations = {
         'empty.authState': 'Belum log masuk.',
         'empty.accountRaw': 'Tiada akaun dimuatkan.',
         'empty.orderResult': 'Tiada pesanan dihantar.',
-        'empty.loginForOrders': 'Log masuk dan muat semula untuk memuat pesanan terbuka',
+        'empty.loginForOrders': 'Log masuk untuk memuat pesanan',
         'empty.book': 'Buku pesanan runtime kosong',
-        'empty.noOpenOrders': 'Tiada pesanan terbuka',
-        'empty.noHeldPositions': 'Tiada posisi dipegang dimuatkan.',
-        'empty.noPositionHistory': 'Tiada sejarah posisi dimuatkan.',
+        'empty.noOpenOrders': 'Tiada pesanan aktif',
+        'empty.noHeldPositions': 'Tiada posisi dimuatkan.',
+        'empty.noPositionHistory': 'Tiada sejarah dagangan dimuatkan.',
+        'empty.noPositions': 'Tiada posisi dimuatkan.',
+        'empty.noTradeHistory': 'Tiada sejarah dagangan dimuatkan.',
         'status.authenticated': 'Disahkan',
         'status.notLoggedIn': 'Belum log masuk',
         'status.sessionUnavailable': 'Sesi tidak tersedia. Sila log masuk semula.',
@@ -256,12 +277,12 @@ const translations = {
         'error.invalidCredentials': 'Akaun tidak ditemui atau kata laluan salah.',
         'error.registrationPending': 'Pengesahan pendaftaran sedang berjalan. Masukkan kod e-mel atau cuba lagi kemudian.',
         'error.alreadyRegistered': 'E-mel ini sudah didaftarkan. Sila log masuk.',
-        'notice.bookRecovered': 'Pesanan terbuka telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
+        'notice.bookRecovered': 'Pesanan telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
         'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
     },
     ko: {
         'page.title': '거래소 콘솔',
-        'page.subtitle': '실시간 호가창 깊이, 주문 입력, 미체결 주문, 계정 리스크로 무기한 시장을 거래하세요.',
+        'page.subtitle': '실시간 호가창 깊이, 주문 입력, 포지션, 주문, 계정 리스크로 무기한 시장을 거래하세요.',
         'language.label': '언어',
         'tab.trade': '거래',
         'profile.open': '프로필 열기',
@@ -269,10 +290,15 @@ const translations = {
         'profile.title': '프로필',
         'profile.funds': '개인 자금',
         'profile.frozen': '동결 자금',
-        'profile.orders': '미체결 주문',
-        'profile.held': '보유 포지션',
-        'profile.history': '포지션 내역',
+        'profile.orders': '주문',
+        'profile.held': '포지션',
+        'profile.history': '거래 내역',
         'profile.orderHold': '미체결 주문 동결',
+        'activity.title': '거래 정보',
+        'activity.helper': '선택한 시장의 포지션, 주문, 거래 내역입니다.',
+        'activity.positions': '포지션',
+        'activity.orders': '주문',
+        'activity.tradeHistory': '거래 내역',
         'market.helper': '사용 가능한 시장을 선택하고 실시간 호가창 유동성과 거래하세요.',
         'field.market': '시장',
         'field.email': '이메일',
@@ -306,7 +332,7 @@ const translations = {
         'book.spread': '스프레드',
         'book.depth': '한쪽 ticks',
         'order.title': '주문 입력',
-        'orders.title': '미체결 주문',
+        'orders.title': '주문',
         'orders.helper': '선택한 시장에서 현재 사용자의 실시간 주문입니다.',
         'table.orderId': '주문 ID',
         'table.side': '방향',
@@ -319,11 +345,13 @@ const translations = {
         'empty.authState': '로그인하지 않았습니다.',
         'empty.accountRaw': '계정이 로드되지 않았습니다.',
         'empty.orderResult': '아직 주문을 제출하지 않았습니다.',
-        'empty.loginForOrders': '로그인 후 새로고침하여 미체결 주문을 불러오세요',
+        'empty.loginForOrders': '로그인하여 주문을 불러오세요',
         'empty.book': '런타임 호가창이 비어 있습니다',
-        'empty.noOpenOrders': '미체결 주문 없음',
-        'empty.noHeldPositions': '로드된 보유 포지션이 없습니다.',
-        'empty.noPositionHistory': '로드된 포지션 내역이 없습니다.',
+        'empty.noOpenOrders': '진행 중인 주문 없음',
+        'empty.noHeldPositions': '로드된 포지션이 없습니다.',
+        'empty.noPositionHistory': '로드된 거래 내역이 없습니다.',
+        'empty.noPositions': '로드된 포지션이 없습니다.',
+        'empty.noTradeHistory': '로드된 거래 내역이 없습니다.',
         'status.authenticated': '인증됨',
         'status.notLoggedIn': '로그인하지 않음',
         'status.sessionUnavailable': '세션을 사용할 수 없습니다. 다시 로그인하세요.',
@@ -341,7 +369,7 @@ const translations = {
         'error.invalidCredentials': '계정을 찾을 수 없거나 비밀번호가 올바르지 않습니다.',
         'error.registrationPending': '가입 인증이 이미 진행 중입니다. 이메일 코드를 입력하거나 나중에 다시 시도하세요.',
         'error.alreadyRegistered': '이미 가입된 이메일입니다. 로그인하세요.',
-        'notice.bookRecovered': '미체결 주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
+        'notice.bookRecovered': '주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
         'error.loginBeforeOrder': '주문 전에 로그인하세요.'
     }
 };
@@ -410,7 +438,7 @@ const authConfig = {
     emailVerificationEnabled: false
 };
 
-// Page state compares runtime order book depth with persisted open orders for clearer MVP diagnostics.
+// Page state compares runtime order book depth with persisted active orders for clearer MVP diagnostics.
 const marketState = {
     depthEmpty: true,
     openOrderCount: 0,
@@ -474,6 +502,21 @@ function setActiveTab(tabName) {
     });
     document.querySelectorAll('[data-tab-panel]').forEach(panel => {
         panel.hidden = panel.dataset.tabPanel !== tabName;
+    });
+}
+
+function setSegmentedTab(scope, tabName) {
+    const tabList = document.querySelector(`[data-segmented-tabs="${scope}"]`);
+    if (!tabList) {
+        return;
+    }
+    // Segmented tabs are scoped to one activity card, so profile tab changes never hide trading-page panels.
+    tabList.querySelectorAll('[data-segmented-tab]').forEach(button => {
+        const active = button.dataset.segmentedTab === tabName;
+        button.setAttribute('aria-selected', String(active));
+    });
+    document.querySelectorAll(`[data-segmented-panel="${scope}"]`).forEach(panel => {
+        panel.hidden = panel.dataset.segmentedPanelName !== tabName;
     });
 }
 
@@ -1359,6 +1402,15 @@ $('placeSell').addEventListener('click', () => placeOrder('SELL'));
 document.querySelectorAll('[data-tab]').forEach(button => {
     button.addEventListener('click', () => setActiveTab(button.dataset.tab));
 });
+document.querySelectorAll('[data-segmented-tabs]').forEach(tabList => {
+    tabList.addEventListener('click', (event) => {
+        const button = event.target.closest('[data-segmented-tab]');
+        if (!button) {
+            return;
+        }
+        setSegmentedTab(tabList.dataset.segmentedTabs, button.dataset.segmentedTab);
+    });
+});
 $('profileToggle').addEventListener('click', () => toggleProfilePanel());
 $('profileClose').addEventListener('click', () => toggleProfilePanel(false));
 setCurrentLanguage(currentLanguage, { render: false });
@@ -1381,6 +1433,8 @@ fields.uid.addEventListener('change', () => Promise.allSettled([loadOrders(), lo
 applyTranslations();
 syncSymbolTitle();
 setActiveTab('trade');
+setSegmentedTab('tradingActivity', 'orders');
+setSegmentedTab('profileActivity', 'positions');
 renderProfileOrders([]);
 setUserIdentity(null);
 syncAuthenticatedUi();

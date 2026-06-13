@@ -112,7 +112,7 @@ test('exchange console renders client trading workflow without admin funding con
       }
     ];
     if (openOrderRequests > 1) {
-      // Scenario: user WebSocket lifecycle signals should refresh open orders without pressing Reload Orders.
+      // Scenario: user WebSocket lifecycle signals should refresh active orders without pressing Reload Orders.
       orders.push({
         orderId: 'order-live-refresh',
         symbol: 'BTCUSDT',
@@ -161,7 +161,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.getByRole('heading', { name: 'Exchange Console' })).toBeVisible();
   // Scenario: the prod-facing client shell must not expose privileged admin navigation.
   await expect(page.getByRole('link', { name: 'Admin Console' })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Trade' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.getByRole('button', { name: 'Trade', exact: true })).toHaveAttribute('aria-selected', 'true');
   await expect(page.locator('.order-entry #symbol')).toHaveValue('BTCUSDT');
   await expect(page.locator('.order-entry #symbol option')).toHaveText(['BTCUSDT', 'ETHUSDT']);
   await expect(page.getByRole('button', { name: 'Reload Market' })).toHaveCount(0);
@@ -208,9 +208,14 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#available')).toHaveCount(0);
   await expect(page.locator('#frozen')).toHaveCount(0);
   await expect(page.locator('#positionMargin')).toHaveCount(0);
-  await expect(page.locator('[data-profile-panel="orders"]')).toContainText('order-live-r');
-  await expect(page.locator('[data-profile-panel="heldPositions"]')).toBeVisible();
-  await expect(page.locator('[data-profile-panel="positionHistory"]')).toBeVisible();
+  await expect(page.locator('[data-profile-panel="activity"]')).toBeVisible();
+  await expect(page.locator('[data-segmented-tabs="profileActivity"]')).toContainText('Positions');
+  await expect(page.locator('[data-segmented-tabs="profileActivity"]')).toContainText('Orders');
+  await expect(page.locator('[data-segmented-tabs="profileActivity"]')).toContainText('Trade History');
+  await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="orders"]').click();
+  await expect(page.locator('[data-segmented-panel="profileActivity"][data-segmented-panel-name="orders"]')).toContainText('order-live-r');
+  await page.locator('[data-segmented-tabs="profileActivity"] [data-segmented-tab="tradeHistory"]').click();
+  await expect(page.locator('#profilePositionHistory')).toBeVisible();
   await expect(page.locator('[data-profile-panel="categoryInfo"]')).toHaveCount(0);
   await expect(page.locator('[data-profile-panel="frozen"]')).toHaveCount(0);
   await expect(page.locator('#profileSectionSummary')).toHaveCount(0);
@@ -218,7 +223,10 @@ test('exchange console renders client trading workflow without admin funding con
   await page.locator('#profileClose').click();
   await expect(page.locator('#profilePanel')).toBeHidden();
   await expect(page.locator('[data-tab="account"]')).toHaveCount(0);
-  // Layout guard: client trading keeps book/order entry first, then open orders, with account details behind a tab.
+  await expect(page.locator('[data-segmented-tabs="tradingActivity"]')).toContainText('Positions');
+  await expect(page.locator('[data-segmented-tabs="tradingActivity"]')).toContainText('Orders');
+  await expect(page.locator('[data-segmented-tabs="tradingActivity"]')).toContainText('Trade History');
+  // Layout guard: client trading keeps book/order entry first, then trading activity below, with account details behind profile.
   const layout = await page.evaluate(() => {
     const rect = (selector) => {
       const box = document.querySelector(selector).getBoundingClientRect();
@@ -251,7 +259,7 @@ test('exchange console renders client trading workflow without admin funding con
   await expect(page.locator('#profileBalance')).toHaveText('-');
   await expect(page.locator('#authState')).toBeHidden();
   await expect(page.locator('#accountRaw')).toBeHidden();
-  await expect(page.locator('#orders')).toContainText('Login and refresh to load open orders');
+  await expect(page.locator('#orders')).toContainText('Login to load orders');
   await expect(page.locator('#orderResult')).toContainText('No order submitted');
   await expect(page.locator('#authCard')).toBeVisible();
   await expect(page.locator('#profileContent')).toBeHidden();
