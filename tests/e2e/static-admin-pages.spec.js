@@ -2,6 +2,17 @@ import { expect, test } from '@playwright/test';
 
 const ok = (data) => ({ ok: true, data });
 
+test('exchange admin shell is the unified operator entry', async ({ page }) => {
+  // Scenario: operator navigation starts from exchange-admin.html and embeds tool pages as tabs.
+  await page.goto('/exchange-admin.html', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Admin Console' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Client Exchange' })).toHaveAttribute('href', '/exchange.html');
+  await expect(page.getByRole('button', { name: 'Test Funds' })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('button', { name: 'Market Makers' }).click();
+  await expect(page.getByRole('button', { name: 'Market Makers' })).toHaveAttribute('aria-selected', 'true');
+  await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-maker.html?embed=1');
+});
+
 test('exchange console renders client trading workflow without admin funding controls', async ({ page }) => {
   // Scenario: authenticated client loads markets from admin config and cannot type arbitrary symbols or UIDs.
   await page.addInitScript(() => {
