@@ -31,6 +31,14 @@ test('exchange admin shell is the unified operator entry', async ({ page }) => {
 
 test('market maker admin uses a production operator console without raw responses', async ({ page }) => {
   // Scenario: operators need a compact console where disabled makers remain recoverable and row details own ops state.
+  await page.addInitScript(() => {
+    const now = Date.now();
+    localStorage.setItem('marketMakerAdminMessages', JSON.stringify([
+      { id: 'old-visible', message: 'Older visible message', createdAt: now - 60_000 },
+      { id: 'expired-hidden', message: 'Expired hidden message', createdAt: now - 25 * 60 * 60 * 1000 },
+      { id: 'new-visible', message: 'Newest visible message', createdAt: now }
+    ]));
+  });
   await page.route('**/api/market-maker/profiles', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
@@ -95,6 +103,10 @@ test('market maker admin uses a production operator console without raw response
       refPrefix: 'auto-mm'
     }))
   }));
+  await page.route('**/api/market-maker/auto-quote/run-once', async (route) => {
+    // Scenario: manual quote refresh should record a durable operator confirmation in the message center.
+    await route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ refreshed: true })) });
+  });
   await page.route('**/api/market-maker/profiles/mm-alpha/hedge-reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
   await page.route('**/api/market-maker/profiles/mm-alpha/hedge-fills?limit=20', async (route) => route.fulfill({
     contentType: 'application/json',
@@ -122,6 +134,15 @@ test('market maker admin uses a production operator console without raw response
   await expect(page.locator('.strategy-detail')).toContainText('50');
   await expect(page.locator('.strategy-detail')).toContainText('bid-1');
   await expect(page.locator('.strategy-detail')).toContainText('hedge-1');
+  await page.getByRole('button', { name: 'Open message center' }).click();
+  await expect(page.locator('#messageList')).toContainText('Newest visible message');
+  await expect(page.locator('#messageList')).toContainText('Older visible message');
+  await expect(page.locator('#messageList')).not.toContainText('Expired hidden message');
+  await expect(page.locator('#messageList .message-item').first()).toContainText('Newest visible message');
+  await page.getByRole('button', { name: 'Open message center' }).click();
+  await page.getByRole('button', { name: 'Refresh Maker Quotes' }).click();
+  await page.getByRole('button', { name: 'Open message center' }).click();
+  await expect(page.locator('#messageList .message-item').first()).toContainText('Quote ladder refresh completed.');
   await page.getByRole('row', { name: /mm-alpha/ }).getByRole('button', { name: 'Edit' }).click();
   await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeVisible();
   await page.getByRole('button', { name: 'Close form' }).click();

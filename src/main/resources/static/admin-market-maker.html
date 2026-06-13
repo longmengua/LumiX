@@ -225,23 +225,55 @@
         }
 
         .expand-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             width: 28px;
             min-width: 28px;
+            height: 28px;
             min-height: 28px;
             padding: 0;
             border-color: var(--line);
             background: #fff;
             color: var(--text);
-            font-size: 16px;
+            line-height: 0;
+        }
+
+        .expand-button svg {
+            width: 16px;
+            height: 16px;
+            stroke: currentColor;
+            stroke-width: 2.3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            fill: none;
+        }
+
+        .profile-table th {
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .profile-table td {
+            text-align: center;
+            vertical-align: middle;
         }
 
         .profile-summary {
             display: grid;
             gap: 4px;
+            justify-items: start;
         }
 
         .profile-summary strong {
-            font-size: 14px;
+            font-size: 15px;
+            line-height: 1.2;
+        }
+
+        .profile-summary span {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.25;
         }
 
         .strategy-detail {
@@ -378,7 +410,7 @@
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            z-index: 21;
+            z-index: 40;
             display: grid;
             place-items: center;
             padding: 24px;
@@ -563,7 +595,122 @@
         .row-actions {
             display: flex;
             flex-wrap: wrap;
+            justify-content: center;
             gap: 6px;
+        }
+
+        .message-center {
+            position: fixed;
+            right: 16px;
+            top: 16px;
+            z-index: 30;
+        }
+
+        .message-center-toggle {
+            position: relative;
+            width: 38px;
+            min-width: 38px;
+            min-height: 38px;
+            padding: 0;
+            border-radius: 50%;
+            box-shadow: 0 10px 24px rgba(23, 32, 51, 0.16);
+            font-size: 18px;
+        }
+
+        .message-badge {
+            position: absolute;
+            right: -4px;
+            top: -4px;
+            min-width: 18px;
+            height: 18px;
+            border: 2px solid #fff;
+            border-radius: 999px;
+            background: var(--danger);
+            color: #fff;
+            font-size: 11px;
+            line-height: 14px;
+            text-align: center;
+        }
+
+        .message-badge[hidden] {
+            display: none;
+        }
+
+        .message-panel {
+            position: absolute;
+            right: 0;
+            top: 46px;
+            display: grid;
+            gap: 8px;
+            width: min(380px, calc(100vw - 32px));
+            max-height: min(620px, calc(100vh - 78px));
+            overflow: auto;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 18px 48px rgba(23, 32, 51, 0.22);
+            padding: 10px;
+        }
+
+        .message-panel[hidden] {
+            display: none;
+        }
+
+        .message-panel h3 {
+            padding: 2px 4px 6px;
+        }
+
+        .action-hint {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .message-list {
+            display: grid;
+            gap: 8px;
+        }
+
+        .message-item {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 12px;
+            border: 1px solid #93d8c9;
+            border-left: 5px solid var(--accent);
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 12px 30px rgba(23, 32, 51, 0.18);
+            color: var(--text);
+            padding: 12px 10px 12px 14px;
+            line-height: 1.4;
+        }
+
+        .message-item span {
+            display: grid;
+            gap: 3px;
+        }
+
+        .message-time {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .message-item button {
+            min-width: 28px;
+            min-height: 28px;
+            border: 0;
+            background: transparent;
+            color: var(--muted);
+            padding: 0;
+            font-size: 20px;
+            line-height: 1;
+        }
+
+        .message-empty {
+            color: var(--muted);
+            padding: 8px 4px;
+            line-height: 1.4;
         }
 
         @media (max-width: 1040px) {
@@ -660,13 +807,13 @@
             <article class="tutorial-step">
                 <div>
                     <h3 data-i18n="tutorial.quote.title">2. Run auto quote once</h3>
-                    <p data-i18n="tutorial.quote.body">Run Auto Quote Once generates a bid/ask ladder from the current book midpoint. Active Quotes shows accepted quote state and the bid/ask order IDs.</p>
+                    <p data-i18n="tutorial.quote.body">Refresh Maker Quotes recalculates a bid/ask ladder from the current book midpoint and replaces tracked maker orders.</p>
                 </div>
                 <div class="tutorial-shot" aria-hidden="true">
                     <div class="shot-bar"><span class="shot-dot"></span><span class="shot-dot"></span><span class="shot-dot"></span></div>
                     <div class="shot-content">
                         <div class="shot-row">
-                            <div class="shot-box accent">Run Auto Quote Once</div>
+                            <div class="shot-box accent">Refresh Maker Quotes</div>
                             <div class="shot-box">Auto Quote: OFF / 300ms</div>
                         </div>
                         <div class="shot-table">
@@ -727,11 +874,12 @@
                 </div>
                 <span id="profileCount" class="pill">0</span>
             </div>
-            <table>
+            <table class="profile-table">
                 <thead>
                 <tr>
                     <th></th>
-                    <th data-i18n="table.marketMaker">Market Maker</th>
+                    <th data-i18n="table.marketMaker">Market Maker Name</th>
+                    <th data-i18n="table.symbols">Symbols</th>
                     <th>UID</th>
                     <th data-i18n="table.enabled">Enabled</th>
                     <th data-i18n="table.strategies">Strategies</th>
@@ -804,9 +952,23 @@
     </section>
 </div>
 
+<!-- Message center persists short operator confirmations without exposing raw API response payloads. -->
+<div id="messageCenter" class="message-center">
+    <button id="messageCenterToggle" type="button" class="message-center-toggle" data-i18n-title="message.open" aria-label="Messages" title="Messages">
+        ✉
+        <span id="messageBadge" class="message-badge" hidden>0</span>
+    </button>
+    <section id="messagePanel" class="message-panel" hidden>
+        <h3 data-i18n="message.title">Messages</h3>
+        <div id="messageList" class="message-list"></div>
+    </section>
+</div>
+
 <script>
     const $ = (id) => document.getElementById(id);
     const I18N_STORAGE_KEY = 'exchangeLanguage';
+    const MESSAGE_STORAGE_KEY = 'marketMakerAdminMessages';
+    const MESSAGE_TTL_MS = 24 * 60 * 60 * 1000;
     const translations = {
         en: {
             'page.title': 'Admin Market Maker',
@@ -817,8 +979,8 @@
             'tutorial.subtitle': 'Follow these steps to create strategy limits, publish quote ladders, and inspect hedge status.',
             'tutorial.profile.title': '1. Save a market-maker strategy',
             'tutorial.profile.body': 'Enter the market-maker ID, UID, symbol, notional limits, slippage limit, and kill switch state. Save Strategy persists the profile and the per-symbol risk limit.',
-            'tutorial.quote.title': '2. Run auto quote once',
-            'tutorial.quote.body': 'Run Auto Quote Once generates a bid/ask ladder from the current book midpoint. Market-Making Orders shows the currently tracked bid/ask orders.',
+            'tutorial.quote.title': '2. Refresh maker quotes',
+            'tutorial.quote.body': 'Refresh Maker Quotes recalculates one bid/ask ladder from the current book midpoint and replaces the tracked maker orders. It does not enable the continuous auto quote runner.',
             'tutorial.hedge.title': '3. Inspect hedge and repair state',
             'tutorial.hedge.body': 'Select the market maker, run hedge execution when needed, then check Hedge Issues, Recent Hedge Fills, and Idempotency Issues for unresolved venue outcomes.',
             'language.label': 'Language',
@@ -836,7 +998,7 @@
             'action.edit': 'Edit',
             'action.cancel': 'Cancel',
             'action.saveStrategy': 'Save Strategy',
-            'action.runAutoQuote': 'Run Auto Quote Once',
+            'action.runAutoQuote': 'Refresh Maker Quotes',
             'action.runHedge': 'Run Hedge',
             'action.reconcileIdempotency': 'Reconcile Idempotency',
             'action.enable': 'Enable',
@@ -853,6 +1015,18 @@
             'placeholder.searchMarketMaker': 'Search by ID, UID, or symbol',
             'modal.profileTitle': 'Market Maker Form',
             'modal.close': 'Close form',
+            'message.open': 'Open message center',
+            'message.title': 'Messages',
+            'message.empty': 'No messages in the last 24 hours.',
+            'message.close': 'Close message',
+            'message.reloadSuccess': 'Market-maker console refreshed.',
+            'message.profileSaved': 'Market-maker strategy saved.',
+            'message.enabled': 'Market maker enabled.',
+            'message.disabled': 'Market maker disabled.',
+            'message.autoQuoteSuccess': 'Quote ladder refresh completed.',
+            'message.hedgeSuccess': 'Hedge execution completed.',
+            'message.idempotencySuccess': 'Idempotency reconciliation completed.',
+            'hint.refreshQuotes': 'Recalculates one bid/ask ladder and replaces tracked maker orders; it does not start continuous quoting.',
             'metric.activeQuotes': 'Market-Making Orders',
             'metric.quoteIssues': 'Quote Issues',
             'metric.hedgeIssues': 'Hedge Issues',
@@ -863,7 +1037,8 @@
             'metric.quantity': 'Quote Qty',
             'metric.spread': 'Half Spread',
             'metric.pulse': 'Pulse',
-            'table.marketMaker': 'Market Maker',
+            'table.marketMaker': 'Market Maker Name',
+            'table.symbols': 'Symbols',
             'table.enabled': 'Enabled',
             'table.strategies': 'Strategies',
             'table.actions': 'Actions',
@@ -895,8 +1070,8 @@
             'tutorial.subtitle': '依序建立策略限制、送出報價 ladder，並檢查對沖狀態。',
             'tutorial.profile.title': '1. 儲存做市商策略',
             'tutorial.profile.body': '輸入做市商 ID、UID、交易對、名目限制、滑價限制與 kill switch 狀態。儲存策略會保存 profile 與單一交易對風控限制。',
-            'tutorial.quote.title': '2. 執行一次自動報價',
-            'tutorial.quote.body': '執行一次自動報價會用目前訂單簿中間價產生買賣雙邊 ladder。做市掛單狀態會顯示目前被追蹤的 bid/ask 掛單。',
+            'tutorial.quote.title': '2. 刷新做市掛單',
+            'tutorial.quote.body': '立即刷新做市掛單會用目前訂單簿中間價重新計算一輪買賣雙邊 ladder，並替換被追蹤的做市掛單；它不是啟動背景持續做市。',
             'tutorial.hedge.title': '3. 檢查對沖與修復狀態',
             'tutorial.hedge.body': '選取做市商，需要時執行對沖，接著查看對沖問題、近期對沖成交與冪等問題，確認是否有未解的外部 venue 結果。',
             'language.label': '語言',
@@ -914,7 +1089,7 @@
             'action.edit': '編輯',
             'action.cancel': '取消',
             'action.saveStrategy': '儲存策略',
-            'action.runAutoQuote': '執行一次自動報價',
+            'action.runAutoQuote': '立即刷新做市掛單',
             'action.runHedge': '執行對沖',
             'action.reconcileIdempotency': '重整冪等狀態',
             'action.enable': '啟用',
@@ -931,6 +1106,18 @@
             'placeholder.searchMarketMaker': '依 ID、UID 或交易對搜尋',
             'modal.profileTitle': '做市商表單',
             'modal.close': '關閉表單',
+            'message.open': '開啟訊息中心',
+            'message.title': '訊息中心',
+            'message.empty': '最近 24 小時沒有訊息。',
+            'message.close': '關閉訊息',
+            'message.reloadSuccess': '做市商後台已重新整理。',
+            'message.profileSaved': '做市商策略已儲存。',
+            'message.enabled': '做市商已啟用。',
+            'message.disabled': '做市商已停用。',
+            'message.autoQuoteSuccess': '做市掛單已刷新完成。',
+            'message.hedgeSuccess': '對沖執行已完成。',
+            'message.idempotencySuccess': '冪等狀態已重整完成。',
+            'hint.refreshQuotes': '重新計算一輪買賣雙邊 ladder，並替換目前追蹤的做市掛單；不會啟動背景持續做市。',
             'metric.activeQuotes': '做市掛單',
             'metric.quoteIssues': '報價問題',
             'metric.hedgeIssues': '對沖問題',
@@ -941,7 +1128,8 @@
             'metric.quantity': '掛單數量',
             'metric.spread': '半價差',
             'metric.pulse': '脈衝',
-            'table.marketMaker': '做市商',
+            'table.marketMaker': '做市商名稱',
+            'table.symbols': '交易對',
             'table.enabled': '啟用',
             'table.strategies': '策略',
             'table.actions': '操作',
@@ -974,7 +1162,7 @@
             'tutorial.profile.title': '1. Simpan strategi pembuat pasaran',
             'tutorial.profile.body': 'Masukkan ID pembuat pasaran, UID, simbol, had notional, had slippage dan status kill switch. Save Strategy menyimpan profil dan had risiko setiap simbol.',
             'tutorial.quote.title': '2. Jalankan auto quote sekali',
-            'tutorial.quote.body': 'Run Auto Quote Once menjana ladder bid/ask daripada midpoint buku pesanan semasa. Pesanan pembuat pasaran menunjukkan pesanan bid/ask yang sedang dijejaki.',
+            'tutorial.quote.body': 'Refresh Maker Quotes mengira semula satu ladder bid/ask daripada midpoint buku pesanan semasa dan menggantikan pesanan pembuat pasaran yang dijejaki. Ia tidak menghidupkan runner auto quote berterusan.',
             'tutorial.hedge.title': '3. Semak hedge dan status pembaikan',
             'tutorial.hedge.body': 'Pilih pembuat pasaran, jalankan hedge bila perlu, kemudian semak Hedge Issues, Recent Hedge Fills dan Idempotency Issues untuk hasil venue yang belum selesai.',
             'language.label': 'Bahasa',
@@ -992,7 +1180,7 @@
             'action.edit': 'Edit',
             'action.cancel': 'Batal',
             'action.saveStrategy': 'Simpan Strategi',
-            'action.runAutoQuote': 'Jalankan Auto Quote Sekali',
+            'action.runAutoQuote': 'Segar Semula Quote',
             'action.runHedge': 'Jalankan Hedge',
             'action.reconcileIdempotency': 'Selaras Idempotensi',
             'action.enable': 'Aktifkan',
@@ -1009,6 +1197,18 @@
             'placeholder.searchMarketMaker': 'Cari mengikut ID, UID atau simbol',
             'modal.profileTitle': 'Borang Pembuat Pasaran',
             'modal.close': 'Tutup borang',
+            'message.open': 'Buka pusat mesej',
+            'message.title': 'Mesej',
+            'message.empty': 'Tiada mesej dalam 24 jam terakhir.',
+            'message.close': 'Tutup mesej',
+            'message.reloadSuccess': 'Konsol pembuat pasaran dimuat semula.',
+            'message.profileSaved': 'Strategi pembuat pasaran disimpan.',
+            'message.enabled': 'Pembuat pasaran diaktifkan.',
+            'message.disabled': 'Pembuat pasaran dinyahaktifkan.',
+            'message.autoQuoteSuccess': 'Penyegaran ladder quote selesai.',
+            'message.hedgeSuccess': 'Pelaksanaan hedge selesai.',
+            'message.idempotencySuccess': 'Penyelarasan idempotensi selesai.',
+            'hint.refreshQuotes': 'Mengira semula satu ladder bid/ask dan menggantikan pesanan yang dijejaki; tidak memulakan quoting berterusan.',
             'metric.activeQuotes': 'Pesanan Pembuat Pasaran',
             'metric.quoteIssues': 'Isu Sebut Harga',
             'metric.hedgeIssues': 'Isu Hedge',
@@ -1019,7 +1219,8 @@
             'metric.quantity': 'Kuantiti Quote',
             'metric.spread': 'Separuh Spread',
             'metric.pulse': 'Pulse',
-            'table.marketMaker': 'Pembuat Pasaran',
+            'table.marketMaker': 'Nama Pembuat Pasaran',
+            'table.symbols': 'Simbol',
             'table.enabled': 'Diaktifkan',
             'table.strategies': 'Strategi',
             'table.actions': 'Tindakan',
@@ -1051,8 +1252,8 @@
             'tutorial.subtitle': '전략 한도 생성, 호가 ladder 발행, 헤지 상태 점검 순서로 진행합니다.',
             'tutorial.profile.title': '1. 마켓메이커 전략 저장',
             'tutorial.profile.body': '마켓메이커 ID, UID, 심볼, 명목 한도, 슬리피지 한도, kill switch 상태를 입력합니다. Save Strategy는 프로필과 심볼별 리스크 한도를 저장합니다.',
-            'tutorial.quote.title': '2. 자동 호가 1회 실행',
-            'tutorial.quote.body': 'Run Auto Quote Once는 현재 호가창 midpoint에서 bid/ask ladder를 생성합니다. 마켓메이킹 주문에서 현재 추적 중인 bid/ask 주문을 확인합니다.',
+            'tutorial.quote.title': '2. 메이커 호가 새로고침',
+            'tutorial.quote.body': 'Refresh Maker Quotes는 현재 호가창 midpoint에서 bid/ask ladder 한 번을 다시 계산하고 추적 중인 메이커 주문을 교체합니다. 지속 자동 호가 실행을 켜지는 않습니다.',
             'tutorial.hedge.title': '3. 헤지와 복구 상태 점검',
             'tutorial.hedge.body': '마켓메이커를 선택하고 필요할 때 헤지를 실행한 뒤 Hedge Issues, Recent Hedge Fills, Idempotency Issues에서 미해결 venue 결과를 확인합니다.',
             'language.label': '언어',
@@ -1070,7 +1271,7 @@
             'action.edit': '편집',
             'action.cancel': '취소',
             'action.saveStrategy': '전략 저장',
-            'action.runAutoQuote': '자동 호가 1회 실행',
+            'action.runAutoQuote': '메이커 호가 새로고침',
             'action.runHedge': '헤지 실행',
             'action.reconcileIdempotency': '멱등성 조정',
             'action.enable': '활성화',
@@ -1087,6 +1288,18 @@
             'placeholder.searchMarketMaker': 'ID, UID 또는 심볼로 검색',
             'modal.profileTitle': '마켓메이커 양식',
             'modal.close': '양식 닫기',
+            'message.open': '메시지 센터 열기',
+            'message.title': '메시지',
+            'message.empty': '최근 24시간 메시지가 없습니다.',
+            'message.close': '메시지 닫기',
+            'message.reloadSuccess': '마켓메이커 콘솔을 새로고침했습니다.',
+            'message.profileSaved': '마켓메이커 전략을 저장했습니다.',
+            'message.enabled': '마켓메이커를 활성화했습니다.',
+            'message.disabled': '마켓메이커를 비활성화했습니다.',
+            'message.autoQuoteSuccess': '호가 ladder 새로고침이 완료되었습니다.',
+            'message.hedgeSuccess': '헤지 실행이 완료되었습니다.',
+            'message.idempotencySuccess': '멱등성 조정이 완료되었습니다.',
+            'hint.refreshQuotes': 'bid/ask ladder 한 번을 다시 계산하고 추적 주문을 교체합니다. 지속 호가를 시작하지 않습니다.',
             'metric.activeQuotes': '마켓메이킹 주문',
             'metric.quoteIssues': '호가 이슈',
             'metric.hedgeIssues': '헤지 이슈',
@@ -1097,7 +1310,8 @@
             'metric.quantity': '호가 수량',
             'metric.spread': '반 스프레드',
             'metric.pulse': '펄스',
-            'table.marketMaker': '마켓메이커',
+            'table.marketMaker': '마켓메이커 이름',
+            'table.symbols': '심볼',
             'table.enabled': '활성',
             'table.strategies': '전략',
             'table.actions': '작업',
@@ -1167,6 +1381,8 @@
         expandedMarketMakerIds: new Set()
     };
 
+    let messages = [];
+
     function text(value) {
         return value === null || value === undefined || value === '' ? '-' : String(value);
     }
@@ -1193,6 +1409,81 @@
         el.hidden = true;
     }
 
+    function chevronIcon(expanded) {
+        return expanded
+            ? '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>'
+            : '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"></path></svg>';
+    }
+
+    function pruneMessages(items) {
+        const cutoff = Date.now() - MESSAGE_TTL_MS;
+        return (items || [])
+            .filter(item => item && item.createdAt >= cutoff && item.message)
+            .sort((a, b) => b.createdAt - a.createdAt);
+    }
+
+    function saveMessages() {
+        localStorage.setItem(MESSAGE_STORAGE_KEY, JSON.stringify(pruneMessages(messages)));
+    }
+
+    function loadMessages() {
+        try {
+            messages = pruneMessages(JSON.parse(localStorage.getItem(MESSAGE_STORAGE_KEY) || '[]'));
+        } catch (error) {
+            messages = [];
+        }
+        saveMessages();
+        renderMessages();
+    }
+
+    function formatMessageTime(createdAt) {
+        return new Date(createdAt).toLocaleString(undefined, {
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+
+    function renderMessages() {
+        messages = pruneMessages(messages);
+        const badge = $('messageBadge');
+        badge.textContent = messages.length > 99 ? '99+' : `${messages.length}`;
+        badge.hidden = messages.length === 0;
+        if (messages.length === 0) {
+            $('messageList').innerHTML = `<div class="message-empty">${t('message.empty')}</div>`;
+            saveMessages();
+            return;
+        }
+        const items = messages.map((message) => {
+            const row = document.createElement('div');
+            row.className = 'message-item';
+            row.innerHTML = `
+                <span>
+                    <strong>${text(message.message)}</strong>
+                    <small class="message-time">${formatMessageTime(message.createdAt)}</small>
+                </span>
+                <button type="button" data-dismiss-message="${text(message.id)}" aria-label="${t('message.close')}" title="${t('message.close')}">×</button>
+            `;
+            return row;
+        });
+        $('messageList').replaceChildren(...items);
+        saveMessages();
+    }
+
+    function showToast(message) {
+        // Successful operator actions are persisted for one day so brief confirmations are not missed.
+        messages = pruneMessages([
+            {
+                id: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+                message,
+                createdAt: Date.now()
+            },
+            ...messages
+        ]);
+        renderMessages();
+    }
+
     function openTutorial() {
         // Tutorial state is purely presentational; API polling and operator forms continue to keep their current data.
         $('tutorialBackdrop').hidden = false;
@@ -1206,6 +1497,7 @@
 
     function openProfileModal() {
         // The form modal keeps list scanning simple while preserving all strategy-risk fields in one operator action.
+        $('messagePanel').hidden = true;
         $('profileModalBackdrop').hidden = false;
         fields.marketMakerId.focus();
     }
@@ -1272,7 +1564,7 @@
         });
         $('profileCount').textContent = `${filteredProfiles.length}`;
         if (filteredProfiles.length === 0) {
-            $('profiles').innerHTML = `<tr><td colspan="6">${t('empty.profiles')}</td></tr>`;
+            $('profiles').innerHTML = `<tr><td colspan="7">${t('empty.profiles')}</td></tr>`;
             return;
         }
         const rows = [];
@@ -1282,8 +1574,9 @@
             row.className = profile.marketMakerId === state.selectedMarketMakerId ? 'selected' : '';
             const limits = profile.riskLimits || [];
             row.innerHTML = `
-                <td><button type="button" class="expand-button" data-expand-market-maker="${text(profile.marketMakerId)}" aria-label="${expanded ? 'Collapse' : 'Expand'}">${expanded ? '⌄' : '›'}</button></td>
-                <td><div class="profile-summary"><strong>${text(profile.marketMakerId)}</strong><span>${limits.map(limit => text(limit.symbol)).join(', ') || '-'}</span></div></td>
+                <td><button type="button" class="expand-button" data-expand-market-maker="${text(profile.marketMakerId)}" aria-label="${expanded ? 'Collapse' : 'Expand'}">${chevronIcon(expanded)}</button></td>
+                <td><strong>${text(profile.marketMakerId)}</strong></td>
+                <td>${limits.map(limit => text(limit.symbol)).join(', ') || '-'}</td>
                 <td>${text(profile.uid)}</td>
                 <td><span class="pill ${profile.enabled ? 'enabled' : 'warn'}">${profile.enabled ? t('status.enabled') : t('status.disabled')}</span></td>
                 <td>${limits.map(limit => `${text(limit.symbol)} ${limit.killSwitch ? `(${t('status.kill')})` : ''}`).join(', ') || '-'}</td>
@@ -1304,7 +1597,7 @@
                 const detailRow = document.createElement('tr');
                 detailRow.className = 'selected';
                 detailRow.innerHTML = `
-                    <td colspan="6">
+                    <td colspan="7">
                         <div class="strategy-detail">
                             <div class="toolbar">
                                 <strong>${text(profile.marketMakerId)} ${t('strategy.title')}</strong>
@@ -1348,6 +1641,7 @@
                         <button type="button" class="secondary" data-reconcile-idempotency>${t('action.reconcileIdempotency')}</button>
                     </div>
                 </div>
+                <div class="action-hint">${t('hint.refreshQuotes')}</div>
                 <div class="metric-row">
                     <div class="metric"><label>${t('metric.activeQuotes')}</label><div class="value">${quotes.length}</div></div>
                     <div class="metric"><label>${t('metric.quoteIssues')}</label><div class="value">${state.quoteIssueCount}</div></div>
@@ -1498,6 +1792,7 @@
             fillProfileForm(saved, (saved.riskLimits || [])[0]);
             await reloadAll();
             closeProfileModal();
+            showToast(t('message.profileSaved'));
         } catch (error) {
             showError($('profileError'), error);
         }
@@ -1522,6 +1817,7 @@
                 method: 'POST'
             });
             await loadOperations();
+            showToast(t('message.hedgeSuccess'));
         } catch (error) {
             showProfileOperationError(marketMakerId, error);
         }
@@ -1532,6 +1828,7 @@
             // Manual pulse helps operators verify strategy output without enabling the continuous background runner.
             await api('/api/market-maker/auto-quote/run-once', { method: 'POST' });
             await loadOperations();
+            showToast(t('message.autoQuoteSuccess'));
         } catch (error) {
             showProfileOperationError(marketMakerId || state.selectedMarketMakerId, error);
         }
@@ -1541,6 +1838,7 @@
         try {
             await api('/api/market-maker/hedge-idempotency/reconcile?limit=50', { method: 'POST' });
             await loadOperations();
+            showToast(t('message.idempotencySuccess'));
         } catch (error) {
             showProfileOperationError(marketMakerId || state.selectedMarketMakerId, error);
         }
@@ -1560,6 +1858,7 @@
             state.selectedMarketMakerId = saved.marketMakerId;
             state.expandedMarketMakerIds.add(saved.marketMakerId);
             await reloadAll();
+            showToast(t(saved.enabled ? 'message.enabled' : 'message.disabled'));
         } catch (error) {
             state.expandedMarketMakerIds.add(marketMakerId);
             renderProfiles();
@@ -1572,7 +1871,10 @@
         document.body.classList.add('embedded');
     }
 
-    $('reload').addEventListener('click', reloadAll);
+    $('reload').addEventListener('click', async () => {
+        await reloadAll();
+        showToast(t('message.reloadSuccess'));
+    });
     $('newProfile').addEventListener('click', () => {
         state.selectedMarketMakerId = '';
         fillProfileForm({ marketMakerId: 'mm-new', uid: 90001, enabled: true, riskLimits: [] }, {
@@ -1644,6 +1946,22 @@
     $('tutorialOpen').addEventListener('click', openTutorial);
     $('tutorialOpenHeader').addEventListener('click', openTutorial);
     $('tutorialClose').addEventListener('click', closeTutorial);
+    $('messageCenterToggle').addEventListener('click', () => {
+        $('messagePanel').hidden = !$('messagePanel').hidden;
+    });
+    $('messageList').addEventListener('click', (event) => {
+        const dismissButton = event.target.closest('[data-dismiss-message]');
+        if (!dismissButton) {
+            return;
+        }
+        messages = messages.filter(message => message.id !== dismissButton.dataset.dismissMessage);
+        renderMessages();
+    });
+    document.addEventListener('click', (event) => {
+        if (!$('messageCenter').contains(event.target)) {
+            $('messagePanel').hidden = true;
+        }
+    });
     $('profileModalClose').addEventListener('click', closeProfileModal);
     $('profileModalCancel').addEventListener('click', closeProfileModal);
     $('profileModalBackdrop').addEventListener('click', (event) => {
@@ -1671,10 +1989,12 @@
         localStorage.setItem(I18N_STORAGE_KEY, currentLanguage);
         applyTranslations();
         renderProfiles();
+        renderMessages();
         loadOperations();
     });
 
     applyTranslations();
+    loadMessages();
     reloadAll();
 </script>
 </body>
