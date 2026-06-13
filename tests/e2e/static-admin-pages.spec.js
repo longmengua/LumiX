@@ -29,9 +29,9 @@ test('exchange admin shell is the unified operator entry', async ({ page }) => {
   await expect(page.locator('#adminFrame')).toHaveAttribute('src', '/admin-market-maker.html?embed=1');
 });
 
-test('market maker admin uses searchable expandable rows and a profile form modal', async ({ page }) => {
-  // Scenario: operator profile setup should scan as a simple list, with strategy details hidden until expansion.
-  await page.route('**/api/market-maker/profiles/enabled', async (route) => {
+test('market maker admin uses a production operator console without raw responses', async ({ page }) => {
+  // Scenario: operators need a compact console where disabled makers remain recoverable and row details own ops state.
+  await page.route('**/api/market-maker/profiles', async (route) => {
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok([
@@ -49,24 +49,80 @@ test('market maker admin uses searchable expandable rows and a profile form moda
               killSwitch: false
             }
           ]
+        },
+        {
+          marketMakerId: 'mm-paused',
+          uid: 90002,
+          enabled: false,
+          riskLimits: [
+            {
+              symbol: 'ETHUSDT',
+              maxLongNotional: '25000',
+              maxShortNotional: '25000',
+              maxOrderNotional: '5000',
+              maxSlippageRate: '0.006',
+              killSwitch: true
+            }
+          ]
         }
       ]))
     });
   });
-  await page.route('**/api/market-maker/quotes/active?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
-  await page.route('**/api/market-maker/quotes/reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
-  await page.route('**/api/market-maker/hedge-idempotency/unresolved?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
-  await page.route('**/api/market-maker/auto-quote/status', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ enabled: false, fixedDelayMs: 300 })) }));
+  await page.route('**/api/market-maker/quotes/active?limit=50', async (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(ok([
+      {
+        marketMakerId: 'mm-alpha',
+        symbol: 'BTCUSDT',
+        active: true,
+        accepted: true,
+        bidOrderId: 'bid-1',
+        askOrderId: 'ask-1'
+      }
+    ]))
+  }));
+  await page.route('**/api/market-maker/quotes/reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 1 })) }));
+  await page.route('**/api/market-maker/hedge-idempotency/unresolved?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 2 })) }));
+  await page.route('**/api/market-maker/auto-quote/status', async (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(ok({
+      enabled: false,
+      fixedDelayMs: 300,
+      ladderLevelsPerSide: 50,
+      quoteQuantity: '0.100',
+      halfSpreadTicks: 2,
+      pulseTicks: 1,
+      refPrefix: 'auto-mm'
+    }))
+  }));
   await page.route('**/api/market-maker/profiles/mm-alpha/hedge-reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
-  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-fills?limit=20', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
+  await page.route('**/api/market-maker/profiles/mm-alpha/hedge-fills?limit=20', async (route) => route.fulfill({
+    contentType: 'application/json',
+    body: JSON.stringify(ok([
+      { symbol: 'BTCUSDT', side: 'BUY', quantity: '0.1', price: '100.00', refId: 'hedge-1' }
+    ]))
+  }));
+  await page.route('**/api/market-maker/profiles/mm-paused/hedge-reconciliation?limit=50', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok({ issueCount: 0 })) }));
+  await page.route('**/api/market-maker/profiles/mm-paused/hedge-fills?limit=20', async (route) => route.fulfill({ contentType: 'application/json', body: JSON.stringify(ok([])) }));
 
   await page.goto('/admin-market-maker.html?embed=1', { waitUntil: 'domcontentloaded' });
   await expect(page.getByRole('heading', { name: 'Market Makers' })).toBeVisible();
+  await expect(page.locator('pre')).toHaveCount(0);
   await page.locator('#profileSearch').fill('BTC');
   await expect(page.locator('#profiles')).toContainText('mm-alpha');
-  await page.getByRole('button', { name: 'Expand' }).click();
+  await expect(page.locator('#profiles')).not.toContainText('mm-paused');
+  await page.locator('#profileSearch').fill('');
+  await expect(page.locator('#profiles')).toContainText('mm-paused');
+  await page.getByRole('row', { name: /mm-alpha/ }).getByRole('button', { name: 'Expand' }).click();
   await expect(page.locator('.strategy-detail')).toContainText('BTCUSDT');
-  await page.getByRole('button', { name: 'Edit' }).click();
+  await expect(page.locator('.strategy-detail')).toContainText('Operations Snapshot');
+  await expect(page.locator('.strategy-detail')).toContainText('Market-Making Orders');
+  await expect(page.locator('.strategy-detail')).toContainText('Recent Hedge Fills');
+  await expect(page.locator('.strategy-detail')).toContainText('300ms');
+  await expect(page.locator('.strategy-detail')).toContainText('50');
+  await expect(page.locator('.strategy-detail')).toContainText('bid-1');
+  await expect(page.locator('.strategy-detail')).toContainText('hedge-1');
+  await page.getByRole('row', { name: /mm-alpha/ }).getByRole('button', { name: 'Edit' }).click();
   await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeVisible();
   await page.getByRole('button', { name: 'Close form' }).click();
   await expect(page.getByRole('dialog', { name: 'Market Maker Form' })).toBeHidden();

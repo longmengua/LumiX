@@ -36,6 +36,12 @@ public class MarketMakerProfileService {
     }
 
     @Transactional(readOnly = true)
+    public List<MarketMakerProfile> profiles() {
+        // Operators need disabled profiles in the admin list so they can re-enable a market maker after a pause.
+        return profileStore.findAll();
+    }
+
+    @Transactional(readOnly = true)
     public List<MarketMakerProfile> enabledProfiles() {
         return profileStore.findEnabled();
     }

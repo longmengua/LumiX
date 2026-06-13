@@ -270,6 +270,24 @@
             margin: 0 0 3px;
         }
 
+        .detail-section {
+            display: grid;
+            gap: 10px;
+            border-top: 1px solid var(--line);
+            padding-top: 12px;
+        }
+
+        .detail-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .detail-section table {
+            margin-top: 0;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -516,22 +534,9 @@
             background: #e6bd69;
         }
 
-        pre {
-            margin: 10px 0 0;
-            max-width: 100%;
-            max-height: 220px;
-            overflow: auto;
-            border: 1px solid var(--line);
-            background: #111827;
-            color: #e5e7eb;
-            padding: 10px;
-            white-space: pre-wrap;
-            overflow-wrap: anywhere;
-        }
-
         .metric-row {
             display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
+            grid-template-columns: repeat(5, minmax(0, 1fr));
             gap: 8px;
             margin-bottom: 12px;
         }
@@ -543,10 +548,22 @@
             min-width: 0;
         }
 
+        .policy-grid {
+            display: grid;
+            grid-template-columns: repeat(6, minmax(0, 1fr));
+            gap: 8px;
+        }
+
         .metric .value {
             font-size: 18px;
             font-weight: 800;
             overflow-wrap: anywhere;
+        }
+
+        .row-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
         }
 
         @media (max-width: 1040px) {
@@ -569,7 +586,7 @@
                 padding: 12px;
             }
 
-            .form-grid, .metric-row {
+            .form-grid, .metric-row, .policy-grid {
                 grid-template-columns: 1fr;
             }
 
@@ -718,6 +735,7 @@
                     <th>UID</th>
                     <th data-i18n="table.enabled">Enabled</th>
                     <th data-i18n="table.strategies">Strategies</th>
+                    <th data-i18n="table.actions">Actions</th>
                 </tr>
                 </thead>
                 <tbody id="profiles"></tbody>
@@ -725,93 +743,6 @@
         </div>
     </section>
 
-    <section class="stack">
-        <div class="panel">
-            <div class="panel-heading">
-                <h2 data-i18n="ops.title">Operations Snapshot</h2>
-                <div class="toolbar">
-                    <button id="runAutoQuote" type="button" data-i18n="action.runAutoQuote">Run Auto Quote Once</button>
-                    <button id="runHedge" type="button" data-i18n="action.runHedge">Run Hedge</button>
-                    <button id="reconcileIdempotency" type="button" class="secondary" data-i18n="action.reconcileIdempotency">Reconcile Idempotency</button>
-                </div>
-            </div>
-            <div class="metric-row">
-                <div class="metric">
-                    <label data-i18n="metric.activeQuotes">Active Quotes</label>
-                    <div id="activeQuoteCount" class="value">0</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.quoteIssues">Quote Issues</label>
-                    <div id="quoteIssueCount" class="value">0</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.hedgeIssues">Hedge Issues</label>
-                    <div id="hedgeIssueCount" class="value">0</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.idempotencyIssues">Idempotency Issues</label>
-                    <div id="idempotencyIssueCount" class="value">0</div>
-                </div>
-                <div class="metric">
-                    <label data-i18n="metric.autoQuote">Auto Quote</label>
-                    <div id="autoQuoteStatus" class="value">OFF</div>
-                </div>
-            </div>
-            <div class="form-grid">
-                <div>
-                    <label for="selectedMarketMaker" data-i18n="field.selectedMarketMaker">Selected Market Maker</label>
-                    <input id="selectedMarketMaker" value="mm-alpha"/>
-                </div>
-                <div>
-                    <label for="refPrefix" data-i18n="field.hedgeRefPrefix">Hedge Ref Prefix</label>
-                    <input id="refPrefix" value="manual"/>
-                </div>
-                <div class="full">
-                    <label for="approvalToken" data-i18n="field.operatorApprovalToken">Operator Approval Token</label>
-                    <input id="approvalToken" data-i18n-placeholder="placeholder.approvalToken" placeholder="optional when backend does not require approval"/>
-                </div>
-            </div>
-            <div id="opsError" class="error" hidden></div>
-            <pre id="opsResult" data-i18n="empty.opsResult">No hedge execution run yet.</pre>
-        </div>
-
-        <div class="panel">
-            <div class="panel-heading">
-                <h2 data-i18n="quotes.title">Active Quotes</h2>
-                <span id="quoteCount" class="pill">0</span>
-            </div>
-            <table>
-                <thead>
-                <tr>
-                    <th data-i18n="table.marketMaker">Market Maker</th>
-                    <th data-i18n="field.symbol">Symbol</th>
-                    <th data-i18n="table.status">Status</th>
-                    <th data-i18n="table.bidAsk">Bid / Ask</th>
-                </tr>
-                </thead>
-                <tbody id="quotes"></tbody>
-            </table>
-        </div>
-
-        <div class="panel">
-            <div class="panel-heading">
-                <h2 data-i18n="fills.title">Recent Hedge Fills</h2>
-                <span id="fillCount" class="pill">0</span>
-            </div>
-            <table>
-                <thead>
-                <tr>
-                    <th data-i18n="field.symbol">Symbol</th>
-                    <th data-i18n="table.side">Side</th>
-                    <th data-i18n="table.qty">Qty</th>
-                    <th data-i18n="table.price">Price</th>
-                    <th>Ref</th>
-                </tr>
-                </thead>
-                <tbody id="fills"></tbody>
-            </table>
-        </div>
-    </section>
 </main>
 
 <div id="profileModalBackdrop" class="modal-backdrop" hidden>
@@ -865,7 +796,6 @@
                 </div>
             </div>
             <div id="profileError" class="error" hidden></div>
-            <pre id="profileResult" data-i18n="empty.profileResult">No strategy saved yet.</pre>
             <div class="modal-actions">
                 <button id="profileModalCancel" type="button" class="secondary" data-i18n="action.cancel">Cancel</button>
                 <button id="saveProfile" type="button" data-i18n="action.saveStrategy">Save Strategy</button>
@@ -909,6 +839,8 @@
             'action.runAutoQuote': 'Run Auto Quote Once',
             'action.runHedge': 'Run Hedge',
             'action.reconcileIdempotency': 'Reconcile Idempotency',
+            'action.enable': 'Enable',
+            'action.disable': 'Disable',
             'field.marketMakerId': 'Market Maker ID',
             'field.searchMarketMaker': 'Search',
             'field.symbol': 'Symbol',
@@ -918,10 +850,6 @@
             'field.maxOrderNotional': 'Max Order Notional',
             'field.maxSlippageRate': 'Max Slippage Rate',
             'field.symbolKillSwitch': 'Symbol Kill Switch',
-            'field.selectedMarketMaker': 'Selected Market Maker',
-            'field.hedgeRefPrefix': 'Hedge Ref Prefix',
-            'field.operatorApprovalToken': 'Operator Approval Token',
-            'placeholder.approvalToken': 'optional when backend does not require approval',
             'placeholder.searchMarketMaker': 'Search by ID, UID, or symbol',
             'modal.profileTitle': 'Market Maker Form',
             'modal.close': 'Close form',
@@ -930,17 +858,21 @@
             'metric.hedgeIssues': 'Hedge Issues',
             'metric.idempotencyIssues': 'Idempotency Issues',
             'metric.autoQuote': 'Auto Quote',
+            'metric.frequency': 'Frequency',
+            'metric.levels': 'Levels / Side',
+            'metric.quantity': 'Quote Qty',
+            'metric.spread': 'Half Spread',
+            'metric.pulse': 'Pulse',
             'table.marketMaker': 'Market Maker',
             'table.enabled': 'Enabled',
             'table.strategies': 'Strategies',
+            'table.actions': 'Actions',
             'table.status': 'Status',
             'table.bidAsk': 'Bid / Ask',
             'table.side': 'Side',
             'table.qty': 'Qty',
             'table.price': 'Price',
-            'empty.profileResult': 'No strategy saved yet.',
-            'empty.opsResult': 'No hedge execution run yet.',
-            'empty.profiles': 'No enabled market makers loaded.',
+            'empty.profiles': 'No market makers loaded.',
             'empty.quotes': 'No active quote states.',
             'empty.fills': 'No hedge fills for selected market maker.',
             'error.selectMarketMaker': 'Select a market maker before running hedge execution.',
@@ -985,6 +917,8 @@
             'action.runAutoQuote': '執行一次自動報價',
             'action.runHedge': '執行對沖',
             'action.reconcileIdempotency': '重整冪等狀態',
+            'action.enable': '啟用',
+            'action.disable': '停用',
             'field.marketMakerId': '做市商 ID',
             'field.searchMarketMaker': '搜尋',
             'field.symbol': '交易對',
@@ -994,10 +928,6 @@
             'field.maxOrderNotional': '單筆最大名目',
             'field.maxSlippageRate': '最大滑價率',
             'field.symbolKillSwitch': '交易對 Kill Switch',
-            'field.selectedMarketMaker': '選取做市商',
-            'field.hedgeRefPrefix': '對沖 Ref 前綴',
-            'field.operatorApprovalToken': '操作員核准 Token',
-            'placeholder.approvalToken': '後端未要求核准時可留空',
             'placeholder.searchMarketMaker': '依 ID、UID 或交易對搜尋',
             'modal.profileTitle': '做市商表單',
             'modal.close': '關閉表單',
@@ -1006,17 +936,21 @@
             'metric.hedgeIssues': '對沖問題',
             'metric.idempotencyIssues': '冪等問題',
             'metric.autoQuote': '自動報價',
+            'metric.frequency': '頻率',
+            'metric.levels': '單邊層數',
+            'metric.quantity': '掛單數量',
+            'metric.spread': '半價差',
+            'metric.pulse': '脈衝',
             'table.marketMaker': '做市商',
             'table.enabled': '啟用',
             'table.strategies': '策略',
+            'table.actions': '操作',
             'table.status': '狀態',
             'table.bidAsk': '買 / 賣',
             'table.side': '方向',
             'table.qty': '數量',
             'table.price': '價格',
-            'empty.profileResult': '尚未儲存策略。',
-            'empty.opsResult': '尚未執行對沖。',
-            'empty.profiles': '尚未載入已啟用做市商。',
+            'empty.profiles': '尚未載入做市商。',
             'empty.quotes': '目前沒有做市掛單狀態。',
             'empty.fills': '所選做市商沒有近期對沖成交。',
             'error.selectMarketMaker': '執行對沖前請先選取做市商。',
@@ -1061,6 +995,8 @@
             'action.runAutoQuote': 'Jalankan Auto Quote Sekali',
             'action.runHedge': 'Jalankan Hedge',
             'action.reconcileIdempotency': 'Selaras Idempotensi',
+            'action.enable': 'Aktifkan',
+            'action.disable': 'Nyahaktif',
             'field.marketMakerId': 'ID Pembuat Pasaran',
             'field.searchMarketMaker': 'Cari',
             'field.symbol': 'Simbol',
@@ -1070,10 +1006,6 @@
             'field.maxOrderNotional': 'Notional Pesanan Maks',
             'field.maxSlippageRate': 'Kadar Slippage Maks',
             'field.symbolKillSwitch': 'Kill Switch Simbol',
-            'field.selectedMarketMaker': 'Pembuat Pasaran Dipilih',
-            'field.hedgeRefPrefix': 'Awalan Ref Hedge',
-            'field.operatorApprovalToken': 'Token Kelulusan Operator',
-            'placeholder.approvalToken': 'pilihan jika backend tidak memerlukan kelulusan',
             'placeholder.searchMarketMaker': 'Cari mengikut ID, UID atau simbol',
             'modal.profileTitle': 'Borang Pembuat Pasaran',
             'modal.close': 'Tutup borang',
@@ -1082,17 +1014,21 @@
             'metric.hedgeIssues': 'Isu Hedge',
             'metric.idempotencyIssues': 'Isu Idempotensi',
             'metric.autoQuote': 'Auto Quote',
+            'metric.frequency': 'Kekerapan',
+            'metric.levels': 'Tahap / Sisi',
+            'metric.quantity': 'Kuantiti Quote',
+            'metric.spread': 'Separuh Spread',
+            'metric.pulse': 'Pulse',
             'table.marketMaker': 'Pembuat Pasaran',
             'table.enabled': 'Diaktifkan',
             'table.strategies': 'Strategi',
+            'table.actions': 'Tindakan',
             'table.status': 'Status',
             'table.bidAsk': 'Beli / Jual',
             'table.side': 'Arah',
             'table.qty': 'Kuantiti',
             'table.price': 'Harga',
-            'empty.profileResult': 'Tiada strategi disimpan.',
-            'empty.opsResult': 'Tiada hedge dijalankan lagi.',
-            'empty.profiles': 'Tiada pembuat pasaran aktif dimuatkan.',
+            'empty.profiles': 'Tiada pembuat pasaran dimuatkan.',
             'empty.quotes': 'Tiada status sebut harga aktif.',
             'empty.fills': 'Tiada isi hedge untuk pembuat pasaran dipilih.',
             'error.selectMarketMaker': 'Pilih pembuat pasaran sebelum menjalankan hedge.',
@@ -1137,6 +1073,8 @@
             'action.runAutoQuote': '자동 호가 1회 실행',
             'action.runHedge': '헤지 실행',
             'action.reconcileIdempotency': '멱등성 조정',
+            'action.enable': '활성화',
+            'action.disable': '비활성화',
             'field.marketMakerId': '마켓메이커 ID',
             'field.searchMarketMaker': '검색',
             'field.symbol': '심볼',
@@ -1146,10 +1084,6 @@
             'field.maxOrderNotional': '주문 최대 명목금액',
             'field.maxSlippageRate': '최대 슬리피지율',
             'field.symbolKillSwitch': '심볼 Kill Switch',
-            'field.selectedMarketMaker': '선택된 마켓메이커',
-            'field.hedgeRefPrefix': '헤지 Ref 접두어',
-            'field.operatorApprovalToken': '운영자 승인 Token',
-            'placeholder.approvalToken': '백엔드 승인이 필요 없으면 비워두세요',
             'placeholder.searchMarketMaker': 'ID, UID 또는 심볼로 검색',
             'modal.profileTitle': '마켓메이커 양식',
             'modal.close': '양식 닫기',
@@ -1158,17 +1092,21 @@
             'metric.hedgeIssues': '헤지 이슈',
             'metric.idempotencyIssues': '멱등성 이슈',
             'metric.autoQuote': '자동 호가',
+            'metric.frequency': '주기',
+            'metric.levels': '한쪽 단계',
+            'metric.quantity': '호가 수량',
+            'metric.spread': '반 스프레드',
+            'metric.pulse': '펄스',
             'table.marketMaker': '마켓메이커',
             'table.enabled': '활성',
             'table.strategies': '전략',
+            'table.actions': '작업',
             'table.status': '상태',
             'table.bidAsk': '매수 / 매도',
             'table.side': '방향',
             'table.qty': '수량',
             'table.price': '가격',
-            'empty.profileResult': '저장된 전략이 없습니다.',
-            'empty.opsResult': '아직 헤지를 실행하지 않았습니다.',
-            'empty.profiles': '활성 마켓메이커가 없습니다.',
+            'empty.profiles': '마켓메이커가 없습니다.',
             'empty.quotes': '마켓메이킹 주문 상태가 없습니다.',
             'empty.fills': '선택한 마켓메이커의 헤지 체결이 없습니다.',
             'error.selectMarketMaker': '헤지를 실행하기 전에 마켓메이커를 선택하세요.',
@@ -1214,15 +1152,16 @@
         maxShortNotional: $('maxShortNotional'),
         maxOrderNotional: $('maxOrderNotional'),
         maxSlippageRate: $('maxSlippageRate'),
-        killSwitch: $('killSwitch'),
-        selectedMarketMaker: $('selectedMarketMaker'),
-        refPrefix: $('refPrefix'),
-        approvalToken: $('approvalToken')
+        killSwitch: $('killSwitch')
     };
 
     let state = {
         profiles: [],
         activeQuotes: [],
+        fillsByMarketMaker: new Map(),
+        hedgeIssuesByMarketMaker: new Map(),
+        quoteIssueCount: 0,
+        idempotencyIssueCount: 0,
         autoQuoteStatus: null,
         selectedMarketMakerId: 'mm-alpha',
         expandedMarketMakerIds: new Set()
@@ -1238,6 +1177,10 @@
         }
         const n = Number(value);
         return Number.isFinite(n) ? n.toLocaleString(undefined, { maximumFractionDigits: 8 }) : String(value);
+    }
+
+    function msText(value) {
+        return value === null || value === undefined || value === '' ? '-' : `${value}ms`;
     }
 
     function showError(el, error) {
@@ -1312,7 +1255,6 @@
         fields.maxOrderNotional.value = limit?.maxOrderNotional || '0';
         fields.maxSlippageRate.value = limit?.maxSlippageRate || '0';
         fields.killSwitch.checked = Boolean(limit?.killSwitch);
-        fields.selectedMarketMaker.value = profile?.marketMakerId || '';
         state.selectedMarketMakerId = profile?.marketMakerId || '';
     }
 
@@ -1330,7 +1272,7 @@
         });
         $('profileCount').textContent = `${filteredProfiles.length}`;
         if (filteredProfiles.length === 0) {
-            $('profiles').innerHTML = `<tr><td colspan="5">${t('empty.profiles')}</td></tr>`;
+            $('profiles').innerHTML = `<tr><td colspan="6">${t('empty.profiles')}</td></tr>`;
             return;
         }
         const rows = [];
@@ -1345,22 +1287,27 @@
                 <td>${text(profile.uid)}</td>
                 <td><span class="pill ${profile.enabled ? 'enabled' : 'warn'}">${profile.enabled ? t('status.enabled') : t('status.disabled')}</span></td>
                 <td>${limits.map(limit => `${text(limit.symbol)} ${limit.killSwitch ? `(${t('status.kill')})` : ''}`).join(', ') || '-'}</td>
+                <td>
+                    <div class="row-actions">
+                        <button type="button" class="secondary" data-toggle-market-maker="${text(profile.marketMakerId)}">${profile.enabled ? t('action.disable') : t('action.enable')}</button>
+                        <button type="button" class="secondary" data-edit-market-maker="${text(profile.marketMakerId)}">${t('action.edit')}</button>
+                    </div>
+                </td>
             `;
-            row.addEventListener('click', () => {
+            row.addEventListener('click', async () => {
                 state.selectedMarketMakerId = profile.marketMakerId;
+                await loadProfileOperations(profile.marketMakerId);
                 renderProfiles();
-                loadProfileOperations(profile.marketMakerId);
             });
             rows.push(row);
             if (expanded) {
                 const detailRow = document.createElement('tr');
                 detailRow.className = 'selected';
                 detailRow.innerHTML = `
-                    <td colspan="5">
+                    <td colspan="6">
                         <div class="strategy-detail">
                             <div class="toolbar">
                                 <strong>${text(profile.marketMakerId)} ${t('strategy.title')}</strong>
-                                <button type="button" class="secondary" data-edit-market-maker="${text(profile.marketMakerId)}">${t('action.edit')}</button>
                             </div>
                             ${limits.length === 0 ? `<div class="empty">${t('empty.profiles')}</div>` : limits.map(limit => `
                                 <div class="strategy-detail-grid">
@@ -1372,6 +1319,7 @@
                                     <div class="detail-item"><label>${t('field.symbolKillSwitch')}</label><strong>${limit.killSwitch ? t('status.on') : t('status.off')}</strong></div>
                                 </div>
                             `).join('')}
+                            ${profileOperationsHtml(profile)}
                         </div>
                     </td>
                 `;
@@ -1381,46 +1329,117 @@
         $('profiles').replaceChildren(...rows);
     }
 
-    function renderQuotes() {
-        $('quoteCount').textContent = `${state.activeQuotes.length}`;
-        $('activeQuoteCount').textContent = `${state.activeQuotes.length}`;
-        if (state.activeQuotes.length === 0) {
-            $('quotes').innerHTML = `<tr><td colspan="4">${t('empty.quotes')}</td></tr>`;
-            return;
-        }
-        $('quotes').replaceChildren(...state.activeQuotes.map((quote) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${text(quote.marketMakerId)}</td>
-                <td>${text(quote.symbol)}</td>
-                <td><span class="pill ${quote.active && quote.accepted ? 'enabled' : 'warn'}">${quote.active ? t('status.active') : t('status.inactive')} / ${quote.accepted ? t('status.accepted') : t('status.rejected')}</span></td>
-                <td>${text(quote.bidOrderId)} / ${text(quote.askOrderId)}</td>
-            `;
-            return row;
-        }));
+    function profileOperationsHtml(profile) {
+        const marketMakerId = profile.marketMakerId;
+        const quotes = state.activeQuotes.filter(quote => quote.marketMakerId === marketMakerId);
+        const fills = state.fillsByMarketMaker.get(marketMakerId) || [];
+        const hedgeIssues = state.hedgeIssuesByMarketMaker.get(marketMakerId) ?? 0;
+        const autoQuoteStatus = state.autoQuoteStatus || {};
+        const autoQuoteLabel = state.autoQuoteStatus
+            ? `${autoQuoteStatus.enabled ? t('status.on') : t('status.off')} / ${autoQuoteStatus.fixedDelayMs}ms`
+            : '-';
+        return `
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h3>${t('ops.title')}</h3>
+                    <div class="toolbar">
+                        <button type="button" data-run-auto-quote>${t('action.runAutoQuote')}</button>
+                        <button type="button" data-run-hedge="${text(marketMakerId)}">${t('action.runHedge')}</button>
+                        <button type="button" class="secondary" data-reconcile-idempotency>${t('action.reconcileIdempotency')}</button>
+                    </div>
+                </div>
+                <div class="metric-row">
+                    <div class="metric"><label>${t('metric.activeQuotes')}</label><div class="value">${quotes.length}</div></div>
+                    <div class="metric"><label>${t('metric.quoteIssues')}</label><div class="value">${state.quoteIssueCount}</div></div>
+                    <div class="metric"><label>${t('metric.hedgeIssues')}</label><div class="value">${hedgeIssues}</div></div>
+                    <div class="metric"><label>${t('metric.idempotencyIssues')}</label><div class="value">${state.idempotencyIssueCount}</div></div>
+                    <div class="metric"><label>${t('metric.autoQuote')}</label><div class="value">${autoQuoteLabel}</div></div>
+                </div>
+                <div class="policy-grid">
+                    <div class="metric"><label>${t('metric.frequency')}</label><div class="value">${msText(autoQuoteStatus.fixedDelayMs)}</div></div>
+                    <div class="metric"><label>${t('metric.levels')}</label><div class="value">${text(autoQuoteStatus.ladderLevelsPerSide)}</div></div>
+                    <div class="metric"><label>${t('metric.quantity')}</label><div class="value">${text(autoQuoteStatus.quoteQuantity)}</div></div>
+                    <div class="metric"><label>${t('metric.spread')}</label><div class="value">${text(autoQuoteStatus.halfSpreadTicks)}</div></div>
+                    <div class="metric"><label>${t('metric.pulse')}</label><div class="value">${text(autoQuoteStatus.pulseTicks)}</div></div>
+                    <div class="metric"><label>Ref</label><div class="value">${text(autoQuoteStatus.refPrefix)}</div></div>
+                </div>
+                <div class="error" data-profile-ops-error="${text(marketMakerId)}" hidden></div>
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h3>${t('quotes.title')}</h3>
+                    <span class="pill">${quotes.length}</span>
+                </div>
+                ${quotesTableHtml(quotes)}
+            </div>
+            <div class="detail-section">
+                <div class="detail-section-header">
+                    <h3>${t('fills.title')}</h3>
+                    <span class="pill">${fills.length}</span>
+                </div>
+                ${fillsTableHtml(fills)}
+            </div>
+        `;
     }
 
-    function renderFills(fills) {
-        $('fillCount').textContent = `${fills.length}`;
-        if (fills.length === 0) {
-            $('fills').innerHTML = `<tr><td colspan="5">${t('empty.fills')}</td></tr>`;
-            return;
+    function quotesTableHtml(quotes) {
+        if (quotes.length === 0) {
+            return `<table><tbody><tr><td>${t('empty.quotes')}</td></tr></tbody></table>`;
         }
-        $('fills').replaceChildren(...fills.map((fill) => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>${text(fill.symbol)}</td>
-                <td>${text(fill.side)}</td>
-                <td>${numberText(fill.quantity)}</td>
-                <td>${numberText(fill.price)}</td>
-                <td>${text(fill.refId)}</td>
-            `;
-            return row;
-        }));
+        return `
+            <table>
+                <thead>
+                <tr>
+                    <th>${t('field.symbol')}</th>
+                    <th>${t('table.status')}</th>
+                    <th>${t('table.bidAsk')}</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${quotes.map(quote => `
+                    <tr>
+                        <td>${text(quote.symbol)}</td>
+                        <td><span class="pill ${quote.active && quote.accepted ? 'enabled' : 'warn'}">${quote.active ? t('status.active') : t('status.inactive')} / ${quote.accepted ? t('status.accepted') : t('status.rejected')}</span></td>
+                        <td>${text(quote.bidOrderId)} / ${text(quote.askOrderId)}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+        `;
+    }
+
+    function fillsTableHtml(fills) {
+        if (fills.length === 0) {
+            return `<table><tbody><tr><td>${t('empty.fills')}</td></tr></tbody></table>`;
+        }
+        return `
+            <table>
+                <thead>
+                <tr>
+                    <th>${t('field.symbol')}</th>
+                    <th>${t('table.side')}</th>
+                    <th>${t('table.qty')}</th>
+                    <th>${t('table.price')}</th>
+                    <th>Ref</th>
+                </tr>
+                </thead>
+                <tbody>
+                ${fills.map(fill => `
+                    <tr>
+                        <td>${text(fill.symbol)}</td>
+                        <td>${text(fill.side)}</td>
+                        <td>${numberText(fill.quantity)}</td>
+                        <td>${numberText(fill.price)}</td>
+                        <td>${text(fill.refId)}</td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+        `;
     }
 
     async function loadProfiles() {
-        const profiles = await api('/api/market-maker/profiles/enabled');
+        const profiles = await api('/api/market-maker/profiles');
         state.profiles = profiles || [];
         if (!state.selectedMarketMakerId && state.profiles.length > 0) {
             state.selectedMarketMakerId = state.profiles[0].marketMakerId;
@@ -1431,15 +1450,14 @@
 
     async function loadProfileOperations(marketMakerId) {
         if (!marketMakerId) {
-            renderFills([]);
             return;
         }
         const [hedgeReport, fills] = await Promise.all([
             api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-reconciliation?limit=50`).catch(() => null),
             api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-fills?limit=20`).catch(() => [])
         ]);
-        $('hedgeIssueCount').textContent = `${hedgeReport?.issueCount ?? 0}`;
-        renderFills(fills || []);
+        state.hedgeIssuesByMarketMaker.set(marketMakerId, hedgeReport?.issueCount ?? 0);
+        state.fillsByMarketMaker.set(marketMakerId, fills || []);
     }
 
     async function loadOperations() {
@@ -1451,18 +1469,17 @@
         ]);
         state.activeQuotes = quotes || [];
         state.autoQuoteStatus = autoQuoteStatus;
-        $('quoteIssueCount').textContent = `${quoteReconciliation?.issueCount ?? 0}`;
-        $('idempotencyIssueCount').textContent = `${idempotency?.issueCount ?? 0}`;
-        $('autoQuoteStatus').textContent = autoQuoteStatus
-            ? `${autoQuoteStatus.enabled ? t('status.on') : t('status.off')} / ${autoQuoteStatus.fixedDelayMs}ms`
-            : '-';
-        renderQuotes();
-        await loadProfileOperations(fields.selectedMarketMaker.value.trim() || state.selectedMarketMakerId);
+        state.quoteIssueCount = quoteReconciliation?.issueCount ?? 0;
+        state.idempotencyIssueCount = idempotency?.issueCount ?? 0;
+        const visibleOperationProfiles = state.profiles
+            .filter(profile => state.expandedMarketMakerIds.has(profile.marketMakerId) || profile.marketMakerId === state.selectedMarketMakerId)
+            .map(profile => profile.marketMakerId);
+        await Promise.all(visibleOperationProfiles.map(loadProfileOperations));
+        renderProfiles();
     }
 
     async function reloadAll() {
         clearError($('profileError'));
-        clearError($('opsError'));
         await loadProfiles();
         await loadOperations();
     }
@@ -1476,7 +1493,6 @@
                 method: 'POST',
                 body: JSON.stringify(payload)
             });
-            $('profileResult').textContent = JSON.stringify(saved, null, 2);
             state.selectedMarketMakerId = saved.marketMakerId;
             state.expandedMarketMakerIds.add(saved.marketMakerId);
             fillProfileForm(saved, (saved.riskLimits || [])[0]);
@@ -1487,48 +1503,67 @@
         }
     }
 
-    async function runHedge() {
-        clearError($('opsError'));
-        const marketMakerId = fields.selectedMarketMaker.value.trim();
-        const refPrefix = fields.refPrefix.value.trim() || 'manual';
-        const approvalToken = fields.approvalToken.value.trim();
+    function showProfileOperationError(marketMakerId, error) {
+        const el = document.querySelector(`[data-profile-ops-error="${CSS.escape(marketMakerId)}"]`);
+        if (el) {
+            showError(el, error);
+        }
+    }
+
+    async function runHedge(marketMakerId) {
+        const refPrefix = state.autoQuoteStatus?.refPrefix || 'manual';
         if (!marketMakerId) {
-            showError($('opsError'), new Error(t('error.selectMarketMaker')));
+            showProfileOperationError(state.selectedMarketMakerId, new Error(t('error.selectMarketMaker')));
             return;
         }
         try {
-            // Manual hedge execution uses the existing guarded endpoint and optional approval token.
-            const result = await api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-execution?refPrefix=${encodeURIComponent(refPrefix)}`, {
-                method: 'POST',
-                headers: approvalToken ? { 'X-Operator-Approval': approvalToken } : {}
+            // Manual hedge execution is row-scoped so operators can repair one maker without hidden global state.
+            await api(`/api/market-maker/profiles/${encodeURIComponent(marketMakerId)}/hedge-execution?refPrefix=${encodeURIComponent(refPrefix)}`, {
+                method: 'POST'
             });
-            $('opsResult').textContent = JSON.stringify(result, null, 2);
             await loadOperations();
         } catch (error) {
-            showError($('opsError'), error);
+            showProfileOperationError(marketMakerId, error);
         }
     }
 
-    async function runAutoQuoteOnce() {
-        clearError($('opsError'));
+    async function runAutoQuoteOnce(marketMakerId) {
         try {
             // Manual pulse helps operators verify strategy output without enabling the continuous background runner.
-            const result = await api('/api/market-maker/auto-quote/run-once', { method: 'POST' });
-            $('opsResult').textContent = JSON.stringify(result, null, 2);
+            await api('/api/market-maker/auto-quote/run-once', { method: 'POST' });
             await loadOperations();
         } catch (error) {
-            showError($('opsError'), error);
+            showProfileOperationError(marketMakerId || state.selectedMarketMakerId, error);
         }
     }
 
-    async function reconcileIdempotency() {
-        clearError($('opsError'));
+    async function reconcileIdempotency(marketMakerId) {
         try {
-            const result = await api('/api/market-maker/hedge-idempotency/reconcile?limit=50', { method: 'POST' });
-            $('opsResult').textContent = JSON.stringify(result, null, 2);
+            await api('/api/market-maker/hedge-idempotency/reconcile?limit=50', { method: 'POST' });
             await loadOperations();
         } catch (error) {
-            showError($('opsError'), error);
+            showProfileOperationError(marketMakerId || state.selectedMarketMakerId, error);
+        }
+    }
+
+    async function toggleProfileEnabled(marketMakerId) {
+        const profile = state.profiles.find(item => item.marketMakerId === marketMakerId);
+        if (!profile) {
+            return;
+        }
+        try {
+            // Disabled profiles stay in the all-profile list, so this toggle can turn market makers back on.
+            const saved = await api('/api/market-maker/profiles', {
+                method: 'POST',
+                body: JSON.stringify({ ...profile, enabled: !profile.enabled })
+            });
+            state.selectedMarketMakerId = saved.marketMakerId;
+            state.expandedMarketMakerIds.add(saved.marketMakerId);
+            await reloadAll();
+        } catch (error) {
+            state.expandedMarketMakerIds.add(marketMakerId);
+            renderProfiles();
+            showProfileOperationError(marketMakerId, error);
         }
     }
 
@@ -1548,13 +1583,12 @@
             maxSlippageRate: '0.005',
             killSwitch: false
         });
-        $('profileResult').textContent = t('empty.profileResult');
         renderProfiles();
         openProfileModal();
     });
     $('saveProfile').addEventListener('click', saveProfile);
     $('profileSearch').addEventListener('input', renderProfiles);
-    $('profiles').addEventListener('click', (event) => {
+    $('profiles').addEventListener('click', async (event) => {
         const expandButton = event.target.closest('[data-expand-market-maker]');
         if (expandButton) {
             event.stopPropagation();
@@ -1563,6 +1597,8 @@
                 state.expandedMarketMakerIds.delete(marketMakerId);
             } else {
                 state.expandedMarketMakerIds.add(marketMakerId);
+                state.selectedMarketMakerId = marketMakerId;
+                await loadProfileOperations(marketMakerId);
             }
             renderProfiles();
             return;
@@ -1573,14 +1609,38 @@
             const profile = state.profiles.find(item => item.marketMakerId === editButton.dataset.editMarketMaker);
             if (profile) {
                 fillProfileForm(profile, (profile.riskLimits || [])[0]);
-                $('profileResult').textContent = JSON.stringify(profile, null, 2);
                 openProfileModal();
             }
+            return;
+        }
+        const toggleButton = event.target.closest('[data-toggle-market-maker]');
+        if (toggleButton) {
+            event.stopPropagation();
+            toggleProfileEnabled(toggleButton.dataset.toggleMarketMaker);
+            return;
+        }
+        const runAutoQuoteButton = event.target.closest('[data-run-auto-quote]');
+        if (runAutoQuoteButton) {
+            event.stopPropagation();
+            const detailRow = runAutoQuoteButton.closest('.strategy-detail');
+            const marketMakerId = detailRow?.querySelector('[data-run-hedge]')?.dataset.runHedge || state.selectedMarketMakerId;
+            runAutoQuoteOnce(marketMakerId);
+            return;
+        }
+        const runHedgeButton = event.target.closest('[data-run-hedge]');
+        if (runHedgeButton) {
+            event.stopPropagation();
+            runHedge(runHedgeButton.dataset.runHedge);
+            return;
+        }
+        const reconcileButton = event.target.closest('[data-reconcile-idempotency]');
+        if (reconcileButton) {
+            event.stopPropagation();
+            const detailRow = reconcileButton.closest('.strategy-detail');
+            const marketMakerId = detailRow?.querySelector('[data-run-hedge]')?.dataset.runHedge || state.selectedMarketMakerId;
+            reconcileIdempotency(marketMakerId);
         }
     });
-    $('runAutoQuote').addEventListener('click', runAutoQuoteOnce);
-    $('runHedge').addEventListener('click', runHedge);
-    $('reconcileIdempotency').addEventListener('click', reconcileIdempotency);
     $('tutorialOpen').addEventListener('click', openTutorial);
     $('tutorialOpenHeader').addEventListener('click', openTutorial);
     $('tutorialClose').addEventListener('click', closeTutorial);
@@ -1611,8 +1671,6 @@
         localStorage.setItem(I18N_STORAGE_KEY, currentLanguage);
         applyTranslations();
         renderProfiles();
-        renderQuotes();
-        renderFills([]);
         loadOperations();
     });
 

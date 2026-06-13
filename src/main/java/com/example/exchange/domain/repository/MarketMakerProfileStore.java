@@ -18,5 +18,8 @@ public interface MarketMakerProfileStore {
 
     Optional<MarketMakerProfile> findByUid(long uid);
 
+    /** Lists all profiles so disabled market makers remain visible and can be re-enabled by operators. */
+    List<MarketMakerProfile> findAll();
+
     List<MarketMakerProfile> findEnabled();
 }

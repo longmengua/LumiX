@@ -13,5 +13,8 @@ public interface MarketMakerProfileRecordJpaRepository extends JpaRepository<Mar
 
     Optional<MarketMakerProfileRecord> findByUid(long uid);
 
+    /** Keeps admin profile recovery deterministic by listing disabled and enabled makers in stable order. */
+    List<MarketMakerProfileRecord> findAllByOrderByMarketMakerIdAsc();
+
     List<MarketMakerProfileRecord> findByEnabledTrueOrderByMarketMakerIdAsc();
 }

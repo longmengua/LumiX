@@ -72,6 +72,12 @@ public class MarketMakerController {
         return ApiResponse.ok(profileService.save(request.toProfile()));
     }
 
+    @GetMapping("/profiles")
+    public ApiResponse<List<MarketMakerProfile>> profiles() {
+        // Admin recovery views require disabled profiles so operators can turn paused makers back on.
+        return ApiResponse.ok(profileService.profiles());
+    }
+
     @GetMapping("/profiles/enabled")
     public ApiResponse<List<MarketMakerProfile>> enabledProfiles() {
         return ApiResponse.ok(profileService.enabledProfiles());

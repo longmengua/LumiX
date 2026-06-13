@@ -49,6 +49,16 @@ public class JpaMarketMakerProfileStore implements MarketMakerProfileStore {
 
     @Override
     @Transactional(readOnly = true)
+    public List<MarketMakerProfile> findAll() {
+        // Operator consoles need disabled profiles too; enabled-only queries are reserved for runtime quote workers.
+        return profileRepository.findAllByOrderByMarketMakerIdAsc()
+                .stream()
+                .map(this::toProfile)
+                .toList();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<MarketMakerProfile> findEnabled() {
         return profileRepository.findByEnabledTrueOrderByMarketMakerIdAsc()
                 .stream()

@@ -302,6 +302,12 @@ class MarketMakerQuoteLifecycleServiceTest {
         }
 
         @Override
+        public List<MarketMakerProfile> findAll() {
+            // Admin profile lists must include disabled profiles so operators can re-enable them.
+            return List.copyOf(profiles.values());
+        }
+
+        @Override
         public List<MarketMakerProfile> findEnabled() {
             return profiles.values().stream()
                     .filter(MarketMakerProfile::enabled)
