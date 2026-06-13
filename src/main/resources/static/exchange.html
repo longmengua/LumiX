@@ -61,6 +61,11 @@
             <button id="resendEmailCode" type="button" class="text-button" data-i18n="action.resendVerification">Resend Code</button>
         </div>
         <div id="authActions" class="auth-actions">
+            <!-- Keep-login is opt-in so shared browsers default to session-only authentication. -->
+            <label class="remember-login">
+                <input id="rememberLogin" type="checkbox"/>
+                <span data-i18n="field.rememberLogin">Keep me logged in</span>
+            </label>
             <button id="login" type="button" data-i18n="action.login">Login</button>
             <button id="register" type="button" class="text-button" data-i18n="account.createAccount">Register</button>
         </div>

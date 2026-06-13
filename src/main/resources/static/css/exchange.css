@@ -692,6 +692,21 @@ pre {
     gap: 8px;
 }
 
+/* Keep-login is a low-emphasis account option, not another primary auth action. */
+.remember-login {
+    align-items: center;
+    color: var(--text);
+    display: flex;
+    gap: 8px;
+    min-height: 28px;
+    text-transform: none;
+}
+
+.remember-login input {
+    min-height: 16px;
+    width: 16px;
+}
+
 .auth-actions[hidden] {
     display: none;
 }

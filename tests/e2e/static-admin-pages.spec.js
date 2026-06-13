@@ -425,6 +425,12 @@ test('exchange console registers with on-screen email code before login', async 
       }))
     });
   });
+  await page.route('**/api/auth/logout', async (route) => {
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify(ok({ revoked: true }))
+    });
+  });
   let languagePayload;
   await page.route('**/api/auth/language', async (route) => {
     languagePayload = route.request().postDataJSON();
@@ -473,9 +479,39 @@ test('exchange console registers with on-screen email code before login', async 
   await expect(page.locator('#profileContent')).toBeVisible();
   await expect(page.locator('#sessionDisplay')).toContainText('new-user@example.com');
   await expect(page.locator('#uidDisplay')).toHaveText('10011');
+  await expect(page.locator('#rememberLogin')).not.toBeChecked();
+  await expect.poll(() => page.evaluate(() => ({
+    localAccess: localStorage.getItem('exchangeAccessToken'),
+    sessionAccess: sessionStorage.getItem('exchangeAccessToken')
+  }))).toEqual({
+    localAccess: null,
+    sessionAccess: 'access-token-after-verification'
+  });
   expect(loginRequests).toBe(0);
   await page.locator('#language').selectOption('ms');
   await expect.poll(() => languagePayload).toMatchObject({ preferredLanguage: 'ms' });
+
+  await page.locator('#logout').click();
+  await expect(page.locator('#authCard')).toBeVisible();
+  await expect.poll(() => page.evaluate(() => ({
+    localAccess: localStorage.getItem('exchangeAccessToken'),
+    sessionAccess: sessionStorage.getItem('exchangeAccessToken')
+  }))).toEqual({ localAccess: null, sessionAccess: null });
+  await page.locator('#authEmail').fill('new-user@example.com');
+  await page.locator('#authPassword').fill('correct-password');
+  await page.locator('#rememberLogin').check();
+  await page.locator('#login').click();
+  await expect.poll(() => loginPayload).toMatchObject({
+    email: 'new-user@example.com',
+    password: 'correct-password'
+  });
+  await expect.poll(() => page.evaluate(() => ({
+    localAccess: localStorage.getItem('exchangeAccessToken'),
+    sessionAccess: sessionStorage.getItem('exchangeAccessToken')
+  }))).toEqual({
+    localAccess: 'access-token-after-login',
+    sessionAccess: null
+  });
 });
 
 test('exchange console shows generic login error for unknown accounts', async ({ page }) => {

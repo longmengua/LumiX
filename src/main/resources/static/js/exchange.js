@@ -3,6 +3,8 @@
 const $ = (id) => document.getElementById(id);
 const I18N_STORAGE_KEY = 'exchangeLanguage';
 const PENDING_REGISTRATION_EMAIL_KEY = 'exchangePendingRegistrationEmail';
+const ACCESS_TOKEN_STORAGE_KEY = 'exchangeAccessToken';
+const REFRESH_TOKEN_STORAGE_KEY = 'exchangeRefreshToken';
 const translations = {
     en: {
         'page.title': 'Exchange Console',
@@ -27,6 +29,7 @@ const translations = {
         'field.market': 'Market',
         'field.email': 'Email',
         'field.password': 'Password',
+        'field.rememberLogin': 'Keep me logged in',
         'field.humanVerification': 'Human Verification',
         'field.humanVerificationPlaceholder': 'Verification token',
         'field.emailVerificationCode': 'Email Code',
@@ -125,6 +128,7 @@ const translations = {
         'field.market': '市場',
         'field.email': '電子信箱',
         'field.password': '密碼',
+        'field.rememberLogin': '保持登入',
         'field.humanVerification': '真人驗證',
         'field.humanVerificationPlaceholder': '驗證 token',
         'field.emailVerificationCode': '信箱驗證碼',
@@ -223,6 +227,7 @@ const translations = {
         'field.market': 'Pasaran',
         'field.email': 'E-mel',
         'field.password': 'Kata Laluan',
+        'field.rememberLogin': 'Kekalkan log masuk',
         'field.humanVerification': 'Pengesahan Manusia',
         'field.humanVerificationPlaceholder': 'Token pengesahan',
         'field.emailVerificationCode': 'Kod E-mel',
@@ -321,6 +326,7 @@ const translations = {
         'field.market': '시장',
         'field.email': '이메일',
         'field.password': '비밀번호',
+        'field.rememberLogin': '로그인 상태 유지',
         'field.humanVerification': '사람 인증',
         'field.humanVerificationPlaceholder': '인증 토큰',
         'field.emailVerificationCode': '이메일 코드',
@@ -450,11 +456,31 @@ const fields = {
     clientOrderId: $('clientOrderId')
 };
 
-// Tokens are stored only for local MVP browser testing; production should move to hardened session storage.
+function storedAuthToken(key) {
+    return localStorage.getItem(key) || sessionStorage.getItem(key) || '';
+}
+
+function clearStoredAuthTokens() {
+    localStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    localStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(ACCESS_TOKEN_STORAGE_KEY);
+    sessionStorage.removeItem(REFRESH_TOKEN_STORAGE_KEY);
+}
+
+function storeAuthTokens(accessToken, refreshToken, persist) {
+    // "Keep me logged in" is the only path that survives browser restarts; otherwise tokens are tab-session scoped.
+    clearStoredAuthTokens();
+    const storage = persist ? localStorage : sessionStorage;
+    storage.setItem(ACCESS_TOKEN_STORAGE_KEY, accessToken);
+    storage.setItem(REFRESH_TOKEN_STORAGE_KEY, refreshToken);
+}
+
+// Tokens default to session storage unless the customer explicitly chooses "keep me logged in".
 const auth = {
-    accessToken: localStorage.getItem('exchangeAccessToken') || '',
-    refreshToken: localStorage.getItem('exchangeRefreshToken') || ''
+    accessToken: storedAuthToken(ACCESS_TOKEN_STORAGE_KEY),
+    refreshToken: storedAuthToken(REFRESH_TOKEN_STORAGE_KEY)
 };
+$('rememberLogin').checked = Boolean(localStorage.getItem(ACCESS_TOKEN_STORAGE_KEY));
 const authConfig = {
     humanVerificationEnabled: false,
     humanVerificationProvider: 'turnstile',
@@ -558,8 +584,7 @@ function promptLogin() {
     // Unauthenticated trade actions open the existing profile auth drawer instead of leaving users at an error.
     auth.accessToken = '';
     auth.refreshToken = '';
-    localStorage.removeItem('exchangeAccessToken');
-    localStorage.removeItem('exchangeRefreshToken');
+    clearStoredAuthTokens();
     setUserIdentity(null);
     syncAuthenticatedUi();
     toggleProfilePanel(true);
@@ -728,7 +753,7 @@ async function authenticate(mode) {
                 password: $('authPassword').value
             })
         });
-        applyAuthResult(result);
+        applyAuthResult(result, { persist: $('rememberLogin').checked });
         await refreshAll();
         subscribeCurrentUser();
     } catch (error) {
@@ -794,12 +819,11 @@ function browserTimeZone() {
     return Intl.DateTimeFormat().resolvedOptions().timeZone || '';
 }
 
-function applyAuthResult(result) {
+function applyAuthResult(result, { persist = false } = {}) {
     // Registration verification and password login both establish the same browser session shape.
     auth.accessToken = result.accessToken;
     auth.refreshToken = result.refreshToken;
-    localStorage.setItem('exchangeAccessToken', auth.accessToken);
-    localStorage.setItem('exchangeRefreshToken', auth.refreshToken);
+    storeAuthTokens(auth.accessToken, auth.refreshToken, persist);
     applyUserLanguage(result.user);
     setUserIdentity(result.user);
     renderAuth(result.user);
@@ -822,7 +846,7 @@ async function verifyRegistrationCode() {
         fields.emailVerificationCode.value = '';
         clearPendingRegistration();
         setRegistrationVerificationMode(false);
-        applyAuthResult(result);
+        applyAuthResult(result, { persist: $('rememberLogin').checked });
         showNotice(t('status.registrationVerified'));
         await refreshAll();
         subscribeCurrentUser();
@@ -953,8 +977,7 @@ async function logout() {
     } finally {
         auth.accessToken = '';
         auth.refreshToken = '';
-        localStorage.removeItem('exchangeAccessToken');
-        localStorage.removeItem('exchangeRefreshToken');
+        clearStoredAuthTokens();
         unsubscribeCurrentUser();
         clearSessionUi();
     }
@@ -978,6 +1001,9 @@ async function loadCurrentUser() {
             $('authState').textContent = t('status.sessionUnavailable');
         }
     } catch (error) {
+        auth.accessToken = '';
+        auth.refreshToken = '';
+        clearStoredAuthTokens();
         clearSessionUi();
         showError($('authError'), error);
     }
