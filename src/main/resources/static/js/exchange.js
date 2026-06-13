@@ -99,7 +99,8 @@ const translations = {
         'error.registrationPending': 'Registration verification is already in progress. Enter the email code or try again later.',
         'error.alreadyRegistered': 'This email is already registered. Please login instead.',
         'notice.bookRecovered': 'Orders are persisted, but the in-memory order book is empty. This usually means the app restarted before order-book recovery/replay restored those resting orders.',
-        'error.loginBeforeOrder': 'Please login before placing orders.'
+        'error.loginBeforeOrder': 'Please login before placing orders.',
+        'error.insufficientBalance': 'Available balance is insufficient for this order.'
     },
     'zh-TW': {
         'page.title': '交易所前台',
@@ -196,7 +197,8 @@ const translations = {
         'error.registrationPending': '此帳號已有註冊驗證進行中，請輸入信箱驗證碼或稍後再試。',
         'error.alreadyRegistered': '此信箱已註冊，請直接登入。',
         'notice.bookRecovered': '委託已持久化，但記憶體訂單簿為空。這通常表示 app 重啟後尚未透過 recovery/replay 還原掛單。',
-        'error.loginBeforeOrder': '下單前請先登入。'
+        'error.loginBeforeOrder': '下單前請先登入。',
+        'error.insufficientBalance': '可用餘額不足，無法送出此委託。'
     },
     ms: {
         'page.title': 'Konsol Bursa',
@@ -293,7 +295,8 @@ const translations = {
         'error.registrationPending': 'Pengesahan pendaftaran sedang berjalan. Masukkan kod e-mel atau cuba lagi kemudian.',
         'error.alreadyRegistered': 'E-mel ini sudah didaftarkan. Sila log masuk.',
         'notice.bookRecovered': 'Pesanan telah disimpan, tetapi buku pesanan memori kosong. Biasanya app dimulakan semula sebelum recovery/replay memulihkan pesanan.',
-        'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.'
+        'error.loginBeforeOrder': 'Sila log masuk sebelum membuat pesanan.',
+        'error.insufficientBalance': 'Baki tersedia tidak mencukupi untuk pesanan ini.'
     },
     ko: {
         'page.title': '거래소 콘솔',
@@ -390,7 +393,8 @@ const translations = {
         'error.registrationPending': '가입 인증이 이미 진행 중입니다. 이메일 코드를 입력하거나 나중에 다시 시도하세요.',
         'error.alreadyRegistered': '이미 가입된 이메일입니다. 로그인하세요.',
         'notice.bookRecovered': '주문은 저장되어 있지만 메모리 호가창이 비어 있습니다. 앱 재시작 후 복구/replay가 아직 완료되지 않았을 수 있습니다.',
-        'error.loginBeforeOrder': '주문 전에 로그인하세요.'
+        'error.loginBeforeOrder': '주문 전에 로그인하세요.',
+        'error.insufficientBalance': '이 주문을 제출할 수 있는 사용 가능 잔고가 부족합니다.'
     }
 };
 let currentLanguage = localStorage.getItem(I18N_STORAGE_KEY) || 'en';
@@ -747,6 +751,14 @@ function authDisplayError(mode, error) {
     if (mode === 'register' && error.code === 'USER_ALREADY_REGISTERED') {
         // Duplicate registration uses a customer-safe message instead of leaking raw HTTP details.
         return new Error(t('error.alreadyRegistered'));
+    }
+    return error;
+}
+
+function orderDisplayError(error) {
+    if (error.code === 'ORDER_INSUFFICIENT_BALANCE') {
+        // Trading rejects keep the raw backend reason generic; the stable enum maps to customer-facing copy here.
+        return new Error(t('error.insufficientBalance'));
     }
     return error;
 }
@@ -1386,7 +1398,7 @@ async function placeOrder(side) {
         await refreshAll();
     } catch (error) {
         $('orderResult').textContent = JSON.stringify(payload, null, 2);
-        showError($('orderError'), error);
+        showError($('orderError'), orderDisplayError(error));
         if (error.status === 401 || error.status === 403) {
             promptLogin();
         }

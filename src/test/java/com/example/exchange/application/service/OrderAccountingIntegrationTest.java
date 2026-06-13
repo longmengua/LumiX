@@ -33,6 +33,8 @@ import com.example.exchange.infra.config.DefaultSymbolConfigRepository;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import com.example.exchange.infra.matching.InMemoryMatchingCommandLog;
 import com.example.exchange.infra.matching.InMemoryMatchingEngine;
+import com.example.exchange.interfaces.web.exception.BusinessErrorCode;
+import com.example.exchange.interfaces.web.exception.BusinessException;
 import com.example.exchange.infra.matching.InMemoryMatchingEventLog;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -248,8 +250,9 @@ class OrderAccountingIntegrationTest {
         PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
 
         assertThatThrownBy(() -> placeOrderUseCase.handle(command(9, OrderSide.BUY, "100.00", "1.000")))
-                .isInstanceOf(IllegalStateException.class)
-                .hasMessageContaining("insufficient available balance");
+                .isInstanceOf(BusinessException.class)
+                .extracting(error -> ((BusinessException) error).getErrorCode())
+                .isEqualTo(BusinessErrorCode.ORDER_INSUFFICIENT_BALANCE);
 
         List<OrderLifecycleEvent> orderEvents = published.stream()
                 .filter(OrderLifecycleEvent.class::isInstance)

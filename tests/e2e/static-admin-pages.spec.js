@@ -142,7 +142,22 @@ test('exchange console renders client trading workflow without admin funding con
       }))
     });
   });
+  let placeOrderRequests = 0;
   await page.route('**/api/order/place', async (route) => {
+    placeOrderRequests += 1;
+    if (placeOrderRequests > 1) {
+      // Scenario: order rejects expose a stable enum while the backend message remains generic.
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          code: 'ORDER_INSUFFICIENT_BALANCE',
+          message: '發生異常',
+          traceId: 'test-trace-id'
+        })
+      });
+      return;
+    }
     await route.fulfill({
       contentType: 'application/json',
       body: JSON.stringify(ok('accepted'))
@@ -260,6 +275,10 @@ test('exchange console renders client trading workflow without admin funding con
 
   await page.getByRole('button', { name: 'Place Buy' }).click();
   await expect(page.locator('#orderResult')).toContainText('accepted');
+  await page.getByRole('button', { name: 'Place Buy' }).click();
+  await expect(page.locator('#orderError')).toContainText('Available balance is insufficient for this order.');
+  await expect(page.locator('#orderError')).not.toContainText('發生異常');
+  await expect(page.locator('#orderError')).not.toContainText('HTTP');
 
   // Logout clears stale account/order state so shared browsers do not display the previous user's snapshot.
   await page.getByRole('button', { name: 'Open Profile' }).click();

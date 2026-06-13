@@ -15,6 +15,8 @@ import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.infra.config.RiskControlsProperties;
+import com.example.exchange.interfaces.web.exception.BusinessErrorCode;
+import com.example.exchange.interfaces.web.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -65,7 +67,8 @@ public class RiskService {
         Account account = accountRepo.findByUid(order.getUid()).orElseGet(() -> new Account(order.getUid()));
         if (account.crossAvailable().compareTo(reserve) < 0) {
             order.reject("INSUFFICIENT_BALANCE");
-            throw new IllegalStateException("insufficient available balance");
+            // Preserve the rejected lifecycle event while returning a stable API code the trading UI can localize.
+            throw new BusinessException(BusinessErrorCode.ORDER_INSUFFICIENT_BALANCE);
         }
 
         walletLedgerService.reserveOrder(
@@ -99,7 +102,8 @@ public class RiskService {
             Account account = accountRepo.findByUid(order.getUid()).orElseGet(() -> new Account(order.getUid()));
             if (account.crossAvailable().compareTo(diff) < 0) {
                 order.reject("INSUFFICIENT_BALANCE");
-                throw new IllegalStateException("insufficient available balance");
+                // Amend/cancel-replace reserve increases should fail with the same customer-facing order code.
+                throw new BusinessException(BusinessErrorCode.ORDER_INSUFFICIENT_BALANCE);
             }
             walletLedgerService.reserveOrder(
                     order.getUid(),

@@ -17,6 +17,7 @@ public enum BusinessErrorCode {
     INVALID_TOKEN(HttpStatus.UNAUTHORIZED, "不合法憑證"),
     USER_DISABLED(HttpStatus.FORBIDDEN, "帳號已停權"),
     USER_ALREADY_REGISTERED(HttpStatus.CONFLICT, "帳號已註冊"),
+    ORDER_INSUFFICIENT_BALANCE(HttpStatus.BAD_REQUEST, "可用餘額不足"),
     VALIDATION_ERROR(HttpStatus.BAD_REQUEST, "參數錯誤"),
     INTERNAL_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "系統錯誤"),
     ;
