@@ -1,4 +1,39 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ExchangeTopBar } from './components/ExchangeTopBar';
+import { KLinePanel } from './components/KLinePanel';
+import { MarketRibbon } from './components/MarketRibbon';
+import { MessageCenterPanel, MessageItem as ExchangeMessageItem, MessageLevel } from './components/MessageCenterPanel';
+import { OrderPanel } from './components/OrderPanel';
+import { PositionPanel } from './components/PositionPanel';
+import { TradeHistoryPanel } from './components/TradeHistoryPanel';
+import {
+  buildWsUrl,
+  fetchJson,
+  normalizeKline,
+  normalizeTicker,
+  normalizeTrade,
+  upsertKlineWithTrade,
+  wsCommandSubscribe
+} from './lib/exchange';
+import { connStatusLabel } from './lib/i18n';
+import { useI18n } from './lib/i18n';
+import {
+  type ConnStatus,
+  type KlineRow,
+  type MarketTickerState,
+  type PositionRow,
+  type RawKline,
+  type RawTicker,
+  type RawTrade,
+  type TradeFormState,
+  type TradeRow,
+  DEFAULT_ORDER_FORM,
+  DEFAULT_SYMBOL,
+  MAX_CHART_CANDLES,
+  MAX_TRADE_ROWS,
+  SAMPLE_POSITIONS,
+  TRADE_PAGE_SIZE
+} from './types/exchange';
 
 type MessageCategory =
   | 'SYSTEM'
@@ -6,31 +41,53 @@ type MessageCategory =
   | 'ORDER'
   | 'TRADE'
   | 'DEPOSIT'
-  | 'WITHDRAWAL'
+  | 'WITHDRAW'
   | 'ACCOUNT'
   | 'SECURITY'
-  | 'CAMPAIGN'
+  | 'PROMOTION'
   | 'COMPLIANCE';
 
-type MessageSeverity = 'info' | 'success' | 'warning' | 'critical';
+type MessageSeverity = 'INFO' | 'SUCCESS' | 'WARNING' | 'CRITICAL';
 
 type MessageTab = 'all' | 'unread' | 'archived';
 
-interface MessageMetadata {
-  label: string;
-  value: string;
+type MessageWsStatus = 'idle' | 'connecting' | 'open' | 'reconnecting' | 'closed' | 'error';
+
+type ReadAllScope = 'ALL' | 'CATEGORY';
+
+interface ApiErrorPayload {
+  code: string;
+  message: string;
+  traceId?: string | null;
 }
 
-interface MessageLink {
-  label: string;
-  href: string;
+interface ApiEnvelope<T> {
+  ok: boolean;
+  data: T | null;
+  error?: ApiErrorPayload | string | null;
 }
 
-interface MessageItem {
-  id: string;
+interface ApiSuccess<T> {
+  ok: true;
+  status: number;
+  data: T;
+}
+
+interface ApiFailure {
+  ok: false;
+  status: number;
+  code: string;
+  message: string;
+  traceId?: string;
+  retryable: boolean;
+}
+
+type ApiResult<T> = ApiSuccess<T> | ApiFailure;
+
+interface MessageSummary {
+  messageId: string;
   title: string;
   summary: string;
-  content: string;
   category: MessageCategory;
   severity: MessageSeverity;
   createdAt: string;
@@ -38,51 +95,197 @@ interface MessageItem {
   isDeleted: boolean;
   isArchived: boolean;
   isPinned: boolean;
-  link?: MessageLink;
-  metadata: MessageMetadata[];
+  isExpired: boolean;
+  isScheduled: boolean;
+  actionUrl: string | null;
+  actionLabel: string | null;
 }
 
-interface MessageNotificationSetting {
-  inApp: true;
-  email: boolean;
-  sms: boolean;
-  push: boolean;
-  locks: {
-    email: boolean;
-    sms: boolean;
-    push: boolean;
-  };
+interface MessageDetail extends MessageSummary {
+  body: string;
+  readAt: string | null;
+  effectiveAt: string | null;
+  expireAt: string | null;
+  metadata: Record<string, unknown>;
 }
 
-interface ChannelConfig {
-  value: MessageCategory;
-  label: string;
+interface UnreadCountResponse {
+  unreadCount: number;
+  byCategory: Record<string, number>;
 }
 
-interface SeverityMeta {
-  label: string;
-  icon: string;
-  tone: 'info' | 'success' | 'warning' | 'critical';
+interface MessageApiListResponse {
+  nextCursor: string | null;
+  hasMore: boolean;
+  items: MessageApiListResponseItem[];
 }
 
-const CHANNELS: ChannelConfig[] = [
-  { value: 'SYSTEM', label: '系統通知' },
-  { value: 'ANNOUNCEMENT', label: '公告通知' },
-  { value: 'ORDER', label: '訂單通知' },
-  { value: 'TRADE', label: '成交通知' },
-  { value: 'DEPOSIT', label: '入金通知' },
-  { value: 'WITHDRAWAL', label: '出金通知' },
-  { value: 'ACCOUNT', label: '帳戶通知' },
-  { value: 'SECURITY', label: '安全通知' },
-  { value: 'CAMPAIGN', label: '活動通知' },
-  { value: 'COMPLIANCE', label: '法遵通知' }
+interface MessageApiListResponseItem {
+  messageId: string;
+  title: string;
+  summary: string;
+  category: string;
+  severity: string;
+  createdAt: string;
+  isRead: boolean;
+  isDeleted: boolean;
+  isArchived: boolean;
+  isPinned: boolean;
+  isExpired: boolean;
+  isScheduled: boolean;
+  actionUrl?: string | null;
+  actionLabel?: string | null;
+}
+
+interface MessageApiDetailResponse {
+  messageId: string;
+  title: string;
+  summary: string;
+  body: string;
+  category: string;
+  severity: string;
+  createdAt: string;
+  effectiveAt: string | null;
+  expireAt: string | null;
+  isRead: boolean;
+  readAt: string | null;
+  isDeleted: boolean;
+  isArchived: boolean;
+  isPinned: boolean;
+  isExpired: boolean;
+  isScheduled: boolean;
+  actionUrl: string | null;
+  actionLabel: string | null;
+  metadata?: Record<string, unknown> | null;
+}
+
+interface MessageReadResponse {
+  messageId: string;
+  isRead: boolean;
+  readAt: string;
+}
+
+interface MessageReadAllResponse {
+  updatedCount: number;
+}
+
+interface MessageArchiveResponse {
+  messageId: string;
+  isArchived: boolean;
+}
+
+interface MessagePinResponse {
+  messageId: string;
+  isPinned: boolean;
+}
+
+interface MessageDeleteResponse {
+  messageId: string;
+  deleted: boolean;
+}
+
+interface MessagePreferencePayload {
+  category: string;
+  inAppEnabled: boolean;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  pushEnabled: boolean;
+  locked: boolean;
+}
+
+interface MessagePreferenceState {
+  inAppEnabled: boolean;
+  emailEnabled: boolean;
+  smsEnabled: boolean;
+  pushEnabled: boolean;
+  locked: boolean;
+}
+
+interface MessagePreferencesResponse {
+  preferences: MessagePreferencePayload[];
+}
+
+interface MessageApiPreferencesUpdateResponse {
+  updated: number;
+  preferences: MessagePreferencePayload[];
+}
+
+interface WsEnvelope {
+  event?: string;
+  type?: string;
+  data?: unknown;
+}
+
+interface WsMessageNewPayload {
+  messageId?: string;
+  title?: string;
+  summary?: string;
+  category?: string;
+  severity?: string;
+  createdAt?: string;
+  isRead?: boolean;
+  isDeleted?: boolean;
+  isArchived?: boolean;
+  isPinned?: boolean;
+  isExpired?: boolean;
+  isScheduled?: boolean;
+  actionUrl?: string | null;
+  actionLabel?: string | null;
+}
+
+interface WsUnreadPayload {
+  unreadCount?: number;
+  byCategory?: Record<string, number>;
+}
+
+const PAGE_SIZE = 30;
+const SEARCH_DEBOUNCE_MS = 300;
+const MESSAGE_RETRY_DELAYS_MS = [500, 1000, 2000];
+const EXCHANGE_TRADE_HISTORY_LIMIT = TRADE_PAGE_SIZE;
+
+const CATEGORY_ALIAS: Record<string, MessageCategory> = {
+  WITHDRAWAL: 'WITHDRAW',
+  CAMPAIGN: 'PROMOTION'
+};
+
+const DEFAULT_PREFERENCE_VALUES: Record<MessageCategory, MessagePreferenceState> = {
+  SYSTEM: { inAppEnabled: true, emailEnabled: true, smsEnabled: false, pushEnabled: false, locked: true },
+  ANNOUNCEMENT: { inAppEnabled: true, emailEnabled: true, smsEnabled: false, pushEnabled: false, locked: false },
+  ORDER: { inAppEnabled: true, emailEnabled: true, smsEnabled: true, pushEnabled: true, locked: false },
+  TRADE: { inAppEnabled: true, emailEnabled: true, smsEnabled: true, pushEnabled: true, locked: false },
+  DEPOSIT: { inAppEnabled: true, emailEnabled: true, smsEnabled: false, pushEnabled: true, locked: false },
+  WITHDRAW: { inAppEnabled: true, emailEnabled: true, smsEnabled: false, pushEnabled: true, locked: false },
+  ACCOUNT: { inAppEnabled: true, emailEnabled: true, smsEnabled: false, pushEnabled: false, locked: false },
+  SECURITY: { inAppEnabled: true, emailEnabled: true, smsEnabled: true, pushEnabled: true, locked: true },
+  PROMOTION: { inAppEnabled: true, emailEnabled: true, smsEnabled: false, pushEnabled: true, locked: false },
+  COMPLIANCE: { inAppEnabled: true, emailEnabled: true, smsEnabled: true, pushEnabled: false, locked: true }
+};
+
+const CATEGORY_OPTIONS: { value: MessageCategory | 'ALL'; label: string }[] = [
+  { value: 'ALL', label: '全部分類' },
+  { value: 'SYSTEM', label: '系統' },
+  { value: 'ANNOUNCEMENT', label: '公告' },
+  { value: 'ORDER', label: '訂單' },
+  { value: 'TRADE', label: '交易' },
+  { value: 'DEPOSIT', label: '入金' },
+  { value: 'WITHDRAW', label: '提領' },
+  { value: 'ACCOUNT', label: '帳戶' },
+  { value: 'SECURITY', label: '安全' },
+  { value: 'PROMOTION', label: '活動' },
+  { value: 'COMPLIANCE', label: '法遵' }
 ];
 
-const SEVERITY: Record<MessageSeverity, SeverityMeta> = {
-  info: { label: '一般', icon: 'ℹ', tone: 'info' },
-  success: { label: '成功', icon: '✓', tone: 'success' },
-  warning: { label: '警告', icon: '!', tone: 'warning' },
-  critical: { label: '重要', icon: '⚠', tone: 'critical' }
+const CATEGORY_LABELS: Record<MessageCategory, string> = {
+  SYSTEM: '系統',
+  ANNOUNCEMENT: '公告',
+  ORDER: '訂單',
+  TRADE: '交易',
+  DEPOSIT: '入金',
+  WITHDRAW: '提領',
+  ACCOUNT: '帳戶',
+  SECURITY: '安全',
+  PROMOTION: '活動',
+  COMPLIANCE: '法遵'
 };
 
 const CATEGORY_ICONS: Record<MessageCategory, string> = {
@@ -91,267 +294,122 @@ const CATEGORY_ICONS: Record<MessageCategory, string> = {
   ORDER: '📋',
   TRADE: '💱',
   DEPOSIT: '💰',
-  WITHDRAWAL: '🔐',
+  WITHDRAW: '🔐',
   ACCOUNT: '👤',
   SECURITY: '🛡',
-  CAMPAIGN: '🎯',
+  PROMOTION: '🎯',
   COMPLIANCE: '⚖️'
 };
 
-const CATEGORY_LABELS: Record<MessageCategory, string> = {
-  SYSTEM: '系統通知',
-  ANNOUNCEMENT: '公告通知',
-  ORDER: '訂單通知',
-  TRADE: '成交通知',
-  DEPOSIT: '入金通知',
-  WITHDRAWAL: '出金通知',
-  ACCOUNT: '帳戶通知',
-  SECURITY: '安全通知',
-  CAMPAIGN: '活動通知',
-  COMPLIANCE: '法遵通知'
+const SEVERITY_META: Record<MessageSeverity, { label: string; icon: string; tone: MessageSeverity }> = {
+  INFO: { label: '一般', icon: 'ℹ', tone: 'INFO' },
+  SUCCESS: { label: '成功', icon: '✓', tone: 'SUCCESS' },
+  WARNING: { label: '警告', icon: '!', tone: 'WARNING' },
+  CRITICAL: { label: '重要', icon: '⚠', tone: 'CRITICAL' }
 };
 
-const CATEGORY_OPTIONS: { value: MessageCategory | 'ALL'; label: string }[] = [
-  { value: 'ALL', label: '全部分類' },
-  ...CHANNELS
-];
+function clonePreferenceMap(seed: Record<MessageCategory, MessagePreferenceState>): Record<MessageCategory, MessagePreferenceState> {
+  const copied = {} as Record<MessageCategory, MessagePreferenceState>;
+  (Object.keys(seed) as MessageCategory[]).forEach((category) => {
+    copied[category] = { ...seed[category] };
+  });
+  return copied;
+}
 
-const INITIAL_MESSAGES: MessageItem[] = [
-  {
-    id: 'msg-001',
-    title: '平台維護公告',
-    summary: '今晚 02:00 ~ 04:00 進行系統維護',
-    content:
-      '為維持撮合與撮合歷史資料穩定，平台將於今晚 02:00 開始進行例行維護，預估維持 2 小時，期間下單與提現暫停。',
-    category: 'SYSTEM',
-    severity: 'warning',
-    createdAt: '2026-06-15T13:40:00.000Z',
-    isRead: false,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: true,
-    link: { label: '查看維護細節', href: '/system-maintenance' },
-    metadata: [
-      { label: '維護窗口', value: '2026-06-16 02:00 - 04:00' },
-      { label: '影響模組', value: '撮合、訂單、提現' }
-    ]
-  },
-  {
-    id: 'msg-002',
-    title: 'BTC/USDT 永續上線',
-    summary: '新上線永續合約，先行開啟測試交易',
-    content: 'BTC/USDT 永續合約將於本週開放，開放名額將以先到先得為準，詳情請參考交易規則。',
-    category: 'ANNOUNCEMENT',
-    severity: 'info',
-    createdAt: '2026-06-15T11:20:00.000Z',
-    isRead: true,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: true,
-    link: { label: '看規則', href: '/announcement/futures-launch' },
-    metadata: [{ label: '交易對', value: 'BTC/USDT' }, { label: '類型', value: '永續' }]
-  },
-  {
-    id: 'msg-003',
-    title: 'BTC 買單已成交',
-    summary: '訂單 #ORD-9001 已成交 0.1 BTC，成交價 65250 USDT',
-    content:
-      '您的 BTC 買單已成交。成交筆數 1，成交數量 0.10000000，成交價格 65,250.00 USDT。可在交易頁查閱完整明細。',
-    category: 'TRADE',
-    severity: 'success',
-    createdAt: '2026-06-15T11:00:00.000Z',
-    isRead: false,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: false,
-    link: { label: '查看成交流', href: '/trade/ORD-9001' },
-    metadata: [
-      { label: '訂單 ID', value: 'ORD-9001' },
-      { label: '成交 ID', value: 'TRD-1101' },
-      { label: '數量', value: '0.10000000 BTC' },
-      { label: '手續費', value: '0.0010 BTC' }
-    ]
-  },
-  {
-    id: 'msg-004',
-    title: '限價單已部分成交',
-    summary: '訂單 #ORD-9002 尚餘 30% 未成交',
-    content: '您的限價單已成功部分成交，剩餘未成交量將繼續等待。',
-    category: 'ORDER',
-    severity: 'info',
-    createdAt: '2026-06-15T10:38:00.000Z',
-    isRead: false,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: false,
-    metadata: [
-      { label: '訂單 ID', value: 'ORD-9002' },
-      { label: '交易對', value: 'ETH/USDT' },
-      { label: '已成交', value: '70%' }
-    ]
-  },
-  {
-    id: 'msg-005',
-    title: 'USDT 入金完成',
-    summary: '入金筆數 #DEP-2201 已完成',
-    content: '入金已入帳，可於資產頁查詢到最新餘額。請確認該筆資金用途與來源合規。',
-    category: 'DEPOSIT',
-    severity: 'success',
-    createdAt: '2026-06-15T09:55:00.000Z',
-    isRead: true,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: false,
-    link: { label: '查看資產', href: '/assets' },
-    metadata: [
-      { label: '幣種', value: 'USDT' },
-      { label: '數量', value: '1,000 USDT' },
-      { label: '鏈別', value: 'TRC20' },
-      { label: 'TxID', value: '0x7f3d...a2d' }
-    ]
-  },
-  {
-    id: 'msg-006',
-    title: 'BTC 出金已提交',
-    summary: '提現申請 #WD-3301 已送達風控',
-    content: '提現申請已提交，待確認打包簽名與鏈上審核。若審核超時，將寄送進度更新。',
-    category: 'WITHDRAWAL',
-    severity: 'warning',
-    createdAt: '2026-06-15T09:05:00.000Z',
-    isRead: false,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: false,
-    link: { label: '查看提現詳情', href: '/withdrawal/WD-3301' },
-    metadata: [
-      { label: '幣種', value: 'BTC' },
-      { label: '數量', value: '0.42 BTC' },
-      { label: '狀態', value: '風控中' }
-    ]
-  },
-  {
-    id: 'msg-007',
-    title: '新裝置登入',
-    summary: '您的帳號從新裝置登入，請確認是否為本人操作',
-    content: '本次登入位於新 IP，若非本人，請立即修改密碼並聯繫客服。',
-    category: 'SECURITY',
-    severity: 'critical',
-    createdAt: '2026-06-15T08:30:00.000Z',
-    isRead: false,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: true,
-    metadata: [
-      { label: '登入時間', value: '2026-06-15 16:30 (UTC+8)' },
-      { label: '登入地區', value: 'Singapore (SG)' },
-      { label: '裝置', value: 'iOS App' }
-    ]
-  },
-  {
-    id: 'msg-008',
-    title: 'KYC 審核未通過',
-    summary: '身份驗證被退回，請補件後再次提交',
-    content: '您的 KYC 審核未通過，請於 5 個工作日內補交清晰度更高的身份證明文件。',
-    category: 'COMPLIANCE',
-    severity: 'warning',
-    createdAt: '2026-06-14T18:12:00.000Z',
-    isRead: true,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: false,
-    link: { label: '重新提交', href: '/kyc/resubmit' },
-    metadata: [
-      { label: '審核狀態', value: '未通過' },
-      { label: '原因', value: '文件模糊，缺少清晰人臉特寫' }
-    ]
-  },
-  {
-    id: 'msg-009',
-    title: '交易規則將調整保證金率',
-    summary: 'BTC 合約保證金率將在本週五起調整',
-    content: '為降低市場波動風險，BTC 合約保證金率將由 3% 調整為 4%。',
-    category: 'ANNOUNCEMENT',
-    severity: 'info',
-    createdAt: '2026-06-14T16:02:00.000Z',
-    isRead: true,
-    isDeleted: false,
-    isArchived: false,
-    isPinned: false,
-    link: { label: '閱讀規則', href: '/announcement/margin-update' },
-    metadata: [
-      { label: '影響商品', value: 'BTCUSDT 永續' },
-      { label: '生效日', value: '2026-06-18' }
-    ]
-  },
-  {
-    id: 'msg-010',
-    title: '活動：10USDT 手續費抵扣券',
-    summary: '完成新手任務可獲得交易抵扣券',
-    content: '活動截止前完成「完成首筆交易」可領 10 USDT 抵扣券，適用隔月帳單。',
-    category: 'CAMPAIGN',
-    severity: 'success',
-    createdAt: '2026-06-14T12:00:00.000Z',
-    isRead: false,
-    isDeleted: true,
-    isArchived: false,
-    isPinned: false,
-    metadata: [{ label: '優惠', value: '10 USDT 抵扣券' }]
-  },
-  {
-    id: 'msg-011',
-    title: '手機綁定成功',
-    summary: '您的手機號碼已完成綁定',
-    content: '手機綁定成功，可用於日後驗證與風險異常通知。',
-    category: 'ACCOUNT',
-    severity: 'success',
-    createdAt: '2026-06-14T08:20:00.000Z',
-    isRead: true,
-    isDeleted: false,
-    isArchived: true,
-    isPinned: false,
-    metadata: [{ label: '綁定時間', value: '2026-06-14 16:20' }]
-  },
-  {
-    id: 'msg-012',
-    title: '訂單已取消',
-    summary: '訂單 #ORD-8988 已由系統自動取消',
-    content: '該筆限價單因長時間未成交並超過風控規則停留時間，已自動取消。',
-    category: 'ORDER',
-    severity: 'warning',
-    createdAt: '2026-06-14T05:35:00.000Z',
-    isRead: false,
-    isDeleted: false,
-    isArchived: true,
-    isPinned: false,
-    link: { label: '查看訂單', href: '/orders/ORD-8988' },
-    metadata: [
-      { label: '訂單 ID', value: 'ORD-8988' },
-      { label: '原因', value: '到期取消' }
-    ]
+function createEmptyUnreadMap(): Record<MessageCategory, number> {
+  return {
+    SYSTEM: 0,
+    ANNOUNCEMENT: 0,
+    ORDER: 0,
+    TRADE: 0,
+    DEPOSIT: 0,
+    WITHDRAW: 0,
+    ACCOUNT: 0,
+    SECURITY: 0,
+    PROMOTION: 0,
+    COMPLIANCE: 0
+  };
+}
+
+function normalizeCategory(raw: unknown): MessageCategory | null {
+  if (typeof raw !== 'string') {
+    return null;
   }
-];
+  const normalized = raw.trim().toUpperCase();
+  if (Object.prototype.hasOwnProperty.call(CATEGORY_ALIAS, normalized)) {
+    return CATEGORY_ALIAS[normalized];
+  }
+  const supported: MessageCategory[] = [
+    'SYSTEM',
+    'ANNOUNCEMENT',
+    'ORDER',
+    'TRADE',
+    'DEPOSIT',
+    'WITHDRAW',
+    'ACCOUNT',
+    'SECURITY',
+    'PROMOTION',
+    'COMPLIANCE'
+  ];
+  return supported.includes(normalized as MessageCategory) ? (normalized as MessageCategory) : null;
+}
 
-const INITIAL_SETTINGS: Record<MessageCategory, MessageNotificationSetting> = {
-  SYSTEM: { inApp: true, email: true, sms: false, push: false, locks: { email: true, sms: true, push: true } },
-  ANNOUNCEMENT: { inApp: true, email: true, sms: false, push: false, locks: { email: false, sms: false, push: false } },
-  ORDER: { inApp: true, email: true, sms: true, push: true, locks: { email: false, sms: false, push: false } },
-  TRADE: { inApp: true, email: true, sms: true, push: true, locks: { email: false, sms: false, push: false } },
-  DEPOSIT: { inApp: true, email: true, sms: false, push: true, locks: { email: false, sms: true, push: false } },
-  WITHDRAWAL: { inApp: true, email: true, sms: true, push: true, locks: { email: false, sms: false, push: false } },
-  ACCOUNT: { inApp: true, email: true, sms: false, push: false, locks: { email: false, sms: true, push: true } },
-  SECURITY: { inApp: true, email: true, sms: true, push: true, locks: { email: true, sms: true, push: true } },
-  CAMPAIGN: { inApp: true, email: true, sms: false, push: true, locks: { email: false, sms: false, push: false } },
-  COMPLIANCE: { inApp: true, email: true, sms: true, push: true, locks: { email: true, sms: true, push: true } }
-};
+function normalizeSeverity(raw: unknown): MessageSeverity {
+  const value = typeof raw === 'string' ? raw.trim().toUpperCase() : 'INFO';
+  if (value === 'SUCCESS' || value === 'WARNING' || value === 'CRITICAL' || value === 'INFO') {
+    return value;
+  }
+  return 'INFO';
+}
 
-const MAX_PAGE_SIZE = 8;
+function normalizeBoolean(value: unknown, fallback = false): boolean {
+  return typeof value === 'boolean' ? value : fallback;
+}
+
+function normalizeString(value: unknown, fallback = ''): string {
+  return typeof value === 'string' ? value : fallback;
+}
+
+function resolveApiBase(): string {
+  const injected = window.__EXCHANGE_API_BASE__?.trim();
+  if (injected) {
+    return injected.replace(/\/+$/, '');
+  }
+  return `${window.location.protocol}//${window.location.host}`.replace(/\/+$/, '');
+}
+
+function readAuthToken(): string | null {
+  const candidates = [
+    localStorage.getItem('accessToken'),
+    localStorage.getItem('authToken'),
+    localStorage.getItem('token'),
+    localStorage.getItem('Authorization'),
+    sessionStorage.getItem('accessToken'),
+    sessionStorage.getItem('token'),
+    new URLSearchParams(window.location.search).get('token'),
+    new URLSearchParams(window.location.search).get('access_token')
+  ];
+  for (const raw of candidates) {
+    if (!raw) {
+      continue;
+    }
+    const trimmed = raw.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const normalized = trimmed.startsWith('Bearer ') ? trimmed.slice(7).trim() : trimmed;
+    if (normalized) {
+      return normalized;
+    }
+  }
+  return null;
+}
 
 function formatDate(time: string): string {
   const date = new Date(time);
   if (Number.isNaN(date.getTime())) {
     return '--';
   }
-
   return new Intl.DateTimeFormat('zh-TW', {
     year: 'numeric',
     month: '2-digit',
@@ -362,213 +420,1341 @@ function formatDate(time: string): string {
   }).format(date);
 }
 
-function normalizeFilterKey(raw: string): string {
-  return raw.trim().toLowerCase();
+function normalizeMessageSummary(raw: MessageApiListResponseItem | WsMessageNewPayload | MessageApiDetailResponse): MessageSummary | null {
+  const messageId = normalizeString((raw as { messageId?: unknown }).messageId);
+  const category = normalizeCategory((raw as { category?: unknown }).category);
+  if (!messageId || !category) {
+    return null;
+  }
+  const actionUrlRaw = (raw as { actionUrl?: unknown }).actionUrl;
+  const actionLabelRaw = (raw as { actionLabel?: unknown }).actionLabel;
+
+  return {
+    messageId,
+    title: normalizeString((raw as { title?: unknown }).title, '--'),
+    summary: normalizeString((raw as { summary?: unknown }).summary, ''),
+    category,
+    severity: normalizeSeverity((raw as { severity?: unknown }).severity),
+    createdAt: normalizeString((raw as { createdAt?: unknown }).createdAt),
+    isRead: normalizeBoolean((raw as { isRead?: unknown })),
+    isDeleted: normalizeBoolean((raw as { isDeleted?: unknown })),
+    isArchived: normalizeBoolean((raw as { isArchived?: unknown })),
+    isPinned: normalizeBoolean((raw as { isPinned?: unknown })),
+    isExpired: normalizeBoolean((raw as { isExpired?: unknown })),
+    isScheduled: normalizeBoolean((raw as { isScheduled?: unknown })),
+    actionUrl: typeof actionUrlRaw === 'string' ? actionUrlRaw : null,
+    actionLabel: typeof actionLabelRaw === 'string' ? actionLabelRaw : null
+  };
 }
 
-export function App() {
+function normalizeMessageDetail(raw: MessageApiDetailResponse): MessageDetail {
+  const base = normalizeMessageSummary(raw);
+  if (!base) {
+    return {
+      messageId: '',
+      title: '--',
+      summary: '--',
+      category: 'SYSTEM',
+      severity: 'INFO',
+      createdAt: new Date().toISOString(),
+      isRead: false,
+      isDeleted: false,
+      isArchived: false,
+      isPinned: false,
+      isExpired: false,
+      isScheduled: false,
+      actionUrl: null,
+      actionLabel: null,
+      body: '--',
+      readAt: null,
+      effectiveAt: null,
+      expireAt: null,
+      metadata: {}
+    };
+  }
+  return {
+    ...base,
+    body: normalizeString((raw as { body?: unknown }).body, '--'),
+    readAt: normalizeString((raw as { readAt?: unknown }).readAt) || null,
+    effectiveAt: normalizeString((raw as { effectiveAt?: unknown }).effectiveAt) || null,
+    expireAt: normalizeString((raw as { expireAt?: unknown }).expireAt) || null,
+    metadata:
+      (raw as { metadata?: unknown }).metadata &&
+      typeof (raw as { metadata?: unknown }).metadata === 'object'
+        ? ((raw as { metadata?: Record<string, unknown> }).metadata as Record<string, unknown>)
+        : {}
+  };
+}
+
+function normalizeUnreadMap(raw: unknown): Record<MessageCategory, number> {
+  const map = createEmptyUnreadMap();
+  if (!raw || typeof raw !== 'object') {
+    return map;
+  }
+
+  Object.entries(raw as Record<string, unknown>).forEach(([key, value]) => {
+    const category = normalizeCategory(key);
+    const count = typeof value === 'number' && Number.isFinite(value) ? value : 0;
+    if (category) {
+      map[category] = count;
+    }
+  });
+  return map;
+}
+
+function normalizePreferencePayload(payload: MessagePreferencePayload[]): Record<MessageCategory, MessagePreferenceState> {
+  const next = clonePreferenceMap(DEFAULT_PREFERENCE_VALUES);
+  payload.forEach((item) => {
+    const category = normalizeCategory(item.category);
+    if (!category) {
+      return;
+    }
+    next[category] = {
+      inAppEnabled: true,
+      emailEnabled: normalizeBoolean(item.emailEnabled, next[category].emailEnabled),
+      smsEnabled: normalizeBoolean(item.smsEnabled, next[category].smsEnabled),
+      pushEnabled: normalizeBoolean(item.pushEnabled, next[category].pushEnabled),
+      locked: normalizeBoolean(item.locked, next[category].locked)
+    };
+  });
+  return next;
+}
+
+function toRecordArray(values: Record<MessageCategory, MessagePreferenceState>): MessagePreferencePayload[] {
+  return (Object.keys(values) as MessageCategory[]).map((category) => ({
+    category,
+    inAppEnabled: true,
+    emailEnabled: values[category].emailEnabled,
+    smsEnabled: values[category].smsEnabled,
+    pushEnabled: values[category].pushEnabled,
+    locked: values[category].locked
+  }));
+}
+
+function parseApiError(raw: unknown, fallbackStatus = 500): ApiFailure {
+  if (!raw || typeof raw !== 'object') {
+    return {
+      ok: false,
+      status: fallbackStatus,
+      code: `HTTP_${fallbackStatus}`,
+      message: `Request failed (${fallbackStatus})`,
+      retryable: fallbackStatus >= 500
+    };
+  }
+
+  const payload = raw as ApiEnvelope<unknown> & { status?: number };
+  if (typeof payload.ok === 'boolean' && payload.ok === false) {
+    const err = payload.error;
+    if (typeof err === 'string') {
+      return {
+        ok: false,
+        status: payload.status ?? fallbackStatus,
+        code: `API_${err.toUpperCase()}`,
+        message: err,
+        retryable: false
+      };
+    }
+    if (err && typeof err === 'object') {
+      return {
+        ok: false,
+        status: payload.status ?? fallbackStatus,
+        code: normalizeString(err.code || `HTTP_${fallbackStatus}`).toUpperCase(),
+        message: normalizeString(err.message, `Request failed (${fallbackStatus})`),
+        traceId: normalizeString(err.traceId),
+        retryable: (payload.status ?? fallbackStatus) >= 500
+      };
+    }
+  }
+
+  return {
+    ok: false,
+    status: payload.status ?? fallbackStatus,
+    code: `HTTP_${fallbackStatus}`,
+    message: `Request failed (${fallbackStatus})`,
+    retryable: fallbackStatus >= 500
+  };
+}
+
+function resolveErrorMessage(failure: ApiFailure): string {
+  const code = failure.code;
+  if (code === 'UNAUTHORIZED' || code === 'HTTP_401') {
+    return '未授權，請先登入後再試';
+  }
+  if (code === 'FORBIDDEN' || code === 'HTTP_403') {
+    return '無權限操作此功能';
+  }
+  if (code === 'VALIDATION_ERROR') {
+    return '輸入參數不正確';
+  }
+  if (code === 'MESSAGE_NOT_FOUND') {
+    return '訊息不存在或已刪除';
+  }
+  if (code === 'PREFERENCE_LOCKED') {
+    return '偏好項目被系統鎖定，不可修改';
+  }
+  if (failure.status >= 500) {
+    return '後端錯誤，已自動重試';
+  }
+  return failure.message || '操作失敗，請稍後再試';
+}
+
+async function requestMessageApi<T>(
+  path: string,
+  options: { method?: 'GET' | 'POST' | 'PUT' | 'DELETE'; body?: unknown; query?: URLSearchParams } = {}
+): Promise<ApiResult<T>> {
+  const method = options.method ?? 'GET';
+  const headers: Record<string, string> = {};
+  const token = readAuthToken();
+
+  if (method !== 'GET' && options.body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const base = resolveApiBase();
+  const url = new URL(path.startsWith('http') ? path : `${base}${path}`);
+  if (options.query) {
+    options.query.forEach((value, key) => {
+      url.searchParams.set(key, value);
+    });
+  }
+
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    try {
+      const res = await fetch(url.toString(), {
+        method,
+        headers,
+        body: options.body === undefined ? undefined : JSON.stringify(options.body),
+        cache: 'no-store'
+      });
+
+      const parsed = await res.json().catch(async () => null);
+      if (parsed && typeof parsed === 'object' && 'ok' in parsed) {
+        const envelope = parsed as ApiEnvelope<T>;
+        if (envelope.ok) {
+          return {
+            ok: true,
+            status: res.status,
+            data: (envelope.data as T) ?? ({} as T)
+          };
+        }
+
+        const failure = parseApiError(parsed, res.status);
+        if (attempt < 1 && failure.retryable) {
+          await new Promise((resolve) => setTimeout(resolve, MESSAGE_RETRY_DELAYS_MS[Math.min(attempt, 1)]));
+          continue;
+        }
+        return failure;
+      }
+
+      if (!res.ok) {
+        const statusFailure = parseApiError({}, res.status);
+        if (attempt < 1 && statusFailure.retryable) {
+          await new Promise((resolve) => setTimeout(resolve, MESSAGE_RETRY_DELAYS_MS[Math.min(attempt, 1)]));
+          continue;
+        }
+        return statusFailure;
+      }
+
+      return {
+        ok: true,
+        status: res.status,
+        data: (parsed as T) ?? ({} as T)
+      };
+    } catch {
+      const networkFailure: ApiFailure = {
+        ok: false,
+        status: 0,
+        code: 'NETWORK_ERROR',
+        message: '網路不穩，請稍後再試',
+        retryable: attempt < 1
+      };
+      if (attempt < 1) {
+        await new Promise((resolve) => setTimeout(resolve, MESSAGE_RETRY_DELAYS_MS[attempt]));
+        continue;
+      }
+      return networkFailure;
+    }
+  }
+
+  return {
+    ok: false,
+    status: 0,
+    code: 'UNKNOWN_ERROR',
+    message: '無法完成請求',
+    retryable: false
+  };
+}
+
+function buildMessageWsUrl(): string {
+  const base = buildWsUrl();
+  const token = readAuthToken();
+  if (!token) {
+    return base;
+  }
+  const separator = base.includes('?') ? '&' : '?';
+  return `${base}${separator}token=${encodeURIComponent(token)}`;
+}
+
+function normalizeMetadataEntries(metadata: Record<string, unknown> = {}): Array<[string, string]> {
+  return Object.entries(metadata).map(([key, raw]) => {
+    if (typeof raw === 'string') {
+      return [key, raw];
+    }
+    if (raw === null || raw === undefined) {
+      return [key, '--'];
+    }
+    return [key, JSON.stringify(raw)];
+  });
+}
+
+function messageMatchesFilter(
+  item: MessageSummary,
+  tab: MessageTab,
+  category: MessageCategory | 'ALL',
+  search: string
+): boolean {
+  if (item.isDeleted) {
+    return false;
+  }
+
+  if (tab === 'unread' && (item.isRead || item.isArchived)) {
+    return false;
+  }
+
+  if (tab === 'archived' && !item.isArchived) {
+    return false;
+  }
+
+  if (tab !== 'archived' && item.isArchived) {
+    return false;
+  }
+
+  if (category !== 'ALL' && item.category !== category) {
+    return false;
+  }
+
+  const keyword = search.trim().toLowerCase();
+  if (!keyword) {
+    return true;
+  }
+  return `${item.title} ${item.summary}`.toLowerCase().includes(keyword);
+}
+
+function isCursorInvalidError(result: ApiFailure): boolean {
+  return result.code === 'INVALID_CURSOR' || /cursor/i.test(result.message);
+}
+
+export function ExchangeConsole() {
+  const { t } = useI18n();
+  const [activePage, setActivePage] = useState<'exchange' | 'message-center'>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('view') === 'messages' ? 'message-center' : 'exchange';
+  });
+
+  const [exchangeSymbol] = useState(DEFAULT_SYMBOL);
+  const [exchangeConnStatus, setExchangeConnStatus] = useState<ConnStatus>('idle');
+  const [exchangeTicker, setExchangeTicker] = useState<MarketTickerState | null>(null);
+  const [exchangeCandles, setExchangeCandles] = useState<KlineRow[]>([]);
+  const [exchangeTrades, setExchangeTrades] = useState<TradeRow[]>([]);
+  const [exchangeTradeLoading, setExchangeTradeLoading] = useState(false);
+  const [exchangeTradeHasMore, setExchangeTradeHasMore] = useState(false);
+  const [exchangeOrderForm, setExchangeOrderForm] = useState<TradeFormState>(DEFAULT_ORDER_FORM);
+  const [exchangeMessages, setExchangeMessages] = useState<ExchangeMessageItem[]>([]);
+
+  const exchangePositions: PositionRow[] = SAMPLE_POSITIONS;
+  const exchangeWsRef = useRef<WebSocket | null>(null);
+  const exchangeWsRetryRef = useRef(0);
+  const exchangeWsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stopExchangeWsRef = useRef(false);
+  const exchangeTradeRequestId = useRef(0);
+
+  const exchangeConnText = useMemo(() => connStatusLabel(exchangeConnStatus, t), [exchangeConnStatus, t]);
+
+  // Keep a lightweight exchange timeline for the right-side system-message panel.
+  const pushExchangeMessage = useCallback((level: MessageLevel, text: string, detail?: string) => {
+    setExchangeMessages((prev) => {
+      const next = [
+        {
+          id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+          ts: Date.now(),
+          level,
+          text,
+          detail
+        },
+        ...prev
+      ];
+      return next.slice(0, 120);
+    });
+  }, []);
+
+  const exchangeToMessageView = useCallback(() => {
+    const next = new URL(window.location.href);
+    next.searchParams.set('view', 'messages');
+    window.history.replaceState({}, '', `${next.pathname}${next.search}`);
+    setActivePage('message-center');
+  }, []);
+
+  const exchangeToTradingView = useCallback(() => {
+    const next = new URL(window.location.href);
+    next.searchParams.delete('view');
+    window.history.replaceState({}, '', `${next.pathname}${next.search}`);
+    setActivePage('exchange');
+  }, []);
+
+  const [viewMode, setViewMode] = useState<'list' | 'settings'>('list');
   const [activeTab, setActiveTab] = useState<MessageTab>('all');
   const [categoryFilter, setCategoryFilter] = useState<MessageCategory | 'ALL'>('ALL');
   const [searchText, setSearchText] = useState('');
-  const [selectedMessageId, setSelectedMessageId] = useState<string | null>('msg-001');
-  const [pageSize, setPageSize] = useState<number>(MAX_PAGE_SIZE);
-  const [viewMode, setViewMode] = useState<'list' | 'settings'>('list');
-  const [saveFeedback, setSaveFeedback] = useState('');
-  const [errorState, setErrorState] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [messages, setMessages] = useState<MessageItem[]>(INITIAL_MESSAGES);
-  const [draftSettings, setDraftSettings] = useState<Record<MessageCategory, MessageNotificationSetting>>(INITIAL_SETTINGS);
-  const [activeSettings, setActiveSettings] = useState<Record<MessageCategory, MessageNotificationSetting>>(INITIAL_SETTINGS);
+  const [searchTextDebounced, setSearchTextDebounced] = useState('');
+  const [messages, setMessages] = useState<MessageSummary[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMore, setHasMore] = useState(false);
+  const [isListLoading, setIsListLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [listError, setListError] = useState<string | null>(null);
+  const [newMessageHints, setNewMessageHints] = useState(0);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 450);
-    return () => {
-      clearTimeout(timer);
-    };
+  const [selectedMessageId, setSelectedMessageId] = useState<string | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<MessageDetail | null>(null);
+  const [isDetailLoading, setIsDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const [actionFeedback, setActionFeedback] = useState('');
+
+  const [unreadTotal, setUnreadTotal] = useState(0);
+  const [unreadByCategory, setUnreadByCategory] = useState<Record<MessageCategory, number>>(createEmptyUnreadMap());
+  const [isFirstPage, setIsFirstPage] = useState(true);
+
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const [activePreferences, setActivePreferences] = useState<Record<MessageCategory, MessagePreferenceState>>(
+    DEFAULT_PREFERENCE_VALUES
+  );
+  const [draftPreferences, setDraftPreferences] = useState<Record<MessageCategory, MessagePreferenceState>>(
+    DEFAULT_PREFERENCE_VALUES
+  );
+  const [preferenceLoading, setPreferenceLoading] = useState(false);
+  const [preferenceSaving, setPreferenceSaving] = useState(false);
+  const [preferenceError, setPreferenceError] = useState<string | null>(null);
+  const [preferenceFeedback, setPreferenceFeedback] = useState('');
+
+  const [wsStatus, setWsStatus] = useState<MessageWsStatus>('idle');
+
+  const messageListRequestId = useRef(0);
+  const detailRequestId = useRef(0);
+  const unreadRequestId = useRef(0);
+
+  const wsRef = useRef<WebSocket | null>(null);
+  const wsRetryRef = useRef(0);
+  const wsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const connectWsRef = useRef<() => void>(() => {});
+  const stopWsRef = useRef(false);
+
+  const filtersRef = useRef({
+    activeTab: 'all' as MessageTab,
+    categoryFilter: 'ALL' as MessageCategory | 'ALL',
+    searchText: '',
+    viewMode: 'list' as 'list' | 'settings',
+    isFirstPage: true
+  });
+
+  const normalizeExchangeTradeRows = useCallback((rawTrades: unknown): TradeRow[] => {
+    if (!Array.isArray(rawTrades)) {
+      return [];
+    }
+
+    return rawTrades
+      .map((item) => normalizeTrade(item as RawTrade))
+      .filter((row): row is TradeRow => row !== null);
   }, []);
 
-  const filterBase = useMemo(() => {
-    const search = normalizeFilterKey(searchText);
-    const now = messages.filter((msg) => {
-      if (msg.isDeleted) {
-        return false;
+  const normalizeExchangeCandles = useCallback((rawCandles: unknown): KlineRow[] => {
+    if (!Array.isArray(rawCandles)) {
+      return [];
+    }
+
+    return rawCandles
+      .map((item) => normalizeKline(item as RawKline))
+      .filter((item): item is KlineRow => item !== null)
+      .sort((a, b) => Date.parse(a.openTime) - Date.parse(b.openTime));
+  }, []);
+
+  const applyExchangeTrade = useCallback((incoming: TradeRow) => {
+    setExchangeTrades((prev) => {
+      const exists = prev.some((item) => item.matchId === incoming.matchId);
+      if (exists) {
+        return prev
+          .map((item) => (item.matchId === incoming.matchId ? { ...item, ...incoming } : item))
+          .sort((a, b) => b.tsKey - a.tsKey)
+          .slice(0, MAX_TRADE_ROWS);
       }
 
-      if (activeTab === 'unread' && (msg.isRead || msg.isArchived)) {
-        return false;
-      }
-
-      if (activeTab === 'archived' && !msg.isArchived) {
-        return false;
-      }
-
-      if (activeTab !== 'archived' && msg.isArchived) {
-        return false;
-      }
-
-      if (categoryFilter !== 'ALL' && msg.category !== categoryFilter) {
-        return false;
-      }
-
-      if (search) {
-        const title = normalizeFilterKey(msg.title);
-        const summary = normalizeFilterKey(msg.summary);
-        const content = normalizeFilterKey(msg.content);
-        return title.includes(search) || summary.includes(search) || content.includes(search);
-      }
-
-      return true;
+      return [incoming, ...prev].sort((a, b) => b.tsKey - a.tsKey).slice(0, MAX_TRADE_ROWS);
     });
+  }, []);
 
-    return now.sort((a, b) => {
-      if (a.isPinned !== b.isPinned) {
-        return a.isPinned ? -1 : 1;
+  const loadExchangeSnapshot = useCallback(async () => {
+    const requestId = ++exchangeTradeRequestId.current;
+    setExchangeTradeLoading(true);
+
+    const [rawTicker, rawKlines, rawTrades] = await Promise.all([
+      fetchJson<RawTicker>(`/api/market-data/${exchangeSymbol}/ticker`),
+      fetchJson<RawKline[]>(`/api/market-data/${exchangeSymbol}/klines?limit=${MAX_CHART_CANDLES}`),
+      fetchJson<RawTrade[]>(`/api/market-data/${exchangeSymbol}/trades?limit=${EXCHANGE_TRADE_HISTORY_LIMIT}`)
+    ]);
+
+    if (requestId !== exchangeTradeRequestId.current) {
+      return;
+    }
+
+    setExchangeTicker((rawTicker && normalizeTicker(rawTicker)) || null);
+
+    const normalizedCandles = normalizeExchangeCandles(rawKlines).slice(-MAX_CHART_CANDLES);
+    setExchangeCandles(normalizedCandles);
+
+    const normalizedTrades = normalizeExchangeTradeRows(rawTrades);
+    setExchangeTrades(normalizedTrades);
+    setExchangeTradeHasMore(Array.isArray(rawTrades) && rawTrades.length === EXCHANGE_TRADE_HISTORY_LIMIT);
+    setExchangeTradeLoading(false);
+
+    if (normalizedTrades.length === 0) {
+      pushExchangeMessage('info', '交易列表尚未收到成交資料');
+    }
+  }, [exchangeSymbol, normalizeExchangeCandles, normalizeExchangeTradeRows, pushExchangeMessage]);
+
+  const loadMoreExchangeTrades = useCallback(async () => {
+    if (!exchangeTradeHasMore || exchangeTradeLoading || exchangeTrades.length === 0) {
+      return;
+    }
+
+    const cursor = exchangeTrades[exchangeTrades.length - 1];
+    const earliestTs = new Date(cursor.tsKey).toISOString();
+    if (Number.isNaN(Date.parse(earliestTs))) {
+      return;
+    }
+
+    const query = new URLSearchParams();
+    query.set('limit', String(EXCHANGE_TRADE_HISTORY_LIMIT));
+    query.set('beforeTs', earliestTs);
+
+    setExchangeTradeLoading(true);
+    const rawTrades = await fetchJson<RawTrade[]>(`/api/market-data/${exchangeSymbol}/trades?${query.toString()}`);
+    if (!Array.isArray(rawTrades)) {
+      setExchangeTradeLoading(false);
+      setExchangeTradeHasMore(false);
+      return;
+    }
+
+    const incoming = normalizeExchangeTradeRows(rawTrades);
+    setExchangeTrades((prev) => {
+      const exists = new Set(prev.map((trade) => trade.matchId));
+      const next = [...prev, ...incoming.filter((trade) => !exists.has(trade.matchId))];
+      return next.sort((a, b) => b.tsKey - a.tsKey).slice(0, MAX_TRADE_ROWS);
+    });
+    setExchangeTradeHasMore(rawTrades.length === EXCHANGE_TRADE_HISTORY_LIMIT);
+    setExchangeTradeLoading(false);
+  }, [exchangeSymbol, exchangeTradeHasMore, exchangeTradeLoading, exchangeTrades, normalizeExchangeTradeRows]);
+
+  const connectExchangeWebSocket = useCallback(() => {
+    const connect = () => {
+      if (stopExchangeWsRef.current) {
+        return;
       }
 
-      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
-    });
-  }, [messages, activeTab, categoryFilter, searchText]);
+      if (exchangeWsTimerRef.current) {
+        clearTimeout(exchangeWsTimerRef.current);
+        exchangeWsTimerRef.current = null;
+      }
 
-  const visibleMessages = useMemo(() => filterBase.slice(0, pageSize), [filterBase, pageSize]);
-  const hasMore = pageSize < filterBase.length;
+      const socket = new WebSocket(buildWsUrl());
+      exchangeWsRef.current = socket;
+      setExchangeConnStatus('connecting');
 
-  const unreadCountByCategory = useMemo(() => {
-    const counters: Record<MessageCategory, number> = {
-      SYSTEM: 0,
-      ANNOUNCEMENT: 0,
-      ORDER: 0,
-      TRADE: 0,
-      DEPOSIT: 0,
-      WITHDRAWAL: 0,
-      ACCOUNT: 0,
-      SECURITY: 0,
-      CAMPAIGN: 0,
-      COMPLIANCE: 0
+      socket.onopen = () => {
+        if (stopExchangeWsRef.current) {
+          return;
+        }
+
+        exchangeWsRetryRef.current = 0;
+        setExchangeConnStatus('open');
+        socket.send(JSON.stringify(wsCommandSubscribe(exchangeSymbol)));
+        void loadExchangeSnapshot();
+        pushExchangeMessage('info', `已訂閱 ${exchangeSymbol}`);
+      };
+
+      socket.onmessage = (event) => {
+        let payload: { event?: string; type?: string; data?: unknown };
+        try {
+          payload = JSON.parse(event.data);
+        } catch {
+          return;
+        }
+
+        if (!payload || (typeof payload.event !== 'string' && typeof payload.type !== 'string')) {
+          return;
+        }
+
+        const eventName = (payload.event || payload.type || '').toLowerCase();
+        if (eventName === 'ticker') {
+          const normalized = normalizeTicker(payload.data as RawTicker);
+          if (normalized) {
+            setExchangeTicker(normalized);
+          }
+          return;
+        }
+
+        if (eventName === 'trade') {
+          const rawTrade = payload.data as RawTrade;
+          const trade = normalizeTrade(rawTrade);
+          if (trade) {
+            applyExchangeTrade(trade);
+            setExchangeCandles((prev) => upsertKlineWithTrade(prev, rawTrade, MAX_CHART_CANDLES).slice(-MAX_CHART_CANDLES));
+          }
+          return;
+        }
+
+        if (eventName === 'subscribed.market') {
+          pushExchangeMessage('info', `訂閱 ${exchangeSymbol} 成功`);
+          return;
+        }
+
+        if (eventName === 'gateway.heartbeat' || eventName === 'heartbeat') {
+          setExchangeConnStatus('open');
+          return;
+        }
+
+        if (eventName === 'error') {
+          pushExchangeMessage('error', 'WS 回報錯誤', (payload.data as Record<string, unknown>)?.['reason'] as string);
+        }
+      };
+
+      socket.onclose = () => {
+        if (stopExchangeWsRef.current) {
+          return;
+        }
+
+        const retryRound = exchangeWsRetryRef.current;
+        if (retryRound < MESSAGE_RETRY_DELAYS_MS.length) {
+          setExchangeConnStatus('reconnecting');
+          exchangeWsRetryRef.current += 1;
+          exchangeWsTimerRef.current = window.setTimeout(() => {
+            connect();
+          }, MESSAGE_RETRY_DELAYS_MS[retryRound]);
+          return;
+        }
+
+        setExchangeConnStatus('error');
+        pushExchangeMessage('error', 'WS 連線中斷，需手動刷新後重試');
+      };
+
+      socket.onerror = () => {
+        if (stopExchangeWsRef.current) {
+          return;
+        }
+        setExchangeConnStatus('error');
+        pushExchangeMessage('error', 'WebSocket 連線異常');
+      };
     };
 
-    for (const item of messages) {
-      if (item.isDeleted || item.isArchived || item.isRead) {
-        continue;
-      }
-      counters[item.category] += 1;
+    connect();
+  }, [applyExchangeTrade, exchangeSymbol, loadExchangeSnapshot, pushExchangeMessage]);
+
+  const stopExchangeSocket = useCallback(() => {
+    stopExchangeWsRef.current = true;
+    if (exchangeWsTimerRef.current) {
+      clearTimeout(exchangeWsTimerRef.current);
+      exchangeWsTimerRef.current = null;
     }
-    return counters;
-  }, [messages]);
+    exchangeWsRef.current?.close();
+  }, []);
 
-  const unreadTotal = useMemo(() => Object.values(unreadCountByCategory).reduce((sum, count) => sum + count, 0), [unreadCountByCategory]);
-
-  const selectedMessage = selectedMessageId ? messages.find((m) => m.id === selectedMessageId) ?? null : null;
-
+  // Kick off exchange stream bootstrap and keep websocket in sync with lifecycle.
   useEffect(() => {
-    if (!selectedMessageId) {
+    void loadExchangeSnapshot();
+    stopExchangeWsRef.current = false;
+    connectExchangeWebSocket();
+
+    return () => {
+      stopExchangeSocket();
+    };
+  }, [connectExchangeWebSocket, loadExchangeSnapshot, stopExchangeSocket]);
+
+  // Keep latest filter/state snapshot for websocket handlers and interval callbacks.
+  useEffect(() => {
+    filtersRef.current = {
+      activeTab,
+      categoryFilter,
+      searchText: searchTextDebounced,
+      viewMode,
+      isFirstPage
+    };
+  }, [activeTab, categoryFilter, searchTextDebounced, viewMode, isFirstPage]);
+
+  // Debounce search input to avoid frequent API calls while typing.
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      setSearchTextDebounced(searchText.trim());
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchText]);
+
+  const listFilterErrorHint = useMemo(() => {
+    const list = [activeTab, categoryFilter, searchTextDebounced].filter(Boolean).join(' / ');
+    return list ? `目前條件：${list}` : '';
+  }, [activeTab, categoryFilter, searchTextDebounced]);
+
+  const loadUnreadCount = useCallback(async () => {
+    const requestId = ++unreadRequestId.current;
+    const query = new URLSearchParams();
+    query.set('excludeArchived', 'true');
+
+    const result = await requestMessageApi<UnreadCountResponse>('/api/messages/unread-count', { query });
+    if (requestId !== unreadRequestId.current) {
       return;
     }
-    if (!messages.some((msg) => msg.id === selectedMessageId && !msg.isDeleted)) {
-      setSelectedMessageId(null);
+
+    if (!result.ok) {
+      setUnreadByCategory((prev) => prev);
+      return;
     }
-  }, [messages, selectedMessageId]);
 
-  useEffect(() => {
-    setPageSize(MAX_PAGE_SIZE);
-  }, [activeTab, categoryFilter, searchText]);
+    setUnreadTotal(Math.max(0, Number(result.data.unreadCount) || 0));
+    setUnreadByCategory(normalizeUnreadMap(result.data.byCategory));
+  }, []);
 
-  function markRead(messageId: string) {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, isRead: true } : msg))
-    );
-  }
+  const applyMessagesToList = useCallback((items: MessageSummary[]) => {
+    setMessages((prev) => {
+      const map = new Map(prev.map((item) => [item.messageId, item]));
+      const next = [...prev];
 
-  function markAllRead() {
-    setMessages((prev) =>
-      prev.map((msg) => {
-        const shouldMark =
-          !msg.isDeleted &&
-          !msg.isArchived &&
-          (activeTab === 'all' || activeTab === 'unread') &&
-          !msg.isRead &&
-          (categoryFilter === 'ALL' || msg.category === categoryFilter);
-        return shouldMark ? { ...msg, isRead: true } : msg;
-      })
-    );
-  }
+      items.forEach((incoming) => {
+        const existing = map.get(incoming.messageId);
+        if (!existing) {
+          next.push(incoming);
+          return;
+        }
 
-  function archiveMessage(messageId: string) {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, isArchived: true } : msg))
-    );
-  }
+        const index = next.findIndex((item) => item.messageId === incoming.messageId);
+        if (index >= 0) {
+          next[index] = { ...existing, ...incoming };
+        }
+      });
 
-  function deleteMessage(messageId: string) {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, isDeleted: true, isRead: true } : msg))
-    );
-  }
-
-  function togglePin(messageId: string) {
-    setMessages((prev) =>
-      prev.map((msg) => (msg.id === messageId ? { ...msg, isPinned: !msg.isPinned } : msg))
-    );
-  }
-
-  function applyMockError() {
-    setErrorState('無法載入訊息設定，請稍後再試。');
-    setSaveFeedback('');
-  }
-
-  function clearError() {
-    setErrorState(null);
-  }
-
-  function onToggleChannel(category: MessageCategory, channel: 'email' | 'sms' | 'push') {
-    setDraftSettings((prev) => {
-      const item = prev[category];
-      if (!item) {
-        return prev;
-      }
-      if (item.locks[channel]) {
-        return prev;
-      }
-      return {
-        ...prev,
-        [category]: { ...item, [channel]: !item[channel] }
-      };
+      return next;
     });
-  }
+  }, []);
 
-  function saveSettings() {
-    clearError();
-    setSaveFeedback('');
-    if (draftSettings.SECURITY.email === false || draftSettings.SECURITY.push === false) {
-      setErrorState('安全與法遵通知不可關閉站內外通知。');
+  const replaceSingleMessageInList = useCallback((incoming: MessageSummary, prepend = false) => {
+    setMessages((prev) => {
+      const next = [...prev];
+      const index = next.findIndex((item) => item.messageId === incoming.messageId);
+      if (index >= 0) {
+        next[index] = { ...next[index], ...incoming };
+        if (prepend) {
+          const [updated] = next.splice(index, 1);
+          next.unshift(updated);
+        }
+        return next;
+      }
+
+      if (prepend) {
+        next.unshift(incoming);
+      } else {
+        next.push(incoming);
+      }
+      return next.slice(0, 160);
+    });
+  }, []);
+
+  const patchSingleMessage = useCallback((messageId: string, patch: Partial<MessageSummary>) => {
+    setMessages((prev) =>
+      prev.map((item) => (item.messageId === messageId ? { ...item, ...patch } : item))
+    );
+    setSelectedMessage((current) =>
+      current && current.messageId === messageId ? ({ ...current, ...patch } as MessageDetail) : current
+    );
+  }, []);
+
+  const loadMessagePage = useCallback(
+    async (cursor: string | null, reset: boolean) => {
+      const requestId = ++messageListRequestId.current;
+      const { activeTab: targetTab, categoryFilter: targetCategory, searchText: targetSearch } = filtersRef.current;
+      const query = new URLSearchParams();
+      query.set('limit', String(PAGE_SIZE));
+      query.set('status', targetTab === 'unread' ? 'UNREAD' : 'ALL');
+      query.set('archived', targetTab === 'archived' ? 'true' : 'false');
+      if (targetSearch) {
+        query.set('search', targetSearch);
+      }
+      if (targetCategory !== 'ALL') {
+        query.append('category', targetCategory);
+      }
+      query.set('pinnedFirst', 'true');
+      query.set('excludeDeleted', 'true');
+      if (cursor) {
+        query.set('cursor', cursor);
+      }
+
+      if (reset) {
+        setIsListLoading(true);
+        setListError(null);
+        setIsLoadingMore(false);
+      } else {
+        setIsLoadingMore(true);
+      }
+
+      const result = await requestMessageApi<MessageApiListResponse>('/api/messages', { query });
+      if (requestId !== messageListRequestId.current) {
+        return;
+      }
+
+      if (!result.ok) {
+        const errorMessage = resolveErrorMessage(result);
+        setListError(errorMessage);
+        setIsListLoading(false);
+        setIsLoadingMore(false);
+
+        if (cursor && isCursorInvalidError(result)) {
+          setListError('資料位移，已自動重載');
+          setNewMessageHints(0);
+          await loadMessagePage(null, true);
+        }
+        return;
+      }
+
+      const incoming = (result.data?.items ?? [])
+        .map((item) => normalizeMessageSummary(item))
+        .filter((item): item is MessageSummary => !!item);
+
+      setListError(null);
+      setNextCursor(result.data?.nextCursor ?? null);
+      setHasMore(Boolean(result.data?.hasMore));
+
+      if (reset) {
+        setMessages(incoming);
+        setIsFirstPage(true);
+      } else {
+        applyMessagesToList(incoming);
+        setIsFirstPage(false);
+      }
+
+      setIsListLoading(false);
+      setIsLoadingMore(false);
+    },
+    [applyMessagesToList]
+  );
+
+  const syncCurrentView = useCallback(async () => {
+    await Promise.all([loadMessagePage(null, true), loadUnreadCount()]);
+  }, [loadMessagePage, loadUnreadCount]);
+
+  const loadMoreMessages = useCallback(() => {
+    if (!hasMore || !nextCursor || isLoadingMore || isListLoading) {
       return;
     }
-    if (draftSettings.COMPLIANCE.email === false || draftSettings.COMPLIANCE.push === false) {
-      setErrorState('安全與法遵通知不可關閉站內外通知。');
+    void loadMessagePage(nextCursor, false);
+  }, [hasMore, nextCursor, isLoadingMore, isListLoading, loadMessagePage]);
+
+  const readMessage = useCallback(
+    async (messageId: string) => {
+      const result = await requestMessageApi<MessageReadResponse>(`/api/messages/${encodeURIComponent(messageId)}/read`, {
+        method: 'POST'
+      });
+      if (!result.ok) {
+        return;
+      }
+      patchSingleMessage(messageId, {
+        isRead: true
+      });
+      void loadUnreadCount();
+    },
+    [patchSingleMessage, loadUnreadCount]
+  );
+
+  const markMessageArchived = useCallback(
+    async (messageId: string, archived: boolean) => {
+      const endpoint = archived ? '/archive' : '/unarchive';
+      const result = await requestMessageApi<MessageArchiveResponse>(
+        `/api/messages/${encodeURIComponent(messageId)}${endpoint}`,
+        { method: 'POST' }
+      );
+
+      if (!result.ok) {
+        return resolveErrorMessage(result);
+      }
+
+      await syncCurrentView();
+      if (selectedMessageId === messageId && archived) {
+        setSelectedMessageId(null);
+        setSelectedMessage(null);
+      }
+      return null;
+    },
+    [syncCurrentView, selectedMessageId]
+  );
+
+  const toggleMessagePinned = useCallback(
+    async (messageId: string, pinned: boolean) => {
+      const method = pinned ? 'DELETE' : 'POST';
+      const result = await requestMessageApi<MessagePinResponse>(
+        `/api/messages/${encodeURIComponent(messageId)}/pin`,
+        { method }
+      );
+
+      if (!result.ok) {
+        return resolveErrorMessage(result);
+      }
+
+      patchSingleMessage(messageId, {
+        isPinned: pinned
+      });
+      return null;
+    },
+    [patchSingleMessage]
+  );
+
+  const deleteMessage = useCallback(
+    async (messageId: string) => {
+      const result = await requestMessageApi<MessageDeleteResponse>(`/api/messages/${encodeURIComponent(messageId)}`, {
+        method: 'DELETE'
+      });
+      if (!result.ok) {
+        return resolveErrorMessage(result);
+      }
+
+      setMessages((prev) => prev.filter((item) => item.messageId !== messageId));
+      if (selectedMessageId === messageId) {
+        setSelectedMessageId(null);
+        setSelectedMessage(null);
+      }
+      void loadUnreadCount();
+      return null;
+    },
+    [selectedMessageId, loadUnreadCount]
+  );
+
+  const readAllMessage = useCallback(async () => {
+    const body: { scope: ReadAllScope; category?: MessageCategory } = {
+      scope: categoryFilter === 'ALL' ? 'ALL' : 'CATEGORY'
+    };
+    if (body.scope === 'CATEGORY') {
+      body.category = categoryFilter as MessageCategory;
+    }
+
+    const result = await requestMessageApi<MessageReadAllResponse>('/api/messages/read-all', {
+      method: 'POST',
+      body
+    });
+
+    if (!result.ok) {
+      return resolveErrorMessage(result);
+    }
+    setActionFeedback(`已標為已讀 ${result.data.updatedCount} 則`);
+    await syncCurrentView();
+    return null;
+  }, [categoryFilter, syncCurrentView]);
+
+  const selectMessage = useCallback(
+    async (messageId: string) => {
+      const requestId = ++detailRequestId.current;
+      setSelectedMessageId(messageId);
+      setIsDetailLoading(true);
+      setDetailError(null);
+
+      const result = await requestMessageApi<MessageApiDetailResponse>(`/api/messages/${encodeURIComponent(messageId)}`, {
+        method: 'GET'
+      });
+      if (requestId !== detailRequestId.current) {
+        return;
+      }
+      if (!result.ok) {
+        setSelectedMessage(null);
+        setDetailError(resolveErrorMessage(result));
+        setIsDetailLoading(false);
+        if (result.code === 'MESSAGE_NOT_FOUND') {
+          setSelectedMessageId(null);
+          setMessages((prev) => prev.filter((item) => item.messageId !== messageId));
+        }
+        return;
+      }
+
+      const normalized = normalizeMessageDetail(result.data);
+      setSelectedMessage(normalized);
+      setIsDetailLoading(false);
+
+      await readMessage(messageId);
+    },
+    [readMessage]
+  );
+
+  const loadMessagePreferences = useCallback(async () => {
+    if (preferenceLoading) {
       return;
     }
-    setActiveSettings(draftSettings);
-    setSaveFeedback('設定已儲存');
-    setTimeout(() => setSaveFeedback(''), 1800);
-  }
 
-  function discardChanges() {
-    setDraftSettings(activeSettings);
-    setSaveFeedback('');
-    setErrorState(null);
+    setPreferenceLoading(true);
+    setPreferenceError(null);
+    setPreferenceFeedback('');
+
+    const result = await requestMessageApi<MessagePreferencesResponse>('/api/message-preferences', { method: 'GET' });
+    if (!result.ok) {
+      setPreferenceError(resolveErrorMessage(result));
+      setPreferenceLoading(false);
+      setPreferencesLoaded(false);
+      return;
+    }
+
+    const next = normalizePreferencePayload(result.data.preferences ?? []);
+    setActivePreferences(clonePreferenceMap(next));
+    setDraftPreferences(clonePreferenceMap(next));
+    setPreferencesLoaded(true);
+    setPreferenceLoading(false);
+  }, [preferenceLoading]);
+
+  const saveMessagePreferences = useCallback(async () => {
+    setPreferenceSaving(true);
+    setPreferenceError(null);
+    setPreferenceFeedback('');
+
+    const result = await requestMessageApi<MessageApiPreferencesUpdateResponse>('/api/message-preferences', {
+      method: 'PUT',
+      body: { preferences: toRecordArray(draftPreferences) }
+    });
+    if (!result.ok) {
+      setPreferenceError(resolveErrorMessage(result));
+      setPreferenceSaving(false);
+      return;
+    }
+
+    const next = normalizePreferencePayload(result.data.preferences ?? []);
+    setActivePreferences(clonePreferenceMap(next));
+    setDraftPreferences(clonePreferenceMap(next));
+    setPreferenceFeedback(`更新完成，已更新 ${result.data.updated} 項`);
+    setPreferenceSaving(false);
+  }, [draftPreferences]);
+
+  const discardPreferenceChanges = useCallback(() => {
+    setDraftPreferences(clonePreferenceMap(activePreferences));
+    setPreferenceError(null);
+    setPreferenceFeedback('');
+  }, [activePreferences]);
+
+  const togglePreferenceChannel = useCallback(
+    (category: MessageCategory, channel: 'emailEnabled' | 'smsEnabled' | 'pushEnabled') => {
+      setPreferenceFeedback('');
+      setPreferenceError(null);
+      setDraftPreferences((prev) => {
+        const current = prev[category];
+        if (!current || current.locked) {
+          return prev;
+        }
+        return {
+          ...prev,
+          [category]: { ...current, [channel]: !current[channel] }
+        };
+      });
+    },
+    []
+  );
+
+  const updateWsMessage = useCallback(
+    (payload: unknown) => {
+      const summary = normalizeMessageSummary((payload || {}) as WsMessageNewPayload);
+      if (!summary) {
+        return;
+      }
+
+      if (!summary.messageId) {
+        return;
+      }
+
+      void loadUnreadCount();
+
+      const { activeTab: currentTab, categoryFilter: currentCategory, searchText: currentSearch, viewMode: currentViewMode, isFirstPage } =
+        filtersRef.current;
+
+      if (currentViewMode !== 'list') {
+        setNewMessageHints((prev) => prev + 1);
+        return;
+      }
+
+      if (currentTab === 'archived') {
+        setNewMessageHints((prev) => prev + 1);
+        return;
+      }
+
+      if (!messageMatchesFilter(summary, currentTab, currentCategory, currentSearch)) {
+        setNewMessageHints((prev) => prev + 1);
+        return;
+      }
+
+      if (!isFirstPage) {
+        setNewMessageHints((prev) => prev + 1);
+        return;
+      }
+
+      replaceSingleMessageInList(summary, true);
+      setIsFirstPage(true);
+      setNewMessageHints(0);
+    },
+    [loadUnreadCount, replaceSingleMessageInList]
+  );
+
+  const updateWsUnreadCount = useCallback(
+    (payload: unknown) => {
+      const data = payload as WsUnreadPayload;
+      if (!data || typeof data !== 'object') {
+        void loadUnreadCount();
+        return;
+      }
+      if (typeof data.unreadCount === 'number' || data.unreadCount === 0) {
+        setUnreadTotal(Math.max(0, Number(data.unreadCount) || 0));
+      }
+      if (data.byCategory && typeof data.byCategory === 'object') {
+        setUnreadByCategory(normalizeUnreadMap(data.byCategory));
+        return;
+      }
+      void loadUnreadCount();
+    },
+    [loadUnreadCount]
+  );
+
+  const wsStatusLabel = useMemo(() => {
+    if (wsStatus === 'open') {
+      return 'WS 連線中';
+    }
+    if (wsStatus === 'connecting') {
+      return 'WS 連線中...';
+    }
+    if (wsStatus === 'reconnecting') {
+      return 'WS 重連中';
+    }
+    if (wsStatus === 'error') {
+      return 'WS 連線中斷';
+    }
+    return 'WS 未啟動';
+  }, [wsStatus]);
+
+  // Initial bootstrap + reload list when filter changes.
+  useEffect(() => {
+    void syncCurrentView();
+  }, []);
+
+  useEffect(() => {
+    void loadMessagePage(null, true);
+  }, [activeTab, categoryFilter, searchTextDebounced, loadMessagePage]);
+
+  // Load preference data when entering preference page.
+  useEffect(() => {
+    if (viewMode === 'settings' && !preferencesLoaded) {
+      void loadMessagePreferences();
+    }
+  }, [viewMode, preferencesLoaded, loadMessagePreferences]);
+
+  useEffect(() => {
+    let isUnmounted = false;
+
+    const connect = () => {
+      if (isUnmounted) {
+        return;
+      }
+
+      if (wsTimerRef.current) {
+        clearTimeout(wsTimerRef.current);
+        wsTimerRef.current = null;
+      }
+
+      if (stopWsRef.current) {
+        return;
+      }
+
+      const socket = new WebSocket(buildMessageWsUrl());
+      wsRef.current = socket;
+      setWsStatus('connecting');
+
+      socket.onopen = () => {
+        if (isUnmounted || stopWsRef.current) {
+          return;
+        }
+        wsRetryRef.current = 0;
+        setWsStatus('open');
+        try {
+          socket.send(JSON.stringify({ type: 'subscribe.user' }));
+        } catch {
+          // Some backend gateway may ignore subscribe for private user channel.
+        }
+        void syncCurrentView();
+      };
+
+      socket.onmessage = (event) => {
+        if (isUnmounted || stopWsRef.current) {
+          return;
+        }
+        let payload: WsEnvelope;
+        try {
+          payload = JSON.parse(event.data) as WsEnvelope;
+        } catch {
+          return;
+        }
+
+        const eventName = payload.event || payload.type || '';
+        if (eventName === 'message.new') {
+          updateWsMessage(payload.data ?? payload);
+        } else if (eventName === 'message.unreadCount') {
+          updateWsUnreadCount(payload.data);
+        }
+      };
+
+      socket.onclose = () => {
+        if (isUnmounted || stopWsRef.current) {
+          return;
+        }
+        const retryRound = wsRetryRef.current;
+        if (retryRound < MESSAGE_RETRY_DELAYS_MS.length) {
+          setWsStatus('reconnecting');
+          wsRetryRef.current += 1;
+          wsTimerRef.current = window.setTimeout(() => {
+            connect();
+          }, MESSAGE_RETRY_DELAYS_MS[retryRound]);
+          return;
+        }
+        setWsStatus('error');
+      };
+
+      socket.onerror = () => {
+        if (isUnmounted || stopWsRef.current) {
+          return;
+        }
+        setWsStatus('error');
+      };
+    };
+
+    const reconnectNow = () => {
+      if (isUnmounted || stopWsRef.current) {
+        return;
+      }
+      wsRetryRef.current = 0;
+      wsRef.current?.close();
+      connect();
+    };
+
+    connectWsRef.current = reconnectNow;
+    connect();
+
+    return () => {
+      isUnmounted = true;
+      stopWsRef.current = true;
+      if (wsTimerRef.current) {
+        clearTimeout(wsTimerRef.current);
+      }
+      wsRef.current?.close();
+    };
+  }, [syncCurrentView, updateWsMessage, updateWsUnreadCount]);
+
+  useEffect(() => {
+    if (selectedMessageId && messages.length > 0 && !messages.some((item) => item.messageId === selectedMessageId)) {
+      setSelectedMessageId(null);
+      setSelectedMessage(null);
+    }
+  }, [selectedMessageId, messages]);
+
+  const listErrorBanner = useMemo(() => {
+    if (!listError) {
+      return null;
+    }
+    return (
+      <div className="message-empty error">
+        {listError}
+      </div>
+    );
+  }, [listError]);
+
+  const topbarConnStatus: ConnStatus = activePage === 'exchange' ? exchangeConnStatus : wsStatus;
+  const topbarConnText = activePage === 'exchange' ? exchangeConnText : wsStatusLabel;
+
+  if (activePage === 'exchange') {
+    return (
+      <div className="exchange-page">
+        <ExchangeTopBar
+          symbol={exchangeSymbol}
+          connText={topbarConnText}
+          status={topbarConnStatus}
+          unreadCount={unreadTotal}
+          onMessageCenterOpen={exchangeToMessageView}
+          onBackToExchange={exchangeToTradingView}
+          showBackButton={activePage === 'message-center'}
+        />
+
+        <MarketRibbon ticker={exchangeTicker} symbol={exchangeSymbol} candles={exchangeCandles} />
+
+        <div className="exchange-grid">
+          <div className="top-row">
+            <div className="stack-column">
+              <KLinePanel candles={exchangeCandles} />
+              <TradeHistoryPanel
+                trades={exchangeTrades}
+                loading={exchangeTradeLoading}
+                hasMore={exchangeTradeHasMore}
+                onLoadMore={loadMoreExchangeTrades}
+              />
+            </div>
+
+            <div className="stack-column">
+              <OrderPanel
+                side={exchangeOrderForm.side}
+                type={exchangeOrderForm.type}
+                price={exchangeOrderForm.price}
+                qty={exchangeOrderForm.qty}
+                onStateChange={setExchangeOrderForm}
+              />
+              <PositionPanel rows={exchangePositions} />
+              <MessageCenterPanel messages={exchangeMessages} />
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
     <div className="exchange-page">
+      <ExchangeTopBar
+        symbol={exchangeSymbol}
+        connText={topbarConnText}
+        status={topbarConnStatus}
+        unreadCount={unreadTotal}
+        onMessageCenterOpen={exchangeToMessageView}
+        onBackToExchange={exchangeToTradingView}
+        showBackButton={activePage === 'message-center'}
+      />
       <header className="message-center-header">
         <div>
           <h1>訊息中心</h1>
-          <p>集中管理公告、交易、資產與安全相關訊息</p>
+          <p>集中管理公告、交易、資產與安全訊息</p>
         </div>
-        <div className="message-center-badge">
-          未讀：<strong>{unreadTotal}</strong>
-          <span className="badge-dot">總</span>
+        <div>
+          <div className="message-center-badge">
+            未讀：
+            <strong>{unreadTotal}</strong>
+            <span className="badge-dot">{unreadTotal === 0 ? '全數已讀' : '未讀中'}</span>
+          </div>
+          <div className="message-center-badge">
+            {wsStatusLabel}
+            {wsStatus === 'error' ? (
+              <button
+                type="button"
+                onClick={() => {
+                  stopWsRef.current = false;
+                  wsRetryRef.current = 0;
+                  connectWsRef.current();
+                }}
+                style={{ marginLeft: 8 }}
+              >
+                點我重試
+              </button>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -623,226 +1809,318 @@ export function App() {
                   <input
                     value={searchText}
                     onChange={(event) => setSearchText(event.currentTarget.value)}
-                    placeholder="搜尋標題或內容"
+                    placeholder="搜尋標題或正文"
                   />
                 </div>
 
                 <div className="message-category-grid">
-                  {CATEGORY_OPTIONS.map((option) => {
-                    const count =
-                      option.value === 'ALL'
-                        ? unreadTotal
-                        : unreadCountByCategory[option.value as MessageCategory];
-                    return (
-                      <button
-                        key={option.value}
-                        type="button"
-                        className={`category-chip ${categoryFilter === option.value ? 'active' : ''}`}
-                        onClick={() => setCategoryFilter(option.value)}
-                      >
-                        {option.label}
-                        {option.value === 'ALL' ? null : <span>{count}</span>}
-                      </button>
-                    );
-                  })}
+                  {CATEGORY_OPTIONS.map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      className={`category-chip ${categoryFilter === option.value ? 'active' : ''}`}
+                      onClick={() => setCategoryFilter(option.value)}
+                    >
+                      {option.label}
+                      <span>
+                        {option.value === 'ALL'
+                          ? unreadTotal
+                          : `${unreadByCategory[option.value as MessageCategory] ?? 0} 未讀`}
+                      </span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               <div className="message-toolbar">
-                <button type="button" onClick={() => markAllRead()}>
-                  全部未讀標為已讀
+                <button
+                  type="button"
+                  onClick={() => {
+                    void readAllMessage().then((errorMessage) => {
+                      if (errorMessage) {
+                        setActionFeedback(errorMessage);
+                        window.setTimeout(() => setActionFeedback(''), 2200);
+                      }
+                    });
+                  }}
+                >
+                  全部已讀
                 </button>
-                <button type="button" onClick={() => {}}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void syncCurrentView();
+                    setActionFeedback('重新整理完成');
+                    window.setTimeout(() => setActionFeedback(''), 1200);
+                  }}
+                >
                   重新整理
                 </button>
               </div>
+
+              <p className="muted">篩選條件：{listFilterErrorHint}</p>
             </section>
 
             <div className="message-center-grid">
               <section className="panel">
                 <div className="panel-head">
                   <h2>
-                    訊息列表 <span className="message-list-sub">{filterBase.length} 筆</span>
+                    訊息列表
+                    <span className="message-list-sub"> {messages.length} 筆</span>
                   </h2>
                 </div>
+
+                {newMessageHints > 0 ? (
+                  <div className="message-empty">
+                    你有 {newMessageHints} 則新訊息，點擊「載入最新」以更新列表
+                    <div className="detail-actions">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setNewMessageHints(0);
+                          void syncCurrentView();
+                        }}
+                      >
+                        載入最新
+                      </button>
+                    </div>
+                  </div>
+                ) : null}
+
                 <div className="message-list-shell">
-                  {isLoading && (
+                  {isListLoading ? (
                     <div className="message-skeleton">
                       <div className="skeleton-line" />
                       <div className="skeleton-line short" />
                       <div className="skeleton-line" />
                     </div>
-                  )}
-                  {!isLoading &&
-                    !errorState &&
-                    visibleMessages.map((msg) => {
-                      const severity = SEVERITY[msg.severity];
-                      return (
-                        <article
-                          key={msg.id}
-                          className={`message-row ${msg.isRead ? '' : 'unread'} ${selectedMessageId === msg.id ? 'selected' : ''} tone-${severity.tone}`}
-                          onClick={() => {
-                            setSelectedMessageId(msg.id);
-                          }}
-                        >
-                          <div className="message-row__head">
-                            <div className="message-row__icon">
-                              {CATEGORY_ICONS[msg.category]}
-                            </div>
-                            <div className="message-row__main">
-                              <div className="message-row__title">
-                                <span>{msg.title}</span>
-                                {msg.isPinned && <span className="pin-badge">已釘選</span>}
-                                {msg.category === 'SECURITY' || msg.category === 'COMPLIANCE' ? (
-                                  <span className="pin-badge critical">高優先級</span>
-                                ) : null}
-                              </div>
-                              <div className="message-row__summary">{msg.summary}</div>
-                              <div className="message-row__meta">
-                                <span>{CATEGORY_LABELS[msg.category]}</span>
-                                <span className={`severity-badge ${severity.tone}`}>
-                                  {severity.icon} {severity.label}
-                                </span>
-                                <span>{formatDate(msg.createdAt)}</span>
-                              </div>
-                            </div>
-                          </div>
-                          <div className="message-row__actions">
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                markRead(msg.id);
-                              }}
-                              aria-label="標為已讀"
-                            >
-                              {msg.isRead ? '已讀' : '標為已讀'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                togglePin(msg.id);
-                              }}
-                              aria-label="切換釘選"
-                            >
-                              {msg.isPinned ? '取消釘選' : '釘選'}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                archiveMessage(msg.id);
-                              }}
-                              aria-label="封存"
-                            >
-                              封存
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                deleteMessage(msg.id);
-                              }}
-                              aria-label="刪除"
-                            >
-                              刪除
-                            </button>
-                          </div>
-                        </article>
-                      );
-                    })}
+                  ) : null}
 
-                  {!isLoading && !errorState && visibleMessages.length === 0 ? (
-                    <div className="message-empty">
-                      目前沒有符合條件的訊息
+                  {listErrorBanner}
+
+                  {!isListLoading && !listError ? (
+                    messages.length === 0 ? (
+                      <div className="message-empty">目前沒有符合條件的訊息</div>
+                    ) : (
+                      messages
+                        .filter((message) => messageMatchesFilter(message, activeTab, categoryFilter, searchTextDebounced))
+                        .map((message) => {
+                          const severity = SEVERITY_META[message.severity];
+                          return (
+                            <article
+                              key={message.messageId}
+                              className={`message-row ${message.isRead ? '' : 'unread'} ${selectedMessageId === message.messageId ? 'selected' : ''} tone-${severity.tone.toLowerCase()}`}
+                              onClick={() => {
+                                void selectMessage(message.messageId);
+                              }}
+                            >
+                              <div className="message-row__head">
+                                <div className="message-row__icon">{CATEGORY_ICONS[message.category]}</div>
+                                <div className="message-row__main">
+                                  <div className="message-row__title">
+                                    <span>{message.title}</span>
+                                    {message.isPinned ? <span className="pin-badge">已釘選</span> : null}
+                                    {message.category === 'SECURITY' || message.category === 'COMPLIANCE' ? (
+                                      <span className="pin-badge critical">高優先</span>
+                                    ) : null}
+                                  </div>
+                                  <div className="message-row__summary">{message.summary}</div>
+                                  <div className="message-row__meta">
+                                    <span>{CATEGORY_LABELS[message.category]}</span>
+                                    <span className={`severity-badge ${severity.tone.toLowerCase()}`}>
+                                      {severity.icon} {severity.label}
+                                    </span>
+                                    <span>{formatDate(message.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="message-row__actions">
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void readMessage(message.messageId);
+                                  }}
+                                >
+                                  {message.isRead ? '已讀' : '標為已讀'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void toggleMessagePinned(message.messageId, !message.isPinned).then((errorMessage) => {
+                                      if (errorMessage) {
+                                        setActionFeedback(errorMessage);
+                                        window.setTimeout(() => setActionFeedback(''), 2200);
+                                      }
+                                    });
+                                  }}
+                                >
+                                  {message.isPinned ? '取消釘選' : '釘選'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void markMessageArchived(message.messageId, !message.isArchived).then((errorMessage) => {
+                                      if (errorMessage) {
+                                        setActionFeedback(errorMessage);
+                                        window.setTimeout(() => setActionFeedback(''), 2200);
+                                      }
+                                    });
+                                  }}
+                                >
+                                  {message.isArchived ? '取消封存' : '封存'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    void deleteMessage(message.messageId).then((errorMessage) => {
+                                      if (errorMessage) {
+                                        setActionFeedback(errorMessage);
+                                        window.setTimeout(() => setActionFeedback(''), 2200);
+                                      }
+                                    });
+                                  }}
+                                >
+                                  刪除
+                                </button>
+                              </div>
+                            </article>
+                          );
+                        })
+                    )
+                  ) : null}
+
+                  {isListLoading ? null : (
+                    <div className="message-pagination">
+                      {!isLoadingMore && hasMore ? (
+                        <button type="button" className="load-more" onClick={loadMoreMessages}>
+                          載入更多
+                        </button>
+                      ) : null}
+                      {isLoadingMore ? <div className="message-empty">載入更多中...</div> : null}
                     </div>
-                  ) : null}
-                  {!isLoading && errorState ? <div className="message-empty error">{errorState}</div> : null}
-
-                  {!isLoading && !errorState && hasMore ? (
-                    <button type="button" className="load-more" onClick={() => setPageSize((prev) => prev + MAX_PAGE_SIZE)}>
-                      載入更多
-                    </button>
-                  ) : null}
+                  )}
                 </div>
+
+                {actionFeedback ? <div className="save-feedback">{actionFeedback}</div> : null}
               </section>
 
               <section className="panel message-detail-panel">
                 <div className="panel-head">
                   <h2>訊息詳情</h2>
                 </div>
-                {!selectedMessage ? (
-                  <div className="message-empty">請先選擇一則訊息</div>
-                ) : (
+                {selectedMessageId ? (
                   <article className="message-detail">
-                    <h3>{selectedMessage.title}</h3>
-                    <p className="muted">{selectedMessage.summary}</p>
-                    <div className="message-meta-grid">
-                      <span>分類</span>
-                      <strong>{CATEGORY_LABELS[selectedMessage.category]}</strong>
-                      <span>重要度</span>
-                      <strong>{SEVERITY[selectedMessage.severity].label}</strong>
-                      <span>時間</span>
-                      <strong>{formatDate(selectedMessage.createdAt)}</strong>
-                      <span>狀態</span>
-                      <strong>{selectedMessage.isRead ? '已讀' : '未讀'}</strong>
-                      <span>釘選</span>
-                      <strong>{selectedMessage.isPinned ? '是' : '否'}</strong>
-                    </div>
-                    <p className="message-detail-content">{selectedMessage.content}</p>
-                    <ul>
-                      {selectedMessage.metadata.map((item) => (
-                        <li key={item.label}>
-                          <strong>{item.label}</strong>
-                          <span>{item.value}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    {selectedMessage.link ? (
-                      <a className="message-link" href={selectedMessage.link.href}>
-                        {selectedMessage.link.label}
-                      </a>
+                    {isDetailLoading ? (
+                      <div className="message-skeleton">
+                        <div className="skeleton-line" />
+                        <div className="skeleton-line short" />
+                        <div className="skeleton-line" />
+                      </div>
                     ) : null}
 
-                    <div className="detail-actions">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          markRead(selectedMessage.id);
-                        }}
-                      >
-                        標記已讀
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          togglePin(selectedMessage.id);
-                        }}
-                      >
-                        {selectedMessage.isPinned ? '取消釘選' : '釘選'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          archiveMessage(selectedMessage.id);
-                          setSelectedMessageId(null);
-                        }}
-                      >
-                        封存
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          deleteMessage(selectedMessage.id);
-                          setSelectedMessageId(null);
-                        }}
-                      >
-                        刪除
-                      </button>
-                    </div>
+                    {detailError ? <div className="message-empty error">{detailError}</div> : null}
+
+                    {selectedMessage ? (
+                      <>
+                        <h3>{selectedMessage.title}</h3>
+                        <p className="muted">{selectedMessage.summary}</p>
+                        <div className="message-meta-grid">
+                          <span>分類</span>
+                          <strong>{CATEGORY_LABELS[selectedMessage.category]}</strong>
+                          <span>重要度</span>
+                          <strong>{SEVERITY_META[selectedMessage.severity].label}</strong>
+                          <span>狀態</span>
+                          <strong>{selectedMessage.isRead ? '已讀' : '未讀'}</strong>
+                          <span>釘選</span>
+                          <strong>{selectedMessage.isPinned ? '是' : '否'}</strong>
+                          <span>封存</span>
+                          <strong>{selectedMessage.isArchived ? '是' : '否'}</strong>
+                          <span>已排程</span>
+                          <strong>{selectedMessage.isScheduled ? '是' : '否'}</strong>
+                          <span>時間</span>
+                          <strong>{formatDate(selectedMessage.createdAt)}</strong>
+                          <span>到期</span>
+                          <strong>{selectedMessage.expireAt ? formatDate(selectedMessage.expireAt) : '無'}</strong>
+                        </div>
+                        <p className="message-detail-content">{selectedMessage.body}</p>
+                        {normalizeMetadataEntries(selectedMessage.metadata).length > 0 ? (
+                          <ul>
+                            {normalizeMetadataEntries(selectedMessage.metadata).map(([key, value]) => (
+                              <li key={key}>
+                                <strong>{key}</strong>
+                                <span>{value}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : null}
+                        {selectedMessage.actionUrl ? (
+                          <a className="message-link" href={selectedMessage.actionUrl}>
+                            {selectedMessage.actionLabel || '查看詳情'}
+                          </a>
+                        ) : null}
+                        <div className="detail-actions">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void readMessage(selectedMessage.messageId);
+                            }}
+                          >
+                            已讀
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void toggleMessagePinned(selectedMessage.messageId, !selectedMessage.isPinned).then(
+                                (errorMessage) => {
+                                  if (errorMessage) {
+                                    setActionFeedback(errorMessage);
+                                    window.setTimeout(() => setActionFeedback(''), 2200);
+                                  }
+                                }
+                              );
+                            }}
+                          >
+                            {selectedMessage.isPinned ? '取消釘選' : '釘選'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void markMessageArchived(selectedMessage.messageId, !selectedMessage.isArchived).then(
+                                (errorMessage) => {
+                                  if (errorMessage) {
+                                    setActionFeedback(errorMessage);
+                                    window.setTimeout(() => setActionFeedback(''), 2200);
+                                  }
+                                }
+                              );
+                            }}
+                          >
+                            {selectedMessage.isArchived ? '取消封存' : '封存'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              void deleteMessage(selectedMessage.messageId).then((errorMessage) => {
+                                if (errorMessage) {
+                                  setActionFeedback(errorMessage);
+                                  window.setTimeout(() => setActionFeedback(''), 2200);
+                                }
+                              });
+                            }}
+                          >
+                            刪除
+                          </button>
+                        </div>
+                      </>
+                    ) : null}
                   </article>
+                ) : (
+                  <div className="message-empty">請先選擇一則訊息</div>
                 )}
               </section>
             </div>
@@ -851,74 +2129,90 @@ export function App() {
           <section className="panel message-settings-panel">
             <div className="panel-head">
               <h2>通知偏好</h2>
-              <span>站內訊息一律保留，安全與法遵不可關閉 Email / SMS / Push。</span>
+              <span>站內通知固定開啟；安全/法遵無法關閉電子郵件與 SMS / Push。</span>
             </div>
-            <p className="message-settings-error">{errorState}</p>
-            <div className="message-settings-grid">
-              <div className="message-settings-row header">
-                <span>分類</span>
-                <span>站內</span>
-                <span>Email</span>
-                <span>SMS</span>
-                <span>Push</span>
+
+            {preferenceLoading ? (
+              <div className="message-skeleton">
+                <div className="skeleton-line" />
+                <div className="skeleton-line" />
+                <div className="skeleton-line short" />
               </div>
-              {CHANNELS.map((channel) => {
-                const setting = draftSettings[channel.value];
-                return (
-                  <div className="message-settings-row" key={channel.value}>
-                    <span>{channel.label}</span>
-                    <label>
-                      <input type="checkbox" checked disabled />
-                      開啟
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={setting.email}
-                        disabled={setting.locks.email}
-                        onChange={() => onToggleChannel(channel.value, 'email')}
-                      />
-                      {setting.locks.email ? '不可關閉' : '開啟'}
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={setting.sms}
-                        disabled={setting.locks.sms}
-                        onChange={() => onToggleChannel(channel.value, 'sms')}
-                      />
-                      {setting.locks.sms ? '不可關閉' : '開啟'}
-                    </label>
-                    <label>
-                      <input
-                        type="checkbox"
-                        checked={setting.push}
-                        disabled={setting.locks.push}
-                        onChange={() => onToggleChannel(channel.value, 'push')}
-                      />
-                      {setting.locks.push ? '不可關閉' : '開啟'}
-                    </label>
+            ) : null}
+
+            {!preferenceLoading ? (
+              <>
+                <p className="message-empty error">{preferenceError}</p>
+
+                <div className="message-settings-grid">
+                  <div className="message-settings-row header">
+                    <span>分類</span>
+                    <span>站內</span>
+                    <span>Email</span>
+                    <span>SMS</span>
+                    <span>Push</span>
                   </div>
-                );
-              })}
-            </div>
-            <div className="detail-actions">
-              <button type="button" onClick={saveSettings}>
-                儲存設定
-              </button>
-              <button type="button" onClick={discardChanges}>
-                放棄變更
-              </button>
-              <button type="button" onClick={applyMockError}>
-                模擬 API 錯誤
-              </button>
-            </div>
-            <div className="save-feedback">
-              {saveFeedback ? <span className="save-success">{saveFeedback}</span> : null}
-            </div>
-            <p className="message-empty muted">
-              測試提示：點擊「模擬 API 錯誤」可驗證錯誤狀態顯示，實際對接 API 後會被對應錯誤替換。
-            </p>
+                  {CATEGORY_OPTIONS.filter((option) => option.value !== 'ALL').map((option) => {
+                    const category = option.value as MessageCategory;
+                    const setting = draftPreferences[category];
+                    return (
+                      <div className="message-settings-row" key={category}>
+                        <span>{option.label}</span>
+                        <label>
+                          <input type="checkbox" checked disabled />
+                          開啟
+                        </label>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={setting.emailEnabled}
+                            disabled={setting.locked}
+                            onChange={() => togglePreferenceChannel(category, 'emailEnabled')}
+                          />
+                          {setting.locked ? '不可關閉' : '開啟'}
+                        </label>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={setting.smsEnabled}
+                            disabled={setting.locked}
+                            onChange={() => togglePreferenceChannel(category, 'smsEnabled')}
+                          />
+                          {setting.locked ? '不可關閉' : '開啟'}
+                        </label>
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={setting.pushEnabled}
+                            disabled={setting.locked}
+                            onChange={() => togglePreferenceChannel(category, 'pushEnabled')}
+                          />
+                          {setting.locked ? '不可關閉' : '開啟'}
+                        </label>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="detail-actions">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void saveMessagePreferences();
+                    }}
+                  >
+                    儲存設定
+                  </button>
+                  <button type="button" onClick={discardPreferenceChanges}>
+                    放棄變更
+                  </button>
+                </div>
+
+                {preferenceSaving ? <div className="message-empty">儲存中...</div> : null}
+                {preferenceError ? <div className="message-empty error">{preferenceError}</div> : null}
+                {preferenceFeedback ? <div className="save-feedback">{preferenceFeedback}</div> : null}
+              </>
+            ) : null}
           </section>
         )}
       </div>
@@ -926,4 +2220,4 @@ export function App() {
   );
 }
 
-export default App;
+export default ExchangeConsole;

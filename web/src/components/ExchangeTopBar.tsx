@@ -10,9 +10,21 @@ interface Props {
   symbol: string;
   connText: string;
   status: ConnStatus;
+  unreadCount: number;
+  onMessageCenterOpen: () => void;
+  onBackToExchange: () => void;
+  showBackButton: boolean;
 }
 
-export function ExchangeTopBar({ symbol, connText, status }: Props) {
+export function ExchangeTopBar({
+  symbol,
+  connText,
+  status,
+  unreadCount,
+  onMessageCenterOpen,
+  onBackToExchange,
+  showBackButton
+}: Props) {
   // 控制兩個上方操作下拉選單的開關，不同來源按鈕互斥顯示。
   const [isProfileOpen, setIsProfileOpen] = useState<boolean>(false);
   const [isLanguageOpen, setIsLanguageOpen] = useState<boolean>(false);
@@ -38,6 +50,28 @@ export function ExchangeTopBar({ symbol, connText, status }: Props) {
         </div>
 
         <div className="topbar-actions">
+          <button
+            type="button"
+            className="topbar-icon-btn topbar-message-btn"
+            aria-label={showBackButton ? '回到交易所' : '打開訊息中心'}
+            title={showBackButton ? '回到交易所' : '打開訊息中心'}
+            onClick={() => {
+              if (showBackButton) {
+                onBackToExchange();
+                return;
+              }
+              onMessageCenterOpen();
+            }}
+          >
+            <span className="topbar-icon" aria-hidden="true">
+              {showBackButton ? '←' : '🔔'}
+            </span>
+            <span>{showBackButton ? '交易所' : '訊息中心'}</span>
+            {!showBackButton && unreadCount > 0 ? (
+              <span className="topbar-badge">{unreadCount > 99 ? '99+' : unreadCount}</span>
+            ) : null}
+          </button>
+
           <div className="topbar-dropdown">
             <button
               type="button"
