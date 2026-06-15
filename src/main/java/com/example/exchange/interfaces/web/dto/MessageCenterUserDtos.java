@@ -119,7 +119,7 @@ public final class MessageCenterUserDtos {
             String category,
             String severity,
             long sentTo,
-            long skipped,
+            long skippedTo,
             boolean alreadyExists,
             Instant sendAt
     ) {
@@ -184,7 +184,8 @@ public final class MessageCenterUserDtos {
     public record MessageAnnouncementDeliveryStats(
             long sent,
             long failed,
-            long skipped
+            long skipped,
+            long pending
     ) {
     }
 
@@ -264,6 +265,20 @@ public final class MessageCenterUserDtos {
     public record MessageAnnouncementCancelResponse(
             String announcementId,
             boolean canceled
+    ) {
+    }
+
+    public record MessageTemplateItem(
+            String templateCode,
+            String title,
+            String summary,
+            String body,
+            List<String> variables
+    ) {
+    }
+
+    public record MessageTemplateListResponse(
+            List<MessageTemplateItem> templates
     ) {
     }
 }

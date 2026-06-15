@@ -34,7 +34,7 @@ public class MessageCenterController {
     @GetMapping("/messages")
     public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageListResponse> listMessages(
             @RequestParam(value = "cursor", required = false) String cursor,
-            @RequestParam(value = "limit", defaultValue = "30") int limit,
+            @RequestParam(value = "limit", defaultValue = "20") int limit,
             @RequestParam(value = "status", defaultValue = "ALL") String status,
             @RequestParam(value = "archived", defaultValue = "false") boolean archived,
             @RequestParam(value = "search", required = false) String search,

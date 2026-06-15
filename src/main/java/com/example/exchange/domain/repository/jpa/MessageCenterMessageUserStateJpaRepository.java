@@ -24,6 +24,8 @@ public interface MessageCenterMessageUserStateJpaRepository
 
     Optional<MessageCenterMessageUserState> findByUidAndMessageId(long uid, String messageId);
 
+    boolean existsByUidAndMessageId(long uid, String messageId);
+
     boolean existsByUidAndDedupeKey(long uid, String dedupeKey);
 
     @Query("""

@@ -4,6 +4,7 @@
 package com.example.exchange.interfaces.web.exception;
 
 import com.example.exchange.domain.util.SensitiveLogSanitizer;
+import com.example.exchange.interfaces.web.dto.ApiResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -62,10 +63,10 @@ public class GlobalExceptionHandler {
      *      ↓
      * 取得 BizErrorCode
      *      ↓
-     * 轉成 HTTP Status + ErrorResponse
+ * 轉成 HTTP Status + ApiResponse error envelope
      */
     @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<ErrorResponse> handleBusiness(BusinessException ex) {
+    public ResponseEntity<ApiResponse<Void>> handleBusiness(BusinessException ex) {
 
         // 取得對應的錯誤碼列舉
         BusinessErrorCode code = ex.getErrorCode();
@@ -73,7 +74,7 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 // HTTP status 由錯誤碼決定（協議層語意）
                 .status(code.getStatus())
-                .body(new ErrorResponse(
+                .body(ApiResponse.fail(
                         // Stable enum code for frontend mapping; the text message stays intentionally generic.
                         code.name(),
 
@@ -86,11 +87,11 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class, MethodArgumentNotValidException.class})
-    public ResponseEntity<ErrorResponse> handleBadRequest(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleBadRequest(Exception ex) {
         log.warn("Bad request: {}", SensitiveLogSanitizer.sanitize(ex.getMessage()));
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(
+                .body(ApiResponse.fail(
                         BusinessErrorCode.VALIDATION_ERROR.name(),
                         PUBLIC_ERROR_MESSAGE,
                         MDC.get("traceId")
@@ -112,7 +113,7 @@ public class GlobalExceptionHandler {
      * - 詳細錯誤應記錄於 log（搭配 traceId）
      */
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleUnknown(Exception ex) {
+    public ResponseEntity<ApiResponse<Void>> handleUnknown(Exception ex) {
 
         // 不要把 ex.getMessage() 回傳給前端
         log.error(
@@ -123,7 +124,7 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(new ErrorResponse(
+                .body(ApiResponse.fail(
                         BusinessErrorCode.INTERNAL_ERROR.name(),
                         PUBLIC_ERROR_MESSAGE,
                         MDC.get("traceId")

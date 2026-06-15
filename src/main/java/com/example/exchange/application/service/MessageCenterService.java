@@ -95,77 +95,77 @@ public class MessageCenterService {
     private static final String FILTER_KEY_INCLUDE_ZERO_BALANCE = "includeZero";
     private static final BigDecimal ZERO = BigDecimal.ZERO;
 
-    private static final Map<String, Map<String, String>> TEMPLATE_TEXT = Map.of(
-            "ORDER_CREATED", Map.of(
+    private static final Map<String, Map<String, String>> TEMPLATE_TEXT = Map.ofEntries(
+            Map.entry("ORDER_CREATED", Map.of(
                     "title", "訂單已建立",
                     "summary", "您的 {symbol} 委託已建立",
                     "body", "訂單已建立，請檢視最新委託狀態。"
-            ),
-            "ORDER_CANCELLED", Map.of(
+            )),
+            Map.entry("ORDER_CANCELLED", Map.of(
                     "title", "訂單已取消",
                     "summary", "您的 {symbol} 訂單已取消",
                     "body", "訂單取消完成，若有疑問請聯繫客服。"
-            ),
-            "ORDER_PARTIALLY_FILLED", Map.of(
+            )),
+            Map.entry("ORDER_PARTIALLY_FILLED", Map.of(
                     "title", "訂單部分成交",
                     "summary", "您的 {symbol} 訂單已部分成交",
                     "body", "訂單已部分成交，請檢視成交明細。"
-            ),
-            "ORDER_FILLED", Map.of(
+            )),
+            Map.entry("ORDER_FILLED", Map.of(
                     "title", "訂單已成交",
                     "summary", "您的 {symbol} 訂單已成交",
                     "body", "訂單已完成，請確認資產變化。"
-            ),
-            "DEPOSIT_SUCCESS", Map.of(
+            )),
+            Map.entry("DEPOSIT_SUCCESS", Map.of(
                     "title", "入金成功",
                     "summary", "{asset} 入金已完成",
                     "body", "入金資金已入帳，請至資產頁確認。"
-            ),
-            "WITHDRAW_REQUESTED", Map.of(
+            )),
+            Map.entry("WITHDRAW_REQUESTED", Map.of(
                     "title", "出金申請已提交",
                     "summary", "您的出金申請已送出",
                     "body", "出金申請進入審核流程，請關注鏈上狀態。"
-            ),
-            "WITHDRAW_SUCCESS", Map.of(
+            )),
+            Map.entry("WITHDRAW_SUCCESS", Map.of(
                     "title", "出金完成",
                     "summary", "您的出金申請已完成",
                     "body", "出金資金已送出，請確認到帳狀態。"
-            ),
-            "WITHDRAW_FAILED", Map.of(
+            )),
+            Map.entry("WITHDRAW_FAILED", Map.of(
                     "title", "出金失敗",
                     "summary", "您的出金申請未通過",
                     "body", "請檢查失敗原因並重新提交。"
-            ),
-            "NEW_DEVICE_LOGIN", Map.of(
+            )),
+            Map.entry("NEW_DEVICE_LOGIN", Map.of(
                     "title", "新裝置登入",
                     "summary", "您的帳戶偵測到新裝置登入",
                     "body", "請盡快確認是否為本人操作。"
-            ),
-            "PASSWORD_CHANGED", Map.of(
+            )),
+            Map.entry("PASSWORD_CHANGED", Map.of(
                     "title", "密碼已修改",
                     "summary", "帳戶登入密碼已更新",
                     "body", "若非本人操作，請立即啟動安全防護。"
-            ),
-            "KYC_APPROVED", Map.of(
+            )),
+            Map.entry("KYC_APPROVED", Map.of(
                     "title", "KYC 已通過",
                     "summary", "您的帳戶 KYC 已通過",
                     "body", "法規審核完成，相關服務已啟用。"
-            ),
-            "KYC_REJECTED", Map.of(
+            )),
+            Map.entry("KYC_REJECTED", Map.of(
                     "title", "KYC 未通過",
                     "summary", "KYC 審核未通過",
                     "body", "請補件後重新提交。"
-            ),
-            "API_KEY_CREATED", Map.of(
+            )),
+            Map.entry("API_KEY_CREATED", Map.of(
                     "title", "API Key 建立",
                     "summary", "新的 API Key 已建立",
                     "body", "請在安全設備中確認 API Key 使用情況。"
-            ),
-            "API_KEY_DELETED", Map.of(
+            )),
+            Map.entry("API_KEY_DELETED", Map.of(
                     "title", "API Key 刪除",
                     "summary", "API Key 已刪除",
                     "body", "該 API Key 已失效，請移除外部引用。"
-            )
+            ))
     );
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {
@@ -352,9 +352,35 @@ public class MessageCenterService {
                 new MessageCenterUserDtos.MessageAnnouncementDeliveryStats(
                         announcement.getSentCount(),
                         announcement.getFailedCount(),
-                        announcement.getSkippedCount()
+                        announcement.getSkippedCount(),
+                        pendingAnnouncementRecipients(announcement)
                 )
         );
+    }
+
+    @Transactional(readOnly = true)
+    public MessageCenterUserDtos.MessageTemplateListResponse listTemplates() {
+        // Template API exposes the server-owned whitelist so admin clients do not hard-code event copy.
+        List<MessageCenterUserDtos.MessageTemplateItem> templates = TEMPLATE_TEXT.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey())
+                .map(entry -> toTemplateItem(entry.getKey(), entry.getValue()))
+                .toList();
+        return new MessageCenterUserDtos.MessageTemplateListResponse(templates);
+    }
+
+    @Transactional(readOnly = true)
+    public MessageCenterUserDtos.MessageTemplateItem getTemplate(String templateCode) {
+        if (templateCode == null || templateCode.isBlank()) {
+            throw new IllegalArgumentException("templateCode is required");
+        }
+
+        String normalized = templateCode.trim().toUpperCase(Locale.ROOT);
+        Map<String, String> template = TEMPLATE_TEXT.get(normalized);
+        if (template == null) {
+            throw new BusinessException(BusinessErrorCode.MESSAGE_NOT_FOUND);
+        }
+
+        return toTemplateItem(normalized, template);
     }
 
     @Transactional(readOnly = true)
@@ -476,7 +502,7 @@ public class MessageCenterService {
         }
 
         boolean archived = false;
-        List<String> categories = parseCategoryFilters(List.ofNullable(category));
+        List<String> categories = parseCategoryFilters(category == null ? List.of() : List.of(category));
         if (categoryScope && categories.isEmpty()) {
             throw new IllegalArgumentException("invalid category");
         }
@@ -1297,6 +1323,52 @@ public class MessageCenterService {
         return value.isBlank() ? (fallback == null ? "" : fallback.trim()) : value;
     }
 
+    private MessageCenterUserDtos.MessageTemplateItem toTemplateItem(String templateCode, Map<String, String> template) {
+        String title = template == null ? "" : template.getOrDefault("title", "");
+        String summary = template == null ? "" : template.getOrDefault("summary", "");
+        String body = template == null ? "" : template.getOrDefault("body", "");
+        return new MessageCenterUserDtos.MessageTemplateItem(
+                templateCode,
+                title,
+                summary,
+                body,
+                extractTemplateVariables(title, summary, body)
+        );
+    }
+
+    private List<String> extractTemplateVariables(String... values) {
+        Set<String> variables = new LinkedHashSet<>();
+        for (String value : values) {
+            if (value == null || value.isBlank()) {
+                continue;
+            }
+            int cursor = 0;
+            while (cursor < value.length()) {
+                int start = value.indexOf('{', cursor);
+                int end = start < 0 ? -1 : value.indexOf('}', start + 1);
+                if (start < 0 || end <= start + 1) {
+                    break;
+                }
+                String variable = value.substring(start + 1, end).trim();
+                if (!variable.isBlank()) {
+                    variables.add(variable);
+                }
+                cursor = end + 1;
+            }
+        }
+        return List.copyOf(variables);
+    }
+
+    private long pendingAnnouncementRecipients(MessageCenterAnnouncement announcement) {
+        if (announcement == null || !MessageAnnouncementStatus.SCHEDULED.name().equals(announcement.getStatus())) {
+            return 0L;
+        }
+        return Math.max(
+                0L,
+                announcement.getEstimatedRecipients() - announcement.getSentCount() - announcement.getSkippedCount()
+        );
+    }
+
     private Map<String, Object> mapOrEmpty(Map<String, Object> source) {
         return source == null ? Collections.emptyMap() : source;
     }
@@ -1364,10 +1436,11 @@ public class MessageCenterService {
         if (vipRoleTokens.isEmpty()) {
             vipRoleTokens = Set.of("VIP");
         }
+        Set<String> resolvedVipRoleTokens = vipRoleTokens;
 
         Predicate<AppUserRecord> predicate = user -> {
             Set<String> roles = tokenize(user.getRoles());
-            return hasAny(role -> vipRoleTokens.contains(role), roles);
+            return hasAny(role -> resolvedVipRoleTokens.contains(role), roles);
         };
 
         List<Long> recipients = resolveUsersByPredicate(predicate, Set.of(), Set.of());

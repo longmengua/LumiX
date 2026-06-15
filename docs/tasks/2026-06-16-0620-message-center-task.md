@@ -151,8 +151,8 @@
 ## 7. API 規格（完整版）
 
 回應規範：
-- 成功：`{ ok: true, data: ... }`
-- 失敗：`{ ok: false, error: { code, message, traceId } }`
+- 成功：`{ "ok": true, "data": ..., "error": null }`
+- 失敗：`{ "ok": false, "data": null, "error": { "code": "ERROR_CODE", "message": "desc", "traceId": "uuid" } }`
 - 時間用 UTC ISO8601（含毫秒）。
 
 ### 7.1 使用者 API
@@ -164,7 +164,7 @@
     - `status`（可選，`UNREAD|ALL`，預設 `ALL`）
     - `archived`（可選，`true|false`，預設 `false`）
     - `search`（可選，關鍵字）
-- `category`（可選，僅支援 repeatable，例如 `category=ORDER&category=TRADE`）
+    - `category`（可選，僅支援 repeatable，例如 `category=ORDER&category=TRADE`）
     - `pinnedFirst`（可選，`true|false`，預設 `true`）
     - `excludeDeleted`（可選，`true|false`，預設 `true`）
   - 排序：`createdAt desc, messageId desc`
@@ -311,6 +311,8 @@
 - `POST /api/admin/messages/announcements/{announcementId}/cancel`
 - `GET /api/admin/messages/announcements`
 - `GET /api/admin/messages/announcements/{announcementId}`
+- `GET /api/admin/messages/templates`
+- `GET /api/admin/messages/templates/{templateCode}`
 
 #### 管理員 API 參數（request / response）
 
@@ -323,12 +325,18 @@
   - `templateCode`: `string`
   - `templateVars`: `object`
   - `actionUrl`: `string | null`
-  - `audience`:
-    - `type`: `ALL|USER_IDS|VIP|HAS_ASSET|CUSTOM_FILTER`
-    - `userIds`: `string[]`（type=USER_IDS）
-    - `vipLevels`: `number[]`（type=VIP）
-    - `assetSymbol`: `string`（type=HAS_ASSET）
-    - `customFilter`: `string`（JSON string，可選）
+  - `audienceType`: `ALL|USER_IDS|VIP|HAS_ASSET|CUSTOM_FILTER`
+  - `recipientUserIds`: `number[] | null`（`audienceType=USER_IDS` 或指定白名單時使用）
+  - `audienceData`: `object`
+  - `audienceData.userIds`: `number[] | string[]`（`USER_IDS` 備援欄位）
+  - `audienceData.vipLevels`: `number[] | string[]`（`VIP`，後端會匹配 `VIP1`、`VIP_1`、`VIP-1` 類角色）
+  - `audienceData.vipRoles`: `string[]`（`VIP`，直接指定角色 token）
+  - `audienceData.assetSymbol`: `string`（`HAS_ASSET` 單資產）
+  - `audienceData.assets`: `string[]`（`HAS_ASSET` 多資產）
+  - `audienceData.minBalance`: `string | number`（預設 `0`，需大於門檻）
+  - `audienceData.includeZero`: `boolean`（預設 false；true 時允許等於門檻）
+  - `audienceData.includeRoles/includeScopes/statuses/emailPrefixes/emailSuffixes`: `string[]`（`CUSTOM_FILTER`）
+  - `audienceData.excludeRoles/excludeScopes/excludeUserIds`: `string[] | number[]`（`CUSTOM_FILTER`）
   - `sendAt`: `ISO8601 | null`
   - `expireAt`: `ISO8601 | null`
   - `deliveryMode`: `DIRECT|LAZY`
@@ -337,12 +345,13 @@
   - `announcementId`
   - `status`: `PUBLISHED|SCHEDULED`
   - `estimatedRecipients`: `number`
+  - `result`: `MessageSendOutcome | null`（立即發布時有值，排程時為 null）
 
 2) `POST /api/admin/messages/announcements/{announcementId}/cancel`
 - Path: `announcementId`
 - Response:
   - `announcementId`
-  - `status`: `CANCELLED`
+  - `canceled`: `true`
 
 3) `GET /api/admin/messages/announcements`
 - Query:
@@ -362,6 +371,24 @@
 - Response:
   - announcement detail + `deliveryStats`
     - `sent`, `failed`, `skipped`, `pending`
+
+5) `GET /api/admin/messages/templates`
+- Response:
+  - `templates`: array
+    - `templateCode`: `string`
+    - `title`: `string`
+    - `summary`: `string`
+    - `body`: `string`
+    - `variables`: `string[]`
+
+6) `GET /api/admin/messages/templates/{templateCode}`
+- Path: `templateCode`
+- Response:
+  - `templateCode`: `string`
+  - `title`: `string`
+  - `summary`: `string`
+  - `body`: `string`
+  - `variables`: `string[]`
 
 ### 7.3 系統事件 API
 
@@ -462,14 +489,16 @@
 ### 7.6 錯誤碼
 
 - VALIDATION_ERROR 400
-- UNAUTHORIZED 401
-- FORBIDDEN 403
+- AUTH_INVALID_CREDENTIAL 401
 - MESSAGE_NOT_FOUND 404
 - MESSAGE_NOT_OWNED 403
 - INVALID_CATEGORY 400
 - INVALID_CHANNEL 400
+- INVALID_CURSOR_FORMAT 400
+- INVALID_AUDIENCE 400
 - PREFERENCE_LOCKED 409
 - SCHEDULE_NOT_CANCELABLE 409
+- ANNOUNCEMENT_NOT_FOUND 404
 - DUPLICATE_MESSAGE 200（建議冪等成功）
 - INTERNAL_ERROR 500
 

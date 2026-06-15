@@ -107,7 +107,7 @@ public class MessageCenterAdminController {
             @RequestParam(value = "from", required = false) Instant from,
             @RequestParam(value = "to", required = false) Instant to,
             @RequestParam(value = "cursor", required = false) String cursor,
-            @RequestParam(value = "limit", defaultValue = "30") Integer limit
+            @RequestParam(value = "limit", defaultValue = "20") Integer limit
     ) {
         return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
                 messageCenterService.listAnnouncements(
@@ -128,6 +128,18 @@ public class MessageCenterAdminController {
         return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
                 messageCenterService.getAnnouncementDetail(announcementId)
         );
+    }
+
+    @GetMapping("/admin/messages/templates")
+    public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageTemplateListResponse> listTemplates() {
+        return com.example.exchange.interfaces.web.dto.ApiResponse.ok(messageCenterService.listTemplates());
+    }
+
+    @GetMapping("/admin/messages/templates/{templateCode}")
+    public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageTemplateItem> getTemplate(
+            @PathVariable String templateCode
+    ) {
+        return com.example.exchange.interfaces.web.dto.ApiResponse.ok(messageCenterService.getTemplate(templateCode));
     }
 
     private ApiPrincipal resolvePrincipal(HttpServletRequest requestContext) {
