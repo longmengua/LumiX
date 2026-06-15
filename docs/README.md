@@ -1,21 +1,28 @@
 # docs
 
-這裡放專案文件，分成英文 `en/` 與繁中 `zh-TW/`。
+這份文件改為「主題目錄」版，不再以 `en/`、`zh-TW/` 當第一層分類。
 
-目前狀態：
-- `en/README.md` / `zh-TW/README.md`：產品與 API 入口說明。
-- `en/technical.md` / `zh-TW/technical.md`：架構、分層與技術方向。
-- `en/current-state.md` / `zh-TW/current-state.md`：目前完成度、MVP baseline、production blocker 與近期優先順序。
-- `en/todo.md` / `zh-TW/todo.md`：production-readiness checklist，已用 `[x]` 標示 MVP baseline 完成項。
-- `en/ai.md` / `zh-TW/ai.md`：Codex/代理快速理解程式碼用的雙語索引；共用細節位於 `ai/maps/`。
-- `en/tasks.md` / `zh-TW/tasks.md`：可點名執行的任務雙語索引；共用任務位於 `tasks/`。
-- `ai/team-collaboration.md`：多人 / 多 AI 並行開工時的 ownership、衝突處理與 handoff 規範。
-- `kafka-topics.md`、`redis-key-schema.md`、`observability.md`、`matching-sequencer-runbook.md`：各語言目錄下的營運規格文件。
+## 文件分類（新結構）
 
-優先閱讀：
-1. `zh-TW/current-state.md` 或 `en/current-state.md`
-2. `zh-TW/README.md` 或 `en/README.md`
-3. `zh-TW/technical.md` 或 `en/technical.md`
-4. `zh-TW/todo.md` 或 `en/todo.md`
-5. `zh-TW/tasks.md` 或 `en/tasks.md`
-6. `zh-TW/ai.md` 或 `en/ai.md`
+- `docs/project`：專案總覽、目前狀態、TODO、技術總覽
+- `docs/architecture`：架構、資料結構、持久化、Kafka 與 Redis 相關設計
+- `docs/operations`：觀測、告警、SMTP、監控導向文件
+- `docs/reliability`：風險控制、運維 runbook、可用性與操作流程
+- `docs/runbooks`：災備、發布節點、跨系統重放與停機演練
+- `docs/integrations`：外部整合、Polymarket、訊息中心 API
+- `docs/ai`：Codex / Agent 協作文件（保留原結構）
+- `docs/tasks`：任務中心（含 active 與 backlog）
+
+## 直接入口
+
+- [DOCUMENTATION-INDEX.md](./DOCUMENTATION-INDEX.md)
+- [專案總覽：`docs/project/README.md`](./project/README.md)
+- [訊息中心 API：`docs/integrations/message-center-api.md`](./integrations/message-center-api.md)
+- [任務入口：`docs/tasks/README.md`](./tasks/README.md)
+
+## 建議閱讀順序
+
+1. 先讀 `docs/project/README.md`
+2. 再讀 `docs/project/current-state.md`、`docs/project/todo.md`
+3. 需要實作則對照 `docs/tasks/README.md`、`docs/tasks/active.md`
+4. 查資料時以 `docs/DOCUMENTATION-INDEX.md` 的主題索引為主

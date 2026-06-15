@@ -1,0 +1,105 @@
+<!-- 檔案用途：快速說明目前程式碼完成度、MVP 能力與 production blocker。 -->
+# 目前狀態
+
+這份文件回答一個問題：目前這個 repo 到底完成到哪裡？
+
+結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 core-v1 freeze checklist 已關閉，P0 production baseline 已完成，post-v1 production hardening task 也已拆出；下一步是 tag / hand off 有邊界的 core-v1 baseline，然後收斂剩餘 P1 production hardening blockers。
+
+## 完成度快照
+
+以下數字來自 [todo.md](todo.md) 的 `[x]` / `[ ]` 狀態。
+
+| 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
+| --- | ---: | ---: | --- |
+| P0 必做 | 43 | 0 | 核心 production baseline 項目已關閉；post-v1 hardening 仍需推進。 |
+| P1 強烈建議 | 22 | 0 | 強烈建議的 production-hardening baselines 已關閉。 |
+| P2 演進項 | 0 | 5 | Admin market-config、risk-parameters、做市商營運與 DLQ 已有靜態頁 / API baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
+| 合計 | 65 | 5 | Production-hardening baselines 已關閉；剩 P2 evolution 工作。 |
+
+## 目前插單優先順序
+
+接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist 與 smoke runbook 已完成，[post-v1 production hardening tasks](../tasks/post-v1/README.md) 也已完成拆分；在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
+
+凍結的 core-v1 baseline 包含：
+
+1. 可 replay 撮合 command/event log、snapshot、checkpoint 與 replay validation。
+2. Liquidation 與 ADL 執行鏈路，包含營運控制與 audit event。
+3. 體驗金 / bonus credit 帳務與流水 tracking。
+4. 可審計 ledger book 與 reconciliation exception workflow。
+5. 做市商報價、inventory、kill switch、hedge interface 與 hedge strategy baseline。
+
+Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 仍重要，但延後到 core v1 之後。
+
+## 目前可合理依賴的能力
+
+- 本機可用 Docker Compose 啟動 MySQL、Redis、Kafka、Kafka UI。
+- 內部交易所下單鏈路已有 MVP：基本驗證、pre-trade risk、in-memory matching、帳務更新、事件發布。
+- prod-facing 前台 exchange console 會從 `/api/markets` 載入可選市場到下單表單，只提供後台配置且啟用的 symbols，不暴露任何 privileged admin 導覽、做市商營運資訊、checksum、book version 診斷或客戶端市場資訊 reload 按鈕，並以登入 session UID 取代可編輯 UID 欄位，也會顯示可切換每邊 5/10/20/50 ask/bid ticks 的公開 order-book 動態深度條；主畫面聚焦交易，登入、註冊、單一資產摘要、登出、委託、持有倉位與歷史開關倉位都集中在右上 profile 抽屜。客戶註冊使用獨立 `customer_registration_requests` 表保存 pending 帳號資料與備案 link token，六位數信箱驗證碼改存在 `customer_verification_codes`，以 email/account 對應、不綁定單一功能，後續可支援後台補發或人工處理；`/api/auth/resend-verification` 可替 pending 註冊輪換驗證碼與備案連結，但不延長原本 24 小時期限。SMTP 寄信、`/api/auth/verify-email` 與 24 小時 pending request 過期規則會在建立 `app_users` 與帳戶前完成；`/api/auth/config` 控制 Turnstile 相容真人驗證。公開 market 與登入後 private user refresh 共用單一 `/ws/exchange` multiplex WebSocket，斷線或重連期間才退回 1 秒 polling，並支援 opt-in cancel-on-disconnect resume metadata。市場資料診斷集中在後台 market-config 頁。
+- 前台 exchange console 與做市商後台頁支援英文、繁中、Bahasa Malaysia、韓文語言切換，並共用瀏覽器語言偏好。
+- 撮合核心已覆蓋 FIFO、post-only、自成交防護、IOC/FOK、市價單流動性不足等 deterministic tests。
+- 已有 in-process 單 symbol sequencer baseline，避免同一 symbol 在單進程內並行改狀態。
+- 已文件化單 symbol sequencer ownership 的 production 部署與 failover 規則。
+- 撮合狀態已有 in-memory snapshot export/restore baseline，可保留掛單 FIFO、command offset、event offset 與 match sequence。
+- 撮合已有 in-memory command/event log 與 replay baseline，可在 deterministic tests 中從 snapshot checkpoint 重建狀態。
+- 撮合 command/event log、engine snapshot 與 replay validation report 也已有 Flyway schema、JPA durable adapter baseline 與 per-symbol offset checkpoint。
+- 撮合 recovery orchestration 可從 latest snapshot 加 command log 恢復單一 symbol，並在 restore drill 驗證 recovered open orders，再保存恢復後 snapshot 與 replay validation report。
+- 撮合 sequencer lease service 可 acquire、renew、release，並在 symbol owner takeover 時遞增 epoch。
+- 撮合 sequencer write guard 會在 command write 前拒絕 missing lease、wrong owner、stale epoch 與 expired lease。
+- 撮合 command replay 支援帶 replacement order payload 的 cancel-replace。
+- 撮合 command/event log entries 可保存 sequencer owner id 與 epoch，供 fencing audit。
+- 撮合 worker startup / renewal lifecycle 已可取得 configured symbol lease、執行 recovery、驗證 replay、保存 owner/epoch readiness context、續租、在續租失敗時移除 readiness，並提供 readiness inspection endpoint。
+- 撮合 worker execution baseline 已可對 submit、cancel、amend、cancel-replace 先 append lease-fenced command，再套用到 engine，並保留 owner/epoch。
+- 既有 submit、cancel、amend、cancel-replace accounting-safe cancel + replacement-submit intake path 在該 symbol 有 ready owner context 時，已可使用 worker execution。
+- `matching-worker.fence-legacy-routing` 可在切流時拒絕 configured symbol fallback 到尚未 worker-ready 的舊 in-process path。
+- `MatchingWorkerStartupListener` 會在 `matching-worker.enabled=true` 時，於 application ready 後啟動 configured worker symbols。
+- 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence、book-level 差異，也已有 multi-symbol interleaved-offset coverage。
+- Market data depth delta 已有 durable sequence/checksum checkpoints、啟動時恢復最新 depth sequence、durable depth delta records，以及依 known version 查詢後續 deltas 的 reconnect backfill endpoint。Trade tape 也有 restart-safe durable baseline 與 `afterTs`/`afterMatchId` replay cursor support。
+- 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
+- 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
+- 體驗金已用 `USER_BONUS_AVAILABLE` 拆出 grant、consume、expire、clawback ledger postings，且不會改動真實現金帳戶餘額；目前也有 grant 批次 expiry/remaining tracking、可設定 consume eligibility gate、用戶/活動 report/export APIs、營運 clawback API，以及預設關閉的 campaign auto-clawback scheduler baseline。
+- 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、一等 order strategy/market-maker tags、order、match、sequence、quantity、price、notional 維度，並可用 summary / drill-down / export APIs 依 uid/symbol/strategy/market-maker/match 查詢，也可做 tag-aware trade/ledger reconciliation。
+- Trial balance 已可從 wallet ledger postings 依 asset/account code 計算。
+- 已有入金/出金狀態機 baseline，支援 pending、confirmed、failed、reversed、manual review；入金 callback 可用 `externalRef` 冪等 replay，manual-review transfer 可被 owner claim，transfer reconciliation projection 可用 ledger ref 比對每筆 transfer。
+- 已有 account risk snapshot、persisted risk snapshot、pre-trade risk checks、uid+symbol order-entry frequency limits、risk tiers、global risk switches、mark/index price oracle baseline、liquidation MVP、funding settlement MVP、reconciliation baseline。
+- liquidation decision 已會發布 audit data，營運控制可 halt liquidation 或導入 manual review。
+- liquidation scanning 可掃描 open positions 並觸發 oracle-based liquidation decisions。
+- ADL 已有 deterministic ranking、deleveraging-plan、forced-execution、durable queue storage、依 `liquidationId` 冪等的 queue enqueue、queue-to-execution orchestration、operator claim/release、stuck/open queue alert reporting、stuck-claim operator reporting 與 runbook、recent execution reporting、insurance/shortfall reconciliation、durable insurance-fund movement records、含 restart coverage 的 partial retry 與 no-eligible-candidate retry baseline，可減掉選中的持倉、寫入 realized-PnL / socialized-loss ledger postings、發布 audit event，並持久化 execution summary / idempotency records。
+- 已有 outbox retry、max retry、DLQ replay、manual compensation baseline。
+- 已有 Kafka topic、Redis key schema、request/correlation id、audit log、ops metrics baseline 文件。
+- Redis hot-state keys 已補 final per-key-family TTL/archive rules、刪除前置條件與 authoritative rebuild source，供 production maintenance 使用。
+- 歷史訂單、成交、ledger entries、Kafka events 與 audit logs 已有 archive strategy，涵蓋 manifests、retention classes、刪除前置條件與 restore rules。
+- Order lifecycle projection 現在會輸出可用 uid、orderId、clientOrderId、symbol 搜尋的 `CORE_EVENT` structured log line。
+- 測試資料夾已有 README 索引，測試案例也用註解和 `@DisplayName` 說明測試鏈路。
+
+## 目前不能當作 production 完成的地方
+
+- Production worker routing 與 disaster recovery 已有 production deployment switch sequence、worker takeover、reconnect/session replay semantics、restore smoke commands、account/position consistency validation、readiness inspection、rollback sequence 與聚焦 smoke verification。單 symbol sequencer 目前仍以 in-process engine 執行，因此更完整的多進程營運強化仍未完成。
+- order lifecycle event 已有 durable event log 與最新狀態 projection baseline；更完整的 order/account replay 與營運 runbook 仍未完成。
+- ledger 已有 durable double-entry journal、SQL-enforced wallet ledger invariants、hash-chain tamper evidence、archive eligibility、archive manifests、restore smoke、archived date-range replay validation、immutable archive delete guard、體驗金獨立帳戶、體驗金 consume eligibility gate、體驗金到期 scanner 與 campaign auto-clawback scheduler baseline、體驗金用戶/活動 report/export 與 clawback APIs、流水 facts、一等 strategy/market-maker order tags、流水 summary/drill-down/export queries、match-level turnover-vs-trade-tape reconciliation、預設關閉的 recent-window 流水 trade/ledger-ref reconciliation 與 replay path；更完整營運控制仍未完成。
+- funding、account risk snapshot 與手動 liquidation 已改由 mark/index price oracle 餵價；risk tiers 已涵蓋初始保證金、維持保證金、槓桿與階梯倉位上限。liquidation scanning 可把 open positions 透過 oracle-based liquidation routing 處理，並具備 halt / manual-review controls、batch limit、per-position failure isolation、decision audit events、ADL alert reporting 與 insurance-fund movement records。production feed redundancy 與 price clamp 仍未完成。
+- reconciliation 已有 persisted reports、可設定排程策略、alert-route baseline、event-store coverage checks、durable ledger hash-chain tamper-evidence、SQL-enforced wallet ledger invariants、trial-balance 計算與 daily snapshot persistence、結構化 ledger replay comparison、issue status/owner/resolved_at workflow 欄位、後台 issue workflow API、workflow audit events、durable-ledger daily finance report baseline、預設關閉的 finance category exporter job、fee/funding/liquidation/bonus/transfer finance category exports、ledger archive/delete eligibility checks、manifest restore smoke、archived date-range replay validation，以及不平衡報表 operator runbook。
+- 做市商對沖已有 durable profile/risk-limit storage、profile admin API、bounded hedge fill query API、venue fill callback ingestion、venue fill idempotent replay 與可選 HMAC/timestamp verification、manual 與預設關閉的 scheduled hedge execution API 且限制安全 ref prefix、durable scheduled-worker lock、operator approval token gate、manual hedge execution API frequency limiting、含 operator identity 與 approval token outcome 的 effectful endpoint audit fields、exposure aggregation、inventory-aware reduce-only hedge planning/execution、global hedge execution halt、enabled-profile batch 共用的 per-run execution route/notional cap policy、quote command validation、quote API frequency limiting、stale quote cleanup、post-only internal order placement、durable active quote state/operator lookup、per-side quote version metadata、active quote reload coverage、quote/open-order reconciliation、預設關閉的 fail-closed quote repair baseline，以及預設關閉、以 top-of-book 中點推算雙邊 ladder 報價、預設每邊 50 層且走同一 quote lifecycle/WebSocket 路徑的 auto quote runner、hedge venue adapter contract、real venue signed-request/lookup HTTP transport、uncertain submit reconciliation 的 venue outcome lookup contract、retryable venue result classification、durable refId idempotency claim/result storage、未解 hedge venue idempotency 營運報告與 reconcile trigger、retry/backoff/throttle decorator baselines、standardized venue fill mapping、預設安全拒絕 adapter、hedging risk checks、slippage rejection、quote/hedge decision audit events、含 internal trade 與 ledger refs 的 durable hedge decision/fill audit trails、decision-vs-fill hedge reconciliation，以及 trade/ledger ref issue reporting；自動 hedge reconciliation repair job 仍未完成。
+- outbox 已使用 MySQL durable store 保存 outbox/DLQ records，並已有 replay/compensation runbook。
+- Database indexing 已有 Flyway baseline，涵蓋 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction order/user-event 查詢，以及 `position_lifecycle_projection` live-position mirror schema / indexes；live order SQL mirror design 已決定使用 `order_lifecycle_projection`，archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Object-storage archive writers、delete jobs 與 live-position projection update/rebuild wiring 仍未完成。
+- Operations metrics 已透過 `/api/ops/metrics` 與 `/actuator/prometheus` 的 Micrometer Prometheus export 暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters。
+- MySQL、Redis、Kafka 之間已有 order commands、liquidation、ADL execution 與 hedge execution 的 command-boundary/outbox baseline，並有 order-place outbox insert failure、cancel ledger-release failure、hedge audit/outbox failure rollback coverage、cross-store MySQL/Redis/Kafka failure drill，以及 outbox/domain-state consistency recovery report。
+- market data 已有 durable depth sequence checkpoints、reconnect backfill depth deltas、durable trade tape、trade replay cursors、durable ticker latest state、durable 1m klines，以及預設關閉的高流量 depth/trade/kline history DB retention windows。
+- WebSocket/SSE gateway 已有 heartbeat contract、預設關閉的 heartbeat scheduler、private user SSE/WebSocket stream 訂閱授權、per-client stream 訂閱限流、depth/trade recovery cursor contract、支援 MONOLITH/GATEWAY 部署的 `push-gateway.runtime.*` role/drain controls、`GET /api/ops/push-gateway/status` runtime status endpoint，以及水平擴展部署 runbook。
+- Polymarket CLOB place 已有 `clientRequestId` local idempotency baseline，CLOB cancel 可使用 durable `commandId` records，也會對已記錄的 cancel/uncertain 狀態做 local replay，reconcile 可用遠端 CLOB status 解除 uncertain cancel，sync/reconcile 會跳過未變更 local writes，已有文件化的 local/CLOB/trade/settlement transition matrix 會防止 stale active 或 terminal downgrade payload 降級 local filled/settled terminal order 或 matched size，settlement/redeem event 可將 matched 或 filled order 推進到 settled，並把 user-channel trade match 推進到 local matched lifecycle，user-channel trade payload 會把 matched lifecycle 與 lastTradeId 持久化到 local `PredictionPolymarketOrder` projection，user WebSocket worker checkpoint/replay 已有 wallet-scoped durable baseline，也有 `polymarket.ws.user-worker-*` runtime identity、啟動 bounded replay、status checkpoint visibility 與 manual replay control，approval reads 已有 TTL cache coverage，session signer lifecycle guard 已覆蓋 expiration / revocation / abnormal-use warning，user-channel callback 會對 duplicate `eventKey` replay 與 save-race duplicate 做 no-op，backend-observed RPC transaction 也已有 durable command / txHash tracking envelope 與 unresolved outcome report，Gamma/CLOB response 也已有 versioned schema report 追蹤遠端欄位漂移。
+- Alert backend integration 已有 `OperationalAlert`、`AlertDispatchService` 與 `OkHttpAlertTransport`，並透過預設關閉的 `alerts.backend.*` 設定接線；alert payload 會帶 severity、route、entity id、runbook、details，以及可用的 request/correlation ids，dispatch skipped/failed 不會改動交易狀態。Tracing export/sampling policy config 已在 `tracing.export.*` 提供，Micrometer Tracing OTLP export 已透過 Actuator management properties 接線，tracing dashboard docs 也已涵蓋第一版 Grafana/Tempo panels。
+- Admin market-config、risk-parameters、做市商營運與 DLQ 已有靜態頁 / API baseline。做市商營運頁已改成單一 operator console 列表，停用 profile 仍會保留在列表中方便復原，展開每個做市商後可查看策略限制、auto quote policy / 頻率、active quote、做市成交 / 委託紀錄、庫存曝險 / 偏向、hedge reconciliation / fills、idempotency 狀態，並透過 row-scoped 操作執行受控手動 hedge；auto quote 預設每邊 50 檔，quote order placement 會先檢查 top-of-book，避免做市單變成吃單。更完整的報表、壓測、灰度與合規功能都還沒完成。
+
+## 建議接下來先做什麼
+
+1. Tag 或 hand off 有邊界的 core-v1 baseline。
+2. core-v1 baseline tag 或明確 hand off 後，再繼續 P2。
+
+## 閱讀順序
+
+快速掌握狀態請先看本文件，再看：
+
+1. [core-v1-release-checklist.md](core-v1-release-checklist.md)：release freeze boundary 與 gates。
+2. [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)：smoke verification flow。
+3. [todo.md](todo.md)：完整 production readiness checklist。
+4. [technical.md](technical.md)：技術文件入口。
+5. [../ai/code-map.md](../ai/code-map.md)：給代理使用的精簡程式碼地圖索引。

@@ -135,7 +135,7 @@ Avoid:
 - Reading all docs before selecting a lane.
 - Asking multiple agents to analyze the same broad roadmap item.
 - Dumping full test logs into chat when the failing assertion is enough.
-- Starting implementation from `docs/en/todo.md` when a narrower `docs/tasks/...` file exists.
+- Starting implementation from `docs/project/todo.md` when a narrower `docs/tasks/...` file exists.
 
 ## Code Graph And Context Map
 
@@ -168,7 +168,7 @@ Use the repository folders this way:
 | `docs/tasks/` | Executable work items | One file per implementable lane or coordinated milestone. |
 | `docs/tasks/active.md` | Current claims | Short rows only; no long analysis. |
 | `docs/tasks/handoffs/` | Unfinished work notes | Use only when work stops before completion. |
-| `docs/en/`, `docs/zh-TW/` | Product, status, and roadmap docs | Update when behavior or roadmap status changes. |
+| `docs/project/` | Product, status, and roadmap docs | Update when behavior or roadmap status changes. |
 | `shells/` | Repeatable local commands and curl coverage | Add scripts when manual verification would otherwise be copied around. |
 | `src/main/...` | Production code | Follow architecture dependency direction from `AGENTS.md`. |
 | `src/test/...` | Focused verification | Tests should document scenario intent through names or comments. |

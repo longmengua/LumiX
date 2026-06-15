@@ -73,8 +73,8 @@ Current behavior:
 - Cancel-on-disconnect supports connection resume by moving a registration from `resumeConnectionId` to the new WebSocket session id, preventing late old-close events from canceling orders after reconnect.
 - Matching restore drills assert that recovered open orders from latest snapshot plus later command log entries are present after recovery.
 - Replay validation has multi-symbol interleaved command-offset coverage, so per-symbol offsets remain independent when command writes are interleaved.
-- Production sequencer deployment and failover rules are documented in `docs/en/matching-sequencer-runbook.md`.
-- Disaster recovery worker takeover, authenticated command reconnect/session replay semantics, restore smoke commands, and account/position consistency validation are documented in `docs/en/disaster-recovery-runbook.md`.
+- Production sequencer deployment and failover rules are documented in `docs/reliability/matching-sequencer-runbook.md`.
+- Disaster recovery worker takeover, authenticated command reconnect/session replay semantics, restore smoke commands, and account/position consistency validation are documented in `docs/runbooks/disaster-recovery-runbook.md`.
 
 Remaining production TODO:
 - Multi-process operational hardening beyond the current in-process engine worker baseline.

@@ -6,7 +6,7 @@ For team-level metrics, token budgets, lane sizing, and weekly operating cadence
 
 ## Operating Model
 
-- Work from one Markdown task entry point whenever possible: a file under `docs/tasks/`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, or a specific `docs/ai/maps/*.md` file.
+- Work from one Markdown task entry point whenever possible: a file under `docs/tasks/`, `docs/project/todo.md`, `docs/project/todo.md`, or a specific `docs/ai/maps/*.md` file.
 - Use `docs/tasks/active.md` as the shared active-work registry before implementation starts.
 - Treat one git worktree as one writer lane: one agent, one task entry point, one active registry row, one branch, and one narrow expected file set.
 - Do not run two coding agents in the same git worktree. The working tree, index/staging area, uncommitted changes, and generated test state are shared and will make ownership ambiguous.
@@ -170,7 +170,7 @@ If the registry says another owner is `doing`, avoid that lane unless the user e
 - Parallel writer agents must use separate git worktrees and separate branches.
 - Agents must not claim another lane while their previous claim or completion is still branch-only and not visible on `main`.
 - Never use `git add .` in a shared worktree while another writer agent is active there; same-worktree parallel writing is disallowed.
-- Avoid parallel edits to these high-conflict files unless the task is explicitly about them: `AGENTS.md`, `docs/en/todo.md`, `docs/zh-TW/todo.md`, `docs/en/current-state.md`, `docs/zh-TW/current-state.md`, `docs/ai/code-map.md`, Flyway migrations, and global config files.
+- Avoid parallel edits to these high-conflict files unless the task is explicitly about them: `AGENTS.md`, `docs/project/todo.md`, `docs/project/todo.md`, `docs/project/current-state.md`, `docs/project/current-state.md`, `docs/ai/code-map.md`, Flyway migrations, and global config files.
 - Avoid overlapping expected areas. If two tasks both need the same controller, service, migration, or map file, split the tasks further or define a dependency order before both agents code.
 - If a task needs a schema migration, use the next migration number only after checking `src/main/resources/db/migration`.
 - Keep commits or final patch sets scoped to one behavior. Split unrelated cleanup into a later task.

@@ -69,7 +69,7 @@ Ledger concerns:
 
 Remaining production TODO:
 - Stronger alert delivery and worker locking for scheduled turnover reconciliation.
-- ADL DB-commit vs Redis hot-state repair rules are documented in `docs/en/redis-key-schema.md` and `docs/zh-TW/redis-key-schema.md`.
+- ADL DB-commit vs Redis hot-state repair rules are documented in `docs/architecture/redis-key-schema.md` and `docs/architecture/redis-key-schema.md`.
 
 ## Funding, Liquidation, Reconciliation
 
@@ -111,7 +111,7 @@ Current liquidation/ADL behavior:
 - `GET /api/risk/adl-executions` reports recent forced-deleveraging outcomes from durable execution records when available.
 - `AdlInsuranceReconciliationService` and `GET /api/risk/adl-insurance-reconciliation` compare open ADL queue shortfalls against liquidated-position ADL/insurance coverage.
 - `AdlQueueExecutionService` consumes queued liquidation shortfalls, enforces queue owner guard when claimed, filters opposite-side candidates, ranks/plans ADL reduction, executes through `ExecuteAdlUseCase`, completes fully covered queue entries, keeps remaining notional on partial execution, and returns `ADL_NO_ELIGIBLE_CANDIDATES` without consuming the queue when no candidate can be reduced.
-- Operator retry steps for stuck claims, partial executions, and no-candidate outcomes are documented in `docs/en/adl-operator-runbook.md` and `docs/zh-TW/adl-operator-runbook.md`.
+- Operator retry steps for stuck claims, partial executions, and no-candidate outcomes are documented in `docs/reliability/adl-operator-runbook.md` and `docs/reliability/adl-operator-runbook.md`.
 - `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:
