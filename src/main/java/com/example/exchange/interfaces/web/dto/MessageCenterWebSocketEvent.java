@@ -12,6 +12,8 @@ public record MessageCenterWebSocketEvent(
         String category,
         String severity,
         Instant createdAt,
+        boolean isExpired,
+        boolean isPinned,
         boolean isScheduled,
         String actionUrl,
         String actionLabel

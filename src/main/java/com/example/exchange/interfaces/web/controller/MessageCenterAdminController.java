@@ -10,11 +10,15 @@ import com.example.exchange.interfaces.web.interceptor.ApiAuthenticationIntercep
 import com.example.exchange.interfaces.web.security.ApiPrincipal;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.time.Instant;
 
 import java.util.Objects;
 
@@ -63,6 +67,66 @@ public class MessageCenterAdminController {
                         principal.subject(),
                         principalHasAdminScope(principal) ? SYSTEM_ACTOR_TYPE : ADMIN_ACTOR_TYPE
                 )
+        );
+    }
+
+    @PostMapping("/system/messages/event")
+    public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageSystemEventResponse> sendSystemEventMessage(
+            @RequestBody MessageCenterUserDtos.MessageSystemEventRequest request,
+            HttpServletRequest requestContext
+    ) {
+        ApiPrincipal principal = resolvePrincipal(requestContext);
+        return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
+                messageCenterService.sendSystemEvent(
+                        request,
+                        principal.subject(),
+                        principalHasAdminScope(principal) ? SYSTEM_ACTOR_TYPE : ADMIN_ACTOR_TYPE
+                )
+        );
+    }
+
+    @PostMapping("/system/messages/event/batch")
+    public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageSystemEventBatchResponse> sendSystemEventBatch(
+            @RequestBody MessageCenterUserDtos.MessageSystemEventBatchRequest request,
+            HttpServletRequest requestContext
+    ) {
+        ApiPrincipal principal = resolvePrincipal(requestContext);
+        return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
+                messageCenterService.sendSystemEventBatch(
+                        request,
+                        principal.subject(),
+                        principalHasAdminScope(principal) ? SYSTEM_ACTOR_TYPE : ADMIN_ACTOR_TYPE
+                )
+        );
+    }
+
+    @GetMapping("/admin/messages/announcements")
+    public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageAnnouncementListResponse> listAnnouncements(
+            @RequestParam(value = "status", required = false) String status,
+            @RequestParam(value = "category", required = false) String category,
+            @RequestParam(value = "from", required = false) Instant from,
+            @RequestParam(value = "to", required = false) Instant to,
+            @RequestParam(value = "cursor", required = false) String cursor,
+            @RequestParam(value = "limit", defaultValue = "30") Integer limit
+    ) {
+        return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
+                messageCenterService.listAnnouncements(
+                        status,
+                        category,
+                        from,
+                        to,
+                        cursor,
+                        limit
+                )
+        );
+    }
+
+    @GetMapping("/admin/messages/announcements/{announcementId}")
+    public com.example.exchange.interfaces.web.dto.ApiResponse<MessageCenterUserDtos.MessageAnnouncementDetailResponse> getAnnouncement(
+            @PathVariable String announcementId
+    ) {
+        return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
+                messageCenterService.getAnnouncementDetail(announcementId)
         );
     }
 

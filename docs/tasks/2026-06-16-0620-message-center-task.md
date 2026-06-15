@@ -400,17 +400,35 @@
 
 3) `POST /api/system/messages/send`
 - Request:
-  - `uids`: `string[]`
-  - `templateCode`: `string`
-  - `templateVars`: `object`
+  - `title`: `string`
+  - `summary`: `string`
+  - `body`: `string`
   - `category`: `MessageCategory`
   - `severity`: `Severity`
-  - `actionUrl`: `string | null`
+  - `templateCode`: `string`
+  - `templateVars`: `object`
+  - `metadata`: `object`
+  - `sourceEventType`: `string`
+  - `sourceEventId`: `string`
+  - `sourceEventHash`: `string`
   - `dedupeKey`: `string | null`
+  - `actionUrl`: `string | null`
+  - `actionLabel`: `string | null`
+  - `effectiveAt`: `ISO8601`
+  - `expireAt`: `ISO8601`
+  - `sendAt`: `ISO8601`
+  - `recipientUserIds`: `number[]`
+  - `audienceType`: `ALL|USER_IDS|VIP|HAS_ASSET|CUSTOM_FILTER`
+  - `audienceData`: `object`
 - Response:
-  - `acceptedCount`: `number`
-  - `dedupeSkippedCount`: `number`
-  - `status`: `string`
+  - `messageId`: `string`
+  - `title`: `string`
+  - `category`: `MessageCategory`
+  - `severity`: `Severity`
+  - `sentTo`: `number`
+  - `skippedTo`: `number`
+  - `alreadyExists`: `boolean`
+  - `sendAt`: `ISO8601`
 
 ### 7.4 推播 API
 
@@ -713,3 +731,18 @@
   - 2) 未讀 badge + 已讀/封存/釘選/刪除操作
   - 3) 詳情頁 + 偏好設定頁
   - 4) WebSocket 重連 + 新訊息提示 + 重同步
+
+## 11.4 2026-06-16 前端落地補充（已實作）
+
+- 已依本文件完成前端一頁式實作（列表、詳情、偏好）並落在 `web/src/App.tsx`。
+- API/WS 實作要點：
+  - `GET /api/messages`（含 cursor、status、archived、search、category、excludeDeleted、pinnedFirst）
+  - `POST /api/messages/{messageId}/read`、`.../archive`、`.../unarchive`、`.../pin`（POST/DELETE）
+  - `DELETE /api/messages/{messageId}`、`POST /api/messages/read-all`、`GET /api/messages/unread-count`
+  - `GET /api/message-preferences`、`PUT /api/message-preferences`
+  - `GET /ws/exchange`（含 Bearer token、500ms/1s/2s 自動重試三次）
+- 已處理規格邊界：
+  - 首頁/分類/搜尋變更即清快取重抓
+  - `message.new` 按 `messageId` 去重與非第一頁提示
+  - 未讀 badge 以 `unread-count`+`byCategory` 驗證
+  - 詳情進入後再做 read 呼叫

@@ -64,6 +64,9 @@ public class MessageCenterService {
     private static final String DEFAULT_SUBJECT = "system";
     private static final String DEFAULT_SUBJECT_TYPE_SYSTEM = "SYSTEM";
     private static final String DEFAULT_SUBJECT_TYPE_ADMIN = "ADMIN";
+    private static final String EVENT_STATUS_CREATED = "created";
+    private static final String EVENT_STATUS_SKIPPED = "skipped";
+    private static final String EVENT_STATUS_DUPLICATE = "duplicate";
 
     private static final Map<String, Map<String, String>> TEMPLATE_TEXT = Map.of(
             "ORDER_CREATED", Map.of(
@@ -235,6 +238,94 @@ public class MessageCenterService {
     }
 
     @Transactional(readOnly = true)
+    public MessageCenterUserDtos.MessageAnnouncementListResponse listAnnouncements(
+            String status,
+            String category,
+            Instant from,
+            Instant to,
+            String cursor,
+            Integer limit
+    ) {
+        // Admin-only announcement list is cursor-based and reuses createdAt/id ordering.
+        int pageSize = sanitizePageSize(limit);
+        MessageCursor parsedCursor = decodeCursor(cursor);
+
+        String statusValue = status == null ? null : MessageAnnouncementStatus.parse(status).name();
+        String categoryValue = category == null ? null : parseCategory(category).name();
+        String cursorMessageId = parsedCursor == null ? null : parsedCursor.messageId();
+
+        List<MessageCenterAnnouncement> rows = announcementRepository.findAnnouncements(
+                statusValue,
+                categoryValue,
+                from,
+                to,
+                parsedCursor == null ? null : parsedCursor.createdAt(),
+                cursorMessageId,
+                PageRequest.of(0, pageSize + 1)
+        );
+
+        boolean hasMore = rows.size() > pageSize;
+        if (hasMore) {
+            rows = rows.subList(0, pageSize);
+        }
+
+        List<MessageCenterUserDtos.MessageAnnouncementListItemResponse> items = rows.stream()
+                .map(item -> new MessageCenterUserDtos.MessageAnnouncementListItemResponse(
+                        item.getId(),
+                        item.getTitle(),
+                        item.getSummary(),
+                        item.getCategory(),
+                        item.getSeverity(),
+                        item.getStatus(),
+                        item.getDeliveryMode(),
+                        item.getSendAt(),
+                        item.getExpireAt(),
+                        item.getCreatedAt(),
+                        item.getAudienceType(),
+                        item.getEstimatedRecipients()
+                ))
+                .toList();
+
+        String nextCursor = hasMore && !rows.isEmpty()
+                ? encodeCursor(rows.get(rows.size() - 1).getCreatedAt(), rows.get(rows.size() - 1).getId())
+                : null;
+
+        return new MessageCenterUserDtos.MessageAnnouncementListResponse(items, nextCursor, hasMore);
+    }
+
+    @Transactional(readOnly = true)
+    public MessageCenterUserDtos.MessageAnnouncementDetailResponse getAnnouncementDetail(String announcementId) {
+        // Admin-only detail response must carry full metadata + delivery statistics.
+        MessageCenterAnnouncement announcement = announcementRepository.findById(announcementId)
+                .orElseThrow(() -> new BusinessException(BusinessErrorCode.ANNOUNCEMENT_NOT_FOUND));
+
+        return new MessageCenterUserDtos.MessageAnnouncementDetailResponse(
+                announcement.getId(),
+                announcement.getTitle(),
+                announcement.getSummary(),
+                announcement.getCategory(),
+                announcement.getSeverity(),
+                announcement.getTemplateCode(),
+                parseJsonMap(announcement.getTemplateVarsJson()),
+                announcement.getAudienceType(),
+                parseJsonMap(announcement.getAudienceData()),
+                announcement.getStatus(),
+                announcement.getDeliveryMode(),
+                announcement.getDedupeKey(),
+                announcement.getSendAt(),
+                announcement.getExpireAt(),
+                announcement.getCreatedAt(),
+                announcement.getCreatedBy(),
+                announcement.getUpdatedAt(),
+                new MessageCenterUserDtos.MessageAnnouncementDeliveryStats(
+                        announcement.getSentCount(),
+                        announcement.getFailedCount(),
+                        announcement.getSkippedCount()
+                )
+        );
+    }
+
+    @Transactional(readOnly = true)
     public MessageCenterUserDtos.MessageDetailResponse getMessageDetail(long uid, String messageId, boolean autoRead) {
         MessageCenterMessage message = messageRepository.findById(messageId)
                 .orElseThrow(() -> new BusinessException(BusinessErrorCode.MESSAGE_NOT_FOUND));
@@ -341,8 +432,22 @@ public class MessageCenterService {
 
     @Transactional
     public MessageCenterUserDtos.MessageReadAllResponse markAllRead(long uid, String scope, String category) {
-        boolean archived = "ARCHIVED".equalsIgnoreCase(scope == null ? "" : scope);
+        String normalizedScope = scope == null ? "" : scope.trim().toUpperCase(Locale.ROOT);
+        boolean categoryScope = "CATEGORY".equals(normalizedScope);
+        boolean allScope = normalizedScope.isBlank() || "ALL".equals(normalizedScope);
+        if (!allScope && !categoryScope) {
+            throw new IllegalArgumentException("scope must be ALL or CATEGORY");
+        }
+
+        if (categoryScope && (category == null || category.isBlank())) {
+            throw new IllegalArgumentException("category is required when scope is CATEGORY");
+        }
+
+        boolean archived = false;
         List<String> categories = parseCategoryFilters(List.ofNullable(category));
+        if (categoryScope && categories.isEmpty()) {
+            throw new IllegalArgumentException("invalid category");
+        }
 
         List<MessageCenterMessageUserState> unreadStates = userStateRepository.findUnreadForReadAll(
                 uid,
@@ -530,6 +635,7 @@ public class MessageCenterService {
                 templateCode,
                 templateVars,
                 metadata,
+                null,
                 actorType == null ? DEFAULT_SUBJECT_TYPE_SYSTEM : actorType,
                 actor == null ? DEFAULT_SUBJECT : actor,
                 request.sourceEventType(),
@@ -554,6 +660,109 @@ public class MessageCenterService {
                 messageResult.existed(),
                 sendAt
         );
+    }
+
+    @Transactional
+    public MessageCenterUserDtos.MessageSystemEventResponse sendSystemEvent(
+            MessageCenterUserDtos.MessageSystemEventRequest request,
+            String actor,
+            String actorType
+    ) {
+        // System event API is eventId/userId 去重，不可重複建立相同事件通知。
+        if (request == null) {
+            throw new IllegalArgumentException("system event request is required");
+        }
+        if (request.eventType() == null || request.eventType().isBlank()) {
+            throw new IllegalArgumentException("eventType is required");
+        }
+        if (request.eventId() == null || request.eventId().isBlank()) {
+            throw new IllegalArgumentException("eventId is required");
+        }
+        if (request.sourceUserId() <= 0) {
+            throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+        }
+
+        MessageCategory category = parseCategory(request.category());
+        MessageSeverity severity = MessageSeverity.parse(request.severity());
+        long targetUid = request.sourceUserId();
+        Instant now = Instant.now(clock);
+        Instant sendAt = request.eventTimestamp() == null ? now : request.eventTimestamp();
+        Instant effectiveAt = sendAt;
+
+        String dedupeKey = resolveEventDedupeKey(request.eventType(), request.eventId(), request.sourceUserId(), request.dedupeKey());
+        Map<String, Object> templateVars = new LinkedHashMap<>();
+        templateVars.put("eventType", request.eventType());
+        templateVars.put("eventId", request.eventId());
+        templateVars.put("sourceUserId", request.sourceUserId());
+        templateVars.put("eventTimestamp", sendAt);
+        templateVars.putAll(mapOrEmpty(request.templateVars()));
+
+        Map<String, Object> metadata = mapOrEmpty(request.metadataOverrides());
+        String templateCode = request.templateCode();
+
+        String title = resolveTemplateText(templateCode, "title", null, templateVars, category.name());
+        String summary = resolveTemplateText(templateCode, "summary", null, templateVars, category.name());
+        String body = resolveTemplateText(templateCode, "body", null, templateVars, category.name());
+
+        MessageCreationResult messageResult = upsertMessage(
+                dedupeKey,
+                title,
+                summary,
+                body,
+                category,
+                severity,
+                templateCode,
+                templateVars,
+                metadata,
+                targetUid,
+                actorType == null ? DEFAULT_SUBJECT_TYPE_SYSTEM : actorType,
+                actor == null ? DEFAULT_SUBJECT : actor,
+                request.eventType(),
+                request.eventId(),
+                dedupeKey,
+                request.actionUrl(),
+                request.actionLabel(),
+                sendAt,
+                effectiveAt,
+                null
+        );
+
+        if (userStateRepository.existsByUidAndDedupeKey(targetUid, dedupeKey)) {
+            return new MessageCenterUserDtos.MessageSystemEventResponse(
+                    messageResult.message().getId(),
+                    request.sourceUserId(),
+                    EVENT_STATUS_DUPLICATE
+            );
+        }
+
+        MessageDispatchStats stats = sendToRecipients(messageResult.message(), List.of(targetUid), now);
+        String status = stats.sentTo() > 0 ? EVENT_STATUS_CREATED : EVENT_STATUS_SKIPPED;
+
+        return new MessageCenterUserDtos.MessageSystemEventResponse(
+                messageResult.message().getId(),
+                request.sourceUserId(),
+                messageResult.existed() && EVENT_STATUS_SKIPPED.equals(status)
+                        ? EVENT_STATUS_DUPLICATE
+                        : status
+        );
+    }
+
+    @Transactional
+    public MessageCenterUserDtos.MessageSystemEventBatchResponse sendSystemEventBatch(
+            MessageCenterUserDtos.MessageSystemEventBatchRequest request,
+            String actor,
+            String actorType
+    ) {
+        List<MessageCenterUserDtos.MessageSystemEventRequest> events = request == null || request.events() == null
+                ? List.of()
+                : request.events();
+        List<MessageCenterUserDtos.MessageSystemEventResponse> results = new ArrayList<>(events.size());
+
+        for (MessageCenterUserDtos.MessageSystemEventRequest event : events) {
+            results.add(sendSystemEvent(event, actor, actorType));
+        }
+
+        return new MessageCenterUserDtos.MessageSystemEventBatchResponse(results);
     }
 
     @Transactional
@@ -688,6 +897,7 @@ public class MessageCenterService {
                 locked.getTemplateCode(),
                 parseJsonMap(locked.getTemplateVarsJson()),
                 Map.of(),
+                null,
                 locked.getCreatedByType(),
                 locked.getCreatedBy(),
                 null,
@@ -719,6 +929,7 @@ public class MessageCenterService {
             String templateCode,
             Map<String, Object> templateVars,
             Map<String, Object> metadata,
+            Long sourceUserId,
             String createdByType,
             String createdBy,
             String sourceEventType,
@@ -753,6 +964,7 @@ public class MessageCenterService {
         message.setActionLabel(blankOr(actionLabel));
         message.setMetadataJson(toJson(metadata));
         message.setTemplateVarsJson(toJson(templateVars));
+        message.setSourceUserId(sourceUserId);
         message.setSourceEventType(sourceEventType);
         message.setSourceEventId(sourceEventId);
         message.setSourceEventHash(sourceEventHash);
@@ -814,15 +1026,33 @@ public class MessageCenterService {
 
     private void sendUnreadCountIfAvailable(long uid) {
         Long unread;
+        Map<String, Long> byCategory = new java.util.LinkedHashMap<>();
         try {
             unread = userStateRepository.countUnread(uid, true);
+            Map<String, Long> current = userStateRepository.countUnreadByCategory(uid, true).stream()
+                    .collect(Collectors.toMap(
+                            MessageCenterUnreadCountProjection::getCategory,
+                            MessageCenterUnreadCountProjection::getUnreadCount,
+                            (left, right) -> right,
+                            java.util.HashMap::new
+                    ));
+            if (unread != null) {
+                byCategory.putAll(current);
+                for (MessageCategory category : MessageCategory.values()) {
+                    byCategory.putIfAbsent(category.name(), 0L);
+                }
+            }
         } catch (RuntimeException ex) {
             unread = null;
+            return;
         }
         if (unread == null) {
             return;
         }
-        pushGatewayService.publishUser(uid, "message.unreadCount", Map.of("unreadCount", unread));
+        Map<String, Object> payload = new java.util.LinkedHashMap<>();
+        payload.put("unreadCount", unread);
+        payload.put("byCategory", byCategory);
+        pushGatewayService.publishUser(uid, "message.unreadCount", payload);
     }
 
     private MessageCenterUserDtos.MessageActionResponse stateResponse(String messageId, MessageCenterMessageUserState state) {
@@ -964,6 +1194,11 @@ public class MessageCenterService {
         } catch (RuntimeException ex) {
             throw new BusinessException(BusinessErrorCode.INVALID_CURSOR_FORMAT);
         }
+    }
+
+    private String encodeCursor(Instant createdAt, String messageId) {
+        String raw = createdAt.toEpochMilli() + CURSOR_SEPARATOR + messageId;
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(raw.getBytes(StandardCharsets.UTF_8));
     }
 
     private String encodeCursor(MessageCenterListProjection projection) {
@@ -1152,6 +1387,7 @@ public class MessageCenterService {
                 announcement.getTemplateCode(),
                 templateVars,
                 Map.of(),
+                null,
                 announcement.getCreatedByType(),
                 announcement.getCreatedBy(),
                 null,
@@ -1211,10 +1447,24 @@ public class MessageCenterService {
                 message.getCategory(),
                 message.getSeverity(),
                 message.getCreatedAt(),
+                isExpired(message, Instant.now(clock)),
+                false,
                 message.isScheduled(),
                 message.getActionUrl(),
                 message.getActionLabel()
         );
+    }
+
+    private String resolveEventDedupeKey(
+            String eventType,
+            String eventId,
+            long sourceUserId,
+            String providedDedupeKey
+    ) {
+        if (providedDedupeKey != null && !providedDedupeKey.isBlank()) {
+            return providedDedupeKey.trim();
+        }
+        return eventType + ":" + eventId + ":" + sourceUserId;
     }
 
     private record MessageCreationResult(

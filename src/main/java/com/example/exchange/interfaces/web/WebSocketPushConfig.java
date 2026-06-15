@@ -142,16 +142,25 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
     }
 
     private void subscribeUser(WebSocketSession session, JsonNode command) throws IOException {
-        long uid = command.path("uid").asLong(0);
-        if (uid <= 0) {
-            sendControl(session, "error", Map.of("reason", "UID_REQUIRED"));
+        String authorization = firstNonBlank(text(command, "authorization"), text(command, "token"));
+        long authorizedUid = userStreamSubscriptionAuthorizer.resolveUid(text(command, "apiKey"), authorization);
+        if (authorizedUid <= 0) {
+            sendControl(session, "error", Map.of("reason", "USER_STREAM_AUTH_REQUIRED"));
             return;
         }
+        String requestedUidText = text(command, "uid");
+        long requestedUid = parseLongIfPresent(requestedUidText);
+        if (requestedUid > 0 && requestedUid != authorizedUid) {
+            sendControl(session, "error", Map.of("reason", "USER_STREAM_PERMISSION_DENIED"));
+            return;
+        }
+        long uid = requestedUid > 0 ? requestedUid : authorizedUid;
+
         UserStreamSubscriptionAuthorizer.UserStreamAuthorizationDecision decision =
                 userStreamSubscriptionAuthorizer.authorize(
                         uid,
                         firstNonBlank(text(command, "apiKey")),
-                        firstNonBlank(text(command, "authorization"), text(command, "token"))
+                        authorization
                 );
         if (!decision.allowed()) {
             sendControl(session, "error", Map.of("reason", decision.reason(), "status", decision.status().value()));
@@ -173,12 +182,15 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
     }
 
     private void unsubscribeUser(WebSocketSession session, JsonNode command) throws IOException {
-        long uid = command.path("uid").asLong(0);
-        if (uid > 0) {
-            pushGatewayService.unregisterUserWebSocket(uid, session);
+        Object cached = session.getAttributes().get("exchange.user.uid");
+        long uid = cached instanceof Long currentUid ? currentUid : 0L;
+        long requestedUid = parseLongIfPresent(text(command, "uid"));
+        long targetUid = requestedUid > 0 ? requestedUid : uid;
+        if (targetUid > 0) {
+            pushGatewayService.unregisterUserWebSocket(targetUid, session);
         }
         session.getAttributes().remove("exchange.user.uid");
-        sendControl(session, "unsubscribed.user", Map.of("uid", uid));
+        sendControl(session, "unsubscribed.user", Map.of("uid", targetUid));
     }
 
     private void sendControl(WebSocketSession session, String event, Object data) throws IOException {
@@ -194,6 +206,17 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
     private static String text(JsonNode node, String field) {
         JsonNode value = node == null ? null : node.get(field);
         return value == null || value.isNull() ? "" : value.asText("").trim();
+    }
+
+    private static long parseLongIfPresent(String value) {
+        if (value == null || value.isBlank()) {
+            return 0L;
+        }
+        try {
+            return Long.parseLong(value.trim());
+        } catch (RuntimeException ex) {
+            return 0L;
+        }
     }
 
     private static String lastPathSegment(WebSocketSession session) {

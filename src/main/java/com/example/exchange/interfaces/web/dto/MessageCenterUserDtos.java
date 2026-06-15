@@ -125,6 +125,91 @@ public final class MessageCenterUserDtos {
     ) {
     }
 
+    public record MessageSystemEventRequest(
+            String eventType,
+            String eventId,
+            Instant eventTimestamp,
+            long sourceUserId,
+            String dedupeKey,
+            String templateCode,
+            Map<String, Object> templateVars,
+            String category,
+            String severity,
+            String actionUrl,
+            String actionLabel,
+            Map<String, Object> metadataOverrides
+    ) {
+    }
+
+    public record MessageSystemEventResponse(
+            String messageId,
+            Long userId,
+            String status
+    ) {
+    }
+
+    public record MessageSystemEventBatchRequest(
+            List<MessageSystemEventRequest> events
+    ) {
+    }
+
+    public record MessageSystemEventBatchResponse(
+            List<MessageSystemEventResponse> results
+    ) {
+    }
+
+    public record MessageAnnouncementListItemResponse(
+            String announcementId,
+            String title,
+            String summary,
+            String category,
+            String severity,
+            String status,
+            String deliveryMode,
+            Instant sendAt,
+            Instant expireAt,
+            Instant createdAt,
+            String audienceType,
+            long estimatedRecipients
+    ) {
+    }
+
+    public record MessageAnnouncementListResponse(
+            List<MessageAnnouncementListItemResponse> items,
+            String nextCursor,
+            boolean hasMore
+    ) {
+    }
+
+    public record MessageAnnouncementDeliveryStats(
+            long sent,
+            long failed,
+            long skipped
+    ) {
+    }
+
+    public record MessageAnnouncementDetailResponse(
+            String announcementId,
+            String title,
+            String summary,
+            String category,
+            String severity,
+            String templateCode,
+            Map<String, Object> templateVars,
+            String audienceType,
+            Map<String, Object> audienceData,
+            String status,
+            String deliveryMode,
+            String dedupeKey,
+            Instant sendAt,
+            Instant expireAt,
+            Instant createdAt,
+            String createdBy,
+            Instant updatedAt,
+            MessageAnnouncementDeliveryStats deliveryStats
+    ) {
+    }
+
     public record MessageSystemSendRequest(
             String title,
             String summary,

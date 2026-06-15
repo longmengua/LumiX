@@ -66,7 +66,7 @@ public class MessageCenterController {
     ) {
         long uid = resolveUid(request);
         return com.example.exchange.interfaces.web.dto.ApiResponse.ok(
-                messageCenterService.getMessageDetail(uid, messageId, true)
+                messageCenterService.getMessageDetail(uid, messageId, false)
         );
     }
 
