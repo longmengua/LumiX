@@ -7,7 +7,6 @@
 
 | 文件 | 說明 |
 | --- | --- |
-| [Active AI Work](../tasks/active.md) | 開工前登記 claimed、blocked、handoff 工作的共享清單。 |
 | [Task README](../tasks/README.md) | 任務流程、狀態定義與任務群組。 |
 | [Core Kernel README](../tasks/core-kernel/README.md) | 目前核心交易所 / 撮合內核優先線。 |
 | [Post-v1 Production Hardening README](../tasks/post-v1/README.md) | core-v1 freeze 後的 production hardening 主線。 |
