@@ -9,6 +9,8 @@ import com.example.exchange.domain.model.dto.MarketKline;
 import com.example.exchange.domain.model.dto.MarketDataRecoveryCursor;
 import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.PriceLevel;
+import com.example.exchange.domain.model.dto.PerpetualContractSnapshot;
+import com.example.exchange.domain.model.dto.PerpetualContractSnapshot;
 import com.example.exchange.domain.model.dto.TopOfBook;
 import com.example.exchange.domain.model.dto.TradeTapeItem;
 import com.example.exchange.domain.model.enums.OrderSide;
@@ -217,8 +219,16 @@ public class MarketDataService {
     }
 
     public List<MarketKline> klines(String symbol, int limit) {
+        return klines(symbol, "1m", limit);
+    }
+
+    public List<MarketKline> klines(String symbol, String interval, int limit) {
+        String normalizedInterval = normalizeKlineInterval(interval);
         if (klineStore != null) {
-            return klineStore.findRecent(normalize(symbol), "1m", limit);
+            return klineStore.findRecent(normalize(symbol), normalizedInterval, limit);
+        }
+        if (!"1m".equals(normalizedInterval)) {
+            return List.of();
         }
         Map<Instant, MarketKline> klines = oneMinuteKlines.get(normalize(symbol));
         if (klines == null) return List.of();
@@ -226,6 +236,110 @@ public class MarketDataService {
                 .sorted(Comparator.comparing(MarketKline::openTime).reversed())
                 .limit(Math.max(1, limit))
                 .toList();
+    }
+
+    private String normalizeKlineInterval(String interval) {
+        return switch (interval == null ? "" : interval.trim()) {
+            case "5m", "15m", "1h" -> interval.trim();
+            default -> "1m";
+        };
+    }
+
+    public PerpetualContractSnapshot perpetualSnapshot(String symbol, MarketTicker referenceTicker, List<MarketKline> referenceKlines) {
+        String code = normalize(symbol);
+        BigDecimal indexPrice = referencePrice(code, referenceTicker, referenceKlines);
+        BigDecimal markPrice = markPrice(indexPrice, referenceKlines);
+        Instant now = Instant.now();
+        return new PerpetualContractSnapshot(
+                code,
+                "USDT_PERPETUAL",
+                baseAsset(code),
+                "USDT",
+                BigDecimal.ONE,
+                indexPrice,
+                markPrice,
+                fundingRate(referenceKlines),
+                nextFundingTime(now),
+                20,
+                10,
+                "ISOLATED",
+                new BigDecimal("0.05"),
+                new BigDecimal("0.005"),
+                null,
+                "TRADING",
+                referenceTicker != null && referenceTicker.updatedAt() != null ? referenceTicker.updatedAt() : now
+        );
+    }
+
+    private BigDecimal referencePrice(String symbol, MarketTicker referenceTicker, List<MarketKline> referenceKlines) {
+        if (referenceTicker != null && referenceTicker.lastPrice() != null && referenceTicker.lastPrice().signum() > 0) {
+            return referenceTicker.lastPrice();
+        }
+        if (referenceKlines != null && !referenceKlines.isEmpty()) {
+            MarketKline latest = referenceKlines.stream()
+                    .max(Comparator.comparing(MarketKline::openTime))
+                    .orElse(null);
+            if (latest != null && latest.close() != null && latest.close().signum() > 0) {
+                return latest.close();
+            }
+        }
+        return ticker(symbol)
+                .map(MarketTicker::lastPrice)
+                .filter(value -> value.signum() > 0)
+                .orElse(BigDecimal.ZERO);
+    }
+
+    private BigDecimal markPrice(BigDecimal indexPrice, List<MarketKline> referenceKlines) {
+        if (indexPrice == null || indexPrice.signum() <= 0 || referenceKlines == null || referenceKlines.size() < 2) {
+            return indexPrice == null ? BigDecimal.ZERO : indexPrice;
+        }
+        List<MarketKline> ordered = referenceKlines.stream()
+                .sorted(Comparator.comparing(MarketKline::openTime))
+                .toList();
+        BigDecimal first = ordered.getFirst().open();
+        BigDecimal last = ordered.getLast().close();
+        if (first == null || first.signum() <= 0 || last == null) {
+            return indexPrice;
+        }
+        BigDecimal basis = last.subtract(first)
+                .divide(first, 8, java.math.RoundingMode.HALF_UP)
+                .max(new BigDecimal("-0.003"))
+                .min(new BigDecimal("0.003"));
+        return indexPrice.multiply(BigDecimal.ONE.add(basis));
+    }
+
+    private BigDecimal fundingRate(List<MarketKline> referenceKlines) {
+        if (referenceKlines == null || referenceKlines.size() < 2) {
+            return BigDecimal.ZERO;
+        }
+        List<MarketKline> ordered = referenceKlines.stream()
+                .sorted(Comparator.comparing(MarketKline::openTime))
+                .toList();
+        BigDecimal first = ordered.getFirst().open();
+        BigDecimal last = ordered.getLast().close();
+        if (first == null || first.signum() <= 0 || last == null) {
+            return BigDecimal.ZERO;
+        }
+        // Demo funding is bounded like an exchange risk guardrail; replace this with venue/index premium data later.
+        return last.subtract(first)
+                .divide(first, 8, java.math.RoundingMode.HALF_UP)
+                .multiply(new BigDecimal("0.1"))
+                .max(new BigDecimal("-0.00075"))
+                .min(new BigDecimal("0.00075"));
+    }
+
+    private Instant nextFundingTime(Instant now) {
+        long epoch = now.getEpochSecond();
+        long fundingIntervalSeconds = 8 * 60 * 60L;
+        long next = ((epoch / fundingIntervalSeconds) + 1) * fundingIntervalSeconds;
+        return Instant.ofEpochSecond(next);
+    }
+
+    private String baseAsset(String symbol) {
+        if (symbol != null && symbol.endsWith("USDT") && symbol.length() > 4) {
+            return symbol.substring(0, symbol.length() - 4);
+        }
+        return symbol == null || symbol.isBlank() ? "UNKNOWN" : symbol;
     }
 
     private void appendTrade(String symbol, TradeExecuted trade) {

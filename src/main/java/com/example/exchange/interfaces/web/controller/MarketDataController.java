@@ -9,6 +9,8 @@ import com.example.exchange.domain.model.dto.DepthDelta;
 import com.example.exchange.domain.model.dto.MarketKline;
 import com.example.exchange.domain.model.dto.MarketDataRecoveryCursor;
 import com.example.exchange.domain.model.dto.MarketTicker;
+import com.example.exchange.domain.model.dto.PerpetualContractSnapshot;
+import com.example.exchange.domain.model.dto.PerpetualContractSnapshot;
 import com.example.exchange.domain.model.dto.TradeTapeItem;
 import com.example.exchange.infra.marketdata.BinanceMarketDataClient;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
@@ -62,6 +64,19 @@ public class MarketDataController {
                 .orElse(null));
     }
 
+    @GetMapping("/{symbol}/perpetual")
+    public ApiResponse<PerpetualContractSnapshot> perpetual(@PathVariable String symbol) {
+        // Perpetual UI consumes one contract snapshot; external futures data is preferred, local market data is fallback.
+        MarketTicker referenceTicker = binanceMarketDataClient.ticker(symbol)
+                .or(() -> marketDataService.ticker(symbol))
+                .orElse(null);
+        List<MarketKline> referenceKlines = binanceMarketDataClient.klines(symbol, 84);
+        if (referenceKlines.isEmpty()) {
+            referenceKlines = marketDataService.klines(symbol, 84);
+        }
+        return ApiResponse.ok(marketDataService.perpetualSnapshot(symbol, referenceTicker, referenceKlines));
+    }
+
     @GetMapping("/{symbol}/trades")
     public ApiResponse<List<TradeTapeItem>> trades(
             @PathVariable String symbol,
@@ -92,14 +107,15 @@ public class MarketDataController {
     @GetMapping("/{symbol}/klines")
     public ApiResponse<List<MarketKline>> klines(
             @PathVariable String symbol,
+            @RequestParam(defaultValue = "1m") String interval,
             @RequestParam(defaultValue = "100") int limit
     ) {
         // Binance K-lines give the MVP chart a real market shape even before local trade tape is deep enough.
-        List<MarketKline> external = binanceMarketDataClient.klines(symbol, limit);
+        List<MarketKline> external = binanceMarketDataClient.klines(symbol, interval, limit);
         if (!external.isEmpty()) {
             return ApiResponse.ok(external);
         }
-        return ApiResponse.ok(marketDataService.klines(symbol, limit));
+        return ApiResponse.ok(marketDataService.klines(symbol, interval, limit));
     }
 
     @GetMapping(path = "/{symbol}/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)

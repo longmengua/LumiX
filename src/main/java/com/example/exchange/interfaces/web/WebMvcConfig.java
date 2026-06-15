@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
-import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.file.Path;
@@ -57,17 +56,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
     /**
      * 針對前端交易頁面靜態資源取消長快取。
-     * 這可避免瀏覽器吃到舊版 exchange.js/exchange.css，導致你看到的版面不一致。
+     * 交易所入口現在就是 root path 對應的 index.html，不再經由 /exchange.html 轉址。
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         Path localStaticDir = Paths.get(System.getProperty("user.dir"), "src", "main", "resources", "static");
 
         registry.addResourceHandler(
-                        "/exchange.html",
-                        "/exchange.js",
-                        "/exchange.css",
-                        "/exchange-dev.html"
+                        "/index.html",
+                        "/index.js",
+                        "/index.css"
                 )
                 .addResourceLocations(
                         localStaticDir.toUri().toString(),
@@ -77,14 +75,5 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .setCachePeriod(0)
                 .setUseLastModified(false)
                 .resourceChain(false);
-    }
-
-    /**
-     * 將根路徑直接導向新版交易頁面。
-     * 過去若環境仍有舊的 index.html（例如 target/classes/static）時，會誤導到不是這一版的頁面。
-     */
-    @Override
-    public void addViewControllers(ViewControllerRegistry registry) {
-        registry.addRedirectViewController("/", "/exchange.html");
     }
 }

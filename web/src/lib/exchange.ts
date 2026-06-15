@@ -6,8 +6,10 @@ import {
   type ApiResponse,
   type KlineRow,
   type MarketTickerState,
+  type PerpetualContractState,
   type DecimalLike,
   type RawKline,
+  type RawPerpetualContract,
   type RawTicker,
   type RawTrade,
   type TradeRow
@@ -126,6 +128,14 @@ export function formatQty(value: number | null): string {
   return formatDecimal(value, 2, 6);
 }
 
+export function formatPercent(value: number | null): string {
+  if (value === null) {
+    return '--';
+  }
+  const percent = value * 100;
+  return `${percent >= 0 ? '+' : ''}${formatDecimal(percent, 4, 4)}%`;
+}
+
 export function formatNotional(value: number | null): string {
   if (value === null) {
     return '--';
@@ -175,6 +185,31 @@ export function normalizeTicker(raw: RawTicker | null): MarketTickerState | null
     high24h: toNumber(raw.high24h),
     low24h: toNumber(raw.low24h),
     updatedAt: raw.updatedAt ? raw.updatedAt : null
+  };
+}
+
+export function normalizePerpetualContract(raw: RawPerpetualContract | null): PerpetualContractState | null {
+  if (!raw || !raw.symbol) {
+    return null;
+  }
+  return {
+    symbol: raw.symbol,
+    contractType: raw.contractType,
+    baseAsset: raw.baseAsset,
+    quoteAsset: raw.quoteAsset,
+    contractSize: toNumber(raw.contractSize) ?? 1,
+    indexPrice: toNumber(raw.indexPrice),
+    markPrice: toNumber(raw.markPrice),
+    fundingRate: toNumber(raw.fundingRate),
+    nextFundingTime: raw.nextFundingTime || null,
+    maxLeverage: raw.maxLeverage,
+    defaultLeverage: raw.defaultLeverage,
+    marginMode: raw.marginMode,
+    initialMarginRate: toNumber(raw.initialMarginRate),
+    maintenanceMarginRate: toNumber(raw.maintenanceMarginRate),
+    estimatedLiquidationPrice: toNumber(raw.estimatedLiquidationPrice),
+    status: raw.status,
+    updatedAt: raw.updatedAt || null
   };
 }
 

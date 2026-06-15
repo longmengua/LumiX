@@ -7,6 +7,7 @@
 export type DecimalLike = string | number | null | undefined;
 
 export type Side = 'BUY' | 'SELL';
+export type KlineInterval = '1m' | '5m' | '15m' | '1h';
 
 export type WsEvent =
   | 'subscribed.market'
@@ -75,6 +76,46 @@ export interface MarketTickerState {
   updatedAt: string | null;
 }
 
+export interface RawPerpetualContract {
+  symbol: string;
+  contractType: string;
+  baseAsset: string;
+  quoteAsset: string;
+  contractSize: DecimalLike;
+  indexPrice: DecimalLike;
+  markPrice: DecimalLike;
+  fundingRate: DecimalLike;
+  nextFundingTime: string;
+  maxLeverage: number;
+  defaultLeverage: number;
+  marginMode: string;
+  initialMarginRate: DecimalLike;
+  maintenanceMarginRate: DecimalLike;
+  estimatedLiquidationPrice?: DecimalLike;
+  status: string;
+  updatedAt: string;
+}
+
+export interface PerpetualContractState {
+  symbol: string;
+  contractType: string;
+  baseAsset: string;
+  quoteAsset: string;
+  contractSize: number;
+  indexPrice: number | null;
+  markPrice: number | null;
+  fundingRate: number | null;
+  nextFundingTime: string | null;
+  maxLeverage: number;
+  defaultLeverage: number;
+  marginMode: string;
+  initialMarginRate: number | null;
+  maintenanceMarginRate: number | null;
+  estimatedLiquidationPrice: number | null;
+  status: string;
+  updatedAt: string | null;
+}
+
 export interface TradeRow {
   matchId: string;
   time: string;
@@ -111,6 +152,7 @@ export interface PositionRow {
 }
 
 export const DEFAULT_SYMBOL = 'BTCUSDT';
+export const KLINE_INTERVALS: KlineInterval[] = ['1m', '5m', '15m', '1h'];
 export const MAX_CANDLE_HISTORY = 120;
 export const MAX_CHART_CANDLES = 84;
 export const MAX_TRADE_ROWS = 200;

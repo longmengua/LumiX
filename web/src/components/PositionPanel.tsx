@@ -7,15 +7,18 @@ import { useI18n } from '../lib/i18n';
  */
 interface Props {
   rows: readonly PositionRow[];
+  embedded?: boolean;
 }
 
-export function PositionPanel({ rows }: Props) {
+export function PositionPanel({ rows, embedded = false }: Props) {
   const { t } = useI18n();
   return (
-    <section className="panel">
-      <div className="panel-head">
-        <h2>{t('positions.title')}</h2>
-      </div>
+    <section className={embedded ? 'embedded-panel position-panel' : 'panel position-panel'}>
+      {!embedded ? (
+        <div className="panel-head">
+          <h2>{t('positions.title')}</h2>
+        </div>
+      ) : null}
       <div className="table-head">
         <span>{t('positions.heading.market')}</span>
         <span>{t('positions.heading.side')}</span>

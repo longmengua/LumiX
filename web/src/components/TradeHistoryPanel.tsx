@@ -11,9 +11,10 @@ interface Props {
   loading: boolean;
   hasMore: boolean;
   onLoadMore: () => void;
+  embedded?: boolean;
 }
 
-export function TradeHistoryPanel({ trades, loading, hasMore, onLoadMore }: Props) {
+export function TradeHistoryPanel({ trades, loading, hasMore, onLoadMore, embedded = false }: Props) {
   const { t } = useI18n();
   const listRef = useRef<HTMLDivElement>(null);
   const LOAD_MORE_OFFSET = 10;
@@ -31,10 +32,12 @@ export function TradeHistoryPanel({ trades, loading, hasMore, onLoadMore }: Prop
   };
 
   return (
-      <section className="panel trade-history-panel">
-        <div className="panel-head">
-        <h2>{t('history.title')}</h2>
-      </div>
+      <section className={`trade-history-panel ${embedded ? 'embedded-panel' : 'panel'}`}>
+        {!embedded ? (
+          <div className="panel-head">
+            <h2>{t('history.title')}</h2>
+          </div>
+        ) : null}
         <div className="table-scroll" ref={listRef} onScroll={handleScroll}>
           <div className="table-head">
           <span>{t('history.heading.time')}</span>

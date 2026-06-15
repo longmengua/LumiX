@@ -21,7 +21,7 @@ public class CustomerAuthProperties {
         private boolean enabled = false;
         private int tokenTtlMinutes = 30;
         private int registrationTtlHours = 24;
-        private String publicBaseUrl = "http://127.0.0.1:8080/exchange.html";
+        private String publicBaseUrl = "http://127.0.0.1:8080/";
         private boolean returnVerificationUrl = false;
         /** Optional localized email templates; blank values fall back to built-in customer copy. */
         private EmailTemplates templates = new EmailTemplates();

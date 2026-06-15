@@ -3,12 +3,13 @@ import { ExchangeTopBar } from './components/ExchangeTopBar';
 import { KLinePanel } from './components/KLinePanel';
 import { MarketRibbon } from './components/MarketRibbon';
 import { OrderPanel } from './components/OrderPanel';
-import { PositionPanel } from './components/PositionPanel';
-import { TradeHistoryPanel } from './components/TradeHistoryPanel';
+import { PerpetualInfoPanel } from './components/PerpetualInfoPanel';
+import { TradingActivityTabs } from './components/TradingActivityTabs';
 import {
   buildWsUrl,
   fetchJson,
   normalizeKline,
+  normalizePerpetualContract,
   normalizeTicker,
   normalizeTrade,
   upsertKlineWithTrade,
@@ -18,10 +19,13 @@ import { connStatusLabel } from './lib/i18n';
 import { useI18n } from './lib/i18n';
 import {
   type ConnStatus,
+  type KlineInterval,
   type KlineRow,
   type MarketTickerState,
+  type PerpetualContractState,
   type PositionRow,
   type RawKline,
+  type RawPerpetualContract,
   type RawTicker,
   type RawTrade,
   type TradeFormState,
@@ -756,11 +760,14 @@ export function ExchangeConsole() {
   const [exchangeSymbol] = useState(DEFAULT_SYMBOL);
   const [exchangeConnStatus, setExchangeConnStatus] = useState<ConnStatus>('idle');
   const [exchangeTicker, setExchangeTicker] = useState<MarketTickerState | null>(null);
+  const [exchangePerpetual, setExchangePerpetual] = useState<PerpetualContractState | null>(null);
   const [exchangeCandles, setExchangeCandles] = useState<KlineRow[]>([]);
+  const [exchangeKlineInterval, setExchangeKlineInterval] = useState<KlineInterval>('1m');
   const [exchangeTrades, setExchangeTrades] = useState<TradeRow[]>([]);
   const [exchangeTradeLoading, setExchangeTradeLoading] = useState(false);
   const [exchangeTradeHasMore, setExchangeTradeHasMore] = useState(false);
   const [exchangeOrderForm, setExchangeOrderForm] = useState<TradeFormState>(DEFAULT_ORDER_FORM);
+  const [tradingActivityTab, setTradingActivityTab] = useState<'trades' | 'positions'>('trades');
   const exchangePositions: PositionRow[] = SAMPLE_POSITIONS;
   const exchangeWsRef = useRef<WebSocket | null>(null);
   const exchangeWsRetryRef = useRef(0);
@@ -860,6 +867,21 @@ export function ExchangeConsole() {
       .sort((a, b) => Date.parse(a.openTime) - Date.parse(b.openTime));
   }, []);
 
+  const refreshExchangeTicker = useCallback(async () => {
+    const [rawTicker, rawPerpetual] = await Promise.all([
+      fetchJson<RawTicker>(`/api/market-data/${exchangeSymbol}/ticker`),
+      fetchJson<RawPerpetualContract>(`/api/market-data/${exchangeSymbol}/perpetual`)
+    ]);
+    const normalizedTicker = rawTicker && normalizeTicker(rawTicker);
+    if (normalizedTicker) {
+      setExchangeTicker(normalizedTicker);
+    }
+    const normalizedPerpetual = rawPerpetual && normalizePerpetualContract(rawPerpetual);
+    if (normalizedPerpetual) {
+      setExchangePerpetual(normalizedPerpetual);
+    }
+  }, [exchangeSymbol]);
+
   const applyExchangeTrade = useCallback((incoming: TradeRow) => {
     setExchangeTrades((prev) => {
       const exists = prev.some((item) => item.matchId === incoming.matchId);
@@ -878,9 +900,10 @@ export function ExchangeConsole() {
     const requestId = ++exchangeTradeRequestId.current;
     setExchangeTradeLoading(true);
 
-    const [rawTicker, rawKlines, rawTrades] = await Promise.all([
+    const [rawTicker, rawPerpetual, rawKlines, rawTrades] = await Promise.all([
       fetchJson<RawTicker>(`/api/market-data/${exchangeSymbol}/ticker`),
-      fetchJson<RawKline[]>(`/api/market-data/${exchangeSymbol}/klines?limit=${MAX_CHART_CANDLES}`),
+      fetchJson<RawPerpetualContract>(`/api/market-data/${exchangeSymbol}/perpetual`),
+      fetchJson<RawKline[]>(`/api/market-data/${exchangeSymbol}/klines?interval=${exchangeKlineInterval}&limit=${MAX_CHART_CANDLES}`),
       fetchJson<RawTrade[]>(`/api/market-data/${exchangeSymbol}/trades?limit=${EXCHANGE_TRADE_HISTORY_LIMIT}`)
     ]);
 
@@ -889,6 +912,7 @@ export function ExchangeConsole() {
     }
 
     setExchangeTicker((rawTicker && normalizeTicker(rawTicker)) || null);
+    setExchangePerpetual((rawPerpetual && normalizePerpetualContract(rawPerpetual)) || null);
 
     const normalizedCandles = normalizeExchangeCandles(rawKlines).slice(-MAX_CHART_CANDLES);
     setExchangeCandles(normalizedCandles);
@@ -898,7 +922,7 @@ export function ExchangeConsole() {
     setExchangeTradeHasMore(Array.isArray(rawTrades) && rawTrades.length === EXCHANGE_TRADE_HISTORY_LIMIT);
     setExchangeTradeLoading(false);
 
-  }, [exchangeSymbol, normalizeExchangeCandles, normalizeExchangeTradeRows]);
+  }, [exchangeKlineInterval, exchangeSymbol, normalizeExchangeCandles, normalizeExchangeTradeRows]);
 
   const loadMoreExchangeTrades = useCallback(async () => {
     if (!exchangeTradeHasMore || exchangeTradeLoading || exchangeTrades.length === 0) {
@@ -985,7 +1009,9 @@ export function ExchangeConsole() {
           const trade = normalizeTrade(rawTrade);
           if (trade) {
             applyExchangeTrade(trade);
-            setExchangeCandles((prev) => upsertKlineWithTrade(prev, rawTrade, MAX_CHART_CANDLES).slice(-MAX_CHART_CANDLES));
+            if (exchangeKlineInterval === '1m') {
+              setExchangeCandles((prev) => upsertKlineWithTrade(prev, rawTrade, MAX_CHART_CANDLES).slice(-MAX_CHART_CANDLES));
+            }
           }
           return;
         }
@@ -1031,7 +1057,7 @@ export function ExchangeConsole() {
     };
 
     connect();
-  }, [applyExchangeTrade, exchangeSymbol, loadExchangeSnapshot]);
+  }, [applyExchangeTrade, exchangeKlineInterval, exchangeSymbol, loadExchangeSnapshot]);
 
   const stopExchangeSocket = useCallback(() => {
     stopExchangeWsRef.current = true;
@@ -1047,11 +1073,15 @@ export function ExchangeConsole() {
     void loadExchangeSnapshot();
     stopExchangeWsRef.current = false;
     connectExchangeWebSocket();
+    const tickerTimer = window.setInterval(() => {
+      void refreshExchangeTicker();
+    }, 3000);
 
     return () => {
+      window.clearInterval(tickerTimer);
       stopExchangeSocket();
     };
-  }, [connectExchangeWebSocket, loadExchangeSnapshot, stopExchangeSocket]);
+  }, [connectExchangeWebSocket, loadExchangeSnapshot, refreshExchangeTicker, stopExchangeSocket]);
 
   // Keep latest filter/state snapshot for websocket handlers and interval callbacks.
   useEffect(() => {
@@ -1660,20 +1690,15 @@ export function ExchangeConsole() {
         />
 
         <MarketRibbon ticker={exchangeTicker} symbol={exchangeSymbol} candles={exchangeCandles} />
+        <PerpetualInfoPanel contract={exchangePerpetual} />
 
         <div className="exchange-grid">
           <div className="top-row">
-            <div className="stack-column">
-              <KLinePanel candles={exchangeCandles} />
-              <TradeHistoryPanel
-                trades={exchangeTrades}
-                loading={exchangeTradeLoading}
-                hasMore={exchangeTradeHasMore}
-                onLoadMore={loadMoreExchangeTrades}
-              />
+            <div className="stack-column market-chart-column">
+              <KLinePanel candles={exchangeCandles} interval={exchangeKlineInterval} onIntervalChange={setExchangeKlineInterval} />
             </div>
 
-            <div className="stack-column">
+            <div className="stack-column order-entry-column">
               <OrderPanel
                 side={exchangeOrderForm.side}
                 type={exchangeOrderForm.type}
@@ -1681,9 +1706,18 @@ export function ExchangeConsole() {
                 qty={exchangeOrderForm.qty}
                 onStateChange={setExchangeOrderForm}
               />
-              <PositionPanel rows={exchangePositions} />
             </div>
           </div>
+
+          <TradingActivityTabs
+            activeTab={tradingActivityTab}
+            onTabChange={setTradingActivityTab}
+            trades={exchangeTrades}
+            positions={exchangePositions}
+            loading={exchangeTradeLoading}
+            hasMore={exchangeTradeHasMore}
+            onLoadMore={loadMoreExchangeTrades}
+          />
         </div>
       </div>
     );

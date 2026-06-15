@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 
 const backendTarget = process.env.EXCHANGE_BACKEND || 'http://127.0.0.1:8080';
 
-// Build output goes directly to Spring static resources, no exchange-react subfolder.
+// Build output goes directly to Spring static resources so "/" is the exchange console in packaged mode.
 export default defineConfig({
   plugins: [react()],
   base: './',
@@ -27,16 +27,16 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: resolve(__dirname, '../../src/main/resources/static'),
+    outDir: resolve(__dirname, '../src/main/resources/static'),
     emptyOutDir: false,
     rollupOptions: {
       input: {
-        exchange: resolve(__dirname, 'exchange.html')
+        index: resolve(__dirname, 'index.html')
       },
       output: {
-        entryFileNames: 'exchange.js',
-        chunkFileNames: 'exchange-[name].js',
-        assetFileNames: 'exchange[extname]'
+        entryFileNames: 'index.js',
+        chunkFileNames: 'index-[name].js',
+        assetFileNames: 'index[extname]'
       }
     }
   }

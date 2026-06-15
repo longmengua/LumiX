@@ -46,12 +46,17 @@ public class BinanceMarketDataClient {
     }
 
     public List<MarketKline> klines(String symbol, int limit) {
+        return klines(symbol, "1m", limit);
+    }
+
+    public List<MarketKline> klines(String symbol, String interval, int limit) {
+        String normalizedInterval = normalizeInterval(interval);
         HttpUrl url = urlBuilder("/fapi/v1/klines")
                 .addQueryParameter("symbol", normalize(symbol))
-                .addQueryParameter("interval", "1m")
+                .addQueryParameter("interval", normalizedInterval)
                 .addQueryParameter("limit", Integer.toString(Math.max(1, Math.min(1000, limit))))
                 .build();
-        return get(url).map(root -> klinesFromJson(normalize(symbol), root)).orElseGet(List::of);
+        return get(url).map(root -> klinesFromJson(normalize(symbol), normalizedInterval, root)).orElseGet(List::of);
     }
 
     private Optional<JsonNode> get(HttpUrl url) {
@@ -86,7 +91,7 @@ public class BinanceMarketDataClient {
         );
     }
 
-    private List<MarketKline> klinesFromJson(String symbol, JsonNode root) {
+    private List<MarketKline> klinesFromJson(String symbol, String interval, JsonNode root) {
         List<MarketKline> result = new ArrayList<>();
         if (root == null || !root.isArray()) {
             return result;
@@ -97,7 +102,7 @@ public class BinanceMarketDataClient {
             }
             result.add(new MarketKline(
                     symbol,
-                    "1m",
+                    interval,
                     Instant.ofEpochMilli(row.get(0).asLong()),
                     decimal(row.get(1)).orElse(BigDecimal.ZERO),
                     decimal(row.get(2)).orElse(BigDecimal.ZERO),
@@ -119,6 +124,13 @@ public class BinanceMarketDataClient {
 
     private static String normalize(String symbol) {
         return symbol == null ? "" : symbol.trim().toUpperCase();
+    }
+
+    private static String normalizeInterval(String interval) {
+        return switch (interval == null ? "" : interval.trim()) {
+            case "5m", "15m", "1h" -> interval.trim();
+            default -> "1m";
+        };
     }
 
     private static Optional<String> text(JsonNode root, String field) {
