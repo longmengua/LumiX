@@ -25,6 +25,7 @@ import com.example.exchange.interfaces.web.exception.BusinessException;
 import com.example.exchange.interfaces.web.security.UserStreamSubscriptionAuthorizer;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -181,6 +182,7 @@ public class MessageCenterService {
     private final ObjectMapper objectMapper;
     private final Clock clock;
 
+    @Autowired
     public MessageCenterService(
             MessageCenterMessageJpaRepository messageRepository,
             MessageCenterMessageUserStateJpaRepository userStateRepository,

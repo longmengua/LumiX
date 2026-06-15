@@ -3,31 +3,11 @@
 Flyway migration scripts。
 
 目前內容：
-- `V1__core_v1_baseline.sql`：core-v1 乾淨 baseline schema，合併原 V1-V20 的可靠性、order lifecycle、ledger、reconciliation、matching replay/lease、turnover、bonus credit、market-maker、hedging、prediction / Polymarket tables。
-- `V2__adl_execution_records.sql`：post-core-v1 ADL forced execution summary / idempotency records。
-- `V3__market_data_sequence_checkpoints.sql`：post-core-v1 market-data stream sequence/checksum checkpoints。
-- `V4__market_data_depth_deltas.sql`：post-core-v1 depth delta reconnect backfill records。
-- `V5__market_data_trade_tape.sql`：post-core-v1 trade tape records。
-- `V6__market_data_tickers.sql`：post-core-v1 ticker latest-state records。
-- `V7__market_data_klines.sql`：post-core-v1 kline records。
-- `V8__hedge_venue_idempotency_records.sql`：hedge venue submit idempotency records。
-- `V9__polymarket_clob_command_records.sql`：Polymarket CLOB command idempotency records。
-- `V10__rpc_transaction_records.sql`：backend-observed RPC transaction outcome tracking records。
-- `V11__adl_queue_entries.sql`：durable ADL queue entries and operator claim state。
-- `V12__production_query_indexes.sql`：orders projections、ledger、events、prediction orders 的 production query indexes。
-- `V16__market_maker_quote_states.sql`：market-maker active quote ownership state。
-- `V17__market_maker_quote_state_versions.sql`：market-maker bid/ask quote version and replaced order metadata。
-- `V18__hedge_trade_ledger_refs.sql`：hedge decision internal trade refs and hedge fill ledger refs for reconciliation。
-- `V19__order_strategy_market_maker_tags.sql`：order lifecycle strategy / market-maker reporting tags。
-- `V20__wallet_ledger_journal_constraints.sql`：wallet ledger schema version、asset/reason、posting line/account/asset SQL constraints。
-- `V21__insurance_fund_movements.sql`：insurance fund capital movement records for liquidation / ADL operations。
-- `V22__polymarket_user_ws_checkpoints.sql`：Polymarket user WebSocket gateway durable replay checkpoint。
-- `V23__position_lifecycle_projection.sql`：live position SQL mirror schema 與 production query indexes。
-- `V26__market_maker_quote_state_prices.sql`：market-maker active quote visible bid/ask price and quantity。
-- `V29__customer_verification_codes.sql`：customer verification code table，將六位數信箱驗證碼從 pending registration request 拆出，保留 link token 作備案流程。
+- `V202606160642__exchange_schema_baseline.sql`：合併原 V1-V31 的完整開發 baseline schema，包含 core exchange、matching recovery、wallet ledger、risk/ADL、market data、Polymarket、customer auth、fee config、message center 等表與索引。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。
-- core-v1 之後若已對外發布 migration，後續變更應建立下一個 `V{n}__*.sql`，不要再修改既有版本。
+- 後續新增 migration 使用 `VyyyyMMddHHmm__business_summary.sql`，例如 `V202606161030__message_delivery_log.sql`。檔名中的 `V` 與雙底線 `__` 是 Flyway 規則，版本主體仍是 `yyyyMMddHHmm`。
+- 已被發布或多人共用的 migration 不要重寫；若正式環境已套用，應新增下一個時間版本。
 - Flyway 是 schema 唯一管理入口；Hibernate 只做 `validate`，不得用 `ddl-auto=update` 漂移 schema。
 - production index、ledger schema、event projection schema 都應在這裡落地。
