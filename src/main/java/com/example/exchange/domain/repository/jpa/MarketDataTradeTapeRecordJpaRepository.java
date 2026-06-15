@@ -36,6 +36,25 @@ public interface MarketDataTradeTapeRecordJpaRepository
             Pageable pageable
     );
 
+    @Query("""
+            select record from MarketDataTradeTapeRecord record
+            where record.symbol = :symbol
+              and (
+                    record.tradeTs < :beforeTs
+                    or (
+                        record.tradeTs = :beforeTs
+                        and (:beforeMatchId is null or record.matchId < :beforeMatchId)
+                    )
+              )
+            order by record.tradeTs desc, record.matchId desc, record.id desc
+            """)
+    List<MarketDataTradeTapeRecord> findBeforeCursor(
+            @Param("symbol") String symbol,
+            @Param("beforeTs") Instant beforeTs,
+            @Param("beforeMatchId") String beforeMatchId,
+            Pageable pageable
+    );
+
     List<MarketDataTradeTapeRecord> findByMatchIdOrderByTradeTsAscIdAsc(String matchId);
 
     long deleteByTradeTsBefore(Instant cutoff);

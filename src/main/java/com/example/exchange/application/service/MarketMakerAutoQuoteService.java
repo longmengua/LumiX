@@ -71,20 +71,22 @@ public class MarketMakerAutoQuoteService {
         if (maybeConfig.isEmpty() || !maybeConfig.get().isTradingEnabled()) {
             return skipped(profile.marketMakerId(), symbol, "SYMBOL_DISABLED");
         }
-        Optional<TopOfBook> maybeTop = matchingEngine.top(symbol);
-        if (maybeTop.isEmpty() || !hasTwoSidedTop(maybeTop.get())) {
-            return skipped(profile.marketMakerId(), symbol, "NO_TWO_SIDED_TOP_OF_BOOK");
-        }
-
         SymbolConfig config = maybeConfig.get();
-        TopOfBook top = maybeTop.get();
+        Optional<TopOfBook> maybeTop = matchingEngine.top(symbol);
         BigDecimal tick = positiveOrDefault(config.priceTickOrDefault(), new BigDecimal("0.01"));
         int halfSpreadTicks = Math.max(1, properties.getHalfSpreadTicks());
         BigDecimal pulse = quotePulse(runSequence, tick);
-        BigDecimal mid = safeFairMid(symbol, top);
+        Optional<BigDecimal> maybeMid = safeFairMid(symbol, maybeTop);
+        if (maybeMid.isEmpty()) {
+            return skipped(profile.marketMakerId(), symbol, "NO_FAIR_PRICE");
+        }
+        BigDecimal mid = maybeMid.get();
         BigDecimal halfSpread = safeHalfSpread(config, mid, tick, halfSpreadTicks);
         BigDecimal nearestBid = floorToStep(mid.subtract(halfSpread).add(pulse), tick);
         BigDecimal nearestAsk = ceilToStep(mid.add(halfSpread).add(pulse), tick);
+        BigDecimal[] postOnlyPrices = keepPostOnlyAroundVisibleTop(nearestBid, nearestAsk, maybeTop, tick);
+        nearestBid = postOnlyPrices[0];
+        nearestAsk = postOnlyPrices[1];
         if (nearestBid.compareTo(nearestAsk) >= 0) {
             nearestAsk = nearestBid.add(tick);
         }
@@ -137,7 +139,7 @@ public class MarketMakerAutoQuoteService {
         return commands;
     }
 
-    private BigDecimal safeFairMid(String symbol, TopOfBook internalTop) {
+    private Optional<BigDecimal> safeFairMid(String symbol, Optional<TopOfBook> internalTop) {
         Optional<MarketTicker> ticker = marketDataService.ticker(symbol);
         if (ticker.isPresent()) {
             MarketTicker fair = ticker.get();
@@ -145,13 +147,48 @@ public class MarketMakerAutoQuoteService {
                     && fair.bestBid().signum() > 0
                     && fair.bestAsk().signum() > 0
                     && fair.bestBid().compareTo(fair.bestAsk()) < 0) {
-                return fair.bestBid().add(fair.bestAsk()).divide(TWO, 18, RoundingMode.HALF_UP);
+                return Optional.of(fair.bestBid().add(fair.bestAsk()).divide(TWO, 18, RoundingMode.HALF_UP));
             }
             if (fair.lastPrice() != null && fair.lastPrice().signum() > 0) {
-                return fair.lastPrice();
+                return Optional.of(fair.lastPrice());
             }
         }
-        return internalTop.getBestBid().add(internalTop.getBestAsk()).divide(TWO, 18, RoundingMode.HALF_UP);
+        if (internalTop.isEmpty()) {
+            return Optional.empty();
+        }
+        TopOfBook top = internalTop.get();
+        if (hasTwoSidedTop(top)) {
+            return Optional.of(top.getBestBid().add(top.getBestAsk()).divide(TWO, 18, RoundingMode.HALF_UP));
+        }
+        if (top.getBestBid() != null && top.getBestBid().signum() > 0) {
+            return Optional.of(top.getBestBid());
+        }
+        if (top.getBestAsk() != null && top.getBestAsk().signum() > 0) {
+            return Optional.of(top.getBestAsk());
+        }
+        return Optional.empty();
+    }
+
+    private static BigDecimal[] keepPostOnlyAroundVisibleTop(
+            BigDecimal bid,
+            BigDecimal ask,
+            Optional<TopOfBook> maybeTop,
+            BigDecimal tick
+    ) {
+        if (maybeTop.isEmpty()) {
+            return new BigDecimal[]{bid, ask};
+        }
+        TopOfBook top = maybeTop.get();
+        BigDecimal safeBid = bid;
+        BigDecimal safeAsk = ask;
+        if (top.getBestAsk() != null && top.getBestAsk().signum() > 0 && safeBid.compareTo(top.getBestAsk()) >= 0) {
+            safeBid = top.getBestAsk().subtract(tick);
+        }
+        if (top.getBestBid() != null && top.getBestBid().signum() > 0 && safeAsk.compareTo(top.getBestBid()) <= 0) {
+            safeAsk = top.getBestBid().add(tick);
+        }
+        // Single-sided books must still get the missing side without crossing the visible top-of-book.
+        return new BigDecimal[]{safeBid, safeAsk};
     }
 
     private BigDecimal safeHalfSpread(SymbolConfig config, BigDecimal mid, BigDecimal tick, int halfSpreadTicks) {

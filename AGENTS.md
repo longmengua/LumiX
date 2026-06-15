@@ -9,9 +9,9 @@ Java21 Match Hub is a Java 21 + Spring Boot backend for an internal exchange cor
 It is a runnable MVP, not production-grade exchange infrastructure.
 
 Primary docs:
-- Product overview: `docs/en/README.md` / `docs/zh-TW/README.md`
-- Current state: `docs/en/current-state.md` / `docs/zh-TW/current-state.md`
-- Production TODO: `docs/en/todo.md` / `docs/zh-TW/todo.md`
+- Product overview: `docs/project/README.md`
+- Current state: `docs/project/current-state.md`
+- Production TODO: `docs/project/todo.md`
 - Agent code map index: `docs/ai/code-map.md`
 - Team AI collaboration mode: `docs/ai/team-collaboration.md`
 - Team AI management metrics: `docs/ai/team-management.md`
@@ -53,9 +53,9 @@ When the user says `讀一下 <file>.md`, `read <file>.md`, or otherwise points 
 Suggested user commands:
 
 ```text
-讀一下 docs/en/todo.md，從最前面的未完成 P0 開始做。
+讀一下 docs/project/todo.md，從最前面的未完成 P0 開始做。
 讀一下 docs/ai/maps/order-matching.md，繼續做 matching 相關 TODO。
-讀一下 docs/en/current-state.md，告訴我現在最該先做哪三件事，先不要改 code。
+讀一下 docs/project/current-state.md，告訴我現在最該先做哪三件事，先不要改 code。
 讀一下 AGENTS.md 和 docs/ai/code-map.md，然後繼續 production TODO。
 ```
 

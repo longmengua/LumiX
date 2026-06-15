@@ -61,6 +61,11 @@ public class RiskService {
         validatePositionLimit(order, config, referencePrice);
         validateLeverage(order, config, referencePrice);
 
+        if (isInternalMarketMakerOrder(order)) {
+            // Internal market-maker quotes are bounded by market-maker risk limits and post-only checks, not customer cash reserve.
+            return;
+        }
+
         BigDecimal reserve = requiredOrderReserve(order, config, referencePrice);
         if (reserve.signum() <= 0) return;
 
@@ -78,6 +83,10 @@ public class RiskService {
                 order.getId().toString()
         );
         order.setReservedAmount(reserve);
+    }
+
+    private static boolean isInternalMarketMakerOrder(Order order) {
+        return order.getMarketMakerId() != null && !order.getMarketMakerId().isBlank();
     }
 
     public BigDecimal validateAmend(Order order, SymbolConfig config) {

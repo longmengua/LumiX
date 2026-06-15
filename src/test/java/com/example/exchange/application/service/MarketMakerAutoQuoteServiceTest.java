@@ -131,20 +131,24 @@ class MarketMakerAutoQuoteServiceTest {
     }
 
     @Test
-    @DisplayName("auto quote 沒有雙邊 top-of-book 時不使用固定價格補單")
-    void runOnceSkipsWithoutTwoSidedTopOfBook() {
+    @DisplayName("auto quote 遇到單邊 top-of-book 時用可見價格補出雙邊 quote")
+    void runOnceQuotesFromSingleSidedTopOfBook() {
         Fixture fixture = new Fixture();
         fixture.profileStore.save(profile(false, "10000"));
         when(fixture.matchingEngine.top("BTCUSDT")).thenReturn(Optional.of(TopOfBook.builder()
                 .bestBid(new BigDecimal("100.00"))
                 .build()));
 
-        // 場景：只有單邊簿時沒有可靠中點，策略跳過而不是寫死價格。
+        // 場景：只有 bid 時，做市商仍要補出 ask；post-only 邊界確保 quote 不吃掉可見 top。
         MarketMakerAutoQuoteRunReport report = fixture.service.runOnce();
 
-        assertThat(report.placedCount()).isZero();
-        assertThat(report.results().getFirst().reason()).isEqualTo("NO_TWO_SIDED_TOP_OF_BOOK");
-        verify(fixture.quoteLifecycleService, never()).placeQuoteLadder(any());
+        @SuppressWarnings("unchecked")
+        ArgumentCaptor<List<MarketMakerQuoteCommand>> commandCaptor = ArgumentCaptor.forClass(List.class);
+        verify(fixture.quoteLifecycleService).placeQuoteLadder(commandCaptor.capture());
+        MarketMakerQuoteCommand command = commandCaptor.getValue().getFirst();
+        assertThat(report.placedCount()).isEqualTo(1);
+        assertThat(command.bidPrice()).isEqualByComparingTo("99.80");
+        assertThat(command.askPrice()).isEqualByComparingTo("100.20");
     }
 
     private static MarketMakerProfile profile(boolean killSwitch, String maxOrderNotional) {

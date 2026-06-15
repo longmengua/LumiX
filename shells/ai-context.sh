@@ -16,9 +16,8 @@ printf 'AGENTS.md\n'
 printf 'docs/ai/README.md\n'
 printf 'docs/ai/code-map.md\n'
 find docs/ai/maps -maxdepth 1 -type f -name '*.md' | sort
-printf 'docs/en/current-state.md\n'
-printf 'docs/en/todo.md\n'
-printf 'docs/zh-TW/todo.md\n'
+printf 'docs/project/current-state.md\n'
+printf 'docs/project/todo.md\n'
 printf 'docs/tasks/README.md\n'
 find docs/tasks -mindepth 2 -type f -name '*.md' | sort
 
@@ -34,7 +33,7 @@ awk '
       printf "%s: %d/%d done\n", s, done[s]+0, total[s]
     }
   }
-' docs/en/todo.md
+' docs/project/todo.md
 
 section "Core Packages"
 find src/main/java/com/example/exchange -maxdepth 2 -type d | sort

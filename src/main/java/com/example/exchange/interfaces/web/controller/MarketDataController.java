@@ -10,6 +10,7 @@ import com.example.exchange.domain.model.dto.MarketKline;
 import com.example.exchange.domain.model.dto.MarketDataRecoveryCursor;
 import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.TradeTapeItem;
+import com.example.exchange.infra.marketdata.BinanceMarketDataClient;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.security.MarketDataStreamRateLimiter;
 import com.example.exchange.interfaces.web.security.UserStreamSubscriptionAuthorizer;
@@ -37,6 +38,7 @@ public class MarketDataController {
     private final PushGatewayService pushGatewayService;
     private final MarketDataStreamRateLimiter marketDataStreamRateLimiter;
     private final UserStreamSubscriptionAuthorizer userStreamSubscriptionAuthorizer;
+    private final BinanceMarketDataClient binanceMarketDataClient;
 
     @GetMapping("/{symbol}/depth-delta")
     public ApiResponse<DepthDelta> depthDelta(@PathVariable String symbol) {
@@ -54,7 +56,10 @@ public class MarketDataController {
 
     @GetMapping("/{symbol}/ticker")
     public ApiResponse<MarketTicker> ticker(@PathVariable String symbol) {
-        return ApiResponse.ok(marketDataService.ticker(symbol).orElse(null));
+        // Customer-facing reference prices should reflect Binance futures when available; local data is the fallback.
+        return ApiResponse.ok(binanceMarketDataClient.ticker(symbol)
+                .or(() -> marketDataService.ticker(symbol))
+                .orElse(null));
     }
 
     @GetMapping("/{symbol}/trades")
@@ -62,12 +67,21 @@ public class MarketDataController {
             @PathVariable String symbol,
             @RequestParam(required = false) Instant afterTs,
             @RequestParam(required = false) String afterMatchId,
+            @RequestParam(required = false) Instant beforeTs,
+            @RequestParam(required = false) String beforeMatchId,
             @RequestParam(defaultValue = "100") int limit
     ) {
-        if (afterTs != null) {
-            return ApiResponse.ok(marketDataService.tradesAfter(symbol, afterTs, afterMatchId, limit));
+        int normalizedLimit = Math.max(1, Math.min(1000, limit));
+
+        if (beforeTs != null) {
+            // before* parameters are used for historical pagination: fetch older trades first.
+            return ApiResponse.ok(marketDataService.tradesBefore(symbol, beforeTs, beforeMatchId, normalizedLimit));
         }
-        return ApiResponse.ok(marketDataService.trades(symbol, limit));
+        if (afterTs != null) {
+            // after* parameters keep compatibility with existing forward cursor usage.
+            return ApiResponse.ok(marketDataService.tradesAfter(symbol, afterTs, afterMatchId, normalizedLimit));
+        }
+        return ApiResponse.ok(marketDataService.trades(symbol, normalizedLimit));
     }
 
     @GetMapping("/{symbol}/recovery-cursor")
@@ -80,6 +94,11 @@ public class MarketDataController {
             @PathVariable String symbol,
             @RequestParam(defaultValue = "100") int limit
     ) {
+        // Binance K-lines give the MVP chart a real market shape even before local trade tape is deep enough.
+        List<MarketKline> external = binanceMarketDataClient.klines(symbol, limit);
+        if (!external.isEmpty()) {
+            return ApiResponse.ok(external);
+        }
         return ApiResponse.ok(marketDataService.klines(symbol, limit));
     }
 

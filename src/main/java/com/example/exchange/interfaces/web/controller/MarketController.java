@@ -36,7 +36,11 @@ public class MarketController {
                 config.getSymbol(),
                 config.getBaseAsset(),
                 config.getQuoteAsset(),
-                config.isTradingEnabled()
+                config.isTradingEnabled(),
+                config.priceTickOrDefault(),
+                config.lotSizeOrDefault(),
+                config.minQtyOrDefault(),
+                config.minNotionalOrDefault()
         );
     }
 }

@@ -18,6 +18,10 @@ public interface MarketDataTradeTapeStore {
         return List.of();
     }
 
+    default List<TradeTapeItem> findBefore(String symbol, Instant beforeTs, String beforeMatchId, int limit) {
+        return List.of();
+    }
+
     default List<TradeTapeItem> findByMatchId(String matchId) {
         return List.of();
     }

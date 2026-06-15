@@ -10,7 +10,7 @@ Tracing helper。
 - 已有 header/MDC/outbox/Kafka/external API 傳遞 baseline。
 - 已有 `tracing.export.*` disabled-by-default export/sampling policy config。
 - `management.tracing.*` / `management.otlp.tracing.*` 已接到 `TRACING_EXPORT_*` 環境設定。
-- dashboard baseline 見 `docs/en/tracing-dashboard.md`。
+- dashboard baseline 見 `docs/operations/tracing-dashboard.md`。
 
 注意：
 - request 結束要清 MDC，避免 servlet thread reuse 污染下一個請求。

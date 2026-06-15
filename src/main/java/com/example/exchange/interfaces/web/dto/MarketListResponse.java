@@ -4,6 +4,7 @@
 package com.example.exchange.interfaces.web.dto;
 
 import java.util.List;
+import java.math.BigDecimal;
 
 public record MarketListResponse(
         List<MarketItem> markets
@@ -13,7 +14,11 @@ public record MarketListResponse(
             String symbol,
             String baseAsset,
             String quoteAsset,
-            boolean tradingEnabled
+            boolean tradingEnabled,
+            BigDecimal priceTick,
+            BigDecimal lotSize,
+            BigDecimal minQty,
+            BigDecimal minNotional
     ) {
     }
 }

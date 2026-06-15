@@ -59,6 +59,16 @@ spring:
     time-zone: Asia/Taipei
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
+  web:
+    resources:
+      # 開發環境強制優先讀取 src/main/resources/static，並關閉靜態快取以免瀏覽器吃到舊版 exchange.* 資源
+      static-locations:
+        - "file:${user.dir}/src/main/resources/static/"
+        - "classpath:/static/"
+      cache:
+        period: 0
+      chain:
+        cache: false
 
   # ---------------------------
   # Kafka (本機連 docker 的映射埠)

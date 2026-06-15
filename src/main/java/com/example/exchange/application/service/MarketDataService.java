@@ -180,6 +180,30 @@ public class MarketDataService {
         }
     }
 
+    public List<TradeTapeItem> tradesBefore(String symbol, Instant beforeTs, String beforeMatchId, int limit) {
+        String code = normalize(symbol);
+        int normalizedLimit = Math.max(1, limit);
+        if (beforeTs == null) {
+            return trades(code, normalizedLimit);
+        }
+        if (tradeTapeStore != null) {
+            return tradeTapeStore.findBefore(code, beforeTs, beforeMatchId, normalizedLimit);
+        }
+        Deque<TradeTapeItem> tape = tradeTapes.get(code);
+        if (tape == null) {
+            return List.of();
+        }
+        String normalizedMatchId = beforeMatchId == null ? null : beforeMatchId.trim();
+        synchronized (tape) {
+            return tape.stream()
+                    .filter(item -> isBeforeCursor(item, beforeTs, normalizedMatchId))
+                    .sorted(Comparator.comparing(TradeTapeItem::ts).reversed()
+                            .thenComparing(TradeTapeItem::matchId).reversed())
+                    .limit(normalizedLimit)
+                    .toList();
+        }
+    }
+
     public MarketDataRecoveryCursor recoveryCursor(String symbol) {
         String code = normalize(symbol);
         TradeTapeItem latestTrade = trades(code, 1).stream().findFirst().orElse(null);
@@ -370,6 +394,16 @@ public class MarketDataService {
             return false;
         }
         return afterMatchId == null || item.matchId().compareTo(afterMatchId) > 0;
+    }
+
+    private static boolean isBeforeCursor(TradeTapeItem item, Instant beforeTs, String beforeMatchId) {
+        if (item.ts().isBefore(beforeTs)) {
+            return true;
+        }
+        if (!item.ts().equals(beforeTs)) {
+            return false;
+        }
+        return beforeMatchId == null || item.matchId().compareTo(beforeMatchId) < 0;
     }
 
     private static String normalize(String symbol) {

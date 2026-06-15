@@ -11,8 +11,14 @@ import com.example.exchange.interfaces.web.interceptor.RequestLoggingInterceptor
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
+import org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * Web MVC 組態 (Configuration)
@@ -47,5 +53,38 @@ public class WebMvcConfig implements WebMvcConfigurer {
 
         registry.addInterceptor(new ApiAuthenticationInterceptor(apiAuthProperties, objectMapper))
                 .addPathPatterns(securityControlsProperties.getProtectedPathPatterns());
+    }
+
+    /**
+     * 針對前端交易頁面靜態資源取消長快取。
+     * 這可避免瀏覽器吃到舊版 exchange.js/exchange.css，導致你看到的版面不一致。
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        Path localStaticDir = Paths.get(System.getProperty("user.dir"), "src", "main", "resources", "static");
+
+        registry.addResourceHandler(
+                        "/exchange.html",
+                        "/exchange.js",
+                        "/exchange.css",
+                        "/exchange-dev.html"
+                )
+                .addResourceLocations(
+                        localStaticDir.toUri().toString(),
+                        "classpath:/static/"
+                )
+                .setCacheControl(CacheControl.noStore().mustRevalidate())
+                .setCachePeriod(0)
+                .setUseLastModified(false)
+                .resourceChain(false);
+    }
+
+    /**
+     * 將根路徑直接導向新版交易頁面。
+     * 過去若環境仍有舊的 index.html（例如 target/classes/static）時，會誤導到不是這一版的頁面。
+     */
+    @Override
+    public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addRedirectViewController("/", "/exchange.html");
     }
 }
