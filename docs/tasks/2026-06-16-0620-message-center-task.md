@@ -1,4 +1,4 @@
-# 交易所訊息中心 v1 一頁式規格（後端優先）
+# 交易所訊息中心規格（後端優先完整版）
 
 生成時間：2026-06-16 06:20 CST
 
@@ -148,7 +148,7 @@
 
 ---
 
-## 7. API 規格（v1）
+## 7. API 規格（完整版）
 
 回應規範：
 - 成功：`{ ok: true, data: ... }`
@@ -160,7 +160,7 @@
 - `GET /api/messages`
   - query：
     - `cursor`（可選，字串）
-    - `limit`（可選，1~100，預設 30）
+    - `limit`（可選，1~100，預設 20）
     - `status`（可選，`UNREAD|ALL`，預設 `ALL`）
     - `archived`（可選，`true|false`，預設 `false`）
     - `search`（可選，關鍵字）
@@ -453,11 +453,11 @@
 - `unreadCount`
 - `byCategory`
 
-### 7.5 模板 API（MVP）
+### 7.5 模板 API
 
 - `GET /api/admin/messages/templates`
 - `GET /api/admin/messages/templates/{templateCode}`
-- 建立/修改模板先留待 v2。
+- 模板為固定白名單管理，前端僅透過現有 `templateCode` 與 `templateVars` 送出訊息，不提供外部 UI CRUD。
 
 ### 7.6 錯誤碼
 

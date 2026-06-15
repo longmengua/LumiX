@@ -8,6 +8,7 @@ import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 public interface WalletLedgerJournal {
 
@@ -18,6 +19,8 @@ public interface WalletLedgerJournal {
     List<WalletLedgerEntry> findByUid(long uid);
 
     List<WalletLedgerEntry> findByUidAndAsset(long uid, String asset);
+
+    Optional<WalletLedgerEntry> findLatestByUidAndAsset(long uid, String asset);
 
     List<WalletLedgerEntry> findByRefId(String refId);
 

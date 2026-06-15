@@ -63,6 +63,13 @@ public class JpaWalletLedgerJournal implements WalletLedgerJournal {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<WalletLedgerEntry> findLatestByUidAndAsset(long uid, String asset) {
+        return entryRepository.findTopByUidAndAssetOrderByCreatedAtDescIdDesc(uid, asset)
+                .map(this::toEntry);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<WalletLedgerEntry> findByRefId(String refId) {
         if (refId == null || refId.isBlank()) return List.of();
         return toEntries(entryRepository.findByRefIdOrderByCreatedAtAscIdAsc(refId));
@@ -129,6 +136,15 @@ public class JpaWalletLedgerJournal implements WalletLedgerJournal {
                         .thenComparing(WalletLedgerEntryRecord::getId))
                 .map(record -> toEntry(record, postingsByEntryId.getOrDefault(record.getId(), List.of())))
                 .toList();
+    }
+
+    private WalletLedgerEntry toEntry(WalletLedgerEntryRecord record) {
+        List<WalletLedgerPosting> postings = postingRepository.findByEntryIdInOrderByEntryIdAscLineNoAsc(List.of(record.getId()))
+                .stream()
+                .map(WalletLedgerPostingRecord::toPosting)
+                .toList();
+
+        return toEntry(record, postings);
     }
 
     private WalletLedgerEntry toEntry(WalletLedgerEntryRecord record, List<WalletLedgerPosting> postings) {

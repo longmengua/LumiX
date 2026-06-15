@@ -17,6 +17,8 @@ public interface WalletLedgerEntryRecordJpaRepository
 
     List<WalletLedgerEntryRecord> findByUidAndAssetOrderByCreatedAtAscIdAsc(Long uid, String asset);
 
+    Optional<WalletLedgerEntryRecord> findTopByUidAndAssetOrderByCreatedAtDescIdDesc(Long uid, String asset);
+
     List<WalletLedgerEntryRecord> findByRefIdOrderByCreatedAtAscIdAsc(String refId);
 
     Optional<WalletLedgerEntryRecord> findTopByOrderByCreatedAtDescIdDesc();

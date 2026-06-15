@@ -10,6 +10,7 @@ import com.example.exchange.domain.model.enums.MessageAnnouncementStatus;
 import com.example.exchange.domain.model.enums.MessageCategory;
 import com.example.exchange.domain.model.enums.MessageDeliveryMode;
 import com.example.exchange.domain.model.enums.MessageSeverity;
+import com.example.exchange.domain.repository.WalletLedgerJournal;
 import com.example.exchange.domain.repository.MessageCenterListProjection;
 import com.example.exchange.domain.repository.MessageCenterUnreadCountProjection;
 import com.example.exchange.domain.repository.jpa.AppUserRecordJpaRepository;
@@ -30,6 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.charset.StandardCharsets;
+import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -43,6 +45,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +70,30 @@ public class MessageCenterService {
     private static final String EVENT_STATUS_CREATED = "created";
     private static final String EVENT_STATUS_SKIPPED = "skipped";
     private static final String EVENT_STATUS_DUPLICATE = "duplicate";
+
+    private static final String FILTER_KEY_USER_IDS = "userIds";
+    private static final String FILTER_KEY_INCLUDE_USER_IDS = "includeUserIds";
+    private static final String FILTER_KEY_EXCLUDE_USER_IDS = "excludeUserIds";
+    private static final String FILTER_KEY_INCLUDE_ROLES = "includeRoles";
+    private static final String FILTER_KEY_EXCLUDE_ROLES = "excludeRoles";
+    private static final String FILTER_KEY_INCLUDE_SCOPES = "includeScopes";
+    private static final String FILTER_KEY_EXCLUDE_SCOPES = "excludeScopes";
+    private static final String FILTER_KEY_STATUS = "status";
+    private static final String FILTER_KEY_STATUSES = "statuses";
+    private static final String FILTER_KEY_VIP_LEVELS = "vipLevels";
+    private static final String FILTER_KEY_VIP_ROLES = "vipRoles";
+    private static final String FILTER_KEY_EMAIL_SUFFIX = "emailSuffix";
+    private static final String FILTER_KEY_EMAIL_SUFFIXES = "emailSuffixes";
+    private static final String FILTER_KEY_EMAIL_PREFIX = "emailPrefix";
+    private static final String FILTER_KEY_EMAIL_PREFIXES = "emailPrefixes";
+    private static final String FILTER_KEY_ASSET = "asset";
+    private static final String FILTER_KEY_ASSETS = "assets";
+    private static final String FILTER_KEY_ASSET_SYMBOL = "assetSymbol";
+    private static final String FILTER_KEY_MIN_BALANCE = "minBalance";
+    private static final String FILTER_KEY_MIN_ASSET_BALANCE = "minAssetBalance";
+    private static final String FILTER_KEY_BALANCE_THRESHOLD = "balanceThreshold";
+    private static final String FILTER_KEY_INCLUDE_ZERO_BALANCE = "includeZero";
+    private static final BigDecimal ZERO = BigDecimal.ZERO;
 
     private static final Map<String, Map<String, String>> TEMPLATE_TEXT = Map.of(
             "ORDER_CREATED", Map.of(
@@ -149,6 +176,7 @@ public class MessageCenterService {
     private final MessageCenterNotificationPreferenceJpaRepository preferenceRepository;
     private final MessageCenterAnnouncementJpaRepository announcementRepository;
     private final AppUserRecordJpaRepository userRepository;
+    private final WalletLedgerJournal walletLedgerJournal;
     private final PushGatewayService pushGatewayService;
     private final ObjectMapper objectMapper;
     private final Clock clock;
@@ -159,10 +187,12 @@ public class MessageCenterService {
             MessageCenterNotificationPreferenceJpaRepository preferenceRepository,
             MessageCenterAnnouncementJpaRepository announcementRepository,
             AppUserRecordJpaRepository userRepository,
-            PushGatewayService pushGatewayService,
-            ObjectMapper objectMapper
+        WalletLedgerJournal walletLedgerJournal,
+        PushGatewayService pushGatewayService,
+        ObjectMapper objectMapper
     ) {
         this(messageRepository, userStateRepository, preferenceRepository, announcementRepository, userRepository,
+                walletLedgerJournal,
                 pushGatewayService, objectMapper, Clock.systemUTC());
     }
 
@@ -172,6 +202,7 @@ public class MessageCenterService {
             MessageCenterNotificationPreferenceJpaRepository preferenceRepository,
             MessageCenterAnnouncementJpaRepository announcementRepository,
             AppUserRecordJpaRepository userRepository,
+            WalletLedgerJournal walletLedgerJournal,
             PushGatewayService pushGatewayService,
             ObjectMapper objectMapper,
             Clock clock
@@ -181,6 +212,7 @@ public class MessageCenterService {
         this.preferenceRepository = preferenceRepository;
         this.announcementRepository = announcementRepository;
         this.userRepository = userRepository;
+        this.walletLedgerJournal = walletLedgerJournal;
         this.pushGatewayService = pushGatewayService;
         this.objectMapper = objectMapper;
         this.clock = clock;
@@ -1290,10 +1322,12 @@ public class MessageCenterService {
 
     private List<Long> resolveRecipients(String audienceTypeValue, List<Long> explicit, Map<String, Object> audienceData) {
         MessageAudienceType audienceType = MessageAudienceType.parse(audienceTypeValue);
-        return resolveRecipients(audienceType, explicit, audienceData);
+        Map<String, Object> effectiveData = audienceData == null ? Map.of() : audienceData;
+        return resolveRecipients(audienceType, explicit, effectiveData);
     }
 
     private List<Long> resolveRecipients(MessageAudienceType audienceType, List<Long> explicit, Map<String, Object> audienceData) {
+        Map<String, Object> effectiveData = audienceData == null ? Map.of() : audienceData;
         return switch (audienceType) {
             case ALL -> userIdsInBatches();
             case USER_IDS -> {
@@ -1301,8 +1335,8 @@ public class MessageCenterService {
                 if (explicit != null) {
                     resolved.addAll(explicit);
                 }
-                if (resolved.isEmpty() && audienceData != null) {
-                    resolved.addAll(parseAudienceUserIds(audienceData));
+                if (resolved.isEmpty()) {
+                    resolved.addAll(parseAudienceUserIds(effectiveData, FILTER_KEY_USER_IDS));
                 }
 
                 List<Long> filtered = resolved.stream()
@@ -1315,19 +1349,161 @@ public class MessageCenterService {
                 }
                 yield filtered;
             }
-            case VIP, HAS_ASSET, CUSTOM_FILTER -> throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+            case VIP -> resolveVipRecipients(effectiveData);
+            case HAS_ASSET -> resolveHasAssetRecipients(effectiveData);
+            case CUSTOM_FILTER -> resolveCustomFilterRecipients(explicit, effectiveData);
         };
     }
 
     private List<Long> userIdsInBatches() {
-        List<Long> all = new ArrayList<>();
+        return resolveUsersByPredicate(user -> true, Set.of(), Set.of());
+    }
+
+    private List<Long> resolveVipRecipients(Map<String, Object> audienceData) {
+        Set<String> vipRoleTokens = parseVipRoles(audienceData);
+        if (vipRoleTokens.isEmpty()) {
+            vipRoleTokens = Set.of("VIP");
+        }
+
+        Predicate<AppUserRecord> predicate = user -> {
+            Set<String> roles = tokenize(user.getRoles());
+            return hasAny(role -> vipRoleTokens.contains(role), roles);
+        };
+
+        List<Long> recipients = resolveUsersByPredicate(predicate, Set.of(), Set.of());
+        if (recipients.isEmpty()) {
+            throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+        }
+        return recipients;
+    }
+
+    private List<Long> resolveHasAssetRecipients(Map<String, Object> audienceData) {
+        List<String> assets = parseAssetSymbols(audienceData);
+        if (assets.isEmpty()) {
+            throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+        }
+
+        BigDecimal minBalance = parseAudienceBalance(audienceData,
+                FILTER_KEY_MIN_BALANCE,
+                FILTER_KEY_BALANCE_THRESHOLD,
+                FILTER_KEY_MIN_ASSET_BALANCE);
+        boolean includeZeroBalance = parseAudienceBoolean(audienceData, FILTER_KEY_INCLUDE_ZERO_BALANCE);
+        Set<Long> includeUsers = new LinkedHashSet<>(
+                parseAudienceUserIds(audienceData, FILTER_KEY_INCLUDE_USER_IDS, FILTER_KEY_USER_IDS)
+        );
+        Set<Long> excludeUsers = new LinkedHashSet<>(
+                parseAudienceUserIds(audienceData, FILTER_KEY_EXCLUDE_USER_IDS)
+        );
+
+        Predicate<AppUserRecord> predicate = user ->
+                hasAnyAssetBalance(user.getId(), assets, minBalance == null ? ZERO : minBalance, includeZeroBalance);
+
+        List<Long> recipients = resolveUsersByPredicate(
+                predicate,
+                includeUsers.isEmpty() ? null : includeUsers,
+                excludeUsers
+        );
+        if (recipients.isEmpty()) {
+            throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+        }
+        return recipients;
+    }
+
+    private List<Long> resolveCustomFilterRecipients(List<Long> explicit, Map<String, Object> audienceData) {
+        Set<Long> includeUsers = explicit == null
+                ? new LinkedHashSet<>()
+                : explicit.stream()
+                .filter(uid -> uid != null && uid > 0)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+        includeUsers.addAll(parseAudienceUserIds(audienceData, FILTER_KEY_INCLUDE_USER_IDS, FILTER_KEY_USER_IDS));
+        Set<Long> excludeUsers = new LinkedHashSet<>(parseAudienceUserIds(audienceData, FILTER_KEY_EXCLUDE_USER_IDS));
+
+        Set<String> includeRoles = parseTokenSet(audienceData, FILTER_KEY_INCLUDE_ROLES);
+        Set<String> excludeRoles = parseTokenSet(audienceData, FILTER_KEY_EXCLUDE_ROLES);
+        Set<String> includeScopes = parseTokenSet(audienceData, FILTER_KEY_INCLUDE_SCOPES);
+        Set<String> excludeScopes = parseTokenSet(audienceData, FILTER_KEY_EXCLUDE_SCOPES);
+        Set<String> statusFilters = parseTokenSet(audienceData, FILTER_KEY_STATUS, FILTER_KEY_STATUSES);
+        Set<String> emailSuffixes = parseTokenSet(audienceData, FILTER_KEY_EMAIL_SUFFIX, FILTER_KEY_EMAIL_SUFFIXES);
+        Set<String> emailPrefixes = parseTokenSet(audienceData, FILTER_KEY_EMAIL_PREFIX, FILTER_KEY_EMAIL_PREFIXES);
+        Set<String> vipRoleTokens = parseVipRoles(audienceData);
+        List<String> assetSymbols = parseAssetSymbols(audienceData);
+        BigDecimal minBalance = parseAudienceBalance(audienceData,
+                FILTER_KEY_MIN_BALANCE,
+                FILTER_KEY_BALANCE_THRESHOLD,
+                FILTER_KEY_MIN_ASSET_BALANCE);
+        boolean includeZeroBalance = parseAudienceBoolean(audienceData, FILTER_KEY_INCLUDE_ZERO_BALANCE);
+
+        Predicate<AppUserRecord> predicate = user -> {
+            Set<String> userRoles = tokenize(user.getRoles());
+            Set<String> userScopes = tokenize(user.getScopes());
+
+            if (!statusFilters.isEmpty() && !statusFilters.contains(normalizeText(user.getStatus()))) {
+                return false;
+            }
+            if (!includeRoles.isEmpty() && !hasAny(role -> includeRoles.contains(role), userRoles)) {
+                return false;
+            }
+            if (hasAny(role -> excludeRoles.contains(role), userRoles)) {
+                return false;
+            }
+            if (!includeScopes.isEmpty() && !hasAny(scope -> includeScopes.contains(scope), userScopes)) {
+                return false;
+            }
+            if (hasAny(scope -> excludeScopes.contains(scope), userScopes)) {
+                return false;
+            }
+            if (!emailPrefixes.isEmpty() && !matchesEmailPrefix(user.getEmail(), emailPrefixes)) {
+                return false;
+            }
+            if (!emailSuffixes.isEmpty() && !matchesEmailSuffix(user.getEmail(), emailSuffixes)) {
+                return false;
+            }
+            if (!vipRoleTokens.isEmpty() && !hasAny(role -> vipRoleTokens.contains(role), userRoles)) {
+                return false;
+            }
+            if (!assetSymbols.isEmpty()
+                    && !hasAnyAssetBalance(user.getId(), assetSymbols,
+                    minBalance == null ? ZERO : minBalance, includeZeroBalance)) {
+                return false;
+            }
+            return true;
+        };
+
+        List<Long> recipients = resolveUsersByPredicate(
+                predicate,
+                includeUsers.isEmpty() ? null : includeUsers,
+                excludeUsers
+        );
+        if (recipients.isEmpty()) {
+            throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+        }
+        return recipients;
+    }
+
+    private List<Long> resolveUsersByPredicate(
+            Predicate<AppUserRecord> predicate,
+            Set<Long> includeUsers,
+            Set<Long> excludeUsers
+    ) {
+        List<Long> result = new ArrayList<>();
         int page = 0;
 
         while (true) {
-            List<AppUserRecord> users = userRepository.findAll(PageRequest.of(page, BATCH_USER_SIZE, Sort.by("id"))).getContent();
+            List<AppUserRecord> users = userRepository.findAll(PageRequest.of(page, BATCH_USER_SIZE, Sort.by("id")))
+                    .getContent();
             for (AppUserRecord user : users) {
-                if (user.getId() != null) {
-                    all.add(user.getId());
+                Long uid = user == null ? null : user.getId();
+                if (uid == null || uid <= 0L) {
+                    continue;
+                }
+                if (excludeUsers != null && !excludeUsers.isEmpty() && excludeUsers.contains(uid)) {
+                    continue;
+                }
+                if (includeUsers != null && !includeUsers.contains(uid)) {
+                    continue;
+                }
+                if (predicate.test(user)) {
+                    result.add(uid);
                 }
             }
 
@@ -1336,27 +1512,210 @@ public class MessageCenterService {
             }
             page++;
         }
-        return all;
+
+        return result;
     }
 
-    private List<Long> parseAudienceUserIds(Map<String, Object> audienceData) {
+    private boolean hasAny(java.util.function.Predicate<String> matcher, Set<String> tokens) {
+        for (String token : tokens) {
+            if (matcher.test(token)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasAnyAssetBalance(long uid, List<String> assets, BigDecimal minBalance, boolean includeZeroBalance) {
+        if (assets == null || assets.isEmpty()) {
+            return false;
+        }
+
+        BigDecimal threshold = minBalance == null ? ZERO : minBalance;
+        for (String asset : assets) {
+            BigDecimal balance = walletLedgerJournal.findLatestByUidAndAsset(uid, normalizeAsset(asset))
+                    .map(entry -> entry.getBalanceAfter())
+                    .orElse(ZERO);
+            int compare = balance == null ? -1 : balance.compareTo(threshold);
+            if ((includeZeroBalance && compare >= 0) || (!includeZeroBalance && compare > 0)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private Set<String> parseVipRoles(Map<String, Object> audienceData) {
+        Set<String> vipRoles = new LinkedHashSet<>(parseTokenSet(audienceData, FILTER_KEY_VIP_ROLES));
+        Set<String> levels = parseTokenSet(audienceData, FILTER_KEY_VIP_LEVELS);
+
+        for (String level : levels) {
+            vipRoles.add("VIP" + level);
+            vipRoles.add("VIP_" + level);
+            vipRoles.add("VIP-" + level);
+        }
+        return vipRoles;
+    }
+
+    private boolean matchesEmailPrefix(String email, Set<String> prefixes) {
+        if (prefixes == null || prefixes.isEmpty()) {
+            return true;
+        }
+        String normalizedEmail = normalizeText(email);
+        if (normalizedEmail.isBlank()) {
+            return false;
+        }
+
+        for (String prefix : prefixes) {
+            if (normalizedEmail.startsWith(normalizeText(prefix))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean matchesEmailSuffix(String email, Set<String> suffixes) {
+        if (suffixes == null || suffixes.isEmpty()) {
+            return true;
+        }
+        String normalizedEmail = normalizeText(email);
+        if (normalizedEmail.isBlank()) {
+            return false;
+        }
+
+        for (String suffix : suffixes) {
+            String normalized = normalizeText(suffix);
+            if (normalized.isBlank()) {
+                continue;
+            }
+            String normalizedSuffix = normalized.startsWith("@") ? normalized : "@" + normalized;
+            if (normalizedEmail.endsWith(normalizedSuffix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean parseAudienceBoolean(Map<String, Object> audienceData, String... keys) {
+        for (String key : keys) {
+            if (!audienceData.containsKey(key)) {
+                continue;
+            }
+
+            Object raw = audienceData.get(key);
+            if (raw instanceof Boolean bool) {
+                return bool;
+            }
+
+            String rawText = normalizeText(raw == null ? null : raw.toString());
+            if (rawText.equals("true")) {
+                return true;
+            }
+            if (rawText.equals("false")) {
+                return false;
+            }
+        }
+
+        return false;
+    }
+
+    private BigDecimal parseAudienceBalance(Map<String, Object> audienceData, String... keys) {
+        for (String key : keys) {
+            if (!audienceData.containsKey(key)) {
+                continue;
+            }
+
+            Object raw = audienceData.get(key);
+            if (raw == null) {
+                continue;
+            }
+
+            try {
+                return new BigDecimal(raw.toString().trim());
+            } catch (NumberFormatException ex) {
+                throw new BusinessException(BusinessErrorCode.INVALID_AUDIENCE);
+            }
+        }
+
+        return ZERO;
+    }
+
+    private List<String> parseAssetSymbols(Map<String, Object> audienceData) {
+        return parseTokenList(audienceData, FILTER_KEY_ASSET, FILTER_KEY_ASSET_SYMBOL, FILTER_KEY_ASSETS).stream()
+                .map(this::normalizeAsset)
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .toList();
+    }
+
+    private String normalizeAsset(String asset) {
+        return asset == null ? "" : asset.trim().toUpperCase(Locale.ROOT);
+    }
+
+    private Set<String> tokenize(String value) {
+        if (value == null || value.isBlank()) {
+            return Set.of();
+        }
+
+        return Set.of(value.trim().toUpperCase(Locale.ROOT).split("\\s+"));
+    }
+
+    private Set<String> parseTokenSet(Map<String, Object> audienceData, String... keys) {
+        return parseTokenList(audienceData, keys).stream()
+                .map(this::normalizeText)
+                .filter(value -> !value.isBlank())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+    }
+
+    private List<String> parseTokenList(Map<String, Object> audienceData, String... keys) {
         if (audienceData == null || audienceData.isEmpty()) {
             return List.of();
         }
 
-        Object userIdsValue = audienceData.get("userIds");
-        if (!(userIdsValue instanceof List<?> values)) {
+        List<String> values = new ArrayList<>();
+        for (String key : keys) {
+            if (!audienceData.containsKey(key)) {
+                continue;
+            }
+
+            values.addAll(parseTokenList(audienceData.get(key)));
+        }
+        return values;
+    }
+
+    private List<String> parseTokenList(Object raw) {
+        if (raw == null) {
             return List.of();
         }
 
-        return values.stream()
-                .map(value -> value == null ? "" : value.toString())
+        if (raw instanceof List<?> values) {
+            return values.stream()
+                    .map(value -> value == null ? "" : value.toString())
+                    .map(String::trim)
+                    .filter(value -> !value.isBlank())
+                    .toList();
+        }
+        return List.of(raw.toString().trim().isBlank() ? "" : raw.toString())
+                .stream()
+                .flatMap(value -> List.of(value.split(",")).stream())
                 .map(String::trim)
                 .filter(value -> !value.isBlank())
+                .toList();
+    }
+
+    private List<Long> parseAudienceUserIds(Map<String, Object> audienceData, String... keys) {
+        return parseTokenList(audienceData, keys).stream()
                 .map(this::parseUserId)
                 .filter(uid -> uid > 0)
                 .distinct()
                 .toList();
+    }
+
+    private List<Long> parseAudienceUserIds(Map<String, Object> audienceData) {
+        return parseAudienceUserIds(audienceData, FILTER_KEY_USER_IDS);
+    }
+
+    private String normalizeText(Object value) {
+        return value == null ? "" : value.toString().trim().toUpperCase(Locale.ROOT);
     }
 
     private Long parseUserId(String value) {
