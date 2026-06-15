@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ExchangeTopBar } from './components/ExchangeTopBar';
 import { KLinePanel } from './components/KLinePanel';
 import { MarketRibbon } from './components/MarketRibbon';
-import { MessageCenterPanel, MessageItem as ExchangeMessageItem, MessageLevel } from './components/MessageCenterPanel';
 import { OrderPanel } from './components/OrderPanel';
 import { PositionPanel } from './components/PositionPanel';
 import { TradeHistoryPanel } from './components/TradeHistoryPanel';
@@ -762,8 +761,6 @@ export function ExchangeConsole() {
   const [exchangeTradeLoading, setExchangeTradeLoading] = useState(false);
   const [exchangeTradeHasMore, setExchangeTradeHasMore] = useState(false);
   const [exchangeOrderForm, setExchangeOrderForm] = useState<TradeFormState>(DEFAULT_ORDER_FORM);
-  const [exchangeMessages, setExchangeMessages] = useState<ExchangeMessageItem[]>([]);
-
   const exchangePositions: PositionRow[] = SAMPLE_POSITIONS;
   const exchangeWsRef = useRef<WebSocket | null>(null);
   const exchangeWsRetryRef = useRef(0);
@@ -772,23 +769,6 @@ export function ExchangeConsole() {
   const exchangeTradeRequestId = useRef(0);
 
   const exchangeConnText = useMemo(() => connStatusLabel(exchangeConnStatus, t), [exchangeConnStatus, t]);
-
-  // Keep a lightweight exchange timeline for the right-side system-message panel.
-  const pushExchangeMessage = useCallback((level: MessageLevel, text: string, detail?: string) => {
-    setExchangeMessages((prev) => {
-      const next = [
-        {
-          id: `${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-          ts: Date.now(),
-          level,
-          text,
-          detail
-        },
-        ...prev
-      ];
-      return next.slice(0, 120);
-    });
-  }, []);
 
   const exchangeToMessageView = useCallback(() => {
     const next = new URL(window.location.href);
@@ -918,10 +898,7 @@ export function ExchangeConsole() {
     setExchangeTradeHasMore(Array.isArray(rawTrades) && rawTrades.length === EXCHANGE_TRADE_HISTORY_LIMIT);
     setExchangeTradeLoading(false);
 
-    if (normalizedTrades.length === 0) {
-      pushExchangeMessage('info', '交易列表尚未收到成交資料');
-    }
-  }, [exchangeSymbol, normalizeExchangeCandles, normalizeExchangeTradeRows, pushExchangeMessage]);
+  }, [exchangeSymbol, normalizeExchangeCandles, normalizeExchangeTradeRows]);
 
   const loadMoreExchangeTrades = useCallback(async () => {
     if (!exchangeTradeHasMore || exchangeTradeLoading || exchangeTrades.length === 0) {
@@ -980,7 +957,6 @@ export function ExchangeConsole() {
         setExchangeConnStatus('open');
         socket.send(JSON.stringify(wsCommandSubscribe(exchangeSymbol)));
         void loadExchangeSnapshot();
-        pushExchangeMessage('info', `已訂閱 ${exchangeSymbol}`);
       };
 
       socket.onmessage = (event) => {
@@ -1015,7 +991,6 @@ export function ExchangeConsole() {
         }
 
         if (eventName === 'subscribed.market') {
-          pushExchangeMessage('info', `訂閱 ${exchangeSymbol} 成功`);
           return;
         }
 
@@ -1025,7 +1000,7 @@ export function ExchangeConsole() {
         }
 
         if (eventName === 'error') {
-          pushExchangeMessage('error', 'WS 回報錯誤', (payload.data as Record<string, unknown>)?.['reason'] as string);
+          setExchangeConnStatus('error');
         }
       };
 
@@ -1045,7 +1020,6 @@ export function ExchangeConsole() {
         }
 
         setExchangeConnStatus('error');
-        pushExchangeMessage('error', 'WS 連線中斷，需手動刷新後重試');
       };
 
       socket.onerror = () => {
@@ -1053,12 +1027,11 @@ export function ExchangeConsole() {
           return;
         }
         setExchangeConnStatus('error');
-        pushExchangeMessage('error', 'WebSocket 連線異常');
       };
     };
 
     connect();
-  }, [applyExchangeTrade, exchangeSymbol, loadExchangeSnapshot, pushExchangeMessage]);
+  }, [applyExchangeTrade, exchangeSymbol, loadExchangeSnapshot]);
 
   const stopExchangeSocket = useCallback(() => {
     stopExchangeWsRef.current = true;
@@ -1709,7 +1682,6 @@ export function ExchangeConsole() {
                 onStateChange={setExchangeOrderForm}
               />
               <PositionPanel rows={exchangePositions} />
-              <MessageCenterPanel messages={exchangeMessages} />
             </div>
           </div>
         </div>
