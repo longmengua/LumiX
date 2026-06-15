@@ -43,6 +43,27 @@ public class UserStreamSubscriptionAuthorizer {
                 : UserStreamAuthorizationDecision.rejected(HttpStatus.FORBIDDEN, "USER_STREAM_PERMISSION_DENIED");
     }
 
+    public long resolveUid(String apiKey, String authorization) {
+        if (!properties.isEnabled()) {
+            return 0L;
+        }
+        return authenticate(apiKey, authorization)
+                .flatMap(principal -> parseSubjectUid(principal.subject()))
+                .orElse(0L);
+    }
+
+    /**
+     * Parses subject strings emitted by API keys / JWT into UID.
+     *
+     * Existing auth tokens commonly carry:
+     * - "123"
+     * - "user-123"
+     * - "uid:123"
+     */
+    public static java.util.Optional<Long> parseSubjectUid(String subject) {
+        return parseUid(subject);
+    }
+
     public String apiKeyHeaderName() {
         return properties.getApiKeyHeader();
     }
@@ -73,6 +94,37 @@ public class UserStreamSubscriptionAuthorizer {
                 && (hasScope(principal, "stream:read")
                 || hasScope(principal, "user:stream")
                 || hasScope(principal, "user:read"));
+    }
+
+    private static java.util.Optional<Long> parseUid(String subject) {
+        if (subject == null || subject.isBlank()) {
+            return java.util.Optional.empty();
+        }
+        try {
+            return java.util.Optional.of(Long.parseLong(subject.trim()));
+        } catch (RuntimeException ignored) {
+            if (subject.regionMatches(true, 0, "user-", 0, 5)) {
+                try {
+                    return java.util.Optional.of(Long.parseLong(subject.substring(5)));
+                } catch (RuntimeException nested) {
+                    return java.util.Optional.empty();
+                }
+            }
+            if (subject.regionMatches(true, 0, "uid:", 0, 4)) {
+                try {
+                    return java.util.Optional.of(Long.parseLong(subject.substring(4)));
+                } catch (RuntimeException nested) {
+                    return java.util.Optional.empty();
+                }
+            }
+            return java.util.Optional.empty();
+        }
+    }
+
+    public static boolean hasUidMatch(ApiPrincipal principal, long uid) {
+        return parseSubjectUid(principal.subject())
+                .filter(value -> value == uid)
+                .isPresent();
     }
 
     private static boolean ownsUid(String subject, long uid) {

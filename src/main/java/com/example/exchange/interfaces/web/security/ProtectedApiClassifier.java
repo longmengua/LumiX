@@ -13,6 +13,15 @@ public final class ProtectedApiClassifier {
             return ProtectedApiCategory.UNKNOWN;
         }
 
+        if (path.startsWith("/api/messages")
+                || path.startsWith("/api/message-preferences")
+                || path.startsWith("/api/system/messages")
+                || path.startsWith("/api/admin/messages")) {
+            return path.startsWith("/api/admin/") || path.startsWith("/api/system/")
+                    ? ProtectedApiCategory.ADMIN
+                    : ProtectedApiCategory.PROTECTED;
+        }
+
         if (path.startsWith("/api/order")
                 || path.startsWith("/api/prediction/orders")
                 || path.startsWith("/api/prediction/session")) {

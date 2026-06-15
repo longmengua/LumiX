@@ -99,6 +99,17 @@ security-controls:
     - /api/prediction/markets/price-refresh
     - /api/prediction/ws/**
     - /api/prediction/approve/**
+    - /api/messages/**
+    - /api/message-preferences/**
+    - /api/admin/messages/**
+    - /api/system/messages/**
+
+message-center:
+  announcement:
+    scheduler:
+      enabled: ${MESSAGE_CENTER_ANNOUNCEMENT_SCHEDULER_ENABLED:true}
+      fixed-delay-ms: ${MESSAGE_CENTER_ANNOUNCEMENT_SCHEDULER_DELAY_MS:30000}
+      batch-size: ${MESSAGE_CENTER_ANNOUNCEMENT_SCHEDULER_BATCH_SIZE:500}
 
 risk-controls:
   order-entry-halt: ${RISK_CONTROLS_ORDER_ENTRY_HALT:false}

@@ -76,6 +76,10 @@ public class SecurityControlsProperties {
             "/api/prediction/markets/retry/**",
             "/api/prediction/markets/price-refresh",
             "/api/prediction/ws/**",
-            "/api/prediction/approve/**"
+            "/api/prediction/approve/**",
+            "/api/messages/**",
+            "/api/message-preferences/**",
+            "/api/admin/messages/**",
+            "/api/system/messages/**"
     ));
 }
