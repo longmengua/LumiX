@@ -39,6 +39,8 @@ class WebSocketPushConfigTest {
         PushGatewayService pushGatewayService = mock(PushGatewayService.class);
         CancelOnDisconnectService cancelOnDisconnectService = mock(CancelOnDisconnectService.class);
         UserStreamSubscriptionAuthorizer authorizer = mock(UserStreamSubscriptionAuthorizer.class);
+        // subscribe.user first resolves the authenticated uid from the token, then verifies the requested uid matches.
+        when(authorizer.resolveUid("", "test-token")).thenReturn(42L);
         when(authorizer.authorize(42L, null, "test-token"))
                 .thenReturn(new UserStreamSubscriptionAuthorizer.UserStreamAuthorizationDecision(
                         true,
