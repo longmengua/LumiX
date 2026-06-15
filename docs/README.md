@@ -17,7 +17,7 @@
 
 - [DOCUMENTATION-INDEX.md](./DOCUMENTATION-INDEX.md)
 - [專案總覽：`docs/project/README.md`](./project/README.md)
-- [訊息中心 API：`docs/integrations/message-center-api.md`](./integrations/message-center-api.md)
+- [訊息中心任務規格：`docs/tasks/2026-06-16-0620-message-center-task.md`](./tasks/2026-06-16-0620-message-center-task.md)
 - [任務入口：`docs/tasks/README.md`](./tasks/README.md)
 
 ## 建議閱讀順序

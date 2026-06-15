@@ -29,6 +29,7 @@ If context is lost, the next agent must read this file and `docs/tasks/handoffs/
 
 | Status | Task / Lane | Owner | Since | Expected Areas | Handoff |
 | --- | --- | --- | --- | --- | --- |
+| done | 2026-06-16-0620-message-center-task.md | T1 message-center-architecture | 2026-06-16 06:20 | `docs/tasks/2026-06-16-0620-message-center-task.md` | 完成前後端無歧義規格；可直接分工 |
 
 Replace the `_none_` row with real claim rows when work starts.
 
