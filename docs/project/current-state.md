@@ -3,7 +3,7 @@
 
 這份文件回答一個問題：目前這個 repo 到底完成到哪裡？
 
-結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 core-v1 freeze checklist 已關閉，P0 production baseline 已完成，post-v1 production hardening task 也已拆出；下一步是 tag / hand off 有邊界的 core-v1 baseline，然後收斂剩餘 P1 production hardening blockers。
+結論：目前是可執行、可測試的交易核心 MVP，不是 production-ready 交易所。目前 core-v1 freeze checklist 已關閉，P0 production baseline 與 P1 production-hardening baseline 已完成；下一步是 tag / hand off 有邊界的 core-v1 baseline，然後再進入 P2 evolution 工作。
 
 ## 完成度快照
 
@@ -13,12 +13,12 @@
 | --- | ---: | ---: | --- |
 | P0 必做 | 43 | 0 | 核心 production baseline 項目已關閉；post-v1 hardening 仍需推進。 |
 | P1 強烈建議 | 22 | 0 | 強烈建議的 production-hardening baselines 已關閉。 |
-| P2 演進項 | 0 | 5 | Admin market-config、risk-parameters、做市商營運與 DLQ 已有靜態頁 / API baseline；更完整的後台、報表、壓測、合規與灰度功能仍未完成。 |
-| 合計 | 65 | 5 | Production-hardening baselines 已關閉；剩 P2 evolution 工作。 |
+| P2 演進項 | 0 | 6 | Admin market-config、risk-parameters、做市商營運與 DLQ 已有靜態頁 / API baseline；更完整的後台、報表、壓測、合規、Auth 擴充與灰度功能仍未完成。 |
+| 合計 | 65 | 6 | Production-hardening baselines 已關閉；剩 P2 evolution 工作。 |
 
 ## 目前插單優先順序
 
-接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist 與 smoke runbook 已完成，[post-v1 production hardening tasks](../tasks/post-v1/README.md) 也已完成拆分；在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
+接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist 與 [smoke runbook](../runbooks/core-v1-smoke-runbook.md) 已完成；目前 `docs/tasks/` 只保留彙整任務與訊息中心規格，舊的 post-v1 / P2 拆分清單可從 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md) 追溯。在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
 
 凍結的 core-v1 baseline 包含：
 
@@ -92,14 +92,14 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 ## 建議接下來先做什麼
 
 1. Tag 或 hand off 有邊界的 core-v1 baseline。
-2. core-v1 baseline tag 或明確 hand off 後，再繼續 P2。
+2. core-v1 baseline tag 或明確 hand off 後，再從 P2 evolution 選一個可落地工作。
 
 ## 閱讀順序
 
 快速掌握狀態請先看本文件，再看：
 
 1. [core-v1-release-checklist.md](core-v1-release-checklist.md)：release freeze boundary 與 gates。
-2. [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)：smoke verification flow。
+2. [core-v1-smoke-runbook.md](../runbooks/core-v1-smoke-runbook.md)：smoke verification flow。
 3. [todo.md](todo.md)：完整 production readiness checklist。
 4. [technical.md](technical.md)：技術文件入口。
 5. [../ai/code-map.md](../ai/code-map.md)：給代理使用的精簡程式碼地圖索引。

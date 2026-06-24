@@ -1,11 +1,11 @@
-<!-- 檔案用途：繁體中文專案說明；其他語言請見根目錄 README.md。 -->
+<!-- 檔案用途：繁體中文專案說明；文件入口請見 docs/README.md。 -->
 # Java21 Match Hub
 
 Java 21 + Spring Boot 3.5 的交易與預測市場整合後端。專案目前同時包含「內部交易所核心」與「Polymarket 整合」兩條業務線，使用 DDD 分層組織程式碼，並以 MySQL、Redis、Kafka 作為本機開發基礎設施。
 
 目前定位是可執行的交易核心 MVP，不是生產級交易所。撮合仍是 in-memory 實作，Kafka、Redis、MySQL 也以單節點本機開發模式啟動；若要上正式環境，還需要補強持久化撮合、風控限額、帳務審計、密鑰管理、觀測與壓測。
 
-其他語言：[根目錄語言目錄](../../README.md)
+文件入口：[docs/README.md](../README.md)
 
 ## 文件分類
 
@@ -15,11 +15,11 @@ Java 21 + Spring Boot 3.5 的交易與預測市場整合後端。專案目前同
 | --- | --- | --- |
 | 產品文件 | 業務總覽、功能、模塊、API 與下單鏈路。 | 目前頁面 |
 | 目前狀態 | 快速說明完成度、MVP baseline、production blocker 與近期優先順序。 | [current-state.md](current-state.md) |
-| Core V1 Release | 有邊界的 core-v1 baseline freeze scope、release gate、smoke runbook 與驗收指令。 | [core-v1-release-checklist.md](core-v1-release-checklist.md) / [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md) |
+| Core V1 Release | 有邊界的 core-v1 baseline freeze scope、release gate、smoke runbook 與驗收指令。 | [core-v1-release-checklist.md](core-v1-release-checklist.md) / [core-v1-smoke-runbook.md](../runbooks/core-v1-smoke-runbook.md) |
 | 技術文件 | 架構、實作筆記、API curl 腳本與撮合引擎說明。 | [technical.md](technical.md) |
 | 待辦清單文件 | 依優先級與領域整理的 production readiness roadmap。 | [todo.md](todo.md) |
 | AI 文件 | 給 Codex/代理使用的精簡地圖與任務入口流程。 | [ai.md](ai.md) |
-| 任務文件 | roadmap 與插單工作的可點名 task md。 | [tasks.md](tasks.md) |
+| 任務文件 | roadmap 與插單工作的可點名 task md。 | [task-index.md](task-index.md) |
 
 ## 技術棧
 

@@ -33,7 +33,7 @@ git status --short
 
 - [x] `./mvnw test` 通過。
 - [x] `git diff --check` 通過。
-- [x] Flyway migration 已在未發布 production schema 前 squash 成單一 `V1__core_v1_baseline.sql`；core-v1 之後恢復 append-only 版本規則。
+- [x] Flyway migration 已在未發布 production schema 前 squash 成單一 `V202606160642__exchange_schema_baseline.sql`；core-v1 之後恢復 append-only 版本規則。
 - [x] 會改動狀態的 scheduler 預設關閉，除非明確要啟用。
 - [x] Protected admin APIs 已被 `/api/market-maker/**`、`/api/recovery/**`、`/api/risk/**` 與相關 security classifier paths 覆蓋。
 - [x] current-state 與 TODO 文件指向 freeze task，而不是繼續擴功能。
@@ -41,7 +41,7 @@ git status --short
 
 ## 驗證紀錄
 
-- `./mvnw test`：122 tests passed。
+- `./mvnw test`：2026-06-25 rerun，95 tests passed。
 - `git diff --check`：passed。
 - Docker clean volume smoke：Flyway 成功驗證並套用 1 個 migration，Hibernate validate 通過。
 - API smoke：`/api/ops/metrics`、`/api/market-maker/profiles/enabled`、`/api/depth/BTC-USDT` 均回 200。

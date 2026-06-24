@@ -38,7 +38,7 @@ Remaining production TODO:
 ## Signing And External APIs
 
 - Target custodial routing design: `docs/integrations/custodial-polymarket-routing-security.md` / `docs/integrations/custodial-polymarket-routing-security.md`
-- Implementation task: `docs/tasks/post-v1/06-custodial-polymarket-routing.md`
+- Implementation task lineage: `docs/tasks/2026-06-16-0528-unfinished-tasks.md` lists the removed `docs/tasks/post-v1/06-custodial-polymarket-routing.md` task.
 - EIP-712 and CLOB signing: `domain.util.PolymarketEip712Signer`, `PolymarketClobOrderSigner`
 - RPC transaction tracking: `application.service.RpcTransactionTrackingService`
 - External API config: `infra.config.OkHttpConfig`

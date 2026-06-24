@@ -1,14 +1,14 @@
-<!-- 檔案用途：繁體中文 production TODO；其他語言請見根目錄 README.md。 -->
+<!-- 檔案用途：繁體中文 production TODO；文件入口請見 docs/README.md。 -->
 # Production TODO
 
-這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze 已關閉；接下來以 [post-v1 production hardening tasks](../tasks/post-v1/README.md) 作為核心 production 工作主線。粗項 TODO 的細分進度追蹤放在 [production-readiness fine tasks](../tasks/production-readiness/README.md)。
+這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze、P0 baseline 與 P1 hardening baseline 已關閉；接下來先 tag / hand off core-v1 baseline，再選擇 P2 evolution 工作。舊的 post-v1 / P2 task 拆分可從 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md) 追溯。
 
 文件分類：[產品文件](README.md) / [技術文件](technical.md) / 待辦清單文件
 
 ## 目前 Freeze 工作
 
 - [x] 關閉 [core-v1-release-checklist.md](core-v1-release-checklist.md)。
-- [x] 執行 [core-v1-smoke-runbook.md](core-v1-smoke-runbook.md)。
+- [x] 執行 [core-v1-smoke-runbook.md](../runbooks/core-v1-smoke-runbook.md)。
 - [x] 只修 freeze verification 發現的 compile/test/checklist 缺口。
 - [x] Web app、Polymarket production worker split、完整報表、合規與觀測擴建延後到 core-v1 tag 之後。
 
@@ -147,18 +147,18 @@
 ## P2 可逐步演進
 
 - [ ] Admin console：市場配置、風控參數、手動停牌、DLQ replay、對帳報表。
-  - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 admin market config、risk parameters、DLQ replay、reconciliation report screens 拆成可實作 lane。
+  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)；目前 repo 未保留 `docs/tasks/p2/` 細項檔。
   - Baseline 進度：read-only admin market-config API 與靜態頁已可用，位置為 `GET /api/admin/market-config` 與 `src/main/resources/static/admin-market-config.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin risk-parameters API 與靜態頁已可用，位置為 `GET /api/admin/risk-parameters` 與 `src/main/resources/static/admin-risk-parameters.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin DLQ API 與靜態頁已可用，位置為 `GET /api/admin/dlq` 與 `src/main/resources/static/admin-dlq.html`；payload/header preview 會遮罩敏感資訊，replay/compensation actions 仍停用，等待 permissioned operator workflow 接線。
 - [ ] 報表系統：用戶資產報表、交易報表、手續費報表、營運與財務日報。
-  - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 user asset、trade、fee、operations/finance daily report exports 拆成可實作 lane。
+  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
 - [ ] 壓測工具：下單 TPS、撮合 TPS、行情推送 fanout、Polymarket sync 壓力。
-  - Task specs 已就緒：[P2 evolution tasks](../tasks/p2/README.md) 已把 order-entry TPS、matching TPS、market-data fanout load tests 拆成可實作 lane；Polymarket sync pressure 仍屬於更大的 load-test roadmap。
+  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)；Polymarket sync pressure 仍屬於更大的 load-test roadmap。
 - [ ] 灰度與回滾：feature flag、canary deployment、schema backward compatibility。
-  - Task spec 已就緒：[feature flag, canary, and rollback](../tasks/p2/12-feature-flag-canary-rollback.md)。
+  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
 - [ ] 合規能力：KYC/AML hook、制裁名單、交易監控、可疑行為報表。
-  - Task specs 已就緒：[KYC/AML/sanctions](../tasks/p2/13-kyc-aml-sanctions-integration.md) 與 [trade surveillance/SAR](../tasks/p2/14-trade-surveillance-sar.md)。
+  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
 - [ ] Auth 擴充：第三方 OAuth、passkeys/WebAuthn、錢包登入、MFA、device/session 管理、正式密碼重設。
   - Baseline 進度：MVP 已有本地 first-party 註冊/登入/登出；新用戶預設沒有資金，正式充值/提幣完成前先用分離的後台 test-funds 頁發測試金。
 

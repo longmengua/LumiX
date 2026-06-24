@@ -35,7 +35,7 @@ Remaining production TODO:
 - Models: `Account`, `WalletLedgerEntry`, `WalletLedgerPosting`, `WalletTransfer`
 - Turnover model: `TurnoverRecord`, `TurnoverSummary`, `TurnoverRecordEntity`
 - Bonus grant model: `BonusCreditGrant`, `BonusCreditGrantRecord`
-- Migrations: `V1__core_v1_baseline.sql`, `V14__wallet_ledger_hash_chain.sql`, `V20__wallet_ledger_journal_constraints.sql`
+- Migrations: `V202606160642__exchange_schema_baseline.sql` contains the squashed core-v1 ledger and funds schema.
 - Tests: `MarginServiceTest`, `WalletLedgerReplayServiceTest`, `WalletLedgerServiceTest`, `BonusCreditServiceTest`, `TurnoverServiceTest`, `FinanceReportServiceTest`, `LedgerArchiveManifestServiceTest`
 
 Ledger concerns:

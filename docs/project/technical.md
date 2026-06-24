@@ -12,7 +12,7 @@
 | [技術筆記](NOTES_ch.md) | 架構與實作審查，涵蓋分層、已完成能力、風險與 production 優先事項。 |
 | [AI Code Map](../ai/code-map.md) | 給 Codex/代理使用的精簡程式碼責任與流程地圖。 |
 | [AI 文件](ai.md) | Agent maps 與任務入口流程的繁中索引。 |
-| [任務文件](tasks.md) | 可點名 task md 的繁中索引。 |
+| [任務文件](task-index.md) | 可點名 task md 的繁中索引。 |
 | [API curl 腳本](../../shells/api-curls/README_ch.md) | 本機 exchange 與 Polymarket API curl 腳本使用說明。 |
 | [撮合引擎](../../src/main/java/com/example/exchange/infra/matching/README_ch.md) | 目前 in-memory matching engine 說明與 production 演進方向。 |
 | [Redis Key Schema](redis-key-schema.md) | Redis key 歸屬、TTL 規則、namespace policy 與 migration backlog。 |
