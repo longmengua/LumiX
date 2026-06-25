@@ -1,11 +1,11 @@
-<!-- 檔案用途：繁體中文專案說明；文件入口請見 docs/README.md。 -->
+<!-- 檔案用途：繁體中文專案說明；文件入口請見 doc/README.md。 -->
 # Java21 Match Hub
 
 Java 21 + Spring Boot 3.5 的交易與預測市場整合後端。專案目前同時包含「內部交易所核心」與「Polymarket 整合」兩條業務線，使用 DDD 分層組織程式碼，並以 MySQL、Redis、Kafka 作為本機開發基礎設施。
 
 目前定位是可執行的交易核心 MVP，不是生產級交易所。撮合仍是 in-memory 實作，Kafka、Redis、MySQL 也以單節點本機開發模式啟動；若要上正式環境，還需要補強持久化撮合、風控限額、帳務審計、密鑰管理、觀測與壓測。
 
-文件入口：[docs/README.md](README.md)
+文件入口：[doc/README.md](README.md)
 
 ## 文件分類
 
@@ -365,7 +365,7 @@ src/main/java/com/example/exchange
 
 Polymarket 的 `private-key`、CLOB `api-key/api-secret/api-passphrase`、relayer key 不應提交到 Git。正式環境應改用環境變數或 secret manager 注入。
 
-若要用 Gmail SMTP 寄送客戶註冊信箱驗證碼，請看 `docs/operations/gmail-smtp.md`。必須使用 Gmail App Password，不要使用帳號登入密碼，並透過環境變數注入。
+若要用 Gmail SMTP 寄送客戶註冊信箱驗證碼，請看 `doc/operations/gmail-smtp.md`。必須使用 Gmail App Password，不要使用帳號登入密碼，並透過環境變數注入。
 
 敏感設定相關環境變數：
 

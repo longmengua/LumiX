@@ -1,4 +1,4 @@
-<!-- 檔案用途：繁體中文 production TODO；文件入口請見 docs/README.md。 -->
+<!-- 檔案用途：繁體中文 production TODO；文件入口請見 doc/README.md。 -->
 # Production TODO
 
 這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze、P0 baseline 與 P1 hardening baseline 已關閉；接下來先 tag / hand off core-v1 baseline，再選擇 P2 evolution 工作。舊的 post-v1 / P2 task 拆分可從 git history 中的 unfinished tasks snapshot 追溯。
@@ -125,10 +125,10 @@
   - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](../architecture/live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror。Flyway `V23__position_lifecycle_projection.sql` 已新增 `position_lifecycle_projection` live-position mirror schema 與 query indexes，並以 `PositionLifecycleProjectionJpaRepository` 作為 JPA 查詢 baseline。Archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Projection update/rebuild wiring 仍屬於獨立 live-position 營運強化，不算在本 index baseline。
 - [x] 文件化 Redis key schema、namespace prefix、版本與 migration 策略。
 - [x] 補 Redis hot-state key 的最終 TTL / archive rules。
-  - Baseline 已完成：`docs/architecture/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。
+  - Baseline 已完成：`doc/architecture/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。
 - [x] Flyway migration 改為正式唯一 schema 管理，不再依賴 Hibernate `ddl-auto=update`。
 - [x] 補齊資料歸檔策略：歷史訂單、成交、ledger、Kafka event、audit log。
-  - Baseline 已完成：`docs/architecture/archive-strategy.md` 已定義 hot/archive sources、minimum payloads、retention classes、manifests、delete rules 與 restore rules；`ArchiveExporterService` / `ArchiveExporterScheduler` 提供預設關閉的 historical order/trade/ledger export-plan skeleton。Remaining：object-storage writers、delete jobs 與更完整 restore smoke tests。
+  - Baseline 已完成：`doc/architecture/archive-strategy.md` 已定義 hot/archive sources、minimum payloads、retention classes、manifests、delete rules 與 restore rules；`ArchiveExporterService` / `ArchiveExporterScheduler` 提供預設關閉的 historical order/trade/ledger export-plan skeleton。Remaining：object-storage writers、delete jobs 與更完整 restore smoke tests。
 
 ### 可觀測性
 
@@ -147,7 +147,7 @@
 ## P2 可逐步演進
 
 - [ ] Admin console：市場配置、風控參數、手動停牌、DLQ replay、對帳報表。
-  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot；目前 repo 未保留 `docs/tasks/p2/` 細項檔。
+  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot；目前 repo 未保留 `doc/tasks/p2/` 細項檔。
   - Baseline 進度：read-only admin market-config API 與靜態頁已可用，位置為 `GET /api/admin/market-config` 與 `src/main/resources/static/admin-market-config.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin risk-parameters API 與靜態頁已可用，位置為 `GET /api/admin/risk-parameters` 與 `src/main/resources/static/admin-risk-parameters.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin DLQ API 與靜態頁已可用，位置為 `GET /api/admin/dlq` 與 `src/main/resources/static/admin-dlq.html`；payload/header preview 會遮罩敏感資訊，replay/compensation actions 仍停用，等待 permissioned operator workflow 接線。

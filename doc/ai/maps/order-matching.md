@@ -21,6 +21,8 @@ OrderController
   -> product-type accounting
      - PERPETUAL: position margin, PnL, funding/liquidation-compatible position state
      - SPOT: base/quote asset settlement without Position creation
+  -> symbol config gates
+     - tradingEnabled / visible / reduceOnly / productType / tick / lot / notional / risk tiers
   -> account/ledger/market-data/lifecycle events
 ```
 
@@ -59,6 +61,7 @@ Current behavior:
 - Per-symbol operations are serialized by an in-process sequencer.
 - LIMIT/MARKET, GTC/IOC/FOK, post-only rejection, self-match prevention, amend, cancel, top-of-book, and depth snapshot are covered.
 - Spot and perpetual products share matching semantics but split risk reserve and settlement accounting by `ProductType`.
+- Order intake always resolves `SymbolConfig` before reserve/matching so symbol visibility and trading enablement stay consistent with admin config.
 - Snapshot export/restore preserves resting order FIFO and match sequence baseline.
 - In-memory command log and replay API preserve snapshot checkpoint replay and match sequence continuation in tests.
 - In-memory event log records emitted trade events with event offsets and their source command offset.
@@ -86,8 +89,8 @@ Current behavior:
 - Cancel-on-disconnect supports connection resume by moving a registration from `resumeConnectionId` to the new WebSocket session id, preventing late old-close events from canceling orders after reconnect.
 - Matching restore drills assert that recovered open orders from latest snapshot plus later command log entries are present after recovery.
 - Replay validation has multi-symbol interleaved command-offset coverage, so per-symbol offsets remain independent when command writes are interleaved.
-- Production sequencer deployment and failover rules are documented in `docs/reliability/matching-sequencer-runbook.md`.
-- Disaster recovery worker takeover, authenticated command reconnect/session replay semantics, restore smoke commands, and account/position consistency validation are documented in `docs/runbooks/disaster-recovery-runbook.md`.
+- Production sequencer deployment and failover rules are documented in `doc/reliability/matching-sequencer-runbook.md`.
+- Disaster recovery worker takeover, authenticated command reconnect/session replay semantics, restore smoke commands, and account/position consistency validation are documented in `doc/runbooks/disaster-recovery-runbook.md`.
 
 Remaining production TODO:
 - Multi-process operational hardening beyond the current in-process engine worker baseline.

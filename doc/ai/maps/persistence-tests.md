@@ -41,17 +41,17 @@ Config:
 
 ## Redis And Kafka Docs
 
-- Redis key contract and hot-state TTL/archive policy: `docs/architecture/redis-key-schema.md`
-- Live order SQL mirror/index decision: `docs/architecture/live-order-sql-mirror.md`
-- Live position SQL mirror/index baseline: `docs/architecture/live-position-sql-mirror.md`, `PositionLifecycleProjection`, `PositionLifecycleProjectionJpaRepository`
-- Historical data archive strategy: `docs/architecture/archive-strategy.md`
+- Redis key contract and hot-state TTL/archive policy: `doc/architecture/redis-key-schema.md`
+- Live order SQL mirror/index decision: `doc/architecture/live-order-sql-mirror.md`
+- Live position SQL mirror/index baseline: `doc/architecture/live-position-sql-mirror.md`, `PositionLifecycleProjection`, `PositionLifecycleProjectionJpaRepository`
+- Historical data archive strategy: `doc/architecture/archive-strategy.md`
 - Archive exporter skeleton: `ArchiveExporterService`, `ArchiveExporterScheduler`, `ArchiveExporterServiceTest`
-- Kafka topic contract: `docs/architecture/kafka-topics.md`
-- Observability baseline: `docs/operations/observability.md`
+- Kafka topic contract: `doc/architecture/kafka-topics.md`
+- Observability baseline: `doc/operations/observability.md`
 - Metrics export: `OperationalMetricsMeterBinder`, `/actuator/prometheus`
-- Tracing export: Micrometer Tracing OpenTelemetry bridge, OTLP exporter, `docs/operations/tracing-dashboard.md`
+- Tracing export: Micrometer Tracing OpenTelemetry bridge, OTLP exporter, `doc/operations/tracing-dashboard.md`
 - Alert backend: `OperationalAlert`, `AlertDispatchService`, `OkHttpAlertTransport`, `alerts.backend.*`
-- Outbox runbook: `docs/operations/outbox-runbook.md`
+- Outbox runbook: `doc/operations/outbox-runbook.md`
 
 ## Focused Tests
 

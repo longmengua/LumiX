@@ -3,7 +3,7 @@
 
 任務文件會把 roadmap 工作拆成可點名執行的 Markdown 檔。插單需求進來時，Codex 應先把需求轉成 task md，再等使用者指定要先做哪個任務檔。
 
-目前 `docs/tasks/` 細項檔已不在目前 worktree。需要追溯拆分清單時，從 git history 查原本的 unfinished tasks snapshot 或 message-center task。
+目前 `doc/tasks/` 細項檔已不在目前 worktree。需要追溯拆分清單時，從 git history 查原本的 unfinished tasks snapshot 或 message-center task。
 
 ## 入口
 

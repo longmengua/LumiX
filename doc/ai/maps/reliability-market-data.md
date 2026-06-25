@@ -10,7 +10,7 @@
 - Migrations:
   - `V1__reliability_baseline.sql`
   - `V5__durable_outbox_headers.sql`
-- Runbook: `docs/operations/outbox-runbook.md`
+- Runbook: `doc/operations/outbox-runbook.md`
 - Tests: `OutboxServiceTest`
 
 Current behavior:
@@ -19,9 +19,9 @@ Current behavior:
 - Admin DLQ inspection baseline: `AdminDlqController`, `AdminDlqResponse`, and `src/main/resources/static/admin-dlq.html` expose sanitized DLQ payload/header previews while leaving replay/compensation actions disabled in the UI.
 - Request/correlation headers retained through delayed publish.
 - When a Spring transaction is active, `OutboxService.publish(...)` saves the outbox row inside the transaction and defers the external publisher call until `afterCommit`.
-- Redis hot-state recovery rules are documented in `docs/architecture/redis-key-schema.md` and `docs/architecture/redis-key-schema.md`: MySQL/outbox rows are authoritative after commit; Redis projection failures should be rebuilt rather than blindly replaying the whole command.
+- Redis hot-state recovery rules are documented in `doc/architecture/redis-key-schema.md` and `doc/architecture/redis-key-schema.md`: MySQL/outbox rows are authoritative after commit; Redis projection failures should be rebuilt rather than blindly replaying the whole command.
 - `OutboxDomainStateConsistencyService` and `/api/recovery/outbox/domain-state-consistency` inspect recent durable outbox rows and flag `order.lifecycle` rows without a matching lifecycle projection.
-- Cross-store failure drill docs live in `docs/runbooks/cross-store-failure-drill.md` and `docs/runbooks/cross-store-failure-drill.md`.
+- Cross-store failure drill docs live in `doc/runbooks/cross-store-failure-drill.md` and `doc/runbooks/cross-store-failure-drill.md`.
 
 ## Event Store And Recovery
 
@@ -76,7 +76,7 @@ Current behavior:
 - `push-gateway.runtime.*` exposes MONOLITH/GATEWAY role, instance id, accepting-new-streams, and draining controls. `GET /api/ops/push-gateway/status` returns local channel/session counts for readiness and load-balancer drain checks.
 - `UserStreamSubscriptionAuthorizer` protects private user SSE/WebSocket streams when `api-auth.enabled=true`; admin principals may subscribe to any uid, while user principals must own the requested uid and carry `stream:read`, `user:stream`, or `user:read` scope. WebSocket handshakes also accept `apiKey`, `access_token`, or `token` query parameters for browser clients.
 - `MarketDataStreamRateLimiter` applies per-client fixed-window limits to market/user SSE subscriptions and WebSocket handshakes through `push-gateway.rate-limit.*`.
-- `docs/reliability/market-data-gateway-scaling.md` and `docs/reliability/market-data-gateway-scaling.md` document the independently deployable gateway role, broadcast fanout requirement for horizontally scaled instances, load-balancer draining, shared rate-limit options, heartbeat policy, reconnect replay flow, readiness, and rollback.
+- `doc/reliability/market-data-gateway-scaling.md` and `doc/reliability/market-data-gateway-scaling.md` document the independently deployable gateway role, broadcast fanout requirement for horizontally scaled instances, load-balancer draining, shared rate-limit options, heartbeat policy, reconnect replay flow, readiness, and rollback.
 
 Remaining production TODO:
 - Production archive export/storage for market-data history beyond local DB retention.

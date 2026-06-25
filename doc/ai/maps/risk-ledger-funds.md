@@ -14,8 +14,9 @@ Checks include:
 - Symbol suspension.
 - Configurable uid+symbol order-entry fixed-window frequency limit, disabled by default.
 - Tick size, lot size, min notional, price band, max order size, max open orders.
+- Symbol visibility and trading enablement from `SymbolConfig`.
 - Product-aware reserve:
-  - `PERPETUAL` reserves quote/margin asset for initial margin and taker-fee buffer.
+  - `PERPETUAL` reserves the configured margin asset for initial margin and taker-fee buffer.
   - `SPOT BUY` reserves quote notional plus fee buffer.
   - `SPOT SELL` reserves base quantity.
 - Balance, leverage, exposure, position notional, client order id deduplication.
@@ -46,6 +47,7 @@ Ledger concerns:
 - Order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, withdrawal are explicit accounting entries.
 - `Account` now keeps per-asset balances for spot settlement while preserving the legacy USDT cross-balance view used by contract risk, recovery, and existing account APIs.
 - Spot trades write base/quote settlement ledger entries and do not create `Position` rows.
+- Trade fee collection writes both the user fee posting and an independent platform income ledger entry so fee revenue is auditable without mixing it into user replay state.
 - Bonus credit grant, consume, expiry, and clawback are explicit ledger entries under `USER_BONUS_AVAILABLE`.
 - Bonus credit is not added to `Account.crossBalance`, so promotional funds cannot silently mix with real cash.
 - Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.
@@ -75,7 +77,7 @@ Ledger concerns:
 
 Remaining production TODO:
 - Stronger alert delivery and worker locking for scheduled turnover reconciliation.
-- ADL DB-commit vs Redis hot-state repair rules are documented in `docs/architecture/redis-key-schema.md` and `docs/architecture/redis-key-schema.md`.
+- ADL DB-commit vs Redis hot-state repair rules are documented in `doc/architecture/redis-key-schema.md` and `doc/architecture/redis-key-schema.md`.
 
 ## Funding, Liquidation, Reconciliation
 
@@ -117,7 +119,7 @@ Current liquidation/ADL behavior:
 - `GET /api/risk/adl-executions` reports recent forced-deleveraging outcomes from durable execution records when available.
 - `AdlInsuranceReconciliationService` and `GET /api/risk/adl-insurance-reconciliation` compare open ADL queue shortfalls against liquidated-position ADL/insurance coverage.
 - `AdlQueueExecutionService` consumes queued liquidation shortfalls, enforces queue owner guard when claimed, filters opposite-side candidates, ranks/plans ADL reduction, executes through `ExecuteAdlUseCase`, completes fully covered queue entries, keeps remaining notional on partial execution, and returns `ADL_NO_ELIGIBLE_CANDIDATES` without consuming the queue when no candidate can be reduced.
-- Operator retry steps for stuck claims, partial executions, and no-candidate outcomes are documented in `docs/reliability/adl-operator-runbook.md` and `docs/reliability/adl-operator-runbook.md`.
+- Operator retry steps for stuck claims, partial executions, and no-candidate outcomes are documented in `doc/reliability/adl-operator-runbook.md` and `doc/reliability/adl-operator-runbook.md`.
 - `RiskControlsProperties` exposes `liquidationHalt` and `liquidationManualReview` operator controls.
 
 Remaining production TODO:

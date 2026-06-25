@@ -14,10 +14,10 @@ Sub-maps live in [maps/](maps/).
 Use a Markdown file as the task entry point:
 
 ```text
-讀一下 docs/roadmap/todo.md，從最前面的未完成 P0 開始做。
+讀一下 doc/roadmap/todo.md，從最前面的未完成 P0 開始做。
 ```
 
-Codex should read that file first, open the relevant map under `docs/ai/maps/`, and either start the clear next task or ask which task to start if the file leaves multiple good options.
+Codex should read that file first, open the relevant map under `doc/ai/maps/`, and either start the clear next task or ask which task to start if the file leaves multiple good options.
 
 ## Code Comment Standard
 
@@ -34,7 +34,7 @@ For interrupt work, ask Codex to create a task file first:
 Then choose the generated file:
 
 ```text
-讀一下 docs/tasks/core-kernel/05-market-maker-hedging.md，開始做。
+讀一下 doc/tasks/core-kernel/05-market-maker-hedging.md，開始做。
 ```
 
 ## Team Management
