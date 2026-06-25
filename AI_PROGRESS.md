@@ -33,7 +33,7 @@
 |---:|---|---|---|---|
 | 0 | Repo 掃描與進度初始化 | done | not_required | 已完成 |
 | 1 | React + TypeScript 專案骨架 | done | pending | 需人工審查 |
-| 2 | Design System 與 App Shell | pending | pending | 需人工審查 |
+| 2 | Design System 與 App Shell | done | pending | 需人工審查 |
 | 3 | 登入、首頁、市場列表 | pending | pending | 需人工審查 |
 | 4 | 個人中心 | pending | pending | 需人工審查 |
 | 5 | 資產、劃轉、充值、提現畫面 | pending | pending | 需人工審查 |
@@ -69,9 +69,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: 1
-current_task: P1-06
-next_action: 等待使用者審查 Phase 1，通過後再進入 Phase 2（Design System 與 App Shell）
+current_phase: 2
+current_task: P2-06
+next_action: 等待使用者審查 Phase 2，通過後再進入 Phase 3（登入、首頁、市場列表）
 ```
 
 ---
@@ -102,12 +102,12 @@ next_action: 等待使用者審查 Phase 1，通過後再進入 Phase 2（Design
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P2-01 建立 Layout | pending | - | - |
-| P2-02 建立 Header | pending | - | - |
-| P2-03 建立 Sidebar | pending | - | - |
-| P2-04 建立基礎路由 | pending | - | - |
-| P2-05 建立共用元件 | pending | - | - |
-| P2-06 建立格式化工具 | pending | - | - |
+| P2-01 建立 Layout | done | 已完成 | - |
+| P2-02 建立 Header | done | 已完成 | - |
+| P2-03 建立 Sidebar | done | 已完成 | - |
+| P2-04 建立基礎路由 | done | 已完成 | - |
+| P2-05 建立共用元件 | done | 已完成 | - |
+| P2-06 建立格式化工具 | done | 已完成 | - |
 
 ### Phase 3
 
