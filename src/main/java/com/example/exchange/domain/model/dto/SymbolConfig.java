@@ -697,6 +697,66 @@ public class SymbolConfig {
     }
 
     /**
+     * 把 SymbolConfig 轉回 trading_symbol 的 JPA entity。
+     *
+     * 這裡只做欄位 mapping，不碰 repository，也不查資料庫。
+     */
+    public TradingSymbolRecord toTradingSymbolRecord() {
+        TradingSymbolRecord record = new TradingSymbolRecord();
+        record.setSymbol(normalizeRecordValue(symbol));
+        record.setProductType(productTypeOrDefault());
+        record.setBaseAsset(normalizeRecordValue(baseAsset));
+        record.setQuoteAsset(normalizeRecordValue(quoteAsset));
+        record.setMarginAsset(normalizeNullableRecordValue(marginAsset));
+        record.setPriceTick(priceTickOrDefault());
+        record.setLotSize(lotSizeOrDefault());
+        record.setMinQty(minQtyOrDefault());
+        record.setMinNotional(minNotionalOrDefault());
+        record.setMaxOrderNotional(maxOrderNotionalOrDefault());
+        record.setMaxPositionNotional(maxPositionNotionalOrDefault());
+        record.setMaxOpenOrders(maxOpenOrdersOrDefault());
+        record.setMaxLeverage(maxLeverageOrDefault());
+        record.setInitialMarginRate(initialMarginRateOrDefault());
+        record.setMaintenanceMarginRate(maintenanceMarginRateOrDefault());
+        record.setMakerFeeRate(makerFeeRateOrDefault());
+        record.setTakerFeeRate(takerFeeRateOrDefault());
+        record.setMakerRebateRate(makerRebateRateOrDefault());
+        record.setReferralRebateRate(referralRebateRateOrDefault());
+        record.setPriceBandRate(priceBandRateOrDefault());
+        record.setTradingEnabled(tradingEnabled);
+        record.setVisible(visibleOrDefault());
+        record.setReduceOnly(reduceOnlyOrDefault());
+        return record;
+    }
+
+    /**
+     * 把 SymbolConfig 的 risk tiers 轉回 trading_symbol_risk_tier 的 JPA entity list。
+     *
+     * 這裡只做欄位 mapping，不查資料庫。
+     */
+    public List<TradingSymbolRiskTierRecord> toTradingSymbolRiskTierRecords() {
+        if (riskTiers == null || riskTiers.isEmpty()) {
+            return List.of();
+        }
+
+        String normalizedSymbol = normalizeRecordValue(symbol);
+
+        return riskTiers.stream()
+                .filter(tier -> tier != null)
+                .map(tier -> {
+                    TradingSymbolRiskTierRecord record = new TradingSymbolRiskTierRecord();
+                    record.setSymbol(normalizedSymbol);
+                    record.setTier(tier.getTier());
+                    record.setMaxPositionNotional(tier.getMaxPositionNotional());
+                    record.setInitialMarginRate(tier.getInitialMarginRate());
+                    record.setMaintenanceMarginRate(tier.getMaintenanceMarginRate());
+                    record.setMaxLeverage(tier.getMaxLeverage());
+                    return record;
+                })
+                .toList();
+    }
+
+    /**
      * 從 DB 的 risk tier 轉成 SymbolConfig 裡面的 risk tier。
      */
     private static RiskTier riskTierFrom(TradingSymbolRiskTierRecord record) {
