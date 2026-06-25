@@ -18,6 +18,8 @@
  */
 package com.example.exchange.domain.model.dto;
 
+import com.example.exchange.domain.model.entity.TradingSymbolRiskTierRecord;
+import com.example.exchange.domain.model.entity.TradingSymbolRecord;
 import com.example.exchange.domain.model.enums.ProductType;
 import lombok.Builder;
 import lombok.Data;
@@ -648,11 +650,86 @@ public class SymbolConfig {
     }
 
     /**
-     * 合約風控分層。
+     * 從資料表模型轉成交易規則模型。
      *
      * 白話：
-     * 倉位越大，平台通常不會讓你開太高槓桿。
+     * TradingSymbolRecord 是 DB 裡的資料。
+     * SymbolConfig 是程式下單、風控、撮合時真正要用的設定。
+     *
+     * 轉換放在 DTO，不放在 entity。
      */
+    public static SymbolConfig from(
+            TradingSymbolRecord record,
+            List<TradingSymbolRiskTierRecord> tierRecords
+    ) {
+        List<RiskTier> tiers = tierRecords == null
+                ? List.of()
+                : tierRecords.stream()
+                        .map(SymbolConfig::riskTierFrom)
+                        .toList();
+
+        return SymbolConfig.builder()
+                .symbol(normalizeRecordValue(record.getSymbol()))
+                .productType(record.getProductType())
+                .baseAsset(normalizeRecordValue(record.getBaseAsset()))
+                .quoteAsset(normalizeRecordValue(record.getQuoteAsset()))
+                .marginAsset(normalizeNullableRecordValue(record.getMarginAsset()))
+                .priceTick(record.getPriceTick())
+                .lotSize(record.getLotSize())
+                .minQty(record.getMinQty())
+                .minNotional(record.getMinNotional())
+                .maxOrderNotional(record.getMaxOrderNotional())
+                .maxPositionNotional(record.getMaxPositionNotional())
+                .maxOpenOrders(record.getMaxOpenOrders())
+                .maxLeverage(record.getMaxLeverage())
+                .makerFeeRate(record.getMakerFeeRate())
+                .takerFeeRate(record.getTakerFeeRate())
+                .makerRebateRate(record.getMakerRebateRate())
+                .referralRebateRate(record.getReferralRebateRate())
+                .priceBandRate(record.getPriceBandRate())
+                .initialMarginRate(record.getInitialMarginRate())
+                .maintenanceMarginRate(record.getMaintenanceMarginRate())
+                .riskTiers(tiers)
+                .tradingEnabled(record.isTradingEnabled())
+                .visible(record.isVisible())
+                .reduceOnly(record.isReduceOnly())
+                .build();
+    }
+
+    /**
+     * 從 DB 的 risk tier 轉成 SymbolConfig 裡面的 risk tier。
+     */
+    private static RiskTier riskTierFrom(TradingSymbolRiskTierRecord record) {
+        return RiskTier.builder()
+                .tier(record.getTier())
+                .maxPositionNotional(record.getMaxPositionNotional())
+                .initialMarginRate(record.getInitialMarginRate())
+                .maintenanceMarginRate(record.getMaintenanceMarginRate())
+                .maxLeverage(record.getMaxLeverage())
+                .build();
+    }
+
+    /**
+     * 統一整理成大寫。
+     */
+    private static String normalizeRecordValue(String value) {
+        return value == null ? "" : value.trim().toUpperCase();
+    }
+
+    /**
+     * 可為 null 的字串整理。
+     */
+    private static String normalizeNullableRecordValue(String value) {
+        if (value == null || value.isBlank()) {
+            return null;
+        }
+        return value.trim().toUpperCase();
+    }
+
+
+
+
+
     @Data
     @Builder
     @Jacksonized
