@@ -197,6 +197,7 @@ public class OrderService {
                 position.setLeverage(BigDecimal.valueOf(relatedOrder.getLeverage()));
             }
 
+            String settlementAsset = config.marginAssetOrDefault();
             BigDecimal oldMargin = safe(position.getMargin());
             PositionChange change = position.applyTradeWithPnl(trade.qty(), trade.price());
             BigDecimal newMargin = requiredPositionMargin(position, config);
@@ -205,7 +206,7 @@ public class OrderService {
             if (marginDelta.signum() > 0) {
                 BigDecimal consumed = walletLedgerService.increasePositionMargin(
                         trade.uid(),
-                        config.getQuoteAsset(),
+                        settlementAsset,
                         marginDelta,
                         refId
                 );
@@ -213,7 +214,7 @@ public class OrderService {
             } else if (marginDelta.signum() < 0) {
                 walletLedgerService.releasePositionMargin(
                         trade.uid(),
-                        config.getQuoteAsset(),
+                        settlementAsset,
                         marginDelta.abs(),
                         refId
                 );
@@ -223,7 +224,7 @@ public class OrderService {
             if (change.hasRealizedPnl()) {
                 walletLedgerService.applyRealizedPnl(
                         trade.uid(),
-                        config.getQuoteAsset(),
+                        settlementAsset,
                         change.realizedPnl(),
                         refId
                 );
@@ -232,7 +233,7 @@ public class OrderService {
             FeeCalculation fee = feeService.calculate(withSeq, config, relatedOrder);
             BigDecimal feeConsumed = walletLedgerService.collectFee(
                     trade.uid(),
-                    config.getQuoteAsset(),
+                    settlementAsset,
                     fee.fee(),
                     refId
             );
@@ -240,7 +241,7 @@ public class OrderService {
             if (fee.rebate().signum() > 0) {
                 walletLedgerService.creditRebate(
                         trade.uid(),
-                        config.getQuoteAsset(),
+                        settlementAsset,
                         fee.rebate(),
                         refId
                 );

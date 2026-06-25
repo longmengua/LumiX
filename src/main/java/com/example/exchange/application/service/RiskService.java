@@ -180,7 +180,10 @@ public class RiskService {
         if (config.isSpot() && order.getSide() == OrderSide.SELL) {
             return config.getBaseAsset();
         }
-        return config.getQuoteAsset();
+        if (config.isSpot()) {
+            return config.getQuoteAsset();
+        }
+        return config.marginAssetOrDefault();
     }
 
     public BigDecimal resolveReferencePrice(Order order) {
@@ -202,7 +205,7 @@ public class RiskService {
     }
 
     private void validateTradable(Order order, SymbolConfig config) {
-        if (config == null || !config.isTradingEnabled()) {
+        if (config == null || !config.isTradingEnabled() || !config.visibleOrDefault()) {
             order.reject("SYMBOL_NOT_TRADABLE");
             throw new IllegalArgumentException("symbol is not tradable");
         }

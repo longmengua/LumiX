@@ -133,6 +133,10 @@ class OrderAccountingIntegrationTest {
         assertThat(orderRepo.findAllOrders(2L, "BTCUSDT")).allMatch(o -> o.getStatus() == Order.Status.FILLED);
         assertThat(ledgerRepo.findByUid(1)).extracting(WalletLedgerEntry::getReason)
                 .contains("order_reserve", "position_margin_increase", "trade_fee");
+        assertThat(ledgerRepo.findByUid(0))
+                .isNotEmpty()
+                .extracting(WalletLedgerEntry::getReason)
+                .allMatch("trade_fee_income"::equals);
         List<TradeExecuted> publishedTrades = published.stream()
                 .filter(TradeExecuted.class::isInstance)
                 .map(TradeExecuted.class::cast)
@@ -273,6 +277,10 @@ class OrderAccountingIntegrationTest {
                 .contains("spot_buy_quote_settlement", "spot_buy_base_delivery", "trade_fee");
         assertThat(ledgerRepo.findByUid(202)).extracting(WalletLedgerEntry::getReason)
                 .contains("spot_sell_base_settlement", "spot_sell_quote_delivery", "trade_fee");
+        assertThat(ledgerRepo.findByUid(0))
+                .isNotEmpty()
+                .extracting(WalletLedgerEntry::getReason)
+                .allMatch("trade_fee_income"::equals);
 
         matchingEngine.shutdown();
     }
@@ -466,6 +474,66 @@ class OrderAccountingIntegrationTest {
         suspendedSymbol.setSuspendedSymbols(List.of(" btcusdt "));
         Order suspendedOrder = limitOrder(5, symbolConfig.toSymbol(), OrderSide.BUY, "100.00", true);
         assertRiskSwitchRejects(suspendedOrder, symbolConfig, suspendedSymbol, "SYMBOL_SUSPENDED");
+    }
+
+    @Test
+    @DisplayName("hidden 或 tradingDisabled 的 symbol 不允許進入下單流程")
+    /**
+     * 流程：先把 symbol 設成 hidden，再把同一個 symbol 切到 tradingDisabled。
+     * 期望：兩種情況都會在 pre-trade 階段被拒絕，且不會產生 ledger side effect。
+     */
+    void hiddenOrDisabledSymbolRejectsOrderEntry() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(
+                new OrderService(
+                        matchingEngine,
+                        positionRepo,
+                        eventStore,
+                        published::add,
+                        orderRepo,
+                        symbolRepo,
+                        walletLedgerService,
+                        new FeeService(),
+                        riskService,
+                        marketDataService,
+                        idempotencyService
+                ),
+                riskService,
+                symbolRepo,
+                published::add
+        );
+
+        SymbolConfig hiddenConfig = btcConfigWithMaxOpenOrders(10);
+        hiddenConfig.setVisible(false);
+        symbolRepo.save(hiddenConfig);
+
+        assertThatThrownBy(() -> placeOrderUseCase.handle(command(6, OrderSide.BUY, "100.00", "1.000")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("symbol is not tradable");
+        assertThat(ledgerRepo.findByUid(6)).isEmpty();
+
+        hiddenConfig.setVisible(true);
+        hiddenConfig.setTradingEnabled(false);
+        symbolRepo.save(hiddenConfig);
+
+        assertThatThrownBy(() -> placeOrderUseCase.handle(command(6, OrderSide.BUY, "100.00", "1.000")))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("symbol is not tradable");
+        assertThat(ledgerRepo.findByUid(6)).isEmpty();
+
+        matchingEngine.shutdown();
     }
 
     @Test

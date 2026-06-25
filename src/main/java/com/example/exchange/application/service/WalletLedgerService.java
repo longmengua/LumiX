@@ -22,10 +22,13 @@ import java.util.List;
 public class WalletLedgerService {
 
     private static final BigDecimal ZERO = BigDecimal.ZERO;
+    private static final long PLATFORM_UID = 0L;
     public static final String USER_BONUS_AVAILABLE = "USER_BONUS_AVAILABLE";
     public static final String BONUS_PROMOTION_POOL = "BONUS_PROMOTION_POOL";
     public static final String BONUS_EXPIRY_EXPENSE = "BONUS_EXPIRY_EXPENSE";
     public static final String BONUS_CLAWBACK_RECEIVABLE = "BONUS_CLAWBACK_RECEIVABLE";
+    private static final String PLATFORM_FEE_CLEARING = "PLATFORM_FEE_CLEARING";
+    private static final String PLATFORM_FEE_INCOME = "PLATFORM_FEE_INCOME";
 
     private final AccountRepository accountRepo;
     private final WalletLedgerRepository ledgerRepo;
@@ -134,6 +137,8 @@ public class WalletLedgerService {
         if (fromOrderHold.signum() > 0) postings.add(credit("USER_ORDER_HOLD", asset, fromOrderHold));
         if (fromAvailable.signum() > 0) postings.add(credit("USER_AVAILABLE", asset, fromAvailable));
         append(uid, asset, "trade_fee", refId, amount, account.balance(asset), postings);
+        // 平台收入使用獨立 ledger entry，避免污染用戶 replay，但仍保留同一 refId 可追。
+        appendPlatformFeeIncome(asset, amount, refId);
         return fromOrderHold;
     }
 
@@ -347,6 +352,24 @@ public class WalletLedgerService {
             ledgerJournal.append(entry);
         }
         ledgerRepo.append(entry);
+    }
+
+    /**
+     * 平台收入不屬於任何使用者資產池，因此用獨立 uid 與獨立會計科目記錄。
+     */
+    private void appendPlatformFeeIncome(String asset, BigDecimal amount, String refId) {
+        append(
+                PLATFORM_UID,
+                asset,
+                "trade_fee_income",
+                refId,
+                amount,
+                amount,
+                List.of(
+                        debit(PLATFORM_FEE_CLEARING, asset, amount),
+                        credit(PLATFORM_FEE_INCOME, asset, amount)
+                )
+        );
     }
 
     private BigDecimal removeBonusCredit(

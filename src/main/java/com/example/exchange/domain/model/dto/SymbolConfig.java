@@ -323,6 +323,18 @@ public class SymbolConfig {
     }
 
     /**
+     * 合約結算 / 手續費使用的保證金幣種。
+     *
+     * 現有 USDT 合約通常直接用 quoteAsset；若後續有獨立 marginAsset，就優先採用它。
+     */
+    public String marginAssetOrDefault() {
+        if (marginAsset == null || marginAsset.isBlank()) {
+            return quoteAsset;
+        }
+        return marginAsset.trim().toUpperCase();
+    }
+
+    /**
      * 是否允許正常下單。
      *
      * 必須同時符合：
