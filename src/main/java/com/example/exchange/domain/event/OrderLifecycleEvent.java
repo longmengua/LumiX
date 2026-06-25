@@ -3,8 +3,8 @@
  */
 package com.example.exchange.domain.event;
 
-import com.example.exchange.domain.model.entity.Order;
-import com.example.exchange.domain.model.entity.Symbol;
+import com.example.exchange.domain.model.dto.Order;
+import com.example.exchange.domain.model.dto.Symbol;
 
 import java.math.BigDecimal;
 import java.time.Instant;

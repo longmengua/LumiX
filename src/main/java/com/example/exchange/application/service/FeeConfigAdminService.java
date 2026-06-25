@@ -4,7 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.entity.FeeConfigChangeRecord;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import com.example.exchange.domain.repository.jpa.FeeConfigChangeRecordJpaRepository;
 import lombok.RequiredArgsConstructor;

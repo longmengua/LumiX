@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.model.dto;
 
-import com.example.exchange.domain.model.entity.WalletTransfer;
+import com.example.exchange.domain.model.dto.WalletTransfer;
 
 import java.math.BigDecimal;
 import java.util.UUID;

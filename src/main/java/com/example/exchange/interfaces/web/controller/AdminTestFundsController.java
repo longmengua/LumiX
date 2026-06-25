@@ -4,7 +4,7 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.service.MarginService;
-import com.example.exchange.domain.model.entity.WalletTransfer;
+import com.example.exchange.domain.model.dto.WalletTransfer;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.TestFundsAirdropRequest;
 import jakarta.validation.Valid;

@@ -5,7 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.OutboxDomainStateConsistencyIssue;
 import com.example.exchange.domain.model.dto.OutboxDomainStateConsistencyReport;
-import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.dto.OutboxEvent;
 import com.example.exchange.domain.repository.OrderLifecycleProjectionStore;
 import com.example.exchange.domain.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;

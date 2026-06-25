@@ -6,7 +6,7 @@ package com.example.exchange.domain.repository.jpa;
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.entity.MatchingCommandLogRecord;
 import com.example.exchange.domain.model.entity.MatchingOffsetCheckpointRecord;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.repository.MatchingCommandLog;
 import com.fasterxml.jackson.databind.ObjectMapper;

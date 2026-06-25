@@ -3,7 +3,7 @@
  */
 package com.example.exchange.application.usecase;
 
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

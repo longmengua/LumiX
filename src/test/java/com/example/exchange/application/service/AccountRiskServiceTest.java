@@ -1,10 +1,10 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.AccountRiskSnapshot;
-import com.example.exchange.domain.model.entity.Account;
-import com.example.exchange.domain.model.entity.Position;
-import com.example.exchange.domain.model.entity.Symbol;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.Account;
+import com.example.exchange.domain.model.dto.Position;
+import com.example.exchange.domain.model.dto.Symbol;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;

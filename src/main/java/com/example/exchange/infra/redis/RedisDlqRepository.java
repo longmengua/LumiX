@@ -3,7 +3,7 @@
  */
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.entity.DlqEvent;
+import com.example.exchange.domain.model.dto.DlqEvent;
 import com.example.exchange.domain.repository.DlqRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

@@ -4,7 +4,7 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.OperationalMetricsSnapshot;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import org.springframework.stereotype.Service;
 
 import java.util.concurrent.TimeUnit;

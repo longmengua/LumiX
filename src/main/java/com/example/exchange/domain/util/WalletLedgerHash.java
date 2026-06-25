@@ -3,8 +3,8 @@
  */
 package com.example.exchange.domain.util;
 
-import com.example.exchange.domain.model.entity.WalletLedgerEntry;
-import com.example.exchange.domain.model.entity.WalletLedgerPosting;
+import com.example.exchange.domain.model.dto.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.WalletLedgerPosting;
 
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;

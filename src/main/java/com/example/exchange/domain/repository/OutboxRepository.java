@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.dto.OutboxEvent;
 
 import java.time.Instant;
 import java.util.List;

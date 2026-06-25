@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.repository.jpa;
 
-import com.example.exchange.domain.model.entity.DlqEvent;
+import com.example.exchange.domain.model.dto.DlqEvent;
 import com.example.exchange.domain.model.entity.DlqEventRecord;
 import com.example.exchange.domain.repository.DlqRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

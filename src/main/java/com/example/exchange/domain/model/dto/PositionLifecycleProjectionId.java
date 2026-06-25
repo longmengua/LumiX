@@ -1,7 +1,7 @@
 /*
  * 檔案用途：position_lifecycle_projection 複合主鍵。
  */
-package com.example.exchange.domain.model.entity;
+package com.example.exchange.domain.model.dto;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;

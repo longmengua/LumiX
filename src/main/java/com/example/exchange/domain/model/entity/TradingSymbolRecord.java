@@ -14,6 +14,8 @@
  */
 package com.example.exchange.domain.model.entity;
 
+import com.example.exchange.domain.model.dto.SymbolConfig;
+
 import com.example.exchange.domain.model.enums.ProductType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

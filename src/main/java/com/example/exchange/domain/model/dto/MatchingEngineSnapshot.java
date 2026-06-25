@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.model.dto;
 
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 
 import java.time.Instant;
 import java.util.List;

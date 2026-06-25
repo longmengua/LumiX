@@ -5,7 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.LiquidationResult;
 import com.example.exchange.domain.model.dto.LiquidationScanResult;
-import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.dto.Position;
 import com.example.exchange.domain.repository.PositionRepository;
 import com.example.exchange.infra.config.RiskControlsProperties;
 import lombok.RequiredArgsConstructor;

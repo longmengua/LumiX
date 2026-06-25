@@ -5,7 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingResult;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.service.MatchingEngine;
 import lombok.RequiredArgsConstructor;

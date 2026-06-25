@@ -1,4 +1,3 @@
-cat > fix_test_imports_after_dto_move.sh <<'SH'
 #!/usr/bin/env bash
 set -euo pipefail
 
@@ -35,8 +34,3 @@ grep -R "import com.example.exchange.domain.model.entity" "$TEST_DIR" || true
 
 echo "==> Done"
 echo "Next: ./mvnw test"
-SH
-
-chmod +x fix_test_imports_after_dto_move.sh
-./fix_test_imports_after_dto_move.sh
-./mvnw test

@@ -3,8 +3,8 @@
  */
 package com.example.exchange.application.service;
 
-import com.example.exchange.domain.model.entity.DlqEvent;
-import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.dto.DlqEvent;
+import com.example.exchange.domain.model.dto.OutboxEvent;
 import com.example.exchange.domain.repository.DlqRepository;
 import com.example.exchange.domain.repository.OutboxRepository;
 import lombok.RequiredArgsConstructor;

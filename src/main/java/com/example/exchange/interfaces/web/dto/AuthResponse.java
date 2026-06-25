@@ -3,6 +3,8 @@
  */
 package com.example.exchange.interfaces.web.dto;
 
+import com.example.exchange.domain.model.dto.Account;
+
 import com.example.exchange.application.service.AuthService;
 
 import java.time.Instant;

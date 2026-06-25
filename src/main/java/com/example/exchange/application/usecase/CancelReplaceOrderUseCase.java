@@ -6,7 +6,7 @@ package com.example.exchange.application.usecase;
 import com.example.exchange.application.command.CancelReplaceOrderCommand;
 import com.example.exchange.application.command.PlaceOrderCommand;
 import com.example.exchange.application.service.CommandTransactionBoundary;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.interfaces.web.dto.OrderInfoResponse;
 import lombok.RequiredArgsConstructor;

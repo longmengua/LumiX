@@ -5,7 +5,7 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.MarketMakerExposure;
 import com.example.exchange.domain.model.dto.MarketMakerProfile;
-import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.dto.Position;
 import com.example.exchange.domain.repository.PositionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

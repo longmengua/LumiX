@@ -6,7 +6,7 @@ package com.example.exchange.application.service;
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEventLogEntry;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.repository.MatchingCommandLog;
 import com.example.exchange.domain.repository.MatchingEventLog;

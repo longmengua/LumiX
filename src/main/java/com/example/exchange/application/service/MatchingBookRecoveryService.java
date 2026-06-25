@@ -4,8 +4,8 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
-import com.example.exchange.domain.model.entity.Order;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.Order;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.repository.OrderRepository;
 import com.example.exchange.domain.repository.SymbolConfigRepository;

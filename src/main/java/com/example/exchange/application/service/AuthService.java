@@ -3,7 +3,7 @@
  */
 package com.example.exchange.application.service;
 
-import com.example.exchange.domain.model.entity.Account;
+import com.example.exchange.domain.model.dto.Account;
 import com.example.exchange.domain.model.entity.AppUserRecord;
 import com.example.exchange.domain.model.entity.AuthRefreshSessionRecord;
 import com.example.exchange.domain.model.entity.CustomerRegistrationRecord;

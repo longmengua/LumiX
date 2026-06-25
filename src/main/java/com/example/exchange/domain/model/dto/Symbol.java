@@ -18,7 +18,7 @@
  *
  * SymbolConfig 是來源，Symbol 是衍生結果。
  */
-package com.example.exchange.domain.model.entity;
+package com.example.exchange.domain.model.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

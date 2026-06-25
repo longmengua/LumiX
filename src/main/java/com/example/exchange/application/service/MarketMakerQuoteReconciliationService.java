@@ -8,7 +8,7 @@ import com.example.exchange.domain.model.dto.MarketMakerQuoteReconciliationRepor
 import com.example.exchange.domain.model.dto.MarketMakerQuoteRepairAction;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteRepairReport;
 import com.example.exchange.domain.model.dto.MarketMakerQuoteState;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.repository.MarketMakerQuoteStateStore;
 import com.example.exchange.domain.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;

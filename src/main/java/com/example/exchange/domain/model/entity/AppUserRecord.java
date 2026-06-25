@@ -3,6 +3,8 @@
  */
 package com.example.exchange.domain.model.entity;
 
+import com.example.exchange.domain.model.dto.Account;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

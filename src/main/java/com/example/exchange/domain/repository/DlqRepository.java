@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.entity.DlqEvent;
+import com.example.exchange.domain.model.dto.DlqEvent;
 
 import java.util.List;
 

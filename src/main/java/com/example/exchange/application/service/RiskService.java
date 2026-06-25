@@ -4,10 +4,10 @@
 package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.TopOfBook;
-import com.example.exchange.domain.model.entity.Account;
-import com.example.exchange.domain.model.entity.Order;
-import com.example.exchange.domain.model.entity.Position;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.Account;
+import com.example.exchange.domain.model.dto.Order;
+import com.example.exchange.domain.model.dto.Position;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 import com.example.exchange.domain.repository.AccountRepository;

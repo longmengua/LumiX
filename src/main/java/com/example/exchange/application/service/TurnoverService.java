@@ -7,7 +7,7 @@ import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.TurnoverRecord;
 import com.example.exchange.domain.model.dto.TurnoverExportReport;
 import com.example.exchange.domain.model.dto.TurnoverSummary;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.repository.TurnoverStore;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

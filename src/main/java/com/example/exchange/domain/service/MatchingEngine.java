@@ -8,7 +8,7 @@ import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.dto.MatchingEventLogEntry;
 import com.example.exchange.domain.model.dto.MatchingReplayValidationReport;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.model.dto.TopOfBook;
 
 import java.math.BigDecimal;

@@ -9,7 +9,7 @@ import com.example.exchange.application.usecase.AmendOrderUseCase;
 import com.example.exchange.application.usecase.CancelOrderUseCase;
 import com.example.exchange.application.usecase.CancelReplaceOrderUseCase;
 import com.example.exchange.application.usecase.PlaceOrderUseCase;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.interfaces.web.dto.AmendOrderRequest;
 import com.example.exchange.interfaces.web.dto.ApiResponse;
 import com.example.exchange.interfaces.web.dto.CancelReplaceOrderRequest;

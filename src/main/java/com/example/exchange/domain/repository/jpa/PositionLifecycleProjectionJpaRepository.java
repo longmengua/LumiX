@@ -4,7 +4,7 @@
 package com.example.exchange.domain.repository.jpa;
 
 import com.example.exchange.domain.model.entity.PositionLifecycleProjection;
-import com.example.exchange.domain.model.entity.PositionLifecycleProjectionId;
+import com.example.exchange.domain.model.dto.PositionLifecycleProjectionId;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 

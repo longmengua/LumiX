@@ -5,8 +5,8 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.AccountPositionConsistencyIssue;
 import com.example.exchange.domain.model.dto.AccountPositionConsistencyReport;
-import com.example.exchange.domain.model.entity.Account;
-import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.dto.Account;
+import com.example.exchange.domain.model.dto.Position;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.PositionRepository;
 import lombok.RequiredArgsConstructor;

@@ -10,7 +10,7 @@ import com.example.exchange.domain.model.dto.MarketMakerQuoteCommand;
 import com.example.exchange.domain.model.dto.MarketMakerRiskLimit;
 import com.example.exchange.domain.model.dto.MarketTicker;
 import com.example.exchange.domain.model.dto.TopOfBook;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import com.example.exchange.domain.service.MatchingEngine;
 import com.example.exchange.infra.config.MarketMakerAutoQuoteProperties;

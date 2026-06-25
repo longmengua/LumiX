@@ -3,7 +3,7 @@
  */
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.dto.OutboxEvent;
 import com.example.exchange.domain.repository.OutboxRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

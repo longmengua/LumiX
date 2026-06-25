@@ -11,7 +11,7 @@ import com.example.exchange.domain.model.dto.MatchingReplayValidationReport;
 import com.example.exchange.domain.model.dto.MatchingResult;
 import com.example.exchange.domain.model.dto.PriceLevel;
 import com.example.exchange.domain.model.dto.TopOfBook;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;

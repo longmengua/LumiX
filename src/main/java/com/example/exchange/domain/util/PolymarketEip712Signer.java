@@ -3,6 +3,8 @@
  */
 package com.example.exchange.domain.util;
 
+import com.example.exchange.domain.model.dto.Order;
+
 import com.example.exchange.domain.model.dto.PolymarketClobOrderRequest;
 import com.example.exchange.infra.config.PolymarketConfigs;
 import com.fasterxml.jackson.databind.ObjectMapper;

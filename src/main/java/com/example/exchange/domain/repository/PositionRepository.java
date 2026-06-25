@@ -3,8 +3,8 @@
  */
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.entity.Position;
-import com.example.exchange.domain.model.entity.Symbol;
+import com.example.exchange.domain.model.dto.Position;
+import com.example.exchange.domain.model.dto.Symbol;
 
 import java.util.List;
 import java.util.Optional;

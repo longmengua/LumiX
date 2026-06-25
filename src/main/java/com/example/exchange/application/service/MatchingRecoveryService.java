@@ -3,6 +3,8 @@
  */
 package com.example.exchange.application.service;
 
+import com.example.exchange.domain.model.dto.Symbol;
+
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
 import com.example.exchange.domain.model.dto.MatchingEngineSnapshot;
 import com.example.exchange.domain.model.dto.MatchingRecoveryResult;

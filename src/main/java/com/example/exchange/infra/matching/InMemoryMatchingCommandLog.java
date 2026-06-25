@@ -4,7 +4,7 @@
 package com.example.exchange.infra.matching;
 
 import com.example.exchange.domain.model.dto.MatchingCommandLogEntry;
-import com.example.exchange.domain.model.entity.Order;
+import com.example.exchange.domain.model.dto.Order;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.repository.MatchingCommandLog;
 

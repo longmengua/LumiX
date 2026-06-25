@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.repository;
 
-import com.example.exchange.domain.model.entity.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.WalletLedgerEntry;
 import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
 
 import java.time.Instant;

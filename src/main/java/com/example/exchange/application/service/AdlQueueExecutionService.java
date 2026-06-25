@@ -9,7 +9,7 @@ import com.example.exchange.domain.model.dto.AdlDeleveragingPlan;
 import com.example.exchange.domain.model.dto.AdlExecutionResult;
 import com.example.exchange.domain.model.dto.AdlQueueEntry;
 import com.example.exchange.domain.model.dto.AdlRankingCandidate;
-import com.example.exchange.domain.model.entity.Position;
+import com.example.exchange.domain.model.dto.Position;
 import com.example.exchange.domain.repository.PositionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

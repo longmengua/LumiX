@@ -5,8 +5,8 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.model.dto.FinanceDailyReport;
 import com.example.exchange.domain.model.dto.FinanceDailyReportLine;
-import com.example.exchange.domain.model.entity.WalletLedgerEntry;
-import com.example.exchange.domain.model.entity.WalletLedgerPosting;
+import com.example.exchange.domain.model.dto.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.WalletLedgerPosting;
 import com.example.exchange.domain.repository.WalletLedgerJournal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;

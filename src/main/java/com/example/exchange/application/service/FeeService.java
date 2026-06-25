@@ -5,8 +5,8 @@ package com.example.exchange.application.service;
 
 import com.example.exchange.domain.event.TradeExecuted;
 import com.example.exchange.domain.model.dto.FeeCalculation;
-import com.example.exchange.domain.model.entity.Order;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.Order;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

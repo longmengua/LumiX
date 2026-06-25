@@ -4,7 +4,7 @@
 package com.example.exchange.interfaces.web.controller;
 
 import com.example.exchange.application.service.FeeConfigAdminService;
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import com.example.exchange.interfaces.web.dto.AdminMarketConfigResponse;
 import com.example.exchange.interfaces.web.dto.ApiResponse;

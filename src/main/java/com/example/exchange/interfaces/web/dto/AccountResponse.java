@@ -3,7 +3,7 @@
  */
 package com.example.exchange.interfaces.web.dto;
 
-import com.example.exchange.domain.model.entity.Account;
+import com.example.exchange.domain.model.dto.Account;
 
 import java.math.BigDecimal;
 import java.time.Instant;

@@ -3,7 +3,7 @@
  */
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.entity.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.WalletLedgerEntry;
 import com.example.exchange.domain.repository.WalletLedgerRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Repository;

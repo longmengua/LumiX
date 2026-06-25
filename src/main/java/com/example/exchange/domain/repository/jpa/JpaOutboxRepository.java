@@ -3,7 +3,7 @@
  */
 package com.example.exchange.domain.repository.jpa;
 
-import com.example.exchange.domain.model.entity.OutboxEvent;
+import com.example.exchange.domain.model.dto.OutboxEvent;
 import com.example.exchange.domain.model.entity.OutboxEventRecord;
 import com.example.exchange.domain.repository.OutboxRepository;
 import com.fasterxml.jackson.core.type.TypeReference;

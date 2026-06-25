@@ -3,6 +3,8 @@
  */
 package com.example.exchange.interfaces.web.dto;
 
+import com.example.exchange.domain.model.dto.Order;
+
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
 

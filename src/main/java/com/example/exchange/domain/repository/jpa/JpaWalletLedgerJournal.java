@@ -4,9 +4,9 @@
 package com.example.exchange.domain.repository.jpa;
 
 import com.example.exchange.domain.model.dto.LedgerTamperEvidenceReport;
-import com.example.exchange.domain.model.entity.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.WalletLedgerEntry;
 import com.example.exchange.domain.model.entity.WalletLedgerEntryRecord;
-import com.example.exchange.domain.model.entity.WalletLedgerPosting;
+import com.example.exchange.domain.model.dto.WalletLedgerPosting;
 import com.example.exchange.domain.model.entity.WalletLedgerPostingRecord;
 import com.example.exchange.domain.repository.WalletLedgerJournal;
 import com.example.exchange.domain.util.WalletLedgerHash;

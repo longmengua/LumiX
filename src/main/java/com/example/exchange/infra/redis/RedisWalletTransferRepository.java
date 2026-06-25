@@ -3,7 +3,7 @@
  */
 package com.example.exchange.infra.redis;
 
-import com.example.exchange.domain.model.entity.WalletTransfer;
+import com.example.exchange.domain.model.dto.WalletTransfer;
 import com.example.exchange.domain.repository.WalletTransferRepository;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;

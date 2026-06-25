@@ -16,7 +16,7 @@
  * - 手續費多少
  * - 這個交易對現在能不能交易
  */
-package com.example.exchange.domain.model.entity;
+package com.example.exchange.domain.model.dto;
 
 import com.example.exchange.domain.model.enums.ProductType;
 import lombok.Builder;

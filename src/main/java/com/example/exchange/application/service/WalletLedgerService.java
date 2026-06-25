@@ -3,9 +3,9 @@
  */
 package com.example.exchange.application.service;
 
-import com.example.exchange.domain.model.entity.Account;
-import com.example.exchange.domain.model.entity.WalletLedgerEntry;
-import com.example.exchange.domain.model.entity.WalletLedgerPosting;
+import com.example.exchange.domain.model.dto.Account;
+import com.example.exchange.domain.model.dto.WalletLedgerEntry;
+import com.example.exchange.domain.model.dto.WalletLedgerPosting;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.WalletLedgerJournal;
 import com.example.exchange.domain.repository.WalletLedgerRepository;

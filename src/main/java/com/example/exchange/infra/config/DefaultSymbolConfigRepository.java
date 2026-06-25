@@ -3,7 +3,7 @@
  */
 package com.example.exchange.infra.config;
 
-import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.dto.SymbolConfig;
 import com.example.exchange.domain.model.enums.ProductType;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import org.springframework.stereotype.Repository;
