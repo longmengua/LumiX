@@ -33,7 +33,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
-//@EnableScheduling
+@EnableScheduling
 @EnableJpaRepositories(
         basePackages = "com.example.exchange.domain.repository.jpa"
 )

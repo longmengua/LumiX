@@ -197,6 +197,8 @@ logging:
     com.example.exchange: DEBUG  # 你自己的程式碼
 
 polymarket:
+  scheduler:
+    enabled: false
   key-sync-ms: 600000
   price-refresh-ms: 5000
   approval-cache-ttl-seconds: ${POLYMARKET_APPROVAL_CACHE_TTL_SECONDS:30}

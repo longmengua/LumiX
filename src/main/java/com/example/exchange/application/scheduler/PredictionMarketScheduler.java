@@ -7,6 +7,7 @@ import com.example.exchange.domain.service.PolymarketSyncService;
 import com.example.exchange.domain.service.PolymarketPriceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -28,14 +29,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ConditionalOnProperty(
+        prefix = "polymarket.scheduler",
+        name = "enabled",
+        havingValue = "true",
+        matchIfMissing = false
+)
 public class PredictionMarketScheduler {
 
     private final PolymarketPriceService priceRefreshService;
-
     private final PolymarketSyncService fullSyncService;
 
     private final AtomicBoolean priceRunning = new AtomicBoolean(false);
-
     private final AtomicBoolean keySyncRunning = new AtomicBoolean(false);
 
     /**
