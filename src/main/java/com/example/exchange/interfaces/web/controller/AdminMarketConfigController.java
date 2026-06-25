@@ -12,6 +12,7 @@ import com.example.exchange.interfaces.web.dto.FeeConfigChangeResponse;
 import com.example.exchange.interfaces.web.dto.FeeConfigUpdateRequest;
 import com.example.exchange.interfaces.web.dto.TradingRuleUpdateRequest;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,10 +20,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Comparator;
 import java.util.List;
 import java.math.BigDecimal;
+import java.util.Locale;
 
 @RestController
 @RequestMapping("/api/admin/market-config")
@@ -47,6 +50,13 @@ public class AdminMarketConfigController {
                 .map(this::toItem)
                 .toList();
         return ApiResponse.ok(new AdminMarketConfigResponse(markets, CAPABILITIES));
+    }
+
+    @GetMapping("/{symbol}")
+    public ApiResponse<AdminMarketConfigResponse.MarketConfigItem> get(@PathVariable String symbol) {
+        SymbolConfig config = symbolConfigRepository.findBySymbol(normalizeSymbol(symbol))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "symbol config not found"));
+        return ApiResponse.ok(toItem(config));
     }
 
     @PostMapping("/{symbol}/fees")
@@ -79,8 +89,8 @@ public class AdminMarketConfigController {
             @PathVariable String symbol,
             @RequestBody TradingRuleUpdateRequest request
     ) {
-        SymbolConfig current = symbolConfigRepository.findBySymbol(symbol)
-                .orElseThrow(() -> new IllegalArgumentException("symbol config not found"));
+        SymbolConfig current = symbolConfigRepository.findBySymbol(normalizeSymbol(symbol))
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "symbol config not found"));
         validatePositive("priceTick", request.priceTick());
         validatePositive("lotSize", request.lotSize());
         validatePositive("minQty", request.minQty());
@@ -93,8 +103,10 @@ public class AdminMarketConfigController {
         // Trading rules are live pre-trade controls; keep fee/risk-tier and session metadata unchanged.
         SymbolConfig updated = SymbolConfig.builder()
                 .symbol(current.getSymbol())
+                .productType(current.productTypeOrDefault())
                 .baseAsset(current.getBaseAsset())
                 .quoteAsset(current.getQuoteAsset())
+                .marginAsset(current.getMarginAsset())
                 .priceTick(request.priceTick())
                 .lotSize(request.lotSize())
                 .minQty(request.minQty())
@@ -112,6 +124,8 @@ public class AdminMarketConfigController {
                 .maintenanceMarginRate(current.getMaintenanceMarginRate())
                 .riskTiers(current.getRiskTiers())
                 .tradingEnabled(current.isTradingEnabled())
+                .visible(current.getVisible())
+                .reduceOnly(current.getReduceOnly())
                 .build();
         return ApiResponse.ok(toItem(symbolConfigRepository.save(updated)));
     }
@@ -147,7 +161,7 @@ public class AdminMarketConfigController {
                 config.priceBandRateOrDefault(),
                 config.initialMarginRateOrDefault(),
                 config.maintenanceMarginRateOrDefault(),
-                "PERPETUAL",
+                config.productTypeOrDefault().name(),
                 "ALWAYS_OPEN",
                 config.isTradingEnabled(),
                 true,
@@ -174,5 +188,12 @@ public class AdminMarketConfigController {
                 tier.getMaintenanceMarginRate(),
                 tier.getMaxLeverage()
         );
+    }
+
+    /**
+     * Normalize symbol lookup keys so admin reads and writes use the same canonical value.
+     */
+    private static String normalizeSymbol(String symbol) {
+        return symbol == null ? "" : symbol.trim().toUpperCase(Locale.ROOT);
     }
 }
