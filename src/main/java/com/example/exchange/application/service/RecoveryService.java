@@ -61,6 +61,7 @@ public class RecoveryService {
 
         for (Map<String, Object> pm : posList) {
             Symbol sym = new Symbol(
+                    null,
                     (String) pm.get("base"),
                     (String) pm.get("quote"),
                     ((Number) pm.get("priceScale")).intValue(),
