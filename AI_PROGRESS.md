@@ -28,7 +28,7 @@
 
 | Phase | 名稱 | status | review_status | 備註 |
 |---:|---|---|---|---|
-| 0 | Repo 掃描與進度初始化 | pending | not_required | 初始化 |
+| 0 | Repo 掃描與進度初始化 | done | not_required | 已完成 |
 | 1 | React + TypeScript 專案骨架 | pending | pending | 需人工審查 |
 | 2 | Design System 與 App Shell | pending | pending | 需人工審查 |
 | 3 | 登入、首頁、市場列表 | pending | pending | 需人工審查 |
@@ -67,8 +67,8 @@ changes_requested：需要修改
 
 ```text
 current_phase: 0
-current_task: P0-01
-next_action: 讀取 AI_START_HERE.md，掃描 repo，初始化進度
+current_task: P0-04
+next_action: 等待使用者確認後進入 Phase 1（React + TypeScript 專案骨架）
 ```
 
 ---
@@ -79,10 +79,10 @@ next_action: 讀取 AI_START_HERE.md，掃描 repo，初始化進度
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P0-01 掃描 repo 結構 | pending | - | - |
-| P0-02 確認目前沒有 package.json 與 src | pending | - | - |
-| P0-03 建立或更新 AI_PROGRESS.md | pending | - | - |
-| P0-04 回報建議開工方向 | pending | - | - |
+| P0-01 掃描 repo 結構 | done | 已確認 | - |
+| P0-02 確認目前沒有 package.json 與 src | done | 已確認 | - |
+| P0-03 建立或更新 AI_PROGRESS.md | done | 已更新 | - |
+| P0-04 回報建議開工方向 | done | 已回報 | - |
 
 ### Phase 1
 
@@ -255,6 +255,7 @@ TODO: Phase 4 完成後確認個人中心是否符合營運需求。
 TODO: Phase 6 完成後確認交易頁資訊密度與產品體驗。
 TODO: Phase 9 之後所有資產相關邏輯需高 reasoning 審查。
 TODO: Phase 11 強平、保證金、PnL、風險率不得未審查上線。
+TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 ```
 
 ---
