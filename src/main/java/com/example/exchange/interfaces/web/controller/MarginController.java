@@ -82,13 +82,14 @@ public class MarginController {
 
     @PostMapping("/deposit")
     public ApiResponse<WalletTransfer> deposit(@Valid @RequestBody DepositRequest request) {
-        return ApiResponse.ok(marginService.deposit(request.uid(), request.amount()));
+        return ApiResponse.ok(marginService.deposit(request.uid(), request.asset(), request.amount()));
     }
 
     @PostMapping("/deposit/callback")
     public ApiResponse<WalletTransfer> depositCallback(@Valid @RequestBody DepositCallbackRequest request) {
         return ApiResponse.ok(marginService.recordDepositCallback(
                 request.uid(),
+                request.asset(),
                 request.amount(),
                 request.externalRef()
         ));
@@ -96,7 +97,7 @@ public class MarginController {
 
     @PostMapping("/withdraw")
     public ApiResponse<WalletTransfer> withdraw(@Valid @RequestBody WithdrawalRequest request) {
-        return ApiResponse.ok(marginService.withdraw(request.uid(), request.amount()));
+        return ApiResponse.ok(marginService.withdraw(request.uid(), request.asset(), request.amount()));
     }
 
     @PostMapping("/transfer")

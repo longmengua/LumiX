@@ -34,6 +34,7 @@ public class MarketController {
     private MarketListResponse.MarketItem toItem(SymbolConfig config) {
         return new MarketListResponse.MarketItem(
                 config.getSymbol(),
+                config.productTypeOrDefault().name(),
                 config.getBaseAsset(),
                 config.getQuoteAsset(),
                 config.isTradingEnabled(),

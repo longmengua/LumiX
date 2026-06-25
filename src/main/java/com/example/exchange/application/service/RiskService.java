@@ -57,9 +57,13 @@ public class RiskService {
         validateTickAndLot(order, config);
         validateNotional(order, config, referencePrice);
         validatePriceBand(order, config);
-        validateReduceOnly(order);
-        validatePositionLimit(order, config, referencePrice);
-        validateLeverage(order, config, referencePrice);
+        if (config.isSpot()) {
+            validateSpotOrder(order);
+        } else {
+            validateReduceOnly(order);
+            validatePositionLimit(order, config, referencePrice);
+            validateLeverage(order, config, referencePrice);
+        }
 
         if (isInternalMarketMakerOrder(order)) {
             // Internal market-maker quotes are bounded by market-maker risk limits and post-only checks, not customer cash reserve.
@@ -70,7 +74,8 @@ public class RiskService {
         if (reserve.signum() <= 0) return;
 
         Account account = accountRepo.findByUid(order.getUid()).orElseGet(() -> new Account(order.getUid()));
-        if (account.crossAvailable().compareTo(reserve) < 0) {
+        String reserveAsset = reserveAsset(order, config);
+        if (account.available(reserveAsset).compareTo(reserve) < 0) {
             order.reject("INSUFFICIENT_BALANCE");
             // Preserve the rejected lifecycle event while returning a stable API code the trading UI can localize.
             throw new BusinessException(BusinessErrorCode.ORDER_INSUFFICIENT_BALANCE);
@@ -78,11 +83,12 @@ public class RiskService {
 
         walletLedgerService.reserveOrder(
                 order.getUid(),
-                config.getQuoteAsset(),
+                reserveAsset,
                 reserve,
                 order.getId().toString()
         );
         order.setReservedAmount(reserve);
+        order.setReservedAsset(reserveAsset);
     }
 
     private static boolean isInternalMarketMakerOrder(Order order) {
@@ -97,9 +103,13 @@ public class RiskService {
         validateTickAndLot(order, config);
         validateNotional(order, config, referencePrice);
         validatePriceBand(order, config);
-        validateReduceOnly(order);
-        validatePositionLimit(order, config, referencePrice);
-        validateLeverage(order, config, referencePrice);
+        if (config.isSpot()) {
+            validateSpotOrder(order);
+        } else {
+            validateReduceOnly(order);
+            validatePositionLimit(order, config, referencePrice);
+            validateLeverage(order, config, referencePrice);
+        }
         return requiredOrderReserve(order, config, referencePrice);
     }
 
@@ -109,21 +119,23 @@ public class RiskService {
         BigDecimal diff = target.subtract(current);
         if (diff.signum() > 0) {
             Account account = accountRepo.findByUid(order.getUid()).orElseGet(() -> new Account(order.getUid()));
-            if (account.crossAvailable().compareTo(diff) < 0) {
+            String reserveAsset = reserveAsset(order, config);
+            if (account.available(reserveAsset).compareTo(diff) < 0) {
                 order.reject("INSUFFICIENT_BALANCE");
                 // Amend/cancel-replace reserve increases should fail with the same customer-facing order code.
                 throw new BusinessException(BusinessErrorCode.ORDER_INSUFFICIENT_BALANCE);
             }
             walletLedgerService.reserveOrder(
                     order.getUid(),
-                    config.getQuoteAsset(),
+                    reserveAsset,
                     diff,
                     order.getId().toString()
             );
+            order.setReservedAsset(reserveAsset);
         } else if (diff.signum() < 0) {
             walletLedgerService.releaseOrderReserve(
                     order.getUid(),
-                    config.getQuoteAsset(),
+                    order.getReservedAsset() == null ? reserveAsset(order, config) : order.getReservedAsset(),
                     diff.abs(),
                     order.getId().toString()
             );
@@ -142,6 +154,13 @@ public class RiskService {
         }
 
         BigDecimal notional = px.multiply(order.getQty());
+        if (config.isSpot()) {
+            if (order.getSide() == OrderSide.SELL) {
+                return order.getQty().setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+            }
+            BigDecimal feeReserve = notional.multiply(order.takerFeeRateSnapshotOrDefault(config));
+            return notional.add(feeReserve).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+        }
         BigDecimal worstNotional = worstPositionNotional(order, px);
         BigDecimal leverageMarginRate = BigDecimal.ONE.divide(
                 BigDecimal.valueOf(Math.max(1, order.getLeverage())),
@@ -155,6 +174,13 @@ public class RiskService {
                 ? BigDecimal.ZERO
                 : notional.multiply(leverageMarginRate.max(tierInitialMarginRate));
         return marginReserve.add(feeReserve).setScale(MONEY_SCALE, RoundingMode.HALF_UP);
+    }
+
+    public String reserveAsset(Order order, SymbolConfig config) {
+        if (config.isSpot() && order.getSide() == OrderSide.SELL) {
+            return config.getBaseAsset();
+        }
+        return config.getQuoteAsset();
     }
 
     public BigDecimal resolveReferencePrice(Order order) {
@@ -316,6 +342,7 @@ public class RiskService {
     }
 
     private void validateReduceOnly(Order order) {
+        // Spot has no position reduce semantics; product-type validation rejects reduce-only before this path matters.
         if (!order.isReduceOnly()) return;
         Position position = positionRepo.find(order.getUid(), order.getSymbol()).orElse(null);
         if (position == null || position.getQty() == null || position.getQty().signum() == 0) {
@@ -333,6 +360,17 @@ public class RiskService {
         if (order.getQty().compareTo(position.getQty().abs()) > 0) {
             order.reject("REDUCE_ONLY_QTY");
             throw new IllegalArgumentException("reduce-only qty exceeds position");
+        }
+    }
+
+    private void validateSpotOrder(Order order) {
+        if (order.getLeverage() != 1) {
+            order.reject("SPOT_LEVERAGE_NOT_ALLOWED");
+            throw new IllegalArgumentException("spot orders must use leverage 1");
+        }
+        if (order.isReduceOnly()) {
+            order.reject("SPOT_REDUCE_ONLY_NOT_ALLOWED");
+            throw new IllegalArgumentException("spot orders do not support reduce-only");
         }
     }
 

@@ -42,6 +42,16 @@ import lombok.extern.jackson.Jacksonized;
 @Jacksonized
 public class Symbol {
 
+    /**
+     * Backward-compatible constructor for older recovery snapshots that only persisted base/quote scales.
+     */
+    public Symbol(String base, String quote, int priceScale, int qtyScale) {
+        this(null, base, quote, priceScale, qtyScale);
+    }
+
+    /** 內部交易代碼，允許 BTCUSDT-SPOT 與 BTCUSDT-PERP 共用 base/quote 但分開簿與帳務。 */
+    private String code;
+
     /** 基礎幣（Base），例：BTC */
     private String base;
 
@@ -76,6 +86,9 @@ public class Symbol {
      * - 顯示層若需要 "BTC/USDT" 可在 UI 轉換或新增 displayCode()。
      */
     public String code() {
+        if (code != null && !code.isBlank()) {
+            return code.trim().toUpperCase();
+        }
         return (base == null ? "" : base.toUpperCase()) + (quote == null ? "" : quote.toUpperCase());
     }
 }

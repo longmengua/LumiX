@@ -47,9 +47,9 @@ public class WalletLedgerService {
     public void deposit(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.deposit(amount);
+        account.deposit(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "deposit", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "deposit", refId, amount, account.balance(asset), List.of(
                 debit("USER_AVAILABLE", asset, amount),
                 credit("EXTERNAL_CASH", asset, amount)
         ));
@@ -59,9 +59,9 @@ public class WalletLedgerService {
         if (notPositive(amount)) return;
         Account account = accountRepo.findByUid(uid)
                 .orElseThrow(() -> new IllegalStateException("account not found"));
-        account.withdraw(amount);
+        account.withdraw(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "withdrawal", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "withdrawal", refId, amount, account.balance(asset), List.of(
                 debit("EXTERNAL_CASH", asset, amount),
                 credit("USER_AVAILABLE", asset, amount)
         ));
@@ -70,9 +70,9 @@ public class WalletLedgerService {
     public void reserveOrder(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.reserveOrder(amount);
+        account.reserveOrder(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "order_reserve", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "order_reserve", refId, amount, account.balance(asset), List.of(
                 debit("USER_ORDER_HOLD", asset, amount),
                 credit("USER_AVAILABLE", asset, amount)
         ));
@@ -81,9 +81,9 @@ public class WalletLedgerService {
     public void releaseOrderReserve(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.releaseOrderReserve(amount);
+        account.releaseOrderReserve(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "order_reserve_release", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "order_reserve_release", refId, amount, account.balance(asset), List.of(
                 debit("USER_AVAILABLE", asset, amount),
                 credit("USER_ORDER_HOLD", asset, amount)
         ));
@@ -92,13 +92,13 @@ public class WalletLedgerService {
     public BigDecimal increasePositionMargin(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return BigDecimal.ZERO;
         Account account = getOrCreate(uid);
-        BigDecimal fromOrderHold = account.crossOrderHold().min(amount);
+        BigDecimal fromOrderHold = account.orderHold(asset).min(amount);
         BigDecimal fromAvailable = amount.subtract(fromOrderHold);
         if (fromOrderHold.signum() > 0) {
-            account.convertOrderHoldToPositionMargin(fromOrderHold);
+            account.convertOrderHoldToPositionMargin(asset, fromOrderHold);
         }
         if (fromAvailable.signum() > 0) {
-            account.reservePositionMargin(fromAvailable);
+            account.reservePositionMargin(asset, fromAvailable);
         }
         accountRepo.save(account);
 
@@ -106,16 +106,16 @@ public class WalletLedgerService {
         postings.add(debit("USER_POSITION_MARGIN", asset, amount));
         if (fromOrderHold.signum() > 0) postings.add(credit("USER_ORDER_HOLD", asset, fromOrderHold));
         if (fromAvailable.signum() > 0) postings.add(credit("USER_AVAILABLE", asset, fromAvailable));
-        append(uid, asset, "position_margin_increase", refId, amount, account.crossBalance(), postings);
+        append(uid, asset, "position_margin_increase", refId, amount, account.balance(asset), postings);
         return fromOrderHold;
     }
 
     public void releasePositionMargin(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.releasePositionMargin(amount);
+        account.releasePositionMargin(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "position_margin_release", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "position_margin_release", refId, amount, account.balance(asset), List.of(
                 debit("USER_AVAILABLE", asset, amount),
                 credit("USER_POSITION_MARGIN", asset, amount)
         ));
@@ -124,17 +124,53 @@ public class WalletLedgerService {
     public BigDecimal collectFee(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return BigDecimal.ZERO;
         Account account = getOrCreate(uid);
-        BigDecimal fromOrderHold = account.crossOrderHold().min(amount);
+        BigDecimal fromOrderHold = account.orderHold(asset).min(amount);
         BigDecimal fromAvailable = amount.subtract(fromOrderHold);
-        account.debitFromOrderHoldFirst(amount);
+        account.debitFromOrderHoldFirst(asset, amount);
         accountRepo.save(account);
 
         List<WalletLedgerPosting> postings = new ArrayList<>();
         postings.add(debit("USER_FEE_EXPENSE", asset, amount));
         if (fromOrderHold.signum() > 0) postings.add(credit("USER_ORDER_HOLD", asset, fromOrderHold));
         if (fromAvailable.signum() > 0) postings.add(credit("USER_AVAILABLE", asset, fromAvailable));
-        append(uid, asset, "trade_fee", refId, amount, account.crossBalance(), postings);
+        append(uid, asset, "trade_fee", refId, amount, account.balance(asset), postings);
         return fromOrderHold;
+    }
+
+    public BigDecimal collectSpotFeeFromOrderHold(long uid, String asset, BigDecimal amount, String refId) {
+        return collectFee(uid, asset, amount, refId);
+    }
+
+    public void settleSpotBuy(long uid, String baseAsset, String quoteAsset, BigDecimal baseQty, BigDecimal quoteNotional, String refId) {
+        if (notPositive(baseQty) || notPositive(quoteNotional)) return;
+        Account account = getOrCreate(uid);
+        account.debitFromOrderHoldFirst(quoteAsset, quoteNotional);
+        account.credit(baseAsset, baseQty);
+        accountRepo.save(account);
+        append(uid, quoteAsset, "spot_buy_quote_settlement", refId, quoteNotional, account.balance(quoteAsset), List.of(
+                debit("SPOT_SETTLEMENT", quoteAsset, quoteNotional),
+                credit("USER_ORDER_HOLD", quoteAsset, quoteNotional)
+        ));
+        append(uid, baseAsset, "spot_buy_base_delivery", refId, baseQty, account.balance(baseAsset), List.of(
+                debit("USER_AVAILABLE", baseAsset, baseQty),
+                credit("SPOT_SETTLEMENT", baseAsset, baseQty)
+        ));
+    }
+
+    public void settleSpotSell(long uid, String baseAsset, String quoteAsset, BigDecimal baseQty, BigDecimal quoteNotional, String refId) {
+        if (notPositive(baseQty) || notPositive(quoteNotional)) return;
+        Account account = getOrCreate(uid);
+        account.debitFromOrderHoldFirst(baseAsset, baseQty);
+        account.credit(quoteAsset, quoteNotional);
+        accountRepo.save(account);
+        append(uid, baseAsset, "spot_sell_base_settlement", refId, baseQty, account.balance(baseAsset), List.of(
+                debit("SPOT_SETTLEMENT", baseAsset, baseQty),
+                credit("USER_ORDER_HOLD", baseAsset, baseQty)
+        ));
+        append(uid, quoteAsset, "spot_sell_quote_delivery", refId, quoteNotional, account.balance(quoteAsset), List.of(
+                debit("USER_AVAILABLE", quoteAsset, quoteNotional),
+                credit("SPOT_SETTLEMENT", quoteAsset, quoteNotional)
+        ));
     }
 
     public void applyRealizedPnl(long uid, String asset, BigDecimal pnl, String refId) {
@@ -142,21 +178,21 @@ public class WalletLedgerService {
         Account account = getOrCreate(uid);
         BigDecimal amount = pnl.abs();
         if (pnl.signum() > 0) {
-            account.credit(amount);
+            account.credit(asset, amount);
             accountRepo.save(account);
-            append(uid, asset, "realized_pnl_profit", refId, amount, account.crossBalance(), List.of(
+            append(uid, asset, "realized_pnl_profit", refId, amount, account.balance(asset), List.of(
                     debit("USER_AVAILABLE", asset, amount),
                     credit("REALIZED_PNL_INCOME", asset, amount)
             ));
             return;
         }
 
-        BigDecimal fromAvailable = account.crossAvailable().min(amount);
+        BigDecimal fromAvailable = account.available(asset).min(amount);
         BigDecimal remaining = amount.subtract(fromAvailable);
-        BigDecimal fromOrderHold = account.crossOrderHold().min(remaining);
+        BigDecimal fromOrderHold = account.orderHold(asset).min(remaining);
         remaining = remaining.subtract(fromOrderHold);
         BigDecimal fromPositionMargin = remaining;
-        account.debit(amount);
+        account.debit(asset, amount);
         accountRepo.save(account);
 
         List<WalletLedgerPosting> postings = new ArrayList<>();
@@ -164,7 +200,7 @@ public class WalletLedgerService {
         if (fromAvailable.signum() > 0) postings.add(credit("USER_AVAILABLE", asset, fromAvailable));
         if (fromOrderHold.signum() > 0) postings.add(credit("USER_ORDER_HOLD", asset, fromOrderHold));
         if (fromPositionMargin.signum() > 0) postings.add(credit("USER_POSITION_MARGIN", asset, fromPositionMargin));
-        append(uid, asset, "realized_pnl_loss", refId, amount, account.crossBalance(), postings);
+        append(uid, asset, "realized_pnl_loss", refId, amount, account.balance(asset), postings);
     }
 
     public void applyFundingFee(long uid, String asset, BigDecimal cashflow, String refId) {
@@ -173,21 +209,21 @@ public class WalletLedgerService {
         BigDecimal amount = cashflow.abs();
 
         if (cashflow.signum() > 0) {
-            account.credit(amount);
+            account.credit(asset, amount);
             accountRepo.save(account);
-            append(uid, asset, "funding_fee_received", refId, amount, account.crossBalance(), List.of(
+            append(uid, asset, "funding_fee_received", refId, amount, account.balance(asset), List.of(
                     debit("USER_AVAILABLE", asset, amount),
                     credit("FUNDING_TRANSFER", asset, amount)
             ));
             return;
         }
 
-        BigDecimal fromAvailable = account.crossAvailable().min(amount);
+        BigDecimal fromAvailable = account.available(asset).min(amount);
         BigDecimal remaining = amount.subtract(fromAvailable);
-        BigDecimal fromOrderHold = account.crossOrderHold().min(remaining);
+        BigDecimal fromOrderHold = account.orderHold(asset).min(remaining);
         remaining = remaining.subtract(fromOrderHold);
         BigDecimal fromPositionMargin = remaining;
-        account.debit(amount);
+        account.debit(asset, amount);
         accountRepo.save(account);
 
         List<WalletLedgerPosting> postings = new ArrayList<>();
@@ -195,15 +231,15 @@ public class WalletLedgerService {
         if (fromAvailable.signum() > 0) postings.add(credit("USER_AVAILABLE", asset, fromAvailable));
         if (fromOrderHold.signum() > 0) postings.add(credit("USER_ORDER_HOLD", asset, fromOrderHold));
         if (fromPositionMargin.signum() > 0) postings.add(credit("USER_POSITION_MARGIN", asset, fromPositionMargin));
-        append(uid, asset, "funding_fee_paid", refId, amount, account.crossBalance(), postings);
+        append(uid, asset, "funding_fee_paid", refId, amount, account.balance(asset), postings);
     }
 
     public void applyInsurancePayout(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.credit(amount);
+        account.credit(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "insurance_fund_payout", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "insurance_fund_payout", refId, amount, account.balance(asset), List.of(
                 debit("USER_AVAILABLE", asset, amount),
                 credit("INSURANCE_FUND", asset, amount)
         ));
@@ -212,9 +248,9 @@ public class WalletLedgerService {
     public void applyAdlCompensation(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.credit(amount);
+        account.credit(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "adl_socialized_loss", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "adl_socialized_loss", refId, amount, account.balance(asset), List.of(
                 debit("USER_AVAILABLE", asset, amount),
                 credit("ADL_SOCIALIZED_LOSS", asset, amount)
         ));
@@ -223,9 +259,9 @@ public class WalletLedgerService {
     public void applyAdlForcedLoss(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.debit(amount);
+        account.debit(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "adl_forced_loss", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "adl_forced_loss", refId, amount, account.balance(asset), List.of(
                 debit("ADL_SOCIALIZED_LOSS", asset, amount),
                 credit("USER_AVAILABLE", asset, amount)
         ));
@@ -234,9 +270,9 @@ public class WalletLedgerService {
     public void creditRebate(long uid, String asset, BigDecimal amount, String refId) {
         if (notPositive(amount)) return;
         Account account = getOrCreate(uid);
-        account.credit(amount);
+        account.credit(asset, amount);
         accountRepo.save(account);
-        append(uid, asset, "trade_rebate", refId, amount, account.crossBalance(), List.of(
+        append(uid, asset, "trade_rebate", refId, amount, account.balance(asset), List.of(
                 debit("USER_AVAILABLE", asset, amount),
                 credit("REBATE_EXPENSE", asset, amount)
         ));

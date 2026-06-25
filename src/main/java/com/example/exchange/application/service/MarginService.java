@@ -43,8 +43,18 @@ public class MarginService {
      * 日後接鏈上或銀行 callback 時，這裡可改成 pending -> confirmed 的非同步流程。</p>
      */
     public WalletTransfer deposit(long uid, BigDecimal amount) {
+        return deposit(uid, null, amount);
+    }
+
+    /**
+     * 建立指定資產入金 transfer 並立即確認。
+     *
+     * <p>現貨帳務需要 base/quote 多資產餘額，這裡保留 asset 可選參數，
+     * 未傳時仍回落到既有 USDT 預設，避免舊 caller 失效。</p>
+     */
+    public WalletTransfer deposit(long uid, String asset, BigDecimal amount) {
         requirePositive(amount, "deposit amount");
-        return createConfirmedDeposit(uid, amount, null);
+        return createConfirmedDeposit(uid, asset, amount, null);
     }
 
     /**
@@ -58,36 +68,54 @@ public class MarginService {
             BigDecimal amount,
             String externalRef
     ) {
+        return recordDepositCallback(uid, null, amount, externalRef);
+    }
+
+    /**
+     * 處理指定資產的鏈上 / 銀行入金 callback。
+     *
+     * <p>callback 需要把 externalRef 與資產一起視為不可變 payload，
+     * 否則不同幣種共用同一外部流水號時會錯誤 replay 到舊 transfer。</p>
+     */
+    public WalletTransfer recordDepositCallback(
+            long uid,
+            String asset,
+            BigDecimal amount,
+            String externalRef
+    ) {
         requirePositive(amount, "deposit amount");
         requireExternalRef(externalRef);
+        String normalizedAsset = normalizeAsset(asset);
 
         Optional<WalletTransfer> existing =
                 walletTransferRepository.findByExternalRef(externalRef.trim());
         if (existing.isPresent()) {
             WalletTransfer transfer =
                     existing.get();
-            assertSameDepositCallback(transfer, uid, amount);
+            assertSameDepositCallback(transfer, uid, normalizedAsset, amount);
             return transfer;
         }
 
-        return createConfirmedDeposit(uid, amount, externalRef.trim());
+        return createConfirmedDeposit(uid, normalizedAsset, amount, externalRef.trim());
     }
 
     private WalletTransfer createConfirmedDeposit(
             long uid,
+            String asset,
             BigDecimal amount,
             String externalRef
     ) {
+        String normalizedAsset = normalizeAsset(asset);
         WalletTransfer transfer = WalletTransfer.builder()
                 .uid(uid)
-                .asset(DEFAULT_ASSET)
+                .asset(normalizedAsset)
                 .amount(amount)
                 .type(WalletTransfer.Type.DEPOSIT)
                 .externalRef(externalRef)
                 .build();
         walletTransferRepository.save(transfer);
 
-        walletLedgerService.deposit(uid, DEFAULT_ASSET, amount, transfer.getId().toString());
+        walletLedgerService.deposit(uid, normalizedAsset, amount, transfer.getId().toString());
         transfer.confirm();
         walletTransferRepository.save(transfer);
         return transfer;
@@ -100,10 +128,20 @@ public class MarginService {
      * 若餘額不足，transfer 會進入 FAILED 且不寫 ledger。</p>
      */
     public WalletTransfer withdraw(long uid, BigDecimal amount) {
+        return withdraw(uid, null, amount);
+    }
+
+    /**
+     * 建立指定資產出金 transfer。
+     *
+     * <p>現貨需要依資產維度檢查 available，否則 BTC 現貨賣方會被錯誤套用 USDT 可用額度。</p>
+     */
+    public WalletTransfer withdraw(long uid, String asset, BigDecimal amount) {
         requirePositive(amount, "withdrawal amount");
+        String normalizedAsset = normalizeAsset(asset);
         WalletTransfer transfer = WalletTransfer.builder()
                 .uid(uid)
-                .asset(DEFAULT_ASSET)
+                .asset(normalizedAsset)
                 .amount(amount)
                 .type(WalletTransfer.Type.WITHDRAWAL)
                 .build();
@@ -116,13 +154,13 @@ public class MarginService {
         }
 
         Account account = accountRepo.findByUid(uid).orElse(null);
-        if (account == null || account.crossAvailable().compareTo(amount) < 0) {
+        if (account == null || account.available(normalizedAsset).compareTo(amount) < 0) {
             transfer.fail("INSUFFICIENT_AVAILABLE_BALANCE");
             walletTransferRepository.save(transfer);
             return transfer;
         }
 
-        walletLedgerService.withdraw(uid, DEFAULT_ASSET, amount, transfer.getId().toString());
+        walletLedgerService.withdraw(uid, normalizedAsset, amount, transfer.getId().toString());
         transfer.confirm();
         walletTransferRepository.save(transfer);
         return transfer;
@@ -229,10 +267,12 @@ public class MarginService {
     private void assertSameDepositCallback(
             WalletTransfer transfer,
             long uid,
+            String asset,
             BigDecimal amount
     ) {
         if (transfer.getType() != WalletTransfer.Type.DEPOSIT
                 || transfer.getUid() != uid
+                || !normalizeAsset(transfer.getAsset()).equals(asset)
                 || transfer.getAmount().compareTo(amount) != 0) {
             throw new IllegalStateException(
                     "deposit callback conflict: externalRef="
@@ -245,5 +285,12 @@ public class MarginService {
         if (externalRef == null || externalRef.isBlank()) {
             throw new IllegalArgumentException("externalRef is required");
         }
+    }
+
+    private static String normalizeAsset(String asset) {
+        if (asset == null || asset.isBlank()) {
+            return DEFAULT_ASSET;
+        }
+        return asset.trim().toUpperCase();
     }
 }

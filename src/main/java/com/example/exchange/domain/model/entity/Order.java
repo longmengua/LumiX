@@ -194,6 +194,13 @@ public class Order {
     private BigDecimal reservedAmount = BigDecimal.ZERO;
 
     /**
+     * 此訂單目前凍結的資產。
+     * - PERPETUAL 通常是 quote/margin asset，例如 USDT。
+     * - SPOT BUY 凍結 quote，SPOT SELL 凍結 base，取消與成交後必須按此資產釋放。
+     */
+    private String reservedAsset;
+
+    /**
      * 下單當下的 maker fee rate 快照。
      * - 後台調整 symbol fee 後，既有掛單仍應依下單時看到的費率結算。
      */

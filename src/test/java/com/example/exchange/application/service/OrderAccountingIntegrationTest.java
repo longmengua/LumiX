@@ -21,6 +21,7 @@ import com.example.exchange.domain.model.entity.WalletLedgerEntry;
 import com.example.exchange.domain.model.enums.MatchingCommandType;
 import com.example.exchange.domain.model.enums.OrderSide;
 import com.example.exchange.domain.model.enums.OrderType;
+import com.example.exchange.domain.model.enums.ProductType;
 import com.example.exchange.domain.model.dto.MatchingSequencerLease;
 import com.example.exchange.domain.repository.AccountRepository;
 import com.example.exchange.domain.repository.EventStore;
@@ -211,6 +212,67 @@ class OrderAccountingIntegrationTest {
         assertThat(incomingTaker.getTakerFeeRateSnapshot()).isEqualByComparingTo("0.0020");
         assertThat(sellerPosition.getFeePaid()).isEqualByComparingTo("0.020000000000000000");
         assertThat(buyerPosition.getFeePaid()).isEqualByComparingTo("0.200000000000000000");
+
+        matchingEngine.shutdown();
+    }
+
+    @Test
+    @DisplayName("現貨成交轉移 base/quote 資產且不建立合約持倉")
+    /**
+     * 情境：BTCUSDT-SPOT 賣方先掛 BTC，買方用 USDT 吃單。
+     * 期望：買方收到 BTC、賣方收到 USDT，雙方只扣現貨手續費，不建立 Position。
+     */
+    void spotFillTransfersAssetsWithoutDerivativePosition() {
+        MemAccountRepository accountRepo = new MemAccountRepository();
+        MemWalletLedgerRepository ledgerRepo = new MemWalletLedgerRepository();
+        MemPositionRepository positionRepo = new MemPositionRepository();
+        MemOrderRepository orderRepo = new MemOrderRepository();
+        MemEventStore eventStore = new MemEventStore();
+        List<Object> published = new ArrayList<>();
+
+        DefaultSymbolConfigRepository symbolRepo = new DefaultSymbolConfigRepository();
+        InMemoryMatchingEngine matchingEngine = new InMemoryMatchingEngine();
+        WalletLedgerService walletLedgerService = new WalletLedgerService(accountRepo, ledgerRepo);
+        RiskService riskService = new RiskService(accountRepo, positionRepo, orderRepo, matchingEngine, walletLedgerService, riskControls());
+        MarketDataService marketDataService = new MarketDataService();
+        IdempotencyService idempotencyService = new IdempotencyService(new MemIdempotencyRepository());
+        OrderService orderService = new OrderService(
+                matchingEngine,
+                positionRepo,
+                eventStore,
+                published::add,
+                orderRepo,
+                symbolRepo,
+                walletLedgerService,
+                new FeeService(),
+                riskService,
+                marketDataService,
+                idempotencyService
+        );
+        PlaceOrderUseCase placeOrderUseCase = new PlaceOrderUseCase(orderService, riskService, symbolRepo, published::add);
+
+        walletLedgerService.deposit(101, "USDT", new BigDecimal("1000"), "spot-buyer-usdt");
+        walletLedgerService.deposit(202, "BTC", new BigDecimal("2.000"), "spot-seller-btc");
+
+        placeOrderUseCase.handle(spotCommand(202, OrderSide.SELL, "100.00", "1.000"));
+        placeOrderUseCase.handle(spotCommand(101, OrderSide.BUY, "100.00", "1.000"));
+
+        Account buyer = accountRepo.findByUid(101).orElseThrow();
+        Account seller = accountRepo.findByUid(202).orElseThrow();
+        Symbol spotSymbol = symbolRepo.findBySymbol("BTCUSDT-SPOT").orElseThrow().toSymbol();
+
+        assertThat(buyer.available("BTC")).isEqualByComparingTo("1.000");
+        assertThat(buyer.available("USDT")).isEqualByComparingTo("899.950000000000000000");
+        assertThat(buyer.orderHold("USDT")).isEqualByComparingTo("0E-18");
+        assertThat(seller.available("BTC")).isEqualByComparingTo("1.000000000000000000");
+        assertThat(seller.orderHold("BTC")).isEqualByComparingTo("0E-18");
+        assertThat(seller.available("USDT")).isEqualByComparingTo("99.980000000000000000");
+        assertThat(positionRepo.find(101, spotSymbol)).isEmpty();
+        assertThat(positionRepo.find(202, spotSymbol)).isEmpty();
+        assertThat(ledgerRepo.findByUid(101)).extracting(WalletLedgerEntry::getReason)
+                .contains("spot_buy_quote_settlement", "spot_buy_base_delivery", "trade_fee");
+        assertThat(ledgerRepo.findByUid(202)).extracting(WalletLedgerEntry::getReason)
+                .contains("spot_sell_base_settlement", "spot_sell_quote_delivery", "trade_fee");
 
         matchingEngine.shutdown();
     }
@@ -955,11 +1017,34 @@ class OrderAccountingIntegrationTest {
     }
 
     /**
+     * 建立 BTCUSDT-SPOT 現貨 LIMIT command；現貨固定 leverage=1 且不帶 reduce-only。
+     */
+    private static PlaceOrderCommand spotCommand(long uid, OrderSide side, String price, String qty) {
+        return new PlaceOrderCommand(
+                uid,
+                "BTCUSDT-SPOT",
+                side,
+                OrderType.LIMIT,
+                new BigDecimal(price),
+                new BigDecimal(qty),
+                1,
+                "CROSS",
+                null,
+                null,
+                null,
+                "GTC",
+                false,
+                false
+        );
+    }
+
+    /**
      * 建立 BTCUSDT symbol config，重點可調 maxOpenOrders 以測 pre-trade risk 上限。
      */
     private static SymbolConfig btcConfigWithMaxOpenOrders(int maxOpenOrders) {
         return SymbolConfig.builder()
                 .symbol("BTCUSDT")
+                .productType(ProductType.PERPETUAL)
                 .baseAsset("BTC")
                 .quoteAsset("USDT")
                 .priceTick(new BigDecimal("0.01"))
@@ -986,6 +1071,7 @@ class OrderAccountingIntegrationTest {
     private static SymbolConfig btcConfigWithRiskTiers() {
         return SymbolConfig.builder()
                 .symbol("BTCUSDT")
+                .productType(ProductType.PERPETUAL)
                 .baseAsset("BTC")
                 .quoteAsset("USDT")
                 .priceTick(new BigDecimal("0.01"))

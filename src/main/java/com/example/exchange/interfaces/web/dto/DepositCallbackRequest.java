@@ -19,6 +19,8 @@ public record DepositCallbackRequest(
         @NotNull(message = "uid 不可為空")
         Long uid,
 
+        String asset,
+
         @NotNull(message = "amount 不可為空")
         @DecimalMin(value = "0.0001", message = "amount 必須 >= 0.0001")
         BigDecimal amount,

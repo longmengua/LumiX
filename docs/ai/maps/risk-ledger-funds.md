@@ -14,8 +14,12 @@ Checks include:
 - Symbol suspension.
 - Configurable uid+symbol order-entry fixed-window frequency limit, disabled by default.
 - Tick size, lot size, min notional, price band, max order size, max open orders.
+- Product-aware reserve:
+  - `PERPETUAL` reserves quote/margin asset for initial margin and taker-fee buffer.
+  - `SPOT BUY` reserves quote notional plus fee buffer.
+  - `SPOT SELL` reserves base quantity.
 - Balance, leverage, exposure, position notional, client order id deduplication.
-- Reduce-only reducible quantity.
+- Reduce-only reducible quantity for perpetuals; spot orders reject leverage other than 1 and reduce-only flags.
 
 Remaining production TODO:
 - External API idempotency coverage where risk depends on external systems.
@@ -40,6 +44,8 @@ Remaining production TODO:
 
 Ledger concerns:
 - Order reserve, position margin, fee, rebate, realized PnL, funding, liquidation shortfall, deposit, withdrawal are explicit accounting entries.
+- `Account` now keeps per-asset balances for spot settlement while preserving the legacy USDT cross-balance view used by contract risk, recovery, and existing account APIs.
+- Spot trades write base/quote settlement ledger entries and do not create `Position` rows.
 - Bonus credit grant, consume, expiry, and clawback are explicit ledger entries under `USER_BONUS_AVAILABLE`.
 - Bonus credit is not added to `Account.crossBalance`, so promotional funds cannot silently mix with real cash.
 - Bonus grant batches track remaining amount and expiry; consumption uses expiry FIFO and expiry scanning is disabled by default.

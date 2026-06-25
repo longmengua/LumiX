@@ -7,6 +7,8 @@ import com.example.exchange.domain.model.entity.Account;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import java.util.Map;
 
 public record AccountResponse(
         long uid,
@@ -15,7 +17,8 @@ public record AccountResponse(
         BigDecimal frozen,
         BigDecimal orderHold,
         BigDecimal positionMargin,
-        Instant updatedAt
+        Instant updatedAt,
+        List<AssetBalanceItem> assets
 ) {
 
     /** Maps the internal account aggregate to frontend-friendly balance fields. */
@@ -27,7 +30,34 @@ public record AccountResponse(
                 account.crossHold(),
                 account.crossOrderHold(),
                 account.crossPositionMargin(),
-                account.updatedAt()
+                account.updatedAt(),
+                assetItems(account)
         );
+    }
+
+    private static List<AssetBalanceItem> assetItems(Account account) {
+        return account.assetBalances().entrySet().stream()
+                .map(AccountResponse::toAssetItem)
+                .toList();
+    }
+
+    private static AssetBalanceItem toAssetItem(Map.Entry<String, Account.AssetBalance> entry) {
+        Account.AssetBalance balance = entry.getValue();
+        return new AssetBalanceItem(
+                entry.getKey(),
+                balance.getBalance(),
+                balance.getAvailable(),
+                balance.getOrderHold(),
+                balance.getPositionMargin()
+        );
+    }
+
+    public record AssetBalanceItem(
+            String asset,
+            BigDecimal balance,
+            BigDecimal available,
+            BigDecimal orderHold,
+            BigDecimal positionMargin
+    ) {
     }
 }

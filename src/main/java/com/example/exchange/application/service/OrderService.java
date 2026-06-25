@@ -174,6 +174,13 @@ public class OrderService {
             }
             SymbolConfig config = symbolConfigRepository.findBySymbol(trade.symbol().code())
                     .orElseThrow(() -> new IllegalArgumentException("missing symbol config: " + trade.symbol().code()));
+            String refId = withSeq.matchId() == null ? String.valueOf(withSeq.seq()) : withSeq.matchId();
+
+            if (config.isSpot()) {
+                // Spot trades transfer base/quote assets directly and must not create derivative positions.
+                settleSpotTrade(withSeq, relatedOrder, config, refId);
+                continue;
+            }
 
             // 查詢或建立當前持倉
             Position position = posRepo.find(trade.uid(), trade.symbol()).orElseGet(() ->
@@ -194,7 +201,6 @@ public class OrderService {
             PositionChange change = position.applyTradeWithPnl(trade.qty(), trade.price());
             BigDecimal newMargin = requiredPositionMargin(position, config);
             BigDecimal marginDelta = newMargin.subtract(oldMargin);
-            String refId = withSeq.matchId() == null ? String.valueOf(withSeq.seq()) : withSeq.matchId();
 
             if (marginDelta.signum() > 0) {
                 BigDecimal consumed = walletLedgerService.increasePositionMargin(
@@ -300,19 +306,63 @@ public class OrderService {
         if (diff.signum() > 0) {
             walletLedgerService.releaseOrderReserve(
                     order.getUid(),
-                    config.getQuoteAsset(),
+                    order.getReservedAsset() == null ? riskService.reserveAsset(order, config) : order.getReservedAsset(),
                     diff,
                     order.getId().toString()
             );
         } else if (diff.signum() < 0) {
             walletLedgerService.reserveOrder(
                     order.getUid(),
-                    config.getQuoteAsset(),
+                    riskService.reserveAsset(order, config),
                     diff.abs(),
                     order.getId().toString()
             );
+            order.setReservedAsset(riskService.reserveAsset(order, config));
         }
         order.setReservedAmount(target);
+    }
+
+    private void settleSpotTrade(TradeExecuted trade, Order relatedOrder, SymbolConfig config, String refId) {
+        BigDecimal baseQty = trade.absQty();
+        BigDecimal quoteNotional = trade.notional();
+        if (trade.qty().signum() > 0) {
+            walletLedgerService.settleSpotBuy(
+                    trade.uid(),
+                    config.getBaseAsset(),
+                    config.getQuoteAsset(),
+                    baseQty,
+                    quoteNotional,
+                    refId
+            );
+            consumeOrderReserve(relatedOrder, quoteNotional);
+        } else {
+            walletLedgerService.settleSpotSell(
+                    trade.uid(),
+                    config.getBaseAsset(),
+                    config.getQuoteAsset(),
+                    baseQty,
+                    quoteNotional,
+                    refId
+            );
+            consumeOrderReserve(relatedOrder, baseQty);
+        }
+
+        FeeCalculation fee = feeService.calculate(trade, config, relatedOrder);
+        BigDecimal feeConsumed = walletLedgerService.collectSpotFeeFromOrderHold(
+                trade.uid(),
+                config.getQuoteAsset(),
+                fee.fee(),
+                refId
+        );
+        consumeOrderReserve(relatedOrder, feeConsumed);
+        if (fee.rebate().signum() > 0) {
+            walletLedgerService.creditRebate(
+                    trade.uid(),
+                    config.getQuoteAsset(),
+                    fee.rebate(),
+                    refId
+            );
+        }
     }
 
     private static BigDecimal requiredPositionMargin(Position position, SymbolConfig config) {

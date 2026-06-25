@@ -54,6 +54,28 @@ class MarginServiceTest {
     }
 
     @Test
+    @DisplayName("指定資產入金與出金會依資產維度更新可用餘額")
+    /**
+     * 流程：先對 BTC 入金，再對 BTC 出金。
+     * 期望：transfer 與 ledger 都保留 BTC 資產欄位，且帳戶 BTC 可用額正確變化。
+     */
+    void assetSpecificDepositAndWithdrawUpdateAssetBalance() {
+        Fixtures fixtures = fixtures(new RiskControlsProperties());
+
+        WalletTransfer deposit = fixtures.marginService.deposit(16, "btc", new BigDecimal("2.5000"));
+        WalletTransfer withdrawal = fixtures.marginService.withdraw(16, "BTC", new BigDecimal("1.2500"));
+
+        Account account = fixtures.accountRepository.findByUid(16).orElseThrow();
+        assertThat(deposit.getAsset()).isEqualTo("BTC");
+        assertThat(withdrawal.getAsset()).isEqualTo("BTC");
+        assertThat(account.available("BTC")).isEqualByComparingTo("1.2500");
+        assertThat(account.available("USDT")).isEqualByComparingTo("0");
+        assertThat(fixtures.ledgerRepository.findByUid(16))
+                .extracting(WalletLedgerEntry::getAsset)
+                .containsExactly("BTC", "BTC");
+    }
+
+    @Test
     @DisplayName("出金暫停時進入人工覆核且不扣款")
     /**
      * 流程：先入金建立餘額 -> 開啟 withdrawal halt -> withdraw 進人工覆核且帳戶不扣款。
@@ -120,6 +142,33 @@ class MarginServiceTest {
                 .hasSize(1);
         assertThat(fixtures.accountRepository.findByUid(14).orElseThrow().crossBalance())
                 .isEqualByComparingTo("50.00");
+    }
+
+    @Test
+    @DisplayName("入金 callback 若同 externalRef 對應不同資產則拒絕")
+    /**
+     * 流程：先用 BTC callback 建立 transfer，再以同一 externalRef 傳入 USDT。
+     * 期望：service 視為外部流水號衝突，避免不同幣種被重放成同一筆入金。
+     */
+    void depositCallbackRejectsAssetMismatchOnSameExternalRef() {
+        Fixtures fixtures = fixtures(new RiskControlsProperties());
+
+        fixtures.marginService.recordDepositCallback(
+                17,
+                "BTC",
+                new BigDecimal("0.5000"),
+                "chain-tx-1"
+        );
+
+        org.assertj.core.api.Assertions.assertThatThrownBy(() ->
+                fixtures.marginService.recordDepositCallback(
+                        17,
+                        "USDT",
+                        new BigDecimal("0.5000"),
+                        "chain-tx-1"
+                ))
+                .isInstanceOf(IllegalStateException.class)
+                .hasMessageContaining("deposit callback conflict");
     }
 
     @Test

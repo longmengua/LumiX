@@ -35,6 +35,7 @@ class MarketControllerTest {
                 .extracting(MarketListResponse.MarketItem::symbol)
                 .containsExactly("BTCUSDT", "ETHUSDT");
         assertThat(response.getData().markets().get(0).tradingEnabled()).isTrue();
+        assertThat(response.getData().markets().get(0).productType()).isEqualTo("PERPETUAL");
         assertThat(response.getData().markets().get(1).tradingEnabled()).isFalse();
     }
 

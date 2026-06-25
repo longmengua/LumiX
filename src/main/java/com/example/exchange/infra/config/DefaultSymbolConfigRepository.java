@@ -4,6 +4,7 @@
 package com.example.exchange.infra.config;
 
 import com.example.exchange.domain.model.entity.SymbolConfig;
+import com.example.exchange.domain.model.enums.ProductType;
 import com.example.exchange.domain.repository.SymbolConfigRepository;
 import org.springframework.stereotype.Repository;
 
@@ -23,6 +24,7 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
         put(defaultPerp("BTCUSDT", "BTC", "USDT", "0.10", "0.001", "5", "1000000", "5000000", 125));
         put(defaultPerp("ETHUSDT", "ETH", "USDT", "0.01", "0.001", "5", "500000", "3000000", 100));
         put(defaultPerp("BTCUSDT-PERP", "BTC", "USDT", "0.10", "0.001", "5", "1000000", "5000000", 125));
+        put(defaultSpot("BTCUSDT-SPOT", "BTC", "USDT", "0.10", "0.001", "5", "1000000"));
     }
 
     @Override
@@ -72,6 +74,7 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
     ) {
         return SymbolConfig.builder()
                 .symbol(symbol)
+                .productType(ProductType.PERPETUAL)
                 .baseAsset(base)
                 .quoteAsset(quote)
                 .priceTick(new BigDecimal(priceTick))
@@ -90,6 +93,40 @@ public class DefaultSymbolConfigRepository implements SymbolConfigRepository {
                 .priceBandRate(new BigDecimal("0.10"))
                 .maintenanceMarginRate(new BigDecimal("0.005"))
                 .riskTiers(defaultRiskTiers(maxPositionNotional, maxLeverage))
+                .tradingEnabled(true)
+                .build();
+    }
+
+    private static SymbolConfig defaultSpot(
+            String symbol,
+            String base,
+            String quote,
+            String priceTick,
+            String lotSize,
+            String minNotional,
+            String maxOrderNotional
+    ) {
+        return SymbolConfig.builder()
+                .symbol(symbol)
+                .productType(ProductType.SPOT)
+                .baseAsset(base)
+                .quoteAsset(quote)
+                .priceTick(new BigDecimal(priceTick))
+                .lotSize(new BigDecimal(lotSize))
+                .minQty(new BigDecimal(lotSize))
+                .minNotional(new BigDecimal(minNotional))
+                .maxOrderNotional(new BigDecimal(maxOrderNotional))
+                .maxPositionNotional(BigDecimal.ZERO)
+                .maxOpenOrders(200)
+                .maxLeverage(1)
+                .initialMarginRate(BigDecimal.ONE)
+                .makerFeeRate(new BigDecimal("0.0002"))
+                .takerFeeRate(new BigDecimal("0.0005"))
+                .makerRebateRate(BigDecimal.ZERO)
+                .referralRebateRate(BigDecimal.ZERO)
+                .priceBandRate(new BigDecimal("0.10"))
+                .maintenanceMarginRate(BigDecimal.ZERO)
+                .riskTiers(List.of())
                 .tradingEnabled(true)
                 .build();
     }

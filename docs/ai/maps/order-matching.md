@@ -18,8 +18,20 @@ OrderController
   -> RiskService.preCheckAndReserve
   -> OrderService.processOrder
   -> MatchingEngine.submit
-  -> position/account/ledger/market-data/lifecycle events
+  -> product-type accounting
+     - PERPETUAL: position margin, PnL, funding/liquidation-compatible position state
+     - SPOT: base/quote asset settlement without Position creation
+  -> account/ledger/market-data/lifecycle events
 ```
+
+## Product Types
+
+- Product discriminator: `domain.model.enums.ProductType`.
+- Symbol config: `SymbolConfig.productType`, defaulting to `PERPETUAL` for backward compatibility.
+- Default markets:
+  - `BTCUSDT` and `BTCUSDT-PERP`: perpetual contract path.
+  - `BTCUSDT-SPOT`: spot asset-settlement path.
+- `Symbol.code()` can now preserve explicit internal symbols such as `BTCUSDT-SPOT`, so spot and perpetual books do not collide when base/quote are the same.
 
 ## Matching Core
 
@@ -46,6 +58,7 @@ OrderController
 Current behavior:
 - Per-symbol operations are serialized by an in-process sequencer.
 - LIMIT/MARKET, GTC/IOC/FOK, post-only rejection, self-match prevention, amend, cancel, top-of-book, and depth snapshot are covered.
+- Spot and perpetual products share matching semantics but split risk reserve and settlement accounting by `ProductType`.
 - Snapshot export/restore preserves resting order FIFO and match sequence baseline.
 - In-memory command log and replay API preserve snapshot checkpoint replay and match sequence continuation in tests.
 - In-memory event log records emitted trade events with event offsets and their source command offset.

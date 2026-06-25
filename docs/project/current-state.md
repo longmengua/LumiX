@@ -33,7 +33,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 ## 目前可合理依賴的能力
 
 - 本機可用 Docker Compose 啟動 MySQL、Redis、Kafka、Kafka UI。
-- 內部交易所下單鏈路已有 MVP：基本驗證、pre-trade risk、in-memory matching、帳務更新、事件發布。
+- 內部交易所下單鏈路已有 product-aware baseline：`PERPETUAL` 合約路徑會做保證金 reserve、position/PnL/fee 帳務與事件發布；`SPOT` 現貨路徑會做 base/quote 資產 reserve 與交割、不建立 Position，並和合約共用撮合、訂單生命週期與 market-data 更新。
 - prod-facing 前台 exchange console 會從 `/api/markets` 載入可選市場到下單表單，只提供後台配置且啟用的 symbols，不暴露任何 privileged admin 導覽、做市商營運資訊、checksum、book version 診斷或客戶端市場資訊 reload 按鈕，並以登入 session UID 取代可編輯 UID 欄位，也會顯示可切換每邊 5/10/20/50 ask/bid ticks 的公開 order-book 動態深度條；主畫面聚焦交易，登入、註冊、單一資產摘要、登出、委託、持有倉位與歷史開關倉位都集中在右上 profile 抽屜。客戶註冊使用獨立 `customer_registration_requests` 表保存 pending 帳號資料與備案 link token，六位數信箱驗證碼改存在 `customer_verification_codes`，以 email/account 對應、不綁定單一功能，後續可支援後台補發或人工處理；`/api/auth/resend-verification` 可替 pending 註冊輪換驗證碼與備案連結，但不延長原本 24 小時期限。SMTP 寄信、`/api/auth/verify-email` 與 24 小時 pending request 過期規則會在建立 `app_users` 與帳戶前完成；`/api/auth/config` 控制 Turnstile 相容真人驗證。公開 market 與登入後 private user refresh 共用單一 `/ws/exchange` multiplex WebSocket，斷線或重連期間才退回 1 秒 polling，並支援 opt-in cancel-on-disconnect resume metadata。市場資料診斷集中在後台 market-config 頁。
 - 前台 exchange console 與做市商後台頁支援英文、繁中、Bahasa Malaysia、韓文語言切換，並共用瀏覽器語言偏好。
 - 撮合核心已覆蓋 FIFO、post-only、自成交防護、IOC/FOK、市價單流動性不足等 deterministic tests。
@@ -54,7 +54,7 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 - `MatchingWorkerStartupListener` 會在 `matching-worker.enabled=true` 時，於 application ready 後啟動 configured worker symbols。
 - 撮合 replay validation 可將 replay output 與 expected snapshot 比對，並回報 command-offset、event-offset、match-sequence、book-level 差異，也已有 multi-symbol interleaved-offset coverage。
 - Market data depth delta 已有 durable sequence/checksum checkpoints、啟動時恢復最新 depth sequence、durable depth delta records，以及依 known version 查詢後續 deltas 的 reconnect backfill endpoint。Trade tape 也有 restart-safe durable baseline 與 `afterTs`/`afterMatchId` replay cursor support。
-- 已有 wallet ledger balanced posting baseline，資金變動可在 MVP 內追蹤與測試。
+- 已有 wallet ledger balanced posting baseline，資金變動可追蹤與測試；`Account` 已支援 per-asset balance/available/order-hold，使現貨 BUY/SELL 可分別凍結 quote/base 並在成交後交割。
 - 已拆出 order reserve、position margin、fee、rebate、realized PnL、funding、liquidation shortfall、deposit、withdrawal 等 accounting entries。
 - 體驗金已用 `USER_BONUS_AVAILABLE` 拆出 grant、consume、expire、clawback ledger postings，且不會改動真實現金帳戶餘額；目前也有 grant 批次 expiry/remaining tracking、可設定 consume eligibility gate、用戶/活動 report/export APIs、營運 clawback API，以及預設關閉的 campaign auto-clawback scheduler baseline。
 - 流水已有 durable read model baseline，會由已處理成交事件產生 user、account、symbol、一等 order strategy/market-maker tags、order、match、sequence、quantity、price、notional 維度，並可用 summary / drill-down / export APIs 依 uid/symbol/strategy/market-maker/match 查詢，也可做 tag-aware trade/ledger reconciliation。

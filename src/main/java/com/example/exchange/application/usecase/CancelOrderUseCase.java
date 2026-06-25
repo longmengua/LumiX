@@ -148,11 +148,12 @@ public class CancelOrderUseCase {
                 .orElseThrow(() -> new IllegalArgumentException("missing symbol config: " + order.getSymbol().code()));
         walletLedgerService.releaseOrderReserve(
                 order.getUid(),
-                config.getQuoteAsset(),
+                order.getReservedAsset() == null ? config.getQuoteAsset() : order.getReservedAsset(),
                 reserved,
                 order.getId().toString()
         );
         order.setReservedAmount(BigDecimal.ZERO);
+        order.setReservedAsset(null);
     }
 
     private boolean cancelThroughConfiguredMatchingPath(Order order) {

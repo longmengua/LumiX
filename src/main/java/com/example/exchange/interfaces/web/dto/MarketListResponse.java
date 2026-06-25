@@ -12,6 +12,7 @@ public record MarketListResponse(
 
     public record MarketItem(
             String symbol,
+            String productType,
             String baseAsset,
             String quoteAsset,
             boolean tradingEnabled,

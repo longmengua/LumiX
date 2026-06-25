@@ -11,6 +11,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.Comparator;
 import java.util.List;
+import com.example.exchange.domain.model.enums.ProductType;
 
 /**
  * 交易對設定：撮合刻度、風控上限與費率。
@@ -21,6 +22,7 @@ import java.util.List;
 public class SymbolConfig {
 
     private String symbol;
+    private ProductType productType;
     private String baseAsset;
     private String quoteAsset;
     private BigDecimal priceTick;
@@ -43,6 +45,7 @@ public class SymbolConfig {
 
     public Symbol toSymbol() {
         return Symbol.builder()
+                .code(symbol)
                 .base(baseAsset)
                 .quote(quoteAsset)
                 .priceScale(scaleOf(priceTick))
@@ -52,6 +55,18 @@ public class SymbolConfig {
 
     public BigDecimal priceTickOrDefault() {
         return defaultIfNull(priceTick, new BigDecimal("0.01"));
+    }
+
+    public ProductType productTypeOrDefault() {
+        return productType == null ? ProductType.PERPETUAL : productType;
+    }
+
+    public boolean isSpot() {
+        return productTypeOrDefault() == ProductType.SPOT;
+    }
+
+    public boolean isPerpetual() {
+        return productTypeOrDefault() == ProductType.PERPETUAL;
     }
 
     public BigDecimal lotSizeOrDefault() {
