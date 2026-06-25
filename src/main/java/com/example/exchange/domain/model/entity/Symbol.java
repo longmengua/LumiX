@@ -1,39 +1,38 @@
 /*
- * 檔案用途：領域模型或持久化實體，承載交易、帳戶、持倉與預測市場狀態。
+ * 檔案用途：
+ * 這個類別用來描述「一個交易對」。
+ *
+ * 白話一點：
+ * Symbol 只回答一件事：
+ * 這個交易對是誰？
+ *
+ * 例如：
+ * BTCUSDT-SPOT
+ * ETHUSDT-SPOT
+ * BNBUSDT-SPOT
+ * BTCUSDT-PERP
+ *
+ * 注意：
+ * 這裡不要放槓桿、手續費、最小下單金額、交易開關。
+ * 那些是交易規則，應該放在 SymbolConfig。
+ *
+ * SymbolConfig 是來源，Symbol 是衍生結果。
  */
 package com.example.exchange.domain.model.entity;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 
 /**
- * 交易對值物件（Domain Model）
+ * 交易對。
  *
- * 用途：
- * - 描述一個交易對（例如：BTC/USDT）的基本屬性與精度設定。
- * - 由應用層/撮合層用來做數值量化（price/qty 的小數位數）、格式化與顯示。
- *
- * 設計說明：
- * - 使用 Lombok 產生樣板碼：
- *   @Data           → 生成 getter/setter、equals、hashCode、toString
- *   @Builder        → 提供建構器（與 @Jacksonized 搭配可支援 Jackson 反序列化）
- *   @AllArgsConstructor / @NoArgsConstructor → 供 ORM/序列化工具使用
- *   @Jacksonized    → 讓 Jackson 能用 Builder 方式做 JSON 反序列化
- *
- * 精度欄位：
- * - priceScale：價格可接受的小數位數（例如 2 → 123.45）
- * - qtyScale  ：數量可接受的小數位數（例如 3 → 0.123）
- *
- * 注意事項：
- * - 「刻度（scale）」只描述小數位數，實際的「跳動步進（tick/step）」與「最小名義金額」不在此類別強制。
- * - 真正的數值量化（四捨五入/截斷）應在應用層或 Value Object（如 Money/Quantity）中統一處理。
- *
- * 常見擴充（TODO）：
- * - TODO: 新增 priceTick、qtyStep（跳動步進，例如 0.01、0.001）
- * - TODO: 新增 minQty、minNotional（最小下單量與最小名義金額）
- * - TODO: 新增 displayCode（顯示用符號，如 "BTC/USDT"）、internalCode（內部代碼，如 "BTCUSDT"）
- * - TODO: 新增合約屬性（如 linear/inverse、合約面值 contractSize、保證金資產 marginAsset）
- * - TODO: 新增交易狀態（tradingEnabled、onlyReduce、maintenance 等）
+ * 簡單理解：
+ * - base 是你要買賣的幣，例如 BTC
+ * - quote 是用來計價的幣，例如 USDT
+ * - code 是系統內部用的交易對代碼，例如 BTCUSDT-SPOT
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,54 +40,177 @@ import lombok.extern.jackson.Jacksonized;
 @Builder
 @Jacksonized
 public class Symbol {
-
     /**
-     * Backward-compatible constructor for older recovery snapshots that only persisted base/quote scales.
+     * 系統內部使用的交易對代碼。
+     *
+     * 建議格式：
+     * - BTCUSDT-SPOT：BTC / USDT 現貨
+     * - BTCUSDT-PERP：BTC / USDT 永續合約
+     *
+     * 為什麼不要只用 BTCUSDT？
+     * 因為 BTCUSDT 現貨和 BTCUSDT 合約是兩個不同產品。
+     * 它們的訂單簿、帳務、槓桿、風控都不一樣。
      */
-    public Symbol(String base, String quote, int priceScale, int qtyScale) {
-        this(null, base, quote, priceScale, qtyScale);
-    }
-
-    /** 內部交易代碼，允許 BTCUSDT-SPOT 與 BTCUSDT-PERP 共用 base/quote 但分開簿與帳務。 */
     private String code;
 
-    /** 基礎幣（Base），例：BTC */
+    /**
+     * 前面的幣。
+     *
+     * 例如：
+     * BTCUSDT 裡面的 BTC。
+     */
     private String base;
 
-    /** 報價幣（Quote），例：USDT */
+    /**
+     * 後面的幣。
+     *
+     * 例如：
+     * BTCUSDT 裡面的 USDT。
+     */
     private String quote;
 
     /**
-     * 價格小數精度（允許多少位小數）
-     * 例：2 → 123.45
+     * 價格小數位數。
      *
-     * 提示：
-     * - 僅描述「位數」；實際步進（tick）請另增 priceTick。
-     * - 應在驗證時確保 >= 0。
+     * 例如 priceScale = 2：
+     * 代表價格最多到小數 2 位。
+     *
+     * 例如：
+     * 100.12 可以
+     * 100.123 不可以
+     *
+     * 注意：
+     * 這裡只記「小數位數」。
+     * 真正價格要跳多少，例如 0.01、0.1，要看 SymbolConfig.priceTick。
      */
     private int priceScale;
 
     /**
-     * 數量小數精度（允許多少位小數）
-     * 例：3 → 0.123
+     * 數量小數位數。
      *
-     * 提示：
-     * - 僅描述「位數」；實際步進（step）請另增 qtyStep。
-     * - 應在驗證時確保 >= 0。
+     * 例如 qtyScale = 3：
+     * 代表數量最多到小數 3 位。
+     *
+     * 例如：
+     * 0.123 可以
+     * 0.1234 不可以
+     *
+     * 注意：
+     * 這裡只記「小數位數」。
+     * 真正數量每次跳多少，例如 0.001、0.0001，要看 SymbolConfig.lotSize。
      */
     private int qtyScale;
 
     /**
-     * 內部代碼：以「Base + Quote」拼接（例：BTCUSDT）
+     * 回傳乾淨版的交易對代碼。
      *
-     * 注意：
-     * - 大小寫規範：若系統需要統一大寫，可於此處或建構時統一 toUpperCase()。
-     * - 顯示層若需要 "BTC/USDT" 可在 UI 轉換或新增 displayCode()。
+     * 如果 code 有值，就用 code。
+     * 如果 code 沒值，就用 base + quote 組出來。
+     *
+     * 例如：
+     * code = BTCUSDT-PERP => 回傳 BTCUSDT-PERP
+     * code 沒填、base = BTC、quote = USDT => 回傳 BTCUSDT
      */
     public String code() {
         if (code != null && !code.isBlank()) {
             return code.trim().toUpperCase();
         }
-        return (base == null ? "" : base.toUpperCase()) + (quote == null ? "" : quote.toUpperCase());
+
+        return normalizedBase() + normalizedQuote();
+    }
+
+    /**
+     * 顯示用交易對名稱。
+     *
+     * 給前端或 log 顯示時比較好讀。
+     *
+     * 例如：
+     * base = BTC
+     * quote = USDT
+     * 回傳 BTC/USDT
+     */
+    public String displayCode() {
+        String normalizedBase = normalizedBase();
+        String normalizedQuote = normalizedQuote();
+
+        if (normalizedBase.isBlank() && normalizedQuote.isBlank()) {
+            return code();
+        }
+
+        if (normalizedBase.isBlank()) {
+            return normalizedQuote;
+        }
+
+        if (normalizedQuote.isBlank()) {
+            return normalizedBase;
+        }
+
+        return normalizedBase + "/" + normalizedQuote;
+    }
+
+    /**
+     * 乾淨版 base。
+     *
+     * 例如：
+     * " btc " => "BTC"
+     */
+    public String normalizedBase() {
+        return normalizeAsset(base);
+    }
+
+    /**
+     * 乾淨版 quote。
+     *
+     * 例如：
+     * " usdt " => "USDT"
+     */
+    public String normalizedQuote() {
+        return normalizeAsset(quote);
+    }
+
+    /**
+     * 價格小數位數。
+     *
+     * 如果設定成負數，直接當成 0。
+     */
+    public int priceScaleOrDefault() {
+        return Math.max(0, priceScale);
+    }
+
+    /**
+     * 數量小數位數。
+     *
+     * 如果設定成負數，直接當成 0。
+     */
+    public int qtyScaleOrDefault() {
+        return Math.max(0, qtyScale);
+    }
+
+    /**
+     * 判斷這個 Symbol 是否有基本資料。
+     *
+     * 至少要有：
+     * - code
+     * 或
+     * - base + quote
+     */
+    public boolean hasIdentity() {
+        if (code != null && !code.isBlank()) {
+            return true;
+        }
+
+        return base != null && !base.isBlank()
+                && quote != null && !quote.isBlank();
+    }
+
+    /**
+     * 把幣種代碼整理成大寫。
+     *
+     * 例如：
+     * "btc" => "BTC"
+     * " usdt " => "USDT"
+     */
+    private static String normalizeAsset(String asset) {
+        return asset == null ? "" : asset.trim().toUpperCase();
     }
 }
