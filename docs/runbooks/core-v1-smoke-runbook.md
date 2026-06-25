@@ -40,4 +40,4 @@ docker compose ps
 - App 可對本機依賴啟動。
 - Protected API paths 依預期需要 admin credentials。
 - 沒有 scheduler 非預期改動狀態。
-- 已知 production gaps 仍明確記錄在 `current-state.md`。
+- 已知 production gaps 仍明確記錄在 `docs/status/current-state.md`。

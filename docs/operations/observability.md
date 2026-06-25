@@ -1,7 +1,7 @@
 <!-- 檔案用途：記錄 tracing、audit log 與事件傳遞的可觀測性基線。 -->
 # Observability Baseline
 
-這份文件說明目前 tracing 與 audit 的基線能力。它還不是完整 production observability stack；metrics、dashboard 與 alert 仍追蹤在 [todo.md](todo.md)。
+這份文件說明目前 tracing 與 audit 的基線能力。它還不是完整 production observability stack；metrics、dashboard 與 alert 仍追蹤在 [todo.md](../roadmap/todo.md)。
 
 ## Trace Headers
 

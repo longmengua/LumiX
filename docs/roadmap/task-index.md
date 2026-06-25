@@ -3,15 +3,15 @@
 
 任務文件會把 roadmap 工作拆成可點名執行的 Markdown 檔。插單需求進來時，Codex 應先把需求轉成 task md，再等使用者指定要先做哪個任務檔。
 
-目前 `docs/tasks/` 只保留彙整任務與訊息中心規格；舊的 core-kernel、post-v1、P2、web 細項檔已不在目前 worktree。需要追溯拆分清單時，先看 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
+目前 `docs/tasks/` 細項檔已不在目前 worktree。需要追溯拆分清單時，從 git history 查原本的 unfinished tasks snapshot 或 message-center task。
 
 ## 入口
 
 | 文件 | 說明 |
 | --- | --- |
-| [Task README](../tasks/README.md) | 任務流程、狀態定義與任務群組。 |
-| [Unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md) | 已移除細項檔的狀態快照與任務名稱。 |
-| [Message center task](../tasks/2026-06-16-0620-message-center-task.md) | 訊息中心後端與前端 API 規格。 |
+| Task README | 任務流程、狀態定義與任務群組；目前檔案已從 worktree 移除。 |
+| Unfinished tasks snapshot | 已移除細項檔的狀態快照與任務名稱；目前檔案已從 worktree 移除。 |
+| Message center task | 訊息中心後端與前端 API 規格；目前檔案已從 worktree 移除。 |
 
 ## 核心內核任務
 

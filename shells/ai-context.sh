@@ -16,10 +16,12 @@ printf 'AGENTS.md\n'
 printf 'docs/ai/README.md\n'
 printf 'docs/ai/code-map.md\n'
 find docs/ai/maps -maxdepth 1 -type f -name '*.md' | sort
-printf 'docs/project/current-state.md\n'
-printf 'docs/project/todo.md\n'
-printf 'docs/tasks/README.md\n'
-find docs/tasks -mindepth 2 -type f -name '*.md' | sort
+printf 'docs/status/current-state.md\n'
+printf 'docs/roadmap/todo.md\n'
+if [[ -d docs/tasks ]]; then
+  printf 'docs/tasks/README.md\n'
+  find docs/tasks -mindepth 2 -type f -name '*.md' | sort
+fi
 
 section "TODO Progress"
 awk '
@@ -33,7 +35,7 @@ awk '
       printf "%s: %d/%d done\n", s, done[s]+0, total[s]
     }
   }
-' docs/project/todo.md
+' docs/roadmap/todo.md
 
 section "Core Packages"
 find src/main/java/com/example/exchange -maxdepth 2 -type d | sort

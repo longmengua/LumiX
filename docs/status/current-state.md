@@ -7,7 +7,7 @@
 
 ## 完成度快照
 
-以下數字來自 [todo.md](todo.md) 的 `[x]` / `[ ]` 狀態。
+以下數字來自 [todo.md](../roadmap/todo.md) 的 `[x]` / `[ ]` 狀態。
 
 | 範圍 | 已完成 baseline | 未完成 production 工作 | 判讀 |
 | --- | ---: | ---: | --- |
@@ -18,7 +18,7 @@
 
 ## 目前插單優先順序
 
-接下來應先 tag 或 hand off [core-v1-release-checklist.md](core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist 與 [smoke runbook](../runbooks/core-v1-smoke-runbook.md) 已完成；目前 `docs/tasks/` 只保留彙整任務與訊息中心規格，舊的 post-v1 / P2 拆分清單可從 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md) 追溯。在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
+接下來應先 tag 或 hand off [core-v1-release-checklist.md](../roadmap/core-v1-release-checklist.md) 所定義的 baseline。Freeze checklist 與 [smoke runbook](../runbooks/core-v1-smoke-runbook.md) 已完成；目前任務入口改由 [task-index.md](../roadmap/task-index.md) 彙整。在 core-v1 tag 之前，不擴 web、Polymarket、報表、合規或觀測範圍。
 
 凍結的 core-v1 baseline 包含：
 
@@ -98,8 +98,8 @@ Polymarket worker 拆分、WebSocket gateway scaling 與更完整 observability 
 
 快速掌握狀態請先看本文件，再看：
 
-1. [core-v1-release-checklist.md](core-v1-release-checklist.md)：release freeze boundary 與 gates。
+1. [core-v1-release-checklist.md](../roadmap/core-v1-release-checklist.md)：release freeze boundary 與 gates。
 2. [core-v1-smoke-runbook.md](../runbooks/core-v1-smoke-runbook.md)：smoke verification flow。
-3. [todo.md](todo.md)：完整 production readiness checklist。
-4. [technical.md](technical.md)：技術文件入口。
+3. [todo.md](../roadmap/todo.md)：完整 production readiness checklist。
+4. [technical-overview.md](../architecture/technical-overview.md)：技術文件入口。
 5. [../ai/code-map.md](../ai/code-map.md)：給代理使用的精簡程式碼地圖索引。

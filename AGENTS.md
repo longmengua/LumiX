@@ -9,9 +9,9 @@ Java21 Match Hub is a Java 21 + Spring Boot backend for an internal exchange cor
 It is a runnable MVP, not production-grade exchange infrastructure.
 
 Primary docs:
-- Product overview: `docs/project/README.md`
-- Current state: `docs/project/current-state.md`
-- Production TODO: `docs/project/todo.md`
+- Product overview: `docs/overview.md`
+- Current state: `docs/status/current-state.md`
+- Production TODO: `docs/roadmap/todo.md`
 - Agent code map index: `docs/ai/code-map.md`
 - Team AI collaboration mode: `docs/ai/team-collaboration.md`
 - Team AI management metrics: `docs/ai/team-management.md`
@@ -48,14 +48,14 @@ When the user says `讀一下 <file>.md`, `read <file>.md`, or otherwise points 
 4. If it gives one clear next task, implement it without asking for a plan first.
 5. If it leaves multiple plausible tasks, ask the user which one to start.
 6. Before broad repo exploration, prefer `./shells/ai-context.sh`.
-7. After implementation, update `docs/*/todo.md`, `docs/*/current-state.md`, and the relevant `docs/ai/maps/*.md` when the change affects status or code ownership.
+7. After implementation, update `docs/roadmap/todo.md`, `docs/status/current-state.md`, and the relevant `docs/ai/maps/*.md` when the change affects status or code ownership.
 
 Suggested user commands:
 
 ```text
-讀一下 docs/project/todo.md，從最前面的未完成 P0 開始做。
+讀一下 docs/roadmap/todo.md，從最前面的未完成 P0 開始做。
 讀一下 docs/ai/maps/order-matching.md，繼續做 matching 相關 TODO。
-讀一下 docs/project/current-state.md，告訴我現在最該先做哪三件事，先不要改 code。
+讀一下 docs/status/current-state.md，告訴我現在最該先做哪三件事，先不要改 code。
 讀一下 AGENTS.md 和 docs/ai/code-map.md，然後繼續 production TODO。
 ```
 

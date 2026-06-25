@@ -1,9 +1,9 @@
 <!-- 檔案用途：繁體中文 production TODO；文件入口請見 docs/README.md。 -->
 # Production TODO
 
-這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze、P0 baseline 與 P1 hardening baseline 已關閉；接下來先 tag / hand off core-v1 baseline，再選擇 P2 evolution 工作。舊的 post-v1 / P2 task 拆分可從 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md) 追溯。
+這份清單聚焦「要把目前 MVP 推向 production」前應補齊的能力。目前 core-v1 freeze、P0 baseline 與 P1 hardening baseline 已關閉；接下來先 tag / hand off core-v1 baseline，再選擇 P2 evolution 工作。舊的 post-v1 / P2 task 拆分可從 git history 中的 unfinished tasks snapshot 追溯。
 
-文件分類：[產品文件](README.md) / [技術文件](technical.md) / 待辦清單文件
+文件分類：[產品文件](../overview.md) / [技術文件](../architecture/technical-overview.md) / 待辦清單文件
 
 ## 目前 Freeze 工作
 
@@ -101,14 +101,14 @@
 - [x] 定義高流量 market-data depth、trade 與 kline history 的 retention/archive policy。
   - Baseline 已完成：DB retention job 依獨立 window 清理 depth delta、trade tape 與 1m kline history；production archive export/storage 仍屬於後續營運任務。
 - [x] WebSocket/SSE gateway 獨立部署，支援水平擴展、訂閱權限、心跳、限流、斷線補償。
-  - Baseline 已完成：gateway heartbeat contract 會向 SSE/WebSocket channel 發送 `gateway.heartbeat`，payload 包含 channel 與 timestamp，會清理已關閉 WebSocket session，並提供預設關閉的 scheduler config。Private user SSE/WebSocket stream 在 `api-auth.enabled=true` 時需要 API key 或 Bearer credentials；admin principal 可供營運訂閱，user principal 則需要 uid ownership 與 stream read scope。SSE/WebSocket stream 訂閱嘗試會通過 `push-gateway.rate-limit.*` per-client fixed-window limiter。`push-gateway.runtime.*` 現在提供 MONOLITH/GATEWAY role、instance id、accepting-new-streams 與 draining controls；draining 時新的 SSE/WebSocket stream 會回 503，既有 stream 可繼續 drain。`GET /api/ops/push-gateway/status` 會暴露 runtime/readiness status，client 斷線後可用 recovery cursor、depth replay 與 trade replay 追上。[Market data gateway scaling](market-data-gateway-scaling.md) 已記錄 independent gateway role、broadcast fanout、load-balancer draining、shared rate-limit options、heartbeat policy、readiness 與 rollback。
+  - Baseline 已完成：gateway heartbeat contract 會向 SSE/WebSocket channel 發送 `gateway.heartbeat`，payload 包含 channel 與 timestamp，會清理已關閉 WebSocket session，並提供預設關閉的 scheduler config。Private user SSE/WebSocket stream 在 `api-auth.enabled=true` 時需要 API key 或 Bearer credentials；admin principal 可供營運訂閱，user principal 則需要 uid ownership 與 stream read scope。SSE/WebSocket stream 訂閱嘗試會通過 `push-gateway.rate-limit.*` per-client fixed-window limiter。`push-gateway.runtime.*` 現在提供 MONOLITH/GATEWAY role、instance id、accepting-new-streams 與 draining controls；draining 時新的 SSE/WebSocket stream 會回 503，既有 stream 可繼續 drain。`GET /api/ops/push-gateway/status` 會暴露 runtime/readiness status，client 斷線後可用 recovery cursor、depth replay 與 trade replay 追上。[Market data gateway scaling](../reliability/market-data-gateway-scaling.md) 已記錄 independent gateway role、broadcast fanout、load-balancer draining、shared rate-limit options、heartbeat policy、readiness 與 rollback。
 - [x] 在 P0 做市商 interface baseline 完成後，補齊 market maker / liquidity provider API hardening 與節流策略。
   - Baseline 已完成：`POST /api/market-maker/quotes` 現在有可設定的 fixed-window frequency limit，設定在 `market-maker.api.quote-rate-limit.*`，會依 client、market-maker id 與 symbol 分 key，並在 quote replacement side effects 前拒絕 burst。Manual hedge execution endpoints 現在也有可設定的 fixed-window frequency limit，設定在 `market-maker.api.hedge-execution-rate-limit.*`，會依 client 與 execution scope 分 key，並在 external venue routing 前拒絕 burst。Effectful quote 與 manual hedge execution endpoints 會輸出 `MARKET_MAKER_ENDPOINT_AUDIT` log，包含 operator subject、credential type、可選 `X-Operator-Id`、request id、endpoint/resource、result/reason 與 approval token outcome，但不記錄 token value。
 
 ### Polymarket 整合
 
 - [x] 建立 Polymarket order 狀態機，完整追蹤 local order、CLOB order、trade、settlement lifecycle。
-  - Baseline 已完成：[Polymarket order transition matrix](polymarket-order-transition-matrix.md) 已定義 local/CLOB/trade/settlement state columns 與 allowed transitions。`PolymarketOrderStateMachine` 會讓 user-channel trade event 經過該 matrix，matched trade event 會推進 local matched lifecycle，settlement/redeem event 可將 matched 或 filled local order 推進到 settled，且 settled/filled terminal status 不會被後續 stale active 或 terminal downgrade event 降級。
+  - Baseline 已完成：[Polymarket order transition matrix](../integrations/polymarket-order-transition-matrix.md) 已定義 local/CLOB/trade/settlement state columns 與 allowed transitions。`PolymarketOrderStateMachine` 會讓 user-channel trade event 經過該 matrix，matched trade event 會推進 local matched lifecycle，settlement/redeem event 可將 matched 或 filled local order 推進到 settled，且 settled/filled terminal status 不會被後續 stale active 或 terminal downgrade event 降級。
 - [x] 將 Gamma/CLOB response schema version 化，避免遠端欄位變更造成解析錯誤。
   - Baseline 已完成：Gamma `/events` 與 `/markets` response 會在 DTO 解析前經過 versioned schema report 驗證，Gamma event/market DTO 可忽略未知遠端欄位，CLOB order-operation response 會記錄 `clob.order-operations.v1` metadata，並在 schema shape 不相容時產生 warning。
 - [x] 對 CLOB 下單、取消、同步、reconcile 做 idempotent command 設計。
@@ -122,7 +122,7 @@
 ### 資料庫與儲存
 
 - [x] 為 orders、positions、ledger、events、prediction orders 補齊 production index。
-  - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror。Flyway `V23__position_lifecycle_projection.sql` 已新增 `position_lifecycle_projection` live-position mirror schema 與 query indexes，並以 `PositionLifecycleProjectionJpaRepository` 作為 JPA 查詢 baseline。Archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Projection update/rebuild wiring 仍屬於獨立 live-position 營運強化，不算在本 index baseline。
+  - Baseline 已完成：Flyway `V12__production_query_indexes.sql` 已補 durable order lifecycle projection/event、ledger entries/postings、outbox/DLQ/matching events、prediction orders/user events 的 query indexes。[Live order SQL mirror](../architecture/live-order-sql-mirror.md) design 決定使用 `order_lifecycle_projection` 作為 durable live-order mirror。Flyway `V23__position_lifecycle_projection.sql` 已新增 `position_lifecycle_projection` live-position mirror schema 與 query indexes，並以 `PositionLifecycleProjectionJpaRepository` 作為 JPA 查詢 baseline。Archive exporter skeleton 也已涵蓋 historical order/trade/ledger export plans。Projection update/rebuild wiring 仍屬於獨立 live-position 營運強化，不算在本 index baseline。
 - [x] 文件化 Redis key schema、namespace prefix、版本與 migration 策略。
 - [x] 補 Redis hot-state key 的最終 TTL / archive rules。
   - Baseline 已完成：`docs/architecture/redis-key-schema.md` 已按 key family 定義 account、position、order、snapshot、ledger、outbox/DLQ、idempotency keys 的 production TTL、archive/delete rule 與 authoritative rebuild source。
@@ -137,28 +137,28 @@
   - Baseline 已完成：`/api/ops/metrics` 已暴露 in-process matching latency、rejection rate、fill rate、DB operation latency、Redis operation latency 與 Kafka consumer lag counters。Spring Boot Actuator 與 Micrometer Prometheus export 已啟用，`OperationalMetricsMeterBinder` 會把 in-process snapshot 映射到 `/actuator/prometheus` 的 Prometheus meters。
 - [x] 補上 request id / correlation id header、MDC、outbox、Kafka、外部 API 傳遞 baseline。
 - [x] 補 distributed tracing export、dashboard 與 sampling policy。
-  - Baseline 已完成：`tracing.export.*` 已定義預設關閉的 OTLP endpoint、service name、ratio sampling、critical-flow always-sample，以及 health/metrics drop policy。Micrometer Tracing OpenTelemetry bridge 與 OTLP exporter dependencies 已透過 `management.tracing.*`、`management.otlp.tracing.*` 接線；[Tracing Dashboard](tracing-dashboard.md) 已定義第一版 Grafana/Tempo panels 與 trace/log/metrics links。
+  - Baseline 已完成：`tracing.export.*` 已定義預設關閉的 OTLP endpoint、service name、ratio sampling、critical-flow always-sample，以及 health/metrics drop policy。Micrometer Tracing OpenTelemetry bridge 與 OTLP exporter dependencies 已透過 `management.tracing.*`、`management.otlp.tracing.*` 接線；[Tracing Dashboard](../operations/tracing-dashboard.md) 已定義第一版 Grafana/Tempo panels 與 trace/log/metrics links。
 - [x] 補 request/security audit structured logging baseline。
 - [x] 補核心事件 structured logging，能按 uid、orderId、clientOrderId、symbol 搜尋。
   - Baseline 已完成：order lifecycle projection 會寫 `CORE_EVENT eventType=ORDER_LIFECYCLE` log line，包含穩定的 `uid`、`orderId`、`clientOrderId`、`symbol`、`stage`、`status`、`reasonCode`、`eventTs` 欄位。
 - [x] 建立 alert：撮合停止、Kafka lag、DLQ 堆積、對帳失敗、外部 API 錯誤率、資產不平。
-  - Baseline 已完成：[Alert Rules Baseline](alert-rules.md) 已定義 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets 的 signal、threshold、severity、route、runbook、routing rules 與 noise controls。`AlertDispatchService` 與 `OkHttpAlertTransport` 提供預設關閉的 `alerts.backend.*` webhook backend，payload 會補 request/correlation ids，dispatch skipped/failed 只回報結果、不改交易狀態。
+  - Baseline 已完成：[Alert Rules Baseline](../operations/alert-rules.md) 已定義 matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced assets 的 signal、threshold、severity、route、runbook、routing rules 與 noise controls。`AlertDispatchService` 與 `OkHttpAlertTransport` 提供預設關閉的 `alerts.backend.*` webhook backend，payload 會補 request/correlation ids，dispatch skipped/failed 只回報結果、不改交易狀態。
 
 ## P2 可逐步演進
 
 - [ ] Admin console：市場配置、風控參數、手動停牌、DLQ replay、對帳報表。
-  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)；目前 repo 未保留 `docs/tasks/p2/` 細項檔。
+  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot；目前 repo 未保留 `docs/tasks/p2/` 細項檔。
   - Baseline 進度：read-only admin market-config API 與靜態頁已可用，位置為 `GET /api/admin/market-config` 與 `src/main/resources/static/admin-market-config.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin risk-parameters API 與靜態頁已可用，位置為 `GET /api/admin/risk-parameters` 與 `src/main/resources/static/admin-risk-parameters.html`；write actions 仍停用，等待 permissioned backend endpoints。
   - Baseline 進度：read-only admin DLQ API 與靜態頁已可用，位置為 `GET /api/admin/dlq` 與 `src/main/resources/static/admin-dlq.html`；payload/header preview 會遮罩敏感資訊，replay/compensation actions 仍停用，等待 permissioned operator workflow 接線。
 - [ ] 報表系統：用戶資產報表、交易報表、手續費報表、營運與財務日報。
-  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
+  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot。
 - [ ] 壓測工具：下單 TPS、撮合 TPS、行情推送 fanout、Polymarket sync 壓力。
-  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)；Polymarket sync pressure 仍屬於更大的 load-test roadmap。
+  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot；Polymarket sync pressure 仍屬於更大的 load-test roadmap。
 - [ ] 灰度與回滾：feature flag、canary deployment、schema backward compatibility。
-  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
+  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot。
 - [ ] 合規能力：KYC/AML hook、制裁名單、交易監控、可疑行為報表。
-  - Task 拆分可追溯於 [unfinished tasks snapshot](../tasks/2026-06-16-0528-unfinished-tasks.md)。
+  - Task 拆分可追溯於 git history 中的 unfinished tasks snapshot。
 - [ ] Auth 擴充：第三方 OAuth、passkeys/WebAuthn、錢包登入、MFA、device/session 管理、正式密碼重設。
   - Baseline 進度：MVP 已有本地 first-party 註冊/登入/登出；新用戶預設沒有資金，正式充值/提幣完成前先用分離的後台 test-funds 頁發測試金。
 

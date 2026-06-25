@@ -5,7 +5,7 @@ Java 21 + Spring Boot 3.5 的交易與預測市場整合後端。專案目前同
 
 目前定位是可執行的交易核心 MVP，不是生產級交易所。撮合仍是 in-memory 實作，Kafka、Redis、MySQL 也以單節點本機開發模式啟動；若要上正式環境，還需要補強持久化撮合、風控限額、帳務審計、密鑰管理、觀測與壓測。
 
-文件入口：[docs/README.md](../README.md)
+文件入口：[docs/README.md](README.md)
 
 ## 文件分類
 
@@ -14,12 +14,12 @@ Java 21 + Spring Boot 3.5 的交易與預測市場整合後端。專案目前同
 | 分類 | 說明 | 連結 |
 | --- | --- | --- |
 | 產品文件 | 業務總覽、功能、模塊、API 與下單鏈路。 | 目前頁面 |
-| 目前狀態 | 快速說明完成度、MVP baseline、production blocker 與近期優先順序。 | [current-state.md](current-state.md) |
-| Core V1 Release | 有邊界的 core-v1 baseline freeze scope、release gate、smoke runbook 與驗收指令。 | [core-v1-release-checklist.md](core-v1-release-checklist.md) / [core-v1-smoke-runbook.md](../runbooks/core-v1-smoke-runbook.md) |
-| 技術文件 | 架構、實作筆記、API curl 腳本與撮合引擎說明。 | [technical.md](technical.md) |
-| 待辦清單文件 | 依優先級與領域整理的 production readiness roadmap。 | [todo.md](todo.md) |
-| AI 文件 | 給 Codex/代理使用的精簡地圖與任務入口流程。 | [ai.md](ai.md) |
-| 任務文件 | roadmap 與插單工作的可點名 task md。 | [task-index.md](task-index.md) |
+| 目前狀態 | 快速說明完成度、MVP baseline、production blocker 與近期優先順序。 | [status/current-state.md](status/current-state.md) |
+| Core V1 Release | 有邊界的 core-v1 baseline freeze scope、release gate、smoke runbook 與驗收指令。 | [roadmap/core-v1-release-checklist.md](roadmap/core-v1-release-checklist.md) / [runbooks/core-v1-smoke-runbook.md](runbooks/core-v1-smoke-runbook.md) |
+| 技術文件 | 架構、實作筆記、API curl 腳本與撮合引擎說明。 | [architecture/technical-overview.md](architecture/technical-overview.md) |
+| 待辦清單文件 | 依優先級與領域整理的 production readiness roadmap。 | [roadmap/todo.md](roadmap/todo.md) |
+| AI 文件 | 給 Codex/代理使用的精簡地圖與任務入口流程。 | [ai/README.md](ai/README.md) |
+| 任務文件 | roadmap 與插單工作的可點名 task md。 | [roadmap/task-index.md](roadmap/task-index.md) |
 
 ## 技術棧
 
@@ -148,7 +148,7 @@ POST /api/order/place
 
 ## 下單鏈路
 
-目前內部交易所下單入口是 `POST /api/order/place`，同步完成基本驗證、風控預檢、撮合、帳務與事件發布後回傳 `accepted`。這條鏈路仍是 MVP 實作，production 前建議參考 `todo.md` 補齊持久化撮合、更完整 replay 與更嚴格的帳務一致性。
+目前內部交易所下單入口是 `POST /api/order/place`，同步完成基本驗證、風控預檢、撮合、帳務與事件發布後回傳 `accepted`。這條鏈路仍是 MVP 實作，production 前建議參考 [roadmap/todo.md](roadmap/todo.md) 補齊持久化撮合、更完整 replay 與更嚴格的帳務一致性。
 
 ```text
 HTTP POST /api/order/place
@@ -423,6 +423,6 @@ keyId:sha256Hex:ROLE_ADMIN|ROLE_TRADER:admin|trade:write;trader:sha256Hex:ROLE_T
 
 ## 參考文件
 
-- `todo.md`
-- `../../src/main/java/com/example/exchange/infra/matching/README_ch.md`
-- `../../shells/api-curls/README_ch.md`
+- [roadmap/todo.md](roadmap/todo.md)
+- [../src/main/java/com/example/exchange/infra/matching/README_ch.md](../src/main/java/com/example/exchange/infra/matching/README_ch.md)
+- [../shells/api-curls/README_ch.md](../shells/api-curls/README_ch.md)

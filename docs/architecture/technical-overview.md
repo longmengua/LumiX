@@ -1,0 +1,41 @@
+<!-- 檔案用途：繁體中文技術文件索引。 -->
+# 技術文件
+
+技術文件面向工程人員，說明系統結構、操作方式與後續擴充方向。
+
+
+## 文件清單
+
+| 文件 | 說明 |
+| --- | --- |
+| [目前狀態](../status/current-state.md) | 快速判斷目前是 MVP baseline，並列出已完成能力、production blocker 與近期優先順序。 |
+| [技術筆記](../roadmap/notes.md) | 架構與實作審查，涵蓋分層、已完成能力、風險與 production 優先事項。 |
+| [AI Code Map](../ai/code-map.md) | 給 Codex/代理使用的精簡程式碼責任與流程地圖。 |
+| [AI 文件](../ai/README.md) | Agent maps 與任務入口流程的繁中索引。 |
+| [任務文件](../roadmap/task-index.md) | 可點名 task md 的繁中索引。 |
+| [API curl 腳本](../../shells/api-curls/README_ch.md) | 本機 exchange 與 Polymarket API curl 腳本使用說明。 |
+| [撮合引擎](../../src/main/java/com/example/exchange/infra/matching/README_ch.md) | 目前 in-memory matching engine 說明與 production 演進方向。 |
+| [Redis Key Schema](redis-key-schema.md) | Redis key 歸屬、TTL 規則、namespace policy 與 migration backlog。 |
+| [Kafka Topics](kafka-topics.md) | Topic matrix、partition key policy、consumer groups、schema versioning 與正式環境建立規則。 |
+| [Observability Baseline](../operations/observability.md) | Request/correlation ID 在 HTTP、OkHttp、Kafka outbox 與 audit logs 的傳遞基線。 |
+| [Archive Strategy](archive-strategy.md) | 歷史資料的 archive manifest、retention class、刪除前置條件與 restore 規則。 |
+| [Finance Operator Runbook](../reliability/finance-operator-runbook.md) | 每日財務匯出、ledger archive restore smoke、delete guard、replay validation 與不平衡日報處理。 |
+| [Outbox Runbook](../operations/outbox-runbook.md) | Durable outbox、DLQ replay 與人工補償操作流程。 |
+| [Alert Rules Baseline](../operations/alert-rules.md) | Matching halt、Kafka lag、DLQ buildup、reconciliation failure、external API error rate 與 unbalanced-asset alert rules。 |
+| [Tracing Dashboard](../operations/tracing-dashboard.md) | OTLP tracing exporter wiring、dashboard panels 與 sampling controls。 |
+| [Cross-Store Failure Drill](../runbooks/cross-store-failure-drill.md) | MySQL/Redis/Kafka failure drill 與 outbox/domain-state consistency checks。 |
+| [Disaster Recovery Runbook](../runbooks/disaster-recovery-runbook.md) | Matching/order/account/position restore 順序、worker takeover、authenticated reconnect replay 與 smoke commands。 |
+| [ADL 營運手冊](../reliability/adl-operator-runbook.md) | ADL queue claim、execution、partial retry、no-candidate retry 與 insurance reconciliation 操作流程。 |
+| [Matching Sequencer Runbook](../reliability/matching-sequencer-runbook.md) | 單 symbol sequencer 的 production ownership、partition、啟動與 failover 規則。 |
+| [代管式 Polymarket 路由與金鑰安全](../integrations/custodial-polymarket-routing-security.md) | 使用者不連 EOA 的後端 Polymarket routing、signer isolation、CLOB credential 與 audit controls 目標架構。 |
+| [產品總覽](../overview.md) | 業務功能、模塊、下單鏈路、API 與 Kafka topics。 |
+| [待辦清單](../roadmap/todo.md) | Production readiness 的工程待辦路線圖。 |
+
+## 範圍
+
+- 系統架構與 package 邊界。
+- 本機基礎設施：MySQL、Redis、Kafka、Kafka UI。
+- API 測試腳本與手動驗證流程。
+- 撮合引擎行為與目前限制。
+- 目前完成度、MVP baseline 與 production blocker。
+- 真實流量前需要補齊的 production 工程缺口。
