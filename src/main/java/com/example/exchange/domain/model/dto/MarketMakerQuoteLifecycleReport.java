@@ -4,12 +4,50 @@
 package com.example.exchange.domain.model.dto;
 
 import java.util.UUID;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
 
-public record MarketMakerQuoteLifecycleReport(
-        MarketMakerQuoteDecision decision,
-        int canceledCount,
-        int placedCount,
-        UUID bidOrderId,
-        UUID askOrderId
-) {
+
+@Data
+@Builder
+@Jacksonized
+public class MarketMakerQuoteLifecycleReport {
+
+    private final MarketMakerQuoteDecision decision;
+
+    private final int canceledCount;
+
+    private final int placedCount;
+
+    private final UUID bidOrderId;
+
+    private final UUID askOrderId;
+    public MarketMakerQuoteLifecycleReport(MarketMakerQuoteDecision decision, int canceledCount, int placedCount, UUID bidOrderId, UUID askOrderId) {
+        this.decision = decision;
+        this.canceledCount = canceledCount;
+        this.placedCount = placedCount;
+        this.bidOrderId = bidOrderId;
+        this.askOrderId = askOrderId;
+    }
+
+    public MarketMakerQuoteDecision decision() {
+        return decision;
+    }
+
+    public int canceledCount() {
+        return canceledCount;
+    }
+
+    public int placedCount() {
+        return placedCount;
+    }
+
+    public UUID bidOrderId() {
+        return bidOrderId;
+    }
+
+    public UUID askOrderId() {
+        return askOrderId;
+    }
 }

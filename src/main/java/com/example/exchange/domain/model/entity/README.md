@@ -1,21 +1,49 @@
 # domain/model/entity
 
-核心狀態模型。
+只放「跟資料表連動」的業務資料模型。
 
-目前重點：
-- 內部交易所：`Order`、`Account`、`Position`、`Symbol`、`SymbolConfig`（含 risk tiers）。
-- 帳務：`WalletLedgerEntry`、`WalletLedgerPosting`、`WalletTransfer`、`BonusCreditGrantRecord`、`TurnoverRecordEntity`。
-- 訂單 lifecycle：`OrderLifecycleEventRecord`、`OrderLifecycleProjection` 保存 latest order state 與 strategy/market-maker tags。
-- 持倉 read model：`PositionLifecycleProjection` 保存 live position SQL mirror schema 與 query indexes；projection 寫入鏈路仍待後續服務接入。
-- 做市商：`MarketMakerProfileRecord`、`MarketMakerRiskLimitRecord`、`MarketMakerQuoteStateRecord`、`HedgeDecisionAuditRecordEntity`（含 internal trade ref）、`HedgeFillRecordEntity`（含 ledger ref）。
-- 風控 read model：`AccountRiskSnapshotRecord`、`AdlExecutionRecordEntity`、`InsuranceFundMovementEntity`。
-- Market data：`MarketDataSequenceCheckpointRecord`、`MarketDataDepthDeltaRecord`、`MarketDataTradeTapeRecord`、`MarketDataTickerRecord`、`MarketDataKlineRecord`。
-- Reliability：`OutboxEvent`、`DlqEvent`。
-- Polymarket：market、session、local order、WS event、sync progress entities。
+白話：
+這裡的 class 基本上就是資料表對應物，通常會有：
 
-目前狀態：
-- 多數 entity 可被 Redis/JPA/Jackson 序列化。
-- production 前要補正式 schema、索引、版本與 migration 策略。
+- `@Entity`
+- `@Table`
+- `@Id`
+- `@Column`
 
-注意：
-- 這裡的 method 可承載 domain state transition，但不要直接呼叫 repository。
+例如：
+
+- `TradingSymbolRecord`
+- `TradingSymbolRiskTierRecord`
+- `OutboxEventRecord`
+- `WalletLedgerEntryRecord`
+- `MatchingCommandLogRecord`
+- `PredictionMarketInfo`
+
+## 不放這裡的東西
+
+不跟資料表直接連動的模型，不放這裡。
+
+例如：
+
+- `Symbol`
+- `SymbolConfig`
+- `Account`
+- `Order`
+- `Position`
+- `WalletTransfer`
+
+這些放在：
+
+```text
+domain/model/dto
+```
+
+## 原則
+
+- entity 只描述資料表欄位。
+- entity 不放複雜商業規則。
+- entity 不直接呼叫 repository。
+- entity 不處理跨模型轉換。
+- 跨模型轉換放在 dto。
+- entity 也維持 Lombok class 風格，不使用 `record`。
+- 若只是在 entity 上省樣板，優先用 `@Getter` / `@Setter` / `@Data` 等 Lombok 註解，而不是改成 record。

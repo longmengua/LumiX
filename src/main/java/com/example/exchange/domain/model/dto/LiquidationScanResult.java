@@ -5,6 +5,10 @@ package com.example.exchange.domain.model.dto;
 
 import java.time.Instant;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * Liquidation scan result。
@@ -15,11 +19,45 @@ import java.util.List;
  * @param results          每個 position 的 liquidation 判斷結果
  * @param scannedAt        掃描時間
  */
-public record LiquidationScanResult(
-        int scannedPositions,
-        int liquidationCount,
-        int reviewedCount,
-        List<LiquidationResult> results,
-        Instant scannedAt
-) {
+@Data
+@Builder
+@Jacksonized
+public class LiquidationScanResult {
+
+    private final int scannedPositions;
+
+    private final int liquidationCount;
+
+    private final int reviewedCount;
+
+    private final List<LiquidationResult> results;
+
+    private final Instant scannedAt;
+    public LiquidationScanResult(int scannedPositions, int liquidationCount, int reviewedCount, List<LiquidationResult> results, Instant scannedAt) {
+        this.scannedPositions = scannedPositions;
+        this.liquidationCount = liquidationCount;
+        this.reviewedCount = reviewedCount;
+        this.results = results;
+        this.scannedAt = scannedAt;
+    }
+
+    public int scannedPositions() {
+        return scannedPositions;
+    }
+
+    public int liquidationCount() {
+        return liquidationCount;
+    }
+
+    public int reviewedCount() {
+        return reviewedCount;
+    }
+
+    public List<LiquidationResult> results() {
+        return results;
+    }
+
+    public Instant scannedAt() {
+        return scannedAt;
+    }
 }

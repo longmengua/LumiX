@@ -4,8 +4,32 @@
 package com.example.exchange.domain.model.dto;
 
 import java.math.BigDecimal;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * 簡單價量結構：某個 price 的聚合數量 qty
  */
-public record PriceLevel(BigDecimal price, BigDecimal qty) {}
+@Data
+@Builder
+@Jacksonized
+public class PriceLevel {
+
+    private final BigDecimal price;
+
+    private final BigDecimal qty;
+    public PriceLevel(BigDecimal price, BigDecimal qty) {
+        this.price = price;
+        this.qty = qty;
+    }
+
+    public BigDecimal price() {
+        return price;
+    }
+
+    public BigDecimal qty() {
+        return qty;
+    }
+}

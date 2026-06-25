@@ -6,6 +6,10 @@ package com.example.exchange.domain.model.dto;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * ADL forced execution result。
@@ -21,16 +25,80 @@ import java.util.List;
  * @param steps                     每筆減倉結果
  * @param executedAt                判斷或執行時間
  */
-public record AdlExecutionResult(
-        String commandId,
-        boolean executed,
-        String reason,
-        BigDecimal requestedNotional,
-        BigDecimal plannedNotional,
-        BigDecimal executedNotional,
-        BigDecimal remainingNotional,
-        BigDecimal socializedLossCharged,
-        List<AdlExecutionStepResult> steps,
-        Instant executedAt
-) {
+@Data
+@Builder
+@Jacksonized
+public class AdlExecutionResult {
+
+    private final String commandId;
+
+    private final boolean executed;
+
+    private final String reason;
+
+    private final BigDecimal requestedNotional;
+
+    private final BigDecimal plannedNotional;
+
+    private final BigDecimal executedNotional;
+
+    private final BigDecimal remainingNotional;
+
+    private final BigDecimal socializedLossCharged;
+
+    private final List<AdlExecutionStepResult> steps;
+
+    private final Instant executedAt;
+    public AdlExecutionResult(String commandId, boolean executed, String reason, BigDecimal requestedNotional, BigDecimal plannedNotional, BigDecimal executedNotional, BigDecimal remainingNotional, BigDecimal socializedLossCharged, List<AdlExecutionStepResult> steps, Instant executedAt) {
+        this.commandId = commandId;
+        this.executed = executed;
+        this.reason = reason;
+        this.requestedNotional = requestedNotional;
+        this.plannedNotional = plannedNotional;
+        this.executedNotional = executedNotional;
+        this.remainingNotional = remainingNotional;
+        this.socializedLossCharged = socializedLossCharged;
+        this.steps = steps;
+        this.executedAt = executedAt;
+    }
+
+    public String commandId() {
+        return commandId;
+    }
+
+    public boolean executed() {
+        return executed;
+    }
+
+    public String reason() {
+        return reason;
+    }
+
+    public BigDecimal requestedNotional() {
+        return requestedNotional;
+    }
+
+    public BigDecimal plannedNotional() {
+        return plannedNotional;
+    }
+
+    public BigDecimal executedNotional() {
+        return executedNotional;
+    }
+
+    public BigDecimal remainingNotional() {
+        return remainingNotional;
+    }
+
+    public BigDecimal socializedLossCharged() {
+        return socializedLossCharged;
+    }
+
+    public List<AdlExecutionStepResult> steps() {
+        return steps;
+    }
+
+    public Instant executedAt() {
+        return executedAt;
+    }
 }

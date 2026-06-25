@@ -5,15 +5,30 @@ package com.example.exchange.domain.model.dto;
 
 import java.util.List;
 import java.util.Optional;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
 
-public record MarketMakerProfile(
-        String marketMakerId,
-        long uid,
-        boolean enabled,
-        List<MarketMakerRiskLimit> riskLimits
-) {
-    public MarketMakerProfile {
+
+@Data
+@Builder
+@Jacksonized
+public class MarketMakerProfile {
+
+    private final String marketMakerId;
+
+    private final long uid;
+
+    private final boolean enabled;
+
+    private final List<MarketMakerRiskLimit> riskLimits;
+    public MarketMakerProfile(String marketMakerId, long uid, boolean enabled, List<MarketMakerRiskLimit> riskLimits) {
         riskLimits = riskLimits == null ? List.of() : List.copyOf(riskLimits);
+    
+        this.marketMakerId = marketMakerId;
+        this.uid = uid;
+        this.enabled = enabled;
+        this.riskLimits = riskLimits;
     }
 
     public Optional<MarketMakerRiskLimit> riskLimit(String symbol) {
@@ -21,5 +36,21 @@ public record MarketMakerProfile(
         return riskLimits.stream()
                 .filter(limit -> normalized.equalsIgnoreCase(limit.symbol()))
                 .findFirst();
+    }
+
+    public String marketMakerId() {
+        return marketMakerId;
+    }
+
+    public long uid() {
+        return uid;
+    }
+
+    public boolean enabled() {
+        return enabled;
+    }
+
+    public List<MarketMakerRiskLimit> riskLimits() {
+        return riskLimits;
     }
 }

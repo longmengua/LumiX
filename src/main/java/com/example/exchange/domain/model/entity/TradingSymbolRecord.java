@@ -5,16 +5,13 @@
  * 白話：
  * 這張表就是後台的「交易對設定」。
  *
- * 例如：
- * - BTCUSDT-SPOT 要不要開放交易
- * - BTCUSDT-PERP 最大幾倍槓桿
- * - 價格最小跳多少
- * - 數量最小跳多少
- * - 手續費多少
+ * 注意：
+ * 這支只描述資料表欄位。
+ * 不放商業規則。
+ * 不放 SymbolConfig 轉換。
+ * 不呼叫 repository。
  */
 package com.example.exchange.domain.model.entity;
-
-import com.example.exchange.domain.model.dto.SymbolConfig;
 
 import com.example.exchange.domain.model.enums.ProductType;
 import jakarta.persistence.Column;
@@ -30,7 +27,6 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 
 @Getter
 @Setter
@@ -40,8 +36,6 @@ public class TradingSymbolRecord {
 
     /**
      * 資料庫流水 ID。
-     *
-     * 沒有業務意思，只是資料庫主鍵。
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -54,8 +48,6 @@ public class TradingSymbolRecord {
      * 例如：
      * BTCUSDT-SPOT
      * BTCUSDT-PERP
-     *
-     * 這個欄位是業務唯一鍵。
      */
     @Column(name = "symbol", nullable = false, length = 64)
     private String symbol;
@@ -251,98 +243,4 @@ public class TradingSymbolRecord {
      */
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false, columnDefinition = "DATETIME(6)")
     private Instant updatedAt;
-
-    /**
-     * 把資料庫資料轉成領域模型 SymbolConfig。
-     *
-     * 白話：
-     * DB 是存資料用。
-     * SymbolConfig 是程式下單、風控、撮合時要用的設定物件。
-     */
-    public SymbolConfig toSymbolConfig(List<TradingSymbolRiskTierRecord> tierRecords) {
-        List<SymbolConfig.RiskTier> tiers = tierRecords == null
-                ? List.of()
-                : tierRecords.stream()
-                .map(TradingSymbolRiskTierRecord::toRiskTier)
-                .toList();
-
-        return SymbolConfig.builder()
-                .symbol(normalize(symbol))
-                .productType(productType)
-                .baseAsset(normalize(baseAsset))
-                .quoteAsset(normalize(quoteAsset))
-                .marginAsset(normalizeNullable(marginAsset))
-                .priceTick(priceTick)
-                .lotSize(lotSize)
-                .minQty(minQty)
-                .minNotional(minNotional)
-                .maxOrderNotional(maxOrderNotional)
-                .maxPositionNotional(maxPositionNotional)
-                .maxOpenOrders(maxOpenOrders)
-                .maxLeverage(maxLeverage)
-                .initialMarginRate(initialMarginRate)
-                .maintenanceMarginRate(maintenanceMarginRate)
-                .makerFeeRate(makerFeeRate)
-                .takerFeeRate(takerFeeRate)
-                .makerRebateRate(makerRebateRate)
-                .referralRebateRate(referralRebateRate)
-                .priceBandRate(priceBandRate)
-                .riskTiers(tiers)
-                .tradingEnabled(tradingEnabled)
-                .visible(visible)
-                .reduceOnly(reduceOnly)
-                .build();
-    }
-
-    /**
-     * 把 SymbolConfig 轉回資料庫 entity。
-     *
-     * 後台新增或修改交易對時會用到。
-     */
-    public static TradingSymbolRecord from(SymbolConfig config) {
-        TradingSymbolRecord record = new TradingSymbolRecord();
-
-        record.setSymbol(normalize(config.getSymbol()));
-        record.setProductType(config.productTypeOrDefault());
-        record.setBaseAsset(normalize(config.getBaseAsset()));
-        record.setQuoteAsset(normalize(config.getQuoteAsset()));
-        record.setMarginAsset(normalizeNullable(config.getMarginAsset()));
-        record.setPriceTick(config.priceTickOrDefault());
-        record.setLotSize(config.lotSizeOrDefault());
-        record.setMinQty(config.minQtyOrDefault());
-        record.setMinNotional(config.minNotionalOrDefault());
-        record.setMaxOrderNotional(config.maxOrderNotionalOrDefault());
-        record.setMaxPositionNotional(config.maxPositionNotionalOrDefault());
-        record.setMaxOpenOrders(config.maxOpenOrdersOrDefault());
-        record.setMaxLeverage(config.maxLeverageOrDefault());
-        record.setInitialMarginRate(config.initialMarginRateOrDefault());
-        record.setMaintenanceMarginRate(config.maintenanceMarginRateOrDefault());
-        record.setMakerFeeRate(config.makerFeeRateOrDefault());
-        record.setTakerFeeRate(config.takerFeeRateOrDefault());
-        record.setMakerRebateRate(config.makerRebateRateOrDefault());
-        record.setReferralRebateRate(config.referralRebateRateOrDefault());
-        record.setPriceBandRate(config.priceBandRateOrDefault());
-        record.setTradingEnabled(config.isTradingEnabled());
-        record.setVisible(config.visibleOrDefault());
-        record.setReduceOnly(config.reduceOnlyOrDefault());
-
-        return record;
-    }
-
-    /**
-     * 統一把字串整理成大寫。
-     */
-    private static String normalize(String value) {
-        return value == null ? "" : value.trim().toUpperCase();
-    }
-
-    /**
-     * 可以為 null 的欄位，用這個整理。
-     */
-    private static String normalizeNullable(String value) {
-        if (value == null || value.isBlank()) {
-            return null;
-        }
-        return value.trim().toUpperCase();
-    }
 }

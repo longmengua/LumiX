@@ -5,6 +5,10 @@ package com.example.exchange.domain.model.dto;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * 帳戶風險快照。
@@ -25,17 +29,94 @@ import java.time.Instant;
  * @param openPositionCount 非零倉位數
  * @param calculatedAt 快照計算時間
  */
-public record AccountRiskSnapshot(
-        long uid,
-        BigDecimal crossBalance,
-        BigDecimal availableBalance,
-        BigDecimal orderHold,
-        BigDecimal positionMargin,
-        BigDecimal frozenFunds,
-        BigDecimal unrealizedPnl,
-        BigDecimal totalEquity,
-        BigDecimal maintenanceMargin,
-        BigDecimal riskRatio,
-        int openPositionCount,
-        Instant calculatedAt
-) {}
+@Data
+@Builder
+@Jacksonized
+public class AccountRiskSnapshot {
+
+    private final long uid;
+
+    private final BigDecimal crossBalance;
+
+    private final BigDecimal availableBalance;
+
+    private final BigDecimal orderHold;
+
+    private final BigDecimal positionMargin;
+
+    private final BigDecimal frozenFunds;
+
+    private final BigDecimal unrealizedPnl;
+
+    private final BigDecimal totalEquity;
+
+    private final BigDecimal maintenanceMargin;
+
+    private final BigDecimal riskRatio;
+
+    private final int openPositionCount;
+
+    private final Instant calculatedAt;
+    public AccountRiskSnapshot(long uid, BigDecimal crossBalance, BigDecimal availableBalance, BigDecimal orderHold, BigDecimal positionMargin, BigDecimal frozenFunds, BigDecimal unrealizedPnl, BigDecimal totalEquity, BigDecimal maintenanceMargin, BigDecimal riskRatio, int openPositionCount, Instant calculatedAt) {
+        this.uid = uid;
+        this.crossBalance = crossBalance;
+        this.availableBalance = availableBalance;
+        this.orderHold = orderHold;
+        this.positionMargin = positionMargin;
+        this.frozenFunds = frozenFunds;
+        this.unrealizedPnl = unrealizedPnl;
+        this.totalEquity = totalEquity;
+        this.maintenanceMargin = maintenanceMargin;
+        this.riskRatio = riskRatio;
+        this.openPositionCount = openPositionCount;
+        this.calculatedAt = calculatedAt;
+    }
+
+    public long uid() {
+        return uid;
+    }
+
+    public BigDecimal crossBalance() {
+        return crossBalance;
+    }
+
+    public BigDecimal availableBalance() {
+        return availableBalance;
+    }
+
+    public BigDecimal orderHold() {
+        return orderHold;
+    }
+
+    public BigDecimal positionMargin() {
+        return positionMargin;
+    }
+
+    public BigDecimal frozenFunds() {
+        return frozenFunds;
+    }
+
+    public BigDecimal unrealizedPnl() {
+        return unrealizedPnl;
+    }
+
+    public BigDecimal totalEquity() {
+        return totalEquity;
+    }
+
+    public BigDecimal maintenanceMargin() {
+        return maintenanceMargin;
+    }
+
+    public BigDecimal riskRatio() {
+        return riskRatio;
+    }
+
+    public int openPositionCount() {
+        return openPositionCount;
+    }
+
+    public Instant calculatedAt() {
+        return calculatedAt;
+    }
+}

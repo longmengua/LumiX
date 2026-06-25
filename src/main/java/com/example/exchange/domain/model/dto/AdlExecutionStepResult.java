@@ -4,6 +4,10 @@
 package com.example.exchange.domain.model.dto;
 
 import java.math.BigDecimal;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * ADL forced execution step result。
@@ -17,14 +21,66 @@ import java.math.BigDecimal;
  * @param marginReleased        依減倉比例釋放的 position margin
  * @param socializedLossCharged 從獲利帳戶扣回、用於承接 ADL 缺口的金額
  */
-public record AdlExecutionStepResult(
-        int rank,
-        long uid,
-        String symbol,
-        BigDecimal executionPrice,
-        BigDecimal closedQty,
-        BigDecimal realizedPnl,
-        BigDecimal marginReleased,
-        BigDecimal socializedLossCharged
-) {
+@Data
+@Builder
+@Jacksonized
+public class AdlExecutionStepResult {
+
+    private final int rank;
+
+    private final long uid;
+
+    private final String symbol;
+
+    private final BigDecimal executionPrice;
+
+    private final BigDecimal closedQty;
+
+    private final BigDecimal realizedPnl;
+
+    private final BigDecimal marginReleased;
+
+    private final BigDecimal socializedLossCharged;
+    public AdlExecutionStepResult(int rank, long uid, String symbol, BigDecimal executionPrice, BigDecimal closedQty, BigDecimal realizedPnl, BigDecimal marginReleased, BigDecimal socializedLossCharged) {
+        this.rank = rank;
+        this.uid = uid;
+        this.symbol = symbol;
+        this.executionPrice = executionPrice;
+        this.closedQty = closedQty;
+        this.realizedPnl = realizedPnl;
+        this.marginReleased = marginReleased;
+        this.socializedLossCharged = socializedLossCharged;
+    }
+
+    public int rank() {
+        return rank;
+    }
+
+    public long uid() {
+        return uid;
+    }
+
+    public String symbol() {
+        return symbol;
+    }
+
+    public BigDecimal executionPrice() {
+        return executionPrice;
+    }
+
+    public BigDecimal closedQty() {
+        return closedQty;
+    }
+
+    public BigDecimal realizedPnl() {
+        return realizedPnl;
+    }
+
+    public BigDecimal marginReleased() {
+        return marginReleased;
+    }
+
+    public BigDecimal socializedLossCharged() {
+        return socializedLossCharged;
+    }
 }

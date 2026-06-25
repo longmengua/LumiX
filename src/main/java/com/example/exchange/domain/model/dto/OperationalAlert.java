@@ -5,22 +5,38 @@ package com.example.exchange.domain.model.dto;
 
 import java.time.Instant;
 import java.util.Map;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
 
-public record OperationalAlert(
-        String alertName,
-        AlertSeverity severity,
-        String route,
-        String summary,
-        String entityId,
-        String runbook,
-        Map<String, String> labels,
-        Map<String, String> details,
-        String requestId,
-        String correlationId,
-        Instant triggeredAt
-) {
 
-    public OperationalAlert {
+@Data
+@Builder
+@Jacksonized
+public class OperationalAlert {
+
+    private final String alertName;
+
+    private final AlertSeverity severity;
+
+    private final String route;
+
+    private final String summary;
+
+    private final String entityId;
+
+    private final String runbook;
+
+    private final Map<String, String> labels;
+
+    private final Map<String, String> details;
+
+    private final String requestId;
+
+    private final String correlationId;
+
+    private final Instant triggeredAt;
+    public OperationalAlert(String alertName, AlertSeverity severity, String route, String summary, String entityId, String runbook, Map<String, String> labels, Map<String, String> details, String requestId, String correlationId, Instant triggeredAt) {
         alertName = requireText(alertName, "alertName");
         severity = severity == null ? AlertSeverity.WARNING : severity;
         route = requireText(route, "route");
@@ -32,6 +48,18 @@ public record OperationalAlert(
         requestId = normalize(requestId);
         correlationId = normalize(correlationId);
         triggeredAt = triggeredAt == null ? Instant.now() : triggeredAt;
+    
+        this.alertName = alertName;
+        this.severity = severity;
+        this.route = route;
+        this.summary = summary;
+        this.entityId = entityId;
+        this.runbook = runbook;
+        this.labels = labels;
+        this.details = details;
+        this.requestId = requestId;
+        this.correlationId = correlationId;
+        this.triggeredAt = triggeredAt;
     }
 
     public OperationalAlert withTrace(String requestId, String correlationId) {
@@ -174,5 +202,49 @@ public record OperationalAlert(
     private static String safe(String value) {
         String normalized = normalize(value);
         return normalized == null ? "unknown" : normalized;
+    }
+
+    public String alertName() {
+        return alertName;
+    }
+
+    public AlertSeverity severity() {
+        return severity;
+    }
+
+    public String route() {
+        return route;
+    }
+
+    public String summary() {
+        return summary;
+    }
+
+    public String entityId() {
+        return entityId;
+    }
+
+    public String runbook() {
+        return runbook;
+    }
+
+    public Map<String, String> labels() {
+        return labels;
+    }
+
+    public Map<String, String> details() {
+        return details;
+    }
+
+    public String requestId() {
+        return requestId;
+    }
+
+    public String correlationId() {
+        return correlationId;
+    }
+
+    public Instant triggeredAt() {
+        return triggeredAt;
     }
 }

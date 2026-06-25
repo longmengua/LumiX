@@ -4,6 +4,10 @@
 package com.example.exchange.domain.model.dto;
 
 import java.math.BigDecimal;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * ADL ranking candidate。
@@ -16,13 +20,59 @@ import java.math.BigDecimal;
  * @param margin     目前倉位保證金
  * @param leverage   倉位槓桿
  */
-public record AdlRankingCandidate(
-        long uid,
-        String symbol,
-        BigDecimal qty,
-        BigDecimal entryPrice,
-        BigDecimal markPrice,
-        BigDecimal margin,
-        BigDecimal leverage
-) {
+@Data
+@Builder
+@Jacksonized
+public class AdlRankingCandidate {
+
+    private final long uid;
+
+    private final String symbol;
+
+    private final BigDecimal qty;
+
+    private final BigDecimal entryPrice;
+
+    private final BigDecimal markPrice;
+
+    private final BigDecimal margin;
+
+    private final BigDecimal leverage;
+    public AdlRankingCandidate(long uid, String symbol, BigDecimal qty, BigDecimal entryPrice, BigDecimal markPrice, BigDecimal margin, BigDecimal leverage) {
+        this.uid = uid;
+        this.symbol = symbol;
+        this.qty = qty;
+        this.entryPrice = entryPrice;
+        this.markPrice = markPrice;
+        this.margin = margin;
+        this.leverage = leverage;
+    }
+
+    public long uid() {
+        return uid;
+    }
+
+    public String symbol() {
+        return symbol;
+    }
+
+    public BigDecimal qty() {
+        return qty;
+    }
+
+    public BigDecimal entryPrice() {
+        return entryPrice;
+    }
+
+    public BigDecimal markPrice() {
+        return markPrice;
+    }
+
+    public BigDecimal margin() {
+        return margin;
+    }
+
+    public BigDecimal leverage() {
+        return leverage;
+    }
 }

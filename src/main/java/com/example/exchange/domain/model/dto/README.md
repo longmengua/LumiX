@@ -1,18 +1,69 @@
 # domain/model/dto
 
-跨層傳遞的資料模型與讀模型。
+放「不跟資料表直接連動」的資料模型、讀模型、狀態模型與轉換模型。
 
-目前重點：
-- Market data：`DepthDelta`、`MarketDataRecoveryCursor`、`MarketTicker`、`MarketKline`、`TradeTapeItem`。
-- Push gateway：`PushGatewayRuntimeStatus` 回報 gateway role、drain flags 與本機 stream/session counts。
-- 風控/帳務：`AccountRiskSnapshot`、`MarkPriceSnapshot`、`FundingSettlementResult`、`LiquidationResult`、`AdlOperationalAlertReport`、`AdlOperationalAlert`、`AdlInsuranceReconciliationReport`、`AdlInsuranceReconciliationIssue`、`InsuranceFundMovement`、`BonusCreditGrant`、`BonusCreditReport`、`BonusCreditCampaignReport`、`BonusCreditCampaignExport`、`TurnoverRecord`、`TurnoverSummary`、`TurnoverExportReport`、`TurnoverReconciliationReport`；`TurnoverReconciliationIssue` 會攜帶 order tag 與 ledger-ref presence 方便營運對帳。
-- Snapshot read model：account risk snapshots、reconciliation reports、wallet ledger replay。
-- Observability command result：`OperationalAlert` 與 `AlertDispatchResult` 定義送往 alert backend 的 payload 與 dispatch result。
-- Finance/recovery read model：`TrialBalanceReport`、`TrialBalanceLine`、`FinanceDailyReport`、`FinanceDailyReportLine`、`FinanceCategoryExportBatch`、`LedgerArchiveDeleteGuardReport`、`LedgerArchiveRestoreSmokeReport`、`LedgerArchiveReplayValidationReport`、`LedgerReplayComparisonReport`、`LedgerReplayComparisonIssue`、`OutboxDomainStateConsistencyReport`、`OutboxDomainStateConsistencyIssue`、`AccountPositionConsistencyReport`、`AccountPositionConsistencyIssue`。
-- Market maker / hedging：`MarketMakerProfile`、`MarketMakerRiskLimit`、`MarketMakerExposure`、`MarketMakerQuoteCommand`、`MarketMakerQuoteDecision`、`MarketMakerQuoteLifecycleReport`、`MarketMakerQuoteState`（含 per-side version / replaced order metadata）、`MarketMakerQuoteReconciliationReport`、`MarketMakerQuoteReconciliationIssue`、`MarketMakerQuoteRepairReport`、`MarketMakerQuoteRepairAction`、`HedgeOrderRequest`、`HedgeOrderResult`（含 retryable 錯誤分類）、`HedgeVenueIdempotencyRecord`、`HedgeVenueIdempotencyReport`、`HedgeVenueIdempotencyIssue`、`HedgeDecision`、`HedgeStrategyDecision`、`HedgeExecutionReport`、`HedgeDecisionAuditRecord`（含 internal trade ref）、`HedgeVenueFillMessage`、`HedgeFillRecord`（含 ledger ref）、`HedgeReconciliationReport`、`HedgeReconciliationIssue`。
-- Recovery / validation：`Snapshot`、`RecoveryResult`、`ValidationIssue`。
-- Polymarket：Gamma/CLOB/user WS 相關 request/response DTO；`PolymarketUserWsStatusResponse` 會帶 worker identity 與 durable checkpoint visibility；`PolymarketPlaceOrderRequest.clientRequestId` 是 CLOB place idempotency key，`PolymarketClobCommandRecord` 是 effectful CLOB command idempotency record，`PolymarketResponseSchemaReport` 是外部 Gamma/CLOB response schema drift report。
+白話：
+只要不是直接對應資料表，就放這裡。
 
-注意：
-- DTO 不應包含 repository 或 infrastructure 依賴。
-- 新增 DTO 時要註明它是 command result、read model，還是外部 API schema。
+## 可以放這裡的東西
+
+- 跨層傳遞資料
+- 查詢結果
+- command result
+- read model
+- 外部 API schema
+- 不直接對表的業務狀態模型
+- 交易規則模型
+- entity 轉換後給程式使用的模型
+
+例如：
+
+- `Symbol`
+- `SymbolConfig`
+- `Account`
+- `Order`
+- `Position`
+- `WalletTransfer`
+- `DepthDelta`
+- `MarketTicker`
+- `FundingSettlementResult`
+- `LiquidationResult`
+- `MatchingResult`
+
+## 關於規則
+
+dto 可以放規則。
+
+例如 `SymbolConfig` 可以放：
+
+- `maxLeverageOrDefault`
+- `isPriceAligned`
+- `isQtyAligned`
+- `riskTierForNotional`
+
+因為它不是資料表 class，而是程式真正拿來判斷交易規則的模型。
+
+## 關於轉換
+
+跨模型轉換放在 dto。
+
+例如：
+
+```text
+TradingSymbolRecord + TradingSymbolRiskTierRecord
+        ↓
+SymbolConfig
+```
+
+這種轉換應該放在 `SymbolConfig` 裡，不要放在 `TradingSymbolRecord` 裡。
+
+## 原則
+
+- dto 不直接操作 DB。
+- dto 不呼叫 repository。
+- dto 不依賴 Spring bean。
+- dto 可以承載資料轉換與規則判斷。
+- dto 在本專案一律用 Lombok class，不新增 `record`。
+- DTO 若需要 JSON 序列化，優先用 `@Data` + `@Builder` + `@Jacksonized`，並保留必要的商業規則方法。
+- 若是 record 轉型中的相容期，可以保留和舊呼叫點相同名稱的 accessor，避免一次改壞所有 consumer。
+- AI 看到 `domain/model/dto` 時，應假設這裡的標準是 Lombok class，不是 Java `record`。

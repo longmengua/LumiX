@@ -5,15 +5,13 @@
  * 白話：
  * 這張表是合約的槓桿分層。
  *
- * 例如：
- * BTCUSDT-PERP
- * - 小倉位可以 100 倍
- * - 中倉位只能 50 倍
- * - 大倉位只能 20 倍
+ * 注意：
+ * 這支只描述資料表欄位。
+ * 不放商業規則。
+ * 不放 SymbolConfig.RiskTier 轉換。
+ * 不呼叫 repository。
  */
 package com.example.exchange.domain.model.entity;
-
-import com.example.exchange.domain.model.dto.SymbolConfig;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -103,40 +101,4 @@ public class TradingSymbolRiskTierRecord {
      */
     @Column(name = "updated_at", nullable = false, insertable = false, updatable = false, columnDefinition = "DATETIME(6)")
     private Instant updatedAt;
-
-    /**
-     * 轉成 SymbolConfig 裡面使用的 RiskTier。
-     */
-    public SymbolConfig.RiskTier toRiskTier() {
-        return SymbolConfig.RiskTier.builder()
-                .tier(tier)
-                .maxPositionNotional(maxPositionNotional)
-                .maxLeverage(maxLeverage)
-                .initialMarginRate(initialMarginRate)
-                .maintenanceMarginRate(maintenanceMarginRate)
-                .build();
-    }
-
-    /**
-     * 從 SymbolConfig.RiskTier 轉成資料庫 entity。
-     */
-    public static TradingSymbolRiskTierRecord from(String symbol, SymbolConfig.RiskTier tier) {
-        TradingSymbolRiskTierRecord record = new TradingSymbolRiskTierRecord();
-
-        record.setSymbol(normalize(symbol));
-        record.setTier(tier.getTier());
-        record.setMaxPositionNotional(tier.getMaxPositionNotional());
-        record.setMaxLeverage(tier.getMaxLeverage());
-        record.setInitialMarginRate(tier.getInitialMarginRate());
-        record.setMaintenanceMarginRate(tier.getMaintenanceMarginRate());
-
-        return record;
-    }
-
-    /**
-     * 統一把交易對整理成大寫。
-     */
-    private static String normalize(String value) {
-        return value == null ? "" : value.trim().toUpperCase();
-    }
 }

@@ -8,6 +8,10 @@ import com.example.exchange.domain.model.enums.MatchingCommandType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import lombok.Builder;
+import lombok.Data;
+import lombok.extern.jackson.Jacksonized;
+
 
 /**
  * 單一 symbol 的撮合 command log entry。
@@ -23,16 +27,80 @@ import java.time.Instant;
  * @param ownerEpoch       寫入 command 時的 sequencer epoch；未接 fencing 時為 0
  * @param createdAt        command log 建立時間
  */
-public record MatchingCommandLogEntry(
-        String symbolCode,
-        long offset,
-        MatchingCommandType type,
-        Order order,
-        Order replacementOrder,
-        BigDecimal newPrice,
-        BigDecimal newQty,
-        String ownerId,
-        long ownerEpoch,
-        Instant createdAt
-) {
+@Data
+@Builder
+@Jacksonized
+public class MatchingCommandLogEntry {
+
+    private final String symbolCode;
+
+    private final long offset;
+
+    private final MatchingCommandType type;
+
+    private final Order order;
+
+    private final Order replacementOrder;
+
+    private final BigDecimal newPrice;
+
+    private final BigDecimal newQty;
+
+    private final String ownerId;
+
+    private final long ownerEpoch;
+
+    private final Instant createdAt;
+    public MatchingCommandLogEntry(String symbolCode, long offset, MatchingCommandType type, Order order, Order replacementOrder, BigDecimal newPrice, BigDecimal newQty, String ownerId, long ownerEpoch, Instant createdAt) {
+        this.symbolCode = symbolCode;
+        this.offset = offset;
+        this.type = type;
+        this.order = order;
+        this.replacementOrder = replacementOrder;
+        this.newPrice = newPrice;
+        this.newQty = newQty;
+        this.ownerId = ownerId;
+        this.ownerEpoch = ownerEpoch;
+        this.createdAt = createdAt;
+    }
+
+    public String symbolCode() {
+        return symbolCode;
+    }
+
+    public long offset() {
+        return offset;
+    }
+
+    public MatchingCommandType type() {
+        return type;
+    }
+
+    public Order order() {
+        return order;
+    }
+
+    public Order replacementOrder() {
+        return replacementOrder;
+    }
+
+    public BigDecimal newPrice() {
+        return newPrice;
+    }
+
+    public BigDecimal newQty() {
+        return newQty;
+    }
+
+    public String ownerId() {
+        return ownerId;
+    }
+
+    public long ownerEpoch() {
+        return ownerEpoch;
+    }
+
+    public Instant createdAt() {
+        return createdAt;
+    }
 }
