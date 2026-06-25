@@ -1,1 +1,1 @@
-# java21-OLAP
+# LumiX
