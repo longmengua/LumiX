@@ -3,6 +3,7 @@
 ## 任務
 
 建立做市商管理模組，包含外部做市商接入、API 權限、績效報表，以及內部做市 bot 的安全骨架。
+後端實作預期為 Java 21 + Spring Boot 3；內部 MM 只保留安全骨架與 Open API adapter。
 
 ---
 
@@ -136,6 +137,8 @@ Sandbox 測試
 不要直接接入真實外部交易所下單。
 不要繞過 Open API。
 可先實作配置、帳號、報表與 bot stub。
+內部 MM 不得直接修改 order book、資產或 ledger。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

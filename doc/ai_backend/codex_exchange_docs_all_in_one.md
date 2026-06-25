@@ -10,6 +10,8 @@
 
 這一組文件是為了讓 Codex mini 用最低成本、最低上下文量，一份一份完成交易所 MVP。
 
+正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`；Java 21 + Spring Boot 3 只負責業務後端與接入層。
+
 不要一次把全部文件丟給 Codex。  
 建議每次只丟一份，等 Codex 完成、測試通過、提交後，再丟下一份。
 
@@ -1223,7 +1225,7 @@ WebSocket channel 有路由或服務骨架。
 ## 任務
 
 建立現貨交易模組骨架，包含訂單、撤單、成交、結算、手續費與行情事件。  
-如果撮合引擎尚未完成，可先建立 matching adapter / stub。
+如果撮合引擎尚未完成，可先建立 Java 接入層 / stub，但正式目標仍是 C++ Core。
 
 ---
 
@@ -1270,7 +1272,7 @@ EXPIRED
   ↓
 建立現貨訂單
   ↓
-送入 matching adapter
+透過 Java Order Service / `MatchingEngineClient` / gRPC / event bus 送入 C++ Core
   ↓
 成交或掛單
   ↓
@@ -1290,7 +1292,7 @@ EXPIRED
   ↓
 查詢訂單狀態
   ↓
-若可撤，通知 matching adapter
+若可撤，通知 Java Order Service，再轉交 C++ Core
   ↓
 更新訂單狀態
   ↓
@@ -1345,7 +1347,7 @@ EXPIRED
 不要實作合約。
 不要實作槓桿借貸。
 不要實作內部做市策略。
-如果 matching engine 未完成，先用 adapter / stub。
+如果 matching engine 未完成，先用 Java interface / stub / TODO，正式目標仍是 C++ Core。
 ```
 
 ---
@@ -1466,7 +1468,7 @@ API 有基本錯誤處理。
   ↓
 建立合約訂單
   ↓
-送入 matching adapter
+透過 Java Order Service / `MatchingEngineClient` / gRPC / event bus 送入 C++ Core
   ↓
 成交後更新倉位
   ↓

@@ -4,6 +4,8 @@
 
 建立每日對帳與補償任務骨架。  
 交易所上線前必須能對資產、錢包、訂單、成交、倉位、借貸、費用與保險基金。
+後端實作預期為 Java 21 + Spring Boot 3；對帳與補償 job 優先以 PostgreSQL 快照與排程 skeleton 表達。
+對帳來源包含 Java 業務服務與 C++ Core 輸出的事件流，事件必須可重放。
 
 ---
 
@@ -18,6 +20,7 @@
 | 訂單 vs 成交 | 撮合結果 |
 | 成交 vs 結算 | 是否完成資產結算 |
 | 倉位 vs 成交 | 合約倉位 |
+| C++ Core event stream | event_id、sequence、symbol、timestamp |
 | 未實現盈虧 vs 標記價格 | 風險準確 |
 | 資金費率 vs 流水 | funding |
 | 借款 vs 負債 | margin debt |
@@ -110,6 +113,7 @@
 不要自動調帳。
 異常只能產生工單或補償任務。
 人工調帳必須走帳本與審批。
+對 C++ Core 事件的缺失或順序錯誤，先進入補償任務與人工對帳，不可直接修改撮合結果。
 ```
 
 ---
@@ -124,6 +128,8 @@
 可以重試補償任務。
 後台可以查對帳結果與差異。
 不會直接自動修改資產。
+對帳修復策略只保留 interface / skeleton / TODO。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

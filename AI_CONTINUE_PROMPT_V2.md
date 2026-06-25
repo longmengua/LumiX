@@ -17,10 +17,12 @@
 2. 不要跨 Phase。
 3. 不要重構無關檔案。
 4. 不要新增大型套件。
-5. 不要直接修改資產餘額。
-6. 不要實作未審查的撮合、強平、保證金、PnL、槓桿風險率。
-7. 不要處理真實私鑰或鏈上出帳。
-8. 所有高風險核心必須標記：TODO: requires high-reasoning review before production use。
-9. 完成後更新 AI_PROGRESS.md。
-10. 完成後回報修改檔案、測試方式、TODO、風險、是否需要人工審查。
+5. 前端維持 root React + TypeScript + Vite，`src/` 不可改成後端。
+6. 後端固定為 Java 21 + Spring Boot 3，程式碼只放 `server/`，不要回退成 Node / Fastify / Prisma / TypeScript backend。
+7. 不要直接修改資產餘額。
+8. 不要實作未審查的撮合、強平、保證金、PnL、槓桿風險率。
+9. 不要處理真實私鑰或鏈上出帳。
+10. 所有高風險核心必須標記：TODO: requires high-reasoning review before production use。
+11. 完成後更新 AI_PROGRESS.md。
+12. 完成後回報修改檔案、測試方式、TODO、風險、是否需要人工審查。
 ```

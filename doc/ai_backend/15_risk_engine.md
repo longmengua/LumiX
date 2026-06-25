@@ -3,6 +3,7 @@
 ## 任務
 
 建立交易所風控模組骨架，包含帳號、提現、現貨、合約、槓桿、API、做市商與系統級 Kill Switch。
+後端實作預期為 Java 21 + Spring Boot 3；風控規則與開關可先以 Redis / PostgreSQL skeleton 表達。
 
 ---
 
@@ -125,6 +126,8 @@
 可以設定與查詢 kill switch。
 交易、提現、API 可依 kill switch 阻擋。
 後台可查風控命中紀錄。
+風控公式與分數只保留 skeleton / TODO。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

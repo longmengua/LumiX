@@ -4,6 +4,7 @@
 
 建立交易所 MVP 的測試清單、驗收標準、壓測項目與上線檢查表。  
 本任務可先建立 docs、test plan、stub tests，不需要一次補齊所有測試。
+後端測試預期對應 Java 21 + Spring Boot 3；前端仍維持 root React + TypeScript + Vite。
 
 ---
 
@@ -151,6 +152,8 @@ API key 洩漏處理。
 有壓測項目清單。
 核心帳本測試至少有 stub 或 TODO。
 合約與槓桿風險測試有明確場景。
+高風險測試只驗證骨架與邊界，不驗證 production 級公式。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

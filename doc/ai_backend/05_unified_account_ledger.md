@@ -4,6 +4,8 @@
 
 建立交易所核心資產帳本骨架。  
 所有現貨、合約、槓桿、錢包、做市商、平台收入都要依賴這套帳本。
+後端實作預期為 Java 21 + Spring Boot 3，資料層優先 PostgreSQL，快取可用 Redis。
+正式交易撮合核心由 C++ Core 負責，C++ Core 只能輸出事件，不可直接修改帳本資料。
 
 ---
 
@@ -79,6 +81,10 @@
 可用與凍結必須分離。
 現貨、合約、槓桿帳戶必須隔離。
 除明確負債欄位外，不允許資產負數。
+Matching Engine / C++ Core 不得直接改 ledger，只能發出 order / trade / orderbook events。
+Settlement / Ledger Service 負責資產結算與資產流水。
+所有 C++ Core 輸出事件必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，並支援 replay、reconciliation、compensation。
+C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`withdraw`、`admin adjustment`。
 ```
 
 ---
@@ -97,6 +103,7 @@
 | 帳戶劃轉 | 帳戶間轉移 |
 | 查流水 | 查 ledger |
 | 建立快照 | 每日資產快照 |
+| SettlementService | 接收成交 / funding / liquidation 結果並落帳 |
 
 ---
 
@@ -108,6 +115,8 @@
 不要實作強平。
 不要實作做市策略。
 本任務只做帳本能力與介面。
+本任務只做 interface / skeleton / TODO，不做 production 級公式。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

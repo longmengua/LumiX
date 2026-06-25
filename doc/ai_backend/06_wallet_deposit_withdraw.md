@@ -4,6 +4,7 @@
 
 建立充值、提現與錢包 Gateway 骨架。  
 第一版可以先用 stub / mock chain scanner，但資料結構、狀態流、冪等與後台審核必須先設計好。
+後端實作預期為 Java 21 + Spring Boot 3；錢包資料與狀態建議落 PostgreSQL，風控與限流可搭配 Redis。
 
 ---
 
@@ -161,6 +162,7 @@ CANCELED
 不要實作完整鏈上節點。
 不要把私鑰放進程式碼。
 不要繞過帳本直接改餘額。
+不要把錢包改成 Node / Fastify / Prisma / TypeScript backend。
 ```
 
 ---
@@ -177,6 +179,8 @@ CANCELED
 充值入帳具備 tx hash 冪等。
 後台可以查詢與審核提現。
 錢包掃鏈與廣播可先 stub，但流程狀態完整。
+所有高風險錢包邏輯只保留 interface / stub / TODO。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

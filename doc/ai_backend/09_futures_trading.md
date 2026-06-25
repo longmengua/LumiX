@@ -3,6 +3,8 @@
 ## 任務
 
 建立 U 本位永續合約模組骨架，包含合約訂單、倉位、保證金、盈虧、資金費率與標記價格接入。
+後端實作預期為 Java 21 + Spring Boot 3；交易核心只保留骨架、interface、TODO。
+正式撮合核心目標為 C++ Core；合約訂單與事件流在 MVP 階段可先保留 Java interface / skeleton / TODO。
 
 ---
 
@@ -71,7 +73,7 @@
   ↓
 建立合約訂單
   ↓
-送入 matching adapter
+Java Order Service 透過 `MatchingEngineClient` / gRPC / event bus 將訂單送入 C++ Core
   ↓
 成交後更新倉位
   ↓
@@ -165,6 +167,9 @@
 不要實作幣本位合約。
 不要實作期權。
 不要實作組合保證金。
+不要實作 production 級 PnL / 保證金 / 資金費率公式。
+不要在此文件實作 production 級撮合。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

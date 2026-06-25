@@ -3,6 +3,8 @@
 ## 任務
 
 建立合約與槓桿強平系統骨架，包含保證金率、強平價格、強平流程、保險基金與極端風險處理。
+後端實作預期為 Java 21 + Spring Boot 3；此文件只允許 interface / skeleton / TODO，不允許 production 級公式。
+強平與保險基金屬於 Java 風控 / 清算層，不放入 C++ Core。
 
 ---
 
@@ -133,6 +135,9 @@
 不要實作完整高頻強平撮合。
 不要實作 ADL 完整排序，可先預留。
 不要直接改資產，必須呼叫帳本服務。
+強平價格、保證金率、保險基金處理只保留 skeleton。
+不要把強平邏輯移入 C++ Core。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

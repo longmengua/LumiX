@@ -3,7 +3,9 @@
 ## 任務
 
 建立交易所 MVP 的工程規則文件與必要的基礎約束。  
-如果 repo 已有 docs 或 architecture 目錄，請放在既有位置；否則建立 docs 目錄。
+本 repo 的前端固定為 root React + TypeScript + Vite，`src/` 只給前端使用。  
+後端固定為 Java 21 + Spring Boot 3，未來程式碼放在 `server/`。
+正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
 
 ---
 
@@ -27,6 +29,29 @@ Open API
 
 ---
 
+## 技術棧邊界
+
+```text
+前端：root React + TypeScript + Vite
+後端：Java 21 + Spring Boot 3
+後端目錄：server/
+交易核心：C++ Core
+交易核心目錄：core/ 或 matching-core/
+Build tool：Gradle 優先
+Database：PostgreSQL
+Cache：Redis
+Event bus：Kafka / Redpanda / RabbitMQ，可先 stub
+```
+
+```text
+一般 CRUD 可使用 Spring Data JPA。
+Java 業務後端的交易核心接入層、資產帳本、訂單、對帳優先使用 jOOQ / MyBatis / JDBC Template。
+不要把整個後端完全交給 JPA 自動管理。
+不要把後端改成 Node / Fastify / Prisma / TypeScript backend。
+```
+
+---
+
 ## 不在本任務實作的內容
 
 ```text
@@ -36,6 +61,8 @@ Open API
 不要實作前端完整頁面。
 不要實作做市策略。
 不要改動大量無關檔案。
+不要建立 server/ 程式碼。
+不要建立 core/ 或 matching-core/ 程式碼。
 ```
 
 ---
@@ -55,6 +82,9 @@ Open API
 ## 核心工程規則
 
 ```text
+root src/ 只屬於 React 前端，不得移動或改造成後端。
+後端固定為 Java 21 + Spring Boot 3，未來程式碼只放 server/。
+正式交易核心目標為 C++ Core，Java Order Service 只保留 interface / skeleton / TODO，透過 MatchingEngineClient、gRPC 或 event bus 與 C++ Core 通訊。
 所有資產變動必須通過帳本服務。
 任何業務模組不得直接修改餘額。
 現貨、合約、槓桿帳戶必須隔離。
@@ -67,6 +97,11 @@ Open API
 槓桿必須有借款、還款、利息、風險率與強平設計。
 Open API 必須有簽名、timestamp、IP 白名單與 rate limit。
 內部做市商與外部做市商都必須走 Open API。
+Matching Engine 先以 Java `MatchingEngineClient` interface 方式存在，正式目標為 C++ Core，未來可透過 gRPC 或 event bus 接入。
+C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`withdraw`、`admin adjustment`。
+Settlement / Ledger Service 負責資產結算與資產流水。
+所有 C++ Core 輸出事件都必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，並支援重放、對帳、補償。
+所有高風險邏輯必須標記 `TODO: requires high-reasoning review before production use`。
 ```
 
 ---
@@ -77,7 +112,7 @@ Open API 必須有簽名、timestamp、IP 白名單與 rate limit。
 |---|---|
 | User | 用戶、登入、安全、KYC 狀態 |
 | Admin | 後台、RBAC、審批、操作日誌 |
-| Asset | 統一帳戶、資產、流水、劃轉 |
+| Asset | 統一帳本、資產、流水、劃轉 |
 | Wallet | 充值、提現、掃鏈、callback |
 | Spot | 現貨訂單、撮合接入、成交、結算 |
 | Futures | 合約訂單、倉位、保證金、資金費率 |
@@ -99,6 +134,8 @@ Open API 必須有簽名、timestamp、IP 白名單與 rate limit。
 文件中清楚說明資產不得直接修改。
 文件中清楚說明現貨、合約、槓桿帳戶隔離。
 文件中清楚說明敏感操作、API key、後台操作的安全要求。
+文件中清楚說明 Java 21 + Spring Boot 3 + server/。
+文件中清楚說明 Java 業務後端 + C++ Core 分工。
 沒有實作無關業務功能。
 ```
 

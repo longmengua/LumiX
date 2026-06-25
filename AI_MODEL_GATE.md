@@ -1,7 +1,8 @@
 # AI_MODEL_GATE.md
 
 > 用途：這是 Codex / AI 每次「繼續開工」前必須先執行的模型能力檢查。  
-> 目的：避免低 reasoning 或 mini model 自行實作高風險交易核心，例如資產帳本、撮合、合約強平、保證金、PnL、槓桿風險率、錢包出帳。
+> 目的：避免低 reasoning 或 mini model 自行實作高風險交易核心，例如資產帳本、撮合、合約強平、保證金、PnL、槓桿風險率、錢包出帳。  
+> 前端固定為 root React + TypeScript + Vite。後端固定為 Java 21 + Spring Boot 3，程式碼未來只放 `server/`。正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
 
 ---
 
@@ -86,6 +87,7 @@ Open API 簽名骨架
 API key 管理
 風控規則骨架
 對帳 job skeleton
+Java backend skeleton
 ```
 
 允許：
@@ -125,6 +127,7 @@ interface
 route
 stub
 TODO
+Java skeleton
 ```
 
 ---
@@ -146,6 +149,8 @@ PnL
 槓桿風險率
 資金費率
 對帳修復策略
+MatchingEngineClient interface
+C++ Core event schema
 ```
 
 允許：
@@ -194,6 +199,8 @@ Reasoning: high
 API withdraw 權限
 做市商資金權限
 正式上線前安全審查
+任何會直接改資產或 ledger 的實作
+任何 C++ Core production 級撮合、PnL、保證金、強平、槓桿風險率實作
 ```
 
 允許：
@@ -240,6 +247,7 @@ AI 每次開工前必須依序回答：
 7. 我本次允許實作到什麼程度？
 8. 我本次禁止碰哪些內容？
 9. 是否需要先停下要求使用者換模型或調 reasoning？
+10. 若是後端任務，是否已確認 Java 21 + Spring Boot 3 + `server/`？
 ```
 
 ---

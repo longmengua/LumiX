@@ -9,7 +9,9 @@
 
 目前專案名稱：LumiX  
 產品目標：交易所 MVP，包含現貨、U 本位永續合約、槓桿交易、充值提現、Open API、外部做市商、內部做市商、後台、風控、強平、對帳。  
-前端指定技術：React + TypeScript。  
+前端固定技術：root React + TypeScript + Vite，`src/` 僅作前端。  
+後端固定技術：Java 21 + Spring Boot 3，未來放在 `server/`。  
+正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
 目前 repo 內已有需求文件，但尚未建立正式前端 / 後端程式骨架。
 
 目前已存在文件：
@@ -18,6 +20,7 @@
 doc/exchange_mvp_plan.md
 doc/ai_backend/*.md
 doc/ai_frontend/*.md
+server/（未建立，後端未來放置位置）
 ```
 
 重要文件：
@@ -211,16 +214,26 @@ AI 只能：
 以下規則任何情況都不能違反：
 
 ```text
-1. 不得直接修改用戶資產餘額。
-2. 所有資產變動必須通過 ledger service 或預留 ledger interface。
-3. 現貨、合約、槓桿帳戶必須隔離。
-4. 所有充值、提現、成交結算、資金費率、強平流程必須預留冪等設計。
-5. API key secret 只允許建立時顯示一次，不可明文持久化。
-6. API withdraw 權限預設不可開。
-7. 內部做市商與外部做市商都必須走 Open API。
-8. 後台高危操作必須有 RBAC、二次確認、operation log。
-9. 合約強平必須使用標記價格，不可直接使用最新成交價。
-10. 所有高風險邏輯必須標記 TODO: requires high-reasoning review。
+1. root `src/` 只屬於 React 前端，不得移動或改造成後端。
+2. 後端固定為 Java 21 + Spring Boot 3，未來程式碼只放 `server/`。
+3. Build tool 以 Gradle 優先，正式後端不得回退為 Node / Fastify / Prisma / TypeScript backend。
+4. Database 使用 PostgreSQL，Cache 使用 Redis。
+5. Event bus 可使用 Kafka / Redpanda / RabbitMQ，MVP 允許先 stub。
+6. 一般 CRUD 可使用 Spring Data JPA。
+7. 交易核心、資產帳本、訂單、對帳優先使用 jOOQ / MyBatis / JDBC Template，不要完全依賴 JPA 自動管理。
+8. 不得直接修改用戶資產餘額。
+9. 所有資產變動必須通過 ledger service 或預留 ledger interface。
+10. 現貨、合約、槓桿帳戶必須隔離。
+11. 所有充值、提現、成交結算、資金費率、強平流程必須預留冪等設計。
+12. API key secret 只允許建立時顯示一次，不可明文持久化。
+13. API withdraw 權限預設不可開。
+14. 內部做市商與外部做市商都必須走 Open API。
+15. 後台高危操作必須有 RBAC、二次確認、operation log。
+16. 合約強平必須使用標記價格，不可直接使用最新成交價。
+17. Matching Engine 先定 Java `MatchingEngineClient` interface，正式目標為 C++ Core，Java Order Service 僅作接入層，未來透過 gRPC 或 event bus 與 C++ Core 通訊。
+18. C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`withdraw`、`admin adjustment`。
+19. Settlement / Ledger Service 負責資產結算與資產流水，所有 C++ Core 輸出事件必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，並支援重放、對帳、補償。
+20. 所有高風險邏輯必須標記 `TODO: requires high-reasoning review before production use`。
 ```
 
 ---
@@ -228,7 +241,8 @@ AI 只能：
 ## 4. 開工總策略
 
 由於目前 repo 只有文件，沒有正式程式碼，第一階段先建立 React 專案骨架與前端畫面。  
-後端交易核心先建立文件、interface、mock service，不直接實作高風險邏輯。
+後端技術棧先校準為 Java 21 + Spring Boot 3 + `server/`，交易核心正式目標為 C++ Core。  
+Phase 9-12 只建立 Java 業務後端的骨架、interface、stub 與 TODO，不直接實作高風險邏輯，也不建立 C++ production 程式碼。
 
 優先順序：
 
@@ -242,11 +256,13 @@ Phase 5：資產、劃轉、充值、提現畫面
 Phase 6：現貨、合約、槓桿交易頁
 Phase 7：訂單、倉位、API Key、通知
 Phase 8：後台前端頁面
-Phase 9：後端規則、帳戶與帳本 interface
-Phase 10：錢包、行情、交易 API stub
-Phase 11：合約、強平、槓桿 skeleton
+Phase 9：建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface
+Phase 10：Wallet、Market Data、Spot、Open API Java stub
+Phase 11：Futures、Liquidation、Margin Java skeleton
 Phase 12：風控、對帳、測試、上線檢查
 ```
+
+目前本次文件更新只做交易核心 C++ 校準，不進入 Phase 3。
 
 ---
 
@@ -612,7 +628,7 @@ Phase 結束後：必須等待使用者人工審查。
 
 ---
 
-### Phase 9：後端規則、帳戶與帳本 interface
+### Phase 9：建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface
 
 模型等級：Level B / C  
 建議 reasoning：high
@@ -620,7 +636,7 @@ Phase 結束後：必須等待使用者人工審查。
 任務：
 
 ```text
-P9-01 建立後端目錄骨架
+P9-01 建立 `server/` 後端目錄骨架
 P9-02 建立 docs 規則文件
 P9-03 建立帳戶模型 interface
 P9-04 建立 ledger service interface
@@ -638,9 +654,10 @@ doc/ai_backend/05_unified_account_ledger.md
 限制：
 
 ```text
+不得建立 Node / Fastify / Prisma / TypeScript backend
 不得完成真實資產扣帳生產邏輯
 不得跳過 ledger service
-所有核心邏輯標記 TODO: requires high-reasoning review
+所有核心邏輯標記 TODO: requires high-reasoning review before production use
 ```
 
 完成條件：
@@ -654,7 +671,7 @@ Phase 結束後：必須等待使用者人工審查。
 
 ---
 
-### Phase 10：錢包、行情、交易 API stub
+### Phase 10：Wallet、Market Data、Spot、Open API Java stub
 
 模型等級：Level B  
 建議 reasoning：high
@@ -682,6 +699,7 @@ doc/ai_backend/12_open_api.md
 限制：
 
 ```text
+不得建立 Node / Fastify / Prisma / TypeScript backend
 不得處理真實私鑰
 不得真實鏈上廣播
 不得真實撮合
@@ -699,7 +717,7 @@ Phase 結束後：必須等待使用者人工審查。
 
 ---
 
-### Phase 11：合約、強平、槓桿 skeleton
+### Phase 11：Futures、Liquidation、Margin Java skeleton
 
 模型等級：Level C  
 建議 reasoning：high
@@ -727,11 +745,12 @@ doc/ai_backend/11_margin_trading.md
 限制：
 
 ```text
+不得建立 Node / Fastify / Prisma / TypeScript backend
 不得自行完成 PnL 公式
 不得自行完成強平公式
 不得自行完成保證金公式
 不得自行完成槓桿風險率公式
-所有核心計算標記 TODO: requires high-reasoning review
+所有核心計算標記 TODO: requires high-reasoning review before production use
 ```
 
 完成條件：
@@ -774,6 +793,7 @@ doc/ai_frontend/16_react_responsive_testing.md
 限制：
 
 ```text
+不得建立 Node / Fastify / Prisma / TypeScript backend
 不得自動修帳
 不得自動調整資產
 不得宣稱可正式上線

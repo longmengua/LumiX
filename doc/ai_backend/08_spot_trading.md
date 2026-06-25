@@ -3,7 +3,8 @@
 ## 任務
 
 建立現貨交易模組骨架，包含訂單、撤單、成交、結算、手續費與行情事件。  
-如果撮合引擎尚未完成，可先建立 matching adapter / stub。
+後端實作預期為 Java 21 + Spring Boot 3。
+正式撮合核心目標為 C++ Core；MVP 階段可先保留 Java interface / skeleton / stub。
 
 ---
 
@@ -50,11 +51,11 @@ EXPIRED
   ↓
 建立現貨訂單
   ↓
-送入 matching adapter
+Java Order Service 透過 `MatchingEngineClient` / gRPC / event bus 將訂單送入 C++ Core
   ↓
 成交或掛單
   ↓
-成交事件進入 settlement
+成交事件進入 settlement / ledger service
   ↓
 扣買賣雙方資產與手續費
   ↓
@@ -70,7 +71,7 @@ EXPIRED
   ↓
 查詢訂單狀態
   ↓
-若可撤，通知 matching adapter
+若可撤，通知 Java Order Service，再由 `MatchingEngineClient` / gRPC / event bus 轉給 C++ Core
   ↓
 更新訂單狀態
   ↓
@@ -90,6 +91,7 @@ EXPIRED
 | spot_settlement | 現貨結算 |
 | order_event | 訂單事件 |
 | fee_config | 費率配置 |
+| matching_engine_event | 由 C++ Core 輸出的 order / trade / orderbook event |
 
 ---
 
@@ -115,6 +117,9 @@ EXPIRED
 成交結算必須冪等。
 手續費必須寫資產流水。
 不得直接修改餘額。
+Matching Engine / C++ Core 不得直接修改資產或 ledger，只能產生事件。
+Settlement / Ledger Service 負責資產結算與資產流水。
+所有 C++ Core 輸出事件必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，支援重放、對帳、補償。
 ```
 
 ---
@@ -125,7 +130,9 @@ EXPIRED
 不要實作合約。
 不要實作槓桿借貸。
 不要實作內部做市策略。
-如果 matching engine 未完成，先用 adapter / stub。
+如果 matching engine 未完成，先用 Java interface / stub / TODO。
+現貨成交與結算核心正式目標為 C++ Core，但 MVP 階段僅保留 Java interface / skeleton / TODO。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

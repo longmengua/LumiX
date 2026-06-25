@@ -4,6 +4,7 @@
 
 建立交易所後台營運模組。  
 後台必須能支援用戶、資產、錢包、現貨、合約、槓桿、風控、做市商、對帳與事故處理。
+後端實作預期為 Java 21 + Spring Boot 3；後台查詢與 CRUD 可優先使用 JPA，資產 / 訂單 / 對帳查詢可走 jOOQ / MyBatis / JDBC Template。
 
 ---
 
@@ -99,6 +100,8 @@
 後台可查做市商。
 後台可執行基礎 kill switch。
 所有後台寫操作都有 operation log。
+後台不得直接改餘額或繞過帳本。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

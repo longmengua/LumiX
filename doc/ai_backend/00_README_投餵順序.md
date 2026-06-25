@@ -2,6 +2,10 @@
 
 這一組文件是為了讓 Codex mini 用最低成本、最低上下文量，一份一份完成交易所 MVP。
 
+後端技術棧已固定為 Java 21 + Spring Boot 3，未來後端程式碼放在 `server/`。  
+root `src/` 只保留 React + TypeScript + Vite 前端，不要把它當後端目錄。
+正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
+
 不要一次把全部文件丟給 Codex。  
 建議每次只丟一份，等 Codex 完成、測試通過、提交後，再丟下一份。
 
@@ -74,6 +78,17 @@
 09_futures_trading.md
 10_liquidation_insurance_fund.md
 11_margin_trading.md
+```
+
+如果你正在做 Java 後端骨架，優先記住：
+
+```text
+server/ 只放後端程式
+core/ 或 matching-core/ 只放交易核心
+PostgreSQL / Redis / Event bus
+交易核心優先使用 jOOQ / MyBatis / JDBC Template
+一般 CRUD 可使用 Spring Data JPA
+MatchingEngineClient 先用 interface，正式目標為 C++ Core
 ```
 
 ---

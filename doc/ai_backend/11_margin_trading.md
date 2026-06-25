@@ -3,6 +3,8 @@
 ## 任務
 
 建立槓桿交易模組骨架，包含槓桿帳戶、借幣、還款、利息、負債、風險率與強平接入。
+後端實作預期為 Java 21 + Spring Boot 3；此模組只保留骨架、interface、TODO。
+槓桿交易的帳務、借貸、風險率、強平都保留在 Java 業務層，不放入 C++ Core。
 
 ---
 
@@ -88,7 +90,7 @@
   ↓
 凍結交易資產
   ↓
-進入現貨撮合
+Java Order Service 透過 `MatchingEngineClient` / gRPC / event bus 將訂單送入 C++ Core
   ↓
 成交後更新槓桿帳戶
   ↓
@@ -134,6 +136,9 @@
 不要實作自動還款。
 不要實作跨幣種複雜抵押折扣，可先預留。
 不要直接修改資產，必須通過帳本服務。
+不要實作 production 級利息、風險率與強平公式。
+不要把槓桿邏輯或借貸邏輯移入 C++ Core。
+TODO: requires high-reasoning review before production use
 ```
 
 ---

@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：已建立 React / TypeScript 專案骨架，等待 Phase 1 人工審查。  
+目前狀態：前端已建立 React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，並已開始補齊交易核心 C++ 校準文件，等待 Phase 2 人工審查。  
 目前觀察：
 
 ```text
@@ -22,7 +22,9 @@
 - repo root 有 vite.config.ts
 - repo root 有 tsconfig*.json
 - repo root 有 src/
+- root `src/` 為 React 前端
 - 前端入口已建立
+- 後端未來放在 `server/`
 ```
 
 ---
@@ -40,9 +42,9 @@
 | 6 | 現貨、合約、槓桿交易頁 | pending | pending | 需人工審查 |
 | 7 | 訂單、倉位、API Key、通知 | pending | pending | 需人工審查 |
 | 8 | 後台前端頁面 | pending | pending | 需人工審查 |
-| 9 | 後端規則、帳戶與帳本 interface | pending | pending | 高風險，需審查 |
-| 10 | 錢包、行情、交易 API stub | pending | pending | 高風險，需審查 |
-| 11 | 合約、強平、槓桿 skeleton | pending | pending | 高風險，需審查 |
+| 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | pending | pending | 高風險，需審查 |
+| 10 | Wallet、Market Data、Spot、Open API Java stub | pending | pending | 高風險，需審查 |
+| 11 | Futures、Liquidation、Margin Java skeleton | pending | pending | 高風險，需審查 |
 | 12 | 風控、對帳、測試、上線檢查 | pending | pending | 高風險，需審查 |
 
 狀態說明：
@@ -71,7 +73,7 @@ changes_requested：需要修改
 ```text
 current_phase: 2
 current_task: P2-06
-next_action: 等待使用者審查 Phase 2，通過後再進入 Phase 3（登入、首頁、市場列表）
+next_action: 等待使用者審查 Phase 2 與交易核心 C++ 校準文件，確認後再評估是否進入 Phase 3（登入、首頁、市場列表）
 ```
 
 ---
@@ -194,33 +196,33 @@ next_action: 等待使用者審查 Phase 2，通過後再進入 Phase 3（登入
 | P8-12 Reconciliation | pending | - | - |
 | P8-13 Operation Logs | pending | - | - |
 
-### Phase 9
+### Phase 9：建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P9-01 建立後端目錄骨架 | pending | - | 高風險前置 |
+| P9-01 建立 `server/` 後端目錄骨架 | pending | - | 高風險前置 |
 | P9-02 建立 docs 規則文件 | pending | - | - |
 | P9-03 建立帳戶模型 interface | pending | - | 不可直接改餘額 |
 | P9-04 建立 ledger service interface | pending | - | 核心 |
 | P9-05 建立 account transfer service stub | pending | - | - |
 | P9-06 建立 idempotency 設計 stub | pending | - | - |
 
-### Phase 10
+### Phase 10：Wallet、Market Data、Spot、Open API Java stub
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P10-01 wallet service stub | pending | - | 不處理私鑰 |
+| P10-01 wallet service stub | pending | - | 不處理私鑰 / 鏈上出帳 |
 | P10-02 deposit / withdraw 狀態模型 | pending | - | - |
 | P10-03 market data service stub | pending | - | - |
 | P10-04 price index service stub | pending | - | - |
 | P10-05 spot order service stub | pending | - | 不做撮合 |
 | P10-06 open api route stub | pending | - | withdraw 預設不開 |
 
-### Phase 11
+### Phase 11：Futures、Liquidation、Margin Java skeleton
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P11-01 futures service skeleton | pending | - | 高風險 |
+| P11-01 futures service skeleton | pending | - | 高風險 / Java skeleton |
 | P11-02 position model skeleton | pending | - | 高風險 |
 | P11-03 funding rate skeleton | pending | - | 高風險 |
 | P11-04 liquidation service skeleton | pending | - | 極高風險 |
@@ -234,7 +236,7 @@ next_action: 等待使用者審查 Phase 2，通過後再進入 Phase 3（登入
 |---|---|---|---|
 | P12-01 risk service skeleton | pending | - | 高風險 |
 | P12-02 kill switch config | pending | - | 高風險 |
-| P12-03 reconciliation job skeleton | pending | - | 高風險 |
+| P12-03 reconciliation job skeleton | pending | - | 高風險 / Java job |
 | P12-04 compensation task skeleton | pending | - | 不可自動修帳 |
 | P12-05 frontend testing checklist | pending | - | - |
 | P12-06 backend safety checklist | pending | - | - |
@@ -266,5 +268,6 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 ## 6. 最後一次 AI 回報
 
 ```text
-尚未開始。
+已完成後端技術棧校準文件更新。
+Phase 3 尚未開始，且本次文件更新明確暫停進入 Phase 3。
 ```

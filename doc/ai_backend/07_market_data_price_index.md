@@ -4,6 +4,7 @@
 
 建立行情服務、K 線服務、外部價格源、指數價格與標記價格骨架。  
 此模組是現貨、合約、強平、做市商都會依賴的基礎。
+後端實作預期為 Java 21 + Spring Boot 3，行情快取與推送可優先考慮 Redis，事件來源可先 stub。
 
 ---
 
@@ -117,6 +118,8 @@ WebSocket 推送
 不要實作合約強平。
 不要實作真實高頻行情架構。
 外部價格源可以先用 adapter / stub。
+指數價與標記價公式只保留 interface / skeleton / TODO。
+TODO: requires high-reasoning review before production use
 ```
 
 ---
