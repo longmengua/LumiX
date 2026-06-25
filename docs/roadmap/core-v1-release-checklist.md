@@ -33,7 +33,7 @@ git status --short
 
 - [x] `./mvnw test` 通過。
 - [x] `git diff --check` 通過。
-- [x] Flyway migration 已在未發布 production schema 前 squash 成單一 `V202606160642__exchange_schema_baseline.sql`；core-v1 之後恢復 append-only 版本規則。
+- [x] Flyway migration 已在未發布 production schema 前 squash 成單一 `V20260625_init.sql.sql`；core-v1 之後恢復 append-only 版本規則。
 - [x] 會改動狀態的 scheduler 預設關閉，除非明確要啟用。
 - [x] Protected admin APIs 已被 `/api/market-maker/**`、`/api/recovery/**`、`/api/risk/**` 與相關 security classifier paths 覆蓋。
 - [x] current-state 與 TODO 文件指向 freeze task，而不是繼續擴功能。

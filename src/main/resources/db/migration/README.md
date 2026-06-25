@@ -3,7 +3,7 @@
 Flyway migration scripts。
 
 目前內容：
-- `V202606160642__exchange_schema_baseline.sql`：合併原 V1-V31 的完整開發 baseline schema，包含 core exchange、matching recovery、wallet ledger、risk/ADL、market data、Polymarket、customer auth、fee config、message center 等表與索引。
+- `V20260625_init.sql.sql`：合併原 V1-V31 的完整開發 baseline schema，包含 core exchange、matching recovery、wallet ledger、risk/ADL、market data、Polymarket、customer auth、fee config、message center 等表與索引。
 
 注意：
 - 目前尚未正式發布 production schema；Docker volume 清空後可用單一 baseline 重新開始。
