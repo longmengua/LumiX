@@ -3,8 +3,8 @@
 ## 技術棧校準
 
 ```text
-前端：root React + TypeScript + Vite
-前端目錄：src/
+前端：web/ React + TypeScript + Vite
+前端目錄：web/src/
 後端：Java 21 + Spring Boot 3
 後端目錄：server/
 交易核心：C++ Core
@@ -16,7 +16,7 @@ Event bus：Kafka / Redpanda / RabbitMQ，可先 stub
 ```
 
 ```text
-不要把 root src/ 改成後端。
+不要把 web/src/ 改成後端。
 不要把後端寫成 Node / Fastify / Prisma / TypeScript backend。
 Java 業務後端的交易核心接入層、資產帳本、訂單、對帳優先使用 jOOQ / MyBatis / JDBC Template。
 一般 CRUD 可以使用 Spring Data JPA。

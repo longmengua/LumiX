@@ -3,7 +3,7 @@
 這一組文件是為了讓 Codex mini 用最低成本、最低上下文量，一份一份完成交易所 MVP。
 
 後端技術棧已固定為 Java 21 + Spring Boot 3，未來後端程式碼放在 `server/`。  
-root `src/` 只保留 React + TypeScript + Vite 前端，不要把它當後端目錄。
+`web/src/` 只保留 React + TypeScript + Vite 前端，不要把它當後端目錄。
 正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
 
 不要一次把全部文件丟給 Codex。  

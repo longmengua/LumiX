@@ -17,7 +17,7 @@
 2. 不要跨 Phase。
 3. 不要重構無關檔案。
 4. 不要新增大型套件。
-5. 前端維持 root React + TypeScript + Vite，`src/` 不可改成後端。
+5. 前端維持 web/ React + TypeScript + Vite，`web/src/` 不可改成後端。
 6. 後端固定為 Java 21 + Spring Boot 3，程式碼只放 `server/`，不要回退成 Node / Fastify / Prisma / TypeScript backend。
 7. 不要直接修改資產餘額。
 8. 不要實作未審查的撮合、強平、保證金、PnL、槓桿風險率。

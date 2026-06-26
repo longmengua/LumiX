@@ -4,7 +4,7 @@
 > 產品定位：第一版核心應包含「現貨 + U 本位永續合約 + 槓桿交易」，並同步具備做市商、風控、強平、對帳與後台營運能力。  
 > 原則：不是做最多功能，而是把「可交易、可槓桿、可爆倉、可對帳、可風控、可做市、可營運」做完整。
 >
-> 技術棧校準：前端維持 root React + TypeScript + Vite；業務後端固定 Java 21 + Spring Boot 3，未來程式碼放 `server/`。交易核心正式目標為 C++ Core，未來程式碼預計放 `core/` 或 `matching-core/`。  
+> 技術棧校準：前端維持 web/ React + TypeScript + Vite；業務後端固定 Java 21 + Spring Boot 3，未來程式碼放 `server/`。交易核心正式目標為 C++ Core，未來程式碼預計放 `core/` 或 `matching-core/`。  
 > 資料層優先 PostgreSQL + Redis，事件匯流排可用 Kafka / Redpanda / RabbitMQ，MVP 允許先 stub。
 
 ---

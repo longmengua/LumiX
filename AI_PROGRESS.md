@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3 已完成並等待人工審查。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3 與 Phase 3.5 已完成並等待人工審查。  
 目前觀察：
 
 ```text
@@ -17,13 +17,14 @@
 - repo root 有 doc/
 - doc/ai_backend 存在
 - doc/ai_frontend 存在
-- repo root 有 package.json
-- repo root 有 index.html
-- repo root 有 vite.config.ts
-- repo root 有 tsconfig*.json
-- repo root 有 src/
-- root `src/` 為 React 前端
-- 前端入口已建立
+- repo root 有 web/
+- web/ 有 package.json
+- web/ 有 index.html
+- web/ 有 vite.config.ts
+- web/ 有 tsconfig*.json
+- web/ 有 src/
+- `web/src/` 為 React 前端
+- 前端入口已建立（web/）
 - 後端未來放在 `server/`
 ```
 
@@ -37,6 +38,7 @@
 | 1 | React + TypeScript 專案骨架 | done | approved | 已審查通過 |
 | 2 | Design System 與 App Shell | done | approved | 已審查通過 |
 | 3 | 登入、首頁、市場列表 | done | pending | 已完成，待審查 |
+| 3.5 | Monorepo 目錄結構校準 | done | pending | 已完成，待審查 |
 | 4 | 個人中心 | pending | pending | 需人工審查 |
 | 5 | 資產、劃轉、充值、提現畫面 | pending | pending | 需人工審查 |
 | 6 | 現貨、合約、槓桿交易頁 | pending | pending | 需人工審查 |
@@ -71,9 +73,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: 3
-current_task: P3-08
-next_action: 等待使用者審查 Phase 3，通過後再進入 Phase 4（個人中心）
+current_phase: 3.5
+current_task: P3.5-01
+next_action: 等待使用者審查 Phase 3 與 Phase 3.5，通過後再進入 Phase 4（個人中心）
 ```
 
 ---
@@ -123,6 +125,12 @@ next_action: 等待使用者審查 Phase 3，通過後再進入 Phase 4（個人
 | P3-06 市場列表 | done | 已完成 | 已完成 |
 | P3-07 mock auth service | done | 已完成 | 已完成 |
 | P3-08 mock market service | done | 已完成 | 已完成 |
+
+### Phase 3.5
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P3.5-01 將 root 前端移入 web/ | done | 已完成 | 已完成，待審查 |
 
 ### Phase 4
 
@@ -269,5 +277,5 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 
 ```text
 已完成交易核心 C++ 校準文件更新，且 Phase 2 已審查通過。
-Phase 3 已完成，等待人工審查。
+Phase 3 與 Phase 3.5 已完成，等待人工審查。
 ```

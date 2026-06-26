@@ -9,10 +9,10 @@
 
 目前專案名稱：LumiX  
 產品目標：交易所 MVP，包含現貨、U 本位永續合約、槓桿交易、充值提現、Open API、外部做市商、內部做市商、後台、風控、強平、對帳。  
-前端固定技術：root React + TypeScript + Vite，`src/` 僅作前端。  
+前端固定技術：web/ React + TypeScript + Vite，`web/src/` 僅作前端。  
 後端固定技術：Java 21 + Spring Boot 3，未來放在 `server/`。  
 正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
-目前 repo 內已有需求文件，但尚未建立正式前端 / 後端程式骨架。
+目前 repo 內已有需求文件，前端骨架已建立在 `web/`，後端骨架尚未建立。
 
 目前已存在文件：
 
@@ -214,7 +214,7 @@ AI 只能：
 以下規則任何情況都不能違反：
 
 ```text
-1. root `src/` 只屬於 React 前端，不得移動或改造成後端。
+1. `web/src/` 只屬於 React 前端，不得移動或改造成後端。
 2. 後端固定為 Java 21 + Spring Boot 3，未來程式碼只放 `server/`。
 3. Build tool 以 Gradle 優先，正式後端不得回退為 Node / Fastify / Prisma / TypeScript backend。
 4. Database 使用 PostgreSQL，Cache 使用 Redis。
@@ -240,7 +240,7 @@ AI 只能：
 
 ## 4. 開工總策略
 
-由於目前 repo 只有文件，沒有正式程式碼，第一階段先建立 React 專案骨架與前端畫面。  
+由於目前 repo 已有 `web/` 前端骨架、但後端仍未建立，第一階段重點會放在前端與後端分工校準，以及後續 Phase 的前端功能。  
 後端技術棧先校準為 Java 21 + Spring Boot 3 + `server/`，交易核心正式目標為 C++ Core。  
 Phase 9-12 只建立 Java 業務後端的骨架、interface、stub 與 TODO，不直接實作高風險邏輯，也不建立 C++ production 程式碼。
 

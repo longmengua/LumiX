@@ -2,7 +2,7 @@
 
 > 用途：這是 Codex / AI 每次「繼續開工」前必須先執行的模型能力檢查。  
 > 目的：避免低 reasoning 或 mini model 自行實作高風險交易核心，例如資產帳本、撮合、合約強平、保證金、PnL、槓桿風險率、錢包出帳。  
-> 前端固定為 root React + TypeScript + Vite。後端固定為 Java 21 + Spring Boot 3，程式碼未來只放 `server/`。正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
+> 前端固定為 web/ React + TypeScript + Vite。後端固定為 Java 21 + Spring Boot 3，程式碼未來只放 `server/`。正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
 
 ---
 

@@ -3,7 +3,7 @@
 ## 任務
 
 建立交易所 MVP 的工程規則文件與必要的基礎約束。  
-本 repo 的前端固定為 root React + TypeScript + Vite，`src/` 只給前端使用。  
+本 repo 的前端固定為 web/ React + TypeScript + Vite，`web/src/` 只給前端使用。  
 後端固定為 Java 21 + Spring Boot 3，未來程式碼放在 `server/`。
 正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
 
@@ -32,7 +32,7 @@ Open API
 ## 技術棧邊界
 
 ```text
-前端：root React + TypeScript + Vite
+前端：web/ React + TypeScript + Vite
 後端：Java 21 + Spring Boot 3
 後端目錄：server/
 交易核心：C++ Core
@@ -82,7 +82,7 @@ Java 業務後端的交易核心接入層、資產帳本、訂單、對帳優先
 ## 核心工程規則
 
 ```text
-root src/ 只屬於 React 前端，不得移動或改造成後端。
+web/src/ 只屬於 React 前端，不得移動或改造成後端。
 後端固定為 Java 21 + Spring Boot 3，未來程式碼只放 server/。
 正式交易核心目標為 C++ Core，Java Order Service 只保留 interface / skeleton / TODO，透過 MatchingEngineClient、gRPC 或 event bus 與 C++ Core 通訊。
 所有資產變動必須通過帳本服務。
