@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成並等待人工審查。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成；目前進入 OL 上線架構校準文件更新。  
 目前觀察：
 
 ```text
@@ -73,9 +73,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: 4
-current_task: P4-09
-next_action: 等待使用者審查 Phase 4，通過後再進入 Phase 5（資產、劃轉、充值、提現畫面）
+current_phase: OL
+current_task: OL-ARCH-01
+next_action: 暫停進入下一個功能 Phase，先完成 OL 上線架構校準文件更新與審查
 ```
 
 ---
@@ -123,8 +123,8 @@ next_action: 等待使用者審查 Phase 4，通過後再進入 Phase 5（資產
 | P3-04 2FA 驗證頁 | done | 已完成 | 已完成 |
 | P3-05 首頁行情 | done | 已完成 | 已完成 |
 | P3-06 市場列表 | done | 已完成 | 已完成 |
-| P3-07 mock auth service | done | 已完成 | 已完成 |
-| P3-08 mock market service | done | 已完成 | 已完成 |
+| P3-07 auth service（開發期 mock） | done | 已完成 | 已完成 |
+| P3-08 market service（開發期 mock） | done | 已完成 | 已完成 |
 
 ### Phase 3.5
 
@@ -144,7 +144,7 @@ next_action: 等待使用者審查 Phase 4，通過後再進入 Phase 5（資產
 | P4-06 API Key 管理入口 | done | 已完成 | 已完成 |
 | P4-07 通知中心入口 | done | 已完成 | 已完成 |
 | P4-08 登入紀錄與安全操作紀錄 | done | 已完成 | 已完成 |
-| P4-09 mock account service | done | 已完成 | 已完成 |
+| P4-09 account service（開發期 mock） | done | 已完成 | 已完成 |
 
 ### Phase 5
 
@@ -168,11 +168,11 @@ next_action: 等待使用者審查 Phase 4，通過後再進入 Phase 5（資產
 | P6-01 現貨交易頁 | pending | - | - |
 | P6-02 合約交易頁 | pending | - | - |
 | P6-03 槓桿交易頁 | pending | - | - |
-| P6-04 mock order book | pending | - | - |
-| P6-05 mock trades | pending | - | - |
-| P6-06 mock open orders | pending | - | - |
-| P6-07 mock positions | pending | - | - |
-| P6-08 mock margin risk ratio | pending | - | - |
+| P6-04 order book integration | pending | - | - |
+| P6-05 trade feed integration | pending | - | - |
+| P6-06 open orders integration | pending | - | - |
+| P6-07 positions integration | pending | - | - |
+| P6-08 margin risk ratio integration | pending | - | - |
 
 ### Phase 7
 
@@ -277,5 +277,5 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 
 ```text
 已完成交易核心 C++ 校準文件更新，且 Phase 2 已審查通過。
-Phase 3、Phase 3.5 與 Phase 4 已完成，等待人工審查。
+Phase 3、Phase 3.5 與 Phase 4 已完成；目前進入 OL 上線架構校準。
 ```

@@ -2,16 +2,16 @@
 
 ## 任務
 
-建立交易所 MVP 的工程規則文件與必要的基礎約束。  
+建立交易所 OL 上線架構的工程規則文件與必要的基礎約束。  
 本 repo 的前端固定為 web/ React + TypeScript + Vite，`web/src/` 只給前端使用。  
 後端固定為 Java 21 + Spring Boot 3，未來程式碼放在 `server/`。
-正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
+C++ Core 是 OL 前必要項，未來程式碼預計放在 `core/` 或 `matching-core/`。
 
 ---
 
 ## 產品範圍
 
-第一版交易所 MVP 包含：
+OL 前必要模組包含：
 
 ```text
 現貨交易
@@ -84,7 +84,7 @@ Java 業務後端的交易核心接入層、資產帳本、訂單、對帳優先
 ```text
 web/src/ 只屬於 React 前端，不得移動或改造成後端。
 後端固定為 Java 21 + Spring Boot 3，未來程式碼只放 server/。
-正式交易核心目標為 C++ Core，Java Order Service 只保留 interface / skeleton / TODO，透過 MatchingEngineClient、gRPC 或 event bus 與 C++ Core 通訊。
+C++ Core 是 OL 前必要項，Java Order Service 只保留接入層與必要 skeleton，不可取代正式撮合，透過 MatchingEngineClient、gRPC 或 event bus 與 C++ Core 通訊。
 所有資產變動必須通過帳本服務。
 任何業務模組不得直接修改餘額。
 現貨、合約、槓桿帳戶必須隔離。
@@ -97,10 +97,10 @@ web/src/ 只屬於 React 前端，不得移動或改造成後端。
 槓桿必須有借款、還款、利息、風險率與強平設計。
 Open API 必須有簽名、timestamp、IP 白名單與 rate limit。
 內部做市商與外部做市商都必須走 Open API。
-Matching Engine 先以 Java `MatchingEngineClient` interface 方式存在，正式目標為 C++ Core，未來可透過 gRPC 或 event bus 接入。
+Matching Engine 只能先以 Java `MatchingEngineClient` 接入層存在，C++ Core 是 OL 前必要項，只能透過 gRPC 或 event bus 接入，不能作為正式撮合替代。
 C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`withdraw`、`admin adjustment`。
 Settlement / Ledger Service 負責資產結算與資產流水。
-所有 C++ Core 輸出事件都必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，並支援重放、對帳、補償。
+所有 C++ Core 輸出事件都必須包含 `event_id`、`sequence`、`symbol`、`timestamp`、`event_type`、`payload`，並支援重放、對帳、補償、gap detection。
 所有高風險邏輯必須標記 `TODO: requires high-reasoning review before production use`。
 ```
 

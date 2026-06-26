@@ -17,10 +17,10 @@
 2. 不要跨 Phase。
 3. 不要重構無關檔案。
 4. 不要新增大型套件。
-5. 前端維持 web/ React + TypeScript + Vite，`web/src/` 不可改成後端。
+5. 前端維持 web/ React + TypeScript + Vite，`web/src/` 不可改成後端，OL 前不得以 mock matching / mock order book / mock trade / mock settlement 作為正式流程。
 6. 後端固定為 Java 21 + Spring Boot 3，程式碼只放 `server/`，不要回退成 Node / Fastify / Prisma / TypeScript backend。
 7. 不要直接修改資產餘額。
-8. 不要實作未審查的撮合、強平、保證金、PnL、槓桿風險率。
+8. 不要實作未審查的撮合、強平、保證金、PnL、槓桿風險率；C++ Core 是 OL 前必要項。
 9. 不要處理真實私鑰或鏈上出帳。
 10. 所有高風險核心必須標記：TODO: requires high-reasoning review before production use。
 11. 完成後更新 AI_PROGRESS.md。

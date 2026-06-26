@@ -3,7 +3,7 @@
 ## 任務
 
 建立 React 認證頁面與安全驗證彈窗。  
-可以使用 mock auth service。
+可以在開發期使用 mock auth service；OL 前必須改接真實 auth API。
 
 ---
 

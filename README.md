@@ -20,7 +20,9 @@ Event bus：Kafka / Redpanda / RabbitMQ，可先 stub
 不要把後端寫成 Node / Fastify / Prisma / TypeScript backend。
 Java 業務後端的交易核心接入層、資產帳本、訂單、對帳優先使用 jOOQ / MyBatis / JDBC Template。
 一般 CRUD 可以使用 Spring Data JPA。
-正式撮合核心目標為 C++ Core；MVP 允許先保留 Java interface / skeleton / TODO。
+C++ Core 是 OL 前必要項，Java MatchingEngineClient 只能作為接入層，不能替代正式撮合。
+OL 前不得以 mock matching / mock order book / mock trade / mock settlement 作為正式流程。
+Java interface / skeleton / TODO 只能存在於非正式開發驗證，不可作為上線替代。
 ```
 
 ## AI 開工語錄

@@ -4,13 +4,13 @@
 
 建立現貨交易模組骨架，包含訂單、撤單、成交、結算、手續費與行情事件。  
 後端實作預期為 Java 21 + Spring Boot 3。
-正式撮合核心目標為 C++ Core；MVP 階段可先保留 Java interface / skeleton / stub。
+正式撮合核心為 C++ Core，這是 OL 前必要項；Java 只能保留接入層、interface、skeleton 與 TODO，不能作為正式撮合替代。
 
 ---
 
 ## 功能範圍
 
-| 功能 | MVP |
+| 功能 | OL 必要 |
 |---|---|
 | 限價單 | 必要 |
 | 市價單 | 建議，需價格保護 |
@@ -130,8 +130,8 @@ Settlement / Ledger Service 負責資產結算與資產流水。
 不要實作合約。
 不要實作槓桿借貸。
 不要實作內部做市策略。
-如果 matching engine 未完成，先用 Java interface / stub / TODO。
-現貨成交與結算核心正式目標為 C++ Core，但 MVP 階段僅保留 Java interface / skeleton / TODO。
+OL 前不得使用 mock matching / mock order book / mock trade / mock settlement 作為正式流程。
+現貨成交與結算核心必須接 C++ Core 與 Java Settlement / Ledger Service；若 C++ Core 未接通，即為 launch blocker。
 TODO: requires high-reasoning review before production use
 ```
 

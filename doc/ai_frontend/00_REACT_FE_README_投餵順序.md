@@ -12,7 +12,7 @@
 | 路由 | React Router；若 repo 已有路由則沿用 |
 | 狀態管理 | 先用 React hooks / context；不要一開始引入大型狀態庫 |
 | UI | 優先沿用現有 UI；沒有就先用乾淨 CSS / Tailwind，如果 repo 已有 |
-| API | 先 mock service / adapter |
+| API | 開發期可先 mock service / adapter，OL 前必須改接真實 API / WebSocket |
 | 圖表 | K 線先放容器，不急著接圖表庫 |
 
 ---
@@ -21,7 +21,7 @@
 
 ```text
 一次只做一個頁面群。
-資料先用 mock service。
+資料開發期可先用 mock service，OL 前必須替換成真實 API / WebSocket。
 不要接真實撮合。
 不要接真實強平。
 不要接真實錢包掃鏈。
@@ -74,5 +74,5 @@
 ## 每次丟給 Codex 前加這句
 
 ```text
-請只完成本文件任務。前端固定使用 React + TypeScript，資料可先用 mock service，不要實作其他文件內容，不要重構無關模組。
+請只完成本文件任務。前端固定使用 React + TypeScript，資料開發期可先用 mock service，但 OL 前必須改接真實 API / WebSocket，不要實作其他文件內容，不要重構無關模組。
 ```

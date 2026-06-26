@@ -3,7 +3,7 @@
 ## 任務
 
 建立 React 首頁與市場列表頁。  
-使用 mock market service。
+可以在開發期使用 mock market service；OL 前必須改接真實 market API / WebSocket。
 
 ---
 

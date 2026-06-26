@@ -2,8 +2,8 @@
 
 ## 任務
 
-建立交易所 MVP 的測試清單、驗收標準、壓測項目與上線檢查表。  
-本任務可先建立 docs、test plan、stub tests，不需要一次補齊所有測試。
+建立交易所 OL 的測試清單、驗收標準、壓測項目與上線檢查表。  
+本任務是 OL 前 launch blocker 清單。可先建立 docs、test plan、stub tests，但文件必須明確標示哪些項目是上線必要項，未通過即阻擋上線。
 後端測試預期對應 Java 21 + Spring Boot 3；前端仍維持 web/ React + TypeScript + Vite。
 
 ---
@@ -25,7 +25,7 @@
 
 ---
 
-## 必測場景
+## OL 必測場景
 
 ### 資產帳本
 
@@ -108,6 +108,23 @@
 | 對帳 | 每日可產出結果 |
 | 日誌 | 高危操作有紀錄 |
 
+## OL 必要測試
+
+```text
+C++ Core integration test
+Java Settlement integration test
+Ledger reconciliation test
+Order lifecycle test
+Cancel order test
+Partial fill test
+Full fill test
+WebSocket orderbook snapshot + diff test
+sequence gap recovery test
+crash recovery test
+replay test
+load test
+```
+
 ---
 
 ## 壓測項目
@@ -150,9 +167,9 @@ API key 洩漏處理。
 有上線前 checklist。
 有事故演練清單。
 有壓測項目清單。
-核心帳本測試至少有 stub 或 TODO。
+核心帳本與交易核心測試必須列入 OL 前完成項。
 合約與槓桿風險測試有明確場景。
-高風險測試只驗證骨架與邊界，不驗證 production 級公式。
+高風險測試仍需 `TODO: requires high-reasoning review before production use`，但不能把 OL 必要項延後。
 TODO: requires high-reasoning review before production use
 ```
 

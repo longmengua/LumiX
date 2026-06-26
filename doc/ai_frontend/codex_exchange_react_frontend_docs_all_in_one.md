@@ -579,7 +579,7 @@ API / Mock：
 ## 任務
 
 建立 React 認證頁面與安全驗證彈窗。  
-可以使用 mock auth service。
+可以在開發期使用 mock auth service；OL 前必須改接真實 auth API。
 
 ---
 
@@ -703,7 +703,7 @@ API / Mock：
 ## 任務
 
 建立 React 首頁與市場列表頁。  
-使用 mock market service。
+可以在開發期使用 mock market service；OL 前必須改接真實 market API / WebSocket。
 
 ---
 
@@ -1137,7 +1137,7 @@ API / Mock：
 ## 任務
 
 建立 React 充值、提現、充值紀錄、提現紀錄頁。  
-使用 mock wallet service，不接真實鏈。
+可以在開發期使用 mock wallet service，不接真實鏈；OL 前必須改接真實 wallet / chain API。
 
 ---
 
@@ -1277,7 +1277,7 @@ API / Mock：
 ## 任務
 
 建立 React 現貨交易頁。  
-使用 mock order book、mock trades、mock orders，不接真實撮合。
+可以在開發期使用 mock order book、mock trades、mock orders；OL 前必須改接真實 order book / trade feed / orders API，不可把 mock 當正式流程。
 
 ---
 
@@ -1389,7 +1389,7 @@ API / Mock：
 ## 任務
 
 建立 React 合約交易頁。  
-使用 mock 合約行情、mock 倉位、mock 訂單，不實作真實強平。
+可以在開發期使用 mock 合約行情、mock 倉位、mock 訂單；OL 前必須改接真實行情、倉位與訂單 API，不能把 mock 強平或 mock 行情當正式流程。
 
 ---
 
@@ -1526,7 +1526,7 @@ API / Mock：
 ## 任務
 
 建立 React 槓桿交易頁。  
-使用 mock 槓桿資產、負債、利息、風險率。
+可以在開發期使用 mock 槓桿資產、負債、利息、風險率；OL 前必須改接真實資產與風險 API。
 
 ---
 

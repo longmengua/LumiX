@@ -1,10 +1,10 @@
 # Codex Mini 投餵順序總索引
 
-這一組文件是為了讓 Codex mini 用最低成本、最低上下文量，一份一份完成交易所 MVP。
+這一組文件是為了讓 Codex mini 用最低成本、最低上下文量，一份一份完成交易所 OL 上線架構校準。
 
-後端技術棧已固定為 Java 21 + Spring Boot 3，未來後端程式碼放在 `server/`。  
+後端技術棧已固定為 Java 21 + Spring Boot 3，`server/` 只放 Java 業務後端程式碼。  
 `web/src/` 只保留 React + TypeScript + Vite 前端，不要把它當後端目錄。
-正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
+C++ Core 是 OL 前必要項，程式碼預計放在 `core/` 或 `matching-core/`，不可缺位。
 
 不要一次把全部文件丟給 Codex。  
 建議每次只丟一份，等 Codex 完成、測試通過、提交後，再丟下一份。
@@ -60,7 +60,7 @@
 04_personal_center.md
 ```
 
-如果你想最快建立交易所底層，先丟：
+如果你想最快建立交易所底層與 OL 必要架構，先丟：
 
 ```text
 01_repo_scan.md
@@ -88,7 +88,7 @@ core/ 或 matching-core/ 只放交易核心
 PostgreSQL / Redis / Event bus
 交易核心優先使用 jOOQ / MyBatis / JDBC Template
 一般 CRUD 可使用 Spring Data JPA
-MatchingEngineClient 先用 interface，正式目標為 C++ Core
+MatchingEngineClient 只能作為接入層，C++ Core 是 OL 前必要項，不能以 Java interface 取代正式撮合
 ```
 
 ---

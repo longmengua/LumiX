@@ -3,7 +3,7 @@
 ## 任務
 
 建立 React 現貨交易頁。  
-使用 mock order book、mock trades、mock orders，不接真實撮合。
+可以在開發期使用 mock order book、mock trades、mock orders；OL 前必須改接真實 order book / trade feed / orders API，不可把 mock 當正式流程。
 
 ---
 

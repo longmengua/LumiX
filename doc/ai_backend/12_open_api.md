@@ -4,7 +4,7 @@
 
 建立 Open API 模組，支援現貨、合約、槓桿的 API 入口與安全機制。  
 本任務先做 API key、簽名、IP 白名單、rate limit 與 route 骨架。
-後端實作預期為 Java 21 + Spring Boot 3；rate limit 可先搭配 Redis，route 只做 skeleton。
+後端實作預期為 Java 21 + Spring Boot 3；rate limit 可先搭配 Redis，route 只允許開發期 skeleton，但 OL 前必須接真實 API / WebSocket，不能把 mock 當正式流程。
 
 ---
 
@@ -112,6 +112,7 @@ Gateway 查 API key
 不要直接實作強平。
 不要繞過內部交易 service。
 Open API 只做安全閘道與 service adapter。
+OL 前不得使用 mock matching / mock order book / mock trade / mock settlement 作為正式流程。
 不要把 Open API 寫成 Node / Fastify / Prisma / TypeScript backend。
 TODO: requires high-reasoning review before production use
 ```

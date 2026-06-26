@@ -3,7 +3,7 @@
 ## 任務
 
 建立 React 充值、提現、充值紀錄、提現紀錄頁。  
-使用 mock wallet service，不接真實鏈。
+可以在開發期使用 mock wallet service，不接真實鏈；OL 前必須改接真實 wallet / chain API。
 
 ---
 

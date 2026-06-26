@@ -8,11 +8,12 @@
 ## 0. 專案狀態
 
 目前專案名稱：LumiX  
-產品目標：交易所 MVP，包含現貨、U 本位永續合約、槓桿交易、充值提現、Open API、外部做市商、內部做市商、後台、風控、強平、對帳。  
+產品目標：交易所 OL 上線架構，包含現貨、U 本位永續合約、槓桿交易、充值提現、Open API、外部做市商、內部做市商、後台、風控、強平、對帳。  
 前端固定技術：web/ React + TypeScript + Vite，`web/src/` 僅作前端。  
 後端固定技術：Java 21 + Spring Boot 3，未來放在 `server/`。  
-正式交易核心目標為 C++ Core，未來程式碼預計放在 `core/` 或 `matching-core/`。
-目前 repo 內已有需求文件，前端骨架已建立在 `web/`，後端骨架尚未建立。
+C++ Core 是 OL 前必要項，未來程式碼預計放在 `core/` 或 `matching-core/`。
+目前 repo 內已有需求文件，前端骨架已建立在 `web/`，後端骨架尚未建立。  
+C++ Core 是 OL 前必要項，正式上線前不得以 mock matching / mock order book / mock trade / mock settlement 作為正式流程。
 
 目前已存在文件：
 
@@ -218,7 +219,7 @@ AI 只能：
 2. 後端固定為 Java 21 + Spring Boot 3，未來程式碼只放 `server/`。
 3. Build tool 以 Gradle 優先，正式後端不得回退為 Node / Fastify / Prisma / TypeScript backend。
 4. Database 使用 PostgreSQL，Cache 使用 Redis。
-5. Event bus 可使用 Kafka / Redpanda / RabbitMQ，MVP 允許先 stub。
+5. Event bus 可使用 Kafka / Redpanda / RabbitMQ，僅允許開發/驗證 stub；OL 前必須完成真實整合。
 6. 一般 CRUD 可使用 Spring Data JPA。
 7. 交易核心、資產帳本、訂單、對帳優先使用 jOOQ / MyBatis / JDBC Template，不要完全依賴 JPA 自動管理。
 8. 不得直接修改用戶資產餘額。
@@ -230,9 +231,9 @@ AI 只能：
 14. 內部做市商與外部做市商都必須走 Open API。
 15. 後台高危操作必須有 RBAC、二次確認、operation log。
 16. 合約強平必須使用標記價格，不可直接使用最新成交價。
-17. Matching Engine 先定 Java `MatchingEngineClient` interface，正式目標為 C++ Core，Java Order Service 僅作接入層，未來透過 gRPC 或 event bus 與 C++ Core 通訊。
+17. Matching Engine 先定 Java `MatchingEngineClient` interface，但它只能是接入層，不能替代正式撮合；C++ Core 是 OL 前必要項，Java Order Service 只能透過 gRPC 或 event bus 接入 C++ Core。
 18. C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`withdraw`、`admin adjustment`。
-19. Settlement / Ledger Service 負責資產結算與資產流水，所有 C++ Core 輸出事件必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，並支援重放、對帳、補償。
+19. Settlement / Ledger Service 必須消費 C++ trade events 做資產結算與資產流水；所有 C++ Core event 必須包含 `event_id`、`sequence`、`symbol`、`timestamp`、`event_type`、`payload`，並支援 replay、reconciliation、compensation、gap detection。
 20. 所有高風險邏輯必須標記 `TODO: requires high-reasoning review before production use`。
 ```
 
@@ -240,9 +241,9 @@ AI 只能：
 
 ## 4. 開工總策略
 
-由於目前 repo 已有 `web/` 前端骨架、但後端仍未建立，第一階段重點會放在前端與後端分工校準，以及後續 Phase 的前端功能。  
-後端技術棧先校準為 Java 21 + Spring Boot 3 + `server/`，交易核心正式目標為 C++ Core。  
-Phase 9-12 只建立 Java 業務後端的骨架、interface、stub 與 TODO，不直接實作高風險邏輯，也不建立 C++ production 程式碼。
+由於目前 repo 已有 `web/` 前端骨架、但後端仍未建立，第一階段重點會放在前端與後端分工校準，以及 OL 上線架構校準。  
+後端技術棧固定為 Java 21 + Spring Boot 3 + `server/`，C++ Core 是 OL 前必要項。  
+Phase 9 之後必須拆成 Java `server/` production foundation、C++ `core/` production foundation、Java ↔ C++ integration、Settlement / Ledger integration、Risk / Liquidation integration、Reconciliation / Replay / Monitoring；OL 前不得只停留在 skeleton、stub 或 mock 流程。
 
 優先順序：
 
@@ -393,8 +394,8 @@ P3-03 忘記密碼頁
 P3-04 2FA 驗證頁
 P3-05 首頁行情
 P3-06 市場列表
-P3-07 mock auth service
-P3-08 mock market service
+P3-07 auth service（開發期 mock）
+P3-08 market service（開發期 mock）
 ```
 
 參考文件：
@@ -514,8 +515,8 @@ Phase 結束後：必須等待使用者人工審查。
 P6-01 現貨交易頁
 P6-02 合約交易頁
 P6-03 槓桿交易頁
-P6-04 mock order book
-P6-05 mock trades
+P6-04 order book integration
+P6-05 trade feed integration
 P6-06 mock open orders
 P6-07 mock positions
 P6-08 mock margin risk ratio

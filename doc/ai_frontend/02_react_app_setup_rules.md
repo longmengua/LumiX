@@ -61,7 +61,7 @@ src/
 頁面不得直接寫死大量 mock，mock 放 services 或 mocks。
 資產、價格、數量統一用格式化工具。
 API key、Email、手機、地址必須脫敏。
-交易頁先用 mock，不接真實 WebSocket。
+交易頁開發期可先用 mock，不接真實 WebSocket；OL 前必須接真實 API / WebSocket。
 高危操作必須有 ConfirmDialog 或 SecurityVerifyModal。
 每個頁面要有 loading、empty、error 狀態。
 ```
@@ -85,7 +85,7 @@ API key、Email、手機、地址必須脫敏。
 建立 React 前端規則文件。
 建立路由與元件規劃。
 明確禁止改成 Next.js / Vue。
-明確要求 mock service。
+明確要求開發期 mock service，並在 OL 前切換成真實 API / WebSocket。
 明確要求 loading / empty / error。
 ```
 

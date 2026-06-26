@@ -6,6 +6,7 @@
 所有現貨、合約、槓桿、錢包、做市商、平台收入都要依賴這套帳本。
 後端實作預期為 Java 21 + Spring Boot 3，資料層優先 PostgreSQL，快取可用 Redis。
 正式交易撮合核心由 C++ Core 負責，C++ Core 只能輸出事件，不可直接修改帳本資料。
+Java Settlement / Ledger Service 必須消費 C++ trade events 做資產結算與資產流水。
 
 ---
 
@@ -84,6 +85,7 @@
 Matching Engine / C++ Core 不得直接改 ledger，只能發出 order / trade / orderbook events。
 Settlement / Ledger Service 負責資產結算與資產流水。
 所有 C++ Core 輸出事件必須包含 `event_id`、`sequence`、`symbol`、`timestamp`，並支援 replay、reconciliation、compensation。
+C++ Core 事件必須再補齊 `event_type`、`payload`，並支援 gap detection。
 C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`withdraw`、`admin adjustment`。
 ```
 
@@ -115,8 +117,7 @@ C++ Core 不得直接修改 `user_balance`、`ledger_journal`、`wallet`、`with
 不要實作強平。
 不要實作做市策略。
 本任務只做帳本能力與介面。
-本任務只做 interface / skeleton / TODO，不做 production 級公式。
-TODO: requires high-reasoning review before production use
+高風險公式與例外處理仍需 `TODO: requires high-reasoning review before production use`，但帳本分工、事件契約與結算邊界必須先完成。
 ```
 
 ---
