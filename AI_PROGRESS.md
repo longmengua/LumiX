@@ -39,7 +39,7 @@
 | 2 | Design System 與 App Shell | done | approved | 已審查通過 |
 | 3 | 登入、首頁、市場列表 | done | approved | 已審查通過 |
 | 3.5 | Monorepo 目錄結構校準 | done | approved | 已審查通過 |
-| 4 | 個人中心 | done | pending | 已完成，待審查 |
+| 4 | 個人中心 | done | approved | 已完成，人工審查通過 |
 | 5 | 資產、劃轉、充值、提現畫面 | pending | pending | 需人工審查 |
 | 6 | 現貨、合約、槓桿交易頁 | pending | pending | 需人工審查 |
 | 7 | 訂單、倉位、API Key、通知 | pending | pending | 需人工審查 |
@@ -256,7 +256,7 @@ next_action: 暫停進入下一個功能 Phase，先完成 OL 上線架構校準
 
 | Phase | 審查人 | 結果 | 時間 | 備註 |
 |---:|---|---|---|---|
-| - | - | - | - | - |
+| 4 | Codex | 通過 | 2026-06-26 | Phase 4 UI / mock 範圍完成；build 通過；typecheck 通過；仍屬開發期 mock / adapter，不代表 OL 真實後端完成；OL 前需接 `server/` Java 真實 API |
 
 ---
 
