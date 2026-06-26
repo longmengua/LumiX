@@ -1,7 +1,12 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from '../app/layout';
 import { Header } from '../components/layout/Header';
+import { LoginPage } from '../pages/LoginPage';
+import { RegisterPage } from '../pages/RegisterPage';
+import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
+import { ResetPasswordPage } from '../pages/ResetPasswordPage';
+import { TwoFactorPage } from '../pages/TwoFactorPage';
 import { HomePage } from '../pages/HomePage';
 import { MarketsPage } from '../pages/MarketsPage';
 import { PlaceholderTradingPage } from '../pages/PlaceholderTradingPage';
@@ -95,9 +100,12 @@ export function AppRouter() {
         }
         path="/admin/*"
       />
-      <Route path="/login" element={<Navigate replace to="/" />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+      <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/two-factor" element={<TwoFactorPage />} />
       <Route path="*" element={<AppLayout header={<Header />}><NotFoundPage /></AppLayout>} />
     </Routes>
   );
 }
-

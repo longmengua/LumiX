@@ -27,11 +27,10 @@ export function Header() {
         ))}
       </nav>
       <div className="topbar__actions">
-        <NavLink className="topbar__button" to="/account">
-          Login
+        <NavLink className="topbar__button" to="/login">
+          Sign in
         </NavLink>
       </div>
     </header>
   );
 }
-
