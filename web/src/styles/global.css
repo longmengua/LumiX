@@ -526,6 +526,126 @@ a {
   gap: 10px;
 }
 
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-grid--three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.stat-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.stat-list__row {
+  display: grid;
+  gap: 4px;
+}
+
+.stat-list__row dt {
+  color: rgba(148, 163, 184, 0.92);
+  font-size: 0.86rem;
+}
+
+.stat-list__row dd {
+  margin: 0;
+  color: rgba(241, 245, 249, 0.98);
+  font-weight: 600;
+}
+
+.account-row,
+.timeline-item,
+.notice-row,
+.api-key-card__header,
+.api-key-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.account-row,
+.timeline-item {
+  padding: 14px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.account-row:first-child,
+.timeline-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.account-row__title {
+  margin: 0;
+  font-weight: 600;
+}
+
+.account-row__meta {
+  margin: 6px 0 0;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.92rem;
+}
+
+.asset-table,
+.api-key-list,
+.timeline-list {
+  display: grid;
+  gap: 16px;
+}
+
+.asset-table__head,
+.asset-table__row {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr));
+  gap: 12px;
+  align-items: center;
+}
+
+.asset-table__head {
+  color: rgba(148, 163, 184, 0.92);
+  font-size: 0.86rem;
+}
+
+.asset-table__row {
+  padding: 14px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.api-key-card {
+  padding: 18px;
+  border-radius: 20px;
+  background: rgba(2, 6, 23, 0.42);
+  border: 1px solid rgba(148, 163, 184, 0.16);
+}
+
+.api-key-card__header,
+.api-key-card__actions {
+  margin-bottom: 16px;
+}
+
+.api-key-card__body {
+  margin-bottom: 16px;
+}
+
+.transfer-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.transfer-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 18px;
+}
+
 .modal-backdrop {
   position: fixed;
   inset: 0;
@@ -659,13 +779,26 @@ a {
   .hero-panel__stats,
   .market-table__head,
   .market-table__row,
-  .market-preview {
+  .market-preview,
+  .dashboard-grid,
+  .dashboard-grid--three,
+  .asset-table__head,
+  .asset-table__row,
+  .transfer-grid {
     grid-template-columns: 1fr;
   }
 
   .market-row__actions,
-  .market-preview__numbers {
+  .market-preview__numbers,
+  .account-row,
+  .timeline-item,
+  .notice-row,
+  .api-key-card__header,
+  .api-key-card__actions,
+  .transfer-actions {
     justify-items: start;
     justify-content: flex-start;
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3 與 Phase 3.5 已完成並等待人工審查。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成並等待人工審查。  
 目前觀察：
 
 ```text
@@ -37,9 +37,9 @@
 | 0 | Repo 掃描與進度初始化 | done | not_required | 已完成 |
 | 1 | React + TypeScript 專案骨架 | done | approved | 已審查通過 |
 | 2 | Design System 與 App Shell | done | approved | 已審查通過 |
-| 3 | 登入、首頁、市場列表 | done | pending | 已完成，待審查 |
-| 3.5 | Monorepo 目錄結構校準 | done | pending | 已完成，待審查 |
-| 4 | 個人中心 | pending | pending | 需人工審查 |
+| 3 | 登入、首頁、市場列表 | done | approved | 已審查通過 |
+| 3.5 | Monorepo 目錄結構校準 | done | approved | 已審查通過 |
+| 4 | 個人中心 | done | pending | 已完成，待審查 |
 | 5 | 資產、劃轉、充值、提現畫面 | pending | pending | 需人工審查 |
 | 6 | 現貨、合約、槓桿交易頁 | pending | pending | 需人工審查 |
 | 7 | 訂單、倉位、API Key、通知 | pending | pending | 需人工審查 |
@@ -73,9 +73,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: 3.5
-current_task: P3.5-01
-next_action: 等待使用者審查 Phase 3 與 Phase 3.5，通過後再進入 Phase 4（個人中心）
+current_phase: 4
+current_task: P4-09
+next_action: 等待使用者審查 Phase 4，通過後再進入 Phase 5（資產、劃轉、充值、提現畫面）
 ```
 
 ---
@@ -136,15 +136,15 @@ next_action: 等待使用者審查 Phase 3 與 Phase 3.5，通過後再進入 Ph
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P4-01 個人中心 Layout | pending | - | - |
-| P4-02 帳戶總覽 | pending | - | - |
-| P4-03 安全中心 | pending | - | - |
-| P4-04 KYC 狀態頁 | pending | - | - |
-| P4-05 資產摘要入口 | pending | - | - |
-| P4-06 API Key 管理入口 | pending | - | - |
-| P4-07 通知中心入口 | pending | - | - |
-| P4-08 登入紀錄與安全操作紀錄 | pending | - | - |
-| P4-09 mock account service | pending | - | - |
+| P4-01 個人中心 Layout | done | 已完成 | 已完成 |
+| P4-02 帳戶總覽 | done | 已完成 | 已完成 |
+| P4-03 安全中心 | done | 已完成 | 已完成 |
+| P4-04 KYC 狀態頁 | done | 已完成 | 已完成 |
+| P4-05 資產摘要入口 | done | 已完成 | 已完成 |
+| P4-06 API Key 管理入口 | done | 已完成 | 已完成 |
+| P4-07 通知中心入口 | done | 已完成 | 已完成 |
+| P4-08 登入紀錄與安全操作紀錄 | done | 已完成 | 已完成 |
+| P4-09 mock account service | done | 已完成 | 已完成 |
 
 ### Phase 5
 
@@ -277,5 +277,5 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 
 ```text
 已完成交易核心 C++ 校準文件更新，且 Phase 2 已審查通過。
-Phase 3 與 Phase 3.5 已完成，等待人工審查。
+Phase 3、Phase 3.5 與 Phase 4 已完成，等待人工審查。
 ```
