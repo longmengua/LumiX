@@ -9,7 +9,7 @@ import { ResetPasswordPage } from '../pages/ResetPasswordPage';
 import { TwoFactorPage } from '../pages/TwoFactorPage';
 import { HomePage } from '../pages/HomePage';
 import { MarketsPage } from '../pages/MarketsPage';
-import { PlaceholderTradingPage } from '../pages/PlaceholderTradingPage';
+import { FuturesTradingPage, MarginTradingPage, SpotTradingPage } from '../pages/TradingPage';
 import { AssetsOverviewPage } from '../pages/assets/AssetsOverviewPage';
 import { SpotAssetsPage } from '../pages/assets/SpotAssetsPage';
 import { FuturesAssetsPage } from '../pages/assets/FuturesAssetsPage';
@@ -48,7 +48,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <PlaceholderTradingPage kind="Spot" />
+            <SpotTradingPage />
           </AppLayout>
         }
         path="/spot/:symbol"
@@ -56,7 +56,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <PlaceholderTradingPage kind="Futures" />
+            <FuturesTradingPage />
           </AppLayout>
         }
         path="/futures/:symbol"
@@ -64,7 +64,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <PlaceholderTradingPage kind="Margin" />
+            <MarginTradingPage />
           </AppLayout>
         }
         path="/margin/:symbol"
