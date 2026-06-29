@@ -2,10 +2,13 @@ import { useState, type FormEvent } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
+import { translateAuthError, translateMaskedMessage } from '../features/auth/authText';
 import { registerMock } from '../features/auth/mockAuthService';
+import { useI18n } from '../i18n';
 
 export function RegisterPage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [verificationCode, setVerificationCode] = useState('');
   const [password, setPassword] = useState('');
@@ -32,10 +35,12 @@ export function RegisterPage() {
         acceptedTerms,
       });
 
-      setSuccess(result);
+      setSuccess(
+        translateMaskedMessage(result, t, 'auth.register.success', 'auth.register.successFallback'),
+      );
       navigate('/login');
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Unable to register.');
+      setError(translateAuthError(submitError, t, 'auth.register.errorGeneric'));
     } finally {
       setLoading(false);
     }
@@ -43,68 +48,68 @@ export function RegisterPage() {
 
   return (
     <AuthPageShell
-      eyebrow="Onboarding"
-      title="Create your LumiX account"
-      description="Use the Phase 3 onboarding shell to test validation, redirects, and security flows."
+      eyebrow={t('auth.shell.eyebrow')}
+      title={t('auth.register.title')}
+      description={t('auth.register.description')}
       footer={
         <p className="auth-page__helper">
-          Already have an account? <NavLink to="/login">Sign in</NavLink>.
+          {t('auth.register.footerPrefix')} <NavLink to="/login">{t('auth.register.footerSignIn')}</NavLink>.
         </p>
       }
     >
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="field">
-          <span className="field__label">Email / phone</span>
+          <span className="field__label">{t('auth.register.identifier')}</span>
           <input
             className="input"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="name@example.com"
+            placeholder={t('auth.register.identifierPlaceholder')}
             autoComplete="username"
           />
         </label>
 
         <div className="auth-form__split">
           <label className="field">
-            <span className="field__label">Verification code</span>
+            <span className="field__label">{t('auth.register.verificationCode')}</span>
             <input
               className="input"
               value={verificationCode}
               onChange={(event) => setVerificationCode(event.target.value)}
-              placeholder="123456"
+              placeholder={t('auth.register.verificationCodePlaceholder')}
             />
           </label>
           <label className="field">
-            <span className="field__label">Referral code</span>
+            <span className="field__label">{t('auth.register.referralCode')}</span>
             <input
               className="input"
               value={referralCode}
               onChange={(event) => setReferralCode(event.target.value)}
-              placeholder="Optional"
+              placeholder={t('auth.register.referralCodePlaceholder')}
             />
           </label>
         </div>
 
         <div className="auth-form__split">
           <label className="field">
-            <span className="field__label">Password</span>
+            <span className="field__label">{t('auth.register.password')}</span>
             <input
               className="input"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t('auth.register.passwordPlaceholder')}
               autoComplete="new-password"
             />
           </label>
           <label className="field">
-            <span className="field__label">Confirm password</span>
+            <span className="field__label">{t('auth.register.confirmPassword')}</span>
             <input
               className="input"
               type="password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Repeat password"
+              placeholder={t('auth.register.confirmPasswordPlaceholder')}
               autoComplete="new-password"
             />
           </label>
@@ -112,14 +117,14 @@ export function RegisterPage() {
 
         <label className="checkbox">
           <input checked={acceptedTerms} type="checkbox" onChange={(event) => setAcceptedTerms(event.target.checked)} />
-          <span>I agree to the terms and risk disclosures.</span>
+          <span>{t('auth.register.acceptTerms')}</span>
         </label>
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {success ? <p className="form-message form-message--success">{success}</p> : null}
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? 'Creating account...' : 'Create account'}
+          {loading ? t('auth.register.submitting') : t('auth.register.submit')}
         </button>
       </form>
     </AuthPageShell>

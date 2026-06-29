@@ -3,9 +3,12 @@ import { NavLink } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { SecurityVerifyModal, type VerificationMethod } from '../components/auth/SecurityVerifyModal';
+import { translateAuthError } from '../features/auth/authText';
 import { resetPasswordMock } from '../features/auth/mockAuthService';
+import { useI18n } from '../i18n';
 
 export function ResetPasswordPage() {
+  const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -21,10 +24,10 @@ export function ResetPasswordPage() {
     setSuccess(null);
 
     try {
-      const result = await resetPasswordMock({ identifier, newPassword, confirmPassword });
-      setSuccess(result);
+      await resetPasswordMock({ identifier, newPassword, confirmPassword });
+      setSuccess(t('auth.reset.success'));
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Unable to reset password.');
+      setError(translateAuthError(submitError, t, 'auth.reset.errorGeneric'));
     } finally {
       setLoading(false);
     }
@@ -33,55 +36,55 @@ export function ResetPasswordPage() {
   function handleVerify(input: { method: VerificationMethod; code: string }) {
     if (input.code.trim() === '123456') {
       setVerifyOpen(false);
-      setSuccess(`Verified by ${input.method}. You can now reset your password.`);
+      setSuccess(t('auth.reset.verified', undefined, { method: t(`auth.verify.method.${input.method}`) }));
       return;
     }
 
-    setError('Verification failed. Try 123456 in the demo flow.');
+    setError(t('auth.reset.verificationFailed'));
   }
 
   return (
     <AuthPageShell
-      eyebrow="Recovery"
-      title="Set a new password"
-      description="Demo reset flow with a reusable security verification modal."
+      eyebrow={t('auth.shell.eyebrow')}
+      title={t('auth.reset.title')}
+      description={t('auth.reset.description')}
       footer={
         <p className="auth-page__helper">
-          Return to <NavLink to="/login">sign in</NavLink>.
+          {t('auth.reset.footerPrefix')} <NavLink to="/login">{t('auth.reset.footerSignIn')}</NavLink>.
         </p>
       }
     >
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="field">
-          <span className="field__label">Email / phone</span>
+          <span className="field__label">{t('auth.reset.identifier')}</span>
           <input
             className="input"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="name@example.com"
+            placeholder={t('auth.reset.identifierPlaceholder')}
           />
         </label>
 
         <div className="auth-form__split">
           <label className="field">
-            <span className="field__label">New password</span>
+            <span className="field__label">{t('auth.reset.newPassword')}</span>
             <input
               className="input"
               type="password"
               value={newPassword}
               onChange={(event) => setNewPassword(event.target.value)}
-              placeholder="At least 8 characters"
+              placeholder={t('auth.reset.newPasswordPlaceholder')}
               autoComplete="new-password"
             />
           </label>
           <label className="field">
-            <span className="field__label">Confirm password</span>
+            <span className="field__label">{t('auth.reset.confirmPassword')}</span>
             <input
               className="input"
               type="password"
               value={confirmPassword}
               onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder="Repeat password"
+              placeholder={t('auth.reset.confirmPasswordPlaceholder')}
               autoComplete="new-password"
             />
           </label>
@@ -89,24 +92,24 @@ export function ResetPasswordPage() {
 
         <div className="auth-form__row">
           <button className="secondary-button" type="button" onClick={() => setVerifyOpen(true)}>
-            Open security verify
+            {t('auth.reset.openVerify')}
           </button>
-          <span className="auth-form__hint">Modal is reusable for password changes, API key actions, and withdrawals.</span>
+          <span className="auth-form__hint">{t('auth.reset.hint')}</span>
         </div>
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {success ? <p className="form-message form-message--success">{success}</p> : null}
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? 'Updating...' : 'Update password'}
+          {loading ? t('auth.reset.submitting') : t('auth.reset.submit')}
         </button>
       </form>
 
       <SecurityVerifyModal
-        confirmLabel="Confirm verification"
-        description="Use any of the supported verification methods before changing a password."
+        confirmLabel={t('auth.reset.verifyConfirm')}
+        description={t('auth.reset.verifyDescription')}
         open={verifyOpen}
-        title="Verify password reset"
+        title={t('auth.reset.verifyTitle')}
         onClose={() => setVerifyOpen(false)}
         onConfirm={handleVerify}
       />

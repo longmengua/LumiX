@@ -2,9 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
+import { translateAuthError, translateMaskedMessage } from '../features/auth/authText';
 import { requestPasswordResetMock } from '../features/auth/mockAuthService';
+import { useI18n } from '../i18n';
 
 export function ForgotPasswordPage() {
+  const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +21,9 @@ export function ForgotPasswordPage() {
 
     try {
       const result = await requestPasswordResetMock(identifier);
-      setSuccess(result);
+      setSuccess(translateMaskedMessage(result, t, 'auth.forgot.success', 'auth.forgot.successFallback'));
     } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : 'Unable to request reset.');
+      setError(translateAuthError(submitError, t, 'auth.forgot.errorGeneric'));
     } finally {
       setLoading(false);
     }
@@ -28,23 +31,24 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthPageShell
-      eyebrow="Recovery"
-      title="Reset your password"
-      description="Request a reset link or code for the demo authentication flow."
+      eyebrow={t('auth.shell.eyebrow')}
+      title={t('auth.forgot.title')}
+      description={t('auth.forgot.description')}
       footer={
         <p className="auth-page__helper">
-          Back to <NavLink to="/login">sign in</NavLink> or <NavLink to="/register">create account</NavLink>.
+          {t('auth.forgot.footerPrefix')} <NavLink to="/login">{t('auth.forgot.footerSignIn')}</NavLink>{' '}
+          {t('auth.forgot.footerConnector')} <NavLink to="/register">{t('auth.forgot.footerCreateAccount')}</NavLink>.
         </p>
       }
     >
       <form className="auth-form" onSubmit={handleSubmit}>
         <label className="field">
-          <span className="field__label">Email / phone</span>
+          <span className="field__label">{t('auth.forgot.identifier')}</span>
           <input
             className="input"
             value={identifier}
             onChange={(event) => setIdentifier(event.target.value)}
-            placeholder="name@example.com"
+            placeholder={t('auth.forgot.identifierPlaceholder')}
             autoComplete="username"
           />
         </label>
@@ -53,7 +57,7 @@ export function ForgotPasswordPage() {
         {success ? <p className="form-message form-message--success">{success}</p> : null}
 
         <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? 'Sending...' : 'Send reset instructions'}
+          {loading ? t('auth.forgot.submitting') : t('auth.forgot.submit')}
         </button>
       </form>
     </AuthPageShell>

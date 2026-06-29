@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
+
+import { Logo } from '../brand/Logo';
 import { useI18n } from '../../i18n';
 
 const links = [
-  ['/', 'nav.logo'],
   ['/markets', 'nav.markets'],
   ['/spot/BTC-USDT', 'nav.spot'],
   ['/futures/BTC-USDT', 'nav.futures'],
@@ -18,13 +19,18 @@ export function Header() {
 
   return (
     <header className="topbar">
+      <NavLink className="topbar__brand topbar__brand--full" to="/" aria-label={t('nav.logo')}>
+        <Logo size="md" title={t('nav.logo')} variant="full" />
+      </NavLink>
+      <NavLink className="topbar__brand topbar__brand--mark" to="/" aria-label={t('nav.logo')}>
+        <Logo size="md" title={t('nav.logo')} variant="mark" />
+      </NavLink>
       <nav className="topbar__nav" aria-label="Primary">
         {links.map(([to, labelKey]) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) => `topbar__link${isActive ? ' topbar__link--active' : ''}`}
-            end={to === '/'}
           >
             {t(labelKey)}
           </NavLink>
