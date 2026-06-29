@@ -1,6 +1,7 @@
 import { Card } from '../../components/base/Card';
 import { ErrorState, LoadingState } from '../../components/base/State';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { useI18n } from '../../i18n';
 import { WalletAdapterNotice } from '../../features/assets/wallet/WalletAdapterNotice';
 import { DepositRecordsTable } from '../../features/assets/wallet/WalletRecordsTable';
 import { WalletSectionNav } from '../../features/assets/wallet/WalletSectionNav';
@@ -8,16 +9,17 @@ import { useWalletWorkspaceMock } from '../../features/assets/wallet/useWalletWo
 import { formatAmount } from '../../utils/format';
 
 export function DepositHistoryPage() {
+  const { t } = useI18n();
   const { data, loading, error, reload } = useWalletWorkspaceMock();
 
   return (
     <div className="stack assets-page">
-      <PageHeader title="Deposit History" description="Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API." />
+      <PageHeader title={t('assets.depositHistoryTitle')} description={t('assets.depositHistoryDescription')} />
       <WalletSectionNav />
-      <WalletAdapterNotice notice={data?.adapterNotice ?? 'Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API.'} />
+      <WalletAdapterNotice notice={data?.adapterNotice ?? t('assets.walletWorkspacesHint')} />
 
-      {loading ? <LoadingState title="Loading deposit history" description="Fetching mock deposit records..." /> : null}
-      {error ? <ErrorState title="Unable to load wallet data" description={error} action={<button className="secondary-button" type="button" onClick={reload}>Retry</button>} /> : null}
+      {loading ? <LoadingState title={t('assets.loadingWalletTitle')} description={t('assets.loadingWalletDescription')} /> : null}
+      {error ? <ErrorState title={t('assets.walletErrorTitle')} description={error} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
 
       {!loading && !error && data ? (
         <>

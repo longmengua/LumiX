@@ -1,19 +1,20 @@
 import { Sidebar } from '../components/layout/Sidebar';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Card } from '../components/base/Card';
+import { useI18n } from '../i18n';
 import { adminNavItems } from '../features/navigation/adminNav';
 
 export function AdminPage() {
+  const { t } = useI18n();
   return (
     <div className="two-column">
-      <Sidebar title="Admin" items={adminNavItems.map(({ to, label }) => ({ to, label }))} />
+      <Sidebar title={t('admin.pageTitle')} items={adminNavItems.map(({ to, labelKey }) => ({ to, label: t(labelKey) }))} />
       <div className="stack">
-        <PageHeader title="Admin" description="Back-office placeholder." />
-        <Card title="Dashboard">
-          <p>Admin console pages will be added in Phase 8.</p>
+        <PageHeader title={t('admin.pageTitle')} description={t('admin.pageDescription')} />
+        <Card title={t('admin.dashboardTitle')}>
+          <p>{t('admin.message')}</p>
         </Card>
       </div>
     </div>
   );
 }
-

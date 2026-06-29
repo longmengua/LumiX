@@ -1,6 +1,7 @@
 import { Card } from '../../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../../components/base/State';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { useI18n } from '../../i18n';
 import type { AssetTabKey } from './mockAssetService';
 import { AssetAccountTable } from './AssetAccountTable';
 import { AssetHistoryList } from './AssetHistoryList';
@@ -16,6 +17,7 @@ type AssetAccountPageProps = {
 };
 
 export function AssetAccountPage({ accountKey, title, description, summaryTitle, summaryPoints }: AssetAccountPageProps) {
+  const { t } = useI18n();
   const { data, loading, error, reload } = useAssetOverviewMock();
   const account = data?.accounts.find((item) => item.key === accountKey) ?? null;
   const history = data?.history.filter((item) => item.account.toLowerCase().includes(accountKey)) ?? [];
@@ -25,8 +27,8 @@ export function AssetAccountPage({ accountKey, title, description, summaryTitle,
       <PageHeader title={title} description={description} />
       <AssetSectionNav active={accountKey} />
 
-      {loading ? <LoadingState title={`Loading ${title.toLowerCase()}`} description="Fetching mock balances and activity..." /> : null}
-      {error ? <ErrorState title="Unable to load asset data" description={error} action={<button className="secondary-button" type="button" onClick={reload}>Retry</button>} /> : null}
+      {loading ? <LoadingState title={t('assets.loadingTitle')} description={t('assets.loadingDescription')} /> : null}
+      {error ? <ErrorState title={t('assets.errorTitle')} description={error} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
 
       {!loading && !error && data ? (
         <>
@@ -42,14 +44,14 @@ export function AssetAccountPage({ accountKey, title, description, summaryTitle,
           </Card>
 
           <Card title={account?.label ?? title}>
-            {account ? <AssetAccountTable account={account} /> : <EmptyState title="No account data" description="This account snapshot is unavailable." />}
+            {account ? <AssetAccountTable account={account} /> : <EmptyState title={t('account.noAssetsSelected')} description={t('account.noAssetsSelectedDescription')} />}
           </Card>
 
           <AssetHistoryList
-            title={`Recent ${title} Activity`}
+            title={t('assets.recentHistoryTitle')}
             history={history}
-            emptyTitle={`No ${title.toLowerCase()} history`}
-            emptyDescription={`Activity for ${title.toLowerCase()} will appear here.`}
+            emptyTitle={t('assets.noHistoryTitle')}
+            emptyDescription={t('assets.noHistoryDescription')}
           />
         </>
       ) : null}

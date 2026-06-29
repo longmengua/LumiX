@@ -1,5 +1,6 @@
 import { Badge } from '../../components/base/Badge';
 import { EmptyState } from '../../components/base/State';
+import { useI18n } from '../../i18n';
 import { formatAmount, formatTime } from '../../utils/format';
 import type { AssetHistoryRecord } from './mockAssetService';
 
@@ -11,14 +12,19 @@ type AssetHistoryListProps = {
 };
 
 export function AssetHistoryList({
-  title = 'Recent Asset History',
+  title,
   history,
-  emptyTitle = 'No asset history',
-  emptyDescription = 'Asset history will appear after the first transfer or settlement event.',
+  emptyTitle,
+  emptyDescription,
 }: AssetHistoryListProps) {
+  const { t } = useI18n();
+  const heading = title ?? t('assets.recentHistoryTitle');
+  const resolvedEmptyTitle = emptyTitle ?? t('assets.noHistoryTitle');
+  const resolvedEmptyDescription = emptyDescription ?? t('assets.noHistoryDescription');
+
   return (
     <div className="card">
-      <h2 className="card__title">{title}</h2>
+      <h2 className="card__title">{heading}</h2>
       {history.length > 0 ? (
         <div className="history-list">
           {history.map((item) => (
@@ -40,7 +46,7 @@ export function AssetHistoryList({
           ))}
         </div>
       ) : (
-        <EmptyState title={emptyTitle} description={emptyDescription} />
+        <EmptyState title={resolvedEmptyTitle} description={resolvedEmptyDescription} />
       )}
     </div>
   );

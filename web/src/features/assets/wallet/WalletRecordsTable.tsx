@@ -1,5 +1,6 @@
 import { Badge } from '../../../components/base/Badge';
 import { EmptyState } from '../../../components/base/State';
+import { useI18n } from '../../../i18n';
 import { formatAmount, formatTime } from '../../../utils/format';
 import type { DepositRecord, WithdrawRecord } from './mockWalletService';
 
@@ -12,6 +13,7 @@ type WithdrawTableProps = {
 };
 
 export function DepositRecordsTable({ records }: DepositTableProps) {
+  const { t } = useI18n();
   return records.length > 0 ? (
     <div className="wallet-table">
       <div className="wallet-table__head wallet-table__head--deposit">
@@ -36,11 +38,12 @@ export function DepositRecordsTable({ records }: DepositTableProps) {
       ))}
     </div>
   ) : (
-    <EmptyState title="No deposit records" description="Deposit records will appear once the wallet adapter returns activity." />
+    <EmptyState title={t('state.noDepositRecordsTitle')} description={t('state.noDepositRecordsDescription')} />
   );
 }
 
 export function WithdrawRecordsTable({ records }: WithdrawTableProps) {
+  const { t } = useI18n();
   return records.length > 0 ? (
     <div className="wallet-table">
       <div className="wallet-table__head wallet-table__head--withdraw">
@@ -69,7 +72,7 @@ export function WithdrawRecordsTable({ records }: WithdrawTableProps) {
       ))}
     </div>
   ) : (
-    <EmptyState title="No withdraw records" description="Withdraw records will appear once the wallet adapter returns activity." />
+    <EmptyState title={t('state.noWithdrawRecordsTitle')} description={t('state.noWithdrawRecordsDescription')} />
   );
 }
 

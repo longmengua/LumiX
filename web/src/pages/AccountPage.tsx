@@ -6,6 +6,7 @@ import { Card } from '../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/base/State';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Sidebar } from '../components/layout/Sidebar';
+import { useI18n } from '../i18n';
 import { AccountApiKeysPage as Phase7AccountApiKeysPage } from '../features/phase7/AccountApiKeysPage';
 import { AccountNotificationsPage as Phase7AccountNotificationsPage } from '../features/phase7/AccountNotificationsPage';
 import { accountNavItems } from '../features/navigation/accountNav';
@@ -19,6 +20,7 @@ import {
 import { formatCurrency, formatAmount, formatTime, maskEmail, maskPhone } from '../utils/format';
 
 export function AccountPage() {
+  const { t } = useI18n();
   const [data, setData] = useState<AccountDashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -53,19 +55,16 @@ export function AccountPage() {
     };
   }, []);
 
-  const sidebarItems = useMemo(
-    () => accountNavItems.map(({ to, label }) => ({ to, label })),
-    [],
-  );
+  const sidebarItems = useMemo(() => accountNavItems.map(({ to, labelKey }) => ({ to, label: t(labelKey) })), [t]);
 
   return (
     <div className="two-column">
-      <Sidebar title="Account" items={sidebarItems} />
+      <Sidebar title={t('account.sidebarTitle')} items={sidebarItems} />
       <div className="stack">
-        <PageHeader title="Personal Center" description="Account, security, KYC, assets, API keys, and logs in one place." />
+        <PageHeader title={t('account.pageTitle')} description={t('account.pageDescription')} />
 
-        {loading ? <LoadingState title="Loading personal center" description="Fetching mock account snapshot..." /> : null}
-        {error ? <ErrorState title="Unable to load account data" description={error} action={<NavLink to="/account">Retry</NavLink>} /> : null}
+        {loading ? <LoadingState title={t('account.loadingTitle')} description={t('account.loadingDescription')} /> : null}
+        {error ? <ErrorState title={t('account.errorTitle')} description={error} action={<NavLink to="/account">{t('common.retry')}</NavLink>} /> : null}
 
         {!loading && !error && data ? (
           <Routes>
@@ -76,8 +75,8 @@ export function AccountPage() {
             <Route path="transfer" element={<AccountTransferPage />} />
             <Route path="api-keys" element={<Phase7AccountApiKeysPage />} />
             <Route path="notifications" element={<Phase7AccountNotificationsPage />} />
-            <Route path="login-history" element={<AccountTimelinePage title="Login History" items={data.loginHistory} emptyText="No login records yet." />} />
-            <Route path="security-logs" element={<AccountTimelinePage title="Security Logs" items={data.securityLogs} emptyText="No security logs yet." />} />
+            <Route path="login-history" element={<AccountTimelinePage title={t('account.loginHistoryTitle')} items={data.loginHistory} emptyText={t('account.noLoginRecords')} />} />
+            <Route path="security-logs" element={<AccountTimelinePage title={t('account.securityLogsTitle')} items={data.securityLogs} emptyText={t('account.noSecurityLogs')} />} />
             <Route path="preferences" element={<AccountPreferencesPage preferences={data.preferences} />} />
             <Route path="*" element={<Navigate replace to="/account" />} />
           </Routes>
@@ -88,10 +87,12 @@ export function AccountPage() {
 }
 
 function AccountOverviewPage({ profile }: { profile: AccountProfile }) {
+  const { t } = useI18n();
+
   return (
     <div className="stack">
       <div className="dashboard-grid">
-        <Card title="Profile">
+        <Card title={t('account.profileTitle')}>
           <StatList
             items={[
               ['UID', profile.uid],
@@ -101,25 +102,25 @@ function AccountOverviewPage({ profile }: { profile: AccountProfile }) {
             ]}
           />
         </Card>
-        <Card title="KYC">
+        <Card title={t('account.kycTitle')}>
           <StatList
             items={[
               ['Status', profile.kycStatus.replace(/_/g, ' ')],
               ['Level', profile.kycLevel],
-              ['Limits', 'Higher withdrawal and futures limits'],
+              ['Limits', t('account.profileLimits')],
             ]}
           />
         </Card>
-        <Card title="Security">
+        <Card title={t('account.securityTitle')}>
           <StatList
             items={[
               ['Security Level', profile.securityLevel],
-              ['2FA', 'Enabled'],
-              ['Whitelist', 'Enabled'],
+              ['2FA', t('account.security2fa')],
+              ['Whitelist', t('account.securityWhitelist')],
             ]}
           />
         </Card>
-        <Card title="Assets">
+        <Card title={t('account.assetsTitle')}>
           <StatList
             items={[
               ['Total Equity', formatCurrency(profile.totalEquity)],
@@ -131,11 +132,11 @@ function AccountOverviewPage({ profile }: { profile: AccountProfile }) {
         </Card>
       </div>
 
-      <Card title="Risk">
+      <Card title={t('account.riskTitle')}>
         <div className="stack">
           {profile.riskWarnings.map((warning) => (
             <div className="notice-row" key={warning}>
-              <Badge tone="warning">Notice</Badge>
+              <Badge tone="warning">{t('account.notice')}</Badge>
               <span>{warning}</span>
             </div>
           ))}
@@ -146,8 +147,10 @@ function AccountOverviewPage({ profile }: { profile: AccountProfile }) {
 }
 
 function AccountSecurityPage({ securityItems }: { securityItems: Array<{ label: string; status: string; description: string }> }) {
+  const { t } = useI18n();
+
   return (
-    <Card title="Security Center">
+    <Card title={t('account.securityCenterTitle')}>
       <div className="stack">
         {securityItems.map((item) => (
           <div className="account-row" key={item.label}>
@@ -164,17 +167,19 @@ function AccountSecurityPage({ securityItems }: { securityItems: Array<{ label: 
 }
 
 function AccountKycPage({ profile }: { profile: AccountProfile }) {
+  const { t } = useI18n();
+
   return (
     <div className="stack">
-      <Card title="KYC Status">
+      <Card title={t('account.kycStatusTitle')}>
         <div className="dashboard-grid dashboard-grid--three">
           <StatTile label="Status" value={profile.kycStatus.replace(/_/g, ' ')} />
           <StatTile label="KYC Level" value={profile.kycLevel} />
-          <StatTile label="Limits" value="Withdraw and futures enabled" />
+          <StatTile label="Limits" value={t('account.profileLimits')} />
         </div>
       </Card>
 
-      <Card title="KYC Details">
+      <Card title={t('account.kycDetailsTitle')}>
         <div className="stack">
           <div className="notice-row">
             <Badge tone={getKycTone(profile.kycStatus)}>{profile.kycStatus.replace(/_/g, ' ')}</Badge>
@@ -182,11 +187,11 @@ function AccountKycPage({ profile }: { profile: AccountProfile }) {
           </div>
           <div className="dashboard-grid dashboard-grid--three">
             <StatTile label="Withdrawal limit" value="$250,000 / day" />
-            <StatTile label="Futures permission" value="Enabled" />
-            <StatTile label="Margin permission" value="Enabled" />
+            <StatTile label="Futures permission" value={t('account.security2fa')} />
+            <StatTile label="Margin permission" value={t('account.security2fa')} />
           </div>
           <button className="primary-button" type="button">
-            Submit KYC placeholder
+            {t('account.submitKyc')}
           </button>
         </div>
       </Card>
@@ -195,12 +200,13 @@ function AccountKycPage({ profile }: { profile: AccountProfile }) {
 }
 
 function AccountAssetsPage({ assetAccounts }: { assetAccounts: AssetAccountSummary[] }) {
+  const { t } = useI18n();
   const [activeTab, setActiveTab] = useState<AssetAccountSummary['accountType']>('Spot Account');
   const activeAccount = assetAccounts.find((account) => account.accountType === activeTab) ?? assetAccounts[0];
 
   return (
     <div className="stack">
-      <Card title="Asset Summary">
+      <Card title={t('account.assetSummaryTitle')}>
         <div className="tab-list">
           {assetAccounts.map((account) => (
             <button
@@ -215,7 +221,7 @@ function AccountAssetsPage({ assetAccounts }: { assetAccounts: AssetAccountSumma
         </div>
       </Card>
 
-      <Card title={activeAccount?.accountType ?? 'Account'}>
+      <Card title={activeAccount?.accountType ?? t('account.assetTableTitle')}>
         {activeAccount ? (
           <div className="asset-table">
             <div className="asset-table__head">
@@ -240,13 +246,13 @@ function AccountAssetsPage({ assetAccounts }: { assetAccounts: AssetAccountSumma
                 <span>{formatAmount(asset.equity, 4)}</span>
                 <span>{formatCurrency(asset.estimatedValue)}</span>
                 <NavLink className="secondary-button" to="/account/transfer">
-                  Transfer
+                  {t('account.transferAction')}
                 </NavLink>
               </div>
             ))}
           </div>
         ) : (
-          <EmptyState title="No assets" description="No account snapshot available." />
+          <EmptyState title={t('account.noAssetsSelected')} description={t('account.noAssetsSelectedDescription')} />
         )}
       </Card>
     </div>
@@ -254,28 +260,30 @@ function AccountAssetsPage({ assetAccounts }: { assetAccounts: AssetAccountSumma
 }
 
 function AccountTransferPage() {
+  const { t } = useI18n();
+
   return (
     <div className="stack">
-      <Card title="Account Transfer">
+      <Card title={t('account.assetTransferTitle')}>
         <div className="transfer-grid">
           <label className="field">
-            <span className="field__label">From account</span>
+            <span className="field__label">{t('account.fromAccount')}</span>
             <select className="input" defaultValue="spot">
-              <option value="spot">Spot Account</option>
-              <option value="futures">Futures Account</option>
-              <option value="margin">Margin Account</option>
+              <option value="spot">{t('account.spotAccount')}</option>
+              <option value="futures">{t('account.futuresAccount')}</option>
+              <option value="margin">{t('account.marginAccount')}</option>
             </select>
           </label>
           <label className="field">
-            <span className="field__label">To account</span>
+            <span className="field__label">{t('account.toAccount')}</span>
             <select className="input" defaultValue="futures">
-              <option value="spot">Spot Account</option>
-              <option value="futures">Futures Account</option>
-              <option value="margin">Margin Account</option>
+              <option value="spot">{t('account.spotAccount')}</option>
+              <option value="futures">{t('account.futuresAccount')}</option>
+              <option value="margin">{t('account.marginAccount')}</option>
             </select>
           </label>
           <label className="field">
-            <span className="field__label">Asset</span>
+            <span className="field__label">{t('account.asset')}</span>
             <select className="input" defaultValue="usdt">
               <option value="usdt">USDT</option>
               <option value="btc">BTC</option>
@@ -283,21 +291,21 @@ function AccountTransferPage() {
             </select>
           </label>
           <label className="field">
-            <span className="field__label">Amount</span>
+            <span className="field__label">{t('account.amount')}</span>
             <input className="input" defaultValue="1500" />
           </label>
         </div>
 
         <div className="transfer-actions">
           <button className="primary-button" type="button">
-            Submit transfer
+            {t('account.submitTransfer')}
           </button>
-          <p className="auth-form__hint">Mock only. No real assets are moved in Phase 4.</p>
+          <p className="auth-form__hint">{t('account.mockOnly')}</p>
         </div>
       </Card>
 
-      <Card title="Recent Transfers">
-        <EmptyState title="No transfer records" description="Transfer history will appear here after mock data is added." />
+      <Card title={t('account.recentTransfersTitle')}>
+        <EmptyState title={t('account.noTransferRecordsTitle')} description={t('account.noTransferRecordsDescription')} />
       </Card>
     </div>
   );
@@ -334,14 +342,16 @@ function AccountTimelinePage({
 }
 
 function AccountPreferencesPage({ preferences }: { preferences: Array<{ label: string; value: string }> }) {
+  const { t } = useI18n();
+
   return (
-    <Card title="Preferences">
+    <Card title={t('account.preferencesTitle')}>
       <div className="stack">
         {preferences.map((item) => (
           <div className="account-row" key={item.label}>
             <div>
               <p className="account-row__title">{item.label}</p>
-              <p className="account-row__meta">Phase 4 placeholder setting</p>
+              <p className="account-row__meta">{t('account.phasePlaceholder')}</p>
             </div>
             <span>{item.value}</span>
           </div>

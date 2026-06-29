@@ -4,6 +4,7 @@ import { Badge } from '../../components/base/Badge';
 import { Card } from '../../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../../components/base/State';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { useI18n } from '../../i18n';
 import { formatAmount, formatCurrency, formatPercent, formatPrice, formatTime } from '../../utils/format';
 import { TradingAdapterNotice } from './TradingAdapterNotice';
 import { TradingOrderBook } from './TradingOrderBook';
@@ -26,33 +27,34 @@ const titles: Record<TradingKind, string> = {
 };
 
 export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
+  const { t } = useI18n();
   const { data, loading, error, reload } = useTradingWorkspaceMock(kind, symbol);
 
   return (
-    <div className="stack trading-page">
+    <div className="stack trading-page trading-page--workspace">
       <PageHeader
-        title={titles[kind]}
-        description="Development adapter only. OL before must connect server/ Java API, C++ Core event stream, and real WebSocket."
+        title={t(titles[kind])}
+        description={t('trading.description')}
         actions={
           <div className="hero-actions">
             <NavLink className="secondary-button" to="/markets">
-              Markets
+              {t('trading.marketLink')}
             </NavLink>
             <NavLink className="secondary-button" to="/assets">
-              Assets
+              {t('trading.assetsLink')}
             </NavLink>
           </div>
         }
       />
 
-      <TradingAdapterNotice notice={data?.adapterNotice ?? 'Development adapter only. OL before must connect server/ Java API, C++ Core event stream, and real WebSocket.'} />
+      <TradingAdapterNotice notice={data?.adapterNotice ?? t('trading.adapterNotice')} />
 
-      {loading ? <LoadingState title="Loading trading workspace" description="Fetching mock book, tape, and adapter snapshots..." /> : null}
+      {loading ? <LoadingState title={t('trading.loadingTitle')} description={t('trading.loadingDescription')} /> : null}
       {error ? (
         <ErrorState
-          title="Unable to load trading workspace"
+          title={t('trading.errorTitle')}
           description={error}
-          action={<button className="secondary-button" type="button" onClick={reload}>Retry</button>}
+          action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>}
         />
       ) : null}
 
@@ -61,7 +63,7 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
           <Card>
             <div className="trading-hero">
               <div className="trading-hero__copy">
-                <p className="eyebrow">Development adapter only</p>
+                <p className="eyebrow">{t('trading.developmentOnly')}</p>
                 <h2>{data.displayName}</h2>
                 <p className="lead">{data.heroCopy}</p>
 
@@ -89,7 +91,7 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
 
           <TradingSectionNav kind={kind} baseAsset={data.baseAsset} />
 
-          <Card title="Workspace Snapshot">
+          <Card title={t('trading.snapshotTitle')}>
             <div className="dashboard-grid dashboard-grid--three">
               {data.metrics.map((metric) => (
                 <div className="stat-card" key={metric.label}>
@@ -103,15 +105,15 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
 
           <div className="trading-layout">
             <div className="stack">
-              <Card title="Order book">
+              <Card title={t('trading.orderBookTitle')}>
                 <TradingOrderBook bids={data.orderBook.bids} asks={data.orderBook.asks} lastPrice={data.midPrice} />
               </Card>
 
-              <Card title="Trade feed">
+              <Card title={t('trading.tradeFeedTitle')}>
                 <TradingTradeFeed trades={data.trades} />
               </Card>
 
-              <Card title="Development guardrails">
+              <Card title={t('trading.guardrailsTitle')}>
                 <div className="stack trading-guardrails">
                   {data.orderHints.map((hint) => (
                     <div className="trading-guardrails__item" key={hint}>
@@ -124,11 +126,11 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
             </div>
 
             <div className="stack">
-              <Card title="Order entry">
+              <Card title={t('trading.orderEntryTitle')}>
                 <TradingOrderForm kind={kind} workspace={data} />
               </Card>
 
-              <Card title="Balances">
+              <Card title={t('trading.balancesTitle')}>
                 <div className="trading-balances">
                   {data.balances.map((balance) => (
                     <div className="trading-balance" key={balance.asset}>
@@ -152,18 +154,18 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
                 </div>
               </Card>
 
-              <Card title="Open orders">
-                {data.openOrders.length > 0 ? <TradingOpenOrdersTable orders={data.openOrders} /> : <EmptyState title="No open orders" description="The adapter snapshot does not contain any open orders." />}
+              <Card title={t('trading.openOrdersTitle')}>
+                {data.openOrders.length > 0 ? <TradingOpenOrdersTable orders={data.openOrders} /> : <EmptyState title={t('trading.noOpenOrdersTitle')} description={t('trading.noOpenOrdersDescription')} />}
               </Card>
 
               {kind === 'futures' ? (
-                <Card title="Positions">
-                  {data.positions.length > 0 ? <TradingPositionsTable positions={data.positions} /> : <EmptyState title="No positions" description="The mock futures snapshot does not contain any positions." />}
+                <Card title={t('trading.positionsTitle')}>
+                  {data.positions.length > 0 ? <TradingPositionsTable positions={data.positions} /> : <EmptyState title={t('trading.noPositionsTitle')} description={t('trading.noPositionsDescription')} />}
                 </Card>
               ) : null}
 
               {kind === 'margin' ? (
-                <Card title="Risk snapshot">
+                <Card title={t('trading.riskSnapshotTitle')}>
                   <TradingRiskSnapshot riskRatio={data.riskRatio} fundingOrBorrow={data.fundingOrBorrow} />
                 </Card>
               ) : null}

@@ -3,6 +3,7 @@ import { EmptyState } from '../../components/base/State';
 import { AmountText } from '../../components/trading/AmountText';
 import { PnlText } from '../../components/trading/PnlText';
 import { PriceText } from '../../components/trading/PriceText';
+import { useI18n } from '../../i18n';
 import { formatAmount, formatCurrency, formatPercent, formatTime } from '../../utils/format';
 import type {
   FundingRecord,
@@ -16,8 +17,9 @@ import type {
 } from './mockPhase7Service';
 
 export function OrderCenterTable({ orders }: { orders: OrderRecord[] }) {
+  const { t } = useI18n();
   if (orders.length === 0) {
-    return <EmptyState title="No orders" description="The adapter snapshot does not contain any orders yet." />;
+    return <EmptyState title={t('state.noOrdersTitle')} description={t('state.noOrdersDescription')} />;
   }
 
   return (
@@ -50,8 +52,9 @@ export function OrderCenterTable({ orders }: { orders: OrderRecord[] }) {
 }
 
 export function OrderFillTable({ fills }: { fills: FillRecord[] }) {
+  const { t } = useI18n();
   if (fills.length === 0) {
-    return <EmptyState title="No fills" description="The adapter snapshot does not contain any fill records." />;
+    return <EmptyState title={t('state.noFillsTitle')} description={t('state.noFillsDescription')} />;
   }
 
   return (
@@ -88,8 +91,9 @@ export function OrderFillTable({ fills }: { fills: FillRecord[] }) {
 }
 
 export function PositionTable({ positions }: { positions: PositionRecord[] }) {
+  const { t } = useI18n();
   if (positions.length === 0) {
-    return <EmptyState title="No positions" description="The adapter snapshot does not contain any open positions." />;
+    return <EmptyState title={t('state.noPositionsTitle')} description={t('state.noPositionsDescription')} />;
   }
 
   return (
@@ -131,8 +135,9 @@ export function PositionTable({ positions }: { positions: PositionRecord[] }) {
 }
 
 export function LiquidationTable({ records }: { records: LiquidationRecord[] }) {
+  const { t } = useI18n();
   if (records.length === 0) {
-    return <EmptyState title="No liquidation records" description="The adapter snapshot does not contain liquidation history." />;
+    return <EmptyState title={t('state.noLiquidationsTitle')} description={t('state.noLiquidationsDescription')} />;
   }
 
   return (
@@ -165,8 +170,9 @@ export function LiquidationTable({ records }: { records: LiquidationRecord[] }) 
 }
 
 export function FundingTable({ records }: { records: FundingRecord[] }) {
+  const { t } = useI18n();
   if (records.length === 0) {
-    return <EmptyState title="No funding records" description="The adapter snapshot does not contain funding history." />;
+    return <EmptyState title={t('state.noFundingTitle')} description={t('state.noFundingDescription')} />;
   }
 
   return (
@@ -203,8 +209,9 @@ export function NotificationList({
   notifications: NotificationRecord[];
   onToggleRead: (id: string) => void;
 }) {
+  const { t } = useI18n();
   if (notifications.length === 0) {
-    return <EmptyState title="No notifications" description="The adapter snapshot does not contain notification events." />;
+    return <EmptyState title={t('state.noNotificationsTitle')} description={t('state.noNotificationsDescription')} />;
   }
 
   return (
@@ -232,8 +239,9 @@ export function NotificationList({
 }
 
 export function ApiKeyList({ keys }: { keys: ManagedApiKey[] }) {
+  const { t } = useI18n();
   if (keys.length === 0) {
-    return <EmptyState title="No API keys" description="Create a key to use the development adapter." />;
+    return <EmptyState title={t('state.noApiKeysTitle')} description={t('state.noApiKeysDescription')} />;
   }
 
   return (

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '../../components/base/Badge';
 import { Card } from '../../components/base/Card';
 import { ErrorState, LoadingState } from '../../components/base/State';
+import { useI18n } from '../../i18n';
 import { createDevelopmentApiKeyPreview, fetchApiKeyCenterMock, type ApiPermission, type ManagedApiKey } from './mockPhase7Service';
 import { ApiKeyList } from './Phase7Tables';
 
@@ -15,12 +16,13 @@ const permissionOptions: Array<{ value: ApiPermission; label: string; descriptio
 ];
 
 export function AccountApiKeysPage() {
+  const { t } = useI18n();
   const [keys, setKeys] = useState<ManagedApiKey[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [recentSecret, setRecentSecret] = useState<string | null>(null);
   const [recentName, setRecentName] = useState<string | null>(null);
-  const [adapterNotice, setAdapterNotice] = useState('Development adapter only.');
+  const [adapterNotice, setAdapterNotice] = useState(t('common.developmentAdapterOnly'));
   const [secretPolicy, setSecretPolicy] = useState('Secret appears once on creation. It is never written back into the adapter snapshot.');
   const [name, setName] = useState('LLM-BOT-DEV');
   const [ipWhitelist, setIpWhitelist] = useState('198.51.100.10');
@@ -44,7 +46,7 @@ export function AccountApiKeysPage() {
         }
       } catch (loadError) {
         if (alive) {
-          setError(loadError instanceof Error ? loadError.message : 'Unable to load API keys.');
+          setError(loadError instanceof Error ? loadError.message : t('state.noApiKeysDescription'));
         }
       } finally {
         if (alive) {
@@ -100,15 +102,15 @@ export function AccountApiKeysPage() {
 
   return (
     <div className="stack">
-      {loading ? <LoadingState title="Loading API keys" description="Fetching the development adapter snapshot..." /> : null}
-      {error ? <ErrorState title="Unable to load API keys" description={error} /> : null}
+      {loading ? <LoadingState title={t('account.loadingTitle')} description={t('account.loadingDescription')} /> : null}
+      {error ? <ErrorState title={t('state.noApiKeysTitle')} description={error} /> : null}
 
       {!loading && !error ? (
         <>
-          <Card title="API Key Management">
+          <Card title={t('nav.account.apiKeys')}>
             <div className="stack">
               <div className="notice-row">
-                <Badge tone="warning">Development adapter only</Badge>
+                <Badge tone="warning">{t('common.developmentAdapterOnly')}</Badge>
                 <span>{adapterNotice}</span>
               </div>
 

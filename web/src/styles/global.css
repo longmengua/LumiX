@@ -1,4 +1,7 @@
 :root {
+  --content-max: 90rem;
+  --content-gutter: clamp(1rem, 2vw, 2rem);
+  --section-gap: clamp(1rem, 2vw, 1.5rem);
   color-scheme: dark;
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
@@ -24,10 +27,12 @@ body,
 #root {
   min-height: 100%;
   margin: 0;
+  min-width: 0;
 }
 
 body {
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 a {
@@ -49,14 +54,33 @@ a {
   font-size: 1.03rem;
 }
 
-.app-layout {
-  min-height: 100vh;
+h1,
+h2,
+h3,
+.card__title,
+.page-header__title {
+  writing-mode: horizontal-tb;
+  text-orientation: mixed;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  line-height: 1.15;
 }
 
+p,
+.card__description,
+.page-header__description {
+  overflow-wrap: anywhere;
+}
+
+.app-layout {
+  min-height: 100vh;
+  min-width: 0;
+}
+
+.app-layout__main,
 .app-layout__body {
-  display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
   min-height: calc(100vh - 72px);
+  width: 100%;
 }
 
 .app-layout__sidebar {
@@ -65,13 +89,29 @@ a {
 }
 
 .app-layout__content {
-  padding: 32px;
+  display: block;
+  padding: var(--content-gutter);
+  min-width: 0;
+  width: 100%;
+}
+
+.app-layout__content-inner {
+  inline-size: min(100%, var(--content-max));
+  margin-inline: auto;
+  min-width: 0;
+}
+
+.app-layout__content-inner > * {
+  inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
 }
 
 .topbar {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 24px;
   min-height: 72px;
   padding: 0 24px;
@@ -84,6 +124,39 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
+  min-width: 0;
+  flex: 1 1 0;
+}
+
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.topbar__locale-switcher {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: rgba(148, 163, 184, 0.08);
+}
+
+.topbar__locale-label {
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.85rem;
+}
+
+.topbar__locale-select {
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: rgba(241, 245, 249, 0.96);
+  font: inherit;
 }
 
 .topbar__link,
@@ -100,6 +173,7 @@ a {
 
 .sidebar {
   padding: 20px 16px;
+  min-width: 0;
 }
 
 .sidebar__title {
@@ -126,19 +200,38 @@ a {
 }
 
 .page-header {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: flex-start;
-  justify-content: space-between;
   gap: 16px;
   margin-bottom: 20px;
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+}
+
+.page-header__copy {
+  min-width: 0;
 }
 
 .page-header h1 {
   margin: 0;
   font-size: clamp(2rem, 4vw, 3rem);
+  line-height: 1.1;
+  white-space: normal;
+  word-break: normal;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .page-header p {
+  margin: 8px 0 0;
+  color: rgba(226, 232, 240, 0.76);
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+.page-header__description {
   margin: 8px 0 0;
   color: rgba(226, 232, 240, 0.76);
 }
@@ -148,6 +241,9 @@ a {
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 12px;
+  min-width: 0;
+  flex: 0 0 auto;
+  justify-self: end;
 }
 
 .card {
@@ -155,10 +251,15 @@ a {
   border-radius: 20px;
   background: rgba(9, 15, 30, 0.72);
   border: 1px solid rgba(148, 163, 184, 0.16);
+  min-width: 0;
+  width: 100%;
 }
 
 .card__title {
   margin: 0 0 12px;
+  line-height: 1.15;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .state-box {
@@ -182,6 +283,7 @@ a {
   border-radius: 999px;
   cursor: pointer;
   font: inherit;
+  white-space: nowrap;
   transition:
     transform 120ms ease,
     background-color 120ms ease,
@@ -268,11 +370,13 @@ a {
 
 .auth-page {
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+  grid-template-columns: minmax(0, 1.05fr) minmax(min(100%, 22rem), 0.95fr);
   gap: 32px;
   min-height: calc(100vh - 48px);
   padding: 24px 0;
   align-items: center;
+  min-width: 0;
+  width: 100%;
 }
 
 .auth-page__hero,
@@ -288,7 +392,9 @@ a {
   margin: 16px 0 12px;
   font-size: clamp(2.6rem, 5vw, 4.5rem);
   line-height: 0.98;
-  max-width: 12ch;
+  max-width: 24rem;
+  word-break: normal;
+  overflow-wrap: break-word;
 }
 
 .auth-page__points {
@@ -364,8 +470,58 @@ a {
 
 .hero-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
+  grid-template-columns: minmax(min(100%, 32rem), 1.2fr) minmax(min(100%, 24rem), 0.8fr);
   gap: 24px;
+  min-width: 0;
+  align-items: stretch;
+  width: 100%;
+}
+
+.home-page {
+  width: 100%;
+  min-width: 0;
+}
+
+.markets-page,
+.orders-page,
+.positions-page,
+.trading-page--workspace {
+  width: 100%;
+  min-width: 0;
+}
+
+.markets-layout {
+  display: grid;
+  grid-template-columns: minmax(min(100%, 16rem), 18rem) minmax(0, 1fr);
+  gap: var(--section-gap);
+  width: 100%;
+  min-width: 0;
+}
+
+.markets-filters,
+.markets-list {
+  min-width: 0;
+}
+
+.markets-list {
+  overflow-x: auto;
+}
+
+.markets-layout {
+  display: grid;
+  grid-template-columns: minmax(min(100%, 16rem), 18rem) minmax(0, 1fr);
+  gap: var(--section-gap);
+  width: 100%;
+  min-width: 0;
+}
+
+.markets-filters,
+.markets-list {
+  min-width: 0;
+}
+
+.markets-list {
+  overflow-x: auto;
 }
 
 .hero-panel__copy {
@@ -375,12 +531,18 @@ a {
     radial-gradient(circle at top right, rgba(96, 165, 250, 0.18), transparent 34%),
     rgba(9, 15, 30, 0.72);
   border: 1px solid rgba(148, 163, 184, 0.16);
+  min-width: 0;
+  position: relative;
+  overflow: hidden;
 }
 
 .hero-panel__copy h2 {
   margin: 16px 0 12px;
   font-size: clamp(2rem, 4vw, 3.3rem);
   line-height: 1.02;
+  max-inline-size: 28rem;
+  word-break: keep-all;
+  overflow-wrap: normal;
 }
 
 .hero-panel__stats {
@@ -407,13 +569,30 @@ a {
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 12px;
+  width: 100%;
 }
 
 .home-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
   gap: 24px;
+  min-width: 0;
+  align-items: start;
+  width: 100%;
+}
+
+.home-highlight-grid,
+.home-market-grid {
+  width: 100%;
+  min-width: 0;
+}
+
+.home-highlight-grid,
+.home-market-grid {
+  width: 100%;
+  min-width: 0;
 }
 
 .link-card,
@@ -423,6 +602,7 @@ a {
   gap: 12px;
   padding: 16px 0;
   border-top: 1px solid rgba(148, 163, 184, 0.12);
+  min-width: 0;
 }
 
 .link-card:first-child,
@@ -468,6 +648,7 @@ a {
 
 .market-preview-list {
   display: grid;
+  width: 100%;
 }
 
 .market-search {
@@ -498,14 +679,19 @@ a {
 .market-table {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  width: 100%;
 }
 
 .market-table__head,
 .market-table__row {
   display: grid;
-  grid-template-columns: 1.3fr repeat(5, minmax(0, 0.72fr)) minmax(160px, 0.95fr);
+  grid-template-columns: 1.3fr repeat(5, minmax(0, 0.72fr)) minmax(min(100%, 10rem), 0.95fr);
   gap: 12px;
   align-items: center;
+  min-inline-size: 52.5rem;
 }
 
 .market-table__head {
@@ -530,16 +716,22 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .assets-page {
   display: grid;
+  width: 100%;
+  min-width: 0;
 }
 
 .assets-metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .assets-metric {
@@ -596,6 +788,8 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .wallet-page__meta {
@@ -608,6 +802,8 @@ a {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
   margin-bottom: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .wallet-form--withdraw,
@@ -621,12 +817,14 @@ a {
 
 .wallet-address-card {
   display: grid;
-  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+  grid-template-columns: minmax(min(100%, 13.75rem), 16.25rem) minmax(0, 1fr);
   gap: 16px;
   padding: 18px;
   border-radius: 20px;
   background: rgba(2, 6, 23, 0.42);
   border: 1px solid rgba(148, 163, 184, 0.16);
+  min-width: 0;
+  width: 100%;
 }
 
 .wallet-address-card__qr {
@@ -664,6 +862,8 @@ a {
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-top: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .wallet-info-card,
@@ -699,6 +899,8 @@ a {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .wallet-security-grid--compact {
@@ -727,6 +929,10 @@ a {
 .wallet-table {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  width: 100%;
 }
 
 .wallet-table__head,
@@ -734,6 +940,7 @@ a {
   display: grid;
   gap: 12px;
   align-items: center;
+  min-inline-size: 56.25rem;
 }
 
 .wallet-table__head {
@@ -799,11 +1006,17 @@ a {
   display: grid;
   grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .asset-overview-table {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  width: 100%;
 }
 
 .asset-overview-table__head,
@@ -812,6 +1025,7 @@ a {
   gap: 12px;
   align-items: center;
   grid-template-columns: var(--asset-columns, 1fr);
+  min-inline-size: 47.5rem;
 }
 
 .asset-overview-table__head {
@@ -828,6 +1042,8 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  min-width: 0;
+  width: 100%;
 }
 
 .transfer-summary {
@@ -850,6 +1066,8 @@ a {
 .history-list {
   display: grid;
   gap: 14px;
+  min-width: 0;
+  width: 100%;
 }
 
 .history-item {
@@ -950,6 +1168,8 @@ a {
 .timeline-list {
   display: grid;
   gap: 16px;
+  min-width: 0;
+  width: 100%;
 }
 
 .asset-table__head,
@@ -958,6 +1178,8 @@ a {
   grid-template-columns: repeat(9, minmax(0, 1fr));
   gap: 12px;
   align-items: center;
+  min-inline-size: 67.5rem;
+  width: 100%;
 }
 
 .asset-table__head {
@@ -988,8 +1210,10 @@ a {
 
 .phase7-api-key-layout {
   display: grid;
-  grid-template-columns: minmax(320px, 0.88fr) minmax(0, 1.12fr);
+  grid-template-columns: minmax(min(100%, 20rem), 0.88fr) minmax(0, 1.12fr);
   gap: 18px;
+  min-width: 0;
+  width: 100%;
 }
 
 .phase7-api-key-form {
@@ -1001,6 +1225,8 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
+  width: 100%;
 }
 
 .phase7-permission-grid {
@@ -1038,6 +1264,8 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  min-width: 0;
+  width: 100%;
 }
 
 .phase7-notification-row {
@@ -1063,6 +1291,8 @@ a {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 16px;
+  min-width: 0;
+  width: 100%;
 }
 
 .transfer-actions {
@@ -1084,7 +1314,7 @@ a {
 }
 
 .modal-card {
-  width: min(100%, 560px);
+  width: min(100%, 35rem);
   padding: 24px;
   border-radius: 24px;
   background: rgba(9, 15, 30, 0.96);
@@ -1128,13 +1358,22 @@ a {
 
 .two-column {
   display: grid;
-  grid-template-columns: 280px minmax(0, 1fr);
+  grid-template-columns: minmax(min(100%, 16rem), 18rem) minmax(0, 1fr);
   gap: 24px;
+  width: 100%;
+  min-width: 0;
+}
+
+.two-column > :first-child,
+.two-column > :last-child {
+  min-width: 0;
 }
 
 .stack {
   display: grid;
   gap: 20px;
+  width: 100%;
+  min-width: 0;
 }
 
 .badge {
@@ -1185,11 +1424,15 @@ a {
 
 .trading-page {
   display: grid;
+  min-width: 0;
+  width: 100%;
 }
 
 .trading-adapter-notice {
   display: grid;
   gap: 10px;
+  min-width: 0;
+  width: 100%;
 }
 
 .trading-adapter-notice__header {
@@ -1210,6 +1453,8 @@ a {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+  width: 100%;
 }
 
 .trading-section-nav__hint {
@@ -1222,6 +1467,8 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 24px;
+  min-width: 0;
+  width: 100%;
 }
 
 .trading-hero__copy {
@@ -1253,7 +1500,7 @@ a {
   display: grid;
   justify-items: end;
   gap: 8px;
-  min-width: 180px;
+  min-width: 0;
 }
 
 .trading-hero__price strong {
@@ -1263,13 +1510,36 @@ a {
 
 .trading-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.18fr) minmax(360px, 0.82fr);
-  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  gap: var(--section-gap);
+  min-width: 0;
+  width: 100%;
+}
+
+.trading-page--workspace .trading-layout,
+.trading-page--workspace .trading-hero,
+.trading-page--workspace .trading-section-nav {
+  width: 100%;
+  min-width: 0;
+}
+
+.trading-layout > * {
+  min-width: 0;
+}
+
+.markets-page .page-header,
+.orders-page .page-header,
+.positions-page .page-header,
+.trading-page--workspace .page-header {
+  width: 100%;
+  max-width: none;
 }
 
 .trading-book {
   display: grid;
   gap: 18px;
+  width: 100%;
+  min-width: 0;
 }
 
 .trading-book__spread {
@@ -1335,6 +1605,8 @@ a {
 .trading-feed {
   display: grid;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .trading-feed__row {
@@ -1376,6 +1648,8 @@ a {
 .trading-form {
   display: grid;
   gap: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 .trading-form__toolbar {
@@ -1419,6 +1693,9 @@ a {
 .trading-table {
   display: grid;
   gap: 12px;
+  min-width: 0;
+  overflow-x: auto;
+  padding-bottom: 4px;
 }
 
 .trading-table__head,
@@ -1426,6 +1703,7 @@ a {
   display: grid;
   gap: 12px;
   align-items: center;
+  min-inline-size: 52rem;
 }
 
 .trading-table__head {
@@ -1451,26 +1729,31 @@ a {
 .trading-table__head--positions,
 .trading-table__row--positions {
   grid-template-columns: 1fr 0.62fr 0.7fr 0.82fr 0.82fr 0.7fr 0.64fr 0.82fr 1fr;
+  min-inline-size: 70rem;
 }
 
 .phase7-table__head--orders,
 .phase7-table__row--orders {
   grid-template-columns: 0.9fr 0.95fr 0.72fr 0.72fr 0.72fr 0.88fr 0.72fr 0.88fr;
+  min-inline-size: 67.5rem;
 }
 
 .phase7-table__head--fills,
 .phase7-table__row--fills {
   grid-template-columns: 0.82fr 0.82fr 0.92fr 0.6fr 0.82fr 0.72fr 0.84fr 0.72fr 0.88fr;
+  min-inline-size: 75rem;
 }
 
 .phase7-table__head--liquidations,
 .phase7-table__row--liquidations {
   grid-template-columns: 0.82fr 1fr 0.58fr 0.8fr 0.8fr 0.72fr 1.18fr 0.9fr;
+  min-inline-size: 70rem;
 }
 
 .phase7-table__head--funding,
 .phase7-table__row--funding {
   grid-template-columns: 0.82fr 1fr 0.7fr 0.86fr 0.72fr 0.92fr 0.92fr;
+  min-inline-size: 60rem;
 }
 
 .trading-risk-cell {
@@ -1481,6 +1764,8 @@ a {
 .trading-risk {
   display: grid;
   gap: 14px;
+  width: 100%;
+  min-width: 0;
 }
 
 .trading-risk__metrics {
@@ -1497,6 +1782,8 @@ a {
 .trading-balances {
   display: grid;
   gap: 12px;
+  width: 100%;
+  min-width: 0;
 }
 
 .trading-balance {
@@ -1534,6 +1821,7 @@ a {
 
 .trading-guardrails {
   gap: 12px;
+  width: 100%;
 }
 
 .trading-guardrails__item {
@@ -1555,10 +1843,12 @@ a {
 }
 
 @media (max-width: 960px) {
+  .app-layout__main,
   .app-layout__body,
   .auth-page,
   .hero-panel,
   .home-grid,
+  .markets-layout,
   .two-column {
     grid-template-columns: 1fr;
   }
@@ -1569,7 +1859,7 @@ a {
   }
 
   .page-header {
-    flex-direction: column;
+    grid-template-columns: 1fr;
   }
 
   .auth-form__split,
@@ -1658,5 +1948,65 @@ a {
 
   .wallet-form__span-2 {
     grid-column: auto;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .topbar__nav,
+  .topbar__actions {
+    width: 100%;
+  }
+
+  .topbar__actions {
+    justify-content: space-between;
+  }
+
+  .topbar__locale-switcher {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .app-layout__content {
+    padding: 16px;
+  }
+
+  .card,
+  .state-box,
+  .hero-panel__copy,
+  .api-key-card,
+  .modal-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .market-table__head,
+  .market-table__row,
+  .wallet-table__head,
+  .wallet-table__row,
+  .asset-table__head,
+  .asset-table__row,
+  .trading-table__head,
+  .trading-table__row,
+  .phase7-table__head--orders,
+  .phase7-table__row--orders,
+  .phase7-table__head--fills,
+  .phase7-table__row--fills,
+  .phase7-table__head--liquidations,
+  .phase7-table__row--liquidations,
+  .phase7-table__head--funding,
+  .phase7-table__row--funding {
+    min-inline-size: 45rem;
+  }
+
+  .wallet-table__head--withdraw,
+  .wallet-table__row--withdraw {
+    min-inline-size: 65rem;
   }
 }

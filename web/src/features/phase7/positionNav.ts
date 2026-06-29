@@ -1,6 +1,5 @@
 export const positionNavItems = [
-  { to: '/positions', label: 'Open Positions' },
-  { to: '/positions/liquidations', label: 'Liquidations' },
-  { to: '/positions/funding', label: 'Funding Rates' },
+  { to: '/positions', labelKey: 'nav.positions.open' },
+  { to: '/positions/liquidations', labelKey: 'nav.positions.liquidations' },
+  { to: '/positions/funding', labelKey: 'nav.positions.funding' },
 ] as const;
-

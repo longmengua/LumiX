@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 
 import { ErrorState, LoadingState } from '../../components/base/State';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { useI18n } from '../../i18n';
 import { WalletAdapterNotice } from '../../features/assets/wallet/WalletAdapterNotice';
 import { WalletSecurityStatus } from '../../features/assets/wallet/WalletSecurityStatus';
 import { WalletSectionNav } from '../../features/assets/wallet/WalletSectionNav';
@@ -10,6 +11,7 @@ import { useWalletWorkspaceMock } from '../../features/assets/wallet/useWalletWo
 import type { WalletAsset, WalletNetwork } from '../../features/assets/wallet/mockWalletService';
 
 export function WithdrawPage() {
+  const { t } = useI18n();
   const { data, loading, error, reload } = useWalletWorkspaceMock();
   const [asset, setAsset] = useState<WalletAsset>('USDT');
   const [network, setNetwork] = useState<WalletNetwork>('TRC20');
@@ -22,12 +24,12 @@ export function WithdrawPage() {
 
   return (
     <div className="stack assets-page">
-      <PageHeader title="Withdraw" description="Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API." />
+      <PageHeader title={t('assets.withdrawTitle')} description={t('assets.withdrawDescription')} />
       <WalletSectionNav />
-      <WalletAdapterNotice notice={data?.adapterNotice ?? 'Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API.'} />
+      <WalletAdapterNotice notice={data?.adapterNotice ?? t('assets.walletWorkspacesHint')} />
 
-      {loading ? <LoadingState title="Loading withdraw workspace" description="Fetching mock withdrawal settings and risk state..." /> : null}
-      {error ? <ErrorState title="Unable to load wallet data" description={error} action={<button className="secondary-button" type="button" onClick={reload}>Retry</button>} /> : null}
+      {loading ? <LoadingState title={t('assets.loadingWalletTitle')} description={t('assets.loadingWalletDescription')} /> : null}
+      {error ? <ErrorState title={t('assets.walletErrorTitle')} description={error} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
 
       {!loading && !error && data ? (
         <>

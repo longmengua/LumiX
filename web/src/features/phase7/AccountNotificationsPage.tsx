@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Badge } from '../../components/base/Badge';
 import { Card } from '../../components/base/Card';
 import { ErrorState, LoadingState } from '../../components/base/State';
+import { useI18n } from '../../i18n';
 import { fetchNotificationCenterMock, type NotificationRecord } from './mockPhase7Service';
 import { NotificationList } from './Phase7Tables';
 
@@ -11,6 +12,7 @@ type NotificationFilter = 'All' | 'Unread' | 'Security' | 'Orders' | 'Positions'
 const filters: NotificationFilter[] = ['All', 'Unread', 'Security', 'Orders', 'Positions', 'Funding', 'System'];
 
 export function AccountNotificationsPage() {
+  const { t } = useI18n();
   const [notifications, setNotifications] = useState<NotificationRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,7 +36,7 @@ export function AccountNotificationsPage() {
         }
       } catch (loadError) {
         if (alive) {
-          setError(loadError instanceof Error ? loadError.message : 'Unable to load notifications.');
+          setError(loadError instanceof Error ? loadError.message : t('state.noNotificationsDescription'));
         }
       } finally {
         if (alive) {
@@ -74,15 +76,15 @@ export function AccountNotificationsPage() {
 
   return (
     <div className="stack">
-      {loading ? <LoadingState title="Loading notifications" description="Fetching the development adapter snapshot..." /> : null}
-      {error ? <ErrorState title="Unable to load notifications" description={error} /> : null}
+      {loading ? <LoadingState title={t('account.loadingTitle')} description={t('account.loadingDescription')} /> : null}
+      {error ? <ErrorState title={t('state.noNotificationsTitle')} description={error} /> : null}
 
       {!loading && !error ? (
         <>
-          <Card title="Notification Center">
+          <Card title={t('nav.account.notifications')}>
             <div className="stack">
               <div className="notice-row">
-                <Badge tone="warning">Development adapter only</Badge>
+                <Badge tone="warning">{t('common.developmentAdapterOnly')}</Badge>
                 <span>{adapterNotice}</span>
               </div>
 

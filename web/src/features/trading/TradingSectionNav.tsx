@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 
+import { useI18n } from '../../i18n';
 import { getTradingRoutes, type TradingKind } from './mockTradingService';
 
 type TradingSectionNavProps = {
@@ -8,19 +9,20 @@ type TradingSectionNavProps = {
 };
 
 const labels: Record<TradingKind, string> = {
-  spot: 'Spot',
-  futures: 'Futures',
-  margin: 'Margin',
+  spot: 'nav.spot',
+  futures: 'nav.futures',
+  margin: 'nav.margin',
 };
 
 export function TradingSectionNav({ kind, baseAsset }: TradingSectionNavProps) {
+  const { t } = useI18n();
   const routes = getTradingRoutes(baseAsset);
 
   return (
     <section className="card trading-section-nav">
       <div>
-        <p className="eyebrow">Trading sections</p>
-        <p className="trading-section-nav__hint">Development adapter only. These links are local UI routes.</p>
+        <p className="eyebrow">{t('trading.sections')}</p>
+        <p className="trading-section-nav__hint">{t('trading.sectionsHint')}</p>
       </div>
       <nav className="tab-list" aria-label="Trading sections">
         {(['spot', 'futures', 'margin'] as const).map((item) => (
@@ -29,11 +31,10 @@ export function TradingSectionNav({ kind, baseAsset }: TradingSectionNavProps) {
             className={({ isActive }) => `tab-button${isActive || item === kind ? ' tab-button--active' : ''}`}
             to={routes[item]}
           >
-            {labels[item]}
+            {t(labels[item])}
           </NavLink>
         ))}
       </nav>
     </section>
   );
 }
-

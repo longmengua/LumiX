@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 
 import { ErrorState, LoadingState } from '../../components/base/State';
 import { PageHeader } from '../../components/layout/PageHeader';
+import { useI18n } from '../../i18n';
 import { formatAmount } from '../../utils/format';
 import { AssetHistoryList } from './AssetHistoryList';
 import { AssetSectionNav } from './AssetSectionNav';
@@ -24,6 +25,7 @@ const initialForm: TransferFormState = {
 };
 
 export function AssetTransferPage() {
+  const { t } = useI18n();
   const { data, loading, error, reload } = useAssetOverviewMock();
   const [transferForm, setTransferForm] = useState<TransferFormState>(initialForm);
   const [transferMessage, setTransferMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
@@ -85,20 +87,23 @@ export function AssetTransferPage() {
 
     setTransferMessage({
       tone: 'success',
-      text: `Transfer request queued for ${formatAmount(Number(transferForm.amount), getFractionDigits(transferForm.asset))} ${transferForm.asset}.`,
+      text: t('assets.walletTransferQueued', undefined, {
+        amount: formatAmount(Number(transferForm.amount), getFractionDigits(transferForm.asset)),
+        asset: transferForm.asset,
+      }),
     });
   }
 
   return (
     <div className="stack assets-page">
       <PageHeader
-        title="Account Transfer"
-        description="Move assets between isolated spot, futures, and margin accounts with validation only."
+        title={t('assets.transferTitle')}
+        description={t('assets.transferDescription')}
       />
       <AssetSectionNav />
 
-      {loading ? <LoadingState title="Loading transfer workspace" description="Fetching mock balances and transfer history..." /> : null}
-      {error ? <ErrorState title="Unable to load asset data" description={error} action={<button className="secondary-button" type="button" onClick={reload}>Retry</button>} /> : null}
+      {loading ? <LoadingState title={t('assets.transferLoadingTitle')} description={t('assets.transferLoadingDescription')} /> : null}
+      {error ? <ErrorState title={t('assets.transferErrorTitle')} description={error} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
 
       {!loading && !error && data ? (
         <>
@@ -124,8 +129,8 @@ export function AssetTransferPage() {
 
           <AssetHistoryList
             history={data.history}
-            emptyTitle="No transfer history"
-            emptyDescription="Transfer activity will appear after the first mock request."
+            emptyTitle={t('assets.transferHistoryEmptyTitle')}
+            emptyDescription={t('assets.transferHistoryEmptyDescription')}
           />
         </>
       ) : null}

@@ -1,12 +1,15 @@
 import { AssetAccountPage } from '../../features/assets/AssetAccountPage';
+import { useI18n } from '../../i18n';
 
 export function FuturesAssetsPage() {
+  const { t } = useI18n();
+
   return (
     <AssetAccountPage
       accountKey="futures"
-      title="Futures Account"
-      description="Futures wallet balance, margin used, and unrealized PnL are tracked separately."
-      summaryTitle="Futures Snapshot"
+      title={t('assets.futuresTitle')}
+      description={t('assets.futuresDescription')}
+      summaryTitle={t('assets.futuresSnapshot')}
       summaryPoints={[
         { label: 'Wallet Balance', value: '$33,311.25 USDT' },
         { label: 'Margin Used', value: '$22,040.11 USDT' },

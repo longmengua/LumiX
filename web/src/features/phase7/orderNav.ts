@@ -1,6 +1,5 @@
 export const orderNavItems = [
-  { to: '/orders', label: 'Open Orders' },
-  { to: '/orders/history', label: 'Order History' },
-  { to: '/orders/fills', label: 'Trade Fills' },
+  { to: '/orders', labelKey: 'nav.orders.open' },
+  { to: '/orders/history', labelKey: 'nav.orders.history' },
+  { to: '/orders/fills', labelKey: 'nav.orders.fills' },
 ] as const;
-

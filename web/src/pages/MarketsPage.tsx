@@ -5,6 +5,7 @@ import { Badge } from '../components/base/Badge';
 import { Card } from '../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/base/State';
 import { PageHeader } from '../components/layout/PageHeader';
+import { useI18n } from '../i18n';
 import { fetchMarketsMock, type MarketCategory, type MarketSnapshot } from '../features/markets/mockMarketService';
 import { formatAmount, formatPercent, formatPrice } from '../utils/format';
 
@@ -18,6 +19,7 @@ const tabs: Array<{ key: TabKey; label: string }> = [
 ];
 
 export function MarketsPage() {
+  const { t } = useI18n();
   const [searchParams, setSearchParams] = useSearchParams();
   const [markets, setMarkets] = useState<MarketSnapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,91 +101,95 @@ export function MarketsPage() {
   }
 
   return (
-    <div className="stack">
-      <PageHeader
-        title="Markets"
-        description="Spot, futures, margin, and favorites are filtered locally while the mock market service simulates loading states."
-        actions={
-          <label className="market-search">
-            <span className="sr-only">Search markets</span>
-            <input
-              className="input"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search symbol"
-            />
-          </label>
-        }
-      />
+    <div className="markets-page markets-layout">
+      <div className="markets-filters stack">
+        <PageHeader
+          title={t('markets.title')}
+          description={t('markets.description')}
+          actions={
+            <label className="market-search">
+              <span className="sr-only">{t('markets.searchAria')}</span>
+              <input
+                className="input"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder={t('markets.searchPlaceholder')}
+              />
+            </label>
+          }
+        />
 
-      <Card>
-        <div className="tab-list" role="tablist" aria-label="Market categories">
-          {tabs.map((tab) => (
-            <button
-              key={tab.key}
-              className={`tab-button${activeTab === tab.key ? ' tab-button--active' : ''}`}
-              type="button"
-              onClick={() => switchTab(tab.key)}
-            >
-              {tab.label}
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      {loading ? <LoadingState title="Loading markets" description="Fetching mock market snapshots..." /> : null}
-      {error ? <ErrorState title="Market load failed" description={error} action={<NavLink to="/markets">Retry</NavLink>} /> : null}
-
-      {!loading && !error && filteredMarkets.length === 0 ? (
-        <EmptyState title="No markets found" description="Try a different tab or search term." />
-      ) : null}
-
-      {!loading && !error && filteredMarkets.length > 0 ? (
-        <Card title="Live market snapshot">
-          <div className="market-table">
-            <div className="market-table__head">
-              <span>Symbol</span>
-              <span>Last Price</span>
-              <span>24h Change</span>
-              <span>24h High</span>
-              <span>24h Low</span>
-              <span>24h Volume</span>
-              <span>Action</span>
-            </div>
-
-            {filteredMarkets.map((market) => (
-              <article className="market-table__row" key={market.symbol}>
-                <div>
-                  <div className="market-row__title">
-                    <strong>{market.displayName}</strong>
-                    <Badge tone={favoriteSymbols.has(market.symbol) ? 'warning' : 'neutral'}>
-                      {favoriteSymbols.has(market.symbol) ? 'Favorite' : market.category}
-                    </Badge>
-                  </div>
-                  <p className="market-row__meta">{market.description}</p>
-                </div>
-
-                <span>{formatPrice(market.lastPrice, 2)}</span>
-                <span className={market.change24h >= 0 ? 'pnl--positive' : 'pnl--negative'}>
-                  {formatPercent(market.change24h)}
-                </span>
-                <span>{formatPrice(market.high24h, 2)}</span>
-                <span>{formatPrice(market.low24h, 2)}</span>
-                <span>{formatAmount(market.volume24h, 2)}</span>
-
-                <div className="market-row__actions">
-                  <button className="ghost-button" type="button" onClick={() => toggleFavorite(market.symbol)}>
-                    {favoriteSymbols.has(market.symbol) ? 'Unfavorite' : 'Favorite'}
-                  </button>
-                  <NavLink className="primary-button" to={market.tradePath}>
-                    Trade
-                  </NavLink>
-                </div>
-              </article>
+        <Card>
+          <div className="tab-list" role="tablist" aria-label="Market categories">
+            {tabs.map((tab) => (
+              <button
+                key={tab.key}
+                className={`tab-button${activeTab === tab.key ? ' tab-button--active' : ''}`}
+                type="button"
+                onClick={() => switchTab(tab.key)}
+              >
+                {tab.label}
+              </button>
             ))}
           </div>
         </Card>
-      ) : null}
+      </div>
+
+      <div className="markets-list stack">
+        {loading ? <LoadingState title={t('markets.loadingTitle')} description={t('markets.loadingDescription')} /> : null}
+        {error ? <ErrorState title={t('markets.errorTitle')} description={error} action={<NavLink to="/markets">{t('common.retry')}</NavLink>} /> : null}
+
+        {!loading && !error && filteredMarkets.length === 0 ? (
+          <EmptyState title={t('markets.emptyTitle')} description={t('markets.emptyDescription')} />
+        ) : null}
+
+        {!loading && !error && filteredMarkets.length > 0 ? (
+          <Card title="Live market snapshot">
+            <div className="market-table">
+              <div className="market-table__head">
+                <span>Symbol</span>
+                <span>Last Price</span>
+                <span>24h Change</span>
+                <span>24h High</span>
+                <span>24h Low</span>
+                <span>24h Volume</span>
+                <span>Action</span>
+              </div>
+
+              {filteredMarkets.map((market) => (
+                <article className="market-table__row" key={market.symbol}>
+                  <div>
+                    <div className="market-row__title">
+                      <strong>{market.displayName}</strong>
+                      <Badge tone={favoriteSymbols.has(market.symbol) ? 'warning' : 'neutral'}>
+                        {favoriteSymbols.has(market.symbol) ? 'Favorite' : market.category}
+                      </Badge>
+                    </div>
+                    <p className="market-row__meta">{market.description}</p>
+                  </div>
+
+                  <span>{formatPrice(market.lastPrice, 2)}</span>
+                  <span className={market.change24h >= 0 ? 'pnl--positive' : 'pnl--negative'}>
+                    {formatPercent(market.change24h)}
+                  </span>
+                  <span>{formatPrice(market.high24h, 2)}</span>
+                  <span>{formatPrice(market.low24h, 2)}</span>
+                  <span>{formatAmount(market.volume24h, 2)}</span>
+
+                  <div className="market-row__actions">
+                    <button className="ghost-button" type="button" onClick={() => toggleFavorite(market.symbol)}>
+                      {favoriteSymbols.has(market.symbol) ? 'Unfavorite' : 'Favorite'}
+                    </button>
+                    <NavLink className="primary-button" to={market.tradePath}>
+                      Trade
+                    </NavLink>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </Card>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import { Card } from '../components/base/Card';
 import { ErrorState, LoadingState } from '../components/base/State';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Sidebar } from '../components/layout/Sidebar';
+import { useI18n } from '../i18n';
 import { OrderCenterTable, OrderFillTable } from '../features/phase7/Phase7Tables';
 import { fetchOrderCenterMock, type OrderCenterSnapshot } from '../features/phase7/mockPhase7Service';
 import { orderNavItems } from '../features/phase7/orderNav';
@@ -12,6 +13,7 @@ import { TradingAdapterNotice } from '../features/trading/TradingAdapterNotice';
 import { formatTime } from '../utils/format';
 
 export function OrdersPage() {
+  const { t } = useI18n();
   const [data, setData] = useState<OrderCenterSnapshot | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -46,35 +48,35 @@ export function OrdersPage() {
     };
   }, []);
 
-  const sidebarItems = useMemo(() => orderNavItems.map(({ to, label }) => ({ to, label })), []);
+  const sidebarItems = useMemo(() => orderNavItems.map(({ to, labelKey }) => ({ to, label: t(labelKey) })), [t]);
 
   return (
-    <div className="two-column">
-      <Sidebar title="Orders" items={sidebarItems} />
+    <div className="two-column orders-page">
+      <Sidebar title={t('orders.sidebarTitle')} items={sidebarItems} />
       <div className="stack">
         <PageHeader
-          title="Order Center"
-          description="Development adapter only. OL before must connect server/ Java order API, C++ Core events, and settlement state."
+          title={t('orders.pageTitle')}
+          description={t('orders.pageDescription')}
           actions={
             <div className="hero-actions">
               <NavLink className="secondary-button" to="/positions">
-                Positions
+                {t('nav.positions')}
               </NavLink>
               <NavLink className="secondary-button" to="/account/api-keys">
-                API Keys
+                {t('nav.account.apiKeys')}
               </NavLink>
             </div>
           }
         />
 
-        {loading ? <LoadingState title="Loading order center" description="Fetching the development adapter snapshot..." /> : null}
-        {error ? <ErrorState title="Unable to load order center" description={error} /> : null}
+        {loading ? <LoadingState title={t('orders.loadingTitle')} description={t('orders.loadingDescription')} /> : null}
+        {error ? <ErrorState title={t('orders.errorTitle')} description={error} /> : null}
 
         {!loading && !error && data ? (
           <>
             <TradingAdapterNotice notice={data.adapterNotice} />
 
-            <Card title="Order Snapshot">
+            <Card title={t('orders.snapshotTitle')}>
               <div className="dashboard-grid dashboard-grid--three">
                 {data.summary.map((item) => (
                   <div className="stat-card" key={item.label}>
@@ -90,7 +92,7 @@ export function OrdersPage() {
               <Route
                 index
                 element={
-                  <Card title="Open Orders">
+                  <Card title={t('orders.openOrdersTitle')}>
                     <OrderCenterTable orders={data.openOrders} />
                   </Card>
                 }
@@ -98,7 +100,7 @@ export function OrdersPage() {
               <Route
                 path="history"
                 element={
-                  <Card title="Order History">
+                  <Card title={t('orders.historyTitle')}>
                     <OrderCenterTable orders={data.orderHistory} />
                   </Card>
                 }
@@ -106,7 +108,7 @@ export function OrdersPage() {
               <Route
                 path="fills"
                 element={
-                  <Card title="Fill History">
+                  <Card title={t('orders.fillsTitle')}>
                     <OrderFillTable fills={data.fills} />
                   </Card>
                 }
@@ -114,19 +116,19 @@ export function OrdersPage() {
               <Route path="*" element={<Navigate replace to="/orders" />} />
             </Routes>
 
-            <Card title="Adapter Guardrails">
+            <Card title={t('orders.guardrailsTitle')}>
               <div className="stack">
                 <div className="notice-row">
-                  <span>Orders remain a local snapshot until OL wiring lands in `server/` Java and C++ Core settlement events.</span>
+                  <span>{t('orders.guardrailsNote')}</span>
                 </div>
                 <div className="phase7-note-grid">
                   <div className="stat-card">
-                    <span className="stat-card__label">Last snapshot</span>
+                    <span className="stat-card__label">{t('orders.lastSnapshot')}</span>
                     <strong>{formatTime(data.openOrders[0]?.updatedAt ?? new Date().toISOString())}</strong>
                   </div>
                   <div className="stat-card">
-                    <span className="stat-card__label">Live submission</span>
-                    <strong>Disabled</strong>
+                    <span className="stat-card__label">{t('orders.liveSubmission')}</span>
+                    <strong>{t('orders.disabled')}</strong>
                   </div>
                 </div>
               </div>
@@ -137,4 +139,3 @@ export function OrdersPage() {
     </div>
   );
 }
-

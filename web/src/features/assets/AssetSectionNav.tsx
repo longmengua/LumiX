@@ -1,14 +1,15 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 
+import { useI18n } from '../../i18n';
 import type { AssetTabKey } from './mockAssetService';
 
 const sectionLinks = [
-  { to: '/assets', label: 'Overview' },
-  { to: '/assets/spot', label: 'Spot' },
-  { to: '/assets/futures', label: 'Futures' },
-  { to: '/assets/margin', label: 'Margin' },
-  { to: '/assets/transfer', label: 'Transfer' },
+  { to: '/assets', labelKey: 'nav.assets.overview' },
+  { to: '/assets/spot', labelKey: 'nav.assets.spot' },
+  { to: '/assets/futures', labelKey: 'nav.assets.futures' },
+  { to: '/assets/margin', labelKey: 'nav.assets.margin' },
+  { to: '/assets/transfer', labelKey: 'nav.assets.transfer' },
 ] as const;
 
 type AssetSectionNavProps = {
@@ -16,8 +17,10 @@ type AssetSectionNavProps = {
 };
 
 export function AssetSectionNav({ active }: AssetSectionNavProps) {
+  const { t } = useI18n();
+
   return (
-    <CardShell title="Account Sections" hint="Separate routes for account details and transfer workstreams.">
+    <CardShell title={t('assets.walletSectionTitle')} hint={t('assets.walletSectionHint')}>
       <div className="assets-tabs">
         {sectionLinks.map((item) => (
           <NavLink
@@ -26,7 +29,7 @@ export function AssetSectionNav({ active }: AssetSectionNavProps) {
             className={({ isActive }) => `tab-button${isActive || activeMatches(active, item.to) ? ' tab-button--active' : ''}`}
             end={item.to === '/assets'}
           >
-            {item.label}
+            {t(item.labelKey)}
           </NavLink>
         ))}
       </div>

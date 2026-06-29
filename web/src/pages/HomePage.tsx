@@ -3,39 +3,38 @@ import { NavLink } from 'react-router-dom';
 import { Badge } from '../components/base/Badge';
 import { Card } from '../components/base/Card';
 import { PageHeader } from '../components/layout/PageHeader';
+import { useI18n } from '../i18n';
 import { formatPercent, formatPrice } from '../utils/format';
 import { homeHighlights, homeStats, getInitialMarkets } from '../features/markets/mockMarketService';
 
 export function HomePage() {
+  const { t } = useI18n();
   const markets = getInitialMarkets();
   const spotMarkets = markets.filter((market) => market.category === 'spot').slice(0, 3);
   const futuresMarkets = markets.filter((market) => market.category === 'futures').slice(0, 3);
 
   return (
-    <div className="stack">
+    <div className="stack home-page">
       <PageHeader
-        title="LumiX Exchange"
-        description="Frontend root remains React + TypeScript + Vite. The home page now acts as the public launch pad for Phase 3."
+        title={t('home.title')}
+        description={t('home.description')}
         actions={
           <div className="hero-actions">
             <NavLink className="primary-button" to="/login">
-              Sign in
+              {t('home.signIn')}
             </NavLink>
             <NavLink className="secondary-button" to="/markets">
-              Explore markets
+              {t('home.exploreMarkets')}
             </NavLink>
           </div>
         }
       />
 
-      <section className="hero-panel">
+      <section className="hero-panel home-highlight-grid">
         <div className="hero-panel__copy">
-          <p className="eyebrow">Root React shell</p>
-          <h2>Trade spot, futures, and margin on a single front door.</h2>
-          <p className="lead">
-            The public experience is wired for authentication, market discovery, and future trading entry points while the
-            Java business backend and C++ Core remain separated by design.
-          </p>
+          <p className="eyebrow">{t('home.eyebrow')}</p>
+          <h2>{t('home.heroTitle')}</h2>
+          <p className="lead">{t('home.heroLead')}</p>
 
           <div className="hero-panel__stats">
             {homeStats.map((item) => (
@@ -47,7 +46,7 @@ export function HomePage() {
           </div>
         </div>
 
-        <Card title="Phase 3 focus">
+        <Card title={t('home.phaseFocus')}>
           <div className="stack">
             {homeHighlights.map((item) => (
               <article className="link-card" key={item.title}>
@@ -56,7 +55,7 @@ export function HomePage() {
                   <p className="link-card__description">{item.description}</p>
                 </div>
                 <NavLink className="link-card__action" to={item.path}>
-                  Open
+                  {t('home.open')}
                 </NavLink>
               </article>
             ))}
@@ -64,8 +63,8 @@ export function HomePage() {
         </Card>
       </section>
 
-      <section className="home-grid">
-        <Card title="Top spot pairs">
+      <section className="home-grid home-market-grid">
+        <Card title={t('home.topSpotPairs')}>
           <div className="market-preview-list">
             {spotMarkets.map((market) => (
               <article className="market-preview" key={market.symbol}>
@@ -78,14 +77,14 @@ export function HomePage() {
                   <Badge tone={market.change24h >= 0 ? 'success' : 'danger'}>{formatPercent(market.change24h)}</Badge>
                 </div>
                 <NavLink className="market-preview__action" to={market.tradePath}>
-                  Trade
+                  {t('home.trade')}
                 </NavLink>
               </article>
             ))}
           </div>
         </Card>
 
-        <Card title="Top futures">
+        <Card title={t('home.topFutures')}>
           <div className="market-preview-list">
             {futuresMarkets.map((market) => (
               <article className="market-preview" key={market.symbol}>
@@ -98,7 +97,7 @@ export function HomePage() {
                   <Badge tone={market.change24h >= 0 ? 'success' : 'danger'}>{formatPercent(market.change24h)}</Badge>
                 </div>
                 <NavLink className="market-preview__action" to={market.tradePath}>
-                  Trade
+                  {t('home.trade')}
                 </NavLink>
               </article>
             ))}
