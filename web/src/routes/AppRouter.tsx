@@ -10,7 +10,16 @@ import { TwoFactorPage } from '../pages/TwoFactorPage';
 import { HomePage } from '../pages/HomePage';
 import { MarketsPage } from '../pages/MarketsPage';
 import { PlaceholderTradingPage } from '../pages/PlaceholderTradingPage';
-import { AssetsPage } from '../pages/AssetsPage';
+import { AssetsOverviewPage } from '../pages/assets/AssetsOverviewPage';
+import { SpotAssetsPage } from '../pages/assets/SpotAssetsPage';
+import { FuturesAssetsPage } from '../pages/assets/FuturesAssetsPage';
+import { MarginAssetsPage } from '../pages/assets/MarginAssetsPage';
+import { TransferAssetsPage } from '../pages/assets/TransferAssetsPage';
+import { DepositPage } from '../pages/assets/DepositPage';
+import { WithdrawPage } from '../pages/assets/WithdrawPage';
+import { DepositHistoryPage } from '../pages/assets/DepositHistoryPage';
+import { WithdrawHistoryPage } from '../pages/assets/WithdrawHistoryPage';
+import { WithdrawAddressesPage } from '../pages/assets/WithdrawAddressesPage';
 import { OrdersPage } from '../pages/OrdersPage';
 import { PositionsPage } from '../pages/PositionsPage';
 import { AccountPage } from '../pages/AccountPage';
@@ -63,10 +72,82 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <AssetsPage />
+            <AssetsOverviewPage />
           </AppLayout>
         }
         path="/assets"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <SpotAssetsPage />
+          </AppLayout>
+        }
+        path="/assets/spot"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <FuturesAssetsPage />
+          </AppLayout>
+        }
+        path="/assets/futures"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <MarginAssetsPage />
+          </AppLayout>
+        }
+        path="/assets/margin"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <TransferAssetsPage />
+          </AppLayout>
+        }
+        path="/assets/transfer"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <DepositPage />
+          </AppLayout>
+        }
+        path="/assets/deposit"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <WithdrawPage />
+          </AppLayout>
+        }
+        path="/assets/withdraw"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <DepositHistoryPage />
+          </AppLayout>
+        }
+        path="/assets/deposit/history"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <WithdrawHistoryPage />
+          </AppLayout>
+        }
+        path="/assets/withdraw/history"
+      />
+      <Route
+        element={
+          <AppLayout header={<Header />}>
+            <WithdrawAddressesPage />
+          </AppLayout>
+        }
+        path="/assets/withdraw/addresses"
       />
       <Route
         element={

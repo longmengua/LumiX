@@ -1,0 +1,161 @@
+import { useMemo, useState } from 'react';
+
+import { ErrorState, LoadingState } from '../../components/base/State';
+import { PageHeader } from '../../components/layout/PageHeader';
+import { formatAmount } from '../../utils/format';
+import { AssetHistoryList } from './AssetHistoryList';
+import { AssetSectionNav } from './AssetSectionNav';
+import { AssetTransferPanel } from './AssetTransferPanel';
+import { useAssetOverviewMock } from './useAssetOverviewMock';
+import type { AssetTabKey } from './mockAssetService';
+
+type TransferFormState = {
+  fromAccount: AssetTabKey;
+  toAccount: AssetTabKey;
+  asset: string;
+  amount: string;
+};
+
+const initialForm: TransferFormState = {
+  fromAccount: 'spot',
+  toAccount: 'futures',
+  asset: 'USDT',
+  amount: '1500',
+};
+
+export function AssetTransferPage() {
+  const { data, loading, error, reload } = useAssetOverviewMock();
+  const [transferForm, setTransferForm] = useState<TransferFormState>(initialForm);
+  const [transferMessage, setTransferMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
+
+  const transferAvailable = data?.transferBalances[transferForm.fromAccount][transferForm.asset] ?? 0;
+  const validationError = validateTransferForm(transferForm, transferAvailable);
+
+  const assetList = useMemo(() => data?.transferAssets ?? ['USDT'], [data]);
+
+  function setFromAccount(fromAccount: AssetTabKey) {
+    if (!data) return;
+
+    setTransferMessage(null);
+    setTransferForm((current) => {
+      const nextToAccount = current.toAccount === fromAccount ? pickDifferentAccount(fromAccount) : current.toAccount;
+      const asset = data.transferAssets.includes(current.asset) ? current.asset : data.transferAssets[0] ?? 'USDT';
+
+      return {
+        ...current,
+        fromAccount,
+        toAccount: nextToAccount,
+        asset,
+        amount: current.amount || formatAmount(data.transferBalances[fromAccount][asset] ?? 0, 2),
+      };
+    });
+  }
+
+  function setToAccount(toAccount: AssetTabKey) {
+    setTransferMessage(null);
+    setTransferForm((current) => ({ ...current, toAccount }));
+  }
+
+  function setAsset(asset: string) {
+    if (!data) return;
+
+    setTransferMessage(null);
+    setTransferForm((current) => ({
+      ...current,
+      asset,
+      amount: current.amount || formatAmount(data.transferBalances[current.fromAccount][asset] ?? 0, 2),
+    }));
+  }
+
+  function handleMaxAmount() {
+    if (!data) return;
+
+    setTransferMessage(null);
+    setTransferForm((current) => ({
+      ...current,
+      amount: formatAmount(data.transferBalances[current.fromAccount][current.asset] ?? 0, getFractionDigits(current.asset)),
+    }));
+  }
+
+  function handleTransfer() {
+    if (validationError) {
+      setTransferMessage({ tone: 'error', text: validationError });
+      return;
+    }
+
+    setTransferMessage({
+      tone: 'success',
+      text: `Transfer request queued for ${formatAmount(Number(transferForm.amount), getFractionDigits(transferForm.asset))} ${transferForm.asset}.`,
+    });
+  }
+
+  return (
+    <div className="stack assets-page">
+      <PageHeader
+        title="Account Transfer"
+        description="Move assets between isolated spot, futures, and margin accounts with validation only."
+      />
+      <AssetSectionNav />
+
+      {loading ? <LoadingState title="Loading transfer workspace" description="Fetching mock balances and transfer history..." /> : null}
+      {error ? <ErrorState title="Unable to load asset data" description={error} action={<button className="secondary-button" type="button" onClick={reload}>Retry</button>} /> : null}
+
+      {!loading && !error && data ? (
+        <>
+          <AssetTransferPanel
+            fromAccount={transferForm.fromAccount}
+            toAccount={transferForm.toAccount}
+            asset={transferForm.asset}
+            amount={transferForm.amount}
+            assets={assetList}
+            available={transferAvailable}
+            message={transferMessage}
+            validationError={validationError}
+            onFromAccountChange={setFromAccount}
+            onToAccountChange={setToAccount}
+            onAssetChange={setAsset}
+            onAmountChange={(value) => {
+              setTransferMessage(null);
+              setTransferForm((current) => ({ ...current, amount: value }));
+            }}
+            onMaxAmount={handleMaxAmount}
+            onSubmit={handleTransfer}
+          />
+
+          <AssetHistoryList
+            history={data.history}
+            emptyTitle="No transfer history"
+            emptyDescription="Transfer activity will appear after the first mock request."
+          />
+        </>
+      ) : null}
+    </div>
+  );
+}
+
+function validateTransferForm(form: TransferFormState, available: number) {
+  if (form.fromAccount === form.toAccount) {
+    return 'From Account and To Account must be different.';
+  }
+
+  const amount = Number(form.amount);
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return 'Enter a valid transfer amount.';
+  }
+
+  if (amount > available) {
+    return 'Transfer amount cannot exceed available balance.';
+  }
+
+  return null;
+}
+
+function pickDifferentAccount(fromAccount: AssetTabKey): AssetTabKey {
+  if (fromAccount === 'spot') return 'futures';
+  if (fromAccount === 'futures') return 'spot';
+  return 'spot';
+}
+
+function getFractionDigits(asset: string) {
+  return asset === 'USDT' ? 2 : 4;
+}
