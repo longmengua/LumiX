@@ -44,9 +44,7 @@ export function LoginPage() {
 
   return (
     <AuthPageShell
-      eyebrow={t('auth.shell.eyebrow')}
-      title={t('auth.login.title')}
-      description={t('auth.login.subtitle')}
+      variant="login"
       homeLabel={t('auth.login.backHome')}
       footer={
         <p className="auth-page__helper">

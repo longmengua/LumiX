@@ -33,9 +33,7 @@ export function TwoFactorPage() {
 
   return (
     <AuthPageShell
-      eyebrow={t('auth.shell.eyebrow')}
-      title={t('auth.twoFactor.title')}
-      description={challenge}
+      variant="twoFactor"
       footer={
         <p className="auth-page__helper">
           {t('auth.twoFactor.footerPrefix')} <NavLink to="/login">{t('auth.twoFactor.footerSignIn')}</NavLink>.
@@ -43,6 +41,7 @@ export function TwoFactorPage() {
       }
     >
       <form className="auth-form" onSubmit={handleSubmit}>
+        <p className="auth-form__hint">{challenge}</p>
         <label className="field">
           <span className="field__label">{t('auth.twoFactor.code')}</span>
           <input

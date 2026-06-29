@@ -45,9 +45,7 @@ export function ResetPasswordPage() {
 
   return (
     <AuthPageShell
-      eyebrow={t('auth.shell.eyebrow')}
-      title={t('auth.reset.title')}
-      description={t('auth.reset.description')}
+      variant="reset"
       footer={
         <p className="auth-page__helper">
           {t('auth.reset.footerPrefix')} <NavLink to="/login">{t('auth.reset.footerSignIn')}</NavLink>.

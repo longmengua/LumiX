@@ -48,9 +48,7 @@ export function RegisterPage() {
 
   return (
     <AuthPageShell
-      eyebrow={t('auth.shell.eyebrow')}
-      title={t('auth.register.title')}
-      description={t('auth.register.description')}
+      variant="register"
       footer={
         <p className="auth-page__helper">
           {t('auth.register.footerPrefix')} <NavLink to="/login">{t('auth.register.footerSignIn')}</NavLink>.

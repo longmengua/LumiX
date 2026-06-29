@@ -31,9 +31,7 @@ export function ForgotPasswordPage() {
 
   return (
     <AuthPageShell
-      eyebrow={t('auth.shell.eyebrow')}
-      title={t('auth.forgot.title')}
-      description={t('auth.forgot.description')}
+      variant="forgot"
       footer={
         <p className="auth-page__helper">
           {t('auth.forgot.footerPrefix')} <NavLink to="/login">{t('auth.forgot.footerSignIn')}</NavLink>{' '}
