@@ -8,6 +8,7 @@ const links = [
   ['/margin/BTC-USDT', 'Margin'],
   ['/assets', 'Assets'],
   ['/orders', 'Orders'],
+  ['/positions', 'Positions'],
   ['/account', 'Account'],
 ] as const;
 

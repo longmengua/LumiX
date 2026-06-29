@@ -986,6 +986,79 @@ a {
   margin-bottom: 16px;
 }
 
+.phase7-api-key-layout {
+  display: grid;
+  grid-template-columns: minmax(320px, 0.88fr) minmax(0, 1.12fr);
+  gap: 18px;
+}
+
+.phase7-api-key-form {
+  display: grid;
+  gap: 16px;
+}
+
+.phase7-api-key-form__summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.phase7-permission-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.phase7-permission-item {
+  padding: 12px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.phase7-permission-item:first-child {
+  border-top: 0;
+  padding-top: 0;
+}
+
+.phase7-permission-item p {
+  margin: 6px 0 0;
+  color: rgba(226, 232, 240, 0.72);
+  font-size: 0.92rem;
+}
+
+.phase7-secret-token {
+  margin: 0;
+  padding: 14px;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.42);
+  border: 1px solid rgba(239, 68, 68, 0.24);
+  font-variant-numeric: tabular-nums;
+  word-break: break-all;
+}
+
+.phase7-note-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.phase7-notification-row {
+  align-items: stretch;
+  flex-direction: column;
+}
+
+.phase7-notification-row__copy {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+}
+
+.phase7-notification-row__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
 .transfer-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1380,6 +1453,26 @@ a {
   grid-template-columns: 1fr 0.62fr 0.7fr 0.82fr 0.82fr 0.7fr 0.64fr 0.82fr 1fr;
 }
 
+.phase7-table__head--orders,
+.phase7-table__row--orders {
+  grid-template-columns: 0.9fr 0.95fr 0.72fr 0.72fr 0.72fr 0.88fr 0.72fr 0.88fr;
+}
+
+.phase7-table__head--fills,
+.phase7-table__row--fills {
+  grid-template-columns: 0.82fr 0.82fr 0.92fr 0.6fr 0.82fr 0.72fr 0.84fr 0.72fr 0.88fr;
+}
+
+.phase7-table__head--liquidations,
+.phase7-table__row--liquidations {
+  grid-template-columns: 0.82fr 1fr 0.58fr 0.8fr 0.8fr 0.72fr 1.18fr 0.9fr;
+}
+
+.phase7-table__head--funding,
+.phase7-table__row--funding {
+  grid-template-columns: 0.82fr 1fr 0.7fr 0.86fr 0.72fr 0.92fr 0.92fr;
+}
+
 .trading-risk-cell {
   display: grid;
   gap: 8px;
@@ -1509,7 +1602,18 @@ a {
   .trading-table__head--orders,
   .trading-table__row--orders,
   .trading-table__head--positions,
-  .trading-table__row--positions {
+  .trading-table__row--positions,
+  .phase7-api-key-layout,
+  .phase7-api-key-form__summary,
+  .phase7-note-grid,
+  .phase7-table__head--orders,
+  .phase7-table__row--orders,
+  .phase7-table__head--fills,
+  .phase7-table__row--fills,
+  .phase7-table__head--liquidations,
+  .phase7-table__row--liquidations,
+  .phase7-table__head--funding,
+  .phase7-table__row--funding {
     grid-template-columns: 1fr;
   }
 
@@ -1545,6 +1649,11 @@ a {
   .trading-hero__price,
   .trading-balance__values {
     justify-items: start;
+  }
+
+  .phase7-notification-row__meta {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
   .wallet-form__span-2 {

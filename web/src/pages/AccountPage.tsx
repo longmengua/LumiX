@@ -6,6 +6,8 @@ import { Card } from '../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/base/State';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Sidebar } from '../components/layout/Sidebar';
+import { AccountApiKeysPage as Phase7AccountApiKeysPage } from '../features/phase7/AccountApiKeysPage';
+import { AccountNotificationsPage as Phase7AccountNotificationsPage } from '../features/phase7/AccountNotificationsPage';
 import { accountNavItems } from '../features/navigation/accountNav';
 import {
   fetchAccountDashboardMock,
@@ -72,8 +74,8 @@ export function AccountPage() {
             <Route path="kyc" element={<AccountKycPage profile={data.profile} />} />
             <Route path="assets" element={<AccountAssetsPage assetAccounts={data.assetAccounts} />} />
             <Route path="transfer" element={<AccountTransferPage />} />
-            <Route path="api-keys" element={<AccountApiKeysPage apiKeys={data.apiKeys} />} />
-            <Route path="notifications" element={<AccountTimelinePage title="Notification Center" items={data.notifications} emptyText="No notification events yet." />} />
+            <Route path="api-keys" element={<Phase7AccountApiKeysPage />} />
+            <Route path="notifications" element={<Phase7AccountNotificationsPage />} />
             <Route path="login-history" element={<AccountTimelinePage title="Login History" items={data.loginHistory} emptyText="No login records yet." />} />
             <Route path="security-logs" element={<AccountTimelinePage title="Security Logs" items={data.securityLogs} emptyText="No security logs yet." />} />
             <Route path="preferences" element={<AccountPreferencesPage preferences={data.preferences} />} />
@@ -296,56 +298,6 @@ function AccountTransferPage() {
 
       <Card title="Recent Transfers">
         <EmptyState title="No transfer records" description="Transfer history will appear here after mock data is added." />
-      </Card>
-    </div>
-  );
-}
-
-function AccountApiKeysPage({ apiKeys }: { apiKeys: AccountDashboardData['apiKeys'] }) {
-  return (
-    <div className="stack">
-      <Card title="API Keys">
-        <div className="stack">
-          <button className="primary-button" type="button">
-            Create API key
-          </button>
-
-          {apiKeys.length > 0 ? (
-            <div className="api-key-list">
-              {apiKeys.map((key) => (
-                <div className="api-key-card" key={key.name}>
-                  <div className="api-key-card__header">
-                    <div>
-                      <p className="account-row__title">{key.name}</p>
-                      <p className="account-row__meta">Secret shown once on creation. Current view is masked.</p>
-                    </div>
-                    <Badge tone={key.status === 'Active' ? 'success' : 'warning'}>{key.status}</Badge>
-                  </div>
-                  <div className="api-key-card__body">
-                    <StatList
-                      items={[
-                        ['Secret', key.secretMasked],
-                        ['Permissions', key.permissions.join(', ')],
-                        ['IP whitelist', key.ipWhitelist],
-                        ['Last used', formatTime(key.lastUsedAt)],
-                      ]}
-                    />
-                  </div>
-                  <div className="api-key-card__actions">
-                    <button className="secondary-button" type="button">
-                      {key.status === 'Active' ? 'Pause' : 'Resume'}
-                    </button>
-                    <button className="ghost-button" type="button">
-                      Delete
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <EmptyState title="No API keys" description="Create a key to access mock integrations." />
-          )}
-        </div>
       </Card>
     </div>
   );

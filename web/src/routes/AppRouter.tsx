@@ -155,7 +155,7 @@ export function AppRouter() {
             <OrdersPage />
           </AppLayout>
         }
-        path="/orders"
+        path="/orders/*"
       />
       <Route
         element={
@@ -163,7 +163,7 @@ export function AppRouter() {
             <PositionsPage />
           </AppLayout>
         }
-        path="/positions"
+        path="/positions/*"
       />
       <Route
         element={
