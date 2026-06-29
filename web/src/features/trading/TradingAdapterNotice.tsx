@@ -11,7 +11,7 @@ export function TradingAdapterNotice({ notice }: TradingAdapterNoticeProps) {
   return (
     <section className="card trading-adapter-notice">
       <div className="trading-adapter-notice__header">
-        <Badge tone="warning">{t('trading.developmentOnly')}</Badge>
+        <Badge tone="warning">{t('trading.developmentNotice.title')}</Badge>
         <span className="trading-adapter-notice__label">{t('trading.adapterLabel')}</span>
       </div>
       <p>{notice}</p>

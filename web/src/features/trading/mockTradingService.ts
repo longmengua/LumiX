@@ -8,10 +8,15 @@ export type TradingRouteMap = {
   margin: string;
 };
 
+export type TradingCopy = {
+  key: string;
+  values?: Record<string, string | number>;
+};
+
 export type TradingMetric = {
-  label: string;
+  labelKey: string;
   value: string;
-  hint: string;
+  hintKey: string;
 };
 
 export type TradingOrderBookLevel = {
@@ -25,7 +30,7 @@ export type TradingFill = {
   side: 'Buy' | 'Sell';
   price: number;
   size: number;
-  source: string;
+  sourceKey: string;
 };
 
 export type TradingOpenOrder = {
@@ -56,7 +61,7 @@ export type TradingBalance = {
   available: number;
   frozen: number;
   total: number;
-  note: string;
+  noteKey: string;
 };
 
 export type TradingWorkspaceData = {
@@ -64,9 +69,11 @@ export type TradingWorkspaceData = {
   symbol: string;
   baseAsset: string;
   displaySymbol: string;
-  displayName: string;
-  adapterNotice: string;
-  heroCopy: string;
+  displayNameKey: string;
+  displayNameValues: Record<string, string | number>;
+  adapterNoticeKey: string;
+  heroCopyKey: string;
+  heroCopyValues: Record<string, string | number>;
   midPrice: number;
   change24h: number;
   metrics: TradingMetric[];
@@ -79,10 +86,11 @@ export type TradingWorkspaceData = {
   openOrders: TradingOpenOrder[];
   positions: TradingPosition[];
   riskRatio: number;
-  fundingOrBorrow: string;
+  fundingOrBorrowKey: string;
+  fundingOrBorrowValues?: Record<string, string | number>;
   lastUpdated: string;
-  actionLabel: string;
-  orderHints: string[];
+  actionLabelKey: string;
+  orderHintCopies: TradingCopy[];
 };
 
 const assetProfiles: Record<
@@ -129,9 +137,6 @@ const assetProfiles: Record<
     marginBorrowRate: 0.014,
   },
 };
-
-const adapterNotice =
-  'Development adapter only. OL before must connect server/ Java API, C++ Core event stream, and real WebSocket.';
 
 export function getTradingRoutes(baseAsset: string): TradingRouteMap {
   const normalizedBaseAsset = baseAsset.toUpperCase();
@@ -193,18 +198,18 @@ function buildTrades(lastPrice: number, kind: TradingKind): TradingFill[] {
     side: offset >= 0 ? 'Buy' : 'Sell',
     price: lastPrice * (1 + offset / 100),
     size: 0.12 + index * 0.04,
-    source:
+    sourceKey:
       kind === 'spot'
         ? index % 2 === 0
-          ? 'Aggressive taker'
-          : 'Liquidity maker'
+          ? 'trading.tradeFeed.source.aggressiveTaker'
+          : 'trading.tradeFeed.source.liquidityMaker'
         : kind === 'futures'
           ? index % 2 === 0
-            ? 'Perp taker'
-            : 'Funding sweep'
+            ? 'trading.tradeFeed.source.perpTaker'
+            : 'trading.tradeFeed.source.fundingSweep'
           : index % 2 === 0
-            ? 'Margin fill'
-            : 'Borrow re-balance',
+            ? 'trading.tradeFeed.source.marginFill'
+            : 'trading.tradeFeed.source.borrowRebalance',
   }));
 }
 
@@ -272,73 +277,73 @@ function buildPositions(baseAsset: string, lastPrice: number): TradingPosition[]
 function buildBalances(kind: TradingKind, baseAsset: string): TradingBalance[] {
   if (kind === 'spot') {
     return [
-      { asset: 'USDT', available: 18420.53, frozen: 120.4, total: 18540.93, note: 'Spot quote balance' },
-      { asset: baseAsset, available: 1.84, frozen: 0.12, total: 1.96, note: 'Base asset inventory' },
+      { asset: 'USDT', available: 18420.53, frozen: 120.4, total: 18540.93, noteKey: 'trading.balance.note.spotQuote' },
+      { asset: baseAsset, available: 1.84, frozen: 0.12, total: 1.96, noteKey: 'trading.balance.note.baseInventory' },
     ];
   }
 
   if (kind === 'futures') {
     return [
-      { asset: 'USDT', available: 32450.73, frozen: 860.52, total: 33311.25, note: 'Wallet balance' },
-      { asset: baseAsset, available: 0.48, frozen: 0.05, total: 0.53, note: 'Reference collateral' },
+      { asset: 'USDT', available: 32450.73, frozen: 860.52, total: 33311.25, noteKey: 'trading.balance.note.walletBalance' },
+      { asset: baseAsset, available: 0.48, frozen: 0.05, total: 0.53, noteKey: 'trading.balance.note.referenceCollateral' },
     ];
   }
 
   return [
-    { asset: 'USDT', available: 8450.1, frozen: 0, total: 8450.1, note: 'Collateral balance' },
-    { asset: baseAsset, available: 0.92, frozen: 0, total: 0.92, note: 'Borrowable reference asset' },
+    { asset: 'USDT', available: 8450.1, frozen: 0, total: 8450.1, noteKey: 'trading.balance.note.collateral' },
+    { asset: baseAsset, available: 0.92, frozen: 0, total: 0.92, noteKey: 'trading.balance.note.borrowableReference' },
   ];
 }
 
 function buildMetrics(kind: TradingKind, profile: ReturnType<typeof getAssetProfile>, lastPrice: number) {
   if (kind === 'spot') {
     return [
-      { label: 'Last price', value: `$${lastPrice.toFixed(2)}`, hint: 'Development adapter snapshot only.' },
-      { label: '24h change', value: `${profile.spotChange24h.toFixed(2)}%`, hint: 'Mock market change.' },
-      { label: '24h high', value: `$${profile.spotHigh24h.toFixed(2)}`, hint: 'Synthetic price ceiling.' },
-      { label: '24h volume', value: `$${profile.spotVolume24h.toFixed(2)}K`, hint: 'Local adapter volume estimate.' },
+      { labelKey: 'trading.metric.lastPrice', value: `$${lastPrice.toFixed(2)}`, hintKey: 'trading.metric.spotLastPriceHint' },
+      { labelKey: 'trading.metric.change24h', value: `${profile.spotChange24h.toFixed(2)}%`, hintKey: 'trading.metric.mockMarketChangeHint' },
+      { labelKey: 'trading.metric.high24h', value: `$${profile.spotHigh24h.toFixed(2)}`, hintKey: 'trading.metric.syntheticCeilingHint' },
+      { labelKey: 'trading.metric.volume24h', value: `$${profile.spotVolume24h.toFixed(2)}K`, hintKey: 'trading.metric.volumeEstimateHint' },
     ];
   }
 
   if (kind === 'futures') {
     return [
-      { label: 'Mark price', value: `$${lastPrice.toFixed(2)}`, hint: 'Derived from the local adapter.' },
-      { label: 'Basis', value: `${profile.futuresBasis.toFixed(2)} USDT`, hint: 'Mock perp basis versus spot.' },
-      { label: 'Funding', value: `${profile.futuresFunding.toFixed(3)}%`, hint: 'Displayed only, not settled.' },
-      { label: '24h change', value: `${(profile.spotChange24h + 0.28).toFixed(2)}%`, hint: 'Synthetic futures move.' },
+      { labelKey: 'trading.metric.markPrice', value: `$${lastPrice.toFixed(2)}`, hintKey: 'trading.metric.markPriceHint' },
+      { labelKey: 'trading.metric.basis', value: `${profile.futuresBasis.toFixed(2)} USDT`, hintKey: 'trading.metric.mockPerpBasisHint' },
+      { labelKey: 'trading.metric.funding', value: `${profile.futuresFunding.toFixed(3)}%`, hintKey: 'trading.metric.fundingDisplayedOnlyHint' },
+      { labelKey: 'trading.metric.change24h', value: `${(profile.spotChange24h + 0.28).toFixed(2)}%`, hintKey: 'trading.metric.syntheticFuturesMoveHint' },
     ];
   }
 
   return [
-    { label: 'Reference price', value: `$${lastPrice.toFixed(2)}`, hint: 'Spot reference for margin preview.' },
-    { label: 'Borrow rate', value: `${profile.marginBorrowRate.toFixed(3)}%`, hint: 'Development-only borrow estimate.' },
-    { label: 'Risk ratio', value: '62.4%', hint: 'Illustrative only, not a live liquidation signal.' },
-    { label: 'Collateral', value: '$8,450.10', hint: 'Mock isolated margin balance.' },
+    { labelKey: 'trading.metric.referencePrice', value: `$${lastPrice.toFixed(2)}`, hintKey: 'trading.metric.spotReferenceHint' },
+    { labelKey: 'trading.metric.borrowRate', value: `${profile.marginBorrowRate.toFixed(3)}%`, hintKey: 'trading.metric.borrowEstimateHint' },
+    { labelKey: 'trading.metric.riskRatio', value: '62.4%', hintKey: 'trading.metric.liveLiquidationHint' },
+    { labelKey: 'trading.metric.collateral', value: '$8,450.10', hintKey: 'trading.metric.isolatedMarginHint' },
   ];
 }
 
 function buildHeroCopy(kind: TradingKind, baseAsset: string) {
   if (kind === 'spot') {
-    return `Spot trade workspace for ${baseAsset}/USDT. The page renders a development adapter only, with book, tape, balances, and preview order entry.`;
+    return { key: 'trading.instrument.spotSubtitle', values: { symbol: `${baseAsset}/USDT` } };
   }
 
   if (kind === 'futures') {
-    return `U 本位永續 workspace for ${baseAsset}USDT-PERP. The UI shows a mock perp book, position snapshot, and funding preview without any live matching or settlement.`;
+    return { key: 'trading.instrument.futuresSubtitle', values: { symbol: `${baseAsset}USDT-PERP` } };
   }
 
-  return `Margin workspace for ${baseAsset}/USDT. The page shows a mock borrow and risk snapshot only; it does not calculate or execute real leverage actions.`;
+  return { key: 'trading.instrument.marginSubtitle', values: { symbol: `${baseAsset}/USDT` } };
 }
 
 function buildFundingOrBorrow(kind: TradingKind, profile: ReturnType<typeof getAssetProfile>) {
   if (kind === 'spot') {
-    return 'No funding or borrow model is active in spot mode.';
+    return { key: 'trading.instrument.noFundingOrBorrow' };
   }
 
   if (kind === 'futures') {
-    return `Funding preview: ${profile.futuresFunding.toFixed(3)}% in the adapter snapshot.`;
+    return { key: 'trading.instrument.fundingPreview', values: { rate: profile.futuresFunding.toFixed(3) } };
   }
 
-  return `Borrow preview: ${profile.marginBorrowRate.toFixed(3)}% interest in the adapter snapshot.`;
+  return { key: 'trading.instrument.borrowPreview', values: { rate: profile.marginBorrowRate.toFixed(3) } };
 }
 
 export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: string): Promise<TradingWorkspaceData> {
@@ -346,6 +351,8 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
 
   const baseAsset = extractBaseAsset(symbol, kind);
   const profile = getAssetProfile(baseAsset);
+  const heroCopy = buildHeroCopy(kind, baseAsset);
+  const fundingOrBorrow = buildFundingOrBorrow(kind, profile);
   const spotPrice = profile.spotPrice;
   const change24h = profile.spotChange24h;
   const lastPrice =
@@ -363,14 +370,16 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
     symbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}-USDT`,
     baseAsset,
     displaySymbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}/USDT`,
-    displayName:
+    displayNameKey:
       kind === 'spot'
-        ? `${baseAsset}/USDT Spot`
+        ? 'trading.instrument.spotTitle'
         : kind === 'futures'
-          ? `${baseAsset} USDT Perpetual`
-          : `${baseAsset}/USDT Margin`,
-    adapterNotice,
-    heroCopy: buildHeroCopy(kind, baseAsset),
+          ? 'trading.instrument.futuresTitle'
+          : 'trading.instrument.marginTitle',
+    displayNameValues: { symbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}/USDT` },
+    adapterNoticeKey: 'trading.developmentNotice.description',
+    heroCopyKey: heroCopy.key,
+    heroCopyValues: heroCopy.values ?? {},
     midPrice: lastPrice,
     change24h: kind === 'futures' ? change24h + 0.28 : kind === 'margin' ? -0.2 : change24h,
     metrics: buildMetrics(kind, profile, lastPrice),
@@ -380,31 +389,32 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
     openOrders: buildOpenOrders(lastPrice),
     positions: kind === 'futures' ? buildPositions(baseAsset, lastPrice) : [],
     riskRatio: kind === 'margin' ? 62.4 : kind === 'futures' ? 31.2 : 0,
-    fundingOrBorrow: buildFundingOrBorrow(kind, profile),
+    fundingOrBorrowKey: fundingOrBorrow.key,
+    fundingOrBorrowValues: fundingOrBorrow.values,
     lastUpdated: new Date().toISOString(),
-    actionLabel:
+    actionLabelKey:
       kind === 'spot'
-        ? 'Preview buy/sell order'
+        ? 'trading.orderEntry.previewSpotOrder'
         : kind === 'futures'
-          ? 'Preview perp order'
-          : 'Preview margin order',
-    orderHints:
+          ? 'trading.orderEntry.previewPerpOrder'
+          : 'trading.orderEntry.previewMarginOrder',
+    orderHintCopies:
       kind === 'spot'
         ? [
-            `Route to futures: ${routes.futures}`,
-            `Route to margin: ${routes.margin}`,
-            'This adapter is view-only and never submits a live order.',
+            { key: 'trading.orderHint.routeToFutures', values: { route: routes.futures } },
+            { key: 'trading.orderHint.routeToMargin', values: { route: routes.margin } },
+            { key: 'trading.orderHint.viewOnly' },
           ]
         : kind === 'futures'
           ? [
-              `Route to spot: ${routes.spot}`,
-              `Route to margin: ${routes.margin}`,
-              'Positions and funding are local snapshots, not live account state.',
+              { key: 'trading.orderHint.routeToSpot', values: { route: routes.spot } },
+              { key: 'trading.orderHint.routeToMargin', values: { route: routes.margin } },
+              { key: 'trading.orderHint.localSnapshotsOnly' },
             ]
         : [
-            `Route to spot: ${routes.spot}`,
-            `Route to futures: ${routes.futures}`,
-            'Borrow and risk figures are fixed adapter values for Phase 6 UI work.',
+            { key: 'trading.orderHint.routeToSpot', values: { route: routes.spot } },
+            { key: 'trading.orderHint.routeToFutures', values: { route: routes.futures } },
+            { key: 'trading.orderHint.fixedAdapterValues' },
           ],
   });
 }
