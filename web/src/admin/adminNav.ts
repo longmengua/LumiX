@@ -1,0 +1,15 @@
+export const adminNavItems = [
+  { to: '/', labelKey: 'admin.nav.dashboard' },
+  { to: '/users', labelKey: 'admin.nav.users' },
+  { to: '/assets', labelKey: 'admin.nav.assets' },
+  { to: '/wallet', labelKey: 'admin.nav.wallet' },
+  { to: '/spot', labelKey: 'admin.nav.spot' },
+  { to: '/futures', labelKey: 'admin.nav.futures' },
+  { to: '/margin', labelKey: 'admin.nav.margin' },
+  { to: '/risk', labelKey: 'admin.nav.risk' },
+  { to: '/market-makers', labelKey: 'admin.nav.marketMakers' },
+  { to: '/insurance-fund', labelKey: 'admin.nav.insuranceFund' },
+  { to: '/reconciliation', labelKey: 'admin.nav.reconciliation' },
+  { to: '/operation-logs', labelKey: 'admin.nav.operationLogs' },
+  { to: '/settings', labelKey: 'admin.nav.settings' },
+] as const;

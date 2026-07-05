@@ -55,7 +55,7 @@ export function AccountPage() {
     };
   }, []);
 
-  const sidebarItems = useMemo(() => accountNavItems.map(({ to, labelKey }) => ({ to, label: t(labelKey) })), [t]);
+  const sidebarItems = useMemo(() => accountNavItems.map(({ to, labelKey, end }) => ({ to, label: t(labelKey), end })), [t]);
 
   return (
     <div className="two-column">

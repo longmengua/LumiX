@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立，等待人工審查；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成，等待人工審查；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成，等待人工審查；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成，等待人工審查；Phase 7.6-auth-brand-cleanup 已完成，等待人工審查；Phase 7.6-auth-visual-panel 已完成，等待人工審查；Phase 7.6-flex-only-layout-refactor 已完成，等待人工審查。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立，等待人工審查；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成，等待人工審查。  
 目前觀察：
 
 ```text
@@ -44,12 +44,12 @@
 | 6 | 現貨、合約、槓桿交易頁 | done | approved | 已審查通過 |
 | 7 | 訂單、倉位、API Key、通知 | done | pending | 需人工審查 |
 | 7.5 | i18n 多語系基礎建設 | done | pending | 已完成 web/ 前端基礎 i18n，等待人工審查 |
-| 7.6-hotfix | 首頁與全域 layout 實機修復 | done | pending | 已針對首頁 hero、content 寬度與桌機顯示做實機修復，等待人工審查 |
-| 7.6-hotfix-v2 | 主內容寬度與 PageHeader collapse 修復 | done | pending | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout，等待人工審查 |
-| 7.6-auth-i18n-cleanup | Auth i18n 清理 | done | pending | 已完成 login / register / forgot password / 2FA / reset password auth 文案 i18n 與開發痕跡清除，等待人工審查 |
-| 7.6-auth-brand-cleanup | Auth brand 清理 | done | pending | 已完成 Auth 文案產品化、Logo component 與 Header / Auth shell 品牌更新，等待人工審查 |
-| 7.6-auth-visual-panel | Auth 視覺面板 | done | pending | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，等待人工審查 |
-| 8 | 後台前端頁面 | pending | pending | 需人工審查 |
+| 7.6-hotfix | 首頁與全域 layout 實機修復 | done | approved | 已針對首頁 hero、content 寬度與桌機顯示做實機修復，人工審查通過 |
+| 7.6-hotfix-v2 | 主內容寬度與 PageHeader collapse 修復 | done | approved | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout，人工審查通過 |
+| 7.6-auth-i18n-cleanup | Auth i18n 清理 | done | approved | 已完成 login / register / forgot password / 2FA / reset password auth 文案 i18n 與開發痕跡清除，人工審查通過 |
+| 7.6-auth-brand-cleanup | Auth brand 清理 | done | approved | 已完成 Auth 文案產品化、Logo component 與 Header / Auth shell 品牌更新，人工審查通過 |
+| 7.6-auth-visual-panel | Auth 視覺面板 | done | approved | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，人工審查通過 |
+| 8 | 後台前端頁面 | done | pending | 已完成 admin console / mock data / confirm dialogs，等待人工審查 |
 | 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | pending | pending | 高風險，需審查 |
 | 10 | Wallet、Market Data、Spot、Open API Java stub | pending | pending | 高風險，需審查 |
 | 11 | Futures、Liquidation、Margin Java skeleton | pending | pending | 高風險，需審查 |
@@ -79,9 +79,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: Phase 7.6-flex-only-layout-refactor
-current_task: phase_7_6_flex_only_layout_refactor
-next_action: 等待使用者審查 Phase 7.6-flex-only-layout-refactor CSS Grid 最終清零，通過後再考慮後續 Phase 8
+current_phase: Phase 8
+current_task: phase_8_admin_frontend_pages
+next_action: 等待使用者審查 Phase 8 後台前端頁面
 ```
 
 ---
@@ -255,19 +255,19 @@ next_action: 等待使用者審查 Phase 7.6-flex-only-layout-refactor CSS Grid 
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P8-01 Admin Layout | pending | - | - |
-| P8-02 Dashboard | pending | - | - |
-| P8-03 Users | pending | - | - |
-| P8-04 Assets | pending | - | - |
-| P8-05 Wallet | pending | - | - |
-| P8-06 Spot | pending | - | - |
-| P8-07 Futures | pending | - | - |
-| P8-08 Margin | pending | - | - |
-| P8-09 Risk | pending | - | - |
-| P8-10 Market Makers | pending | - | - |
-| P8-11 Insurance Fund | pending | - | - |
-| P8-12 Reconciliation | pending | - | - |
-| P8-13 Operation Logs | pending | - | - |
+| P8-01 Admin Layout | done | 已完成 | 已掛載 /admin shell、sidebar 與路由 |
+| P8-02 Dashboard | done | 已完成 | 已加入 dashboard cards 與 summary mock data |
+| P8-03 Users | done | 已完成 | 已加入使用者表格、凍結 / 解凍與 2FA reset confirm dialogs |
+| P8-04 Assets | done | 已完成 | 已加入資產餘額表格 |
+| P8-05 Wallet | done | 已完成 | 已加入充值 / 提現審核表格與 confirm dialogs |
+| P8-06 Spot | done | 已完成 | 已加入交易對狀態表格與 pause / resume confirm dialogs |
+| P8-07 Futures | done | 已完成 | 已加入合約狀態表格與 mode 切換 confirm dialogs |
+| P8-08 Margin | done | 已完成 | 已加入借貸與風險率表格 |
+| P8-09 Risk | done | 已完成 | 已加入 kill switch / withdraw pause / reduce only UI |
+| P8-10 Market Makers | done | 已完成 | 已加入做市商狀態表格與 disable / enable confirm dialogs |
+| P8-11 Insurance Fund | done | 已完成 | 已加入保險基金表格 |
+| P8-12 Reconciliation | done | 已完成 | 已加入對帳結果表格 |
+| P8-13 Operation Logs | done | 已完成 | 已加入操作紀錄表格 |
 
 ### Phase 9：建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface
 

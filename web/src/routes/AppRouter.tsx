@@ -23,7 +23,6 @@ import { WithdrawAddressesPage } from '../pages/assets/WithdrawAddressesPage';
 import { OrdersPage } from '../pages/OrdersPage';
 import { PositionsPage } from '../pages/PositionsPage';
 import { AccountPage } from '../pages/AccountPage';
-import { AdminPage } from '../pages/AdminPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 export function AppRouter() {
@@ -172,14 +171,6 @@ export function AppRouter() {
           </AppLayout>
         }
         path="/account/*"
-      />
-      <Route
-        element={
-          <AppLayout header={<Header />}>
-            <AdminPage />
-          </AppLayout>
-        }
-        path="/admin/*"
       />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
