@@ -2,29 +2,28 @@
 
 `LumiX` 是交易所專案代號，名稱來自 `Lumi` 與 `X`。
 
-`Lumi` 帶有光、照亮與清晰可見的意象，`X` 代表 exchange。
+`Lumi` 帶有光、照亮與清晰可見的意象，`X` 代表 `exchange`。
 
-LumiX is being organized toward a full operating OL exchange, not an MVP.
+LumiX 的目標是建立一套可正式營運的 OL 交易所，涵蓋使用者介面、後端服務、交易核心、錢包、風控、對帳與營運支援。
 
-## Current Status
+## 你可以在這裡看到什麼
 
-- Phase 11 completed as a documentation-only production architecture reset.
-- Phase 12 through Phase 36 are planned and not started.
-- The next implementation phase is Phase 12 - Production Database Schema & Migration.
-- Production trading is not completed.
-- Production launch readiness is not completed.
+- 使用者會看到什麼樣的交易所介面
+- 交易所後端大致怎麼分工
+- 交易核心如何串起帳本、撮合、結算與錢包
+- 營運與上線需要哪些準備
+- Phase 12 到 Phase 36 的施工章節
 
-## Source of Truth
+## 文件入口
 
-- `docs/README.md`
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/ARCHITECTURE_TEXT_MAP.md`
-- `docs/PHASE_REVIEW_WORKFLOW.md`
+- `docs/README.md`：文件總目錄
+- `docs/ARCHITECTURE_TEXT_MAP.md`：整體架構圖
+- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`：專案總綱
+- `docs/PHASE_REVIEW_WORKFLOW.md`：Phase 審核流程
 
-## Boundaries
+## 目錄概覽
 
-- `web/` is the frontend.
-- `server/` is the Java backend.
-- Production matching must be a C++ core in `core/` or `matching-core/`.
-- Java `MatchingEngineClient` is only an integration boundary.
-- Do not treat stub, interface, mock, placeholder, or TODO work as production completion.
+- `web/`：前端專案
+- `server/`：Java 後端專案
+- `docs/`：專案文件
+
