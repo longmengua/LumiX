@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立，等待人工審查；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成，等待人工審查。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 1、Phase 2、Phase 3 已人工審查通過；Phase 3.5 與 Phase 4 已完成並審查通過；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成並審查通過，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成並審查通過。  
 目前觀察：
 
 ```text
@@ -42,15 +42,15 @@
 | 4 | 個人中心 | done | approved | 已完成，人工審查通過 |
 | 5 | 資產、劃轉、充值、提現畫面 | done | approved | 已審查通過 |
 | 6 | 現貨、合約、槓桿交易頁 | done | approved | 已審查通過 |
-| 7 | 訂單、倉位、API Key、通知 | done | pending | 需人工審查 |
+| 7 | 訂單、倉位、API Key、通知 | done | approved | 已審查通過 |
 | 7.5 | i18n 多語系基礎建設 | done | pending | 已完成 web/ 前端基礎 i18n，等待人工審查 |
 | 7.6-hotfix | 首頁與全域 layout 實機修復 | done | approved | 已針對首頁 hero、content 寬度與桌機顯示做實機修復，人工審查通過 |
 | 7.6-hotfix-v2 | 主內容寬度與 PageHeader collapse 修復 | done | approved | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout，人工審查通過 |
 | 7.6-auth-i18n-cleanup | Auth i18n 清理 | done | approved | 已完成 login / register / forgot password / 2FA / reset password auth 文案 i18n 與開發痕跡清除，人工審查通過 |
 | 7.6-auth-brand-cleanup | Auth brand 清理 | done | approved | 已完成 Auth 文案產品化、Logo component 與 Header / Auth shell 品牌更新，人工審查通過 |
 | 7.6-auth-visual-panel | Auth 視覺面板 | done | approved | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，人工審查通過 |
-| 8 | 後台前端頁面 | done | pending | 已完成 admin console / mock data / confirm dialogs，等待人工審查 |
-| 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | pending | pending | 高風險，需審查 |
+| 8 | 後台前端頁面 | done | approved | 已完成 admin console / mock data / confirm dialogs，人工審查通過 |
+| 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | in_progress | pending | 高風險，進行中 |
 | 10 | Wallet、Market Data、Spot、Open API Java stub | pending | pending | 高風險，需審查 |
 | 11 | Futures、Liquidation、Margin Java skeleton | pending | pending | 高風險，需審查 |
 | 12 | 風控、對帳、測試、上線檢查 | pending | pending | 高風險，需審查 |
@@ -79,9 +79,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: Phase 8
-current_task: phase_8_admin_frontend_pages
-next_action: 等待使用者審查 Phase 8 後台前端頁面
+current_phase: Phase 9
+current_task: phase_9_server_spring_boot_account_ledger_foundation
+next_action: 執行 Phase 9 後端骨架、帳戶與帳本 interface
 ```
 
 ---
@@ -324,6 +324,11 @@ next_action: 等待使用者審查 Phase 8 後台前端頁面
 | 4 | Codex | 通過 | 2026-06-26 | Phase 4 UI / mock 範圍完成；build 通過；typecheck 通過；仍屬開發期 mock / adapter，不代表 OL 真實後端完成；OL 前需接 `server/` Java 真實 API |
 | 5 | Codex | 通過 | 2026-06-29 | Phase 5 資產 / 劃轉 / 充值 / 提現 UI 與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java 真實 API |
 | 6 | Codex | 通過 | 2026-06-29 | Phase 6 現貨 / 合約 / 槓桿交易頁與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java API、C++ Core event stream 與真正結算流程 |
+| 1 | Codex | 通過 | 2026-06-25 | Phase 1 React + TypeScript 專案骨架已通過人工審查 |
+| 2 | Codex | 通過 | 2026-06-25 | Phase 2 Design System 與 App Shell 已通過人工審查 |
+| 3 | Codex | 通過 | 2026-06-25 | Phase 3 登入、首頁、市場列表已通過人工審查 |
+| 7 | Codex | 通過 | 2026-06-25 | Phase 7 訂單、倉位、API Key、通知前端頁面已通過人工審查 |
+| 8 | Codex | 通過 | 2026-07-05 | Phase 8 後台前端頁面完成；admin console / mock data / confirm dialogs 已審查通過，等待下一階段後端骨架與帳本介面 |
 
 ---
 
