@@ -1,9 +1,11 @@
-# docs/ai/
+# AI Chapters
 
-AI workflow and prompt governance.
+This section is the instruction layer for Codex work on LumiX.
 
-Source of truth:
+Read these chapters in order:
 
-- `docs/PHASE_REVIEW_WORKFLOW.md`
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
+1. `working-rules.md`
+2. `phase-command-workflow.md`
+3. `codex-prompt-index.md`
 
+These chapters sit alongside `../PHASE_REVIEW_WORKFLOW.md` and `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
