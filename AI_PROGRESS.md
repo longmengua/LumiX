@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 1、Phase 2、Phase 3 已人工審查通過；Phase 3.5 與 Phase 4 已完成並審查通過；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成並審查通過，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成並審查通過；Phase 9 後端骨架、帳戶與帳本 interface 已完成，等待人工審查。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 1、Phase 2、Phase 3 已人工審查通過；Phase 3.5 與 Phase 4 已完成並審查通過；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成並審查通過，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成並審查通過；Phase 9 後端骨架、帳戶與帳本 interface 已完成並審查通過；Phase 10 Wallet / Market Data / Spot / Open API Java stub 已完成，等待人工審查。  
 目前觀察：
 
 ```text
@@ -54,7 +54,7 @@
 | 7.6-auth-visual-panel | Auth 視覺面板 | done | approved | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，人工審查通過 |
 | 8 | 後台前端頁面 | done | approved | 已完成 admin console / mock data / confirm dialogs，人工審查通過 |
 | 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | done | approved | 高風險，已完成並通過人工審查 |
-| 10 | Wallet、Market Data、Spot、Open API Java stub | pending | pending | 高風險，需審查 |
+| 10 | Wallet、Market Data、Spot、Open API Java stub | done | approved | 高風險，已完成並通過人工審查 |
 | 11 | Futures、Liquidation、Margin Java skeleton | pending | pending | 高風險，需審查 |
 | 12 | 風控、對帳、測試、上線檢查 | pending | pending | 高風險，需審查 |
 
@@ -82,9 +82,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: Phase 9
-current_task: phase_9_server_spring_boot_account_ledger_foundation_review
-next_action: 可進入 Phase 10，等待使用者指示
+current_phase: Phase 10
+current_task: phase_10_wallet_market_spot_open_api_java_stub_approved
+next_action: 可進入 Phase 11，等待使用者指示
 ```
 
 ---
@@ -287,12 +287,12 @@ next_action: 可進入 Phase 10，等待使用者指示
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P10-01 wallet service stub | pending | - | 不處理私鑰 / 鏈上出帳 |
-| P10-02 deposit / withdraw 狀態模型 | pending | - | - |
-| P10-03 market data service stub | pending | - | - |
-| P10-04 price index service stub | pending | - | - |
-| P10-05 spot order service stub | pending | - | 不做撮合 |
-| P10-06 open api route stub | pending | - | withdraw 預設不開 |
+| P10-01 wallet service stub | done | 已完成 | 僅建立 wallet service / gateway / address / chain config stub，不處理私鑰或鏈上出帳 |
+| P10-02 deposit / withdraw 狀態模型 | done | 已完成 | 僅建立狀態模型、record 與 validation stub，不做真實入帳、凍結或廣播 |
+| P10-03 market data service stub | done | 已完成 | 僅建立 symbol / depth / trades / ticker / kline stub，不接外部行情 |
+| P10-04 price index service stub | done | 已完成 | 僅建立 external quote / index / mark price stub，不做真實公式 |
+| P10-05 spot order service stub | done | 已完成 | 僅做 request validation 與 matching / ledger placeholder，不做撮合或結算 |
+| P10-06 open api route stub | done | 已完成 | 僅建立 API key / signature / rate limit / route metadata stub，withdraw 預設不開 |
 
 ### Phase 11：Futures、Liquidation、Margin Java skeleton
 
@@ -324,6 +324,7 @@ next_action: 可進入 Phase 10，等待使用者指示
 
 | Phase | 審查人 | 結果 | 時間 | 備註 |
 |---:|---|---|---|---|
+| 10 | Codex | 通過 | 2026-07-06 | Phase 10 Wallet、Market Data、Spot、Open API Java stub 已由使用者人工審核通過；本次僅完成 Java skeleton / interface / DTO / stub，未進入 Phase 11 |
 | 8 | Codex | 通過 | 2026-07-05 | Phase 8 後台前端頁面完成；admin console / mock data / confirm dialogs 已審查通過，等待下一階段後端骨架與帳本介面 |
 | 9 | Codex | 通過 | 2026-07-06 | Phase 9 後端骨架、帳戶與帳本 interface 已由使用者人工審核通過；Phase 9 保持骨架 / interface / stub 邊界，不含 production ledger 或真實資產邏輯 |
 | 7 | Codex | 通過 | 2026-07-05 | Phase 7 訂單、倉位、API Key、通知前端頁面已通過人工審查 |
@@ -352,6 +353,113 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 ## 6. 最後一次 AI 回報
 
 ```text
+[2026-07-06 Phase 10 cleanup]
+修改摘要：
+- 已刪除 `server/target/` 與 `server/.mvn/maven/` 本地 Maven build/cache 產物。
+- 已新增 `server/.gitignore`，忽略 `target/`、`.mvn/maven/`、`.mvn/wrapper/dists/`。
+- 未修改 Phase 10 業務 stub，未進入 Phase 11。
+測試結果：
+- `test ! -d server/target && echo "server/target cleaned"` 通過。
+- `test ! -d server/.mvn/maven && echo "server/.mvn/maven cleaned"` 通過。
+- `test -f server/pom.xml && echo "server/pom.xml exists"` 通過。
+- `test -f server/mvnw && echo "server/mvnw exists"` 通過。
+- `test -f server/mvnw.cmd && echo "server/mvnw.cmd exists"` 通過。
+- `test -f server/.mvn/wrapper/maven-wrapper.properties && echo "maven-wrapper.properties exists"` 通過。
+- `test -f server/.mvn/wrapper/maven-wrapper.jar && echo "maven-wrapper.jar exists"` 通過。
+- `find server -maxdepth 5 \( -name 'build.gradle' -o -name 'settings.gradle' -o -name 'gradlew' -o -name 'gradlew.bat' -o -name 'gradle-wrapper.properties' -o -name 'gradle-wrapper.jar' -o -path '*/gradle/wrapper/*' \) -print` 無輸出。
+TODO：
+- 僅清理 build/cache 產物，Phase 10 業務 TODO 維持不變，等待使用者人工審查。
+風險：
+- cleanup 不影響 Phase 10 stub 邊界與 review 狀態；當前仍不可進入 Phase 11。
+
+[2026-07-06 Phase 10]
+修改摘要：
+- 已新增 `wallet/` package，建立 ChainType、WalletAsset、WalletAddress、WalletChainConfig、DepositRecord、WithdrawRecord、WithdrawAddress、WalletCallbackLog 與 wallet / deposit / withdraw service stub。
+- 已新增 `market/` package，建立 TradingSymbol、depth / trade / ticker / kline 模型、MarketDataService stub、ExternalPriceQuote、PriceIndexService 與 MarkPriceService stub。
+- 已新增 `spot/` package，建立現貨訂單 request / view / trade 模型、SpotOrderService、MatchingEngineClient 與 validation-only DefaultSpotOrderService。
+- 已新增 `openapi/` package，建立 API key / permission / status / create result / signature request DTO、signature / rate limit / IP whitelist interface、fail-closed stub 與 route metadata registry。
+- 所有高風險 wallet / deposit / withdraw / market / price index / mark price / spot / openapi 核心方法均保留 `TODO: requires high-reasoning review before production use`，且未進入 Phase 11。
+新增檔案：
+- `server/src/main/java/com/lumix/wallet/ChainType.java`
+- `server/src/main/java/com/lumix/wallet/WalletAddressStatus.java`
+- `server/src/main/java/com/lumix/wallet/DepositStatus.java`
+- `server/src/main/java/com/lumix/wallet/WithdrawStatus.java`
+- `server/src/main/java/com/lumix/wallet/WalletAsset.java`
+- `server/src/main/java/com/lumix/wallet/WalletAddress.java`
+- `server/src/main/java/com/lumix/wallet/WalletChainConfig.java`
+- `server/src/main/java/com/lumix/wallet/WalletService.java`
+- `server/src/main/java/com/lumix/wallet/WalletGateway.java`
+- `server/src/main/java/com/lumix/wallet/DepositRecord.java`
+- `server/src/main/java/com/lumix/wallet/WithdrawRecord.java`
+- `server/src/main/java/com/lumix/wallet/WithdrawAddress.java`
+- `server/src/main/java/com/lumix/wallet/WalletCallbackLog.java`
+- `server/src/main/java/com/lumix/wallet/DepositService.java`
+- `server/src/main/java/com/lumix/wallet/WithdrawService.java`
+- `server/src/main/java/com/lumix/wallet/DefaultDepositService.java`
+- `server/src/main/java/com/lumix/wallet/DefaultWithdrawService.java`
+- `server/src/main/java/com/lumix/market/SymbolType.java`
+- `server/src/main/java/com/lumix/market/TradingSymbol.java`
+- `server/src/main/java/com/lumix/market/OrderBookLevel.java`
+- `server/src/main/java/com/lumix/market/OrderBookSnapshot.java`
+- `server/src/main/java/com/lumix/market/MarketTradeView.java`
+- `server/src/main/java/com/lumix/market/Ticker24hView.java`
+- `server/src/main/java/com/lumix/market/KlineInterval.java`
+- `server/src/main/java/com/lumix/market/KlineView.java`
+- `server/src/main/java/com/lumix/market/MarketDataService.java`
+- `server/src/main/java/com/lumix/market/DefaultMarketDataService.java`
+- `server/src/main/java/com/lumix/market/ExternalPriceSource.java`
+- `server/src/main/java/com/lumix/market/ExternalPriceQuote.java`
+- `server/src/main/java/com/lumix/market/PriceIndexView.java`
+- `server/src/main/java/com/lumix/market/MarkPriceView.java`
+- `server/src/main/java/com/lumix/market/PriceIndexService.java`
+- `server/src/main/java/com/lumix/market/MarkPriceService.java`
+- `server/src/main/java/com/lumix/market/DefaultPriceIndexService.java`
+- `server/src/main/java/com/lumix/market/DefaultMarkPriceService.java`
+- `server/src/main/java/com/lumix/spot/SpotOrderSide.java`
+- `server/src/main/java/com/lumix/spot/SpotOrderType.java`
+- `server/src/main/java/com/lumix/spot/SpotOrderStatus.java`
+- `server/src/main/java/com/lumix/spot/TimeInForce.java`
+- `server/src/main/java/com/lumix/spot/SpotOrderRequest.java`
+- `server/src/main/java/com/lumix/spot/SpotOrderView.java`
+- `server/src/main/java/com/lumix/spot/SpotTradeView.java`
+- `server/src/main/java/com/lumix/spot/SpotOrderService.java`
+- `server/src/main/java/com/lumix/spot/MatchingEngineClient.java`
+- `server/src/main/java/com/lumix/spot/DefaultSpotOrderService.java`
+- `server/src/main/java/com/lumix/openapi/ApiKeyPermission.java`
+- `server/src/main/java/com/lumix/openapi/ApiKeyStatus.java`
+- `server/src/main/java/com/lumix/openapi/ApiRateLimitTier.java`
+- `server/src/main/java/com/lumix/openapi/ApiKeyView.java`
+- `server/src/main/java/com/lumix/openapi/ApiKeyCreateRequest.java`
+- `server/src/main/java/com/lumix/openapi/ApiKeyCreateResult.java`
+- `server/src/main/java/com/lumix/openapi/ApiSignatureRequest.java`
+- `server/src/main/java/com/lumix/openapi/ApiSignatureVerifier.java`
+- `server/src/main/java/com/lumix/openapi/ApiRateLimitService.java`
+- `server/src/main/java/com/lumix/openapi/ApiIpWhitelistService.java`
+- `server/src/main/java/com/lumix/openapi/OpenApiRoute.java`
+- `server/src/main/java/com/lumix/openapi/OpenApiRouteRegistry.java`
+- `server/src/main/java/com/lumix/openapi/DefaultApiSignatureVerifier.java`
+- `server/src/main/java/com/lumix/openapi/DefaultApiRateLimitService.java`
+測試結果：
+- `find server -maxdepth 5 \( -name 'build.gradle' -o -name 'settings.gradle' -o -name 'gradlew' -o -name 'gradlew.bat' -o -name 'gradle-wrapper.properties' -o -name 'gradle-wrapper.jar' -o -path '*/gradle/wrapper/*' \) -print` 無輸出。
+- `test -f server/pom.xml && echo "server/pom.xml exists"`、`test -f server/mvnw && echo "server/mvnw exists"`、`test -f server/mvnw.cmd && echo "server/mvnw.cmd exists"`、`test -f server/.mvn/wrapper/maven-wrapper.properties && echo "maven-wrapper.properties exists"` 全部通過。
+- `grep -R "private key\|mnemonic\|seed phrase" server/src/main/java || true` 無輸出。
+- `grep -R "@RestController\|@Controller\|JpaRepository\|CrudRepository\|RedisTemplate\|KafkaTemplate" server/src/main/java || true` 無輸出。
+- `grep -R "increaseBalance\|decreaseBalance\|lockBalance\|unlockBalance" server/src/main/java || true` 無輸出。
+- `grep -R "HashMap\|ConcurrentHashMap\|Map<" server/src/main/java || true` 無輸出。
+- `grep -R "TODO: requires high-reasoning review before production use" server/src/main/java` 已確認 wallet / market / spot / openapi 與既有 ledger / account 高風險點皆有 TODO。
+- `cd server && ./mvnw test` 通過。
+- `cd server && ./mvnw package` 通過。
+TODO：
+- WalletService / WalletGateway 仍僅是地址與鏈配置契約，未接地址供應、掃鏈、廣播或任何外部服務。
+- DefaultDepositService / DefaultWithdrawService 僅完成 validation 與 idempotency / ledger placeholder，未做真實入帳、凍結、解凍、扣凍結或鏈上狀態同步。
+- DefaultMarketDataService、DefaultPriceIndexService、DefaultMarkPriceService 只回傳空集合或零值 placeholder，未接任何外部行情源或真實公式。
+- DefaultSpotOrderService 只做 validation 並 fail-closed 回傳 stub 狀態，未接 C++ Core、未做撮合、未做 settlement。
+- DefaultApiSignatureVerifier / DefaultApiRateLimitService 採 fail-closed stub，未做 production 級 secret 驗證、distributed rate limit 或 IP 白名單實作。
+風險：
+- Phase 10 全部為 skeleton / interface / DTO / stub，任何錢包、行情、現貨交易、Open API 安全能力都不可視為可上線功能。
+- `OpenApiRouteRegistry` 僅列 route metadata，其中 futures / margin 只保留 metadata，未建立任何 Phase 11 service skeleton。
+- Maven build 過程會產生 `server/target/` 與 wrapper cache，屬本地建置產物，不代表新增業務功能。
+
 [2026-07-05 Phase 9]
 修改摘要：
 - 已建立 server/ Gradle + Spring Boot 3 後端骨架、README、測試骨架與 docs 規則文件。
