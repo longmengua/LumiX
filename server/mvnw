@@ -1,0 +1,28 @@
+#!/usr/bin/env sh
+
+set -eu
+
+MVNW_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+MAVEN_WRAPPER_JAR="$MVNW_DIR/.mvn/wrapper/maven-wrapper.jar"
+MAVEN_USER_HOME="${MAVEN_USER_HOME:-$MVNW_DIR/.mvn/maven}"
+JAVA_CMD="${JAVA_HOME:-}"
+
+if [ -n "$JAVA_CMD" ]; then
+    JAVA_CMD="$JAVA_CMD/bin/java"
+else
+    JAVA_CMD=java
+fi
+
+if [ ! -f "$MAVEN_WRAPPER_JAR" ]; then
+    echo "Missing Maven wrapper jar: $MAVEN_WRAPPER_JAR" >&2
+    exit 1
+fi
+
+mkdir -p "$MAVEN_USER_HOME"
+export MAVEN_USER_HOME
+
+exec "$JAVA_CMD" \
+    -Dmaven.multiModuleProjectDirectory="$MVNW_DIR" \
+    -Dmaven.user.home="$MAVEN_USER_HOME" \
+    -classpath "$MAVEN_WRAPPER_JAR" \
+    org.apache.maven.wrapper.MavenWrapperMain "$@"

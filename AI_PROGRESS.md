@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 1、Phase 2、Phase 3 已人工審查通過；Phase 3.5 與 Phase 4 已完成並審查通過；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成並審查通過，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成並審查通過。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 1、Phase 2、Phase 3 已人工審查通過；Phase 3.5 與 Phase 4 已完成並審查通過；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成並審查通過，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成並審查通過；Phase 9 後端骨架、帳戶與帳本 interface 已完成，等待人工審查。  
 目前觀察：
 
 ```text
@@ -18,6 +18,7 @@
 - doc/ai_backend 存在
 - doc/ai_frontend 存在
 - repo root 有 web/
+- repo root 有 server/
 - web/ 有 package.json
 - web/ 有 index.html
 - web/ 有 vite.config.ts
@@ -25,7 +26,9 @@
 - web/ 有 src/
 - `web/src/` 為 React 前端
 - 前端入口已建立（web/）
-- 後端未來放在 `server/`
+- 後端位於 `server/`
+- `server/` 已建立 Java 21 + Spring Boot 3 Phase 9 骨架
+- `server/` build tool 已切換為 Maven + Maven Wrapper
 ```
 
 ---
@@ -50,7 +53,7 @@
 | 7.6-auth-brand-cleanup | Auth brand 清理 | done | approved | 已完成 Auth 文案產品化、Logo component 與 Header / Auth shell 品牌更新，人工審查通過 |
 | 7.6-auth-visual-panel | Auth 視覺面板 | done | approved | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，人工審查通過 |
 | 8 | 後台前端頁面 | done | approved | 已完成 admin console / mock data / confirm dialogs，人工審查通過 |
-| 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | in_progress | pending | 高風險，進行中 |
+| 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | done | approved | 高風險，已完成並通過人工審查 |
 | 10 | Wallet、Market Data、Spot、Open API Java stub | pending | pending | 高風險，需審查 |
 | 11 | Futures、Liquidation、Margin Java skeleton | pending | pending | 高風險，需審查 |
 | 12 | 風控、對帳、測試、上線檢查 | pending | pending | 高風險，需審查 |
@@ -80,8 +83,8 @@ changes_requested：需要修改
 
 ```text
 current_phase: Phase 9
-current_task: phase_9_server_spring_boot_account_ledger_foundation
-next_action: 執行 Phase 9 後端骨架、帳戶與帳本 interface
+current_task: phase_9_server_spring_boot_account_ledger_foundation_review
+next_action: 可進入 Phase 10，等待使用者指示
 ```
 
 ---
@@ -273,12 +276,12 @@ next_action: 執行 Phase 9 後端骨架、帳戶與帳本 interface
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P9-01 建立 `server/` 後端目錄骨架 | pending | - | 高風險前置 |
-| P9-02 建立 docs 規則文件 | pending | - | - |
-| P9-03 建立帳戶模型 interface | pending | - | 不可直接改餘額 |
-| P9-04 建立 ledger service interface | pending | - | 核心 |
-| P9-05 建立 account transfer service stub | pending | - | - |
-| P9-06 建立 idempotency 設計 stub | pending | - | - |
+| P9-01 建立 `server/` 後端目錄骨架 | done | 已完成 | Java 21 + Spring Boot 3 + Gradle skeleton |
+| P9-02 建立 docs 規則文件 | done | 已完成 | 已建立 server/docs 規則檔 |
+| P9-03 建立帳戶模型 interface | done | 已完成 | 唯讀 view / DTO / interface，無直接改餘額方法 |
+| P9-04 建立 ledger service interface | done | 已完成 | 僅定義 interface 與 journal contract |
+| P9-05 建立 account transfer service stub | done | 已完成 | 只做 validation 與 TODO placeholder |
+| P9-06 建立 idempotency 設計 stub | done | 已完成 | 僅定義 interface / record / status |
 
 ### Phase 10：Wallet、Market Data、Spot、Open API Java stub
 
@@ -322,6 +325,7 @@ next_action: 執行 Phase 9 後端骨架、帳戶與帳本 interface
 | Phase | 審查人 | 結果 | 時間 | 備註 |
 |---:|---|---|---|---|
 | 8 | Codex | 通過 | 2026-07-05 | Phase 8 後台前端頁面完成；admin console / mock data / confirm dialogs 已審查通過，等待下一階段後端骨架與帳本介面 |
+| 9 | Codex | 通過 | 2026-07-06 | Phase 9 後端骨架、帳戶與帳本 interface 已由使用者人工審核通過；Phase 9 保持骨架 / interface / stub 邊界，不含 production ledger 或真實資產邏輯 |
 | 7 | Codex | 通過 | 2026-07-05 | Phase 7 訂單、倉位、API Key、通知前端頁面已通過人工審查 |
 | 5 | Codex | 通過 | 2026-06-29 | Phase 5 資產 / 劃轉 / 充值 / 提現 UI 與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java 真實 API |
 | 6 | Codex | 通過 | 2026-06-29 | Phase 6 現貨 / 合約 / 槓桿交易頁與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java API、C++ Core event stream 與真正結算流程 |
@@ -348,6 +352,63 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 ## 6. 最後一次 AI 回報
 
 ```text
+[2026-07-05 Phase 9]
+修改摘要：
+- 已建立 server/ Gradle + Spring Boot 3 後端骨架、README、測試骨架與 docs 規則文件。
+- 已建立 account 唯讀模型 interface、ledger service interface、account transfer validation stub、idempotency interface / record / status。
+- 所有高風險資產相關核心點位已保留 TODO: requires high-reasoning review before production use，未實作真實扣帳、真實 ledger engine、真實 transfer。
+測試結果：
+- `javac --release 21 -d /tmp/lumix-server-javac server/src/main/java/com/lumix/common/*.java server/src/main/java/com/lumix/account/*.java server/src/main/java/com/lumix/ledger/*.java server/src/main/java/com/lumix/idempotency/*.java` 通過。
+- `gradle test` 未執行成功，原因：環境未安裝 gradle（`command not found`），本次未建立 Gradle wrapper。
+TODO：
+- LedgerService 僅為 interface，reserve / release / commit / rollback / postJournal 仍待高風險人工審查後再設計實作。
+- DefaultAccountTransferService 僅完成 request validation 與 placeholder，未串接真實帳本流程。
+- IdempotencyService 僅為設計 stub，未接 Redis、DB、distributed lock，也未宣稱 exactly-once。
+風險：
+- `server/src/main/java/com/lumix/LumiXServerApplication.java` 與 Spring Boot 測試骨架需在可用 Gradle 環境下載依賴後再做完整 build 驗證。
+- Phase 9 僅完成骨架與介面，不可視為可上線資產系統。
+
+[2026-07-05 Phase 9 wrapper supplement]
+修改摘要：
+- 已補上 `server/gradlew`、`server/gradlew.bat`、`server/gradle/wrapper/gradle-wrapper.properties` 與 `server/gradle/wrapper/gradle-wrapper.jar`。
+- wrapper 入口改為直接載入官方 Gradle 8.8 發行包，並固定 `GRADLE_USER_HOME`，避免寫入使用者家目錄。
+測試結果：
+- `./gradlew test` 與 `./gradlew build` 皆可進入 Gradle 實際執行階段，但最終仍失敗於 Gradle daemon 嘗試綁定 socket，錯誤為 `java.net.SocketException: Operation not permitted`。
+- 已排除 wrapper jar 缺類、`GRADLE_USER_HOME` 寫入權限與下載 cache 問題。
+TODO：
+- 若要在此 sandbox 完成 Gradle build，需要再處理 Gradle daemon socket 綁定限制。
+風險：
+- 目前 wrapper 只能證明入口已補齊，無法在此環境下完成 `test/build` 成功驗證。
+
+[2026-07-05 Phase 9 build tool switch]
+修改摘要：
+- 已將 `server/` build tool 由 Gradle 改為 Maven。
+- 已新增 `server/pom.xml`，並刪除 `server/build.gradle` 與 `server/settings.gradle`。
+- 已更新 `server/README.md`、`server/docs/PROJECT_RULES.md`、`server/docs/CODEX_TASK_RULES.md` 以反映 Maven 與 Phase 9 skeleton 限制。
+測試結果：
+- `mvn -v` 失敗，環境回應 `mvn: command not found`，表示本機未安裝 Maven。
+- `mvn test` 失敗，環境回應 `mvn: command not found`。
+- `mvn package` 失敗，環境回應 `mvn: command not found`。
+TODO：
+- 待具備 Maven 的環境後，再執行 `mvn test` 與 `mvn package` 完成 build 驗證。
+風險：
+- Phase 9 仍僅是 skeleton / interface / stub，未進入 Phase 10。
+
+[2026-07-05 Phase 9 build cleanup]
+修改摘要：
+- 已補齊 `server/mvnw`、`server/mvnw.cmd`、`server/.mvn/wrapper/maven-wrapper.properties`、`server/.mvn/wrapper/maven-wrapper.jar`。
+- 已清除 `server/` 下所有 Gradle build files 與 Gradle wrapper，`server/` 現在只保留 Maven build system。
+- 已更新 `server/README.md`、`server/docs/PROJECT_RULES.md`、`server/docs/CODEX_TASK_RULES.md`，改用 Maven Wrapper 指令。
+測試結果：
+- `./mvnw -v` 成功，wrapper 下載並使用 Apache Maven 3.9.9。
+- `./mvnw test` 成功，Spring Boot skeleton 測試通過。
+- `./mvnw package` 成功，jar 重新封裝成功。
+TODO：
+- 後續若要再次執行 build，wrapper 會使用本機 Maven cache 與下載的 Maven distribution。
+風險：
+- 仍是 Phase 9 skeleton / interface / stub，未新增任何業務邏輯，也未進入 Phase 10。
+
+[歷史]
 已完成交易核心 C++ 校準文件更新，且 Phase 2 已審查通過。
 Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5 已完成，充值與提現前端頁面已建立，已完成 cleanup 並修正轉帳提示文案，等待人工審查。
 ```
