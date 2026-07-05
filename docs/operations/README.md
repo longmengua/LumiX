@@ -1,8 +1,8 @@
-# Operations Chapters
+# 營運章節
 
-This section covers how LumiX is run safely in production.
+這一章描述交易所要怎麼安全地被營運、監控與上線。
 
-Read these chapters in order:
+## 內容順序
 
 1. `deployment.md`
 2. `observability.md`
@@ -10,4 +10,4 @@ Read these chapters in order:
 4. `security-compliance.md`
 5. `launch-readiness.md`
 
-These chapters connect the operating story to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../PHASE_REVIEW_WORKFLOW.md`.
+這些章節對應的是實際營運與維運工作。

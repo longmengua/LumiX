@@ -1,11 +1,11 @@
-# AI Chapters
+# AI 章節
 
-This section is the instruction layer for Codex work on LumiX.
+這一章是給 Codex 看文件順序與操作方式的導覽。
 
-Read these chapters in order:
+## 內容順序
 
 1. `working-rules.md`
 2. `phase-command-workflow.md`
 3. `codex-prompt-index.md`
 
-These chapters sit alongside `../PHASE_REVIEW_WORKFLOW.md` and `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+這一區是 AI 工作流程的入口。

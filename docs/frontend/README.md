@@ -1,12 +1,12 @@
-# Frontend Chapters
+# 前端章節
 
-This section is the user-facing side of LumiX.
+這一章描述使用者在網站上會看到什麼、怎麼操作。
 
-Read these chapters in order:
+## 內容順序
 
 1. `frontend-architecture.md`
 2. `trading-ui.md`
 3. `wallet-ui.md`
 4. `admin-ui.md`
 
-These chapters explain how the web experience relates to the full system in `../ARCHITECTURE_TEXT_MAP.md`.
+這些章節對應的是前端畫面與使用體驗。

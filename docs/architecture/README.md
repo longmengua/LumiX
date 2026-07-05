@@ -1,8 +1,8 @@
-# Architecture Chapters
+# 架構章節
 
-This section explains how LumiX fits together as a system.
+這一章說明 LumiX 整體怎麼組成。
 
-Read these chapters in order:
+## 內容順序
 
 1. `system-architecture.md`
 2. `trading-core-boundaries.md`
@@ -10,4 +10,4 @@ Read these chapters in order:
 4. `order-settlement-flow.md`
 5. `data-and-event-flow.md`
 
-These chapters support the main picture in `../ARCHITECTURE_TEXT_MAP.md`.
+這些章節搭配 `../ARCHITECTURE_TEXT_MAP.md` 觀看會更完整。

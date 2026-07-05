@@ -1,8 +1,8 @@
-# Exchange Core Chapters
+# 交易核心章節
 
-This section describes the domains that make an exchange real.
+這一章是交易所最核心的內容，描述資金、撮合與風控如何串起來。
 
-Read these chapters in order:
+## 內容順序
 
 1. `ledger.md`
 2. `reservation-freeze.md`
@@ -13,4 +13,4 @@ Read these chapters in order:
 7. `risk-controls.md`
 8. `reconciliation.md`
 
-These chapters connect the core trading story to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../ARCHITECTURE_TEXT_MAP.md`.
+這一區最接近交易所真正運作的核心。

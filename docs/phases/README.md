@@ -1,8 +1,8 @@
-# Phase Chapters
+# Phase 章節
 
-This section is the implementation book for Phase 12 through Phase 36.
+這一章像是施工進度的章回，從 Phase 12 一路排到 Phase 36。
 
-Read the phase chapters in order:
+## 內容順序
 
 1. `PHASE_12_DATABASE_SCHEMA.md`
 2. `PHASE_13_DOUBLE_ENTRY_LEDGER.md`
@@ -30,4 +30,4 @@ Read the phase chapters in order:
 24. `PHASE_35_PRODUCTION_INFRA_CICD_RELEASE.md`
 25. `PHASE_36_PRE_LAUNCH_CERTIFICATION.md`
 
-This section works with `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../PHASE_REVIEW_WORKFLOW.md`.
+這一區是 Phase 施工章節的總目錄。

@@ -1,28 +1,22 @@
-# LumiX Documentation Map
+# LumiX 文件導覽
 
-This folder is the book cover and table of contents for LumiX.
+這一頁像是整本書的目錄，幫你快速找到各章內容。
 
-If you want the shortest path into the project, start here:
+## 章節一覽
 
-1. `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-2. `docs/ARCHITECTURE_TEXT_MAP.md`
-3. `docs/PHASE_REVIEW_WORKFLOW.md`
+- `architecture/`：整體系統架構、模組關係與資料流。
+- `product/`：產品定位、使用者流程與營運流程。
+- `frontend/`：前端頁面、介面結構與使用者操作畫面。
+- `backend/`：Java 後端的責任分工與邊界。
+- `exchange-core/`：交易所核心能力，包含帳本、撮合、結算、錢包與風控。
+- `operations/`：部署、監控、事件處理與上線準備。
+- `phases/`：Phase 12 到 Phase 36 的逐章施工內容。
+- `ai/`：Codex 使用說明與提示詞索引。
+- `archive/`：歷史資料與舊版參考內容。
 
-## What This Book Contains
+## 建議閱讀順序
 
-- `architecture/` describes the system design in plain language.
-- `product/` describes what the exchange is meant to do for users and operators.
-- `frontend/` describes the user-facing experience and page structure.
-- `backend/` describes the Java backend boundaries and responsibilities.
-- `exchange-core/` describes the trading-core domains such as ledger, matching, settlement, wallet, and risk.
-- `operations/` describes deployment, observability, incident response, and launch readiness.
-- `phases/` contains the detailed phase-by-phase chapters for Phase 12 through Phase 36.
-- `ai/` contains Codex workflow notes and prompt navigation.
-- `archive/` contains historical reference material that is no longer the active plan.
-
-## Reading Order
-
-1. Start with the master plan.
-2. Read the architecture text map to understand the whole exchange at a glance.
-3. Read the phase review workflow to understand how implementation moves forward.
-4. Read the relevant chapter folder for the area you care about.
+1. `ARCHITECTURE_TEXT_MAP.md`
+2. `OPERATING_EXCHANGE_MASTER_PLAN.md`
+3. `PHASE_REVIEW_WORKFLOW.md`
+4. 對應章節資料夾中的內容

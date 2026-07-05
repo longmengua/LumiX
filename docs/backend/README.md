@@ -1,12 +1,12 @@
-# Backend Chapters
+# 後端章節
 
-This section describes the Java backend as the business orchestration layer of LumiX.
+這一章描述 Java 後端在整個系統中的角色。
 
-Read these chapters in order:
+## 內容順序
 
 1. `backend-architecture.md`
 2. `api-boundaries.md`
 3. `service-boundaries.md`
 4. `data-model-boundaries.md`
 
-These chapters explain how the backend fits into the full system map in `../ARCHITECTURE_TEXT_MAP.md`.
+這些章節用來理解後端如何支援整體系統。

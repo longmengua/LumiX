@@ -1,10 +1,10 @@
-# Archive Chapters
+# 歷史章節
 
-This section is the shelf for historical material that is still useful to read, but no longer drives current planning.
+這一章是舊資料的書架，保留給需要回頭翻閱的人。
 
-Read this only after the active chapters:
+## 內容順序
 
 1. `legacy/README.md`
-2. Historical MVP planning and old prompt material under `legacy/`
+2. `legacy/` 下的舊版 MVP 與舊提示詞資料
 
-Current operating exchange planning lives in `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../PHASE_REVIEW_WORKFLOW.md`.
+這一區是歷史參考，不是新的主線。
