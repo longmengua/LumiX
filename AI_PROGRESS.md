@@ -9,7 +9,7 @@
 ## 0. Repo 狀態
 
 專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成；目前進入 OL 上線架構校準文件更新。  
+目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立，等待人工審查；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成，等待人工審查；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成，等待人工審查；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成，等待人工審查；Phase 7.6-auth-brand-cleanup 已完成，等待人工審查；Phase 7.6-auth-visual-panel 已完成，等待人工審查；Phase 7.6-flex-only-layout-refactor 已完成，等待人工審查。  
 目前觀察：
 
 ```text
@@ -40,9 +40,15 @@
 | 3 | 登入、首頁、市場列表 | done | approved | 已審查通過 |
 | 3.5 | Monorepo 目錄結構校準 | done | approved | 已審查通過 |
 | 4 | 個人中心 | done | approved | 已完成，人工審查通過 |
-| 5 | 資產、劃轉、充值、提現畫面 | pending | pending | 需人工審查 |
-| 6 | 現貨、合約、槓桿交易頁 | pending | pending | 需人工審查 |
-| 7 | 訂單、倉位、API Key、通知 | pending | pending | 需人工審查 |
+| 5 | 資產、劃轉、充值、提現畫面 | done | approved | 已審查通過 |
+| 6 | 現貨、合約、槓桿交易頁 | done | approved | 已審查通過 |
+| 7 | 訂單、倉位、API Key、通知 | done | pending | 需人工審查 |
+| 7.5 | i18n 多語系基礎建設 | done | pending | 已完成 web/ 前端基礎 i18n，等待人工審查 |
+| 7.6-hotfix | 首頁與全域 layout 實機修復 | done | pending | 已針對首頁 hero、content 寬度與桌機顯示做實機修復，等待人工審查 |
+| 7.6-hotfix-v2 | 主內容寬度與 PageHeader collapse 修復 | done | pending | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout，等待人工審查 |
+| 7.6-auth-i18n-cleanup | Auth i18n 清理 | done | pending | 已完成 login / register / forgot password / 2FA / reset password auth 文案 i18n 與開發痕跡清除，等待人工審查 |
+| 7.6-auth-brand-cleanup | Auth brand 清理 | done | pending | 已完成 Auth 文案產品化、Logo component 與 Header / Auth shell 品牌更新，等待人工審查 |
+| 7.6-auth-visual-panel | Auth 視覺面板 | done | pending | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，等待人工審查 |
 | 8 | 後台前端頁面 | pending | pending | 需人工審查 |
 | 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | pending | pending | 高風險，需審查 |
 | 10 | Wallet、Market Data、Spot、Open API Java stub | pending | pending | 高風險，需審查 |
@@ -73,9 +79,9 @@ changes_requested：需要修改
 ## 2. 當前任務
 
 ```text
-current_phase: OL
-current_task: OL-ARCH-01
-next_action: 暫停進入下一個功能 Phase，先完成 OL 上線架構校準文件更新與審查
+current_phase: Phase 7.6-flex-only-layout-refactor
+current_task: phase_7_6_flex_only_layout_refactor
+next_action: 等待使用者審查 Phase 7.6-flex-only-layout-refactor CSS Grid 最終清零，通過後再考慮後續 Phase 8
 ```
 
 ---
@@ -150,41 +156,100 @@ next_action: 暫停進入下一個功能 Phase，先完成 OL 上線架構校準
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P5-01 資產總覽 | pending | - | - |
-| P5-02 現貨帳戶頁 | pending | - | - |
-| P5-03 合約帳戶頁 | pending | - | - |
-| P5-04 槓桿帳戶頁 | pending | - | - |
-| P5-05 帳戶劃轉頁 | pending | - | - |
-| P5-06 充值頁 | pending | - | - |
-| P5-07 提現頁 | pending | - | - |
-| P5-08 充值紀錄 | pending | - | - |
-| P5-09 提現紀錄 | pending | - | - |
-| P5-10 提現地址頁 | pending | - | - |
+| P5-01 資產總覽 | done | 已完成 | Phase 5 第一個頁面群 |
+| P5-02 現貨帳戶頁 | done | 已完成 | 已拆出 route-level 共用元件 |
+| P5-03 合約帳戶頁 | done | 已完成 | 已拆出 route-level 共用元件 |
+| P5-04 槓桿帳戶頁 | done | 已完成 | 已拆出 route-level 共用元件 |
+| P5-05 帳戶劃轉頁 | done | 已完成 | 已拆出 route-level 共用元件 |
+| P5-06 充值頁 | done | 已完成 | 開發期 adapter，含地址、QR placeholder、memo / tag、recent deposits |
+| P5-07 提現頁 | done | 已完成 | 含 2FA、白名單、風控審核、手續費與到帳預估 |
+| P5-08 充值紀錄 | done | 已完成 | 含 loading、empty、error |
+| P5-09 提現紀錄 | done | 已完成 | 含 loading、empty、error |
+| P5-10 提現地址頁 | done | 已完成 | 含白名單、風險標記、停用 / 刪除與安全驗證 modal |
 
 ### Phase 6
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P6-01 現貨交易頁 | pending | - | - |
-| P6-02 合約交易頁 | pending | - | - |
-| P6-03 槓桿交易頁 | pending | - | - |
-| P6-04 order book integration | pending | - | - |
-| P6-05 trade feed integration | pending | - | - |
-| P6-06 open orders integration | pending | - | - |
-| P6-07 positions integration | pending | - | - |
-| P6-08 margin risk ratio integration | pending | - | - |
+| P6-01 現貨交易頁 | done | 已完成 | Development adapter only，含 order book / tape / order form / open orders |
+| P6-02 合約交易頁 | done | 已完成 | Development adapter only，含 positions / funding preview |
+| P6-03 槓桿交易頁 | done | 已完成 | Development adapter only，含 borrow / risk snapshot |
+| P6-04 order book integration | done | 已完成 | mock 前端 order book 區塊 |
+| P6-05 trade feed integration | done | 已完成 | mock 前端 trade feed 區塊 |
+| P6-06 open orders integration | done | 已完成 | mock 前端 open orders 區塊 |
+| P6-07 positions integration | done | 已完成 | mock 前端 positions 區塊 |
+| P6-08 margin risk ratio integration | done | 已完成 | mock 前端 risk ratio 區塊 |
 
 ### Phase 7
 
 | 任務 | status | 結果 | 備註 |
 |---|---|---|---|
-| P7-01 訂單中心 | pending | - | - |
-| P7-02 倉位中心 | pending | - | - |
-| P7-03 強平紀錄 | pending | - | - |
-| P7-04 資金費率紀錄 | pending | - | - |
-| P7-05 API Key 管理完整頁 | pending | - | - |
-| P7-06 安全紀錄 | pending | - | - |
-| P7-07 通知中心 | pending | - | - |
+| P7-01 訂單中心 | done | 已完成 | Development adapter only，含 open / history / fills |
+| P7-02 倉位中心 | done | 已完成 | Development adapter only，含 open / liquidation / funding |
+| P7-03 強平紀錄 | done | 已完成 | 開發期 liquidation adapter snapshot |
+| P7-04 資金費率紀錄 | done | 已完成 | 開發期 funding adapter snapshot |
+| P7-05 API Key 管理完整頁 | done | 已完成 | development adapter only，secret 只在建立時顯示一次 |
+| P7-06 安全紀錄 | done | 已完成 | 通知 / 安全事件以本地 snapshot 呈現 |
+| P7-07 通知中心 | done | 已完成 | 開發期通知中心，含 unread / filter / read toggle |
+
+### Phase 7.5
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.5-01 建立 `web/src/i18n` 架構 | done | 已完成 | 含 `I18nProvider`、`useI18n`、`t(key)`、`locale / setLocale`、localStorage 持久化 |
+| P7.5-02 Header 語言切換 UI | done | 已完成 | 可在 `zh-TW` 與 `en-US` 間切換 |
+| P7.5-03 sidebar / navigation 接入 i18n | done | 已完成 | 含 account / admin / assets / orders / positions / trading |
+| P7.5-04 page header 與 common state 文案接入 | done | 已完成 | 含 loading / empty / error 常見文字 |
+| P7.5-05 更新 AI_PROGRESS | done | 已完成 | Phase 7.5 完成紀錄，等待人工審查 |
+
+### Phase 7.6
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.6-01 全域 layout / header / sidebar 響應式修正 | done | 已完成 | 1440 / 1024 / 390 基準下避免重疊與橫向爆版 |
+| P7.6-02 table / grid / form / tabs 響應式修正 | done | 已完成 | 主要表格區支援窄螢幕水平捲動或堆疊 |
+| P7.6-03 trading / assets / account / wallet UI QA | done | 已完成 | 針對中英文字長差異調整 |
+| P7.6-04 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
+
+### Phase 7.6-hotfix
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.6H-01 首頁 hero / CTA / highlight cards 實機修復 | done | 已完成 | 解決 1440px 左右首頁壓窄與重疊問題 |
+| P7.6H-02 AppLayout / content 寬度與置中修復 | done | 已完成 | 主內容改為可讀寬度並置中 |
+| P7.6H-03 Header / PageHeader / Card 寬度保護 | done | 已完成 | 避免標題與 actions 被擠壓 |
+| P7.6H-04 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
+
+### Phase 7.6-hotfix-v2
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.6HV2-01 主內容寬度與 PageHeader collapse 修復 | done | 已完成 | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout |
+| P7.6HV2-02 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
+
+### Phase 7.6-auth-i18n-cleanup
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.6AIC-01 Auth shell 與頁面文案 i18n 化 | done | 已完成 | login / register / forgot password / 2FA / reset password 已接入 i18n |
+| P7.6AIC-02 開發痕跡文案清理 | done | 已完成 | 移除 / 替換對外可見的 Phase 3、demo-ready、Root React + TypeScript + Vite 等文案 |
+| P7.6AIC-03 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
+
+### Phase 7.6-auth-brand-cleanup
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.6ABC-01 Logo component 建立 | done | 已完成 | 新增可重用 `Logo` component，支援 full / mark 與 size |
+| P7.6ABC-02 Header / Auth shell 品牌更新 | done | 已完成 | Header 左上角與 Auth hero 改用 Logo component |
+| P7.6ABC-03 dev notice env gate | done | 已完成 | 開發提示預設不顯示，僅在 `VITE_SHOW_DEV_NOTICES=true` 時顯示且走 i18n |
+| P7.6ABC-04 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
+
+### Phase 7.6-flex-only-layout-refactor
+
+| 任務 | status | 結果 | 備註 |
+|---|---|---|---|
+| P7.6FLEX-01 CSS Grid 最終清零 | done | 已完成 | 已將剩餘 `display:grid` / `grid-template` / `grid-column` / `fr` 清除，等待人工審查 |
+| P7.6FLEX-02 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
 
 ### Phase 8
 
@@ -257,6 +322,8 @@ next_action: 暫停進入下一個功能 Phase，先完成 OL 上線架構校準
 | Phase | 審查人 | 結果 | 時間 | 備註 |
 |---:|---|---|---|---|
 | 4 | Codex | 通過 | 2026-06-26 | Phase 4 UI / mock 範圍完成；build 通過；typecheck 通過；仍屬開發期 mock / adapter，不代表 OL 真實後端完成；OL 前需接 `server/` Java 真實 API |
+| 5 | Codex | 通過 | 2026-06-29 | Phase 5 資產 / 劃轉 / 充值 / 提現 UI 與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java 真實 API |
+| 6 | Codex | 通過 | 2026-06-29 | Phase 6 現貨 / 合約 / 槓桿交易頁與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java API、C++ Core event stream 與真正結算流程 |
 
 ---
 
@@ -277,5 +344,5 @@ TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
 
 ```text
 已完成交易核心 C++ 校準文件更新，且 Phase 2 已審查通過。
-Phase 3、Phase 3.5 與 Phase 4 已完成；目前進入 OL 上線架構校準。
+Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5 已完成，充值與提現前端頁面已建立，已完成 cleanup 並修正轉帳提示文案，等待人工審查。
 ```

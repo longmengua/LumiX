@@ -1,5 +1,7 @@
 # LumiX
 
+> Name note: `LumiX` is the exchange project codename. It combines `Lumi`, which evokes light or luminosity, with `X`, which stands for exchange.
+
 ## 技術棧校準
 
 ```text
