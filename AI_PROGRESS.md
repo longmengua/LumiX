@@ -1,522 +1,70 @@
 # AI_PROGRESS.md
 
-> 用途：記錄 AI / Codex 目前開工進度。  
-> AI 每次執行任務後必須更新本文件。  
-> 使用者每個 Phase 結束後需人工審查，審查通過後才能進入下一個 Phase。
+## Authoritative Status
 
----
+- Phase 11 completed as production architecture reset documentation only.
+- Phase 12 through Phase 36 definition pack completed as documentation only.
+- Phase 12 through Phase 36 runtime implementation is still planned and not started.
+- The next implementation phase is Phase 12 - Production Database Schema & Migration.
+- `docs/CODEX_PHASE_PROMPTS.md` is the authoritative source for future Codex phase execution prompts.
+- Do not jump phases.
+- Do not count stub, interface, mock, placeholder, or TODO work as completed production functionality.
+- Do not claim production trading completed until the required readiness gates pass.
+- Do not claim production launch ready before Phase 36 passes with explicit human sign-off.
 
-## 0. Repo 狀態
+## Current Repo Reality
 
-專案名稱：LumiX  
-目前狀態：前端已建立 web/ React / TypeScript / Vite 專案骨架，後端技術棧校準為 Java 21 + Spring Boot 3，交易核心 C++ 校準文件已審查通過，Phase 1、Phase 2、Phase 3 已人工審查通過；Phase 3.5 與 Phase 4 已完成並審查通過；Phase 5、Phase 6 已完成並審查通過；Phase 7 已完成並審查通過，訂單 / 倉位 / API Key / 通知前端頁面與開發期 adapter 已建立；Phase 7.5 i18n 多語系基礎建設已完成，等待人工審查；Phase 7.6 layout / responsive UI QA 已完成並審查通過；Phase 7.6-hotfix 首頁與全域 layout 實機修復已完成並審查通過；Phase 7.6-hotfix-v2 主內容寬度與 PageHeader collapse 修復已完成，已再調整為流式 responsive layout，等待人工審查；Phase 7.6-auth-i18n-cleanup 已完成並審查通過；Phase 7.6-auth-brand-cleanup 已完成並審查通過；Phase 7.6-auth-visual-panel 已完成並審查通過；Phase 7.6-flex-only-layout-refactor 已完成並審查通過；Phase 8 後台前端頁面已完成並審查通過；Phase 9 後端骨架、帳戶與帳本 interface 已完成並審查通過；Phase 10 Wallet / Market Data / Spot / Open API Java stub 已完成，等待人工審查。  
-目前觀察：
+- `web/` contains frontend pages and development/mock adapters.
+- `server/` contains Spring Boot foundation plus Phase 9-10 interfaces, DTOs, and stubs.
+- No production ledger engine, freeze engine, matching core, settlement engine, real deposit system, real withdrawal system, or production market-data pipeline exists yet.
 
-```text
-- repo root 有 README.md
-- repo root 有 doc/
-- doc/ai_backend 存在
-- doc/ai_frontend 存在
-- repo root 有 web/
-- repo root 有 server/
-- web/ 有 package.json
-- web/ 有 index.html
-- web/ 有 vite.config.ts
-- web/ 有 tsconfig*.json
-- web/ 有 src/
-- `web/src/` 為 React 前端
-- 前端入口已建立（web/）
-- 後端位於 `server/`
-- `server/` 已建立 Java 21 + Spring Boot 3 Phase 9 骨架
-- `server/` build tool 已切換為 Maven + Maven Wrapper
-```
+## Historical Summary
 
----
+- Phase 1-8 completed frontend UI and mock adapters.
+- Phase 9 completed Java server foundation and asset-domain contracts.
+- Phase 10 completed wallet, market, spot, and Open API stubs only.
+- Phase 11 completed the production architecture reset.
 
-## 1. Phase 狀態總覽
+## Phase Registry
 
-| Phase | 名稱 | status | review_status | 備註 |
-|---:|---|---|---|---|
-| 0 | Repo 掃描與進度初始化 | done | not_required | 已完成 |
-| 1 | React + TypeScript 專案骨架 | done | approved | 已審查通過 |
-| 2 | Design System 與 App Shell | done | approved | 已審查通過 |
-| 3 | 登入、首頁、市場列表 | done | approved | 已審查通過 |
-| 3.5 | Monorepo 目錄結構校準 | done | approved | 已審查通過 |
-| 4 | 個人中心 | done | approved | 已完成，人工審查通過 |
-| 5 | 資產、劃轉、充值、提現畫面 | done | approved | 已審查通過 |
-| 6 | 現貨、合約、槓桿交易頁 | done | approved | 已審查通過 |
-| 7 | 訂單、倉位、API Key、通知 | done | approved | 已審查通過 |
-| 7.5 | i18n 多語系基礎建設 | done | pending | 已完成 web/ 前端基礎 i18n，等待人工審查 |
-| 7.6-hotfix | 首頁與全域 layout 實機修復 | done | approved | 已針對首頁 hero、content 寬度與桌機顯示做實機修復，人工審查通過 |
-| 7.6-hotfix-v2 | 主內容寬度與 PageHeader collapse 修復 | done | approved | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout，人工審查通過 |
-| 7.6-auth-i18n-cleanup | Auth i18n 清理 | done | approved | 已完成 login / register / forgot password / 2FA / reset password auth 文案 i18n 與開發痕跡清除，人工審查通過 |
-| 7.6-auth-brand-cleanup | Auth brand 清理 | done | approved | 已完成 Auth 文案產品化、Logo component 與 Header / Auth shell 品牌更新，人工審查通過 |
-| 7.6-auth-visual-panel | Auth 視覺面板 | done | approved | 已完成 Auth 左側品牌視覺面板、動畫與 i18n 補強，人工審查通過 |
-| 8 | 後台前端頁面 | done | approved | 已完成 admin console / mock data / confirm dialogs，人工審查通過 |
-| 9 | 建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface | done | approved | 高風險，已完成並通過人工審查 |
-| 10 | Wallet、Market Data、Spot、Open API Java stub | done | approved | 高風險，已完成並通過人工審查 |
-| 11 | Futures、Liquidation、Margin Java skeleton | pending | pending | 高風險，需審查 |
-| 12 | 風控、對帳、測試、上線檢查 | pending | pending | 高風險，需審查 |
+| Phase | Name | Status | Review | Note | Definition |
+| --- | --- | --- | --- | --- | --- |
+| 11 | Production Architecture Reset | completed_docs_only | human_review_required | architecture_reset_completed_not_runtime | docs/PHASE_11_CHECKLIST.md |
+| 12 | Production Database Schema & Migration | planned | not_started | not_production_completed | docs/phases/PHASE_12_DATABASE_SCHEMA.md |
+| 13 | Double-Entry Ledger Engine | planned | not_started | not_production_completed | docs/phases/PHASE_13_DOUBLE_ENTRY_LEDGER.md |
+| 14 | Balance Projection & Ledger Reconciliation | planned | not_started | not_production_completed | docs/phases/PHASE_14_BALANCE_RECONCILIATION.md |
+| 15 | Asset Reservation / Freeze Engine | planned | not_started | not_production_completed | docs/phases/PHASE_15_ASSET_RESERVATION.md |
+| 16 | Production Spot Order Service | planned | not_started | not_production_completed | docs/phases/PHASE_16_PRODUCTION_SPOT_ORDER.md |
+| 17 | C++ Matching Core | planned | not_started | not_production_completed | docs/phases/PHASE_17_CPP_MATCHING_CORE.md |
+| 18 | Java ↔ C++ Core Integration | planned | not_started | not_production_completed | docs/phases/PHASE_18_MATCHING_INTEGRATION.md |
+| 19 | Trade Settlement Engine | planned | not_started | not_production_completed | docs/phases/PHASE_19_TRADE_SETTLEMENT.md |
+| 20 | Production Market Data Pipeline | planned | not_started | not_production_completed | docs/phases/PHASE_20_MARKET_DATA_PIPELINE.md |
+| 21 | Production Deposit System | planned | not_started | not_production_completed | docs/phases/PHASE_21_DEPOSIT_SYSTEM.md |
+| 22 | Production Withdrawal System | planned | not_started | not_production_completed | docs/phases/PHASE_22_WITHDRAWAL_SYSTEM.md |
+| 23 | Hot / Cold Wallet Treasury | planned | not_started | not_production_completed | docs/phases/PHASE_23_HOT_COLD_WALLET_TREASURY.md |
+| 24 | Production Open API | planned | not_started | not_production_completed | docs/phases/PHASE_24_PRODUCTION_OPEN_API.md |
+| 25 | Admin Back Office | planned | not_started | not_production_completed | docs/phases/PHASE_25_ADMIN_BACK_OFFICE.md |
+| 26 | Risk Engine & Kill Switch | planned | not_started | not_production_completed | docs/phases/PHASE_26_RISK_ENGINE_KILL_SWITCH.md |
+| 27 | Market Maker / Liquidity Controls | planned | not_started | not_production_completed | docs/phases/PHASE_27_MARKET_MAKER_LIQUIDITY.md |
+| 28 | Futures Contract Foundation | planned | not_started | not_production_completed | docs/phases/PHASE_28_FUTURES_CONTRACT_FOUNDATION.md |
+| 29 | Position / PnL / Margin Engine | planned | not_started | not_production_completed | docs/phases/PHASE_29_POSITION_PNL_MARGIN.md |
+| 30 | Liquidation / ADL / Insurance Fund | planned | not_started | not_production_completed | docs/phases/PHASE_30_LIQUIDATION_ADL_INSURANCE.md |
+| 31 | Margin Lending System | planned | not_started | not_production_completed | docs/phases/PHASE_31_MARGIN_LENDING.md |
+| 32 | Reconciliation & Compensation System | planned | not_started | not_production_completed | docs/phases/PHASE_32_RECONCILIATION_COMPENSATION.md |
+| 33 | Security / Compliance Hardening | planned | not_started | not_production_completed | docs/phases/PHASE_33_SECURITY_COMPLIANCE_HARDENING.md |
+| 34 | Observability / SRE / Incident Response | planned | not_started | not_production_completed | docs/phases/PHASE_34_OBSERVABILITY_SRE_INCIDENT.md |
+| 35 | Production Infra / CI-CD / Release | planned | not_started | not_production_completed | docs/phases/PHASE_35_PRODUCTION_INFRA_CICD_RELEASE.md |
+| 36 | Pre-Launch Certification & Business Readiness | planned | not_started | not_production_completed | docs/phases/PHASE_36_PRE_LAUNCH_CERTIFICATION.md |
 
-狀態說明：
+## Current Task Pointer
 
 ```text
-pending：尚未開始
-in_progress：進行中
-done：AI 已完成
-blocked：被阻擋
-approved：使用者已審查通過
-```
-
-review_status 說明：
-
-```text
-not_required：不需要人工審查
-pending：等待人工審查
-approved：人工審查通過
-changes_requested：需要修改
-```
-
----
-
-## 2. 當前任務
-
-```text
-current_phase: Phase 10
-current_task: phase_10_wallet_market_spot_open_api_java_stub_approved
-next_action: 可進入 Phase 11，等待使用者指示
-```
-
----
-
-## 3. 任務紀錄
-
-### Phase 0
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P0-01 掃描 repo 結構 | done | 已確認 | - |
-| P0-02 確認目前沒有 package.json 與 src | done | 已確認 | - |
-| P0-03 建立或更新 AI_PROGRESS.md | done | 已更新 | - |
-| P0-04 回報建議開工方向 | done | 已回報 | - |
-
-### Phase 1
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P1-01 建立 React + TypeScript 專案骨架 | done | 已完成 | 已審查通過 |
-| P1-02 使用 Vite 或合適方案 | done | 已完成 | 已審查通過 |
-| P1-03 建立 src 目錄 | done | 已完成 | 已審查通過 |
-| P1-04 建立 package.json | done | 已完成 | 已審查通過 |
-| P1-05 建立 scripts | done | 已完成 | 已審查通過 |
-| P1-06 建立基本入口頁 | done | 已完成 | 已審查通過 |
-
-### Phase 2
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P2-01 建立 Layout | done | 已完成 | 已審查通過 |
-| P2-02 建立 Header | done | 已完成 | 已審查通過 |
-| P2-03 建立 Sidebar | done | 已完成 | 已審查通過 |
-| P2-04 建立基礎路由 | done | 已完成 | 已審查通過 |
-| P2-05 建立共用元件 | done | 已完成 | 已審查通過 |
-| P2-06 建立格式化工具 | done | 已完成 | 已審查通過 |
-
-### Phase 3
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P3-01 登入頁 | done | 已完成 | 已完成 |
-| P3-02 註冊頁 | done | 已完成 | 已完成 |
-| P3-03 忘記密碼頁 | done | 已完成 | 已完成 |
-| P3-04 2FA 驗證頁 | done | 已完成 | 已完成 |
-| P3-05 首頁行情 | done | 已完成 | 已完成 |
-| P3-06 市場列表 | done | 已完成 | 已完成 |
-| P3-07 auth service（開發期 mock） | done | 已完成 | 已完成 |
-| P3-08 market service（開發期 mock） | done | 已完成 | 已完成 |
-
-### Phase 3.5
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P3.5-01 將 root 前端移入 web/ | done | 已完成 | 已完成，待審查 |
-
-### Phase 4
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P4-01 個人中心 Layout | done | 已完成 | 已完成 |
-| P4-02 帳戶總覽 | done | 已完成 | 已完成 |
-| P4-03 安全中心 | done | 已完成 | 已完成 |
-| P4-04 KYC 狀態頁 | done | 已完成 | 已完成 |
-| P4-05 資產摘要入口 | done | 已完成 | 已完成 |
-| P4-06 API Key 管理入口 | done | 已完成 | 已完成 |
-| P4-07 通知中心入口 | done | 已完成 | 已完成 |
-| P4-08 登入紀錄與安全操作紀錄 | done | 已完成 | 已完成 |
-| P4-09 account service（開發期 mock） | done | 已完成 | 已完成 |
-
-### Phase 5
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P5-01 資產總覽 | done | 已完成 | Phase 5 第一個頁面群 |
-| P5-02 現貨帳戶頁 | done | 已完成 | 已拆出 route-level 共用元件 |
-| P5-03 合約帳戶頁 | done | 已完成 | 已拆出 route-level 共用元件 |
-| P5-04 槓桿帳戶頁 | done | 已完成 | 已拆出 route-level 共用元件 |
-| P5-05 帳戶劃轉頁 | done | 已完成 | 已拆出 route-level 共用元件 |
-| P5-06 充值頁 | done | 已完成 | 開發期 adapter，含地址、QR placeholder、memo / tag、recent deposits |
-| P5-07 提現頁 | done | 已完成 | 含 2FA、白名單、風控審核、手續費與到帳預估 |
-| P5-08 充值紀錄 | done | 已完成 | 含 loading、empty、error |
-| P5-09 提現紀錄 | done | 已完成 | 含 loading、empty、error |
-| P5-10 提現地址頁 | done | 已完成 | 含白名單、風險標記、停用 / 刪除與安全驗證 modal |
-
-### Phase 6
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P6-01 現貨交易頁 | done | 已完成 | Development adapter only，含 order book / tape / order form / open orders |
-| P6-02 合約交易頁 | done | 已完成 | Development adapter only，含 positions / funding preview |
-| P6-03 槓桿交易頁 | done | 已完成 | Development adapter only，含 borrow / risk snapshot |
-| P6-04 order book integration | done | 已完成 | mock 前端 order book 區塊 |
-| P6-05 trade feed integration | done | 已完成 | mock 前端 trade feed 區塊 |
-| P6-06 open orders integration | done | 已完成 | mock 前端 open orders 區塊 |
-| P6-07 positions integration | done | 已完成 | mock 前端 positions 區塊 |
-| P6-08 margin risk ratio integration | done | 已完成 | mock 前端 risk ratio 區塊 |
-
-### Phase 7
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7-01 訂單中心 | done | 已完成 | Development adapter only，含 open / history / fills |
-| P7-02 倉位中心 | done | 已完成 | Development adapter only，含 open / liquidation / funding |
-| P7-03 強平紀錄 | done | 已完成 | 開發期 liquidation adapter snapshot |
-| P7-04 資金費率紀錄 | done | 已完成 | 開發期 funding adapter snapshot |
-| P7-05 API Key 管理完整頁 | done | 已完成 | development adapter only，secret 只在建立時顯示一次 |
-| P7-06 安全紀錄 | done | 已完成 | 通知 / 安全事件以本地 snapshot 呈現 |
-| P7-07 通知中心 | done | 已完成 | 開發期通知中心，含 unread / filter / read toggle |
-
-### Phase 7.5
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.5-01 建立 `web/src/i18n` 架構 | done | 已完成 | 含 `I18nProvider`、`useI18n`、`t(key)`、`locale / setLocale`、localStorage 持久化 |
-| P7.5-02 Header 語言切換 UI | done | 已完成 | 可在 `zh-TW` 與 `en-US` 間切換 |
-| P7.5-03 sidebar / navigation 接入 i18n | done | 已完成 | 含 account / admin / assets / orders / positions / trading |
-| P7.5-04 page header 與 common state 文案接入 | done | 已完成 | 含 loading / empty / error 常見文字 |
-| P7.5-05 更新 AI_PROGRESS | done | 已完成 | Phase 7.5 完成紀錄，等待人工審查 |
-
-### Phase 7.6
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.6-01 全域 layout / header / sidebar 響應式修正 | done | 已完成 | 1440 / 1024 / 390 基準下避免重疊與橫向爆版 |
-| P7.6-02 table / grid / form / tabs 響應式修正 | done | 已完成 | 主要表格區支援窄螢幕水平捲動或堆疊 |
-| P7.6-03 trading / assets / account / wallet UI QA | done | 已完成 | 針對中英文字長差異調整 |
-| P7.6-04 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
-
-### Phase 7.6-hotfix
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.6H-01 首頁 hero / CTA / highlight cards 實機修復 | done | 已完成 | 解決 1440px 左右首頁壓窄與重疊問題 |
-| P7.6H-02 AppLayout / content 寬度與置中修復 | done | 已完成 | 主內容改為可讀寬度並置中 |
-| P7.6H-03 Header / PageHeader / Card 寬度保護 | done | 已完成 | 避免標題與 actions 被擠壓 |
-| P7.6H-04 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
-
-### Phase 7.6-hotfix-v2
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.6HV2-01 主內容寬度與 PageHeader collapse 修復 | done | 已完成 | 已針對 `/`、`/markets`、`/spot/BTC-USDT`、`/futures/BTC-USDT`、`/orders`、`/positions` 做寬度與排版修復，並改為流式 responsive layout |
-| P7.6HV2-02 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
-
-### Phase 7.6-auth-i18n-cleanup
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.6AIC-01 Auth shell 與頁面文案 i18n 化 | done | 已完成 | login / register / forgot password / 2FA / reset password 已接入 i18n |
-| P7.6AIC-02 開發痕跡文案清理 | done | 已完成 | 移除 / 替換對外可見的 Phase 3、demo-ready、Root React + TypeScript + Vite 等文案 |
-| P7.6AIC-03 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
-
-### Phase 7.6-auth-brand-cleanup
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.6ABC-01 Logo component 建立 | done | 已完成 | 新增可重用 `Logo` component，支援 full / mark 與 size |
-| P7.6ABC-02 Header / Auth shell 品牌更新 | done | 已完成 | Header 左上角與 Auth hero 改用 Logo component |
-| P7.6ABC-03 dev notice env gate | done | 已完成 | 開發提示預設不顯示，僅在 `VITE_SHOW_DEV_NOTICES=true` 時顯示且走 i18n |
-| P7.6ABC-04 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
-
-### Phase 7.6-flex-only-layout-refactor
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P7.6FLEX-01 CSS Grid 最終清零 | done | 已完成 | 已將剩餘 `display:grid` / `grid-template` / `grid-column` / `fr` 清除，等待人工審查 |
-| P7.6FLEX-02 build / typecheck 驗證 | done | 已完成 | `npm run build` 與 `npm run typecheck` 通過 |
-
-### Phase 8
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P8-01 Admin Layout | done | 已完成 | 已掛載 /admin shell、sidebar 與路由 |
-| P8-02 Dashboard | done | 已完成 | 已加入 dashboard cards 與 summary mock data |
-| P8-03 Users | done | 已完成 | 已加入使用者表格、凍結 / 解凍與 2FA reset confirm dialogs |
-| P8-04 Assets | done | 已完成 | 已加入資產餘額表格 |
-| P8-05 Wallet | done | 已完成 | 已加入充值 / 提現審核表格與 confirm dialogs |
-| P8-06 Spot | done | 已完成 | 已加入交易對狀態表格與 pause / resume confirm dialogs |
-| P8-07 Futures | done | 已完成 | 已加入合約狀態表格與 mode 切換 confirm dialogs |
-| P8-08 Margin | done | 已完成 | 已加入借貸與風險率表格 |
-| P8-09 Risk | done | 已完成 | 已加入 kill switch / withdraw pause / reduce only UI |
-| P8-10 Market Makers | done | 已完成 | 已加入做市商狀態表格與 disable / enable confirm dialogs |
-| P8-11 Insurance Fund | done | 已完成 | 已加入保險基金表格 |
-| P8-12 Reconciliation | done | 已完成 | 已加入對帳結果表格 |
-| P8-13 Operation Logs | done | 已完成 | 已加入操作紀錄表格 |
-
-### Phase 9：建立 `server/` Spring Boot 後端骨架、帳戶與帳本 interface
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P9-01 建立 `server/` 後端目錄骨架 | done | 已完成 | Java 21 + Spring Boot 3 + Gradle skeleton |
-| P9-02 建立 docs 規則文件 | done | 已完成 | 已建立 server/docs 規則檔 |
-| P9-03 建立帳戶模型 interface | done | 已完成 | 唯讀 view / DTO / interface，無直接改餘額方法 |
-| P9-04 建立 ledger service interface | done | 已完成 | 僅定義 interface 與 journal contract |
-| P9-05 建立 account transfer service stub | done | 已完成 | 只做 validation 與 TODO placeholder |
-| P9-06 建立 idempotency 設計 stub | done | 已完成 | 僅定義 interface / record / status |
-
-### Phase 10：Wallet、Market Data、Spot、Open API Java stub
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P10-01 wallet service stub | done | 已完成 | 僅建立 wallet service / gateway / address / chain config stub，不處理私鑰或鏈上出帳 |
-| P10-02 deposit / withdraw 狀態模型 | done | 已完成 | 僅建立狀態模型、record 與 validation stub，不做真實入帳、凍結或廣播 |
-| P10-03 market data service stub | done | 已完成 | 僅建立 symbol / depth / trades / ticker / kline stub，不接外部行情 |
-| P10-04 price index service stub | done | 已完成 | 僅建立 external quote / index / mark price stub，不做真實公式 |
-| P10-05 spot order service stub | done | 已完成 | 僅做 request validation 與 matching / ledger placeholder，不做撮合或結算 |
-| P10-06 open api route stub | done | 已完成 | 僅建立 API key / signature / rate limit / route metadata stub，withdraw 預設不開 |
-
-### Phase 11：Futures、Liquidation、Margin Java skeleton
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P11-01 futures service skeleton | pending | - | 高風險 / Java skeleton |
-| P11-02 position model skeleton | pending | - | 高風險 |
-| P11-03 funding rate skeleton | pending | - | 高風險 |
-| P11-04 liquidation service skeleton | pending | - | 極高風險 |
-| P11-05 insurance fund skeleton | pending | - | 高風險 |
-| P11-06 margin service skeleton | pending | - | 高風險 |
-| P11-07 borrow / repay / interest skeleton | pending | - | 高風險 |
-
-### Phase 12
-
-| 任務 | status | 結果 | 備註 |
-|---|---|---|---|
-| P12-01 risk service skeleton | pending | - | 高風險 |
-| P12-02 kill switch config | pending | - | 高風險 |
-| P12-03 reconciliation job skeleton | pending | - | 高風險 / Java job |
-| P12-04 compensation task skeleton | pending | - | 不可自動修帳 |
-| P12-05 frontend testing checklist | pending | - | - |
-| P12-06 backend safety checklist | pending | - | - |
-| P12-07 go-live checklist | pending | - | 不可宣稱已可上線 |
-
----
-
-## 4. 人工審查紀錄
-
-| Phase | 審查人 | 結果 | 時間 | 備註 |
-|---:|---|---|---|---|
-| 10 | Codex | 通過 | 2026-07-06 | Phase 10 Wallet、Market Data、Spot、Open API Java stub 已由使用者人工審核通過；本次僅完成 Java skeleton / interface / DTO / stub，未進入 Phase 11 |
-| 8 | Codex | 通過 | 2026-07-05 | Phase 8 後台前端頁面完成；admin console / mock data / confirm dialogs 已審查通過，等待下一階段後端骨架與帳本介面 |
-| 9 | Codex | 通過 | 2026-07-06 | Phase 9 後端骨架、帳戶與帳本 interface 已由使用者人工審核通過；Phase 9 保持骨架 / interface / stub 邊界，不含 production ledger 或真實資產邏輯 |
-| 7 | Codex | 通過 | 2026-07-05 | Phase 7 訂單、倉位、API Key、通知前端頁面已通過人工審查 |
-| 5 | Codex | 通過 | 2026-06-29 | Phase 5 資產 / 劃轉 / 充值 / 提現 UI 與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java 真實 API |
-| 6 | Codex | 通過 | 2026-06-29 | Phase 6 現貨 / 合約 / 槓桿交易頁與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java API、C++ Core event stream 與真正結算流程 |
-| 4 | Codex | 通過 | 2026-06-26 | Phase 4 UI / mock 範圍完成；build 通過；typecheck 通過；仍屬開發期 mock / adapter，不代表 OL 真實後端完成；OL 前需接 `server/` Java 真實 API |
-| 3 | Codex | 通過 | 2026-06-25 | Phase 3 登入、首頁、市場列表已通過人工審查 |
-| 2 | Codex | 通過 | 2026-06-25 | Phase 2 Design System 與 App Shell 已通過人工審查 |
-| 1 | Codex | 通過 | 2026-06-25 | Phase 1 React + TypeScript 專案骨架已通過人工審查 |
-
----
-
-## 5. 重要 TODO
-
-```text
-TODO: Phase 1 完成後確認 React 專案可正常啟動。
-TODO: Phase 4 完成後確認個人中心是否符合營運需求。
-TODO: Phase 6 完成後確認交易頁資訊密度與產品體驗。
-TODO: Phase 9 之後所有資產相關邏輯需高 reasoning 審查。
-TODO: Phase 11 強平、保證金、PnL、風險率不得未審查上線。
-TODO: Phase 1 開始前先完成使用者人工確認，避免跨 Phase。
-```
-
----
-
-## 6. 最後一次 AI 回報
-
-```text
-[2026-07-06 Phase 10 cleanup]
-修改摘要：
-- 已刪除 `server/target/` 與 `server/.mvn/maven/` 本地 Maven build/cache 產物。
-- 已新增 `server/.gitignore`，忽略 `target/`、`.mvn/maven/`、`.mvn/wrapper/dists/`。
-- 未修改 Phase 10 業務 stub，未進入 Phase 11。
-測試結果：
-- `test ! -d server/target && echo "server/target cleaned"` 通過。
-- `test ! -d server/.mvn/maven && echo "server/.mvn/maven cleaned"` 通過。
-- `test -f server/pom.xml && echo "server/pom.xml exists"` 通過。
-- `test -f server/mvnw && echo "server/mvnw exists"` 通過。
-- `test -f server/mvnw.cmd && echo "server/mvnw.cmd exists"` 通過。
-- `test -f server/.mvn/wrapper/maven-wrapper.properties && echo "maven-wrapper.properties exists"` 通過。
-- `test -f server/.mvn/wrapper/maven-wrapper.jar && echo "maven-wrapper.jar exists"` 通過。
-- `find server -maxdepth 5 \( -name 'build.gradle' -o -name 'settings.gradle' -o -name 'gradlew' -o -name 'gradlew.bat' -o -name 'gradle-wrapper.properties' -o -name 'gradle-wrapper.jar' -o -path '*/gradle/wrapper/*' \) -print` 無輸出。
-TODO：
-- 僅清理 build/cache 產物，Phase 10 業務 TODO 維持不變，等待使用者人工審查。
-風險：
-- cleanup 不影響 Phase 10 stub 邊界與 review 狀態；當前仍不可進入 Phase 11。
-
-[2026-07-06 Phase 10]
-修改摘要：
-- 已新增 `wallet/` package，建立 ChainType、WalletAsset、WalletAddress、WalletChainConfig、DepositRecord、WithdrawRecord、WithdrawAddress、WalletCallbackLog 與 wallet / deposit / withdraw service stub。
-- 已新增 `market/` package，建立 TradingSymbol、depth / trade / ticker / kline 模型、MarketDataService stub、ExternalPriceQuote、PriceIndexService 與 MarkPriceService stub。
-- 已新增 `spot/` package，建立現貨訂單 request / view / trade 模型、SpotOrderService、MatchingEngineClient 與 validation-only DefaultSpotOrderService。
-- 已新增 `openapi/` package，建立 API key / permission / status / create result / signature request DTO、signature / rate limit / IP whitelist interface、fail-closed stub 與 route metadata registry。
-- 所有高風險 wallet / deposit / withdraw / market / price index / mark price / spot / openapi 核心方法均保留 `TODO: requires high-reasoning review before production use`，且未進入 Phase 11。
-新增檔案：
-- `server/src/main/java/com/lumix/wallet/ChainType.java`
-- `server/src/main/java/com/lumix/wallet/WalletAddressStatus.java`
-- `server/src/main/java/com/lumix/wallet/DepositStatus.java`
-- `server/src/main/java/com/lumix/wallet/WithdrawStatus.java`
-- `server/src/main/java/com/lumix/wallet/WalletAsset.java`
-- `server/src/main/java/com/lumix/wallet/WalletAddress.java`
-- `server/src/main/java/com/lumix/wallet/WalletChainConfig.java`
-- `server/src/main/java/com/lumix/wallet/WalletService.java`
-- `server/src/main/java/com/lumix/wallet/WalletGateway.java`
-- `server/src/main/java/com/lumix/wallet/DepositRecord.java`
-- `server/src/main/java/com/lumix/wallet/WithdrawRecord.java`
-- `server/src/main/java/com/lumix/wallet/WithdrawAddress.java`
-- `server/src/main/java/com/lumix/wallet/WalletCallbackLog.java`
-- `server/src/main/java/com/lumix/wallet/DepositService.java`
-- `server/src/main/java/com/lumix/wallet/WithdrawService.java`
-- `server/src/main/java/com/lumix/wallet/DefaultDepositService.java`
-- `server/src/main/java/com/lumix/wallet/DefaultWithdrawService.java`
-- `server/src/main/java/com/lumix/market/SymbolType.java`
-- `server/src/main/java/com/lumix/market/TradingSymbol.java`
-- `server/src/main/java/com/lumix/market/OrderBookLevel.java`
-- `server/src/main/java/com/lumix/market/OrderBookSnapshot.java`
-- `server/src/main/java/com/lumix/market/MarketTradeView.java`
-- `server/src/main/java/com/lumix/market/Ticker24hView.java`
-- `server/src/main/java/com/lumix/market/KlineInterval.java`
-- `server/src/main/java/com/lumix/market/KlineView.java`
-- `server/src/main/java/com/lumix/market/MarketDataService.java`
-- `server/src/main/java/com/lumix/market/DefaultMarketDataService.java`
-- `server/src/main/java/com/lumix/market/ExternalPriceSource.java`
-- `server/src/main/java/com/lumix/market/ExternalPriceQuote.java`
-- `server/src/main/java/com/lumix/market/PriceIndexView.java`
-- `server/src/main/java/com/lumix/market/MarkPriceView.java`
-- `server/src/main/java/com/lumix/market/PriceIndexService.java`
-- `server/src/main/java/com/lumix/market/MarkPriceService.java`
-- `server/src/main/java/com/lumix/market/DefaultPriceIndexService.java`
-- `server/src/main/java/com/lumix/market/DefaultMarkPriceService.java`
-- `server/src/main/java/com/lumix/spot/SpotOrderSide.java`
-- `server/src/main/java/com/lumix/spot/SpotOrderType.java`
-- `server/src/main/java/com/lumix/spot/SpotOrderStatus.java`
-- `server/src/main/java/com/lumix/spot/TimeInForce.java`
-- `server/src/main/java/com/lumix/spot/SpotOrderRequest.java`
-- `server/src/main/java/com/lumix/spot/SpotOrderView.java`
-- `server/src/main/java/com/lumix/spot/SpotTradeView.java`
-- `server/src/main/java/com/lumix/spot/SpotOrderService.java`
-- `server/src/main/java/com/lumix/spot/MatchingEngineClient.java`
-- `server/src/main/java/com/lumix/spot/DefaultSpotOrderService.java`
-- `server/src/main/java/com/lumix/openapi/ApiKeyPermission.java`
-- `server/src/main/java/com/lumix/openapi/ApiKeyStatus.java`
-- `server/src/main/java/com/lumix/openapi/ApiRateLimitTier.java`
-- `server/src/main/java/com/lumix/openapi/ApiKeyView.java`
-- `server/src/main/java/com/lumix/openapi/ApiKeyCreateRequest.java`
-- `server/src/main/java/com/lumix/openapi/ApiKeyCreateResult.java`
-- `server/src/main/java/com/lumix/openapi/ApiSignatureRequest.java`
-- `server/src/main/java/com/lumix/openapi/ApiSignatureVerifier.java`
-- `server/src/main/java/com/lumix/openapi/ApiRateLimitService.java`
-- `server/src/main/java/com/lumix/openapi/ApiIpWhitelistService.java`
-- `server/src/main/java/com/lumix/openapi/OpenApiRoute.java`
-- `server/src/main/java/com/lumix/openapi/OpenApiRouteRegistry.java`
-- `server/src/main/java/com/lumix/openapi/DefaultApiSignatureVerifier.java`
-- `server/src/main/java/com/lumix/openapi/DefaultApiRateLimitService.java`
-測試結果：
-- `find server -maxdepth 5 \( -name 'build.gradle' -o -name 'settings.gradle' -o -name 'gradlew' -o -name 'gradlew.bat' -o -name 'gradle-wrapper.properties' -o -name 'gradle-wrapper.jar' -o -path '*/gradle/wrapper/*' \) -print` 無輸出。
-- `test -f server/pom.xml && echo "server/pom.xml exists"`、`test -f server/mvnw && echo "server/mvnw exists"`、`test -f server/mvnw.cmd && echo "server/mvnw.cmd exists"`、`test -f server/.mvn/wrapper/maven-wrapper.properties && echo "maven-wrapper.properties exists"` 全部通過。
-- `grep -R "private key\|mnemonic\|seed phrase" server/src/main/java || true` 無輸出。
-- `grep -R "@RestController\|@Controller\|JpaRepository\|CrudRepository\|RedisTemplate\|KafkaTemplate" server/src/main/java || true` 無輸出。
-- `grep -R "increaseBalance\|decreaseBalance\|lockBalance\|unlockBalance" server/src/main/java || true` 無輸出。
-- `grep -R "HashMap\|ConcurrentHashMap\|Map<" server/src/main/java || true` 無輸出。
-- `grep -R "TODO: requires high-reasoning review before production use" server/src/main/java` 已確認 wallet / market / spot / openapi 與既有 ledger / account 高風險點皆有 TODO。
-- `cd server && ./mvnw test` 通過。
-- `cd server && ./mvnw package` 通過。
-TODO：
-- WalletService / WalletGateway 仍僅是地址與鏈配置契約，未接地址供應、掃鏈、廣播或任何外部服務。
-- DefaultDepositService / DefaultWithdrawService 僅完成 validation 與 idempotency / ledger placeholder，未做真實入帳、凍結、解凍、扣凍結或鏈上狀態同步。
-- DefaultMarketDataService、DefaultPriceIndexService、DefaultMarkPriceService 只回傳空集合或零值 placeholder，未接任何外部行情源或真實公式。
-- DefaultSpotOrderService 只做 validation 並 fail-closed 回傳 stub 狀態，未接 C++ Core、未做撮合、未做 settlement。
-- DefaultApiSignatureVerifier / DefaultApiRateLimitService 採 fail-closed stub，未做 production 級 secret 驗證、distributed rate limit 或 IP 白名單實作。
-風險：
-- Phase 10 全部為 skeleton / interface / DTO / stub，任何錢包、行情、現貨交易、Open API 安全能力都不可視為可上線功能。
-- `OpenApiRouteRegistry` 僅列 route metadata，其中 futures / margin 只保留 metadata，未建立任何 Phase 11 service skeleton。
-- Maven build 過程會產生 `server/target/` 與 wrapper cache，屬本地建置產物，不代表新增業務功能。
-
-[2026-07-05 Phase 9]
-修改摘要：
-- 已建立 server/ Gradle + Spring Boot 3 後端骨架、README、測試骨架與 docs 規則文件。
-- 已建立 account 唯讀模型 interface、ledger service interface、account transfer validation stub、idempotency interface / record / status。
-- 所有高風險資產相關核心點位已保留 TODO: requires high-reasoning review before production use，未實作真實扣帳、真實 ledger engine、真實 transfer。
-測試結果：
-- `javac --release 21 -d /tmp/lumix-server-javac server/src/main/java/com/lumix/common/*.java server/src/main/java/com/lumix/account/*.java server/src/main/java/com/lumix/ledger/*.java server/src/main/java/com/lumix/idempotency/*.java` 通過。
-- `gradle test` 未執行成功，原因：環境未安裝 gradle（`command not found`），本次未建立 Gradle wrapper。
-TODO：
-- LedgerService 僅為 interface，reserve / release / commit / rollback / postJournal 仍待高風險人工審查後再設計實作。
-- DefaultAccountTransferService 僅完成 request validation 與 placeholder，未串接真實帳本流程。
-- IdempotencyService 僅為設計 stub，未接 Redis、DB、distributed lock，也未宣稱 exactly-once。
-風險：
-- `server/src/main/java/com/lumix/LumiXServerApplication.java` 與 Spring Boot 測試骨架需在可用 Gradle 環境下載依賴後再做完整 build 驗證。
-- Phase 9 僅完成骨架與介面，不可視為可上線資產系統。
-
-[2026-07-05 Phase 9 wrapper supplement]
-修改摘要：
-- 已補上 `server/gradlew`、`server/gradlew.bat`、`server/gradle/wrapper/gradle-wrapper.properties` 與 `server/gradle/wrapper/gradle-wrapper.jar`。
-- wrapper 入口改為直接載入官方 Gradle 8.8 發行包，並固定 `GRADLE_USER_HOME`，避免寫入使用者家目錄。
-測試結果：
-- `./gradlew test` 與 `./gradlew build` 皆可進入 Gradle 實際執行階段，但最終仍失敗於 Gradle daemon 嘗試綁定 socket，錯誤為 `java.net.SocketException: Operation not permitted`。
-- 已排除 wrapper jar 缺類、`GRADLE_USER_HOME` 寫入權限與下載 cache 問題。
-TODO：
-- 若要在此 sandbox 完成 Gradle build，需要再處理 Gradle daemon socket 綁定限制。
-風險：
-- 目前 wrapper 只能證明入口已補齊，無法在此環境下完成 `test/build` 成功驗證。
-
-[2026-07-05 Phase 9 build tool switch]
-修改摘要：
-- 已將 `server/` build tool 由 Gradle 改為 Maven。
-- 已新增 `server/pom.xml`，並刪除 `server/build.gradle` 與 `server/settings.gradle`。
-- 已更新 `server/README.md`、`server/docs/PROJECT_RULES.md`、`server/docs/CODEX_TASK_RULES.md` 以反映 Maven 與 Phase 9 skeleton 限制。
-測試結果：
-- `mvn -v` 失敗，環境回應 `mvn: command not found`，表示本機未安裝 Maven。
-- `mvn test` 失敗，環境回應 `mvn: command not found`。
-- `mvn package` 失敗，環境回應 `mvn: command not found`。
-TODO：
-- 待具備 Maven 的環境後，再執行 `mvn test` 與 `mvn package` 完成 build 驗證。
-風險：
-- Phase 9 仍僅是 skeleton / interface / stub，未進入 Phase 10。
-
-[2026-07-05 Phase 9 build cleanup]
-修改摘要：
-- 已補齊 `server/mvnw`、`server/mvnw.cmd`、`server/.mvn/wrapper/maven-wrapper.properties`、`server/.mvn/wrapper/maven-wrapper.jar`。
-- 已清除 `server/` 下所有 Gradle build files 與 Gradle wrapper，`server/` 現在只保留 Maven build system。
-- 已更新 `server/README.md`、`server/docs/PROJECT_RULES.md`、`server/docs/CODEX_TASK_RULES.md`，改用 Maven Wrapper 指令。
-測試結果：
-- `./mvnw -v` 成功，wrapper 下載並使用 Apache Maven 3.9.9。
-- `./mvnw test` 成功，Spring Boot skeleton 測試通過。
-- `./mvnw package` 成功，jar 重新封裝成功。
-TODO：
-- 後續若要再次執行 build，wrapper 會使用本機 Maven cache 與下載的 Maven distribution。
-風險：
-- 仍是 Phase 9 skeleton / interface / stub，未新增任何業務邏輯，也未進入 Phase 10。
-
-[歷史]
-已完成交易核心 C++ 校準文件更新，且 Phase 2 已審查通過。
-Phase 3、Phase 3.5 與 Phase 4 已完成；Phase 5 已完成，充值與提現前端頁面已建立，已完成 cleanup 並修正轉帳提示文案，等待人工審查。
+completed_phase: Phase 11
+phase_definition_pack: completed
+next_implementation_phase: Phase 12
+current_runtime_status: Phase 12 not started
+authoritative_roadmap: docs/PRODUCTION_ROADMAP.md
+authoritative_dependencies: docs/PHASE_DEPENDENCY_MAP.md
+authoritative_gates: docs/PRODUCTION_READINESS_GATES.md
+authoritative_prompts: docs/CODEX_PHASE_PROMPTS.md
 ```

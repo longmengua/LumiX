@@ -1,27 +1,33 @@
-# LumiX Server Phase 9
+# LumiX Server Status
 
-This directory contains the Phase 9 backend foundation for LumiX.
+This directory currently contains the Java backend foundation and stub work from Phase 9 and Phase 10.
 
-Scope in this phase:
-- Java 21 + Spring Boot 3 Maven project skeleton only
-- Backend code lives only in `server/`
-- `account`, `ledger`, and `idempotency` boundaries and interfaces
-- Account transfer validation stub only
+Implemented in this directory:
 
-Out of scope in this phase:
-- Production-ready ledger engine
-- Real balance mutation
-- Wallet deposit or withdrawal logic
-- Market data, price index, spot order, or Open API services
-- Any Phase 10 or later functionality
+- Java 21 + Spring Boot 3 Maven project skeleton
+- `account`, `ledger`, and `idempotency` contracts
+- Validation-only `DefaultAccountTransferService`
+- Wallet, market data, spot order, and Open API DTOs/interfaces/stubs
 
-Notes:
-- High-risk logic is intentionally left as interface or stub with explicit TODO markers.
-- This phase does not claim production readiness.
-- A global Maven installation is not required; use Maven Wrapper in `server/`.
-- To build locally, use Java 21 with the wrapper commands below.
+Not implemented in this directory:
+
+- Production matching engine or C++ matching-core integration
+- Real order persistence, real order submission, fill handling, or settlement
+- Real balance mutation, reservation, release, commit, or rollback
+- Double-entry ledger engine
+- Real deposit or withdrawal blockchain integration
+- Repository layer, controller layer, database migrations, queue consumers, websocket publication, or reconciliation jobs
+
+Do not claim production trading from `server/`.
+
+Authoritative production reset documents:
+
+- `../docs/PHASE_10_AUDIT.md`
+- `../docs/PRODUCTION_ROADMAP.md`
+- `../docs/ARCHITECTURE_PRODUCTION.md`
 
 Build commands:
+
 - `./mvnw test`
 - `./mvnw package`
 - `./mvnw spring-boot:run`

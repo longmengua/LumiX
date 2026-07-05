@@ -2,6 +2,16 @@
 
 > Name note: `LumiX` is the exchange project codename. It combines `Lumi`, which evokes light or luminosity, with `X`, which stands for exchange.
 
+## Current Implementation Status
+
+```text
+web/ contains frontend pages and development/mock adapters.
+server/ contains Java foundation and Phase 9-10 stubs only.
+LumiX does not currently have production trading, a production matching engine, a production order book, real fund freeze, double-entry ledger mutation, real deposit, or real withdrawal.
+docs/PRODUCTION_ROADMAP.md is the execution roadmap after the production reset.
+Historical MVP material in doc/exchange_mvp_plan.md is not the current execution source of truth.
+```
+
 ## 技術棧校準
 
 ```text
@@ -9,9 +19,9 @@
 前端目錄：web/src/
 後端：Java 21 + Spring Boot 3
 後端目錄：server/
-交易核心：C++ Core
-交易核心目錄：core/ 或 matching-core/
-Build tool：Gradle 優先
+交易核心：C++ Core（production requirement, not implemented in this repo yet）
+交易核心目錄：core/ 或 matching-core/（目前不存在）
+Build tool：server/ 目前使用 Maven Wrapper；web/ 使用 npm + Vite
 Database：PostgreSQL
 Cache：Redis
 Event bus：Kafka / Redpanda / RabbitMQ，可先 stub
