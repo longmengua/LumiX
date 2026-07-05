@@ -1,5 +1,9 @@
 # 交易所 OL 專案落地規劃文件
 
+Archive notice: This is legacy MVP planning material.
+Current operating exchange planning lives in `../../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+Do not use this file as the source of truth for current implementation.
+
 > 目標：建立一個可真實營運、可讓真實用戶交易、可接外部做市商、可內部做市、可透過現貨、合約、槓桿產生收益的交易所 OL 系統。  
 > 產品定位：第一版核心應包含「現貨 + U 本位永續合約 + 槓桿交易」，並同步具備做市商、風控、強平、對帳與後台營運能力。  
 > 原則：不是做最多功能，而是把「可交易、可槓桿、可爆倉、可對帳、可風控、可做市、可營運」做完整。

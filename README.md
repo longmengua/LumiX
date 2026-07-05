@@ -1,65 +1,27 @@
 # LumiX
 
-> Name note: `LumiX` is the exchange project codename. It combines `Lumi`, which evokes light or luminosity, with `X`, which stands for exchange.
+LumiX is being organized toward a full operating OL exchange, not an MVP.
 
-## Current Implementation Status
+## Current Status
 
-```text
-web/ contains frontend pages and development/mock adapters.
-server/ contains Java foundation and Phase 9-10 stubs only.
-LumiX does not currently have production trading, a production matching engine, a production order book, real fund freeze, double-entry ledger mutation, real deposit, or real withdrawal.
-docs/PRODUCTION_ROADMAP.md is the execution roadmap after the production reset.
-Historical MVP material in doc/exchange_mvp_plan.md is not the current execution source of truth.
-```
+- Phase 11 completed as a documentation-only production architecture reset.
+- Phase 12 through Phase 36 are planned and not started.
+- The next implementation phase is Phase 12 - Production Database Schema & Migration.
+- Production trading is not completed.
+- Production launch readiness is not completed.
 
-## 技術棧校準
+## Source of Truth
 
-```text
-前端：web/ React + TypeScript + Vite
-前端目錄：web/src/
-後端：Java 21 + Spring Boot 3
-後端目錄：server/
-交易核心：C++ Core（production requirement, not implemented in this repo yet）
-交易核心目錄：core/ 或 matching-core/（目前不存在）
-Build tool：server/ 目前使用 Maven Wrapper；web/ 使用 npm + Vite
-Database：PostgreSQL
-Cache：Redis
-Event bus：Kafka / Redpanda / RabbitMQ，可先 stub
-```
+- `docs/README.md`
+- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
+- `docs/ARCHITECTURE_TEXT_MAP.md`
+- `docs/PHASE_REVIEW_WORKFLOW.md`
 
-```text
-不要把 web/src/ 改成後端。
-不要把後端寫成 Node / Fastify / Prisma / TypeScript backend。
-Java 業務後端的交易核心接入層、資產帳本、訂單、對帳優先使用 jOOQ / MyBatis / JDBC Template。
-一般 CRUD 可以使用 Spring Data JPA。
-C++ Core 是 OL 前必要項，Java MatchingEngineClient 只能作為接入層，不能替代正式撮合。
-OL 前不得以 mock matching / mock order book / mock trade / mock settlement 作為正式流程。
-Java interface / skeleton / TODO 只能存在於非正式開發驗證，不可作為上線替代。
-```
+## Boundaries
 
-## AI 開工語錄
+- `web/` is the frontend.
+- `server/` is the Java backend.
+- Production matching must be a C++ core in `core/` or `matching-core/`.
+- Java `MatchingEngineClient` is only an integration boundary.
+- Do not treat stub, interface, mock, placeholder, or TODO work as production completion.
 
-```
-請閱讀 AI_START_HERE.md、AI_MODEL_GATE.md、AI_PROGRESS.md，然後初始化開工。
-
-開工前必須先做模型開工檢查：
-1. 判斷目前 Phase / Task。
-2. 判斷任務等級 Level A / B / C / D。
-3. 判斷目前模型與 reasoning 是否適合。
-4. 如果不適合，停止並說明需要切換什麼模型或只能做 stub。
-5. 如果適合，執行 Phase 0。
-
-限制：
-- 不要跨 Phase。
-- 不要重構無關檔案。
-- 不要直接修改資產餘額。
-- 不要實作未審查的撮合、強平、保證金、PnL、槓桿風險率。
-- 不要處理真實私鑰或鏈上出帳。
-- 完成後更新 AI_PROGRESS.md。
-- 完成後回報修改檔案、測試方式、TODO、風險與下一步。
-```
-
-```
-Phase 0 審查通過，繼續開工。
-Phase 1 審查通過，繼續開工。
-```
