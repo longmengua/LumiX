@@ -1,3 +1,3 @@
-# Reservation / Freeze
+# 預留與凍結
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+這一章說明可用餘額、鎖定餘額、預留、釋放、提交與回滾如何配合。這是保護使用者資金與避免超額下單的關鍵機制。

@@ -1,3 +1,5 @@
-# Order Settlement Flow
+# 訂單與結算流程
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../ARCHITECTURE_TEXT_MAP.md`.
+這一章描述現貨訂單從使用者送出，到風控檢查、資金預留、訂單持久化、撮合、成交事件、手續費、結算與對帳的整條路徑。
+
+它要回答的不是「畫面怎麼按」，而是「一筆訂單進來後，系統內部到底怎麼安全地完成」。

@@ -10,4 +10,4 @@
 4. `order-settlement-flow.md`
 5. `data-and-event-flow.md`
 
-這些章節搭配 `../ARCHITECTURE_TEXT_MAP.md` 觀看會更完整。
+這些章節搭配 `ARCHITECTURE_TEXT_MAP.md` 觀看會更完整。

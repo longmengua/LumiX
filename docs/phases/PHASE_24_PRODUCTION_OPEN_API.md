@@ -1,133 +1,82 @@
-# Phase 24 - Production Open API
+# Phase 24 - 正式 Open API
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+對外 API 需要正式安全邊界。
 
-## Goal
+## 目標
+建立 API key、權限範圍、簽章、時間戳、IP 白名單與頻率限制。
 
-Implement the production Open API layer for market, account, order, and restricted withdrawal endpoints with strong authentication and audit controls.
+## 為何需要這一章
+對外 API 需要正式安全邊界。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 16、20。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-External traders, market makers, and automation clients need a real API, but production exposure requires strong key management, signing, nonce or timestamp controls, IP policy, and rate limiting.
+## 範圍
+order API、account API、market API、withdraw API 限制、API audit log。
 
-## Dependencies
+## 非目標
+新增交易邏輯。
 
-- Previous phases required: Phase 16, Phase 18, Phase 20, and wallet phases as needed for restricted wallet endpoints
-- External dependencies if any: signature standard choice, rate-limit storage, API documentation tooling
-- Blocking risks: signature bypass, weak permission scopes, withdraw misuse, insufficient audit logs
+## 必要產出
+Open API、權限層、測試。
 
-## Scope
+## 驗收標準
+API 會驗證身份、權限與節流。
 
-- API key management
-- Permission scopes
-- HMAC / RSA signature
-- Timestamp / nonce
-- IP whitelist
-- Rate limit
-- Order API
-- Account API
-- Market API
-- Withdraw API restrictions
-- API audit logs
+## 必要測試
+簽章、nonce、rate limit、權限。
 
-## Non-goals
+## 可能影響的檔案與模組
+API controllers、auth、audit。
 
-- Unrestricted withdrawal API enablement
-- Futures or margin APIs before their product engines are ready
-- Admin API replacement
+## 資料模型影響
+API key 與存取紀錄。
 
-## Required deliverables
+## API 影響
+正式對外 API。
 
-- Production API key lifecycle
-- Signature verification implementation
-- Timestamp and nonce enforcement
-- IP whitelist controls
-- Rate-limit enforcement
-- Order/account/market API exposure
-- Restricted withdrawal API rules
-- API audit logging
-- Open API test suite
+## 安全影響
+HMAC / RSA、IP 限制、審計。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Signatures validate correctly for supported modes
-- Permission scopes are enforced per route
-- Rate limits do not fail open
-- Withdrawal API stays restricted by policy
-- Audit logs capture key, route, actor, and outcome
+## 風險等級
+High。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- API key lifecycle tests
-- HMAC or RSA signature tests
-- Timestamp and nonce tests
-- IP whitelist tests
-- Rate-limit tests
-- Permission-scope tests
-- Restricted withdrawal API tests
+## 目前仍不能宣稱
+正式 API 完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 25 把管理後台補完整。
 
-- `server/src/main/java/com/lumix/openapi/`
-- security/auth packages
-- API controllers
-- cache integration for rate limits
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- May add key metadata, nonce tracking, IP whitelist records, and API audit tables if not already covered
-
-## API impact
-
-- Introduces production Open API surface for external clients
-- Withdraw APIs remain tightly restricted and policy-gated
-
-## Security impact
-
-- High
-- Requires careful secret handling, scope enforcement, replay prevention, and audit logging
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because trading and wallet APIs can expose user funds through automation
-
-## Risk level
-
-- High
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: authentication and permission defects can become direct fund-loss paths
-
-## Cannot claim yet
-
-- admin back-office completed
-- full risk controls completed
-- market maker operational controls completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 25 adds admin RBAC, lookup flows, review queues, approval controls, and audit logging for operations staff.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/TRADING_CORE_BOUNDARIES.md, and docs/phases/PHASE_24_PRODUCTION_OPEN_API.md.
-
-Goal: implement Phase 24 only - Production Open API.
-Scope: API key management, permission scopes, HMAC/RSA signature, timestamp/nonce, IP whitelist, rate limit, order/account/market APIs, restricted withdraw APIs, and API audit logs.
-Non-goals: unrestricted withdraw API enablement, unfinished futures or margin APIs, later phases.
-Deliverables: production Open API layer, tests, and progress/doc updates tied to real implementation.
-Tests: key lifecycle, signature, timestamp/nonce, IP whitelist, rate limit, scope enforcement, restricted withdraw API, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 24 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: admin back-office completed, full risk controls completed, market maker operational controls completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 24 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_24_PRODUCTION_OPEN_API.md
+本章目標：只做 Phase 24 - 正式 Open API。
+範圍：order API、account API、market API、withdraw API 限制、API audit log。
+不要做：新增交易邏輯。
+產出：Open API、權限層、測試。
+測試：簽章、nonce、rate limit、權限。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式 API 完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 24 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

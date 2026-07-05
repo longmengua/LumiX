@@ -1,13 +1,12 @@
-# Phase Command Workflow
+# Phase 指令流程
 
-1. Receive one phase command.
-2. Reload the repo from disk.
-3. Read the master plan and review workflow.
-4. Read the current phase spec under `docs/phases/`.
-5. Implement only that phase.
-6. Validate build and tests.
-7. Mark `implementation completed / pending human review`.
-8. Wait for explicit human approval.
-9. Only then mark the phase completed.
-10. Do not start the next phase automatically.
-
+1. 收到一個 Phase 指令。
+2. 先重新讀取 repo。
+3. 先讀總綱與審核流程。
+4. 再讀對應的 Phase 章節。
+5. 只實作當前 Phase。
+6. 完成後執行 build 與測試。
+7. 標記為「已完成實作／等待人工審核」。
+8. 等待人工明確核准。
+9. 只有在核准後，才可以標記為已完成。
+10. 不要自動開始下一個 Phase。

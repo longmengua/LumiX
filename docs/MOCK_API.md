@@ -1,13 +1,13 @@
-# LumiX Mock API
+# LumiX 假資料 API 原則
 
-## Principle
+## 原則
 
-- Use mock services for Phase 2 and later UI scaffolding.
-- Keep mock data deterministic and easy to replace with real API clients later.
+- 先用 mock service 支援前期介面開發。
+- 假資料要固定、可預測、容易替換成正式 API。
 
-## Rules
+## 規則
 
-- Do not connect to real matching or real wallet systems.
-- Do not expose sensitive values in mock payloads.
-- Keep response shapes aligned with later backend interfaces where practical.
-
+- 不要連到真實撮合系統。
+- 不要連到真實錢包系統。
+- 假資料回應不要暴露敏感資訊。
+- 回傳結構要盡量和未來正式介面對齊。

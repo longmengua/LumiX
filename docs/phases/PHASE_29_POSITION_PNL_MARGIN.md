@@ -1,129 +1,82 @@
-# Phase 29 - Position / PnL / Margin Engine
+# Phase 29 - 倉位 / PnL / 保證金引擎
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+期貨不能只靠現貨帳本，需要倉位與保證金模型。
 
-## Goal
+## 目標
+建立開倉、平倉、已實現 / 未實現 PnL、初始保證金與維持保證金。
 
-Implement the production futures position, realized and unrealized PnL, and margin accounting engine.
+## 為何需要這一章
+期貨不能只靠現貨帳本，需要倉位與保證金模型。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 13、14、19、28。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Futures products cannot go live without deterministic position state, margin calculations, leverage changes, and funding settlement behavior.
+## 範圍
+isolated / cross margin、leverage 調整、funding payment settlement。
 
-## Dependencies
+## 非目標
+強平、ADL、保險基金。
 
-- Previous phases required: Phase 13, Phase 14, Phase 19, Phase 28
-- External dependencies if any: approved formulas, funding policy, risk-tier model
-- Blocking risks: incorrect PnL math, wrong margin requirements, inconsistent isolated vs cross behavior
+## 必要產出
+position engine、margin 計算、測試。
 
-## Scope
+## 驗收標準
+倉位、PnL 與保證金可被正確計算。
 
-- Position open / close
-- Realized PnL
-- Unrealized PnL
-- Initial margin
-- Maintenance margin
-- Isolated margin
-- Cross margin
-- Leverage adjustment
-- Funding payment settlement
+## 必要測試
+開平倉、PnL、保證金、funding。
 
-## Non-goals
+## 可能影響的檔案與模組
+position、PnL、margin 服務。
 
-- Liquidation execution
-- ADL
-- Insurance fund operation
-- Margin lending
+## 資料模型影響
+倉位與保證金記錄。
 
-## Required deliverables
+## API 影響
+倉位與保證金查詢。
 
-- Position engine
-- PnL calculation boundaries
-- Margin calculator
-- Isolated and cross margin model
-- Leverage-adjustment rules
-- Funding-payment settlement path
-- Position and margin test suite
+## 安全影響
+避免錯算風險。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Position state rebuilds deterministically from authoritative events
-- Realized and unrealized PnL calculations are versioned and tested
-- Initial and maintenance margin are enforced correctly
-- Isolated and cross margin modes behave as specified
-- Funding payments settle through auditable flows
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Position open/close tests
-- Realized and unrealized PnL tests
-- Initial and maintenance margin tests
-- Isolated vs cross margin tests
-- Leverage-adjustment tests
-- Funding-payment settlement tests
+## 目前仍不能宣稱
+期貨交易完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 30 會處理強平與 ADL。
 
-- `server/src/main/java/com/lumix/futures/`
-- `server/src/main/java/com/lumix/ledger/`
-- settlement and risk integration packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Adds position state, margin state, funding accrual or funding-payment records, and related history tables
-
-## API impact
-
-- Enables futures position and margin query APIs
-- Still requires liquidation and lending phases before full futures product claims
-
-## Security impact
-
-- Must prevent unauthorized margin-mode or leverage changes
-- Must audit position and margin transitions
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this phase directly controls leveraged account state
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: position and margin errors create immediate leveraged-loss risk
-
-## Cannot claim yet
-
-- liquidation completed
-- ADL completed
-- insurance fund completed
-- margin lending completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 30 adds liquidation triggers, bankruptcy handling, insurance fund, and ADL workflows.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_29_POSITION_PNL_MARGIN.md.
-
-Goal: implement Phase 29 only - Position / PnL / Margin Engine.
-Scope: position open/close, realized/unrealized PnL, initial and maintenance margin, isolated/cross margin, leverage adjustment, and funding payment settlement.
-Non-goals: liquidation, ADL, insurance fund, margin lending, later phases.
-Deliverables: position and margin engine, tests, and progress/doc updates tied to real implementation.
-Tests: position lifecycle, PnL, margin modes, leverage adjustment, funding settlement, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 29 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: liquidation completed, ADL completed, insurance fund completed, margin lending completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 29 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_29_POSITION_PNL_MARGIN.md
+本章目標：只做 Phase 29 - 倉位 / PnL / 保證金引擎。
+範圍：isolated / cross margin、leverage 調整、funding payment settlement。
+不要做：強平、ADL、保險基金。
+產出：position engine、margin 計算、測試。
+測試：開平倉、PnL、保證金、funding。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：期貨交易完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 29 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

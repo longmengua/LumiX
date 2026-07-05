@@ -1,126 +1,82 @@
-# Phase 28 - Futures Contract Foundation
+# Phase 28 - 期貨合約基礎
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+期貨需要自己的產品規則。
 
-## Goal
+## 目標
+建立合約定義、tick、lot、funding interval、index price 與 mark price。
 
-Define the production futures contract model and core configuration boundaries needed before position and margin logic can exist.
+## 為何需要這一章
+期貨需要自己的產品規則。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 20、24、26。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Futures expansion cannot begin safely without canonical contract definition, price granularity, funding cadence, leverage configuration, and risk-tier structure.
+## 範圍
+contract definition、leverage、margin mode、risk limit tier。
 
-## Dependencies
+## 非目標
+倉位引擎、強平、借貸。
 
-- Previous phases required: Phase 20, Phase 24, Phase 26
-- External dependencies if any: index-price source policy, contract listing policy
-- Blocking risks: ambiguous contract rules, inconsistent mark/index configuration, unsafe leverage defaults
+## 必要產出
+contract models、設定、測試。
 
-## Scope
+## 驗收標準
+每個合約規則可被清楚描述與驗證。
 
-- Contract definition
-- Tick size
-- Lot size
-- Funding interval
-- Index price
-- Mark price
-- Leverage config
-- Margin mode config
-- Risk limit tier
+## 必要測試
+合約設定、價格來源、基礎檢查。
 
-## Non-goals
+## 可能影響的檔案與模組
+futures config、market data、risk。
 
-- Position engine
-- PnL engine
-- Liquidation engine
-- Live leveraged trading rollout
+## 資料模型影響
+合約與風險階層。
 
-## Required deliverables
+## API 影響
+合約查詢 API。
 
-- Futures contract metadata model
-- Tick and lot-size configuration
-- Funding-interval configuration
-- Index and mark-price boundary definitions
-- Leverage and margin-mode configuration model
-- Risk-tier configuration
-- Futures foundation test suite
+## 安全影響
+避免錯誤合約規格。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Every futures contract has explicit trading and risk configuration
-- Tick size, lot size, leverage, and risk-tier rules are versioned and testable
-- Index and mark-price dependency boundaries are explicit
-- No live futures trading path bypasses later phases
+## 風險等級
+High。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Contract-definition tests
-- Tick and lot-size validation tests
-- Funding-interval configuration tests
-- Leverage and margin-mode config tests
-- Risk-tier config tests
+## 目前仍不能宣稱
+期貨上線完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 29 會處理倉位、PnL 與保證金。
 
-- future `server/src/main/java/com/lumix/futures/`
-- `server/src/main/java/com/lumix/market/`
-- config and docs packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Adds futures contract metadata, leverage config, margin modes, and risk-tier tables
-
-## API impact
-
-- May expose read-only futures contract metadata APIs
-- No live leveraged execution claim yet
-
-## Security impact
-
-- Must prevent invalid or unsafe contract configuration rollout
-- Must audit contract-definition changes
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because futures config errors propagate into leveraged risk
-
-## Risk level
-
-- High
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: futures configuration becomes the base for later leveraged funds logic
-
-## Cannot claim yet
-
-- position/pnl/margin completed
-- liquidation completed
-- margin lending completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 29 implements position lifecycle, PnL, and margin accounting on top of these contract definitions.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_28_FUTURES_CONTRACT_FOUNDATION.md.
-
-Goal: implement Phase 28 only - Futures Contract Foundation.
-Scope: contract definition, tick size, lot size, funding interval, index price boundary, mark price boundary, leverage config, margin mode config, and risk limit tiers.
-Non-goals: position/PnL/margin runtime, liquidation, live leveraged trading, later phases.
-Deliverables: futures contract foundation, tests, and progress/doc updates tied to real implementation.
-Tests: contract config, tick/lot validation, funding interval, leverage/margin-mode config, risk tiers, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 28 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: position/pnl/margin completed, liquidation completed, margin lending completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 28 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_28_FUTURES_CONTRACT_FOUNDATION.md
+本章目標：只做 Phase 28 - 期貨合約基礎。
+範圍：contract definition、leverage、margin mode、risk limit tier。
+不要做：倉位引擎、強平、借貸。
+產出：contract models、設定、測試。
+測試：合約設定、價格來源、基礎檢查。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：期貨上線完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 28 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

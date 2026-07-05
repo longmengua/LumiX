@@ -1,3 +1,3 @@
-# Wallet UI
+# 錢包介面
 
-Pointer to `../ARCHITECTURE_TEXT_MAP.md`.
+錢包介面讓使用者查看充值、提領、資產餘額與歷史紀錄。這一章描述錢包頁面的資訊分布與使用者操作流程。

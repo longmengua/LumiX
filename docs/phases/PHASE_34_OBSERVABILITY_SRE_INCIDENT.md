@@ -1,129 +1,82 @@
-# Phase 34 - Observability / SRE / Incident Response
+# Phase 34 - 監控 / SRE / 事故應對
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+正式服務不能只做完，還要看得見、救得回。
 
-## Goal
+## 目標
+建立結構化 log、metrics、tracing、告警、值班與事故流程。
 
-Make the exchange observable and operable under incident conditions with structured logs, metrics, tracing, dashboards, alerts, runbooks, and severity policy.
+## 為何需要這一章
+正式服務不能只做完，還要看得見、救得回。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 19～22、32～33。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Live trading and live funds systems require fast diagnosis, on-call procedures, and operational evidence beyond functional correctness.
+## 範圍
+order latency、matching latency、wallet 告警、ledger imbalance 告警、reconciliation 告警、on-call runbook、postmortem template。
 
-## Dependencies
+## 非目標
+新增交易核心。
 
-- Previous phases required: Phase 19, Phase 20, Phase 21, Phase 22, Phase 32, Phase 33
-- External dependencies if any: metrics stack, log stack, tracing stack, paging destination
-- Blocking risks: blind failures, alert noise, no runbooks, unclear incident ownership
+## 必要產出
+監控面板、告警、事故手冊。
 
-## Scope
+## 驗收標準
+關鍵狀態都能被觀察與通知。
 
-- Structured logs
-- Metrics
-- Tracing
-- Order latency dashboard
-- Matching latency dashboard
-- Wallet alert
-- Ledger imbalance alert
-- Reconciliation alert
-- On-call runbook
-- Incident severity policy
-- Postmortem template
+## 必要測試
+告警演練、值班演練、事故模板。
 
-## Non-goals
+## 可能影響的檔案與模組
+observability、runbook、incident docs。
 
-- Infrastructure deployment itself
-- Legal or customer communications policy beyond incident hooks
-- Launch sign-off itself
+## 資料模型影響
+監控與事故紀錄。
 
-## Required deliverables
+## API 影響
+監控與告警輸出。
 
-- Structured logging standard
-- Metrics and tracing coverage
-- Critical dashboards
-- Wallet, ledger, and reconciliation alerts
-- On-call runbooks
-- Incident severity matrix
-- Postmortem template
-- Observability validation tests or drills
+## 安全影響
+事故時可快速定位與收斂。
 
-## Acceptance criteria
+## 用戶資金影響
+- 否。
+- 審核需求：必須人工審核。
 
-- Core order, matching, wallet, ledger, and reconciliation flows emit usable telemetry
-- Critical alerts map to runbooks
-- Latency dashboards exist for order and matching paths
-- Incident severity and escalation policy are documented
-- Postmortem template is ready for use
+## 風險等級
+High。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Telemetry emission tests
-- Alert-rule tests where practical
-- Dashboard data validation
-- Runbook drill or tabletop validation
-- Incident escalation policy review
+## 目前仍不能宣稱
+正式上線準備完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 35 會整理正式部署與 CI/CD。
 
-- telemetry and config packages
-- ops docs
-- alert and dashboard configuration
-- possibly CI or deployment metadata
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Minimal business-model impact
-- May add event or metric tags, correlation IDs, and incident metadata
-
-## API impact
-
-- No major user-facing API scope change
-- Improves traceability and supportability of existing APIs
-
-## Security impact
-
-- Must avoid leaking secrets or sensitive user data in logs and traces
-- Must protect observability backends appropriately
-
-## User funds impact
-
-- No direct balance mutation
-- Review requirements: mandatory human review before merge because missing or unsafe telemetry can block incident handling for funds and trading systems
-
-## Risk level
-
-- High
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: operational readiness is a launch gate, not a background nicety
-
-## Cannot claim yet
-
-- production infra/release completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 35 creates deploy, rollback, environment, backup, and disaster-recovery execution paths.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, and docs/phases/PHASE_34_OBSERVABILITY_SRE_INCIDENT.md.
-
-Goal: implement Phase 34 only - Observability / SRE / Incident Response.
-Scope: structured logs, metrics, tracing, order and matching latency dashboards, wallet/ledger/reconciliation alerts, on-call runbooks, incident severity policy, and postmortem template.
-Non-goals: infrastructure deployment itself, launch sign-off, later phases.
-Deliverables: observability and incident-response implementation, checks or drills, and progress/doc updates tied to real implementation.
-Tests: telemetry emission, alerts, dashboard validation, runbook drill/tabletop, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 34 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: production infra/release completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 34 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_34_OBSERVABILITY_SRE_INCIDENT.md
+本章目標：只做 Phase 34 - 監控 / SRE / 事故應對。
+範圍：order latency、matching latency、wallet 告警、ledger imbalance 告警、reconciliation 告警、on-call runbook、postmortem template。
+不要做：新增交易核心。
+產出：監控面板、告警、事故手冊。
+測試：告警演練、值班演練、事故模板。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式上線準備完成。
+輸出格式：Changed Files、Summary、What Phase 34 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

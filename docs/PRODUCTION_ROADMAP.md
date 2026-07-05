@@ -1,11 +1,50 @@
-# Production Roadmap
+# 正式路線圖
 
-Archive pointer only.
+這份文件只看大方向，不重複每一個章節的全部細節。它的作用是幫你快速知道整體順序。
 
-Current source of truth:
+## 路線分組
 
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/PHASE_REVIEW_WORKFLOW.md`
+- Phase 12 到 Phase 15：資金安全與帳本基礎。
+- Phase 16 到 Phase 20：現貨交易核心。
+- Phase 21 到 Phase 23：錢包與金庫。
+- Phase 24 到 Phase 27：API、管理、風控與流動性。
+- Phase 28 到 Phase 31：期貨與保證金擴充。
+- Phase 32 到 Phase 36：對帳、安全、部署與上線。
 
-Do not use this file as the authoritative phase roadmap.
+## 目前狀態
 
+- Phase 11 已完成。
+- Phase 12 到 Phase 36 都是規劃中，尚未開始。
+- 下一個實作章節是 Phase 12 - 資料庫結構與遷移。
+
+## 每一章在做什麼
+
+- Phase 12：先把資料庫骨架立好。
+- Phase 13：把帳本做成可稽核的雙式帳本。
+- Phase 14：把帳本變成可以重建與對帳的餘額。
+- Phase 15：把可用餘額與鎖定餘額分開管理。
+- Phase 16：把下單流程接到預留與持久化。
+- Phase 17：把撮合核心做成確定性 order book。
+- Phase 18：把 Java 與 C++ 撮合邊界接起來。
+- Phase 19：把成交寫進帳本並完成結算。
+- Phase 20：把成交與 order book 變成公開市場資料。
+- Phase 21：把真實入金接到鏈上掃描與記帳。
+- Phase 22：把真實出金接到審核與廣播流程。
+- Phase 23：把熱錢包、冷錢包與金庫分層。
+- Phase 24：把對外 API 做成正式安全邊界。
+- Phase 25：把管理後台做成可審核、可追蹤。
+- Phase 26：把風控與總開關做成正式控制層。
+- Phase 27：把做市與流動性管理納入營運。
+- Phase 28：把期貨合約規則建立起來。
+- Phase 29：把倉位、PnL 與保證金算清楚。
+- Phase 30：把強平、ADL 與保險基金接起來。
+- Phase 31：把借貸與利息納入保證金模型。
+- Phase 32：把各域資料做完整對帳與補償。
+- Phase 33：把安全與合規邊界補齊。
+- Phase 34：把監控、告警與事故流程補齊。
+- Phase 35：把部署、CI/CD、回滾與備份補齊。
+- Phase 36：把費率、法務、客服、演練與上線決策補齊。
+
+## 讀法
+
+先看總綱，再看對應章節。任何資金、撮合、結算、錢包、風控與上線能力，都不能把樣板、stub 或 placeholder 當成完成。

@@ -1,129 +1,82 @@
-# Phase 26 - Risk Engine & Kill Switch
+# Phase 26 - 風控引擎與總開關
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+正式營運一定要能擋錯單、擋異常與暫停風險。
 
-## Goal
+## 目標
+建立使用者、交易對與全站的風控限制，以及總開關。
 
-Implement production risk gates for users, symbols, global operations, and emergency stops across trading and wallet flows.
+## 為何需要這一章
+正式營運一定要能擋錯單、擋異常與暫停風險。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 16、20、22、25。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Even correct trading and wallet logic is unsafe without enforceable pre-trade and operational limits plus hard-stop controls for incidents.
+## 範圍
+order size、price band、fat finger、withdrawal pause、symbol halt、matching halt、global kill switch。
 
-## Dependencies
+## 非目標
+新增撮合邏輯。
 
-- Previous phases required: Phase 16, Phase 20, Phase 22, Phase 25
-- External dependencies if any: risk policy inputs, incident policy, alerting destinations
-- Blocking risks: fail-open risk decisions, missing kill-switch propagation, inconsistent rule evaluation
+## 必要產出
+risk service、停機控制、測試。
 
-## Scope
+## 驗收標準
+風控能在下單與出金前阻擋危險請求。
 
-- User risk limits
-- Symbol risk limits
-- Global risk limits
-- Order size limit
-- Price band
-- Fat finger protection
-- Withdrawal pause
-- Symbol halt
-- Matching halt
-- Global kill switch
-- Risk audit
+## 必要測試
+limit、band、halt、kill switch。
 
-## Non-goals
+## 可能影響的檔案與模組
+risk domain、gateways、admin controls。
 
-- Liquidation engine
-- Portfolio margin logic
-- Compliance-only controls outside defined scope
+## 資料模型影響
+風控規則與事件。
 
-## Required deliverables
+## API 影響
+風控設定 API。
 
-- Risk decision service
-- Configurable user, symbol, and global risk rules
-- Halt and pause controls
-- Global kill-switch propagation
-- Risk audit trail
-- Risk test suite
+## 安全影響
+可即時停權與停單。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Unsafe orders are blocked before reserve or submit paths advance
-- Withdrawal pause and symbol halt are enforceable
-- Matching halt and global kill switch fail closed
-- Risk decisions are logged and reviewable
-- Fat-finger and price-band protections are deterministic
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- User/symbol/global limit tests
-- Order-size and price-band tests
-- Fat-finger protection tests
-- Withdrawal pause tests
-- Symbol halt and matching halt tests
-- Global kill-switch tests
-- Risk audit-log tests
+## 目前仍不能宣稱
+正式風控完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 27 會補流動性與做市管理。
 
-- `server/src/main/java/com/lumix/risk/`
-- `server/src/main/java/com/lumix/spot/`
-- `server/src/main/java/com/lumix/wallet/`
-- admin and config packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- May add risk rule tables, policy versions, halt-state tables, and risk audit metadata
-
-## API impact
-
-- Affects order and wallet request behavior
-- May add admin-facing risk configuration APIs
-
-## Security impact
-
-- Critical
-- Must not fail open under outage, stale config, or partial propagation
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because risk failure can allow unsafe trades or withdrawals
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: this phase is part of the production safety control plane
-
-## Cannot claim yet
-
-- liquidity controls completed
-- futures and margin expansion completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 27 adds market-maker and liquidity controls on top of the risk and API foundations.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_26_RISK_ENGINE_KILL_SWITCH.md.
-
-Goal: implement Phase 26 only - Risk Engine & Kill Switch.
-Scope: user/symbol/global risk limits, order size limit, price band, fat finger protection, withdrawal pause, symbol halt, matching halt, global kill switch, and risk audit.
-Non-goals: liquidation engine, portfolio margin, later phases.
-Deliverables: production risk engine, tests, and progress/doc updates tied to real implementation.
-Tests: risk limit checks, price-band and fat-finger protection, withdrawal pause, symbol/matching halts, global kill switch, risk audit, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 26 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: liquidity controls completed, futures and margin expansion completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 26 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_26_RISK_ENGINE_KILL_SWITCH.md
+本章目標：只做 Phase 26 - 風控引擎與總開關。
+範圍：order size、price band、fat finger、withdrawal pause、symbol halt、matching halt、global kill switch。
+不要做：新增撮合邏輯。
+產出：risk service、停機控制、測試。
+測試：limit、band、halt、kill switch。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式風控完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 26 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

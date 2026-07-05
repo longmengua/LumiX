@@ -1,3 +1,3 @@
-# Matching Engine
+# 撮合引擎
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+撮合引擎負責依照價格優先、時間優先的規則處理委託單，並產生可重放、可回放、可恢復的成交事件。未來正式版本會以 C++ 核心實作。

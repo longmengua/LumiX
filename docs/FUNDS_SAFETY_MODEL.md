@@ -1,11 +1,3 @@
-# Funds Safety Model
+# 資金安全模型
 
-Archive pointer only.
-
-Current source of truth:
-
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/ARCHITECTURE_TEXT_MAP.md`
-
-Do not use this file as the authoritative funds-safety definition.
-
+交易所最重要的事情，是讓資金狀態可以被準確描述：可用、鎖定、已消耗、已釋放。這份文件描述的是訂單、提領、成交與失敗情況下，資金應該怎麼流動，才能避免負餘額與重複扣款。

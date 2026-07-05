@@ -1,125 +1,82 @@
-# Phase 12 - Production Database Schema & Migration
+# Phase 12 - 資料庫結構與遷移
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+先把帳本、凍結、訂單、入金、出金與對帳的資料骨架固定下來。
 
-## Goal
+## 目標
+建立正式資料庫結構，讓後面的資金流程有共同底座。
 
-Define and version the canonical production database schema for trading, funds, wallet, reconciliation, and audit domains.
+## 為何需要這一章
+先把帳本、凍結、訂單、入金、出金與對帳的資料骨架固定下來。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 11。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Later phases cannot safely implement ledger, reservation, orders, settlement, or wallet flows without durable schema ownership, migration order, and data invariants.
+## 範圍
+accounts、assets、asset networks、symbols、balances、ledger journals、ledger lines、reservations、orders、fills、deposits、withdrawals、reconciliation、admin audit、migration tests。
 
-## Dependencies
+## 非目標
+帳本 runtime、資金變動、凍結、撮合、結算、錢包鏈上 runtime。
 
-- Previous phases required: Phase 11
-- External dependencies if any: PostgreSQL target version, migration tool choice, schema review input from ledger/reservation/order/wallet domains
-- Blocking risks: ambiguous table ownership, weak uniqueness rules, missing foreign keys, migration order drift
+## 必要產出
+schema 文件、migration 檔、索引與約束、migration tests。
 
-## Scope
+## 驗收標準
+可從零建立資料庫，欄位與約束正確，遷移順序固定。
 
-- Define tables for accounts, assets, asset networks, symbols, account balances, ledger journals, ledger lines, reservations, orders, trades/fills, deposits, withdrawals, reconciliation, and admin audit
-- Define keys, constraints, indexes, enums, timestamps, and archival or partition considerations
-- Define migration ordering, rollback approach, and migration test requirements
+## 必要測試
+zero-to-latest migration、constraint check、smoke test。
 
-## Non-goals
+## 可能影響的檔案與模組
+server/src/main/resources/db/migration/。
 
-- Ledger engine implementation
-- Balance mutation logic
-- Reservation runtime logic
-- Matching runtime logic
-- Settlement runtime logic
-- Public API runtime logic
+## 資料模型影響
+建立正式持久化表與約束。
 
-## Required deliverables
+## API 影響
+暫無。
 
-- Production schema specification
-- Migration files and naming convention
-- Table ownership map
-- Constraint and index plan
-- Migration test plan
-- Schema documentation for downstream phases
+## 安全影響
+資料欄位、權限與稽核基礎。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- A clean database can be created from migrations only
-- Required tables for funds, orders, wallet, reconciliation, and audit exist
-- Critical uniqueness and foreign-key constraints are defined
-- Migration ordering is deterministic and reviewable
-- Schema ownership is explicit per domain
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Empty database bootstrap test
-- Migration replay test from zero to latest
-- Constraint validation tests
-- Index existence checks for critical lookup paths
-- Migration smoke test in CI-compatible environment
+## 目前仍不能宣稱
+帳本完成、資金變動完成、凍結完成、撮合完成、結算完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 13 會在這份 schema 上做雙式帳本。
 
-- `server/src/main/resources/db/migration/`
-- `server/docs/`
-- future repository packages under `server/src/main/java/`
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Introduces canonical persistent structures for all production domains
-- Defines how balances, journals, reservations, orders, fills, deposits, withdrawals, reconciliation cases, and admin audit records are stored
-
-## API impact
-
-- No production API behavior yet
-- Enables future API contracts to map to durable entities
-
-## Security impact
-
-- Must define audit columns, soft-delete policy where needed, and least-privilege data boundaries
-- Must avoid storing secrets or sensitive material in unsafe plaintext fields
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because schema mistakes can corrupt future funds logic and auditability
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: schema mistakes cascade into all later funds and trading phases
-
-## Cannot claim yet
-
-- ledger engine completed
-- balance mutation completed
-- freeze completed
-- matching completed
-- settlement completed
-- production trading completed
-
-## Next phase handoff
-
-Phase 13 consumes the schema to implement immutable double-entry posting, idempotency, and reversal rules.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, docs/FUNDS_SAFETY_MODEL.md, and docs/phases/PHASE_12_DATABASE_SCHEMA.md.
-
-Goal: implement Phase 12 only - Production Database Schema & Migration.
-Scope: production schema and migration files for accounts, assets, asset networks, symbols, account balances, ledger journals, ledger lines, reservations, orders, trades/fills, deposits, withdrawals, reconciliation, and admin audit.
-Non-goals: ledger engine, reservation runtime, matching, settlement, wallet runtime, later phases.
-Deliverables: migration files, schema docs, migration tests, updated AI_PROGRESS.md and roadmap metadata if needed.
-Tests: migration bootstrap, replay, constraint checks, and project build validation.
-Docs to update: AI_PROGRESS.md and the relevant phase docs only if implementation reality changes.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: ledger engine completed, freeze completed, matching completed, settlement completed, production trading completed.
-Final output format: Changed Files, Summary, What Phase 12 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_12_DATABASE_SCHEMA.md
+本章目標：只做 Phase 12 - 資料庫結構與遷移。
+範圍：accounts、assets、asset networks、symbols、balances、ledger journals、ledger lines、reservations、orders、fills、deposits、withdrawals、reconciliation、admin audit、migration tests。
+不要做：帳本 runtime、資金變動、凍結、撮合、結算、錢包鏈上 runtime。
+產出：schema 文件、migration 檔、索引與約束、migration tests。
+測試：zero-to-latest migration、constraint check、smoke test。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：帳本完成、資金變動完成、凍結完成、撮合完成、結算完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 12 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

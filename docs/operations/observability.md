@@ -1,3 +1,3 @@
-# Observability
+# 可觀測性
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+可觀測性章節描述系統要如何被監控，包括日誌、指標、追蹤、儀表板與告警。

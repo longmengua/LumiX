@@ -1,21 +1,20 @@
-# LumiX Frontend Rules
+# LumiX 前端規則
 
-## Scope
+## 範圍
 
-- React + TypeScript only.
-- Keep feature work inside the current Phase.
-- Use mock services until a later backend Phase explicitly exposes APIs.
+- 只使用 React + TypeScript。
+- 目前的功能開發都要留在當前 Phase 內。
+- 在後端正式 API 開放之前，先使用 mock service。
 
-## Hard rules
+## 硬性規則
 
-- Do not implement real matching, liquidation, margin, PnL, wallet sweep, or withdrawal execution here.
-- Do not add a large UI library without explicit approval.
-- Do not store real secrets in the frontend.
-- Keep asset-sensitive values formatted or masked.
+- 不要在這裡實作真實撮合、強平、保證金、PnL、錢包 sweep 或提領執行。
+- 不要未經確認就加入大型 UI 套件。
+- 不要把真實密鑰放進前端。
+- 涉及資產的數字要格式化或遮罩。
 
-## UI rules
+## 介面規則
 
-- Every page needs loading, empty, and error states when applicable.
-- Keep skeleton components reusable.
-- Prefer small, focused components over page-local duplication.
-
+- 每個頁面都要有載入中、空狀態與錯誤狀態。
+- 骨架元件要可重用。
+- 盡量用小而聚焦的元件，避免頁面內重複堆疊。

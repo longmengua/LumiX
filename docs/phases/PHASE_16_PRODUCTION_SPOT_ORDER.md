@@ -1,131 +1,82 @@
-# Phase 16 - Production Spot Order Service
+# Phase 16 - 正式現貨下單服務
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+先做驗證、預留、持久化，再把單送去撮合。
 
-## Goal
+## 目標
+實作驗證、資金計算、預留、持久化、送撮合、取消與查詢。
 
-Replace the validation-only spot stub with a production Java spot order orchestration service that validates, reserves, persists, submits, cancels, and exposes order state without fake matching.
+## 為何需要這一章
+先做驗證、預留、持久化，再把單送去撮合。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12～15。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-User-facing spot trading cannot exist without a durable order lifecycle, fund reservation, idempotency, and a strict integration boundary to the matching core.
+## 範圍
+client order id 冪等、訂單生命週期、不可假裝撮合。
 
-## Dependencies
+## 非目標
+本地撮合、結算 runtime、市場資料 runtime。
 
-- Previous phases required: Phase 12, Phase 13, Phase 14, Phase 15
-- External dependencies if any: symbol metadata source, risk rules, matching boundary contract
-- Blocking risks: fake matching in Java, broken idempotency, incorrect order status transitions
+## 必要產出
+order service、持久化、測試。
 
-## Scope
+## 驗收標準
+下單流程可持久、可重送、以 reservation 為基礎。
 
-- Validate order
-- Calculate required funds
-- Reserve funds
-- Persist order
-- Submit to matching boundary
-- Cancel order
-- Order status lifecycle
-- Client order id idempotency
-- Order query APIs
-- No fake matching
+## 必要測試
+驗證、冪等、送單 / 取消、查詢。
 
-## Non-goals
+## 可能影響的檔案與模組
+spot service、controllers、repositories、DTO。
 
-- Matching engine implementation
-- Fill generation in Java
-- Settlement runtime
-- Market-data runtime
+## 資料模型影響
+orders 表與狀態追蹤。
 
-## Required deliverables
+## API 影響
+現貨下單 API。
 
-- Production `SpotOrderService`
-- Order persistence model and repository layer
-- Submission and cancel orchestration through `MatchingEngineClient`
-- Order status lifecycle rules
-- Client-order-id idempotency behavior
-- Order query APIs
-- Spot-order test suite
+## 安全影響
+請求驗證與冪等。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Orders are rejected before reservation if validation fails
-- Orders cannot be submitted before reservation and persistence succeed
-- Cancel does not release funds without authoritative remaining state
-- Client order id idempotency is enforced
-- No Java code path performs matching locally
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Validation tests
-- Required-funds calculation tests
-- Reservation-before-submit tests
-- Persistence failure handling tests
-- Client-order-id idempotency tests
-- Cancel lifecycle tests
-- Query API tests
+## 目前仍不能宣稱
+撮合完成、結算完成、正式市場資料完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 17 會提供 C++ 撮合核心。
 
-- `server/src/main/java/com/lumix/spot/`
-- API/controller packages
-- repositories for spot orders
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses orders and client-id uniqueness structures from Phase 12
-- May require order-event or status-history metadata
-
-## API impact
-
-- Introduces production spot order submit/cancel/query API surfaces
-- Still depends on later phases before a full trading claim
-
-## Security impact
-
-- Must enforce authenticated ownership of order actions
-- Must audit sensitive order submissions and cancels
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because order orchestration directly controls reservation and downstream settlement exposure
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: incorrect orchestration can lock, misroute, or expose user funds
-
-## Cannot claim yet
-
-- matching completed
-- settlement completed
-- production market data completed
-- production trading completed
-
-## Next phase handoff
-
-Phase 17 implements the deterministic C++ matching core that this phase must submit to.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/TRADING_CORE_BOUNDARIES.md, docs/FUNDS_SAFETY_MODEL.md, docs/ORDER_SETTLEMENT_FLOW.md, and docs/phases/PHASE_16_PRODUCTION_SPOT_ORDER.md.
-
-Goal: implement Phase 16 only - Production Spot Order Service.
-Scope: order validation, required-funds calculation, reservation, persistence, submit/cancel through MatchingEngineClient, order lifecycle, client-order-id idempotency, and query APIs.
-Non-goals: matching engine, fake Java matching, settlement runtime, market-data runtime, later phases.
-Deliverables: production spot order orchestration, tests, and progress/doc updates tied to real code.
-Tests: validation, funds calculation, reservation-before-submit, persistence failure, client-order-id idempotency, cancel lifecycle, query APIs, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 16 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: matching completed, settlement completed, production market data completed, production trading completed.
-Final output format: Changed Files, Summary, What Phase 16 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_16_PRODUCTION_SPOT_ORDER.md
+本章目標：只做 Phase 16 - 正式現貨下單服務。
+範圍：client order id 冪等、訂單生命週期、不可假裝撮合。
+不要做：本地撮合、結算 runtime、市場資料 runtime。
+產出：order service、持久化、測試。
+測試：驗證、冪等、送單 / 取消、查詢。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：撮合完成、結算完成、正式市場資料完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 16 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

@@ -1,129 +1,82 @@
-# Phase 19 - Trade Settlement Engine
+# Phase 19 - 成交結算引擎
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+撮合完成不代表資金完成，還要把成交真的寫進帳本。
 
-## Goal
+## 目標
+根據 fill 事件完成手續費、帳本記錄、未用預留釋放與訂單收尾。
 
-Consume authoritative fill events and convert them into fee calculation, reserve commit, unused reserve release, ledger entries, and final order-state transitions.
+## 為何需要這一章
+撮合完成不代表資金完成，還要把成交真的寫進帳本。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 13～18。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Matching alone does not move assets. Production trading requires deterministic post-fill settlement with idempotency, compensation handling, and durable journal output.
+## 範圍
+maker / taker fee、reserve commit、unused reserve release、settlement journal、冪等、失敗補償。
 
-## Dependencies
+## 非目標
+市場資料、鏈上錢包 runtime。
 
-- Previous phases required: Phase 13, Phase 14, Phase 15, Phase 16, Phase 18
-- External dependencies if any: fee schedule policy, fill-event schema, audit and reconciliation requirements
-- Blocking risks: duplicate settlement, incorrect fee math, reserve over-commit, failed compensation paths
+## 必要產出
+settlement engine、測試、狀態更新。
 
-## Scope
+## 驗收標準
+成交後資金、費用與訂單狀態都會落地。
 
-- Fill event settlement
-- Maker/taker fee
-- Reserve commit
-- Unused reserve release
-- Ledger entries
-- Settlement journal
-- Idempotency
-- Failed settlement compensation
-- Order final state update
+## 必要測試
+fill settlement、費用、冪等、失敗補償。
 
-## Non-goals
+## 可能影響的檔案與模組
+settlement domain、ledger 整合、order final state。
 
-- Matching implementation
-- Market-data fanout
-- Wallet chain operations
-- Futures settlement
+## 資料模型影響
+settlement journal。
 
-## Required deliverables
+## API 影響
+內部結算介面。
 
-- Settlement engine implementation
-- Fee calculation boundary
-- Fill-event consumer logic
-- Reservation commit and release hooks
-- Settlement journal records
-- Failed-settlement compensation workflow
-- Settlement test suite
+## 安全影響
+避免重複結算與漏結算。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Duplicate fill events do not double-settle
-- Reserve commit and unused release are deterministic
-- Ledger entries reflect buyer, seller, and fee legs
-- Failed settlement paths are visible and compensable
-- Final order state updates are derived from authoritative events
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Settlement idempotency tests
-- Maker/taker fee tests
-- Reserve commit and release tests
-- Duplicate fill handling tests
-- Failed settlement compensation tests
-- Final order-state update tests
+## 目前仍不能宣稱
+正式市場資料完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 20 會把成交結果送去市場資料管線。
 
-- new `server/src/main/java/com/lumix/settlement/`
-- `server/src/main/java/com/lumix/ledger/`
-- `server/src/main/java/com/lumix/spot/`
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses fills, reservations, orders, and journals from prior phases
-- May add settlement tracking and compensation-case metadata
-
-## API impact
-
-- No direct public API completion claim
-- Enables user order status and fill history to reflect settled reality
-
-## Security impact
-
-- Must prevent unauthorized manual settlement mutation
-- Must preserve full traceability between fill, reservation, journal, and final order state
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this phase moves user assets in response to fills
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: settlement correctness is a core funds-safety gate
-
-## Cannot claim yet
-
-- production market data completed
-- real deposit completed
-- real withdrawal completed
-- production trading completed
-
-## Next phase handoff
-
-Phase 20 consumes matching and settlement events to build public and internal market data.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/FUNDS_SAFETY_MODEL.md, docs/ORDER_SETTLEMENT_FLOW.md, docs/TRADING_CORE_BOUNDARIES.md, and docs/phases/PHASE_19_TRADE_SETTLEMENT.md.
-
-Goal: implement Phase 19 only - Trade Settlement Engine.
-Scope: fill-event settlement, maker/taker fee calculation, reserve commit, unused reserve release, ledger entries, settlement journal, idempotency, failed settlement compensation, and order final state update.
-Non-goals: matching implementation, market-data runtime, wallet runtime, futures runtime, later phases.
-Deliverables: settlement engine, tests, and progress/doc updates tied to real implementation.
-Tests: settlement idempotency, fee logic, reserve commit/release, duplicate fill handling, compensation flow, final order-state update, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 19 doc only if implementation changes reality.
-Validation commands: run matching-core validation as needed, plus cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: production market data completed, real deposit completed, real withdrawal completed, production trading completed.
-Final output format: Changed Files, Summary, What Phase 19 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_19_TRADE_SETTLEMENT.md
+本章目標：只做 Phase 19 - 成交結算引擎。
+範圍：maker / taker fee、reserve commit、unused reserve release、settlement journal、冪等、失敗補償。
+不要做：市場資料、鏈上錢包 runtime。
+產出：settlement engine、測試、狀態更新。
+測試：fill settlement、費用、冪等、失敗補償。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式市場資料完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 19 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

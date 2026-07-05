@@ -1,3 +1,5 @@
-# Frontend Architecture
+# 前端架構
 
-Pointer to `../ARCHITECTURE_TEXT_MAP.md`.
+LumiX 前端負責顯示市場、交易、錢包、帳戶與後台操作介面。它不是交易核心，但它是使用者進入整個交易所的第一個入口。
+
+這一章說明前端頁面如何被分區、如何對應不同角色，以及哪些畫面應該先存在。

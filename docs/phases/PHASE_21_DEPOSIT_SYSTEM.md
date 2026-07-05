@@ -1,127 +1,82 @@
-# Phase 21 - Production Deposit System
+# Phase 21 - 入金系統
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+真實資產進入交易所的第一步是入金。
 
-## Goal
+## 目標
+建立地址生成、鏈上掃描邊界、確認策略、入金偵測與冪等記帳。
 
-Implement the production inbound deposit system from address issuance through confirmation handling and idempotent ledger credit.
+## 為何需要這一章
+真實資產進入交易所的第一步是入金。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12～14。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Real user funds cannot enter the exchange safely without address generation, chain observation, confirmation policy, reorg handling, and idempotent credit posting.
+## 範圍
+address generation、chain scanner / indexer 邊界、confirmation policy、reorg 處理、manual review。
 
-## Dependencies
+## 非目標
+自動出金、撮合、結算。
 
-- Previous phases required: Phase 12, Phase 13, Phase 14
-- External dependencies if any: address provider, chain scanner or indexer, supported network policies
-- Blocking risks: double credit, missed deposits, reorg mishandling, unsafe callback trust
+## 必要產出
+deposit service、掃描邊界、測試。
 
-## Scope
+## 驗收標準
+可辨識入金、可冪等入帳、可處理重組。
 
-- Address generation
-- Chain scanner / indexer boundary
-- Confirmation policy
-- Deposit detection
-- Reorg handling
-- Idempotent credit
-- Ledger posting
-- Deposit status lifecycle
-- Manual review
+## 必要測試
+deposit detect、reorg、idempotent credit。
 
-## Non-goals
+## 可能影響的檔案與模組
+wallet / scanner / deposit domain。
 
-- Withdrawal broadcast
-- Treasury sweep strategy
-- Full wallet operations platform beyond deposits
+## 資料模型影響
+deposits 表與入金狀態。
 
-## Required deliverables
+## API 影響
+入金查詢與記錄。
 
-- Deposit address service
-- Chain observation or callback boundary
-- Confirmation and reorg policy
-- Idempotent deposit credit flow
-- Deposit status lifecycle
-- Manual review path for exceptions
-- Deposit test suite
+## 安全影響
+避免重複入帳與錯帳。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Deposit addresses can be issued safely for supported assets and networks
-- Confirmed deposits credit exactly once
-- Reorg or insufficient-confirmation behavior is defined and tested
-- Exceptional deposits can be routed to manual review
-- Deposit history is auditable end to end
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Address generation tests
-- Detection and confirmation tests
-- Reorg handling tests
-- Idempotent credit tests
-- Deposit status lifecycle tests
-- Manual review routing tests
+## 目前仍不能宣稱
+正式出金完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 22 會在餘額與風控之上做出金。
 
-- `server/src/main/java/com/lumix/wallet/`
-- `server/src/main/java/com/lumix/ledger/`
-- admin review packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses deposit, address, and network tables from Phase 12
-- May add callback security or scanner checkpoint metadata
-
-## API impact
-
-- Enables deposit address and deposit-history APIs to become production-backed
-
-## Security impact
-
-- Must authenticate callbacks or secure scanner ingestion
-- Must protect against replay, spoofed deposit notifications, and wrong-network credit
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this phase directly credits user funds
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: incorrect deposit crediting directly affects user assets
-
-## Cannot claim yet
-
-- real withdrawal completed
-- treasury completed
-- production wallet completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 22 implements outbound withdrawal request, review, broadcast boundary, and failed-withdrawal release behavior.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, docs/FUNDS_SAFETY_MODEL.md, and docs/phases/PHASE_21_DEPOSIT_SYSTEM.md.
-
-Goal: implement Phase 21 only - Production Deposit System.
-Scope: address generation, chain scanner/indexer boundary, confirmation policy, deposit detection, reorg handling, idempotent credit, ledger posting, deposit status lifecycle, and manual review.
-Non-goals: withdrawal runtime, treasury sweep, later phases.
-Deliverables: production deposit system, tests, and progress/doc updates tied to real implementation.
-Tests: address generation, detection/confirmation, reorg handling, idempotent credit, status lifecycle, manual review, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 21 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: real withdrawal completed, treasury completed, production wallet completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 21 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_21_DEPOSIT_SYSTEM.md
+本章目標：只做 Phase 21 - 入金系統。
+範圍：address generation、chain scanner / indexer 邊界、confirmation policy、reorg 處理、manual review。
+不要做：自動出金、撮合、結算。
+產出：deposit service、掃描邊界、測試。
+測試：deposit detect、reorg、idempotent credit。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式出金完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 21 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

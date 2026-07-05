@@ -1,132 +1,82 @@
-# Phase 13 - Double-Entry Ledger Engine
+# Phase 13 - 雙式帳本引擎
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+所有資金變動都要留下可稽核、不可任意改寫的帳本軌跡。
 
-## Goal
+## 目標
+實作可稽核的雙式帳本、冪等入帳與沖正。
 
-Implement the immutable double-entry ledger engine as the only authority for balance-affecting asset mutation.
+## 為何需要這一章
+所有資金變動都要留下可稽核、不可任意改寫的帳本軌跡。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-All later funds and settlement flows depend on balanced journals, idempotent posting, reversal semantics, and a financial audit trail.
+## 範圍
+debit / credit 驗證、journal 不可變、冪等處理、併發控制、沖正模型、稽核軌跡。
 
-## Dependencies
+## 非目標
+reservation、撮合、結算、錢包 runtime。
 
-- Previous phases required: Phase 12
-- External dependencies if any: finalized schema, journal account taxonomy, accounting review input
-- Blocking risks: unbalanced posting rules, weak idempotency, poor concurrency handling, unclear reversal model
+## 必要產出
+ledger 引擎、測試、對帳可讀資料。
 
-## Scope
+## 驗收標準
+只有平衡分錄可以入帳，不能出現負向亂改。
 
-- Double-entry posting
-- Debit and credit validation
-- Journal immutability
-- Idempotency
-- Account balance projection update boundary
-- Negative balance prevention hooks
-- Rollback or reversal model
-- Financial audit trail
-- Concurrency handling
-- Ledger tests
+## 必要測試
+posting、idempotency、reversal、concurrency。
 
-## Non-goals
+## 可能影響的檔案與模組
+ledger domain、repository、migration、服務邊界。
 
-- Reservation runtime
-- Order orchestration
-- Matching runtime
-- Settlement runtime
-- Wallet runtime
+## 資料模型影響
+journal 與 line 成為權威資料。
 
-## Required deliverables
+## API 影響
+僅內部帳本介面。
 
-- `LedgerService` production implementation
-- Journal and line validation rules
-- Idempotent posting boundary
-- Reversal model
-- Concurrency control design
-- Audit-friendly journal records
-- Ledger test suite
+## 安全影響
+保存不可變財務歷史。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Every posted journal balances
-- Duplicate request IDs do not double-post
-- Journals become immutable after commit
-- Reversal behavior is explicit and auditable
-- Ledger engine fails closed on invalid debit or credit requests
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Balanced posting tests
-- Invalid debit/credit rejection tests
-- Duplicate request idempotency tests
-- Concurrency tests
-- Reversal tests
-- Audit trail integrity tests
+## 目前仍不能宣稱
+凍結完成、現貨下單完成、撮合完成、結算完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 14 會用 journal 做餘額投影與比對。
 
-- `server/src/main/java/com/lumix/ledger/`
-- `server/src/main/java/com/lumix/account/`
-- repository packages
-- DB-backed ledger tests
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses journals and lines from Phase 12
-- May add ledger metadata fields or supporting lookup tables if schema review requires them
-
-## API impact
-
-- No direct public API required
-- Internal asset-changing services begin to depend on the ledger boundary
-
-## Security impact
-
-- Must preserve immutability and auditability
-- Must prevent unauthorized direct mutation paths around the ledger
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this phase defines the authoritative funds mutation engine
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: ledger defects directly threaten correctness of user funds
-
-## Cannot claim yet
-
-- order freeze completed
-- spot order production flow completed
-- matching completed
-- settlement completed
-
-## Next phase handoff
-
-Phase 14 consumes journal output to build balance projection, rebuild, and reconciliation checks.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, docs/FUNDS_SAFETY_MODEL.md, docs/phases/PHASE_12_DATABASE_SCHEMA.md, and docs/phases/PHASE_13_DOUBLE_ENTRY_LEDGER.md.
-
-Goal: implement Phase 13 only - Double-Entry Ledger Engine.
-Scope: double-entry posting, debit/credit validation, journal immutability, idempotency, reversal model, concurrency handling, and audit trail.
-Non-goals: reservation runtime, matching, settlement, wallet runtime, later phases.
-Deliverables: LedgerService implementation, persistence layer, ledger tests, and docs/progress updates tied to actual implementation.
-Tests: balanced journal tests, invalid posting rejection, idempotency, reversal, concurrency, and build validation.
-Docs to update: AI_PROGRESS.md plus the Phase 13 doc if implementation details materially change.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: order freeze completed, spot order production flow completed, matching completed, settlement completed.
-Final output format: Changed Files, Summary, What Phase 13 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_13_DOUBLE_ENTRY_LEDGER.md
+本章目標：只做 Phase 13 - 雙式帳本引擎。
+範圍：debit / credit 驗證、journal 不可變、冪等處理、併發控制、沖正模型、稽核軌跡。
+不要做：reservation、撮合、結算、錢包 runtime。
+產出：ledger 引擎、測試、對帳可讀資料。
+測試：posting、idempotency、reversal、concurrency。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：凍結完成、現貨下單完成、撮合完成、結算完成。
+輸出格式：Changed Files、Summary、What Phase 13 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

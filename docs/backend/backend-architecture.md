@@ -1,3 +1,3 @@
-# Backend Architecture
+# 後端架構
 
-Pointer to `../ARCHITECTURE_TEXT_MAP.md`.
+Java 後端負責交易所的商業流程協調，例如驗證、授權、訂單編排、帳戶操作、營運管理與外部 API 統一入口。它不是撮合引擎，但它要把各個核心模組安全地串起來。

@@ -1,126 +1,82 @@
-# Phase 23 - Hot / Cold Wallet Treasury
+# Phase 23 - 熱錢包 / 冷錢包金庫
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+交易所需要穩定的資產保管與調度能力。
 
-## Goal
+## 目標
+建立熱錢包、冷錢包、補水策略、簽章邊界與對帳。
 
-Define and implement treasury controls for hot wallets, cold wallets, sweep strategy, batching, signer boundaries, and treasury reconciliation.
+## 為何需要這一章
+交易所需要穩定的資產保管與調度能力。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 21～22。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Deposit and withdrawal runtime alone are insufficient without custody controls, exposure limits, and reconciliation for platform-owned wallets.
+## 範圍
+hot wallet、cold wallet、sweep、threshold、batching、signer boundary、HSM / MPC placeholder、alerting。
 
-## Dependencies
+## 非目標
+撮合、帳本、期貨保證金。
 
-- Previous phases required: Phase 21, Phase 22
-- External dependencies if any: signer system, custody provider, treasury ops policy
-- Blocking risks: excessive hot-wallet exposure, poor batching control, weak signer boundary, treasury drift
+## 必要產出
+treasury 流程、閾值規則、警報。
 
-## Scope
+## 驗收標準
+熱錢包餘額與出金量可以被管理。
 
-- Hot wallet
-- Cold wallet
-- Sweep strategy
-- Hot wallet threshold
-- Withdrawal batching
-- Signer boundary
-- HSM / MPC placeholder
-- Treasury reconciliation
-- Wallet alerting
+## 必要測試
+sweep、threshold、reconciliation、alert。
 
-## Non-goals
+## 可能影響的檔案與模組
+treasury、wallet boundary、monitoring。
 
-- Full HSM or MPC vendor implementation details if externalized
-- User-facing trading logic
-- Non-wallet business workflows
+## 資料模型影響
+金庫狀態與轉帳記錄。
 
-## Required deliverables
+## API 影響
+內部金庫介面。
 
-- Treasury wallet role model
-- Sweep and refill policy
-- Hot-wallet threshold rules
-- Withdrawal batching policy
-- Signer boundary definition
-- Treasury reconciliation workflow
-- Wallet alerting plan
-- Treasury test coverage
+## 安全影響
+簽章與保管邊界清楚。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Hot and cold wallet responsibilities are separated
-- Threshold breaches create actionable alerts
-- Sweep and refill policy is explicit and testable
-- Treasury reconciliation can detect internal vs chain mismatches
-- Signer boundary is documented and reviewable
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Threshold rule tests
-- Sweep strategy tests
-- Withdrawal batching tests
-- Treasury reconciliation tests
-- Alert routing tests
+## 目前仍不能宣稱
+正式錢包安全完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 24 會把對外 API 也納進來。
 
-- `server/src/main/java/com/lumix/wallet/`
-- new treasury packages
-- admin and ops-support packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- May add treasury wallet inventory, sweep records, batch records, and reconciliation metadata
-
-## API impact
-
-- Mostly internal and admin-facing
-- No broader public trading API claims
-
-## Security impact
-
-- Must isolate signer boundary and protect custody workflow
-- Must log all treasury movements and approvals
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because treasury controls affect platform solvency and withdrawal safety
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: custody and treasury controls are launch-critical
-
-## Cannot claim yet
-
-- full production launch readiness
-- compliance hardening completed
-- disaster recovery readiness completed
-
-## Next phase handoff
-
-Phase 24 exposes production Open API capabilities on top of the completed core trading and wallet foundations.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_23_HOT_COLD_WALLET_TREASURY.md.
-
-Goal: implement Phase 23 only - Hot / Cold Wallet Treasury.
-Scope: hot/cold wallet model, sweep strategy, thresholds, withdrawal batching, signer boundary, HSM/MPC placeholder boundary, treasury reconciliation, and wallet alerting.
-Non-goals: public trading logic, full HSM/MPC vendor implementation, later phases.
-Deliverables: treasury controls, tests, and progress/doc updates tied to real implementation.
-Tests: threshold, sweep, batching, treasury reconciliation, alerting, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 23 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: full production launch readiness, compliance hardening completed, disaster recovery readiness completed.
-Final output format: Changed Files, Summary, What Phase 23 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_23_HOT_COLD_WALLET_TREASURY.md
+本章目標：只做 Phase 23 - 熱錢包 / 冷錢包金庫。
+範圍：hot wallet、cold wallet、sweep、threshold、batching、signer boundary、HSM / MPC placeholder、alerting。
+不要做：撮合、帳本、期貨保證金。
+產出：treasury 流程、閾值規則、警報。
+測試：sweep、threshold、reconciliation、alert。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式錢包安全完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 23 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

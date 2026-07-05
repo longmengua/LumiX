@@ -1,130 +1,82 @@
-# Phase 18 - Java ↔ C++ Core Integration
+# Phase 18 - Java 與 C++ 核心整合
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+讓下單服務真的接上撮合核心，而不是只留介面。
 
-## Goal
+## 目標
+實作命令與事件協議，讓 Java 與 C++ 核心可以穩定互通。
 
-Implement the production integration boundary between Java order orchestration and the C++ matching core.
+## 為何需要這一章
+讓下單服務真的接上撮合核心，而不是只留介面。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 16～17。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Even with a real matching core, production trading still fails without a reliable command path, event path, replay handling, duplicate handling, and backpressure or circuit-breaker controls.
+## 範圍
+submit / cancel、fill event consumer、sequence 保證、duplicate event 處理、replay、backpressure、circuit breaker。
 
-## Dependencies
+## 非目標
+結算 runtime、餘額變動 runtime。
 
-- Previous phases required: Phase 16, Phase 17
-- External dependencies if any: transport choice, protocol serialization, integration environment
-- Blocking risks: duplicate or missing events, sequence drift, blocked command path, uncontrolled backpressure
+## 必要產出
+整合層、事件消費、整合測試。
 
-## Scope
+## 驗收標準
+命令與事件能可靠往返，不會重複記帳。
 
-- Command protocol
-- Event protocol
-- Submit order
-- Cancel order
-- Fill event consumer
-- Sequence guarantee
-- Duplicate event handling
-- Replay handling
-- Backpressure
-- Circuit breaker
-- Integration tests
+## 必要測試
+protocol、重送、replay、backpressure。
 
-## Non-goals
+## 可能影響的檔案與模組
+server 與 core 邊界、integration tests。
 
-- Matching-core implementation itself
-- Settlement runtime
-- Market-data runtime
-- Wallet runtime
+## 資料模型影響
+事件序號與交付記錄。
 
-## Required deliverables
+## API 影響
+Java ↔ C++ 介面。
 
-- `MatchingEngineClient` production implementation
-- Command and event protocol contracts
-- Order submit and cancel integration path
-- Fill-event consumer boundary
-- Sequence and replay policy
-- Backpressure and circuit-breaker behavior
-- Integration test suite
+## 安全影響
+避免重複事件與亂序。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Java can submit and cancel orders through the core boundary safely
-- Duplicate events do not double-apply downstream effects
-- Replay path can recover missing state
-- Sequence guarantees are documented and enforced
-- Backpressure and circuit-breaker behavior fails closed
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Submit integration tests
-- Cancel integration tests
-- Duplicate event handling tests
-- Replay recovery tests
-- Sequence gap handling tests
-- Backpressure and circuit-breaker tests
+## 目前仍不能宣稱
+結算完成、正式市場資料完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 19 會根據 fill 事件做結算。
 
-- `server/src/main/java/com/lumix/spot/`
-- new integration packages
-- shared protocol docs
-- possible `core/` protocol modules
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- May add integration event checkpoint metadata and replay markers
-
-## API impact
-
-- No new end-user API surface required
-- Existing order APIs gain a real matching path behind the boundary
-
-## Security impact
-
-- Must authenticate or trust-boundary protect the Java-to-core channel
-- Must guard against malformed or replayed integration messages
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because integration defects can misroute execution and downstream settlement
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: protocol and sequencing defects can corrupt the trading pipeline
-
-## Cannot claim yet
-
-- settlement completed
-- production market data completed
-- production trading completed
-
-## Next phase handoff
-
-Phase 19 consumes authoritative fill events to perform fee calculation, reserve commit, unused reserve release, and final state updates.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/TRADING_CORE_BOUNDARIES.md, docs/ORDER_SETTLEMENT_FLOW.md, docs/phases/PHASE_17_CPP_MATCHING_CORE.md, and docs/phases/PHASE_18_MATCHING_INTEGRATION.md.
-
-Goal: implement Phase 18 only - Java ↔ C++ Core Integration.
-Scope: command protocol, event protocol, submit/cancel integration, fill event consumption, sequence guarantees, duplicate handling, replay handling, backpressure, circuit breaker, and integration tests.
-Non-goals: matching-core implementation, settlement runtime, market-data runtime, wallet runtime, later phases.
-Deliverables: MatchingEngineClient implementation, protocol contracts, integration tests, and progress/doc updates tied to real implementation.
-Tests: submit/cancel integration, duplicate handling, replay recovery, sequence gap handling, backpressure, circuit breaker, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 18 doc only if implementation changes reality.
-Validation commands: run matching-core validation as needed, plus cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: settlement completed, production market data completed, production trading completed.
-Final output format: Changed Files, Summary, What Phase 18 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_18_MATCHING_INTEGRATION.md
+本章目標：只做 Phase 18 - Java 與 C++ 核心整合。
+範圍：submit / cancel、fill event consumer、sequence 保證、duplicate event 處理、replay、backpressure、circuit breaker。
+不要做：結算 runtime、餘額變動 runtime。
+產出：整合層、事件消費、整合測試。
+測試：protocol、重送、replay、backpressure。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：結算完成、正式市場資料完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 18 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

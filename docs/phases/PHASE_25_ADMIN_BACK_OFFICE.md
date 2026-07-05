@@ -1,129 +1,82 @@
-# Phase 25 - Admin Back Office
+# Phase 25 - 管理後台
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+營運交易所一定要有正式後台。
 
-## Goal
+## 目標
+建立 admin RBAC、查詢、審核、四眼批准與稽核紀錄。
 
-Implement the production back-office control plane for user, account, order, trade, and wallet operations with RBAC and four-eyes approval.
+## 為何需要這一章
+營運交易所一定要有正式後台。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 21～24。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Production exchanges need safe operational tooling for review, investigation, and controlled interventions without bypassing ledger and audit requirements.
+## 範圍
+user / account / order / trade / deposit / withdrawal 查詢、asset adjustment request、four-eyes approval。
 
-## Dependencies
+## 非目標
+新增交易邏輯。
 
-- Previous phases required: Phase 21, Phase 22, Phase 24, and relevant trading data phases
-- External dependencies if any: RBAC policy model, operator workflow requirements
-- Blocking risks: over-privileged admin access, unlogged actions, approval bypasses
+## 必要產出
+admin console、審批流程、審計。
 
-## Scope
+## 驗收標準
+後台操作都有角色限制與稽核。
 
-- Admin RBAC
-- User lookup
-- Account lookup
-- Order lookup
-- Trade lookup
-- Deposit / withdrawal review
-- Asset adjustment request
-- Four-eyes approval
-- Admin audit log
-- Reason code
+## 必要測試
+RBAC、查詢、審批、audit log。
 
-## Non-goals
+## 可能影響的檔案與模組
+admin controllers、services、audit。
 
-- Silent direct balance mutation
-- Ad-hoc database editing as an operational substitute
-- Replacing reconciliation workflows
+## 資料模型影響
+後台操作與原因碼。
 
-## Required deliverables
+## API 影響
+管理 API。
 
-- Admin permission model
-- Lookup APIs and views
-- Deposit and withdrawal review tools
-- Asset-adjustment request workflow
-- Four-eyes approval flow
-- Reason-code taxonomy
-- Immutable admin audit log
-- Admin back-office test suite
+## 安全影響
+最小權限與雙人覆核。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Every admin action is authenticated and authorized
-- Sensitive actions require approval where policy says so
-- Asset adjustments go through request and approval workflow
-- Audit log records actor, target, reason, before or after state context, and outcome
-- Admin tooling does not bypass ledger or reservation boundaries
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- RBAC tests
-- Lookup authorization tests
-- Review workflow tests
-- Four-eyes approval tests
-- Reason-code enforcement tests
-- Admin audit-log tests
+## 目前仍不能宣稱
+正式管理完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 26 會把風控與 kill switch 接上。
 
-- admin packages under `server/src/main/java/com/lumix/`
-- audit packages
-- wallet, order, and account lookup controllers
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses admin audit and review tables
-- May add adjustment-request and approval metadata
-
-## API impact
-
-- Introduces production admin-only APIs or internal endpoints
-- No change to public claims of full launch readiness
-
-## Security impact
-
-- Critical reliance on RBAC, audit logging, and least privilege
-- Must detect and block privilege escalation or approval bypass
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because admin tooling can influence sensitive wallet and funds workflows
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: admin control defects create high-impact abuse paths
-
-## Cannot claim yet
-
-- full risk engine completed
-- liquidity controls completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 26 adds production risk limits, halts, pauses, and kill-switch controls across trading and wallet flows.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_25_ADMIN_BACK_OFFICE.md.
-
-Goal: implement Phase 25 only - Admin Back Office.
-Scope: admin RBAC, user/account/order/trade lookup, deposit/withdraw review, asset-adjustment requests, four-eyes approval, admin audit log, and reason codes.
-Non-goals: silent direct balance mutation, ad-hoc DB edits as operations, later phases.
-Deliverables: production admin back office, tests, and progress/doc updates tied to real implementation.
-Tests: RBAC, lookup authorization, review workflows, four-eyes approval, reason codes, audit log, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 25 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: full risk engine completed, liquidity controls completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 25 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_25_ADMIN_BACK_OFFICE.md
+本章目標：只做 Phase 25 - 管理後台。
+範圍：user / account / order / trade / deposit / withdrawal 查詢、asset adjustment request、four-eyes approval。
+不要做：新增交易邏輯。
+產出：admin console、審批流程、審計。
+測試：RBAC、查詢、審批、audit log。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式管理完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 25 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

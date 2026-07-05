@@ -1,129 +1,82 @@
-# Phase 33 - Security / Compliance Hardening
+# Phase 33 - 安全與合規加固
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+正式營運需要清楚的安全與合規邊界。
 
-## Goal
+## 目標
+把威脅模型、秘密管理、API 濫用偵測、KYC / AML 接點與稽核補齊。
 
-Harden the platform against secret compromise, API abuse, suspicious operations, and compliance gaps before launch.
+## 為何需要這一章
+正式營運需要清楚的安全與合規邊界。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 24～26、32。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Even correct business logic is not launch-ready without threat modeling, secret handling, abuse detection, compliance hooks, and security remediation tracking.
+## 範圍
+sanctions screening hook、suspicious withdrawal alert、device / session risk、admin anomaly detection、dependency audit。
 
-## Dependencies
+## 非目標
+新增交易核心。
 
-- Previous phases required: Phase 24, Phase 25, Phase 26, Phase 32
-- External dependencies if any: KYC/AML provider boundaries, sanctions screening source, security review input
-- Blocking risks: poor secret hygiene, missing abuse detection, incomplete compliance integration, unresolved critical findings
+## 必要產出
+安全清單、合規接點、修補項。
 
-## Scope
+## 驗收標準
+已知高風險點有處理計畫與紀錄。
 
-- Threat model
-- Secrets management
-- API abuse detection
-- KYC / AML integration boundary
-- Sanctions screening hook
-- Suspicious withdrawal alert
-- Device / session risk
-- Admin anomaly detection
-- Dependency audit
-- Penetration test fix list
+## 必要測試
+威脅檢查、權限檢查、依賴掃描。
 
-## Non-goals
+## 可能影響的檔案與模組
+security docs、認證、稽核與告警。
 
-- Full legal or policy authoring
-- Launch sign-off itself
-- Replacing the runtime business engines
+## 資料模型影響
+安全事件與審計。
 
-## Required deliverables
+## API 影響
+安全與合規 API 接點。
 
-- Threat model document
-- Secret-management plan and integration points
-- Abuse-detection controls
-- KYC/AML and sanctions hook boundaries
-- Suspicious-withdrawal alerting
-- Device/session risk controls
-- Admin anomaly-detection hooks
-- Dependency audit results
-- Pen-test remediation backlog
+## 安全影響
+這一章本身就是安全主題。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Critical secret and abuse paths are hardened
-- Compliance integration boundaries are explicit
-- Suspicious withdrawal and admin anomaly alerts are actionable
-- Dependency audit and pen-test fix list exist with tracked severity
-- Critical unresolved security gaps are visible before launch decisions
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Secret handling tests where applicable
-- API abuse or throttling tests
-- Alert-generation tests for suspicious withdrawal and admin anomalies
-- Dependency-audit execution
-- Security regression or hardening checks
+## 目前仍不能宣稱
+安全與合規完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 34 會把監控與事故流程補全。
 
-- security and auth packages
-- wallet and admin packages
-- config and ops docs
-- dependency manifests and CI hooks
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- May add security event records, compliance-case metadata, and anomaly alerts
-
-## API impact
-
-- Hardens API and session behavior
-- Adds compliance and abuse hooks around existing APIs
-
-## Security impact
-
-- Critical
-- This phase is itself a security-hardening phase
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because security defects can become direct fund-loss paths
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: security and compliance are pre-launch blockers
-
-## Cannot claim yet
-
-- observability/SRE completed
-- production infra/release completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 34 adds structured observability, runbooks, alerting, incident policy, and postmortem infrastructure.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, and docs/phases/PHASE_33_SECURITY_COMPLIANCE_HARDENING.md.
-
-Goal: implement Phase 33 only - Security / Compliance Hardening.
-Scope: threat model, secrets management, API abuse detection, KYC/AML integration boundary, sanctions screening hook, suspicious withdrawal alert, device/session risk, admin anomaly detection, dependency audit, and pen-test fix list.
-Non-goals: launch sign-off, later phases.
-Deliverables: security/compliance hardening work, tests/checks, and progress/doc updates tied to real implementation.
-Tests: security regressions, abuse detection, alert generation, dependency audit, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 33 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: observability/SRE completed, production infra/release completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 33 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_33_SECURITY_COMPLIANCE_HARDENING.md
+本章目標：只做 Phase 33 - 安全與合規加固。
+範圍：sanctions screening hook、suspicious withdrawal alert、device / session risk、admin anomaly detection、dependency audit。
+不要做：新增交易核心。
+產出：安全清單、合規接點、修補項。
+測試：威脅檢查、權限檢查、依賴掃描。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：安全與合規完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 33 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

@@ -1,21 +1,20 @@
-# LumiX Routes
+# LumiX 路由索引
 
-## Public routes
+## 公開頁面
 
-- `/` - Home
-- `/markets` - Markets
-- `/spot/:symbol` - Spot trading placeholder
-- `/futures/:symbol` - Futures trading placeholder
-- `/margin/:symbol` - Margin trading placeholder
+- `/`：首頁
+- `/markets`：市場頁
+- `/spot/:symbol`：現貨交易頁（占位）
+- `/futures/:symbol`：合約交易頁（占位）
+- `/margin/:symbol`：槓桿交易頁（占位）
 
-## Account routes
+## 帳戶頁面
 
-- `/assets` - Assets
-- `/orders` - Orders
-- `/positions` - Positions
-- `/account` - Account overview
+- `/assets`：資產頁
+- `/orders`：訂單頁
+- `/positions`：倉位頁
+- `/account`：帳戶總覽
 
-## Admin routes
+## 管理頁面
 
-- `/admin` - Admin dashboard placeholder
-
+- `/admin`：後台總覽（占位）

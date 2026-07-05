@@ -1,3 +1,3 @@
-# Settlement
+# 結算
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+結算負責把成交事件轉成正式帳本變化，包含手續費、預留提交、剩餘資金釋放與失敗補償。沒有結算，成交就只是事件，不會成為真正的資金結果。

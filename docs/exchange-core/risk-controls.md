@@ -1,3 +1,3 @@
-# Risk Controls
+# 風控
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+風控負責控制交易量、價格帶、提領、整體風險上限與緊急停止。當市場或系統異常時，風控是保護交易所與使用者的第一道閘門。

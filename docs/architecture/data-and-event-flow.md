@@ -1,3 +1,5 @@
-# Data and Event Flow
+# 資料與事件流
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../ARCHITECTURE_TEXT_MAP.md`.
+LumiX 的資料不是只存在單一資料表裡，而是會經過訂單、成交、帳本、行情、錢包與對帳等多條事件流共同推進。這一章用來說明哪些資料是交易核心事件、哪些是衍生視圖、哪些是公開行情、哪些是營運報表。
+
+理解這一章，可以幫助你看懂整個系統如何維持一致性。

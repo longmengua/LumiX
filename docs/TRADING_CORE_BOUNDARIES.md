@@ -1,11 +1,5 @@
-# Trading Core Boundaries
+# 交易核心邊界說明
 
-Archive pointer only.
+LumiX 的正式撮合必須由獨立核心承擔，Java 後端只做協調，不負責假裝撮合完成。這份文件要讓人清楚知道：誰是交易核心、誰是結算核心、誰是帳本核心、誰只負責介面與流程。
 
-Current source of truth:
-
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/ARCHITECTURE_TEXT_MAP.md`
-
-Do not use this file as the authoritative trading-core boundary definition.
-
+這樣的邊界能降低錯誤，也能讓未來的正式上線有明確責任分工。

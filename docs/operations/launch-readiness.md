@@ -1,3 +1,3 @@
-# Launch Readiness
+# 上線準備
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../PHASE_REVIEW_WORKFLOW.md`.
+上線準備章節描述正式開站前要完成的檢查、演練與決策流程，確保系統、團隊與文件都到位。

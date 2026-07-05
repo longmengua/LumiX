@@ -1,3 +1,3 @@
-# Deployment
+# 部署
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+部署章節描述 LumiX 要如何被發佈到正式環境，包含環境切分、版本管理、回滾與備份。

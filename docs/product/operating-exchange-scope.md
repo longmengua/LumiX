@@ -1,3 +1,5 @@
-# Operating Exchange Scope
+# 交易所產品範圍
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+LumiX 的目標不是只做一個可以點按的展示型網站，而是一套可以正式營運的交易所產品。它需要同時支援使用者交易、資金管理、風控、對帳、營運與商業化收入。
+
+這一章用來描述產品邊界，以及哪些能力是正式上線前的必要條件。

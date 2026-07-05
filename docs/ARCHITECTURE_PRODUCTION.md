@@ -1,11 +1,5 @@
-# Production Exchange Architecture
+# 交易所架構總覽
 
-Archive pointer only.
+LumiX 要成為一套正式營運的交易所，需要把前端、後端、撮合核心、帳本、錢包、風控、對帳與營運支援拆成清楚的層次。這份架構頁的用途，是讓讀者先建立整體印象，再去看各章細節。
 
-Current source of truth:
-
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/ARCHITECTURE_TEXT_MAP.md`
-
-Do not use this file as the authoritative architecture definition.
-
+重點不是「把所有功能放在一起」，而是「每個責任都清楚分開」。

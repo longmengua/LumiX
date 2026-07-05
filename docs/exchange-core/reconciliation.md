@@ -1,3 +1,3 @@
-# Reconciliation
+# 對帳
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+對帳負責檢查帳本、餘額、訂單、成交、錢包與鏈上狀態是否一致。當不一致發生時，系統要能開案、追查與補償，而不是直接默默改資料。

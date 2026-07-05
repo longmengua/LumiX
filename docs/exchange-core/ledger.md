@@ -1,3 +1,3 @@
-# Ledger
+# 帳本
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+交易所帳本負責記錄所有會影響資產的正式紀錄。它需要支援雙向分錄、冪等、不可變更、回滾與重建，才能讓每一筆資金變化都可被稽核。

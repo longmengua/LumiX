@@ -1,131 +1,82 @@
-# Phase 35 - Production Infra / CI-CD / Release
+# Phase 35 - 生產部署 / CI-CD / 發版
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+正式營運需要穩定交付與回復能力。
 
-## Goal
+## 目標
+建立 Docker、部署清單、環境分離、密鑰注入、DB migration pipeline 與回滾策略。
 
-Implement production build, deploy, rollback, environment, backup, and release orchestration for web, server, and future core components.
+## 為何需要這一章
+正式營運需要穩定交付與回復能力。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 32～34。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Production operation requires reproducible deployment paths, environment isolation, safe rollback, and disaster-recovery evidence in addition to application code.
+## 範圍
+canary、blue-green、backup / restore drill、disaster recovery drill。
 
-## Dependencies
+## 非目標
+新增交易核心。
 
-- Previous phases required: Phase 12 through Phase 34 as applicable to deployable components
-- External dependencies if any: container registry, orchestrator, secret store, backup targets
-- Blocking risks: unsafe rollout path, broken rollback, migration drift, poor environment separation
+## 必要產出
+部署腳本、CI/CD、回復演練。
 
-## Scope
+## 驗收標準
+部署、回滾與備份恢復都有演練。
 
-- Docker production build
-- Kubernetes / deployment manifests
-- Environment separation
-- Secret injection
-- DB migration pipeline
-- Rollback strategy
-- Canary deploy
-- Blue-green deploy
-- Backup / restore drill
-- Disaster recovery drill
+## 必要測試
+build、部署演練、備份恢復。
 
-## Non-goals
+## 可能影響的檔案與模組
+Docker、部署清單、CI/CD、運維文件。
 
-- Business launch approval itself
-- Product policy definition
-- Replacing application-level correctness testing
+## 資料模型影響
+發版與回滾紀錄。
 
-## Required deliverables
+## API 影響
+部署與環境設定。
 
-- Production build artifacts and container definitions
-- Deployment manifests
-- Environment separation model
-- Secret-injection workflow
-- DB migration deployment pipeline
-- Rollback strategy
-- Canary and blue-green rollout procedures
-- Backup and restore drill evidence
-- Disaster-recovery drill evidence
+## 安全影響
+密鑰與環境隔離。
 
-## Acceptance criteria
+## 用戶資金影響
+- 否。
+- 審核需求：必須人工審核。
 
-- Deployments are reproducible and versioned
-- Secrets are injected safely per environment
-- DB migrations are part of controlled release flow
-- Rollback path is documented and tested
-- Backup/restore and disaster-recovery drills produce evidence
+## 風險等級
+High。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Build artifact validation
-- Deployment manifest validation
-- Migration pipeline validation
-- Rollback drill
-- Canary or blue-green rollout test
-- Backup/restore drill
-- Disaster-recovery drill
+## 目前仍不能宣稱
+正式上線完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 36 會做最終上線審核。
 
-- `infra/` or deployment directories if created
-- CI configuration
-- release docs
-- build tooling for `server/`, `web/`, and future `core/`
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- No direct business-model change
-- Controls how schemas and data are promoted and recovered
-
-## API impact
-
-- No direct API feature change
-- Improves reliability of API release and rollback
-
-## Security impact
-
-- Must protect secrets, deployment credentials, and backup artifacts
-- Must ensure environment isolation and least privilege
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because deployment and restore mistakes can affect production funds integrity
-
-## Risk level
-
-- High
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: release controls are part of production safety and recovery
-
-## Cannot claim yet
-
-- pre-launch certification completed
-- production launch ready
-
-## Next phase handoff
-
-Phase 36 consumes technical readiness evidence and turns it into final launch certification and go/no-go decision workflow.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, and docs/phases/PHASE_35_PRODUCTION_INFRA_CICD_RELEASE.md.
-
-Goal: implement Phase 35 only - Production Infra / CI-CD / Release.
-Scope: Docker production build, deployment manifests, environment separation, secret injection, DB migration pipeline, rollback strategy, canary/blue-green deploy, backup/restore drill, and disaster recovery drill.
-Non-goals: business launch approval, later phases.
-Deliverables: production infra/release system, drill evidence, and progress/doc updates tied to real implementation.
-Tests: build validation, manifest validation, migration pipeline validation, rollback drill, canary/blue-green test, backup/restore drill, disaster-recovery drill.
-Docs to update: AI_PROGRESS.md and the Phase 35 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists; run any infra validation commands added for this phase.
-Cannot claim yet: pre-launch certification completed, production launch ready.
-Final output format: Changed Files, Summary, What Phase 35 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_35_PRODUCTION_INFRA_CICD_RELEASE.md
+本章目標：只做 Phase 35 - 生產部署 / CI-CD / 發版。
+範圍：canary、blue-green、backup / restore drill、disaster recovery drill。
+不要做：新增交易核心。
+產出：部署腳本、CI/CD、回復演練。
+測試：build、部署演練、備份恢復。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式上線完成。
+輸出格式：Changed Files、Summary、What Phase 35 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

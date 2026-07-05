@@ -1,129 +1,82 @@
-# Phase 22 - Production Withdrawal System
+# Phase 22 - 出金系統
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+出金是最敏感的資金操作之一。
 
-## Goal
+## 目標
+建立出金申請、可用餘額檢查、預留、審核、白名單與廣播邊界。
 
-Implement the production withdrawal system from request intake through reservation, approval, broadcast boundary, tracking, and failed-withdrawal release.
+## 為何需要這一章
+出金是最敏感的資金操作之一。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12～15、21。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Outbound funds movement is one of the highest-risk exchange operations and requires strict security, review, reservation, fee handling, and rollback controls.
+## 範圍
+withdrawal request、risk review、address whitelist、fee deduction、tx status tracking、failed release。
 
-## Dependencies
+## 非目標
+自動清算撮合、期貨保證金。
 
-- Previous phases required: Phase 12, Phase 13, Phase 14, Phase 15, Phase 21
-- External dependencies if any: broadcast provider, signer boundary, whitelist policy, risk-review input
-- Blocking risks: unauthorized withdrawal, missing release on failure, incorrect fee treatment, unsafe whitelist handling
+## 必要產出
+withdrawal service、審批流程、測試。
 
-## Scope
+## 驗收標準
+出金前會預留資金，失敗時可以釋放。
 
-- Withdrawal request
-- Available balance check
-- Fund reservation
-- Approval workflow
-- Risk review
-- Address whitelist
-- Fee deduction
-- Broadcast boundary
-- Tx status tracking
-- Failed withdrawal release
+## 必要測試
+request、approval、broadcast boundary、failed release。
 
-## Non-goals
+## 可能影響的檔案與模組
+withdrawal domain、admin review、wallet boundary。
 
-- Hot/cold treasury strategy
-- HSM or MPC implementation details beyond boundary definition
-- Automatic compensation outside approved workflows
+## 資料模型影響
+withdrawals 表與狀態。
 
-## Required deliverables
+## API 影響
+出金申請與查詢。
 
-- Production `WithdrawService`
-- Withdrawal approval and review flow
-- Fee deduction policy integration
-- Broadcast boundary and tx tracking
-- Failed-withdrawal release path
-- Withdrawal test suite
+## 安全影響
+白名單、審核、費用檢查。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Withdrawal request fails closed on insufficient available balance
-- Reservation occurs before approval or broadcast
-- Whitelist and risk review policies are enforced
-- Broadcast state and tx tracking are auditable
-- Failed withdrawals release funds safely when policy allows
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Available-balance check tests
-- Reservation-before-broadcast tests
-- Approval and risk-review tests
-- Whitelist tests
-- Fee deduction tests
-- Failed-withdrawal release tests
-- Tx status tracking tests
+## 目前仍不能宣稱
+正式錢包安全完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 23 會補上金庫與錢包分層。
 
-- `server/src/main/java/com/lumix/wallet/`
-- `server/src/main/java/com/lumix/ledger/`
-- `server/src/main/java/com/lumix/risk/`
-- admin review packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses withdrawal, reservation, whitelist, and audit structures from earlier phases
-- May add tx-state or approval metadata
-
-## API impact
-
-- Enables production withdrawal request and history APIs
-- Withdraw API must remain tightly permissioned
-
-## Security impact
-
-- Critical dependence on 2FA, whitelist, risk review, and audit logging
-- Must protect the broadcast boundary and tx-status update path
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this phase can move user assets out of the platform
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: withdrawal safety is a core launch blocker
-
-## Cannot claim yet
-
-- treasury completed
-- production wallet completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 23 adds hot/cold wallet treasury controls, thresholds, batching, signer boundaries, and treasury reconciliation.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, docs/FUNDS_SAFETY_MODEL.md, and docs/phases/PHASE_22_WITHDRAWAL_SYSTEM.md.
-
-Goal: implement Phase 22 only - Production Withdrawal System.
-Scope: withdrawal request, available-balance check, fund reservation, approval workflow, risk review, whitelist, fee deduction, broadcast boundary, tx tracking, and failed withdrawal release.
-Non-goals: treasury strategy, HSM/MPC implementation, later phases.
-Deliverables: production withdrawal system, tests, and progress/doc updates tied to real implementation.
-Tests: available-balance checks, reservation-before-broadcast, approval/risk review, whitelist, fee deduction, failed withdrawal release, tx tracking, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 22 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: treasury completed, production wallet completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 22 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_22_WITHDRAWAL_SYSTEM.md
+本章目標：只做 Phase 22 - 出金系統。
+範圍：withdrawal request、risk review、address whitelist、fee deduction、tx status tracking、failed release。
+不要做：自動清算撮合、期貨保證金。
+產出：withdrawal service、審批流程、測試。
+測試：request、approval、broadcast boundary、failed release。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式錢包安全完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 22 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

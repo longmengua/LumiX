@@ -1,3 +1,3 @@
-# Service Boundaries
+# 服務邊界
 
-Pointer to `../ARCHITECTURE_TEXT_MAP.md`.
+後端服務要按照責任切分：帳戶、錢包、訂單、風控、對帳、管理功能各自獨立，避免把整個交易所塞進單一服務裡。

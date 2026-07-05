@@ -1,3 +1,3 @@
-# Security / Compliance
+# 安全與合規
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+安全與合規章節描述密鑰管理、存取控制、稽核、法遵與風險揭露等營運條件。

@@ -1,3 +1,5 @@
-# System Architecture
+# 系統架構
 
-Pointer to `../ARCHITECTURE_TEXT_MAP.md` and `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+LumiX 的系統可以分成前端、後端、交易核心、資料層、錢包層與營運層。使用者操作從前端或 Open API 進來，Java 後端負責驗證、協調與路由，真正的撮合與資金安全則要交給專屬核心模組。
+
+這一章是整體架構的總說明，重點在於理解每個模組的責任邊界，而不是把所有功能塞進單一服務。

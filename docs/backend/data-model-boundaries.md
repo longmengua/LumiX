@@ -1,3 +1,3 @@
-# Data Model Boundaries
+# 資料模型邊界
 
-Pointer to `../ARCHITECTURE_TEXT_MAP.md`.
+資料模型要清楚區分指令型資料、事件型資料、帳本資料、衍生視圖與營運報表，避免不同用途的資料混在同一層處理。

@@ -1,129 +1,82 @@
-# Phase 36 - Pre-Launch Certification & Business Readiness
+# Phase 36 - 上線前驗證與商業就緒
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+就算功能做完，正式上線前還要有營運與商業條件。
 
-## Goal
+## 目標
+完成費率、法務、客服、做市合作、展示演練與 go / no-go 決策。
 
-Perform the final technical, operational, business, and policy certification required before any production launch claim.
+## 為何需要這一章
+就算功能做完，正式上線前還要有營運與商業條件。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12～35。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Even when core systems are implemented, launch still requires fee, legal, support, market-maker, SLA, and rehearsal readiness plus a final go/no-go decision.
+## 範圍
+fee schedule、revenue report、listing policy、customer support、legal terms、privacy policy、risk disclosure、withdrawal SLA、market maker agreement、bug bounty、launch rehearsal。
 
-## Dependencies
+## 非目標
+新增 runtime 功能。
 
-- Previous phases required: Phase 12 through Phase 35
-- External dependencies if any: legal review, support staffing, market-maker agreements, executive launch sign-off
-- Blocking risks: unresolved critical issues, incomplete policies, failed rehearsal, unsupported customer operations
+## 必要產出
+上線審查包、營運文件、演練紀錄。
 
-## Scope
+## 驗收標準
+所有前置章節都完成且可審核。
 
-- Fee schedule
-- Revenue report
-- Listing policy
-- Customer support workflow
-- Legal terms
-- Privacy policy
-- Risk disclosure
-- Withdrawal SLA
-- Market maker agreement
-- Bug bounty
-- Launch rehearsal
-- Go / no-go review
+## 必要測試
+launch rehearsal、營運清單、客服演練、go / no-go 佐證。
 
-## Non-goals
+## 可能影響的檔案與模組
+營運、法務、客服、發版文件。
 
-- New runtime feature implementation
-- Unreviewed scope expansion after readiness review begins
+## 資料模型影響
+上線證據與決策紀錄。
 
-## Required deliverables
+## API 影響
+無新增主要 API。
 
-- Final fee schedule
-- Revenue and business reporting baseline
-- Listing policy
-- Customer-support and escalation workflow
-- Legal terms, privacy policy, and risk disclosure
-- Withdrawal SLA
-- Market-maker agreement readiness
-- Bug-bounty readiness
-- Launch rehearsal report
-- Go/no-go review package
+## 安全影響
+確認沒有未解重大安全問題。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- All prior critical phases are complete and reviewed
-- Launch rehearsal succeeds or produces resolved follow-up items
-- Legal, support, and market-operation documents exist
-- Go/no-go review has explicit owners and sign-off path
-- No production launch claim is made before this phase passes
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Launch rehearsal
-- End-to-end operational checklist validation
-- Support escalation drill
-- Go/no-go review evidence collection
+## 目前仍不能宣稱
+正式上線就緒。
 
-## Files / modules likely affected
+## 下一階段交接
+沒有下一個實作章節；只剩正式上線決策。
 
-- launch and ops docs
-- support and legal document directories
-- release metadata
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Little or no direct runtime data-model change
-- May add readiness evidence records or checklists if tracked in repo
-
-## API impact
-
-- No major new API implementation
-- Final policy and SLA constraints may shape public documentation
-
-## Security impact
-
-- Must confirm security, compliance, and incident controls are already satisfied
-- Must ensure no unresolved critical security findings remain open
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this phase is the final production-launch gate for user funds and trading safety
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: this phase is the final launch gate and cannot be auto-approved
-
-## Cannot claim yet
-
-- nothing further can be claimed before this phase passes
-- production launch ready
-
-## Next phase handoff
-
-There is no subsequent implementation phase. Successful completion leads only to an explicit launch decision, not automatic launch.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/CODEX_PHASE_PROMPTS.md, and docs/phases/PHASE_36_PRE_LAUNCH_CERTIFICATION.md.
-
-Goal: implement Phase 36 only - Pre-Launch Certification & Business Readiness.
-Scope: fee schedule, revenue report, listing policy, customer support workflow, legal terms, privacy policy, risk disclosure, withdrawal SLA, market maker agreement, bug bounty, launch rehearsal, and go/no-go review.
-Non-goals: new runtime features, later phases.
-Deliverables: final certification package, launch rehearsal evidence, and progress/doc updates tied to actual readiness work.
-Tests: launch rehearsal, operational checklist validation, support drill, go/no-go evidence collection, and normal build validation to confirm repo health.
-Docs to update: AI_PROGRESS.md and the Phase 36 doc only if readiness reality changes.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: production launch ready until this phase fully passes with explicit human sign-off.
-Final output format: Changed Files, Summary, What Phase 36 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_36_PRE_LAUNCH_CERTIFICATION.md
+本章目標：只做 Phase 36 - 上線前驗證與商業就緒。
+範圍：fee schedule、revenue report、listing policy、customer support、legal terms、privacy policy、risk disclosure、withdrawal SLA、market maker agreement、bug bounty、launch rehearsal。
+不要做：新增 runtime 功能。
+產出：上線審查包、營運文件、演練紀錄。
+測試：launch rehearsal、營運清單、客服演練、go / no-go 佐證。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式上線就緒。
+輸出格式：Changed Files、Summary、What Phase 36 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

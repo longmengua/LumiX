@@ -1,3 +1,3 @@
-# Market Data
+# 行情資料
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+行情資料包含深度、撮合增量、成交明細、Ticker 與 K 線。它必須來自正式事件流，而不是手動填資料。

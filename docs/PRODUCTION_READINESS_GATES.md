@@ -1,11 +1,18 @@
-# Production Readiness Gates
+# 上線就緒門檻
 
-Archive pointer only.
+這份文件用來判斷「哪些事情真的已經準備好」。它不談願望，只看證據。
 
-Current source of truth:
-
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/PHASE_REVIEW_WORKFLOW.md`
-
-Do not use this file as the authoritative readiness gate definition.
-
+| 門檻 | 必要章節 | 必要測試 | 必要證據 | 通過前不能宣稱 |
+| --- | --- | --- | --- | --- |
+| 不得宣稱正式交易 | 11 到 20、21 到 23、32 到 36 | 章節測試與建置 | 文件、測試紀錄、審核紀錄 | 正式交易完成 |
+| 帳本正確 | 12 到 14 | 帳本、冪等、重建、對帳 | journal 與餘額證據 | 帳本完成 |
+| 資金凍結 | 15、16 | reserve、release、commit、rollback | 凍結狀態與重試紀錄 | 凍結完成 |
+| 撮合確定性 | 17、18 | C++ 測試、整合、replay | snapshot、sequence 證據 | 撮合完成 |
+| 結算正確 | 19、20 | fill settlement、費用、釋放 | 結算 journal | 結算完成 |
+| 錢包安全 | 21 到 23 | 入金、出金、金庫演練 | 鏈上與內部對帳紀錄 | 錢包安全完成 |
+| 對帳 | 14、19 到 22、32 | 差異、卡住狀態、補償 | 對帳報告 | 對帳完成 |
+| 管理稽核 | 25、32 | RBAC、審批、audit log | 管理操作紀錄 | 管理完成 |
+| 風控總開關 | 26、33 | 限制、停單、停幣 | 風控與告警證據 | 風控完成 |
+| 安全 | 33 | 威脅、依賴、權限檢查 | 安全清單 | 安全完成 |
+| 監控 | 34 | 告警、演練、事故流程 | 監控面板與演練 | 監控完成 |
+| 上線決策 | 35、36 | 發版、回復、launch rehearsal | go / no-go 包 | 正式上線就緒 |

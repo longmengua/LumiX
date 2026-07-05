@@ -1,3 +1,3 @@
-# Incident Response
+# 事件應變
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+事件應變章節描述當交易、錢包、對帳或風控出現異常時，團隊應該如何處理、升級與復原。

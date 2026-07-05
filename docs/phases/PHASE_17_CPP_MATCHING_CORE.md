@@ -1,135 +1,82 @@
-# Phase 17 - C++ Matching Core
+# Phase 17 - C++ 撮合核心
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+撮合必須由獨立核心負責，不能靠 Java 假裝完成。
 
-## Goal
+## 目標
+建立確定性撮合、order book、價格時間優先、重放與回復。
 
-Implement the deterministic production C++ matching engine and authoritative order book.
+## 為何需要這一章
+撮合必須由獨立核心負責，不能靠 Java 假裝完成。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 11 的邊界與 Phase 16 的接點。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Production trading cannot be claimed while Java only exposes `MatchingEngineClient` without a real deterministic matching core, replay path, snapshot path, or crash recovery behavior.
+## 範圍
+limit / market order、cancel、partial fills、benchmark、C++ 測試。
 
-## Dependencies
+## 非目標
+餘額變動、結算、錢包操作。
 
-- Previous phases required: Phase 11, with Phase 16 defining the Java-side submission boundary
-- External dependencies if any: C++ toolchain, protocol contract, performance targets, benchmark environment
-- Blocking risks: nondeterminism, sequence gaps, broken crash recovery, incomplete market-order semantics
+## 必要產出
+C++ core、測試、benchmark。
 
-## Scope
+## 驗收標準
+replay 與 snapshot recovery 結果可重現。
 
-- Deterministic matching engine
-- Price-time priority
-- Order book
-- Limit order
-- Market order
-- Cancel
-- Partial fill
-- Sequence number
-- Replay
-- Snapshot
-- Crash recovery
-- Benchmark
-- C++ tests
+## 必要測試
+C++ 單元、整合、benchmark。
 
-## Non-goals
+## 可能影響的檔案與模組
+core/ 或 matching-core/。
 
-- Balance mutation
-- Ledger writes
-- Wallet operations
-- Admin adjustments
-- Settlement logic
+## 資料模型影響
+事件與 sequence metadata。
 
-## Required deliverables
+## API 影響
+撮合邊界協議。
 
-- `core/` or `matching-core/` source tree
-- Deterministic matching core implementation
-- Authoritative order-book state model
-- Snapshot and replay tooling
-- Crash recovery behavior
-- Performance benchmarks
-- C++ test suite
+## 安全影響
+權威隔離。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Matching is deterministic under replay
-- Sequence numbers are monotonic and authoritative
-- Limit, market, cancel, and partial-fill behavior are defined and tested
-- Snapshot and recovery produce consistent state
-- Benchmark evidence exists for expected throughput and latency targets
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Deterministic replay tests
-- Price-time priority tests
-- Limit and market order tests
-- Cancel tests
-- Partial-fill tests
-- Snapshot and crash-recovery tests
-- Benchmark runs with captured results
+## 目前仍不能宣稱
+Java 整合完成、結算完成、正式市場資料完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 18 會把 Java 與 C++ 串起來。
 
-- new `core/` or `matching-core/`
-- shared protocol documentation
-- build tooling for the core
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- No direct Java DB writes
-- Defines authoritative event payload shape consumed by later phases
-
-## API impact
-
-- Introduces core command and event contracts for later integration
-- No user-facing Java API completion claim yet
-
-## Security impact
-
-- Must isolate the core from direct balance or wallet mutation paths
-- Must preserve replay integrity and event authenticity expectations
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because matching determinism and execution correctness directly affect user outcomes
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: matching defects create incorrect execution state even before settlement
-
-## Cannot claim yet
-
-- Java integration completed
-- settlement completed
-- production market data completed
-- production trading completed
-
-## Next phase handoff
-
-Phase 18 integrates Java order orchestration with the new C++ command and event protocols.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/TRADING_CORE_BOUNDARIES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_17_CPP_MATCHING_CORE.md.
-
-Goal: implement Phase 17 only - C++ Matching Core.
-Scope: deterministic matching engine, price-time priority, order book, limit/market/cancel/partial fill support, sequence numbers, replay, snapshots, crash recovery, benchmarks, and C++ tests.
-Non-goals: ledger mutation, wallet operations, settlement, Java integration runtime beyond protocol contracts, later phases.
-Deliverables: core source tree, tests, benchmarks, protocol docs, and progress/doc updates tied to actual implementation.
-Tests: deterministic replay, price-time priority, order type handling, cancel, partial fill, snapshot/recovery, benchmarks, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 17 doc only if implementation changes reality.
-Validation commands: run the matching-core test/build commands you add, plus cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: Java integration completed, settlement completed, production market data completed, production trading completed.
-Final output format: Changed Files, Summary, What Phase 17 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_17_CPP_MATCHING_CORE.md
+本章目標：只做 Phase 17 - C++ 撮合核心。
+範圍：limit / market order、cancel、partial fills、benchmark、C++ 測試。
+不要做：餘額變動、結算、錢包操作。
+產出：C++ core、測試、benchmark。
+測試：C++ 單元、整合、benchmark。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：Java 整合完成、結算完成、正式市場資料完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 17 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

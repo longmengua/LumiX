@@ -1,127 +1,82 @@
-# Phase 14 - Balance Projection & Ledger Reconciliation
+# Phase 14 - 餘額投影與帳本對帳
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+使用者看見的餘額要能被重建、比對與追查。
 
-## Goal
+## 目標
+從帳本重建可讀餘額，並檢查帳本與餘額是否一致。
 
-Project user balances from ledger journals and detect any divergence between journal state and balance state.
+## 為何需要這一章
+使用者看見的餘額要能被重建、比對與追查。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12～13。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-The ledger is the source of truth, but production operations need fast balance reads, rebuild capability, and automated detection of imbalances or stuck journal flows.
+## 範圍
+投影重建、差異偵測、卡住 journal 偵測、稽核報告。
 
-## Dependencies
+## 非目標
+自動修復、撮合、結算、錢包 runtime。
 
-- Previous phases required: Phase 12, Phase 13
-- External dependencies if any: reporting requirements, operational alerting destination
-- Blocking risks: projection drift, incomplete rebuild path, silent mismatch handling
+## 必要產出
+投影工作、對帳報告、測試。
 
-## Scope
+## 驗收標準
+帳本與餘額的差異可重建、可追查。
 
-- Ledger journal to balance projection
-- Rebuild projection from journal history
-- Reconciliation run
-- Ledger vs balance check
-- Imbalance detection
-- Stuck journal detection
-- Audit reports
-- No automatic asset repair without approval
+## 必要測試
+rebuild、mismatch detection、audit output。
 
-## Non-goals
+## 可能影響的檔案與模組
+ledger read model、reconciliation jobs。
 
-- Reservation runtime
-- Order orchestration
-- Matching runtime
-- Settlement runtime
-- Automatic asset repair
+## 資料模型影響
+餘額投影表或 view。
 
-## Required deliverables
+## API 影響
+唯讀查詢為主。
 
-- Balance projection service
-- Rebuild tooling
-- Reconciliation report format
-- Imbalance and stuck-journal detection
-- Audit report outputs
-- Operational guidance for manual follow-up
+## 安全影響
+避免靜默漂移。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Balance views can be rebuilt from journals
-- Rebuilt balances match current projected balances in normal cases
-- Ledger-vs-balance mismatches are surfaced deterministically
-- Stuck journal states are detectable and reportable
-- No automatic repair path mutates assets without approval
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Projection update tests
-- Full rebuild tests
-- Ledger-vs-balance mismatch detection tests
-- Stuck journal detection tests
-- Audit report generation tests
+## 目前仍不能宣稱
+凍結完成、正式現貨下單完成、撮合完成、結算完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 15 會用投影來移動可用與鎖定餘額。
 
-- `server/src/main/java/com/lumix/ledger/`
-- future `server/src/main/java/com/lumix/reconciliation/`
-- reporting or ops-support packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- May add projection tables, reconciliation snapshots, and reporting metadata
-
-## API impact
-
-- Enables future account-balance and audit read APIs
-- No public trading API claims yet
-
-## Security impact
-
-- Must keep report access limited to authorized operators and auditors
-- Must not allow automatic repair without explicit approval workflow
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because balance projection errors can misstate available or locked funds
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: reconciliation and projection correctness are core funds-safety controls
-
-## Cannot claim yet
-
-- reservation/freeze completed
-- production spot order flow completed
-- matching completed
-- settlement completed
-- automatic asset repair approved
-
-## Next phase handoff
-
-Phase 15 consumes projected balances to implement reserve, release, commit, rollback, and stuck-reservation detection.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/FUNDS_SAFETY_MODEL.md, docs/ARCHITECTURE_PRODUCTION.md, docs/phases/PHASE_13_DOUBLE_ENTRY_LEDGER.md, and docs/phases/PHASE_14_BALANCE_RECONCILIATION.md.
-
-Goal: implement Phase 14 only - Balance Projection & Ledger Reconciliation.
-Scope: projection from journals, rebuild tooling, ledger-vs-balance checks, imbalance detection, stuck journal detection, and audit reports.
-Non-goals: reservation runtime, matching, settlement, wallet runtime, automatic asset repair, later phases.
-Deliverables: projection implementation, rebuild tooling, reconciliation checks, tests, and progress/doc updates tied to actual code.
-Tests: projection correctness, rebuild, mismatch detection, stuck journal detection, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 14 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: freeze completed, production spot order flow completed, matching completed, settlement completed.
-Final output format: Changed Files, Summary, What Phase 14 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_14_BALANCE_RECONCILIATION.md
+本章目標：只做 Phase 14 - 餘額投影與帳本對帳。
+範圍：投影重建、差異偵測、卡住 journal 偵測、稽核報告。
+不要做：自動修復、撮合、結算、錢包 runtime。
+產出：投影工作、對帳報告、測試。
+測試：rebuild、mismatch detection、audit output。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：凍結完成、正式現貨下單完成、撮合完成、結算完成。
+輸出格式：Changed Files、Summary、What Phase 14 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

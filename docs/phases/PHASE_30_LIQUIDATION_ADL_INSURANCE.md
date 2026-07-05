@@ -1,129 +1,82 @@
-# Phase 30 - Liquidation / ADL / Insurance Fund
+# Phase 30 - 強平 / ADL / 保險基金
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+槓桿交易一定要有失控保護。
 
-## Goal
+## 目標
+建立強平觸發、部分強平、破產價、強平單、ADL 隊列與保險基金。
 
-Implement deterministic liquidation, ADL, bankruptcy handling, and insurance-fund workflows for leveraged products.
+## 為何需要這一章
+槓桿交易一定要有失控保護。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 28～29。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Futures and margin products are unsafe without controlled forced-exit behavior, bad-debt handling, and replayable liquidation logic.
+## 範圍
+liquidation trigger、bad debt handling、simulation tests、chaos tests。
 
-## Dependencies
+## 非目標
+現貨撮合、錢包出入金。
 
-- Previous phases required: Phase 28, Phase 29
-- External dependencies if any: approved liquidation policy, simulation environment
-- Blocking risks: incorrect trigger logic, unfair ADL ordering, broken bankruptcy handling, unsafe insurance-fund accounting
+## 必要產出
+liquidation flow、保險基金、測試。
 
-## Scope
+## 驗收標準
+風險過高時可自動處理並留下紀錄。
 
-- Liquidation trigger
-- Partial liquidation
-- Bankruptcy price
-- Liquidation order
-- Insurance fund
-- ADL queue
-- Bad debt handling
-- Liquidation audit
-- Simulation tests
-- Chaos tests
+## 必要測試
+強平模擬、混沌測試、審計。
 
-## Non-goals
+## 可能影響的檔案與模組
+liquidation、ADL、insurance fund。
 
-- Margin lending
-- General compensation workflows outside liquidation scope
-- Broader launch readiness work
+## 資料模型影響
+強平與保險基金資料。
 
-## Required deliverables
+## API 影響
+風控與處置查詢。
 
-- Liquidation decision engine
-- Partial-liquidation rules
-- Bankruptcy-price logic
-- Insurance-fund accounting path
-- ADL queue model
-- Liquidation audit trail
-- Simulation and chaos test coverage
+## 安全影響
+避免壞帳擴散。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Liquidation triggers are reproducible and auditable
-- Partial liquidation and bankruptcy handling follow explicit rules
-- Insurance-fund movements are journaled
-- ADL queue behavior is deterministic
-- Simulation and chaos tests cover stressed scenarios
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Liquidation-trigger tests
-- Partial-liquidation tests
-- Bankruptcy-price tests
-- Insurance-fund accounting tests
-- ADL queue tests
-- Simulation tests
-- Chaos tests
+## 目前仍不能宣稱
+槓桿安全完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 31 會補借貸模型。
 
-- liquidation packages under `server/src/main/java/com/lumix/`
-- `server/src/main/java/com/lumix/futures/`
-- `server/src/main/java/com/lumix/ledger/`
-- risk packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Adds liquidation events, ADL queue state, insurance-fund records, and bad-debt tracking
-
-## API impact
-
-- Enables liquidation history and risk-status views
-- No full margin-lending or launch-readiness claim yet
-
-## Security impact
-
-- Must protect liquidation controls from manual abuse
-- Must preserve auditable forensic history for every forced-exit path
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because liquidation defects can rapidly harm many accounts
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: liquidation is one of the highest-risk trading systems
-
-## Cannot claim yet
-
-- margin lending completed
-- full reconciliation and compensation completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 31 adds borrow, repay, collateral valuation, interest accrual, and bad-debt handling for margin lending.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_30_LIQUIDATION_ADL_INSURANCE.md.
-
-Goal: implement Phase 30 only - Liquidation / ADL / Insurance Fund.
-Scope: liquidation trigger, partial liquidation, bankruptcy price, liquidation orders, insurance fund, ADL queue, bad debt handling, liquidation audit, simulation tests, and chaos tests.
-Non-goals: margin lending, broader launch readiness, later phases.
-Deliverables: liquidation system, tests, and progress/doc updates tied to real implementation.
-Tests: liquidation trigger, partial liquidation, bankruptcy price, insurance fund, ADL queue, simulation, chaos, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 30 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: margin lending completed, full reconciliation and compensation completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 30 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_30_LIQUIDATION_ADL_INSURANCE.md
+本章目標：只做 Phase 30 - 強平 / ADL / 保險基金。
+範圍：liquidation trigger、bad debt handling、simulation tests、chaos tests。
+不要做：現貨撮合、錢包出入金。
+產出：liquidation flow、保險基金、測試。
+測試：強平模擬、混沌測試、審計。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：槓桿安全完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 30 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

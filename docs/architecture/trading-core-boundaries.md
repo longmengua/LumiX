@@ -1,3 +1,5 @@
-# Trading Core Boundaries
+# 交易核心邊界
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../ARCHITECTURE_TEXT_MAP.md`.
+LumiX 的交易核心不是 Java 後端自己假裝完成的撮合功能，而是未來的 C++ 核心。Java 只負責交易流程編排、驗證與提交；C++ 核心負責確定性的撮合、順序與回放；結算與帳本則有各自的專門責任。
+
+這一章的目的是把「誰可以做什麼、誰不可以做什麼」講清楚，避免之後把假實作當成正式能力。

@@ -1,11 +1,5 @@
-# Order Settlement Flow
+# 訂單與結算流程
 
-Archive pointer only.
+這份文件描述一筆現貨訂單從使用者送出，到風控、預留資金、持久化、撮合、成交、手續費、結算與對帳的完整流程。
 
-Current source of truth:
-
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `docs/ARCHITECTURE_TEXT_MAP.md`
-
-Do not use this file as the authoritative settlement flow definition.
-
+讀這份文件的目的，是理解一筆訂單進來後，系統內部是如何一步一步變成正式資金結果。

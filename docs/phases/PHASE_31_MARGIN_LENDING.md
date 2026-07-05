@@ -1,127 +1,82 @@
-# Phase 31 - Margin Lending System
+# Phase 31 - 保證金借貸系統
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+借貸是保證金交易的延伸能力。
 
-## Goal
+## 目標
+建立借款、還款、利息、抵押品估值、借款上限與強制還款。
 
-Implement the production borrow, repay, interest, collateral valuation, and bad-debt controls for margin lending.
+## 為何需要這一章
+借貸是保證金交易的延伸能力。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 13～15、26。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Margin trading requires a separate lending and collateral engine beyond spot reservation and beyond futures margin accounting.
+## 範圍
+borrow、repay、interest accrual、collateral valuation、margin level、bad debt handling。
 
-## Dependencies
+## 非目標
+現貨撮合、錢包出金。
 
-- Previous phases required: Phase 13, Phase 14, Phase 15, Phase 26
-- External dependencies if any: collateral policy, lending inventory policy, approved interest model
-- Blocking risks: incorrect interest accrual, under-collateralized borrowing, weak forced-repayment flow
+## 必要產出
+lending ledger、利息模型、測試。
 
-## Scope
+## 驗收標準
+借貸與利息可以追蹤且可對帳。
 
-- Borrow
-- Repay
-- Interest accrual
-- Collateral valuation
-- Margin level
-- Forced repayment
-- Borrow limit
-- Lending ledger
-- Bad debt handling
+## 必要測試
+borrow、repay、interest、forced repayment。
 
-## Non-goals
+## 可能影響的檔案與模組
+lending、risk、ledger 擴充。
 
-- Futures liquidation logic
-- Treasury sweep logic
-- Launch-readiness work
+## 資料模型影響
+借貸帳本與利息記錄。
 
-## Required deliverables
+## API 影響
+借貸查詢與操作。
 
-- Margin lending engine
-- Borrow and repay workflows
-- Interest-accrual job or engine
-- Collateral valuation and margin-level checks
-- Borrow-limit enforcement
-- Forced-repayment path
-- Lending-ledger integration
-- Margin lending test suite
+## 安全影響
+避免超借與壞帳。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Borrow and repay flows are journaled and auditable
-- Interest accrues deterministically and reproducibly
-- Collateral valuation and margin level block unsafe borrowing
-- Forced repayment and bad-debt handling are explicit and tested
-- Borrow limits are enforceable by asset and account state
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Borrow and repay tests
-- Interest-accrual tests
-- Collateral valuation tests
-- Margin-level tests
-- Borrow-limit tests
-- Forced-repayment tests
-- Bad-debt handling tests
+## 目前仍不能宣稱
+借貸上線完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 32 會做跨域對帳與補償。
 
-- margin packages under `server/src/main/java/com/lumix/`
-- `server/src/main/java/com/lumix/ledger/`
-- risk and account packages
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Adds borrow positions, interest accrual records, collateral state, lending-ledger metadata, and bad-debt records
-
-## API impact
-
-- Enables borrow, repay, and lending history APIs for margin accounts
-
-## Security impact
-
-- Must prevent unauthorized borrow or repay operations
-- Must audit all lending and forced-repayment actions
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because lending defects create debt, collateral, and solvency risk
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: margin lending directly affects borrow exposure and platform loss paths
-
-## Cannot claim yet
-
-- full reconciliation and compensation completed
-- security/compliance hardening completed
-- launch readiness completed
-
-## Next phase handoff
-
-Phase 32 adds cross-domain reconciliation and compensation workflows spanning ledger, orders, matching, wallet, and fee revenue.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_31_MARGIN_LENDING.md.
-
-Goal: implement Phase 31 only - Margin Lending System.
-Scope: borrow, repay, interest accrual, collateral valuation, margin level, forced repayment, borrow limits, lending ledger, and bad debt handling.
-Non-goals: futures liquidation logic, treasury sweep logic, later phases.
-Deliverables: margin lending system, tests, and progress/doc updates tied to real implementation.
-Tests: borrow/repay, interest accrual, collateral valuation, margin level, borrow limits, forced repayment, bad debt handling, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 31 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: full reconciliation and compensation completed, security/compliance hardening completed, launch readiness completed.
-Final output format: Changed Files, Summary, What Phase 31 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_31_MARGIN_LENDING.md
+本章目標：只做 Phase 31 - 保證金借貸系統。
+範圍：borrow、repay、interest accrual、collateral valuation、margin level、bad debt handling。
+不要做：現貨撮合、錢包出金。
+產出：lending ledger、利息模型、測試。
+測試：borrow、repay、interest、forced repayment。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：借貸上線完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 31 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

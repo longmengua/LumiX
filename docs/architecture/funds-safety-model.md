@@ -1,3 +1,5 @@
-# Funds Safety Model
+# 資金安全模型
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md` and `../ARCHITECTURE_TEXT_MAP.md`.
+交易所最重要的事情，是讓使用者資金永遠有清楚的狀態：可用、已鎖定、已消耗、已釋放。資金安全模型描述的是訂單、提領、成交、取消與失敗情況下，資金應該怎麼流轉，才能避免重複扣款或負餘額。
+
+這一章用來解釋 reservation、release、commit、rollback 以及它們和帳本的關係。

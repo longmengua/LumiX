@@ -1,130 +1,82 @@
-# Phase 15 - Asset Reservation / Freeze Engine
+# Phase 15 - 資產預留與凍結引擎
 
-## Phase status
+## 章節狀態
+- 規劃中
+- 尚未開始
+- 未完成正式上線
 
-- Planned
-- Not started
-- Not production completed
+## 這一章在交易所中的角色
+交易與出金都需要先把資金鎖住，不能直接亂扣。
 
-## Goal
+## 目標
+實作 reserve、release、commit、rollback、locked balance 與 available balance。
 
-Implement the production reservation engine that controls available balance, locked balance, and the reserve/release/commit/rollback lifecycle.
+## 為何需要這一章
+交易與出金都需要先把資金鎖住，不能直接亂扣。
 
-## Why this phase exists
+## 依賴
+- 前置章節：Phase 12～14。
+- 阻塞風險：需求不清、邊界不明、測試不足。
 
-Production spot orders and withdrawals cannot safely proceed without a formal freeze engine with idempotency, partial consumption, cancel release, and stuck-state detection.
+## 範圍
+部分成交、取消釋放、冪等 reservation 事件、卡住 reservation 偵測。
 
-## Dependencies
+## 非目標
+撮合、結算、錢包 runtime。
 
-- Previous phases required: Phase 12, Phase 13, Phase 14
-- External dependencies if any: clear reservation state model and concurrency policy
-- Blocking risks: negative available balance, double release, partial-fill bugs, stuck reservations
+## 必要產出
+reservation 引擎、測試、狀態機說明。
 
-## Scope
+## 驗收標準
+available + locked = total，reserve 流程可以重試且不亂。
 
-- Reserve
-- Release
-- Commit
-- Rollback
-- Locked balance
-- Available balance
-- Partial fill support
-- Cancel release
-- Idempotent reservation events
-- Stuck reservation detection
+## 必要測試
+reserve / release / commit / rollback、partial fill、cancel、stuck reservation。
 
-## Non-goals
+## 可能影響的檔案與模組
+reservation domain、ledger hooks、order service 邊界。
 
-- Order matching
-- Spot order orchestration beyond reservation boundary
-- Settlement runtime beyond commit/release hooks
-- Wallet broadcast logic
+## 資料模型影響
+reservation 狀態表。
 
-## Required deliverables
+## API 影響
+內部 reservation 邊界。
 
-- Reservation service implementation
-- Reservation state machine
-- Balance mutation hooks against ledger/projection boundaries
-- Idempotent reserve/release/commit/rollback handling
-- Partial-fill and cancel-release logic
-- Stuck reservation detector
-- Reservation test suite
+## 安全影響
+避免負餘額與未授權釋放。
 
-## Acceptance criteria
+## 用戶資金影響
+- 是。
+- 審核需求：必須人工審核。
 
-- Reserve decreases available and increases locked deterministically
-- Release and commit are idempotent
-- Rollback restores safe state when allowed
-- Partial fills consume only the appropriate reservation amount
-- Stuck reservations are detectable and reportable
+## 風險等級
+Critical。
 
-## Required tests
+## 審核門檻
+必須人工審核。
 
-- Reserve/release/commit/rollback tests
-- Negative-balance prevention tests
-- Idempotency tests
-- Partial-fill tests
-- Cancel-release tests
-- Stuck-reservation detection tests
+## 目前仍不能宣稱
+正式現貨下單完成、撮合完成、結算完成、正式交易完成。
 
-## Files / modules likely affected
+## 下一階段交接
+Phase 16 會在這個引擎上編排下單流程。
 
-- new reservation package under `server/src/main/java/com/lumix/`
-- `server/src/main/java/com/lumix/ledger/`
-- `server/src/main/java/com/lumix/account/`
+## 人工審核要求
+這一章完成後，必須先由人工確認。
+允許的暫時狀態只有：implementation completed / pending human review。
+只有收到明確批准後，才可標記為 completed。
 
-## Data model impact
-
-- Uses reservation tables from Phase 12
-- May add reservation event or state-transition metadata
-
-## API impact
-
-- Internal service boundary becomes available to spot order and withdrawal flows
-- No public claim of full trading yet
-
-## Security impact
-
-- Must prevent unauthorized release or commit paths
-- Must maintain full audit trail for every reservation transition
-
-## User funds impact
-
-- Yes
-- Review requirements: mandatory human review before merge because this is the formal production freeze phase
-
-## Risk level
-
-- Critical
-
-## Review gate
-
-- Mandatory human review before merge: Yes
-- Why: reservation defects directly risk overspending or locked-funds loss
-
-## Cannot claim yet
-
-- production spot order flow completed
-- matching completed
-- settlement completed
-- production trading completed
-
-## Next phase handoff
-
-Phase 16 consumes the reservation engine to implement production spot order orchestration without fake matching.
-
-## Codex implementation prompt
-
-```text
-Reload the repo from disk before working. Read AI_PROGRESS.md, README.md, server/README.md, docs/PRODUCTION_ROADMAP.md, docs/PHASE_DEPENDENCY_MAP.md, docs/PRODUCTION_READINESS_GATES.md, docs/FUNDS_SAFETY_MODEL.md, docs/ORDER_SETTLEMENT_FLOW.md, docs/ARCHITECTURE_PRODUCTION.md, and docs/phases/PHASE_15_ASSET_RESERVATION.md.
-
-Goal: implement Phase 15 only - Asset Reservation / Freeze Engine.
-Scope: reserve, release, commit, rollback, locked and available balance handling, partial fill support, cancel release, idempotency, and stuck reservation detection.
-Non-goals: spot order orchestration, matching, settlement, wallet runtime, later phases.
-Deliverables: reservation service, state machine, tests, and progress/doc updates tied to real implementation.
-Tests: reserve/release/commit/rollback, negative balance prevention, idempotency, partial fill, cancel release, stuck reservation detection, and build validation.
-Docs to update: AI_PROGRESS.md and the Phase 15 doc only if implementation changes reality.
-Validation commands: cd server && ./mvnw test && ./mvnw package; cd ../web && npm install && npm run build; run npm test only if a test script exists.
-Cannot claim yet: production spot order flow completed, matching completed, settlement completed, production trading completed.
-Final output format: Changed Files, Summary, What Phase 15 completed, What is still NOT completed, Validation Results, Next Recommended Command.
-```
+## Codex 實作提示
+~~~text
+重新讀取 repo，不要沿用舊上下文。
+先閱讀：README.md、server/README.md、docs/OPERATING_EXCHANGE_MASTER_PLAN.md、docs/PHASE_REVIEW_WORKFLOW.md、docs/phases/PHASE_15_ASSET_RESERVATION.md
+本章目標：只做 Phase 15 - 資產預留與凍結引擎。
+範圍：部分成交、取消釋放、冪等 reservation 事件、卡住 reservation 偵測。
+不要做：撮合、結算、錢包 runtime。
+產出：reservation 引擎、測試、狀態機說明。
+測試：reserve / release / commit / rollback、partial fill、cancel、stuck reservation。
+更新文件：總綱與本章文件。
+驗證命令：cd server && ./mvnw test && ./mvnw package；cd web && npm install && npm run build；若有 test script 再跑 npm test。
+不能宣稱：正式現貨下單完成、撮合完成、結算完成、正式交易完成。
+輸出格式：Changed Files、Summary、What Phase 15 completed、What is still NOT completed、Validation Results、Next Recommended Command。
+~~~

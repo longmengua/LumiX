@@ -1,3 +1,3 @@
-# Wallet Deposit / Withdrawal
+# 錢包充值與提領
 
-Pointer to `../OPERATING_EXCHANGE_MASTER_PLAN.md`.
+這一章描述鏈上充值、提領、確認、重組、審核與錢包保管的基本流程。它的目的是讓資金進出都可追蹤、可稽核、可回補。

@@ -1,8 +1,7 @@
-# Working Rules
+# 工作原則
 
-- Do not count stub, interface, mock, placeholder, or TODO work as production completion.
-- Implement only the current phase.
-- Do not jump phases.
-- Do not claim production trading completed before the gates pass.
-- Do not claim launch ready before Phase 36 and explicit human approval.
-
+- 不要把 stub、interface、mock、placeholder 或 TODO 當成正式完成。
+- 一次只做當前 Phase。
+- 不要跳 Phase。
+- 在就緒門檻通過前，不要宣稱正式交易完成。
+- 在 Phase 36 與人工確認前，不要宣稱正式上線就緒。
