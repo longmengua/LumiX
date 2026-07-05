@@ -321,14 +321,14 @@ next_action: 執行 Phase 9 後端骨架、帳戶與帳本 interface
 
 | Phase | 審查人 | 結果 | 時間 | 備註 |
 |---:|---|---|---|---|
-| 4 | Codex | 通過 | 2026-06-26 | Phase 4 UI / mock 範圍完成；build 通過；typecheck 通過；仍屬開發期 mock / adapter，不代表 OL 真實後端完成；OL 前需接 `server/` Java 真實 API |
+| 8 | Codex | 通過 | 2026-07-05 | Phase 8 後台前端頁面完成；admin console / mock data / confirm dialogs 已審查通過，等待下一階段後端骨架與帳本介面 |
+| 7 | Codex | 通過 | 2026-07-05 | Phase 7 訂單、倉位、API Key、通知前端頁面已通過人工審查 |
 | 5 | Codex | 通過 | 2026-06-29 | Phase 5 資產 / 劃轉 / 充值 / 提現 UI 與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java 真實 API |
 | 6 | Codex | 通過 | 2026-06-29 | Phase 6 現貨 / 合約 / 槓桿交易頁與開發期 adapter 完成；build 通過；typecheck 通過；OL 前仍需接 `server/` Java API、C++ Core event stream 與真正結算流程 |
-| 1 | Codex | 通過 | 2026-06-25 | Phase 1 React + TypeScript 專案骨架已通過人工審查 |
-| 2 | Codex | 通過 | 2026-06-25 | Phase 2 Design System 與 App Shell 已通過人工審查 |
+| 4 | Codex | 通過 | 2026-06-26 | Phase 4 UI / mock 範圍完成；build 通過；typecheck 通過；仍屬開發期 mock / adapter，不代表 OL 真實後端完成；OL 前需接 `server/` Java 真實 API |
 | 3 | Codex | 通過 | 2026-06-25 | Phase 3 登入、首頁、市場列表已通過人工審查 |
-| 7 | Codex | 通過 | 2026-06-25 | Phase 7 訂單、倉位、API Key、通知前端頁面已通過人工審查 |
-| 8 | Codex | 通過 | 2026-07-05 | Phase 8 後台前端頁面完成；admin console / mock data / confirm dialogs 已審查通過，等待下一階段後端骨架與帳本介面 |
+| 2 | Codex | 通過 | 2026-06-25 | Phase 2 Design System 與 App Shell 已通過人工審查 |
+| 1 | Codex | 通過 | 2026-06-25 | Phase 1 React + TypeScript 專案骨架已通過人工審查 |
 
 ---
 
