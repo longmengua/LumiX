@@ -1,4 +1,4 @@
-# Data Flow
+# 資料流
 
 ## Command flow
 
@@ -24,7 +24,7 @@ Client query
   -> response
 ```
 
-## Source of truth rule
+## 真相來源規則
 
 ```text
 Ledger journal     = truth for funds

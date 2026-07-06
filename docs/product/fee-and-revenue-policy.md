@@ -1,4 +1,4 @@
-# Fee and Revenue Policy
+# 手續費與收益政策
 
 ## Fee model
 
@@ -19,9 +19,9 @@ Exchange revenue     -> credit fee
 
 ## Fee rounding
 
-Fee rounding is money-impacting. Any implementation must define：
+Fee rounding is money-影響ing. Any 實作 must define：
 
-- precision per asset。
+- 精度 per asset。
 - rounding mode。
 - minimum fee。
 - zero-fee promotional policy。

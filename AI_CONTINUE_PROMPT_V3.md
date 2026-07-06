@@ -1,6 +1,6 @@
 # AI_CONTINUE_PROMPT_V3.md
 
-Use this prompt when continuing work with Codex or another coding agent.
+當你要用 Codex 或其他 coding agent 繼續工作時，請使用這個 prompt。
 
 ```text
 You are working on LumiX, a production-grade exchange project. Do not treat it as an MVP.

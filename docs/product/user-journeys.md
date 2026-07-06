@@ -1,4 +1,4 @@
-# User Journeys
+# 使用者旅程
 
 ## Register and secure account
 
@@ -6,13 +6,13 @@
 Landing -> Register -> Email verification -> Login -> Security setup -> Dashboard
 ```
 
-## Deposit and trade
+## 入金 and trade
 
 ```text
 Dashboard -> Wallet -> Deposit -> Wait confirmations -> Balance available -> Trade -> Order history
 ```
 
-## Withdraw
+## 提款
 
 ```text
 Wallet -> Withdraw -> Address / amount -> Risk checks -> Pending approval -> Broadcast -> Confirmed

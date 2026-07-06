@@ -1,8 +1,8 @@
-# Ledger Invariants
+# 帳本不變式
 
 ## Core rule
 
-Ledger is immutable and append-only.
+帳本 is immutable and append-only.
 
 ```text
 No update to historical ledger entries
@@ -39,19 +39,19 @@ FEE_RECEIVABLE
 ADJUSTMENT
 ```
 
-## Balance projection invariant
+## 餘額投影 invariant
 
 ```text
 balance_projection(account, asset)
   = sum(ledger_entries for account and asset)
 ```
 
-Balance projection may be cached, but must be rebuildable from ledger.
+餘額投影 may be cached, but must be rebuildable from ledger.
 
 ## Prohibited shortcuts
 
 - Directly increasing balance without ledger entry.
 - Directly decreasing balance without ledger entry.
-- Using order table as fund truth.
+- 把訂單表當成資金真相。
 - Using Redis as fund truth.
 - Using admin tool to mutate current balance without audit and ledger adjustment.

@@ -1,6 +1,6 @@
-# Order Lifecycle
+# 訂單生命周期
 
-## Order states
+## 訂單 states
 
 ```text
 NEW -> VALIDATED -> ACCEPTED -> OPEN -> PARTIALLY_FILLED -> FILLED
@@ -9,7 +9,7 @@ NEW -> VALIDATED -> ACCEPTED -> OPEN -> PARTIALLY_FILLED -> FILLED
                  REJECTED     CANCELLED     CANCELLED
 ```
 
-## Order data requirements
+## 訂單 data requirements
 
 ```text
 order_id
@@ -33,4 +33,4 @@ updated_at
 
 ## Money safety
 
-Order acceptance must not imply settlement. Funds must be reserved before order enters matching.
+訂單 acceptance must not imply settlement. Funds must be reserved before order enters matching.

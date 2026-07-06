@@ -1,4 +1,4 @@
-# Matching Engine Contract
+# 撮合引擎合約
 
 ## Input
 
@@ -29,8 +29,8 @@ Match result
 
 ## Determinism
 
-Given the same order book state and same input order sequence, matching output must be identical.
+Given the same 委託簿 state and same input order sequence, matching output must be identical.
 
 ## Boundary
 
-Matching decides who trades with whom and at what price/quantity. Matching does not directly mutate ledger. Settlement consumes match output and posts ledger entries.
+Matching decides who trades with whom and at what price/quantity. Matching does not directly mutate ledger. 結算ment consumes match output and posts ledger entries.

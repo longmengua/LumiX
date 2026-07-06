@@ -1,4 +1,4 @@
-# Backend Module Map
+# 後端 Module Map
 
 ```text
 com.lumix
@@ -20,7 +20,7 @@ com.lumix
   shared
 ```
 
-## Dependency direction
+## 相依 direction
 
 ```text
 controller -> application service -> domain service -> repository

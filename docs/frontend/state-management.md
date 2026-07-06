@@ -12,7 +12,7 @@ Ledger truth              -> backend only
 
 ## Money display
 
-- Do not use JavaScript floating point for final money calculation.
-- Use string decimal values from API.
-- Show asset precision consistently.
+- 最終金額計算不要使用 JavaScript 浮點數。
+- 請使用 API 傳來的字串十進位值。
+- Show asset 精度 consistently.
 - Clearly separate available, held, pending withdrawal, and total.

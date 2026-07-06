@@ -1,6 +1,6 @@
-# Mini Workflow
+# Mini 工作流程
 
-## One-task loop
+## 單任務循環
 
 ```text
 +------------+     +------------+     +------------+     +------------+
@@ -11,11 +11,11 @@
        +-------------------- next task after review ----------+
 ```
 
-## Do not multitask
+## 不要多工
 
 Mini should not combine P12-T01 and P12-T02 in one change unless reviewer explicitly asks.
 
-## Required final note
+## 必要結尾說明
 
 ```text
 Task:

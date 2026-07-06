@@ -1,6 +1,6 @@
-# P12 Migration Plan
+# P12 遷移計畫
 
-## Suggested order
+## 建議順序
 
 ```text
 V001__create_identity_and_assets.sql
@@ -13,10 +13,10 @@ V007__add_indexes_and_constraints.sql
 V008__add_schema_comments.sql
 ```
 
-## Migration rules
+## 遷移規則
 
-- Use deterministic names.
-- Do not edit an already-applied migration in shared environments.
-- Add new migration for changes.
-- Include comments for high-risk tables.
-- Keep rollback notes in `rollback-notes.md`.
+- 請使用可決定性的名稱。
+- 不要在共享環境中編輯已套用的 migration。
+- 有變更就新增 migration。
+- 高風險資料表要加上註解。
+- 回滾備註請保留在 `rollback-notes.md`。

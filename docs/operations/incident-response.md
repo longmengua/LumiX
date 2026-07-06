@@ -1,4 +1,4 @@
-# Incident Response
+# 事故應對
 
 ## Incident flow
 
@@ -6,7 +6,7 @@
 Alert -> Triage -> Contain -> Communicate -> Repair -> Reconcile -> Postmortem
 ```
 
-## Containment actions
+## Containment 動作s
 
 ```text
 pause market

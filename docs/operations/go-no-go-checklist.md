@@ -1,6 +1,6 @@
-# Go / No-Go Checklist
+# Go / No-Go 檢查清單
 
-## Decision flow
+## 決定 flow
 
 ```text
 +-------------------+
@@ -33,6 +33,6 @@
        +-----+
 ```
 
-## Human sign-off
+## 人工簽核
 
 Only human reviewer can mark launch GO.

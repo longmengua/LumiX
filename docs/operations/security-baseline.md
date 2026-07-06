@@ -1,4 +1,4 @@
-# Security Baseline
+# 安全基線
 
 ## Baseline controls
 
@@ -16,4 +16,4 @@ backup encryption
 
 ## Secrets rule
 
-Secrets must not be committed, logged, stored in normal database tables, or exposed through API errors.
+密鑰不得被提交、記錄、存入一般資料表，或透過 API 錯誤暴露。

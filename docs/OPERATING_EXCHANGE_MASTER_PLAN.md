@@ -5,8 +5,8 @@
 ## Current phase
 
 ```text
-Phase 11: Production architecture reset - completed as docs-only
-Phase 12: Production database schema and migration - next
+Phase 11: 生產架構重整 - 以文件完成
+Phase 12: 生產資料庫結構與 migration - 下一步
 Phase 13-36: planned, not started
 ```
 
@@ -49,7 +49,7 @@ P28 Audit, Compliance, Evidence Export
   |
 P29 Public / Private API Hardening
   |
-P30 Frontend Production Trading UX
+P30 前端正式交易 UX
   |
 P31 Observability & Alerting
   |
@@ -61,7 +61,7 @@ P34 Load / Soak / Chaos Testing
   |
 P35 Business Operations Readiness
   |
-P36 Production Launch Gate
+P36 正式上線門檻
 ```
 
 ## No-jump rule

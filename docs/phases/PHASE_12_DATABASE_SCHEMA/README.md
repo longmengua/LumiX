@@ -1,16 +1,16 @@
-# Phase 12 - Production Database Schema & Migration
+# 第 12 階段 - 生產資料庫結構與遷移
 
-## Status
+## 狀態
 
 ```text
-planned, not started
+in progress
 ```
 
-## Goal
+## 目標
 
-Create the production database foundation that later phases can safely build on.
+建立後續階段可以安全依賴的正式資料庫基礎。
 
-## Out of scope
+## 不在範圍內
 
 ```text
 runtime ledger mutation
@@ -21,7 +21,7 @@ deposit crediting
 withdrawal signing / broadcast
 ```
 
-## Required reading
+## 必要閱讀
 
 ```text
 AGENTS.md
@@ -32,7 +32,7 @@ docs/exchange-core/ledger-invariants.md
 docs/exchange-core/reservation-state-machine.md
 ```
 
-## Task order
+## 任務順序
 
 ```text
 P12-T01 migration tool and directory conventions
@@ -46,11 +46,11 @@ P12-T08 constraints, indexes, uniqueness, precision rules
 P12-T09 schema verification tests and rollback notes
 ```
 
-## Done criteria
+## 完成條件
 
 - Migrations exist.
 - Schema can be applied to a clean PostgreSQL database.
 - Core constraints and indexes are defined.
 - Schema verification exists.
-- Rollback / repair strategy is documented.
-- No runtime money movement is implemented in this phase.
+- 要有回滾／修復策略文件。
+- 這個階段不會實作 runtime 資金異動。

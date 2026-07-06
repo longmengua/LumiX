@@ -1,6 +1,6 @@
-# Settlement Contract
+# 結算合約
 
-Settlement turns match results into ledger entries and order state changes.
+結算ment turns match results into ledger entries and order state changes.
 
 ## Sequence
 
@@ -30,4 +30,4 @@ These should commit together or be replayable without double settlement.
 
 ## Human review
 
-Any change to settlement calculation, fee rounding, or reservation capture requires human review.
+Any change to settlement calculation, fee rounding, or 預留扣用 requires human review.

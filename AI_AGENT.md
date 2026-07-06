@@ -19,7 +19,7 @@
 
 ## Agent responsibilities
 
-### Architect agent
+### 架構師 agent
 
 - 拆分文件。
 - 定義領域邊界。
@@ -27,7 +27,7 @@
 - 製作純文字 UML / 架構圖。
 - 給 mini 可執行任務卡。
 
-### Mini engineer
+### Mini 工程師
 
 - 只執行單一任務卡。
 - 不重設架構。
@@ -36,12 +36,12 @@
 
 ### Review agent
 
-- 檢查是否跳 Phase。
+- 檢查是否跳階。
 - 檢查是否把 stub 當完成。
 - 檢查是否違反資金安全不變式。
 - 檢查是否缺測試或驗證方式。
 
-## Token-saving protocol
+## 節省 Token 流程
 
 每次任務只載入四層文件。
 
@@ -61,9 +61,9 @@ all product docs
 all architecture docs
 ```
 
-## Current work instruction for Codex
+## 給 Codex 的目前工作指引
 
-開始 Phase 12 時，請照順序執行：
+開始 第 12 階段 時，請照順序執行：
 
 ```text
 1. Read AGENTS.md
@@ -77,7 +77,7 @@ all architecture docs
 9. Stop and produce a review summary
 ```
 
-## Human-review triggers
+## 人工審核觸發條件
 
 下列任一條件發生時，必須標記 `HUMAN_REVIEW_REQUIRED`：
 
@@ -96,7 +96,7 @@ authentication or authorization change
 secret management change
 ```
 
-## Output contract for mini
+## Mini 輸出格式
 
 完成任務後輸出：
 

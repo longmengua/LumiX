@@ -1,6 +1,6 @@
-# Reconciliation
+# 對帳
 
-## Reconciliation layers
+## 對帳 layers
 
 ```text
 Ledger vs balance projection

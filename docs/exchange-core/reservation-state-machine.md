@@ -1,6 +1,6 @@
-# Reservation State Machine
+# 預留狀態機
 
-Reservation protects available balance before order or withdrawal effects are finalized.
+預留 protects available balance before order or withdrawal effects are finalized.
 
 ## State diagram
 
@@ -37,6 +37,6 @@ FAILED     hold did not happen
 
 - HELD amount cannot exceed available balance at hold time.
 - CAPTURED + RELEASED cannot exceed HELD.
-- Reservation purpose must be explicit: ORDER, WITHDRAWAL, ADMIN_HOLD.
-- Reservation must reference order_id, withdrawal_id, or admin_action_id.
-- Reservation transitions must be idempotent.
+- 預留 purpose must be explicit: ORDER, WITHDRAWAL, ADMIN_HOLD.
+- 預留 must reference order_id, withdrawal_id, or admin_動作_id.
+- 預留 transitions must be idempotent.

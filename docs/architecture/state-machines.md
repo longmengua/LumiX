@@ -1,6 +1,6 @@
-# State Machines
+# 狀態機
 
-## Order state machine
+## 訂單 state machine
 
 ```text
 +---------+
@@ -30,7 +30,7 @@
                         +-----------+
 ```
 
-## Reservation state machine
+## 預留 state machine
 
 ```text
 +-----------+
@@ -51,7 +51,7 @@
                              +----------+
 ```
 
-## Withdrawal state machine
+## 提款al state machine
 
 ```text
 REQUESTED -> RISK_REVIEW -> APPROVED -> SIGNING -> BROADCASTED -> CONFIRMED

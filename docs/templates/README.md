@@ -1,3 +1,3 @@
-# Templates
+# 範本
 
-Use these templates for repeatable tasks, phase reviews, and ADRs.
+這些範本用於可重複任務、階段審查與 ADR。

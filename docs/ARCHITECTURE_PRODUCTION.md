@@ -1,8 +1,8 @@
-# Production Architecture
+# 生產架構
 
 LumiX 的 production architecture 建立在五個核心原則上。
 
-## Principles
+## 原則
 
 1. 帳本是資金真相，不是 balance cache。
 2. 下單前先凍結，撮合後再結算。
@@ -10,7 +10,7 @@ LumiX 的 production architecture 建立在五個核心原則上。
 4. 錢包出帳與簽名流程必須比一般 API 更嚴格。
 5. 所有跨系統副作用都必須有 idempotency 與 outbox / audit trail。
 
-## High-level layers
+## 高層分層
 
 ```text
 +-------------------------------+
@@ -40,7 +40,7 @@ LumiX 的 production architecture 建立在五個核心原則上。
 +-------------------------------+
 ```
 
-## Production data rule
+## 生產資料規則
 
 ```text
 Request accepted != funds moved

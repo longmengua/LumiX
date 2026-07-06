@@ -1,4 +1,4 @@
-# Backend
+# 後端
 
 Java backend 的責任是處理 API、交易邊界、資料一致性、流程協調與審計。
 

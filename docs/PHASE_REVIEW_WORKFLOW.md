@@ -1,6 +1,6 @@
-# Phase Review Workflow
+# 階段 Review Workflow
 
-每個 Phase 都有固定流程。
+每個 階段 都有固定流程。
 
 ## Workflow
 
@@ -35,6 +35,6 @@ Next task:
 - 任務擴大 scope。
 - 改到高風險邏輯但沒有標記人審。
 - migration 沒有 rollback 策略。
-- schema 沒有 precision / uniqueness / index 說明。
+- schema 沒有 精度 / uniqueness / index 說明。
 - 把 stub / TODO / mock 寫成完成。
 - 沒有測試或可驗證說明。

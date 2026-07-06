@@ -1,4 +1,4 @@
-# Observability
+# 可觀測性
 
 ## Required correlation IDs
 

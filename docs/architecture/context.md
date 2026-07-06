@@ -1,4 +1,4 @@
-# System Context
+# 系統情境
 
 ```text
 +-------------------+                  +-------------------+
@@ -25,9 +25,9 @@
 +-------------------+ +-------------------+ +-------------------+
 ```
 
-## External actors
+## 外部角色
 
 - Retail users create accounts, deposit, trade, and withdraw.
 - Operators manage markets, risk, incidents, and reconciliation.
-- External chains provide transaction observations and settlement networks.
+- External chains provide trans動作 observations and settlement networks.
 - Future custody providers may own signing boundaries.

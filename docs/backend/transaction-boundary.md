@@ -1,8 +1,8 @@
-# Transaction Boundary
+# Trans動作 Boundary
 
 ## Rule
 
-每個會造成業務副作用的 command 必須有明確 transaction boundary。
+每個會造成業務副作用的 command 必須有明確 trans動作 boundary。
 
 ```text
 API request
@@ -15,7 +15,7 @@ API request
   -> async side effect delivery
 ```
 
-## Funds transaction rule
+## Funds trans動作 rule
 
 ```text
 Ledger entry append
@@ -25,11 +25,11 @@ Order state update
 Outbox append
 ```
 
-以上若同屬一個業務事件，必須在同一個 transaction 或有可證明的補償與重放機制。
+以上若同屬一個業務事件，必須在同一個 trans動作 或有可證明的補償與重放機制。
 
 ## Do not
 
-- Do not update balance before ledger entry.
-- Do not publish external event before database commit.
-- Do not call chain broadcast inside an uncommitted database transaction.
-- Do not use distributed transaction unless explicitly designed and reviewed.
+- 不要在帳本分錄前更新餘額。
+- 不要在資料庫提交前發布外部事件。
+- Do not call chain broadcast inside an uncommitted database trans動作.
+- Do not use distributed trans動作 unless explicitly designed and reviewed.

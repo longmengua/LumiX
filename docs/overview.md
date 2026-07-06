@@ -2,7 +2,7 @@
 
 LumiX 是一個以正式營運為目標的線上交易所系統。
 
-## Product scope
+## 產品 scope
 
 ```text
 Retail user
@@ -26,7 +26,7 @@ System
   - protect withdrawals through approval and signing boundaries
 ```
 
-## Production stance
+## 生產立場
 
 LumiX 的核心設計假設是真實資金會進入系統，因此所有金流資料必須：
 

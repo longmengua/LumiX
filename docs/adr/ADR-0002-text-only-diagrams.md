@@ -1,6 +1,6 @@
 # ADR-0002 Text-only Diagrams
 
-## Decision
+## 決定
 
 All diagrams in documentation use pure text diagrams.
 
@@ -8,7 +8,7 @@ All diagrams in documentation use pure text diagrams.
 
 Pure text diagrams are diffable, readable in terminals, friendly to AI agents, and do not require external rendering tools.
 
-## Consequences
+## 後果
 
 - No Mermaid.
 - No PlantUML.

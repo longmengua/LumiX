@@ -1,15 +1,15 @@
-# ADR-XXXX Title
+# ADR-XXXX 標題
 
-## Status
+## 狀態
 
-proposed / accepted / superseded
+提案中 / 已接受 / 已取代
 
-## Context
+## 背景
 
-## Decision
+## 決定
 
-## Consequences
+## 後果
 
 ## Human review required
 
-yes / no
+是 / 否

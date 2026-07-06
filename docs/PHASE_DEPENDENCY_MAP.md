@@ -1,6 +1,6 @@
-# Phase Dependency Map
+# 階段依賴圖
 
-## Dependency graph
+## 相依圖
 
 ```text
 P12 Database
@@ -36,4 +36,4 @@ P12 Database
 
 ## Review implication
 
-若 Phase 12 schema 設計不穩，後續帳本、凍結、撮合、結算、錢包都會返工。因此 Phase 12 必須先以 production data model 為中心，而不是以畫面或 controller 為中心。
+若 第 12 階段 schema 設計不穩，後續帳本、凍結、撮合、結算、錢包都會返工。因此 第 12 階段 必須先以 production data model 為中心，而不是以畫面或 controller 為中心。

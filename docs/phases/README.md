@@ -1,6 +1,6 @@
-# Phases
+# 階段
 
-Phases are the construction plan. Do not jump phases.
+階段是施工計畫。不要跳階。
 
 ```text
 PHASE_12_DATABASE_SCHEMA/      next implementation phase
@@ -10,7 +10,7 @@ PHASE_15_BALANCE_RECON/        planned
 ...
 ```
 
-Current allowed work:
+目前可執行的工作：
 
 ```text
 docs/phases/PHASE_12_DATABASE_SCHEMA/

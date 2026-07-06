@@ -1,4 +1,4 @@
-# AI Review Checklist
+# AI 審查檢查清單
 
 ## Scope
 
@@ -9,14 +9,14 @@
 ## Safety
 
 - [ ] Money values avoid floating point.
-- [ ] Ledger remains append-only.
-- [ ] Balance projection is not source of truth.
+- [ ] 帳本 remains append-only.
+- [ ] 餘額投影 is not source of truth.
 - [ ] Idempotency is present for effectful operations.
 - [ ] High-risk change has `HUMAN_REVIEW_REQUIRED`.
 
 ## Documentation
 
-- [ ] Phase task status updated.
+- [ ] 階段 任務狀態更新d.
 - [ ] Migration notes updated if schema changed.
 - [ ] Pure text diagrams only.
 

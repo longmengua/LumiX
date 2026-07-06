@@ -1,6 +1,6 @@
-# Component Diagram
+# 元件圖
 
-## Backend component map
+## 後端 component map
 
 ```text
 +----------------------------------------------------------------------------+

@@ -1,6 +1,6 @@
 # ADR-0001 Production Exchange Boundaries
 
-## Decision
+## 決定
 
 LumiX separates application services from exchange-core rules. Controllers must not mutate funds directly.
 
@@ -8,7 +8,7 @@ LumiX separates application services from exchange-core rules. Controllers must 
 
 Trading and wallet flows need auditability, deterministic state transitions, and human review around funds safety.
 
-## Consequences
+## 後果
 
 - More files and explicit boundaries.
 - Less accidental money mutation.

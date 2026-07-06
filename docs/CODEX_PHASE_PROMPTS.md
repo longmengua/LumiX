@@ -1,6 +1,6 @@
-# Codex Phase Prompts
+# Codex 階段提示詞
 
-## P12 prompt
+## P12 提示詞
 
 ```text
 Read AGENTS.md, AI_AGENT.md, AI_PROGRESS.md, docs/ai/AI_CONTEXT_ROUTING.md, and docs/phases/PHASE_12_DATABASE_SCHEMA/README.md.
@@ -11,7 +11,7 @@ After changing files, run the narrowest relevant verification and update the tas
 Stop with a review summary.
 ```
 
-## Review prompt
+## Review 提示詞
 
 ```text
 Review this change against AGENTS.md and docs/PHASE_REVIEW_WORKFLOW.md.

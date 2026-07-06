@@ -1,8 +1,8 @@
-# Phase Review Report
+# 階段審查報告
 
-## Phase
+## 階段
 
-## Summary
+## 摘要
 
 ## Completed tasks
 
@@ -12,14 +12,14 @@
 
 ## Open issues
 
-## Decision
+## 決定
 
 ```text
 GO / NO-GO
 ```
 
-## Human reviewer
+## 人工審核者
 
 Name:
-Date:
+日期：
 Notes:

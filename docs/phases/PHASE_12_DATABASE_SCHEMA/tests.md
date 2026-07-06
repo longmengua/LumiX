@@ -1,6 +1,6 @@
-# P12 Tests
+# P12 測試
 
-## Required checks
+## 必要檢查
 
 ```text
 clean database migration applies
@@ -12,9 +12,9 @@ unique constraints exist for idempotency keys
 indexes exist for query paths
 ```
 
-## Suggested test types
+## 建議測試類型
 
-- Migration integration test.
-- Schema metadata assertion.
-- Repository smoke test if repository classes exist.
-- Static grep for forbidden money types in migration SQL.
+- Migration 整合測試。
+- Schema 中繼資料斷言。
+- 如果有 repository 類別，就做 smoke test。
+- 對 migration SQL 做靜態 grep，檢查禁止的金額型別。

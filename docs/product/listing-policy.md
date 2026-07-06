@@ -1,6 +1,6 @@
-# Listing Policy
+# 上架政策
 
-## Asset listing checklist
+## 資產上架檢查清單
 
 ```text
 asset metadata
@@ -15,7 +15,7 @@ reconciliation support
 incident response plan
 ```
 
-## Market listing checklist
+## 市場上架檢查清單
 
 ```text
 base asset

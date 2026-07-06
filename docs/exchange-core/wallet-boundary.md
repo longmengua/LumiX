@@ -1,8 +1,8 @@
-# Wallet Boundary
+# 錢包邊界
 
 Wallet flows have stricter safety than ordinary trading APIs.
 
-## Deposit boundary
+## 入金 boundary
 
 ```text
 Chain transaction observed
@@ -13,7 +13,7 @@ Chain transaction observed
   -> balance projection
 ```
 
-## Withdrawal boundary
+## 提款al boundary
 
 ```text
 Withdrawal request

@@ -1,8 +1,8 @@
-# Architecture Text Map
+# 架構文字圖
 
 本文件只放整體地圖。細節請跳到 `docs/architecture/`、`docs/backend/`、`docs/exchange-core/`。
 
-## System context
+## 系統情境
 
 ```text
 +------------------+       +------------------+       +------------------+

@@ -1,4 +1,4 @@
-# Glossary
+# 詞彙表
 
 ```text
 Ledger

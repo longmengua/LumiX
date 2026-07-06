@@ -1,6 +1,6 @@
 # P12 Data Model
 
-## Text ERD
+## 文字 ERD
 
 ```text
 users 1---n accounts 1---n account_assets
@@ -18,7 +18,7 @@ outbox_events n---1 aggregate reference
 audit_logs n---1 actor reference
 ```
 
-## Core tables
+## 核心資料表
 
 ```text
 users
@@ -43,6 +43,6 @@ idempotency_keys
 admin_actions
 ```
 
-## Money precision
+## Money 精度
 
-All money columns must be decimal or integer-minor-unit with explicit precision. No float, real, or double precision for money.
+All money columns must be decimal or integer-minor-unit with explicit 精度. No float, real, or double 精度 for money.

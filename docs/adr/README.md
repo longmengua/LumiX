@@ -1,3 +1,3 @@
-# Architecture Decision Records
+# 架構決策紀錄
 
 ADR 用來記錄不可隨意改動的架構決策。

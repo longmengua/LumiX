@@ -1,4 +1,4 @@
-# Admin Operations
+# 管理操作
 
 ## Operator capabilities
 
@@ -13,9 +13,9 @@ View audit log
 Run reconciliation report
 ```
 
-## Admin action rule
+## Admin 動作 rule
 
-All privileged actions must write audit log:
+All privileged 動作s must write audit log:
 
 ```text
 admin_id

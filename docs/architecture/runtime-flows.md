@@ -1,6 +1,6 @@
-# Runtime Flows
+# 執行期流程
 
-## Deposit flow
+## 入金 flow
 
 ```text
 User              Chain Listener       Wallet Service       Ledger        Balance
@@ -14,7 +14,7 @@ User              Chain Listener       Wallet Service       Ledger        Balanc
  |<--------------------- balance updated after credit ------------------------|
 ```
 
-Deposit observed is not deposit credited. Credit happens only after confirmation policy passes.
+入金 observed is not deposit credited. Credit happens only after 確認政策 passes.
 
 ## Spot order flow
 
@@ -42,7 +42,7 @@ User/API       Order Service       Matching       Reservation       Ledger
   |<---------------- final order state ---------------------------------------|
 ```
 
-## Withdrawal flow
+## 提款al flow
 
 ```text
 User/API       Wallet Service       Risk/Admin       Reservation       Signer       Chain
@@ -56,4 +56,4 @@ User/API       Wallet Service       Risk/Admin       Reservation       Signer   
   |<---------------- status: requested/approved/sent/confirmed/failed --------|
 ```
 
-Withdrawal requested is not withdrawal paid. Signing and broadcast require stronger controls than ordinary API calls.
+提款al requested is not withdrawal paid. Signing and broadcast require stronger controls than ordinary API calls.

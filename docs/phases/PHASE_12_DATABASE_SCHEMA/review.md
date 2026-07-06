@@ -1,21 +1,21 @@
-# P12 Review
+# P12 審查
 
-## Review checklist
+## 審查清單
 
 - [ ] All P12 tasks complete.
 - [ ] Migration order is clear.
 - [ ] Schema can be applied from scratch.
 - [ ] Precision rules are explicit.
-- [ ] Ledger tables support append-only behavior.
-- [ ] Reservation states are representable.
-- [ ] Order lifecycle states are representable.
+- [ ] 帳本 tables support append-only behavior.
+- [ ] 預留 states are representable.
+- [ ] 訂單 lifecycle states are representable.
 - [ ] Wallet deposit and withdrawal states are representable.
 - [ ] Outbox, audit, and idempotency are present.
 - [ ] No runtime money movement was added.
 
-## Human sign-off
+## 人工簽核
 
 Reviewer:
-Date:
-Decision: GO / NO-GO
+日期：
+決定: GO / NO-GO
 Notes:

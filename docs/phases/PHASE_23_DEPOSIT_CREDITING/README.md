@@ -1,19 +1,19 @@
-# Deposit Crediting and Confirmation Policy
+# 入金入帳與確認政策
 
-## Status
+## 狀態
 
 ```text
 planned, not started
 ```
 
-## Dependency
+## 相依
 
 This phase must not start until earlier required phases pass review.
 
-## Scope placeholder
+## 範圍占位
 
 Detailed task cards should be created by the architect agent after the previous phase is signed off.
 
-## No-jump warning
+## 不可跳階警告
 
-Do not implement this phase while Phase 12 is still incomplete.
+Do not implement this phase while 第 12 階段 is still incomplete.

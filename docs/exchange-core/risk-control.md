@@ -1,4 +1,4 @@
-# Risk Control
+# 風控
 
 ## Risk checkpoints
 
@@ -18,7 +18,7 @@ market halt / resume
 
 - Rate limits.
 - Velocity limits.
-- Withdrawal amount limits.
+- 提款al amount limits.
 - Address allowlist / cooldown if enabled.
 - Market halt.
 - Asset withdrawal pause.
@@ -26,4 +26,4 @@ market halt / resume
 
 ## Rule
 
-Risk rejection must be explicit and auditable. Silent balance mutation is prohibited.
+風控拒絕必須明確且可稽核。禁止靜默餘額異動。

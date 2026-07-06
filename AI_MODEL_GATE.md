@@ -2,7 +2,7 @@
 
 本文件定義不同 AI agent 可以做什麼。
 
-## Capability gate
+## 能力門檻
 
 ```text
 +----------------------+----------------------+----------------------+----------------------+
@@ -19,24 +19,24 @@
 +----------------------+----------------------+----------------------+----------------------+
 ```
 
-## Mini may do
+## Mini 可做
 
-- Implement one Phase 12 task at a time.
+- 一次只執行一個第 12 階段 task。
 - Add migrations following the approved schema design.
 - Add tests that validate schema shape and constraints.
-- Update task status documents.
+- 更新 task status 文件。
 - Refactor local code only when needed by the task.
 
-## Mini must not do
+## Mini 不可做
 
 - Create runtime fund movement.
 - Create production matching execution.
 - Create withdrawal signing or broadcast logic.
 - Change invariant definitions.
-- Skip test or review notes.
+- 不要略過測試或審查備註。
 - Use mock logic in production path.
 
-## Architect may do
+## 架構師 可做
 
 - Split documents.
 - Define boundaries.
@@ -44,11 +44,11 @@
 - Propose schema and lifecycle decisions.
 - Mark decisions needing human review.
 
-## Human reviewer owns
+## 人工審核者負責
 
 - Fee policy.
 - Asset listing policy.
-- Withdrawal risk policy.
+- 提款風險政策。
 - Launch readiness.
 - Legal / compliance go/no-go.
 - Any money-affecting invariant.

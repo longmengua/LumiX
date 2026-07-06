@@ -1,4 +1,4 @@
-# Mini Task Brief
+# Mini 任務簡報
 
 ## Task
 
@@ -22,7 +22,7 @@ docs/ai/AI_CONTEXT_ROUTING.md
 
 ## Verification
 
-## Output summary
+## Output 摘要
 
 ```text
 Task:

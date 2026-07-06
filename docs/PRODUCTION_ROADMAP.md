@@ -1,6 +1,6 @@
-# Production Roadmap
+# 生產路線圖
 
-## Roadmap by capability
+## 依能力規劃路線圖
 
 ```text
 Foundation
@@ -43,4 +43,4 @@ Launch
 
 - Internal alpha：可以跑完整模擬交易，但不碰真實資金。
 - Closed beta：可以在受控環境做有限資金流程，提款仍需高度人工 gate。
-- Production launch：所有 readiness gates 通過。
+- 正式上線：所有 readiness gates 通過。

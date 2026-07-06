@@ -1,4 +1,4 @@
-# Architecture
+# 架構
 
 本章說明 LumiX 的系統形狀。
 
