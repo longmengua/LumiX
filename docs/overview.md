@@ -1,13 +1,38 @@
-# LumiX 總覽
+# LumiX Overview
 
-LumiX 的文件以「一本書」的方式整理。你可以先從總目錄開始，再一路往下讀到架構、產品、核心能力、營運與各個 Phase。
+LumiX 是一個以正式營運為目標的線上交易所系統。
 
-建議閱讀順序：
+## Product scope
 
-1. `docs/README.md`
-2. `docs/ARCHITECTURE_TEXT_MAP.md`
-3. `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-4. `docs/PHASE_REVIEW_WORKFLOW.md`
-5. `docs/phases/` 中對應的章節
+```text
+Retail user
+  - register / login / account security
+  - deposit assets
+  - trade spot markets
+  - view balances, orders, trades, fees
+  - withdraw assets
 
-這套文件的目標，是讓人不看程式碼也能先理解 LumiX 想成為什麼樣的交易所。
+Operator
+  - monitor markets and wallets
+  - review abnormal activity
+  - handle listing, fee, risk, incident workflow
+  - reconcile balances and chain transactions
+
+System
+  - keep immutable ledger
+  - reserve funds before order placement
+  - match orders deterministically
+  - settle trades atomically
+  - protect withdrawals through approval and signing boundaries
+```
+
+## Production stance
+
+LumiX 的核心設計假設是真實資金會進入系統，因此所有金流資料必須：
+
+- 可審計。
+- 可追蹤。
+- 可重放。
+- 可對帳。
+- 可事故復原。
+- 可被人類審核。

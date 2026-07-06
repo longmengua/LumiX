@@ -1,11 +1,13 @@
-# AI 章節
+# AI Docs
 
-這一章是給 Codex 看文件順序與操作方式的導覽。
+AI 文件的目標是讓 agent 少讀、準確讀、安全做。
 
-## 內容順序
-
-1. `working-rules.md`
-2. `phase-command-workflow.md`
-3. `codex-prompt-index.md`
-
-這一區是 AI 工作流程的入口。
+```text
+AGENTS.md
+  |
+AI_AGENT.md
+  |
+docs/ai/AI_CONTEXT_ROUTING.md
+  |
+phase task card
+```

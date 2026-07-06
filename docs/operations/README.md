@@ -1,13 +1,12 @@
-# 營運章節
+# Operations
 
-這一章描述交易所要怎麼安全地被營運、監控與上線。
+營運文件定義如何上線、監控、處理事故與審核 readiness。
 
-## 內容順序
-
-1. `deployment.md`
-2. `observability.md`
-3. `incident-response.md`
-4. `security-compliance.md`
-5. `launch-readiness.md`
-
-這些章節對應的是實際營運與維運工作。
+```text
+deployment-runbook.md  deploy and rollback
+observability.md       logs, metrics, traces
+incident-response.md   incident process
+go-no-go-checklist.md  launch decision
+security-baseline.md   production security baseline
+backup-restore.md      recovery expectations
+```

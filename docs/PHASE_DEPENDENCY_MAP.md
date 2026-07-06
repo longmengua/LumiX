@@ -1,109 +1,39 @@
-# Phase 依賴圖
+# Phase Dependency Map
 
-這份文件只說清楚一件事：哪幾章一定要先後順序做，哪幾章可以先準備文件或營運材料。
-
-## 依賴關係圖
+## Dependency graph
 
 ```text
-[Phase 12: 資料庫結構與遷移]
-    |
-    v
-[Phase 13: 雙式帳本引擎]
-    |
-    v
-[Phase 14: 餘額投影與帳本對帳]
-    |
-    v
-[Phase 15: 資產預留與凍結引擎]
-    |
-    v
-[Phase 16: 正式現貨下單服務]
-    |
-    v
-[Phase 17: C++ 撮合核心]
-    |
-    v
-[Phase 18: Java 與 C++ 核心整合]
-    |
-    v
-[Phase 19: 成交結算引擎]
-    |
-    v
-[Phase 20: 市場資料管線]
+P12 Database
+  |
+  +--> P13 Identity / Account / Asset
+          |
+          +--> P14 Ledger
+                  |
+                  +--> P15 Balance Projection / Reconciliation
+                          |
+                          +--> P16 Reservation
+                                  |
+                                  +--> P17 Order Intake
+                                          |
+                                          +--> P18 Matching Contract
+                                                  |
+                                                  +--> P19 Settlement
+                                                          |
+                                                          +--> P20 Fee Engine
 
-[Phase 21: 入金系統]
-    |
-    v
-[Phase 22: 出金系統]
-    |
-    v
-[Phase 23: 熱錢包 / 冷錢包金庫]
+P12 Database
+  |
+  +--> P22 Deposit Schema / Chain Listener
+          |
+          +--> P23 Deposit Crediting
 
-[Phase 24: 正式 Open API]
-    |
-    v
-[Phase 25: 管理後台]
-    |
-    v
-[Phase 26: 風控引擎與總開關]
-    |
-    v
-[Phase 27: 做市與流動性控制]
-
-[Phase 28: 期貨合約基礎]
-    |
-    v
-[Phase 29: 倉位 / PnL / 保證金引擎]
-    |
-    v
-[Phase 30: 強平 / ADL / 保險基金]
-    |
-    v
-[Phase 31: 保證金借貸系統]
-
-[Phase 32: 對帳與補償系統]
-    |
-    v
-[Phase 33: 安全與合規加固]
-    |
-    v
-[Phase 34: 監控 / SRE / 事故應對]
-    |
-    v
-[Phase 35: 生產部署 / CI-CD / 發版]
-    |
-    v
-[Phase 36: 上線前驗證與商業就緒]
+P12 Database
+  |
+  +--> P24 Withdrawal Request
+          |
+          +--> P25 Approval / Signing / Broadcast
 ```
 
-## 關鍵路徑
+## Review implication
 
-- 正式現貨核心：12 → 13 → 14 → 15 → 16 → 17 → 18 → 19 → 20
-- 錢包路徑：21 → 22 → 23
-- API / 管理 / 風控 / 流動性：24 → 25 → 26 → 27
-- 合約與保證金：28 → 29 → 30 → 31
-- 對帳 / 安全 / 部署 / 上線：32 → 33 → 34 → 35 → 36
-
-## 不能亂跳的地方
-
-- 12 到 20 是正式交易主線，不能跳到後面再回頭補。
-- 21 到 23 需要前面的資金底座。
-- 29 到 31 需要前面的合約與保證金規則。
-- 32 到 36 需要前面的大多數核心完成。
-
-## 會碰到用戶資金的章節
-
-- 12 到 23、26、29 到 32、36。
-
-## 必須人工審核的章節
-
-- 12 到 36 全部都要人工審核。
-
-## 可以先平行準備的部分
-
-- 文件整理
-- 產品文案
-- UI 草圖
-- 營運流程
-- 監控與告警文件
-- 法務與客服文件
+若 Phase 12 schema 設計不穩，後續帳本、凍結、撮合、結算、錢包都會返工。因此 Phase 12 必須先以 production data model 為中心，而不是以畫面或 controller 為中心。

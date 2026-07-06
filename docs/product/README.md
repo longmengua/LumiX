@@ -1,12 +1,12 @@
-# 產品章節
+# Product
 
-這一章說明 LumiX 想做成什麼樣的交易所，從使用者與營運角度來看。
+本章說明 LumiX 作為可營運交易所需要的產品能力。
 
-## 內容順序
-
-1. `operating-exchange-scope.md`
-2. `user-flows.md`
-3. `admin-flows.md`
-4. `revenue-model.md`
-
-這些章節偏向產品故事與營運藍圖。
+```text
+business-model.md          why this can make money
+trading-product-scope.md   trading features
+fee-and-revenue-policy.md  fee and revenue accounting
+user-journeys.md           retail user flows
+admin-operations.md        operator flows
+listing-policy.md          asset / market listing rules
+```

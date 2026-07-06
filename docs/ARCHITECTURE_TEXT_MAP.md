@@ -1,151 +1,76 @@
-# LumiX 整體架構文字圖
+# Architecture Text Map
 
-這份文件用文字把整個系統畫出來。重點不是堆名詞，而是讓人看懂每個區塊在做什麼、資料怎麼流、資金怎麼走。
+本文件只放整體地圖。細節請跳到 `docs/architecture/`、`docs/backend/`、`docs/exchange-core/`。
 
-## 一、全系統架構
-
-```text
-[使用者網頁 / Open API 客戶端]
-  |
-  | 同步請求
-  v
-[前端 Web]
-  - 公開行情頁：看市場與公告
-  - 交易頁：送單、撤單、看成交
-  - 錢包頁：看入金、出金與資產
-  - 帳戶 / KYC 頁：登入、安全設定、身份預留
-  - 管理頁：給營運人員使用
-  |
-  | 同步請求
-  v
-[Java Spring Boot 後端]
-  - REST 控制器：對外 API 入口
-  - WebSocket / SSE：即時推播
-  - 身分驗證 / API Key：保護存取權限
-  - 帳戶服務：登入、帳戶資料、權限
-  - 錢包服務：入金、出金、資產查詢
-  - 現貨下單：驗證、預留、送撮合
-  - 帳本：記錄每一次資金變化
-  - 預留 / 凍結：控制可用與鎖定餘額
-  - 結算：把成交寫進帳本
-  - 市場資料：把成交與 order book 變成公開資料
-  - 風控：下單與出金前先擋風險
-  - 管理：查詢、審批、人工處置
-  - 對帳：找差異、找卡住狀態
-  |
-  | 非同步事件
-  v
-[C++ 撮合核心]
-  - order book：買賣盤
-  - deterministic matching：確定性撮合
-  - sequence / replay：序號、重放、回復
-  |
-  | 撮合事件
-  v
-[市場資料管線]
-  - order book snapshot
-  - order book delta
-  - trade tape
-  - ticker
-  - kline
-  - WebSocket fanout
-  - REST market API
-  |
-  | 資金路徑
-  v
-[資料庫與快取]
-  - 交易核心資料表
-  - Redis 快取
-  - 事件匯流排邊界
-  - 日誌 / 物件儲存預留
-  |
-  | 鏈上資料
-  v
-[錢包與金庫邊界]
-  - chain scanner：掃描鏈上入金與出金狀態
-  - hot wallet：處理日常出金
-  - cold wallet：保存較大資產
-  - signer / HSM / MPC：簽章邊界預留
-  |
-  | 營運與保護
-  v
-[Operations]
-  - 監控
-  - 告警
-  - 操作手冊
-  - CI/CD
-  - 備份 / 還原
-```
-
-## 二、正式交易流程
+## System context
 
 ```text
-使用者 / API 客戶端
-→ 前端 / Open API
-→ Java 下單服務
-→ 風控前置檢查
-→ 資金預留
-→ 訂單持久化
-→ C++ 撮合核心
-→ 成交事件
-→ 結算引擎
-→ 帳本記錄
-→ 餘額投影
-→ 市場資料
-→ WebSocket / REST 查詢
-→ 對帳
++------------------+       +------------------+       +------------------+
+| Retail user      | <---> | LumiX Web        | <---> | LumiX API        |
++------------------+       +------------------+       +------------------+
+                                                              |
++------------------+       +------------------+               |
+| Operator         | <---> | Admin Console    | <-------------+
++------------------+       +------------------+
+                                                              |
+                                                              v
+                                                     +------------------+
+                                                     | Exchange System  |
+                                                     +------------------+
+                                                              |
+            +------------------+----------------------+------------------+
+            |                  |                      |                  |
+            v                  v                      v                  v
++------------------+ +------------------+ +------------------+ +------------------+
+| PostgreSQL       | | Redis            | | Event Bus        | | Wallet / Chain   |
+| source of truth  | | cache / locks    | | async workflow   | | integrations     |
++------------------+ +------------------+ +------------------+ +------------------+
 ```
 
-### 這條流程每一步在做什麼
-
-- 前端 / Open API：接收使用者輸入。
-- Java 下單服務：驗證參數、查風控、叫預留。
-- 風控前置檢查：擋掉不該進來的單。
-- 資金預留：先把會用到的資金鎖起來。
-- 訂單持久化：把訂單寫進資料庫。
-- C++ 撮合核心：決定誰成交、成交多少、成交價是多少。
-- 成交事件：把撮合結果送回 Java。
-- 結算引擎：把成交變成帳本變化。
-- 帳本記錄：留下可稽核的金流軌跡。
-- 餘額投影：讓前台查得到快的餘額。
-- 市場資料：讓行情頁、K 線與深度圖有資料。
-- 對帳：找出系統之間的差異。
-
-## 三、模組對照
+## Container map
 
 ```text
-web/
-  → 頁面與路由
-  → API 連接層
-  → 登入狀態
-  → 交易視圖
-  → 錢包視圖
-  → 管理視圖
-
-server/
-  → Controller / DTO
-  → 應用服務
-  → 領域服務
-  → Repository
-  → 基礎設施接點
-
-matching-core/ 或 core/
-  → 撮合核心（規劃中）
-
-docs/
-  → 架構 / 路線圖 / 審核 / 章節 / 歷史資料
++--------------------------------------------------------------------------------+
+| LumiX                                                                         |
+|                                                                                |
+|  +-------------+       +----------------+       +---------------------------+   |
+|  | Web App     | <---> | API Gateway    | <---> | Backend Modules          |   |
+|  | React/TS    |       | Spring API     |       | account / order / wallet |   |
+|  +-------------+       +----------------+       +---------------------------+   |
+|                                                   |                            |
+|                                                   v                            |
+|                                         +-------------------+                  |
+|                                         | Exchange Core     |                  |
+|                                         | ledger/matching   |                  |
+|                                         +-------------------+                  |
+|                                                   |                            |
+|  +-------------+       +----------------+       +---------------------------+   |
+|  | PostgreSQL  | <---- | Outbox Worker  | ----> | Event Bus / Workers      |   |
+|  +-------------+       +----------------+       +---------------------------+   |
+|                                                                                |
++--------------------------------------------------------------------------------+
 ```
 
-## 四、目前真實狀態
+## Runtime flow index
 
-- 前端頁面與部分開發用接點已存在。
-- 後端有 Spring Boot 骨架與樣板。
-- 正式帳本、凍結、撮合、結算、入金、出金與市場資料 runtime 都還沒有完成。
-- `MatchingEngineClient` 只是整合邊界，不是正式撮合引擎。
-- 沒有任何文件可以在正式門檻未過前宣稱正式交易完成。
+```text
+Deposit        -> docs/architecture/runtime-flows.md#deposit-flow
+Order          -> docs/architecture/runtime-flows.md#spot-order-flow
+Cancel         -> docs/architecture/runtime-flows.md#cancel-order-flow
+Settlement     -> docs/exchange-core/settlement-contract.md
+Withdrawal     -> docs/architecture/runtime-flows.md#withdrawal-flow
+Reconciliation -> docs/exchange-core/reconciliation.md
+```
 
-## 五、讀這張圖時要記住的事
+## Domain boundary index
 
-- 畫面先行，不代表 runtime 已完成。
-- 介面存在，不代表 production 已可用。
-- 樣板、stub、placeholder 都只能算佈局，不能算正式能力。
+```text
+Account / identity       -> docs/backend/module-map.md
+Ledger invariants        -> docs/exchange-core/ledger-invariants.md
+Reservation state        -> docs/exchange-core/reservation-state-machine.md
+Order lifecycle          -> docs/exchange-core/order-lifecycle.md
+Matching contract        -> docs/exchange-core/matching-engine-contract.md
+Wallet boundary          -> docs/exchange-core/wallet-boundary.md
+Risk control             -> docs/exchange-core/risk-control.md
+Operations readiness     -> docs/operations/go-no-go-checklist.md
+```

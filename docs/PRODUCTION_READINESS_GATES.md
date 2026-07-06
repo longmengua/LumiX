@@ -1,172 +1,63 @@
-# 上線就緒門檻
+# Production Readiness Gates
 
-這份文件用來判斷「哪些事情真的已經準備好」。它不談願望，只看證據。
+LumiX 只有在所有 gate 通過後，才能宣稱 production launch ready。
 
-## 門檻：不得宣稱正式交易
+## Gate map
 
-必要條件：
-- Phase 11 到 20、21 到 23、32 到 36 都有明確章節與審核紀錄。
-- 每個 production flow 都有文件、測試紀錄與人工確認。
+```text
++------------------+       +------------------+       +------------------+
+| Data integrity   | ----> | Funds safety     | ----> | Trading safety   |
++------------------+       +------------------+       +------------------+
+          |                         |                         |
+          v                         v                         v
++------------------+       +------------------+       +------------------+
+| Security         | ----> | Operations       | ----> | Business launch  |
++------------------+       +------------------+       +------------------+
+```
 
-證據：
-- 文件。
-- 測試紀錄。
-- 審核紀錄。
+## Data integrity gate
 
-通過前不能宣稱：
-- 正式交易完成。
+- Migration 可重跑且可驗證。
+- 所有金額欄位 precision 明確。
+- 所有交易唯一鍵與 idempotency key 明確。
+- Outbox / audit log 存在。
+- Ledger append-only schema 存在。
 
-## 門檻：帳本正確
+## Funds safety gate
 
-必要條件：
-- Phase 12 到 14 完成。
-- journal 可以重建。
-- 冪等處理可以重放。
-- 餘額與帳本可以對回。
+- Ledger invariant 測試通過。
+- Balance projection 可由 ledger 重建。
+- Reservation hold/release/capture 可對帳。
+- Deposit crediting 有 confirmation policy。
+- Withdrawal 需要 approval / signing / broadcast / reconciliation。
 
-證據：
-- journal 證據。
-- 餘額證據。
-- 重建與對帳報告。
+## Trading safety gate
 
-通過前不能宣稱：
-- 帳本完成。
+- Order lifecycle 狀態完整。
+- Matching output deterministic。
+- Settlement atomic 或具備補償流程。
+- Fee rounding policy 明確。
+- Market halt / risk limit 有管理流程。
 
-## 門檻：資金凍結
+## Security gate
 
-必要條件：
-- Phase 15 到 16 完成。
-- reserve、release、commit、rollback 都有測試。
-- BUY 與 SELL 都能對應正確的 locked / available 變化。
+- Authentication / authorization 通過。
+- Admin action audit trail 完整。
+- Secrets 不落庫、不進 log。
+- Rate limit / abuse protection 存在。
+- Withdrawal 權限分離。
 
-證據：
-- 凍結狀態。
-- 重試紀錄。
-- 部分成交與取消釋放紀錄。
+## Operations gate
 
-通過前不能宣稱：
-- 凍結完成。
+- Metrics、logs、traces、alerts 可用。
+- Runbook 完整。
+- Incident escalation path 完整。
+- Backup / restore / replay 演練完成。
+- On-call 與交接可執行。
 
-## 門檻：撮合確定性
+## Business launch gate
 
-必要條件：
-- Phase 17 到 18 完成。
-- C++ 核心可以 replay。
-- sequence 與 snapshot 可以回復。
-- duplicate 或 out-of-order event 有明確處理。
-
-證據：
-- snapshot。
-- sequence 證據。
-- 整合與 benchmark 結果。
-
-通過前不能宣稱：
-- 撮合完成。
-
-## 門檻：結算正確
-
-必要條件：
-- Phase 19 到 20 完成。
-- fill settlement、費用、釋放邏輯都要能對回 journal。
-- market data 只能從正式成交事件長出來。
-
-證據：
-- 結算 journal。
-- 事件重放結果。
-- 市場資料序號證據。
-
-通過前不能宣稱：
-- 結算完成。
-
-## 門檻：錢包安全
-
-必要條件：
-- Phase 21 到 23 完成。
-- 入金、出金、金庫都有對帳與告警。
-- chain / internal records 可以互相核對。
-
-證據：
-- 鏈上與內部對帳紀錄。
-- wallet 演練紀錄。
-
-通過前不能宣稱：
-- 錢包安全完成。
-
-## 門檻：對帳
-
-必要條件：
-- Phase 14、19 到 22、32 完成。
-- 差異、卡住狀態與補償流程都有證據。
-- 不可只看成功案例。
-
-證據：
-- 對帳報告。
-- discrepancy case。
-- compensation trace。
-
-通過前不能宣稱：
-- 對帳完成。
-
-## 門檻：管理稽核
-
-必要條件：
-- Phase 25 到 32 完成。
-- RBAC、審批與 audit log 都能回查。
-
-證據：
-- 管理操作紀錄。
-- audit trail。
-
-通過前不能宣稱：
-- 管理完成。
-
-## 門檻：風控總開關
-
-必要條件：
-- Phase 26 到 33 完成。
-- 限制、停單、停幣與告警都可驗證。
-
-證據：
-- 風控與告警證據。
-
-通過前不能宣稱：
-- 風控完成。
-
-## 門檻：安全
-
-必要條件：
-- Phase 33 完成。
-- 威脅模型、依賴與權限檢查都已完成。
-
-證據：
-- 安全清單。
-- 審核紀錄。
-
-通過前不能宣稱：
-- 安全完成。
-
-## 門檻：監控
-
-必要條件：
-- Phase 34 完成。
-- 告警、演練與事故流程都可操作。
-
-證據：
-- 監控面板。
-- 演練紀錄。
-
-通過前不能宣稱：
-- 監控完成。
-
-## 門檻：上線決策
-
-必要條件：
-- Phase 35 到 36 完成。
-- 發版、回復與 launch rehearsal 都走過。
-
-證據：
-- go / no-go 包。
-- 發版與回滾紀錄。
-
-通過前不能宣稱：
-- 正式上線就緒。
+- Fee schedule 可管理。
+- Revenue ledger 可查詢。
+- User terms / compliance / support 流程準備完成。
+- Human reviewer 明確簽核。

@@ -1,8 +1,17 @@
-# Phase 章節
+# Phases
 
-這裡放 Phase 12 到 Phase 36 的逐章內容。每一章都會說清楚：這章在做什麼、不要做什麼、完成後還不能宣稱什麼。
+Phases are the construction plan. Do not jump phases.
 
-## 讀法
-- 先看總綱。
-- 再看當前章節。
-- 最後看章節末尾的 Codex 實作提示。
+```text
+PHASE_12_DATABASE_SCHEMA/      next implementation phase
+PHASE_13_IDENTITY_ACCOUNT/     planned
+PHASE_14_LEDGER_ENGINE/        planned
+PHASE_15_BALANCE_RECON/        planned
+...
+```
+
+Current allowed work:
+
+```text
+docs/phases/PHASE_12_DATABASE_SCHEMA/
+```

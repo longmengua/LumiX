@@ -1,3 +1,27 @@
-# 對帳
+# Reconciliation
 
-對帳負責檢查帳本、餘額、訂單、成交、錢包與鏈上狀態是否一致。當不一致發生時，系統要能開案、追查與補償，而不是直接默默改資料。
+## Reconciliation layers
+
+```text
+Ledger vs balance projection
+Ledger vs order/trade settlement
+Wallet ledger vs chain balance
+Deposit records vs chain transactions
+Withdrawal records vs chain transactions
+Revenue ledger vs fee reports
+```
+
+## Rebuild flow
+
+```text
+ledger entries
+  -> group by account/asset
+  -> rebuild balance projection
+  -> compare current projection
+  -> report diff
+  -> human-reviewed repair if needed
+```
+
+## Repair rule
+
+No direct historical mutation. Repair requires new adjustment journal plus audit log.

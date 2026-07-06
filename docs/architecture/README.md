@@ -1,13 +1,14 @@
-# 架構章節
+# Architecture
 
-這一章說明 LumiX 整體怎麼組成。
+本章說明 LumiX 的系統形狀。
 
-## 內容順序
-
-1. `system-architecture.md`
-2. `trading-core-boundaries.md`
-3. `funds-safety-model.md`
-4. `data-and-event-flow.md`
-5. `order-settlement-flow.md`
-
-這些章節搭配 `ARCHITECTURE_TEXT_MAP.md` 觀看會更完整。
+```text
+context.md        system context
+containers.md     runtime containers
+components.md     backend / exchange-core components
+data-flow.md      cross-domain data movement
+runtime-flows.md  deposit, order, settlement, withdrawal
+state-machines.md order and reservation states
+deployment.md     production deployment view
+nfr.md            non-functional requirements
+```

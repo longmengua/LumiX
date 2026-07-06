@@ -1,36 +1,33 @@
 # AI_START_HERE.md
 
-This is the authoritative starting document for Codex work in LumiX.
+LumiX 目前進入正式營運交易所架構化施工階段。請不要把這個專案當成 demo 或 MVP。
 
-## Current Authoritative Status
+## 現在做到哪裡
 
-- Phase 11 completed as a documentation-only production architecture reset.
-- Phase 12 through Phase 36 are planned and not started.
-- The next implementation phase is Phase 12 - Production Database Schema & Migration.
-- `docs/OPERATING_EXCHANGE_MASTER_PLAN.md` is the authoritative source of truth.
-- `docs/PHASE_REVIEW_WORKFLOW.md` is the authoritative phase-governance source.
-- Do not jump phases.
-- Do not count interface, stub, mock, placeholder, or TODO work as production completed.
-- Do not claim production trading completed before the required readiness gates pass.
-- Do not claim production launch ready before Phase 36 and explicit human sign-off.
+- Phase 11：文件層級 production architecture reset 完成。
+- Phase 12：Production Database Schema & Migration 尚未開始，是下一個實作階段。
+- Phase 13 到 Phase 36：規劃中，尚未開始。
 
-## Required Read Order Before Any Phase Work
+## AI 先讀什麼
 
-1. `AI_PROGRESS.md`
-2. `README.md`
-3. `server/README.md`
-4. `docs/README.md`
-5. `docs/OPERATING_EXCHANGE_MASTER_PLAN.md`
-6. `docs/ARCHITECTURE_TEXT_MAP.md`
-7. `docs/PHASE_REVIEW_WORKFLOW.md`
-8. the current phase file under `docs/phases/`
+```text
+AGENTS.md
+AI_AGENT.md
+AI_PROGRESS.md
+docs/ai/AI_CONTEXT_ROUTING.md
+docs/phases/PHASE_12_DATABASE_SCHEMA/README.md
+```
 
-## Execution Rules
+## 第一個可執行任務
 
-- Reload the repo from disk before each phase.
-- Implement only the current approved phase.
-- Read the current phase prompt from `docs/phases/`.
-- Update `AI_PROGRESS.md` after work.
-- Run build and test validation after work.
-- Stop after the phase work and wait for human review if the phase is high-risk or if the user requests it.
+```text
+docs/phases/PHASE_12_DATABASE_SCHEMA/tasks/P12-T01.md
+```
 
+## 不要做什麼
+
+- 不要跳到撮合引擎。
+- 不要實作真實資金扣帳。
+- 不要實作真實提款。
+- 不要把 stub 改名成 production。
+- 不要把 mock adapter 接成正式邏輯。

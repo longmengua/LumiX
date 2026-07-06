@@ -1,3 +1,32 @@
-# 事件應變
+# Incident Response
 
-事件應變章節描述當交易、錢包、對帳或風控出現異常時，團隊應該如何處理、升級與復原。
+## Incident flow
+
+```text
+Alert -> Triage -> Contain -> Communicate -> Repair -> Reconcile -> Postmortem
+```
+
+## Containment actions
+
+```text
+pause market
+pause withdrawals
+pause deposit crediting
+increase confirmation threshold
+disable risky admin action
+switch service to read-only mode
+```
+
+## Postmortem required fields
+
+```text
+summary
+impact
+timeline
+root cause
+what stopped the incident
+what failed
+actions
+owner
+due date
+```

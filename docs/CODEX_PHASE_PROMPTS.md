@@ -1,47 +1,19 @@
-# Codex 章節提示索引
+# Codex Phase Prompts
 
-這份文件只做簡單索引，方便快速找每一章的實作方向。每個章節的完整提示都放在自己的 Phase 文件末尾。
+## P12 prompt
 
-## 使用原則
+```text
+Read AGENTS.md, AI_AGENT.md, AI_PROGRESS.md, docs/ai/AI_CONTEXT_ROUTING.md, and docs/phases/PHASE_12_DATABASE_SCHEMA/README.md.
 
-- 每次只做一個章節。
-- 不跳章。
-- 不把 stub、interface、mock、placeholder 或 TODO 當完成。
-- 完成後先進入人工審核。
-- 沒有 Phase 36 的完整門檻，不要宣稱正式上線就緒。
+Implement only the first incomplete P12 task under docs/phases/PHASE_12_DATABASE_SCHEMA/tasks/.
+Do not implement runtime ledger mutation, matching, settlement, deposit crediting, or withdrawal signing.
+After changing files, run the narrowest relevant verification and update the task status.
+Stop with a review summary.
+```
 
-## 章節索引
+## Review prompt
 
-| Phase | 章節 | 重點 |
-| --- | --- | --- |
-| 12 | 資料庫結構與遷移 | 先把資金、訂單、入金、出金與對帳的表結構立好。 |
-| 13 | 雙式帳本引擎 | 建立可稽核的雙式帳本與沖正。 |
-| 14 | 餘額投影與帳本對帳 | 讓帳本可重建、可比對。 |
-| 15 | 資產預留與凍結引擎 | 把可用餘額與鎖定餘額分開。 |
-| 16 | 正式現貨下單服務 | 送單前先驗證、預留、持久化。 |
-| 17 | C++ 撮合核心 | 建立 deterministic order book。 |
-| 18 | Java 與 C++ 核心整合 | 把命令與事件邊界接穩。 |
-| 19 | 成交結算引擎 | 把成交寫進帳本並收尾。 |
-| 20 | 市場資料管線 | 把成交與 order book 變成行情資料。 |
-| 21 | 入金系統 | 掃鏈、確認、入帳。 |
-| 22 | 出金系統 | 審核、預留、廣播、失敗釋放。 |
-| 23 | 熱錢包 / 冷錢包金庫 | 把保管與調度分層。 |
-| 24 | 正式 Open API | 做身份、簽章與節流。 |
-| 25 | 管理後台 | 做查詢、審批與四眼原則。 |
-| 26 | 風控引擎與總開關 | 做限制、停單與停幣。 |
-| 27 | 做市與流動性控制 | 管報價、庫存與自成交。 |
-| 28 | 期貨合約基礎 | 定義合約、tick、lot、mark price。 |
-| 29 | 倉位 / PnL / 保證金引擎 | 管倉位、盈虧與保證金。 |
-| 30 | 強平 / ADL / 保險基金 | 管槓桿失控時的處置。 |
-| 31 | 保證金借貸系統 | 管借款、利息與強制還款。 |
-| 32 | 對帳與補償系統 | 找差異、找卡住狀態、走人工補償。 |
-| 33 | 安全與合規加固 | 補威脅模型、秘密管理與審計。 |
-| 34 | 監控 / SRE / 事故應對 | 補 logs、metrics、tracing 與事故流程。 |
-| 35 | 生產部署 / CI-CD / 發版 | 補部署、回滾、備份與還原。 |
-| 36 | 上線前驗證與商業就緒 | 做費率、法務、客服、演練與 go / no-go。 |
-
-## 讀法
-
-- 先看總綱與審核流程。
-- 再看當前章節文件。
-- 只實作當前章節，不做下一章。
+```text
+Review this change against AGENTS.md and docs/PHASE_REVIEW_WORKFLOW.md.
+Check for scope creep, phase jumping, money-impacting changes, missing tests, schema risks, and whether HUMAN_REVIEW_REQUIRED is needed.
+```

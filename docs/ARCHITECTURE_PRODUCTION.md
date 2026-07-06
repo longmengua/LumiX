@@ -1,5 +1,52 @@
-# 交易所架構總覽
+# Production Architecture
 
-LumiX 要成為一套正式營運的交易所，需要把前端、後端、撮合核心、帳本、錢包、風控、對帳與營運支援拆成清楚的層次。這份架構頁的用途，是讓讀者先建立整體印象，再去看各章細節。
+LumiX 的 production architecture 建立在五個核心原則上。
 
-重點不是「把所有功能放在一起」，而是「每個責任都清楚分開」。
+## Principles
+
+1. 帳本是資金真相，不是 balance cache。
+2. 下單前先凍結，撮合後再結算。
+3. 交易結果必須可以重放、重算、對帳。
+4. 錢包出帳與簽名流程必須比一般 API 更嚴格。
+5. 所有跨系統副作用都必須有 idempotency 與 outbox / audit trail。
+
+## High-level layers
+
+```text
++-------------------------------+
+| User Experience               |
+| web, admin, public API        |
++---------------+---------------+
+                |
++---------------v---------------+
+| Application Services          |
+| auth, account, order, wallet  |
++---------------+---------------+
+                |
++---------------v---------------+
+| Exchange Core                 |
+| ledger, reservation, matching |
+| settlement, risk              |
++---------------+---------------+
+                |
++---------------v---------------+
+| Persistence & Messaging       |
+| PostgreSQL, Redis, outbox     |
++---------------+---------------+
+                |
++---------------v---------------+
+| External Systems              |
+| chain node, custody, email    |
++-------------------------------+
+```
+
+## Production data rule
+
+```text
+Request accepted != funds moved
+Order accepted   != trade settled
+Withdrawal asked != withdrawal signed
+Deposit seen     != deposit credited
+```
+
+每個狀態都要有可查詢的中間狀態，不可用一個 boolean 欄位概括整條生命週期。

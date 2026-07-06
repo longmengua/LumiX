@@ -1,16 +1,14 @@
-# 交易核心章節
+# Exchange Core
 
-這一章是交易所最核心的內容，描述資金、撮合與風控如何串起來。
+Exchange core 是 LumiX 的資金與交易安全中心。
 
-## 內容順序
-
-1. `ledger.md`
-2. `reservation-freeze.md`
-3. `matching-engine.md`
-4. `settlement.md`
-5. `market-data.md`
-6. `wallet-deposit-withdrawal.md`
-7. `risk-controls.md`
-8. `reconciliation.md`
-
-這一區最接近交易所真正運作的核心。
+```text
+ledger-invariants.md              ledger truth
+reservation-state-machine.md      hold/release/capture
+order-lifecycle.md                order states
+matching-engine-contract.md       matching input/output
+settlement-contract.md            trade settlement
+wallet-boundary.md                deposit/withdrawal boundary
+risk-control.md                   risk checks
+reconciliation.md                 verification and repair
+```

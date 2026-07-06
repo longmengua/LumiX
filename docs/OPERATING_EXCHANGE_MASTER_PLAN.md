@@ -1,134 +1,87 @@
-# LumiX 交易所總綱
+# Operating Exchange Master Plan
 
-這份文件是 LumiX 的總目錄級說明。它回答三件事：目前做到哪裡、後面還要做什麼、哪些事情不能亂宣稱已完成。
+本文件是 LumiX 從文件架構進入正式營運交易所的總綱。
 
-## 目前狀態
+## Current phase
 
-- Phase 11 已完成，內容是文件層級的生產架構重整。
-- Phase 12 到 Phase 36 都已規劃，但尚未開始實作。
-- 下一個實作章節是 Phase 12 - 資料庫結構與遷移。
-- LumiX 目前還不是正式可營運的交易所。
-- 正式交易、資金凍結、帳本變動、撮合、結算、入金、出金與市場資料管線都還沒有完成。
+```text
+Phase 11: Production architecture reset - completed as docs-only
+Phase 12: Production database schema and migration - next
+Phase 13-36: planned, not started
+```
 
-## LumiX 要成為什麼
+## Master phase ladder
 
-LumiX 不是做一個只看起來能交易的 MVP，而是要做一套可以正式營運的 OL 交易所。它要能承載真實使用者、真實資金、真實撮合與真實營運流程。
+```text
+P12 Database Schema & Migration
+  |
+P13 Identity, Account, Asset Foundation
+  |
+P14 Immutable Ledger Engine
+  |
+P15 Balance Projection & Reconciliation
+  |
+P16 Reservation / Freeze Engine
+  |
+P17 Order Intake & Idempotency
+  |
+P18 Matching Core Contract
+  |
+P19 Trade Settlement Engine
+  |
+P20 Fee Engine & Revenue Accounting
+  |
+P21 Market Data Pipeline
+  |
+P22 Deposit Address & Chain Listener
+  |
+P23 Deposit Crediting & Confirmation Policy
+  |
+P24 Withdrawal Request Workflow
+  |
+P25 Withdrawal Approval / Signing / Broadcast
+  |
+P26 Risk Control & Limits
+  |
+P27 Admin Console Foundation
+  |
+P28 Audit, Compliance, Evidence Export
+  |
+P29 Public / Private API Hardening
+  |
+P30 Frontend Production Trading UX
+  |
+P31 Observability & Alerting
+  |
+P32 Disaster Recovery & Replay
+  |
+P33 Security Hardening
+  |
+P34 Load / Soak / Chaos Testing
+  |
+P35 Business Operations Readiness
+  |
+P36 Production Launch Gate
+```
 
-核心能力會落在這幾組：
+## No-jump rule
 
-- 使用者帳戶與安全
-- 現貨交易
-- 雙式帳本
-- 資金預留與凍結
-- 結算
-- 入金與出金
-- 市場資料
-- Open API
-- 管理後台
-- 風控與總開關
-- 對帳與補償
-- 安全、監控與部署
+```text
+A later phase may read earlier design.
+A later phase may not be implemented before its dependency phases pass review.
+```
 
-## 章節地圖
+## Business readiness view
 
-### Phase 0 到 Phase 8
+```text
+Revenue requires:
+  - fee policy
+  - fee calculation
+  - fee ledger posting
+  - reporting
+  - reconciliation
+  - admin visibility
+  - tax / accounting export path
+```
 
-這一段是前端與早期基礎。重點是先把畫面、路由、登入、帳戶、資產、交易頁、訂單頁、通知與管理介面搭起來。
-
-- Phase 0：前端啟動
-- Phase 1：版面與路由
-- Phase 2：登入與首頁
-- Phase 3：帳戶中心
-- Phase 4：資產頁面
-- Phase 5：交易頁面
-- Phase 6：訂單與倉位頁面
-- Phase 7：API 與通知
-- Phase 8：管理台
-
-### Phase 9 到 Phase 10
-
-這一段是後端骨架與樣板。重點是先有 Spring Boot 基底、API 合約、DTO、介面與服務邊界，但還不是正式交易 runtime。
-
-- Phase 9：後端骨架
-- Phase 10：錢包 / 訂單 / API 樣板
-
-### Phase 11
-
-這一章是文件層級的架構重整。它把後面的正式交易路線、資金邊界、撮合邊界、結算邊界先講清楚。
-
-- Phase 11：生產架構重整
-
-### Phase 12 到 Phase 15
-
-這一組是資金安全與帳本基礎。先把資料庫、帳本、餘額投影與資金預留做穩，後面的交易、結算、入金、出金都要建立在這個底座上。
-
-- Phase 12：資料庫結構與遷移
-- Phase 13：雙式帳本引擎
-- Phase 14：餘額投影與帳本對帳
-- Phase 15：資產預留與凍結引擎
-
-### Phase 16 到 Phase 20
-
-這一組是現貨交易核心。重點是下單、撮合、結算與市場資料都要真正串起來。
-
-- Phase 16：正式現貨下單服務
-- Phase 17：C++ 撮合核心
-- Phase 18：Java 與 C++ 核心整合
-- Phase 19：成交結算引擎
-- Phase 20：市場資料管線
-
-### Phase 21 到 Phase 23
-
-這一組是錢包與金庫。重點是入金、出金、熱錢包、冷錢包與對帳。
-
-- Phase 21：入金系統
-- Phase 22：出金系統
-- Phase 23：熱錢包 / 冷錢包金庫
-
-### Phase 24 到 Phase 27
-
-這一組是對外 API、管理、風控與流動性控制。它們是正式營運時的主要操作層。
-
-- Phase 24：正式 Open API
-- Phase 25：管理後台
-- Phase 26：風控引擎與總開關
-- Phase 27：做市與流動性控制
-
-### Phase 28 到 Phase 31
-
-這一組是期貨與保證金擴充。先有合約規格，再有倉位、PnL、保證金、強平與借貸。
-
-- Phase 28：期貨合約基礎
-- Phase 29：倉位 / PnL / 保證金引擎
-- Phase 30：強平 / ADL / 保險基金
-- Phase 31：保證金借貸系統
-
-### Phase 32 到 Phase 36
-
-這一組是對帳、安全、部署與上線。它處理的是正式營運前最後一公里的事情。
-
-- Phase 32：對帳與補償系統
-- Phase 33：安全與合規加固
-- Phase 34：監控 / SRE / 事故應對
-- Phase 35：生產部署 / CI-CD / 發版
-- Phase 36：上線前驗證與商業就緒
-
-## 重要門檻
-
-- Phase 12 到 Phase 15 是資金安全與帳本基礎。
-- Phase 16 到 Phase 20 是現貨交易核心。
-- Phase 21 到 Phase 23 是錢包與金庫。
-- Phase 24 到 Phase 27 是 API、管理、風控與流動性。
-- Phase 28 到 Phase 31 是期貨與保證金。
-- Phase 32 到 Phase 36 是對帳、安全、部署與上線準備。
-
-## 現在還不能宣稱什麼
-
-- 不能宣稱正式撮合完成，除非真的有可重放、可回復的撮合核心。
-- 不能宣稱資金凍結完成，除非帳本變動、預留、釋放、提交與回滾都真的落地。
-- 不能宣稱正式交易完成，除非結算、入金、出金與對帳都完整。
-- 不能宣稱正式上線就緒，除非 Phase 36 的條件全部完成並通過人工審核。
-
-## 下一步
-
-- 先做 Phase 12 - 資料庫結構與遷移。
+不應只做到交易畫面與 order API 就認定能營運。能賺錢代表費用、收入、風險、事故與對帳都能落地。
