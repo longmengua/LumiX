@@ -24,6 +24,10 @@ submit / cancel、fill event consumer、sequence 保證、duplicate event 處理
 ## 非目標
 結算 runtime、餘額變動 runtime。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 整合層、事件消費、整合測試。
 

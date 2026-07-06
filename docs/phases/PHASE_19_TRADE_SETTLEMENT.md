@@ -24,6 +24,10 @@ maker / taker fee、reserve commit、unused reserve release、settlement journal
 ## 非目標
 市場資料、鏈上錢包 runtime。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 settlement engine、測試、狀態更新。
 

@@ -17,8 +17,19 @@
 ## 先讀哪幾章
 
 1. `ARCHITECTURE_TEXT_MAP.md`：先看整體長什麼樣。
-2. `OPERATING_EXCHANGE_MASTER_PLAN.md`：再看目前做到哪裡、後面怎麼排。
-3. `PHASE_REVIEW_WORKFLOW.md`：最後看章節怎麼進入實作與審核。
+2. `architecture/data-and-event-flow.md`：看系統層級的資料與事件流。
+3. `architecture/order-settlement-flow.md`：看訂單、預留、撮合、結算與對帳。
+4. `OPERATING_EXCHANGE_MASTER_PLAN.md`：再看目前做到哪裡、後面怎麼排。
+5. `PHASE_REVIEW_WORKFLOW.md`：最後看章節怎麼進入實作與審核。
+
+## 文件規則
+
+- 流程圖只能用純文字表示。
+- 流程圖一律放在 fenced `text` blocks。
+- 不要使用 Mermaid。
+- 不要用 Markdown tables 描述生命周期或流程。
+- 不要使用圖片或外部圖檔。
+- 每一條正式流程都要顯示生產方、消費方、事件或命令、狀態變化、持久化邊界與對帳點。
 
 ## 讀完這頁之後
 

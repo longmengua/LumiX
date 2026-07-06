@@ -4,32 +4,76 @@
 
 ## 依賴關係圖
 
-```mermaid
-flowchart TD
-  P12[Phase 12 資料庫結構與遷移] --> P13[Phase 13 雙式帳本引擎]
-  P13 --> P14[Phase 14 餘額投影與帳本對帳]
-  P14 --> P15[Phase 15 資產預留與凍結引擎]
-  P15 --> P16[Phase 16 正式現貨下單服務]
-  P16 --> P17[Phase 17 C++ 撮合核心]
-  P17 --> P18[Phase 18 Java 與 C++ 核心整合]
-  P18 --> P19[Phase 19 成交結算引擎]
-  P19 --> P20[Phase 20 市場資料管線]
+```text
+[Phase 12: 資料庫結構與遷移]
+    |
+    v
+[Phase 13: 雙式帳本引擎]
+    |
+    v
+[Phase 14: 餘額投影與帳本對帳]
+    |
+    v
+[Phase 15: 資產預留與凍結引擎]
+    |
+    v
+[Phase 16: 正式現貨下單服務]
+    |
+    v
+[Phase 17: C++ 撮合核心]
+    |
+    v
+[Phase 18: Java 與 C++ 核心整合]
+    |
+    v
+[Phase 19: 成交結算引擎]
+    |
+    v
+[Phase 20: 市場資料管線]
 
-  P21[Phase 21 入金系統] --> P22[Phase 22 出金系統]
-  P22 --> P23[Phase 23 熱錢包 / 冷錢包金庫]
+[Phase 21: 入金系統]
+    |
+    v
+[Phase 22: 出金系統]
+    |
+    v
+[Phase 23: 熱錢包 / 冷錢包金庫]
 
-  P24[Phase 24 正式 Open API] --> P25[Phase 25 管理後台]
-  P25 --> P26[Phase 26 風控引擎與總開關]
-  P26 --> P27[Phase 27 做市與流動性控制]
+[Phase 24: 正式 Open API]
+    |
+    v
+[Phase 25: 管理後台]
+    |
+    v
+[Phase 26: 風控引擎與總開關]
+    |
+    v
+[Phase 27: 做市與流動性控制]
 
-  P28[Phase 28 期貨合約基礎] --> P29[Phase 29 倉位 / PnL / 保證金引擎]
-  P29 --> P30[Phase 30 強平 / ADL / 保險基金]
-  P30 --> P31[Phase 31 保證金借貸系統]
+[Phase 28: 期貨合約基礎]
+    |
+    v
+[Phase 29: 倉位 / PnL / 保證金引擎]
+    |
+    v
+[Phase 30: 強平 / ADL / 保險基金]
+    |
+    v
+[Phase 31: 保證金借貸系統]
 
-  P32[Phase 32 對帳與補償系統] --> P33[Phase 33 安全與合規加固]
-  P33 --> P34[Phase 34 監控 / SRE / 事故應對]
-  P34 --> P35[Phase 35 生產部署 / CI-CD / 發版]
-  P35 --> P36[Phase 36 上線前驗證與商業就緒]
+[Phase 32: 對帳與補償系統]
+    |
+    v
+[Phase 33: 安全與合規加固]
+    |
+    v
+[Phase 34: 監控 / SRE / 事故應對]
+    |
+    v
+[Phase 35: 生產部署 / CI-CD / 發版]
+    |
+    v
+[Phase 36: 上線前驗證與商業就緒]
 ```
 
 ## 關鍵路徑

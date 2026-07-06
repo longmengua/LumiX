@@ -24,6 +24,10 @@
 ## 非目標
 自動修復、撮合、結算、錢包 runtime。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 投影工作、對帳報告、測試。
 

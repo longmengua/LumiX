@@ -24,6 +24,10 @@ limit / market order、cancel、partial fills、benchmark、C++ 測試。
 ## 非目標
 餘額變動、結算、錢包操作。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 C++ core、測試、benchmark。
 

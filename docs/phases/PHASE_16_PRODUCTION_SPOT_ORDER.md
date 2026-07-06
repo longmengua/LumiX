@@ -24,6 +24,10 @@ client order id 冪等、訂單生命週期、不可假裝撮合。
 ## 非目標
 本地撮合、結算 runtime、市場資料 runtime。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 order service、持久化、測試。
 

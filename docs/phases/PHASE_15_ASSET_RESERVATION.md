@@ -24,6 +24,10 @@
 ## 非目標
 撮合、結算、錢包 runtime。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 reservation 引擎、測試、狀態機說明。
 

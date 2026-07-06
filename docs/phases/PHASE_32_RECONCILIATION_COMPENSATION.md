@@ -24,6 +24,10 @@ ledger vs balance、order vs trade、matching event vs DB、wallet vs chain、fe
 ## 非目標
 自動修帳、不經批准的資產修復。
 
+## 參考文件
+- `docs/architecture/data-and-event-flow.md`
+- `docs/architecture/order-settlement-flow.md`
+
 ## 必要產出
 reconciliation jobs、報表、補償流程。
 
