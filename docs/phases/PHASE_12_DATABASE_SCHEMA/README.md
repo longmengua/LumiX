@@ -44,6 +44,7 @@ P12-T06 deposit, withdrawal, address, chain transaction schema
 P12-T07 outbox, audit log, idempotency, admin action schema
 P12-T08 constraints, indexes, uniqueness, precision rules
 P12-T09 schema verification tests and rollback notes
+P12-T10 final review gate and status normalization
 ```
 
 ## 完成條件
@@ -53,4 +54,5 @@ P12-T09 schema verification tests and rollback notes
 - Core constraints and indexes are defined.
 - Schema verification exists.
 - 要有回滾／修復策略文件。
+- 最終 review gate 必須明確列出 known risks，且不得宣稱 production-ready。
 - 這個階段不會實作 runtime 資金異動。
