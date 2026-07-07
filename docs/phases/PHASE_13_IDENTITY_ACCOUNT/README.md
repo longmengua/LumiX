@@ -3,12 +3,12 @@
 ## 狀態
 
 ```text
-in progress
+completed
 ```
 
 ## 目標
 
-建立 Spring Boot 後端的 module 邊界與 API 分層準則，讓後續 identity、account、ledger、wallet、order、trade 等 runtime 可以安全接入。
+建立 Spring Boot 後端的 module 邊界與 API 分層準則，讓後續 runtime 可以安全接入；Phase 13 本身只做到 backend boundary foundation，不等於交易 runtime 完成。
 
 ## 不在範圍內
 
@@ -74,6 +74,7 @@ P13-T06 API versioning and OpenAPI documentation boundary
 P13-T07 security boundary skeleton
 P13-T08 integration test foundation
 P13-T09 module dependency guardrails
+P13-T10 phase final review gate
 ```
 
 ## 完成條件
@@ -84,3 +85,14 @@ P13-T09 module dependency guardrails
 - 不加入 runtime 邏輯。
 - 不修改 migration。
 - 有清楚的驗證方式。
+
+## Phase 13 final review
+
+- Phase 13 已完成 backend boundary foundation。
+- Phase 13 不是 runtime completion，也不是 production-ready。
+- 尚未實作 identity / account / asset / market runtime。
+- 尚未實作 ledger posting、balance projection runtime、reservation hold / release runtime、order placement / matching / settlement runtime。
+- 尚未實作 wallet signing / broadcast / deposit crediting runtime。
+- 尚未完成完整 auth / permission runtime。
+- 高風險 module dependency guardrails 目前仍保留過渡例外，後續 runtime phase 需要再收緊。
+- Phase 12 PostgreSQL replay 已通過，本 phase 未修改 migration。

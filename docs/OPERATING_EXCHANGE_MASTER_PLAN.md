@@ -7,7 +7,8 @@
 ```text
 Phase 11: 生產架構重整 - 以文件完成
 Phase 12: 生產資料庫結構與 migration - 下一步
-Phase 13-36: planned, not started
+Phase 13: backend module foundation & API boundary - completed
+Phase 14-36: planned, not started
 ```
 
 ## Master phase ladder
