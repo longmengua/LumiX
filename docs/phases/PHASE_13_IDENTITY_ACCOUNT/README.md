@@ -68,6 +68,7 @@ persistence
 P13-T01 backend package architecture and module boundary
 P13-T02 common error response / exception boundary
 P13-T03 request validation and DTO convention
+P13-T04 repository / persistence access convention
 ```
 
 ## 完成條件

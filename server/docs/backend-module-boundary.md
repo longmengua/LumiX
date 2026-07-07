@@ -110,3 +110,11 @@ API request / response DTO 的命名與驗證規則另見：
 server/docs/dto-conventions.md
 server/docs/validation-conventions.md
 ```
+
+## Persistence boundary
+
+repository / persistence 存取規則另見：
+
+```text
+server/docs/persistence-boundary.md
+```

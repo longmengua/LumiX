@@ -45,6 +45,12 @@ HIGH_RISK_OPERATION_REJECTED
 - `field` 與 `reason` 可以公開。
 - `rejectedValue` 預設不公開，只有明確允許的安全情境才可帶出。
 
+## Persistence mapping
+
+- persistence exception 預設轉成安全的 `INTERNAL_ERROR`，避免把 SQL 與底層連線細節帶到 API。
+- 若 persistence error 明確代表資源衝突，可保守映射成 `CONFLICT`，但不能附帶原始 SQL 或 connection string。
+- API 層只能接收去敏後的錯誤內容，不接受 raw database exception。
+
 ## 高風險原則
 
 - ledger、withdrawal、settlement、risk 類錯誤不得被包裝成一般 validation error 來淡化風險。

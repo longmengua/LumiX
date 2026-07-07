@@ -3,6 +3,8 @@ package com.lumix.api.error;
 import com.lumix.common.BusinessException;
 import com.lumix.common.RequestId;
 import com.lumix.api.validation.ValidationException;
+import com.lumix.persistence.PersistenceErrorCode;
+import com.lumix.persistence.PersistenceException;
 import java.util.Map;
 
 /**
@@ -52,10 +54,27 @@ public class ApiExceptionHandler {
             return ApiErrorResponse.of(ApiErrorCode.NOT_FOUND, requestId, null);
         }
 
+        if (exception instanceof PersistenceException persistenceException) {
+            return ApiErrorResponse.of(mapPersistenceErrorCode(persistenceException.getErrorCode()), requestId, null);
+        }
+
         if (exception instanceof IllegalStateException) {
             return ApiErrorResponse.of(ApiErrorCode.CONFLICT, requestId, null);
         }
 
         return ApiErrorResponse.of(ApiErrorCode.INTERNAL_ERROR, requestId, null);
+    }
+
+    /**
+     * 將 persistence error code 保守映射成 API error code。
+     *
+     * 這層只做安全分類，不把底層 SQL / 連線訊息帶出去。
+     */
+    private ApiErrorCode mapPersistenceErrorCode(PersistenceErrorCode errorCode) {
+        return switch (errorCode) {
+            case CONSTRAINT_VIOLATION -> ApiErrorCode.CONFLICT;
+            case NOT_FOUND -> ApiErrorCode.NOT_FOUND;
+            case CONNECTION_FAILURE, QUERY_FAILURE, UNKNOWN -> ApiErrorCode.INTERNAL_ERROR;
+        };
     }
 }
