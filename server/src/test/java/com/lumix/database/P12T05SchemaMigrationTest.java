@@ -130,11 +130,11 @@ class P12T05SchemaMigrationTest {
             assertColumnComment(connection, "ORDERS", "USER_ID",
                     "下單使用者。這是查詢與權限邊界的基本維度，不代表資金已被預留或扣款。");
             assertColumnComment(connection, "ORDERS", "ACCOUNT_ID",
-                    "下單帳戶。order 以帳戶作為資金與交易邊界，避免把使用者層級的資料直接當成資金來源。");
+                    "下單帳戶。order 以帳戶作為資金與交易邊界；資料庫透過 composite foreign key 保證 account_id 與 user_id 歸屬一致。");
             assertColumnComment(connection, "ORDERS", "MARKET_SYMBOL",
                     "交易對代號，例如 BTC-USDT。訂單只綁定單一 market，避免後續撮合時需要重新推導交易對。");
             assertColumnComment(connection, "ORDERS", "SIDE",
-                    "訂單方向。BUY / SELL 只描述意圖，不代表已成交或已結算。");
+                    "訂單方向。BUY / SELL 只描述下單意圖，不代表已成交或已結算。");
             assertColumnComment(connection, "ORDERS", "ORDER_TYPE",
                     "訂單類型。LIMIT 與 MARKET 的欄位約束不同，schema 只負責約束格式，不負責撮合策略。");
             assertColumnComment(connection, "ORDERS", "TIME_IN_FORCE",
@@ -146,13 +146,13 @@ class P12T05SchemaMigrationTest {
             assertColumnComment(connection, "ORDERS", "QUANTITY",
                     "委託數量，以 base asset 數值表示。這是 order 的名義數量，不是可用餘額。");
             assertColumnComment(connection, "ORDERS", "FILLED_QUANTITY",
-                    "已成交數量。後續撮合或結算可以累加，但必須和 remaining_quantity 保持一致。");
+                    "已成交數量。後續撮合或結算可以累加，但必須和 remaining_quantity / quantity 保持一致。");
             assertColumnComment(connection, "ORDERS", "REMAINING_QUANTITY",
                     "剩餘未成交數量。此欄位保留查詢便利性，但仍要和 filled_quantity / quantity 一致。");
             assertColumnComment(connection, "ORDERS", "CLIENT_ORDER_ID",
-                    "使用者自訂訂單代號。用來做客戶端重送防護與操作對帳，不應作為交易核心唯一主鍵。");
+                    "使用者自訂訂單代號。PostgreSQL UNIQUE 允許多筆 NULL；只有使用者提供 client_order_id 時，才要求同一 account 下唯一。");
             assertColumnComment(connection, "ORDERS", "REQUEST_ID",
-                    "請求識別碼。這是下單 idempotency 的核心欄位，避免重送造成重複下單。");
+                    "請求識別碼。用於追蹤下單請求與降低重送造成重複下單的風險；完整 idempotency policy 仍需由後續 idempotency_keys 與應用層流程保證。");
             assertColumnComment(connection, "ORDERS", "CREATED_AT",
                     "資料建立時間。由資料庫預設產生，供審計與歷史查詢使用。");
             assertColumnComment(connection, "ORDERS", "UPDATED_AT",
@@ -169,15 +169,15 @@ class P12T05SchemaMigrationTest {
             assertColumnComment(connection, "TRADES", "TAKER_ORDER_ID",
                     "Taker 訂單。保留 maker / taker 關係，供撮合回放與費用追蹤使用。");
             assertColumnComment(connection, "TRADES", "MAKER_ACCOUNT_ID",
-                    "Maker 所屬帳戶。供查詢與審計使用，不代表此階段已完成任何結算寫入。");
+                    "Maker 所屬帳戶。透過 composite foreign key 保證此帳戶與 maker_order_id / market_symbol 一致；不代表此階段已完成任何結算寫入。");
             assertColumnComment(connection, "TRADES", "TAKER_ACCOUNT_ID",
-                    "Taker 所屬帳戶。供查詢與審計使用，不代表此階段已完成任何結算寫入。");
+                    "Taker 所屬帳戶。透過 composite foreign key 保證此帳戶與 taker_order_id / market_symbol 一致；不代表此階段已完成任何結算寫入。");
             assertColumnComment(connection, "TRADES", "PRICE",
                     "成交價格。使用 quote asset 單位記錄，必須保持 NUMERIC 精度。");
             assertColumnComment(connection, "TRADES", "QUANTITY",
                     "成交數量。使用 base asset 單位記錄，必須保持 NUMERIC 精度。");
             assertColumnComment(connection, "TRADES", "QUOTE_QUANTITY",
-                    "成交金額。由 price × quantity 與精度規則推導後寫入，作為查詢與對帳便利欄位。");
+                    "成交金額。由 price × quantity 與精度規則推導後寫入，作為查詢與對帳便利欄位；實際 rounding policy 需由後續費率與結算設計固定。");
             assertColumnComment(connection, "TRADES", "MAKER_FEE_AMOUNT",
                     "Maker 手續費。這是高風險欄位，費用精度與四捨五入政策必須在後續 review 後固定。");
             assertColumnComment(connection, "TRADES", "TAKER_FEE_AMOUNT",
