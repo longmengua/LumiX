@@ -45,3 +45,4 @@ API Request -> validation -> application use case -> response/view
 
 - 先固定命名與欄位語意，再讓後續 API 慢慢接入。
 - 不把 DTO 當成 domain entity。
+- 若後續 API path 採 `/api/v1` 版本化，DTO contract 仍要保持與版本同步，不可因版本不同而偷偷改欄位語意。

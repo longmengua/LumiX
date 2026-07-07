@@ -74,3 +74,4 @@ HIGH_RISK_OPERATION_REJECTED
 - 先把 response contract 固定，再讓後續 API layer 去接。
 - 不在此階段加入真正的 controller 或 web routing。
 - 不把內部 exception message 當成公開 message。
+- 若後續 API path 採 `/api/v1` 版本化，error response contract 仍需維持與 `ApiErrorResponse` 對齊。

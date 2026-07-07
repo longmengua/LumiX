@@ -126,3 +126,11 @@ application service transaction 規範另見：
 ```text
 server/docs/transaction-boundary.md
 ```
+
+## API versioning and OpenAPI boundary
+
+API versioning 與 OpenAPI 文件規範另見：
+
+```text
+server/docs/api-versioning-openapi-boundary.md
+```

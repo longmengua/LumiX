@@ -70,6 +70,7 @@ P13-T02 common error response / exception boundary
 P13-T03 request validation and DTO convention
 P13-T04 repository / persistence access convention
 P13-T05 transaction boundary policy
+P13-T06 API versioning and OpenAPI documentation boundary
 ```
 
 ## 完成條件
