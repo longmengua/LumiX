@@ -46,3 +46,13 @@ admin_actions
 ## Money 精度
 
 All money columns must be decimal or integer-minor-unit with explicit 精度. No float, real, or double 精度 for money.
+
+## 餘額投影規則
+
+```text
+balance_projections is a query-only read model.
+It is not the source of truth for funds.
+No runtime money movement may rely on direct updates to balance_projections as final authority.
+Formal funds truth must come from ledger / reservation / settlement flows.
+Balance projections may be rebuilt from authoritative events and ledger data.
+```
