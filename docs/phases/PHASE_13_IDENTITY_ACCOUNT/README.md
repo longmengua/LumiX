@@ -72,6 +72,7 @@ P13-T04 repository / persistence access convention
 P13-T05 transaction boundary policy
 P13-T06 API versioning and OpenAPI documentation boundary
 P13-T07 security boundary skeleton
+P13-T08 integration test foundation
 ```
 
 ## 完成條件

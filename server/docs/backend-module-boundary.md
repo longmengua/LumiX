@@ -142,3 +142,11 @@ security boundary 與 principal / high-risk operation 模型另見：
 ```text
 server/docs/security-boundary.md
 ```
+
+## Test boundary
+
+測試分層與 integration test policy 另見：
+
+```text
+server/docs/test-strategy.md
+```
