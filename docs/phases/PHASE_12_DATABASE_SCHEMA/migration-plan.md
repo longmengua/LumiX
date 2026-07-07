@@ -9,9 +9,10 @@ V003__create_ledger_tables.sql
 V004__create_order_and_trade_schema.sql
 V005__create_wallet_lifecycle_schema.sql
 V006__create_reservation_schema.sql
-V007__create_outbox_audit_idempotency_tables.sql
-V008__add_indexes_and_constraints.sql
-V009__add_schema_comments.sql
+V007__normalize_wallet_lifecycle_schema.sql
+V008__create_outbox_audit_idempotency_tables.sql
+V009__add_indexes_and_constraints.sql
+V010__add_schema_comments.sql
 ```
 
 ## 遷移規則
@@ -23,3 +24,4 @@ V009__add_schema_comments.sql
 - 回滾備註請保留在 `rollback-notes.md`。
 - `V005__create_wallet_lifecycle_schema.sql` 已先行建立，必須保留，不可 revert。
 - `V006__create_reservation_schema.sql` 是 P12-T06 的正式實作點；reservation schema 由這份 migration 完成，wallet lifecycle schema 仍保留在 V005。
+- `V007__normalize_wallet_lifecycle_schema.sql` 只補 wallet lifecycle 的查詢索引，不改 V005 欄位語意。
