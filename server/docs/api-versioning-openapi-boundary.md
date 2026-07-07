@@ -41,6 +41,11 @@ admin
 risk
 ```
 
+## Security boundary note
+
+上述高風險 API 的文件與 endpoint 說明必須與 security boundary 一致，
+不能讓 OpenAPI 看起來像是已經完成登入、簽名或 admin runtime。
+
 ## 文字圖
 
 ```text

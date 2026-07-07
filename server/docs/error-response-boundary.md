@@ -51,6 +51,13 @@ HIGH_RISK_OPERATION_REJECTED
 - 若 persistence error 明確代表資源衝突，可保守映射成 `CONFLICT`，但不能附帶原始 SQL 或 connection string。
 - API 層只能接收去敏後的錯誤內容，不接受 raw database exception。
 
+## Security mapping
+
+- authentication failure 應映射成 `AUTHENTICATION_ERROR`
+- authorization failure 應映射成 `AUTHORIZATION_ERROR`
+- high-risk security rejection 應映射成 `HIGH_RISK_OPERATION_REJECTED`
+- 不得把 secret、signature payload 或 private key 內容帶入 response
+
 ## 高風險原則
 
 - ledger、withdrawal、settlement、risk 類錯誤不得被包裝成一般 validation error 來淡化風險。

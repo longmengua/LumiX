@@ -76,7 +76,6 @@ class P13T01ModuleBoundaryTest {
     void newModuleSkeletonsContainOnlyPackageInfo() throws IOException {
         Path sourceRoot = resolveSourceRoot();
         Set<String> skeletonPackages = Set.of(
-            "com/lumix/security",
             "com/lumix/user",
             "com/lumix/asset",
             "com/lumix/reservation",

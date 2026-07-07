@@ -71,6 +71,7 @@ P13-T03 request validation and DTO convention
 P13-T04 repository / persistence access convention
 P13-T05 transaction boundary policy
 P13-T06 API versioning and OpenAPI documentation boundary
+P13-T07 security boundary skeleton
 ```
 
 ## 完成條件

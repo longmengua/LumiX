@@ -5,6 +5,7 @@ import com.lumix.common.RequestId;
 import com.lumix.api.validation.ValidationException;
 import com.lumix.persistence.PersistenceErrorCode;
 import com.lumix.persistence.PersistenceException;
+import com.lumix.security.SecurityException;
 import java.util.Map;
 
 /**
@@ -56,6 +57,10 @@ public class ApiExceptionHandler {
 
         if (exception instanceof PersistenceException persistenceException) {
             return ApiErrorResponse.of(mapPersistenceErrorCode(persistenceException.getErrorCode()), requestId, null);
+        }
+
+        if (exception instanceof SecurityException securityException) {
+            return ApiErrorResponse.of(securityException.getErrorCode(), requestId, null);
         }
 
         if (exception instanceof IllegalStateException) {

@@ -134,3 +134,11 @@ API versioning 與 OpenAPI 文件規範另見：
 ```text
 server/docs/api-versioning-openapi-boundary.md
 ```
+
+## Security boundary
+
+security boundary 與 principal / high-risk operation 模型另見：
+
+```text
+server/docs/security-boundary.md
+```
