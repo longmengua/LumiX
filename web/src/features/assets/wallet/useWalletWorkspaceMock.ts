@@ -11,6 +11,7 @@ export function useWalletWorkspaceMock() {
     let alive = true;
 
     async function loadWallet() {
+      // 防止 unmount 後才回寫 state，避免看起來像是 wallet API 突然失敗。
       setLoading(true);
       setError(null);
 
@@ -38,6 +39,7 @@ export function useWalletWorkspaceMock() {
   }, []);
 
   function reload() {
+    // 重載仍然維持 mock fetch，讓 UI 測試時的行為可重現。
     setLoading(true);
     setError(null);
     void fetchWalletWorkspaceMock()

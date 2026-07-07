@@ -14,6 +14,7 @@ export function WalletSecurityStatus({ twoFactor, whitelist, riskReview, riskNot
 
   return (
     <section className="card">
+      {/* 這個區塊只把安全條件視覺化，不能把顯示狀態當成已完成審核。 */}
       <h2 className="card__title">{t('account.securityCenterTitle')}</h2>
       <div className="wallet-security-grid">
         <div className="wallet-security-item">

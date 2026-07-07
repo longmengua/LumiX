@@ -33,6 +33,7 @@ export function AdminConsole() {
     let alive = true;
 
     async function loadAdminConsole() {
+      // snapshot 只代表後台示意資料；實際操作必須改成 server-backed API 與審計紀錄。
       setLoading(true);
       setError(null);
 
@@ -60,6 +61,7 @@ export function AdminConsole() {
   }, []);
 
   function openConfirm(confirm: ConfirmState) {
+    // 危險操作先進確認對話框，避免 demo 狀態下直接把 UI 行為誤認為已生效。
     setConfirmState(confirm);
   }
 

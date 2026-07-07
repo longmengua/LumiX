@@ -24,8 +24,7 @@ public class DefaultMarkPriceService implements MarkPriceService {
 
         PriceIndexView priceIndexView = priceIndexService.getPriceIndex(symbol);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub mirrors indexPrice and does not implement a production mark-price formula.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前直接回傳 index price 作為占位，避免誤以為已完成正式 mark-price 公式。
         return new MarkPriceView(
                 symbol.trim(),
                 priceIndexView.indexPrice(),

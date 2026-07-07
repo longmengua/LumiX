@@ -16,6 +16,7 @@ export function TradingOrderBook({ bids, asks, lastPrice }: TradingOrderBookProp
 
   return (
     <div className="trading-book">
+      {/* order book 只負責展示深度與價差，不代表已連到真實撮合引擎。 */}
       <div className="trading-book__spread">
         <div>
           <p className="trading-book__label">{t('trading.orderBook.mid')}</p>

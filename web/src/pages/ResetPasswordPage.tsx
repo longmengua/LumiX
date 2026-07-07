@@ -24,6 +24,7 @@ export function ResetPasswordPage() {
     setSuccess(null);
 
     try {
+      // 重設密碼在這裡只是 demo flow；實際上還需要 server 端驗證與稽核紀錄。
       await resetPasswordMock({ identifier, newPassword, confirmPassword });
       setSuccess(t('auth.reset.success'));
     } catch (submitError) {
@@ -34,6 +35,7 @@ export function ResetPasswordPage() {
   }
 
   function handleVerify(input: { method: VerificationMethod; code: string }) {
+    // 驗證碼只用來演示流程分支，不代表正式安全驗證實作。
     if (input.code.trim() === '123456') {
       setVerifyOpen(false);
       setSuccess(t('auth.reset.verified', undefined, { method: t(`auth.verify.method.${input.method}`) }));

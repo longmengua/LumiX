@@ -43,6 +43,7 @@ export type AssetOverviewData = {
 };
 
 const assetData: AssetOverviewData = {
+  // 這份資產快照只支援頁面顯示與互動測試；真正的資產狀態應由後端與帳本推導。
   metrics: [
     { label: 'Total Equity', value: '$384,250.37', hint: 'Cross-account equity across spot, futures, and margin.' },
     { label: 'Spot Value', value: '$182,400.84', hint: 'Assets settled in the spot wallet.' },
@@ -157,5 +158,6 @@ const assetData: AssetOverviewData = {
 
 export async function fetchAssetOverviewMock(): Promise<AssetOverviewData> {
   await delay(420);
+  // 以 structuredClone 傳回副本，避免 UI 直接改到共用快照。
   return structuredClone(assetData);
 }

@@ -7,6 +7,7 @@ type AppLayoutProps = {
 };
 
 export function AppLayout({ header, sidebar, children }: AppLayoutProps) {
+  // 共用版型只負責排列區塊，不應承擔頁面行為或業務規則。
   return (
     <div className="app-layout">
       {header}

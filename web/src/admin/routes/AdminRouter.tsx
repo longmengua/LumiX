@@ -6,6 +6,7 @@ import { AdminLoginPage } from '../pages/AdminLoginPage';
 import { AdminConsole } from '../features/console/AdminConsole';
 
 export function AdminRouter() {
+  // 後台子路由全部由 AdminConsole 承接，方便未來把每個區塊逐步拆成真實 API 頁面。
   return (
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />

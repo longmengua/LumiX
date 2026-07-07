@@ -5,6 +5,6 @@ package com.lumix.openapi;
  */
 public interface ApiRateLimitService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 回傳此 principal / route / tier 是否允許通行。
     boolean isAllowed(String principalId, ApiRateLimitTier tier, OpenApiRoute route);
 }

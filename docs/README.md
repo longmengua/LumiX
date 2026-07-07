@@ -18,6 +18,7 @@ Architect
   +-- docs/exchange-core/README.md
   +-- docs/backend/README.md
   +-- docs/operations/README.md
+  +-- docs/engineering/code-commenting-standard.md
 
 Mini engineer / Codex
   |
@@ -37,6 +38,7 @@ docs/
   frontend/        前端頁面與狀態管理規格
   backend/         Java 後端模組、交易邊界、API 與錯誤政策
   exchange-core/   帳本、凍結、撮合、結算、錢包、風控、對帳
+  engineering/     程式碼註解與工程規範
   operations/      部署、監控、事故、資安與上線檢查
   phases/          Phase 12 到 Phase 36 的施工規格
   adr/             架構決策紀錄

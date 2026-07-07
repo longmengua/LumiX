@@ -12,6 +12,7 @@ export function AdminRequireAuth({ children }: AdminRequireAuthProps) {
   const location = useLocation();
 
   if (!isAuthenticated) {
+    // 未登入就導回登入頁；這裡只做前端路由保護，不能取代真正的後端授權檢查。
     return <Navigate replace state={{ from: location.pathname }} to="/login" />;
   }
 

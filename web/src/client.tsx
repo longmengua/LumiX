@@ -7,6 +7,7 @@ import { I18nProvider } from './i18n';
 import './styles/global.css';
 
 export function mountClient() {
+  // 客戶端入口只負責把 React App 掛到 #root；真實 API 與認證邏輯都應該在各自模組內處理。
   const container = document.getElementById('root');
 
   if (!container) {

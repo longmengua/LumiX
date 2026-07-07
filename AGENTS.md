@@ -77,6 +77,8 @@ security bypass
 - API 需要 idempotency 設計，尤其是下單、取消、提款、入金確認。
 - 不允許用 TODO / placeholder 偽裝完成。
 - 不允許把 mock adapter 接到 production path。
+- 所有新增或修改的程式碼都必須具備足夠註解，遵守 `docs/engineering/code-commenting-standard.md`。
+- 註解必須使用繁體中文，優先說明為什麼這樣做，而不是重複程式碼表面行為。
 
 ## Documentation rules
 

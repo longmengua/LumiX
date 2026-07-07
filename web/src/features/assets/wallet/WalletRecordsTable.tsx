@@ -16,6 +16,7 @@ export function DepositRecordsTable({ records }: DepositTableProps) {
   const { t } = useI18n();
   return records.length > 0 ? (
     <div className="wallet-table">
+      {/* 表格欄位順序對應後續對帳畫面，避免未來串接真實來源時欄位意義混亂。 */}
       <div className="wallet-table__head wallet-table__head--deposit">
         <span>Time</span>
         <span>Asset</span>
@@ -46,6 +47,7 @@ export function WithdrawRecordsTable({ records }: WithdrawTableProps) {
   const { t } = useI18n();
   return records.length > 0 ? (
     <div className="wallet-table">
+      {/* 提領紀錄同時呈現 fee 與 receive amount，方便後續接 settlement / reconciliation。 */}
       <div className="wallet-table__head wallet-table__head--withdraw">
         <span>Time</span>
         <span>Asset</span>
@@ -76,6 +78,7 @@ export function WithdrawRecordsTable({ records }: WithdrawTableProps) {
   );
 }
 
+// 提領與入金共用顯示精度規則，避免不同表格的金額顯示不一致。
 function getFractionDigits(asset: string) {
   return asset === 'USDT' ? 2 : 4;
 }

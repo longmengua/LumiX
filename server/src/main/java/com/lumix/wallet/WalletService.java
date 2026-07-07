@@ -11,15 +11,15 @@ import java.util.List;
  */
 public interface WalletService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 只保留地址供應與查詢契約，不在此層實作真實鏈上動作。
     WalletAddress getOrCreateDepositAddress(UserId userId, AssetSymbol asset, ChainType chain);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢使用者已建立的錢包地址。
     List<WalletAddress> listWalletAddresses(UserId userId, AssetSymbol asset);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢支援的資產清單。
     List<WalletAsset> listSupportedAssets();
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢鏈設定，供地址與提現流程使用。
     List<WalletChainConfig> listChainConfigs(AssetSymbol asset);
 }

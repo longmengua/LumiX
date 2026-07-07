@@ -12,6 +12,7 @@ type AdminAuthContextValue = {
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
+  // 這層只保存前端 session 快照，不能當成安全來源；真正的後台授權仍要由 server 驗證。
   const [session, setSession] = useState<AdminSession | null>(() => readAdminSession());
 
   useEffect(() => {

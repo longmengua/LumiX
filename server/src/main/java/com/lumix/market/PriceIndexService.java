@@ -7,9 +7,9 @@ import java.util.List;
  */
 public interface PriceIndexService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取得外部價格指數；正式版本必須定義來源、加權與異常值過濾規則。
     List<ExternalPriceQuote> listExternalQuotes(String symbol);
 
-    // TODO: requires high-reasoning review before production use
+    // 回傳用於索引計算的來源清單，便於驗證與維運。
     PriceIndexView getPriceIndex(String symbol);
 }

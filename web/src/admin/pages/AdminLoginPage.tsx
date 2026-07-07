@@ -10,6 +10,7 @@ import { useAdminAuth } from '../auth/AdminAuthProvider';
 const SHOW_DEV_NOTICES = import.meta.env.VITE_SHOW_DEV_NOTICES === 'true';
 
 export function AdminLoginPage() {
+  // 這個頁面只處理後台 demo session 的登入體驗，不代表正式 operator 驗證流程。
   const { locale, setLocale, t } = useI18n();
   const { isAuthenticated, signIn } = useAdminAuth();
   const navigate = useNavigate();

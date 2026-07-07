@@ -9,9 +9,9 @@ import java.util.List;
  */
 public interface DepositService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 只定義充值觀測事件的契約；正式入帳與確認規則要由後續階段補齊。
     DepositRecord registerObservedDeposit(DepositRecord depositRecord);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢使用者的充值紀錄，供 UI 與對帳使用。
     List<DepositRecord> listDeposits(UserId userId);
 }

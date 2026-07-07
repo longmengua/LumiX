@@ -13,8 +13,7 @@ public class DefaultMarketDataService implements MarketDataService {
 
     @Override
     public List<TradingSymbol> listSymbols() {
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Real symbol metadata should come from reviewed configuration and exchange rules.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前回傳空清單，避免把未審核的 symbol metadata 誤當成正式行情來源。
         return List.of();
     }
 
@@ -23,8 +22,7 @@ public class DefaultMarketDataService implements MarketDataService {
         validateSymbol(symbol);
         validateLimit(limit);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub does not represent a real order book, market feed, or matching output.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不回傳真實 order book，以免把未接好的 market feed 或 matching output 當成正式資料。
         return new OrderBookSnapshot(symbol.trim(), SymbolType.SPOT, Instant.now(), List.of(), List.of());
     }
 
@@ -33,8 +31,7 @@ public class DefaultMarketDataService implements MarketDataService {
         validateSymbol(symbol);
         validateLimit(limit);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub does not stream or persist real trade events.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不串接真實成交事件流，避免把 placeholder 當成可用的市場資料管線。
         return List.of();
     }
 
@@ -42,8 +39,7 @@ public class DefaultMarketDataService implements MarketDataService {
     public Optional<Ticker24hView> getTicker24h(String symbol) {
         validateSymbol(symbol);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub intentionally does not claim a real 24h ticker calculation.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不計算真實 24h ticker，避免未定義的統計來源影響前端顯示。
         return Optional.empty();
     }
 
@@ -53,8 +49,7 @@ public class DefaultMarketDataService implements MarketDataService {
         Objects.requireNonNull(interval, "interval must not be null");
         validateLimit(limit);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub intentionally does not aggregate or publish production candle data.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不聚合或發布正式 K 線資料，避免把 stub 當成正式行情服務。
         return List.of();
     }
 

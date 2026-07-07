@@ -30,6 +30,7 @@ export function AssetTransferPage() {
   const [transferForm, setTransferForm] = useState<TransferFormState>(initialForm);
   const [transferMessage, setTransferMessage] = useState<{ tone: 'success' | 'error'; text: string } | null>(null);
 
+  // 轉帳可用額度只來自前端快照；正式版本應改成 server 驗證後再回寫結果。
   const transferAvailable = data?.transferBalances[transferForm.fromAccount][transferForm.asset] ?? 0;
   const validationError = validateTransferForm(transferForm, transferAvailable);
 
@@ -85,6 +86,7 @@ export function AssetTransferPage() {
       return;
     }
 
+    // 這裡只產生 queued 訊息，方便把 UI 流程與真正的資金異動明確切開。
     setTransferMessage({
       tone: 'success',
       text: t('assets.walletTransferQueued', undefined, {

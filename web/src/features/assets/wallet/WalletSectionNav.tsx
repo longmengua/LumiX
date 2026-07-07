@@ -20,6 +20,7 @@ export function WalletSectionNav() {
 
   return (
     <section className="card">
+      {/* 這組導覽把入金、提領、歷史與地址簿分開，方便後續逐步接上真實工作流。 */}
       <h2 className="card__title">{t('assets.walletSectionTitle')}</h2>
       <p className="assets-tabs__hint">{t('assets.walletWorkspacesHint')}</p>
       <div className="wallet-section-nav">

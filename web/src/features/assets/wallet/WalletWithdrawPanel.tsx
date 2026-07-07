@@ -52,6 +52,7 @@ export function WalletWithdrawPanel({
       return;
     }
 
+    // 這裡先開驗證視窗，代表高風險動作需要再確認，不直接模擬成功扣款。
     setVerifyOpen(true);
   }
 
@@ -62,6 +63,7 @@ export function WalletWithdrawPanel({
       return;
     }
 
+    // 訊息只是在前端標示 queued 狀態，正式版本必須由 server 與 ledger 流程決定最終結果。
     setMessage({
       tone: 'success',
       text: `Mock withdrawal queued with ${input.method.toUpperCase()} verification. OL flow will use server/ Java wallet API, risk API, and ledger API.`,
@@ -73,6 +75,7 @@ export function WalletWithdrawPanel({
   return (
     <>
       <section className="card">
+        {/* 提領面板刻意保留安全檢查提示，避免未來把 mock flow 誤看成 production ready。 */}
         <h2 className="card__title">Withdraw</h2>
         <p className="wallet-page__meta">
           Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API.
@@ -172,16 +175,19 @@ export function WalletWithdrawPanel({
   );
 }
 
+// 費用計算只供 UI 預覽，實際扣款仍要由後端計算與落帳。
 function calculateFee(amount: number, feeRate: number, flatFee: number) {
   if (!Number.isFinite(amount) || amount <= 0) return flatFee;
   return amount * feeRate + flatFee;
 }
 
+// 預估到帳金額只是一個顯示值，不是最終結算結果。
 function calculateReceiveAmount(amount: number, fee: number) {
   if (!Number.isFinite(amount) || amount <= 0) return 0;
   return Math.max(amount - fee, 0);
 }
 
+// 前端驗證只擋住明顯錯誤，不能取代 server 的風控與資金檢查。
 function validateWithdraw(amount: string, address: string, available: number) {
   const numericAmount = Number(amount);
   if (!address.trim()) return 'Withdraw address is required.';

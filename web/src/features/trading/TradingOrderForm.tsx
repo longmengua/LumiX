@@ -23,6 +23,7 @@ export function TradingOrderForm({ kind, workspace }: TradingOrderFormProps) {
   const [messageKey, setMessageKey] = useState<string | null>(null);
 
   useEffect(() => {
+    // 切換交易品種時重置表單，避免上一個市場的價格/槓桿殘留到新市場。
     setPrice(String(workspace.orderBook.bids[0]?.price ?? 0));
     setQuantity('0.25');
     setLeverage(kind === 'futures' ? '5' : '1');
@@ -35,6 +36,7 @@ export function TradingOrderForm({ kind, workspace }: TradingOrderFormProps) {
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    // 這裡只回報 local saved 狀態；真正下單必須經過 API、風控、撮合與結算。
     setMessageKey('trading.order.savedLocally');
   }
 
@@ -55,6 +57,7 @@ export function TradingOrderForm({ kind, workspace }: TradingOrderFormProps) {
         >
           {t('trading.order.side.sell')}
         </button>
+        {/* 這個 badge 明確提醒：目前只是 adapter 預覽，不是可直接送單的 production 表單。 */}
         <Badge tone="warning">{t('trading.order.adapterPreview')}</Badge>
       </div>
 

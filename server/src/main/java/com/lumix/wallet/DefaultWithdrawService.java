@@ -26,19 +26,9 @@ public class DefaultWithdrawService implements WithdrawService {
         Objects.requireNonNull(withdrawRecord, "withdrawRecord must not be null");
         validateRecord(withdrawRecord);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Future implementation must enforce security checks such as email, SMS, or authenticator challenges.
-
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Future implementation must enforce withdraw risk review before any asset operation.
-
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Future implementation should use LedgerService reserve / release / commit boundaries.
-        // This stub intentionally does not call ledgerService.reserve(...), release(...), or commit(...).
-
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Future implementation may hand off to WalletGateway after approval.
-        // This stub intentionally does not broadcast or query any chain transaction.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不做正式安全挑戰與風控審核，避免讓 stub 看起來像已通過提現保護流程。
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不呼叫 LedgerService 的 reserve / release / commit，因為這些邊界尚未在本階段定義完成。
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不做任何鏈上廣播或查詢，避免在沒有正式 approval 與 signing 流程前外送資金。
 
         return new WithdrawRecord(
                 withdrawRecord.id(),

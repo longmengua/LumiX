@@ -139,6 +139,7 @@ const assetProfiles: Record<
 };
 
 export function getTradingRoutes(baseAsset: string): TradingRouteMap {
+  // 路由只負責示意市場入口，真正的交易上下文仍要由 workspace data 提供。
   const normalizedBaseAsset = baseAsset.toUpperCase();
   return {
     spot: `/spot/${normalizedBaseAsset}-USDT`,
@@ -148,6 +149,7 @@ export function getTradingRoutes(baseAsset: string): TradingRouteMap {
 }
 
 export function extractBaseAsset(symbol: string, kind: TradingKind) {
+  // 這裡只做 symbol 正規化，避免 UI 因不同商品格式而拆出多份邏輯。
   const normalized = symbol.toUpperCase();
 
   if (kind === 'futures') {
@@ -170,6 +172,7 @@ function getAssetProfile(baseAsset: string) {
 }
 
 function buildOrderBookLevels(lastPrice: number) {
+  // 這些深度資料是為了版面與互動測試，不是可交易的市場快照。
   const bidSpacing = Math.max(lastPrice * 0.00032, 0.01);
   const askSpacing = Math.max(lastPrice * 0.00035, 0.01);
 
@@ -191,6 +194,7 @@ function buildOrderBookLevels(lastPrice: number) {
 }
 
 function buildTrades(lastPrice: number, kind: TradingKind): TradingFill[] {
+  // 成交明細只做時間序列演示，不能拿來當作實際成交證明。
   const offsets = [0.11, -0.05, 0.17, -0.09, 0.03, -0.14];
 
   return offsets.map((offset, index) => ({
@@ -214,6 +218,7 @@ function buildTrades(lastPrice: number, kind: TradingKind): TradingFill[] {
 }
 
 function buildOpenOrders(lastPrice: number): TradingOpenOrder[] {
+  // 未完成委託只用來測試表格與狀態切換，實際委託仍要由 API 與撮合結果決定。
   return [
     {
       id: 'ord-2048',
@@ -246,6 +251,7 @@ function buildOpenOrders(lastPrice: number): TradingOpenOrder[] {
 }
 
 function buildPositions(baseAsset: string, lastPrice: number): TradingPosition[] {
+  // 部位資料偏重風險與 UI 呈現，不代表真實持倉計算已完成。
   return [
     {
       symbol: `${baseAsset}USDT-PERP`,

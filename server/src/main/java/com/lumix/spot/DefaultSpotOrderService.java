@@ -34,15 +34,8 @@ public class DefaultSpotOrderService implements SpotOrderService {
         Objects.requireNonNull(request, "request must not be null");
         validateRequest(request);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. BUY orders should reserve quote asset via LedgerService after formal review.
-
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. SELL orders should reserve base asset via LedgerService after formal review.
-
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Real order submission must go through MatchingEngineClient to a reviewed C++ Core.
-        // This stub intentionally does not call matchingEngineClient.submitOrder(...).
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不做 BUY/SELL 的真實資產預留，避免把未審查的資金路徑接入訂單入口。
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不把訂單送往 matching core，因為真實撮合邊界尚未在本階段完成審核。
 
         return new SpotOrderView(
                 "stub-" + request.requestId().value(),
@@ -69,8 +62,7 @@ public class DefaultSpotOrderService implements SpotOrderService {
         Objects.requireNonNull(userId, "userId must not be null");
         validateText(orderId, "orderId");
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Real cancellation must check order state, contact MatchingEngineClient, and release assets via LedgerService.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不做真實取消與資產釋放，避免在沒有完整訂單 / 預留狀態機前誤釋放資金。
         return false;
     }
 

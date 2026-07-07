@@ -11,21 +11,21 @@ import java.util.Optional;
  */
 public interface SpotOrderService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 提交現貨訂單；正式版本必須先完成資金預留與 idempotency 檢查。
     SpotOrderView placeOrder(SpotOrderRequest request);
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取消現貨訂單；正式版本需要與 matching / reservation 邊界一致。
     boolean cancelOrder(RequestId requestId, UserId userId, String orderId);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢單筆訂單。
     Optional<SpotOrderView> getOrder(UserId userId, String orderId);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢尚未完成的訂單。
     List<SpotOrderView> listOpenOrders(UserId userId, String symbol);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢歷史訂單。
     List<SpotOrderView> listOrderHistory(UserId userId, String symbol);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢成交紀錄。
     List<SpotTradeView> listTrades(UserId userId, String symbol);
 }

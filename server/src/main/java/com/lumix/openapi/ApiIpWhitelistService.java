@@ -5,6 +5,6 @@ package com.lumix.openapi;
  */
 public interface ApiIpWhitelistService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 檢查來源 IP 是否允許通過該 API 邊界。
     boolean isAllowed(ApiKeyView apiKeyView, String sourceIp);
 }

@@ -5,6 +5,6 @@ package com.lumix.openapi;
  */
 public interface ApiSignatureVerifier {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 驗證 API 簽章；正式版本必須清楚定義 canonical payload 與 key 使用邊界。
     boolean verify(ApiSignatureRequest request, ApiKeyView apiKeyView);
 }

@@ -32,13 +32,8 @@ public class DefaultDepositService implements DepositService {
 
         IdempotencyKey idempotencyKey = buildIdempotencyKey(depositRecord);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Future implementation should check txHash + asset + chain idempotency via IdempotencyService.
-        // This stub intentionally does not call idempotencyService.startProcessing(...).
-
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Future implementation should call LedgerService after confirmation policy is satisfied.
-        // This stub intentionally does not call ledgerService.postJournal(...).
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不做 txHash + asset + chain 的真實冪等處理，避免把觀測到的 deposit 當成已完成入帳。
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不呼叫 LedgerService，因為確認政策與正式入帳邊界要等後續階段定義。
 
         return new DepositRecord(
                 depositRecord.id(),

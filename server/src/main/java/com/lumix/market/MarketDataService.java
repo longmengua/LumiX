@@ -8,18 +8,18 @@ import java.util.Optional;
  */
 public interface MarketDataService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 列出可交易 symbol，供行情頁與下單表單使用。
     List<TradingSymbol> listSymbols();
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取得 order book 深度。
     OrderBookSnapshot getDepth(String symbol, int limit);
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取得最近成交列表。
     List<MarketTradeView> getRecentTrades(String symbol, int limit);
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取得 24h ticker。
     Optional<Ticker24hView> getTicker24h(String symbol);
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取得 K 線資料。
     List<KlineView> getKline(String symbol, KlineInterval interval, int limit);
 }

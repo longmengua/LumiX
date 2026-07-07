@@ -19,6 +19,7 @@ export function Header() {
 
   return (
     <header className="topbar">
+      {/* 主站 header 只提供導覽與語系切換，避免把交易或資產操作塞在全域導覽裡。 */}
       <NavLink className="topbar__brand topbar__brand--full" to="/" aria-label={t('nav.logo')}>
         <Logo size="md" title={t('nav.logo')} variant="full" />
       </NavLink>

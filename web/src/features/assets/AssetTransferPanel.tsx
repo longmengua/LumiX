@@ -46,6 +46,7 @@ export function AssetTransferPanel({
 
   return (
     <div className="card">
+      {/* 這個面板只處理使用者輸入與前端驗證，不代表資金已實際轉移。 */}
       <h2 className="card__title">{t('assets.transferTitle')}</h2>
       <div className="transfer-panel">
         <label className="field">
@@ -125,6 +126,7 @@ export function AssetTransferPanel({
   );
 }
 
+// USDT 使用 2 位小數，其餘資產保留較細精度，避免前端顯示誤導。
 function getFractionDigits(asset: string) {
   return asset === 'USDT' ? 2 : 4;
 }

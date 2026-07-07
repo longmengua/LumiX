@@ -11,6 +11,7 @@ export function useTradingWorkspaceMock(kind: TradingKind, symbol: string) {
     let alive = true;
 
     async function loadWorkspace() {
+      // 以 alive 標記防止 unmount 後還更新 state，避免切頁時出現假錯誤訊息。
       setLoading(true);
       setError(null);
 
@@ -38,6 +39,7 @@ export function useTradingWorkspaceMock(kind: TradingKind, symbol: string) {
   }, [kind, symbol]);
 
   function reload() {
+    // 重新整理同樣走 mock fetch，讓頁面重載行為保持一致。
     setLoading(true);
     setError(null);
     void fetchTradingWorkspaceMock(kind, symbol)
@@ -48,4 +50,3 @@ export function useTradingWorkspaceMock(kind: TradingKind, symbol: string) {
 
   return { data, loading, error, reload };
 }
-

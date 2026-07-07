@@ -82,6 +82,7 @@ export type WalletWorkspaceData = {
 };
 
 const walletData: WalletWorkspaceData = {
+  // 這份 wallet 資料只服務頁面展示與流程演示，不可當成真實入金 / 提領事實來源。
   adapterNotice:
     'Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API.',
   securityStatus: {
@@ -268,5 +269,6 @@ const walletData: WalletWorkspaceData = {
 
 export async function fetchWalletWorkspaceMock(): Promise<WalletWorkspaceData> {
   await delay(420);
+  // 以副本傳出，避免頁面層不小心污染共用 mock state。
   return structuredClone(walletData);
 }

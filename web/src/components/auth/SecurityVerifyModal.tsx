@@ -35,6 +35,7 @@ export function SecurityVerifyModal({
   const [code, setCode] = useState('');
 
   useEffect(() => {
+    // 每次重新打開時都重置欄位，避免上一筆敏感操作的內容殘留。
     if (open) {
       setMethod(methods[0] ?? 'email');
       setCode('');
@@ -53,7 +54,8 @@ export function SecurityVerifyModal({
         className="modal-card"
         role="dialog"
         onClick={(event) => event.stopPropagation()}
-        >
+      >
+        {/* 這個 modal 只模擬安全驗證步驟；真實 OTP / email / sms 驗證要走後端。 */}
         <div className="modal-card__header">
           <div>
             <p className="eyebrow">{t('auth.verify.eyebrow')}</p>

@@ -22,6 +22,7 @@ export function TwoFactorPage() {
     setError(null);
 
     try {
+      // 2FA 成功後只做前端導頁；若未來接真實 auth，這裡應改成接收 server session。
       await verifyTwoFactorMock(code);
       navigate(nextPath);
     } catch (submitError) {

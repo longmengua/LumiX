@@ -11,6 +11,7 @@ export function useAssetOverviewMock() {
     let alive = true;
 
     async function loadAssets() {
+      // 以 alive 標記防止 unmount 後還更新 state，避免測試或切頁時出現假警報。
       setLoading(true);
       setError(null);
 

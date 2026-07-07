@@ -26,6 +26,7 @@ import { AccountPage } from '../pages/AccountPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 
 export function AppRouter() {
+  // 這份路由只組合頁面層級的導覽；資料讀寫與權限控管要留在對應 feature/service。
   return (
     <Routes>
       <Route

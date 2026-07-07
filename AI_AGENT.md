@@ -33,6 +33,7 @@
 - 不重設架構。
 - 不擴大 scope。
 - 遇到帳本、錢包、撮合、結算、資金安全分歧時停止並回報。
+- 任何新增或修改的程式碼都必須符合 `docs/engineering/code-commenting-standard.md`。
 
 ### Review agent
 
@@ -95,6 +96,20 @@ risk-control bypass
 authentication or authorization change
 secret management change
 ```
+
+## 程式碼註解規則
+
+- 所有新增或修改的程式碼都必須具備足夠註解，以利後續維護。
+- 註解使用繁體中文，台灣用語。
+- 標準技術術語保留英文，例如 migration、ledger、reservation、matching、settlement、idempotency、outbox。
+- 不要求每一行都加註解，也不寫重複程式碼內容的噪音註解。
+- 註解應說明為什麼這樣做、業務限制、安全限制、資料一致性限制與後續維護注意事項。
+- 高風險領域要有更完整註解，包括 ledger、balance、reservation、withdrawal、matching、settlement、PnL、liquidation、risk、admin、security、idempotency、outbox、reconciliation。
+- SQL migration 必須包含 migration 檔頭說明、table / column inline comments，以及 PostgreSQL `COMMENT ON TABLE` / `COMMENT ON COLUMN`。
+- Java 程式在 `public class`、`public method`、複雜 business rule、transaction boundary、高風險流程要補 JavaDoc 或區塊註解。
+- TypeScript / React 程式在複雜 hook、狀態流、權限判斷、交易表單驗證、API boundary 要補 JSDoc 或區塊註解。
+- 測試程式要註解測試意圖，尤其是資金、安全、資料一致性與錯誤案例。
+- 如果需要大量註解才能理解，應優先重構或拆小函式，不可用註解掩蓋壞設計。
 
 ## Mini 輸出格式
 

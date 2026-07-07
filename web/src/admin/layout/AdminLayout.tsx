@@ -8,6 +8,7 @@ type AdminLayoutProps = {
 };
 
 export function AdminLayout({ children }: AdminLayoutProps) {
+  // 後台版型只負責共用殼層，避免每個管理頁重複處理 header / nav。
   return (
     <div className="admin-app">
       <div className="admin-layout">

@@ -40,6 +40,7 @@ export function WalletWithdrawAddressesPanel({
       return;
     }
 
+    // 這裡只是在本地組出新地址快照；正式環境應先通過安全驗證與 server 審核。
     const nextAddress: WithdrawAddressRecord = {
       id: `addr-${Date.now()}`,
       label: draft.label || 'New address',
@@ -67,6 +68,7 @@ export function WalletWithdrawAddressesPanel({
   return (
     <>
       <section className="card">
+        {/* 提領地址管理屬於高風險操作，前端只負責提示與驗證流程。 */}
         <h2 className="card__title">Withdraw Addresses</h2>
         <p className="wallet-page__meta">Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API.</p>
 
@@ -164,6 +166,7 @@ export function WalletWithdrawAddressesPanel({
   );
 }
 
+// 風險標籤只用於 UI 呈現，不代表真實風控模型的最終判定。
 function getRiskTone(risk: WithdrawAddressRecord['riskFlag']) {
   if (risk === 'Low') return 'success';
   if (risk === 'Medium') return 'warning';

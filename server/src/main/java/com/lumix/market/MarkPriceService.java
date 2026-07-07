@@ -5,6 +5,6 @@ package com.lumix.market;
  */
 public interface MarkPriceService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 取得 mark price；正式公式與資料來源要在後續階段定義。
     MarkPriceView getMarkPrice(String symbol);
 }

@@ -39,6 +39,7 @@ export async function signInAdminMock(input: AdminLoginInput): Promise<AdminSess
     throw new Error('Missing admin credentials.');
   }
 
+  // 這裡只回傳 mock session；正式環境必須由 server 核發與驗證憑證。
   return {
     operatorId: 'op-0001',
     email: input.email.trim(),

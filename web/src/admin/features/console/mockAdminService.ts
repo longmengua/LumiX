@@ -133,6 +133,7 @@ export type AdminConsoleSnapshot = {
 };
 
 const snapshot: AdminConsoleSnapshot = {
+  // 這份資料只用來支撐後台介面與流程演示，不是營運事實來源。
   adapterNotice:
     'Development adapter only. Phase 8 remains a front-end mock layer until the Java back-office APIs, ledger checks, and operation logs are wired in.',
   summary: [

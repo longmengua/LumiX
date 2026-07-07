@@ -36,6 +36,7 @@ export function WalletDepositPanel({
   const [copyState, setCopyState] = useState<'idle' | 'copied'>('idle');
 
   async function handleCopy() {
+    // 複製地址只是 UX 輔助；真正的入金確認必須靠鏈上與後端入帳流程。
     try {
       await navigator.clipboard.writeText(address);
       setCopyState('copied');
@@ -50,6 +51,7 @@ export function WalletDepositPanel({
   return (
     <div className="grid-split">
       <section className="card">
+        {/* 入金面板只展示地址、網路與確認數，不能把它當成已入帳。 */}
         <h2 className="card__title">Deposit</h2>
         <p className="wallet-page__meta">
           Development adapter only. OL before must connect server/ Java wallet API, risk API, and ledger API.
@@ -112,6 +114,7 @@ export function WalletDepositPanel({
       </section>
 
       <section className="card">
+        {/* 最近入金清單是 adapter 驅動的預覽資料，不是鏈上 callback 的證明。 */}
         <h2 className="card__title">Recent Deposits</h2>
         <p className="wallet-page__meta">Adapter-driven preview of recent activity. No real chain callback is performed here.</p>
         {children}

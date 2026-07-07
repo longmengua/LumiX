@@ -28,8 +28,7 @@ public class DefaultApiSignatureVerifier implements ApiSignatureVerifier {
             return false;
         }
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub does not implement canonical payload signing or secret-based verification.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不做 canonical payload 驗證與 secret-based verification，避免把骨架誤認為安全實作。
         return false;
     }
 }

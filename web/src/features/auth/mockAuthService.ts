@@ -39,6 +39,7 @@ export type ResetPasswordInput = {
 export async function signInMock(input: LoginInput): Promise<LoginResult> {
   await delay(500);
 
+  // 這是登入流程的前端模擬器，只用來展示 2FA / redirect 分支，不可視為真實 auth 實作。
   if (!input.identifier.trim()) {
     throw new Error('Please enter an email or phone number.');
   }

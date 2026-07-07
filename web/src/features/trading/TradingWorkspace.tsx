@@ -39,6 +39,7 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
 
   return (
     <div className="stack trading-page trading-page--workspace">
+      {/* 交易頁面所有資料都來自 mock workspace；這只是 UI 與流程預覽，不是 live market view。 */}
       <PageHeader
         title={t(titles[kind])}
         description={t('trading.developmentNotice.description')}

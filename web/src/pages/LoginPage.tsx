@@ -21,6 +21,7 @@ export function LoginPage() {
     setError(null);
 
     try {
+      // 登入結果可能會導向 2FA；這裡只處理前端導頁，不負責憑證核發。
       const result = await signInMock({ identifier, password, remember });
 
       if (result.status === 'two_factor') {

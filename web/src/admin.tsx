@@ -7,6 +7,7 @@ import { AdminApp } from './admin/AdminApp';
 import './styles/global.css';
 
 export function mountAdmin() {
+  // 後台入口使用 /admin basename，避免與客戶端路由互相污染。
   const container = document.getElementById('root');
 
   if (!container) {

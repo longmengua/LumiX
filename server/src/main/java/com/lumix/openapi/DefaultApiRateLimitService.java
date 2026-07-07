@@ -17,8 +17,7 @@ public class DefaultApiRateLimitService implements ApiRateLimitService {
         Objects.requireNonNull(tier, "tier must not be null");
         Objects.requireNonNull(route, "route must not be null");
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub does not implement counters, bursts, or distributed enforcement.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前一律 fail-closed，避免未接 rate limit 儲存層時形成錯誤的安全假象。
         return false;
     }
 }

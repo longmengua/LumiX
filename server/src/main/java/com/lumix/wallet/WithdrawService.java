@@ -9,9 +9,9 @@ import java.util.List;
  */
 public interface WithdrawService {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 提現申請只定義契約；正式簽章與廣播流程留待後續階段。
     WithdrawRecord submitWithdrawal(WithdrawRecord withdrawRecord);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢使用者提現紀錄，供營運與對帳查看。
     List<WithdrawRecord> listWithdrawals(UserId userId);
 }

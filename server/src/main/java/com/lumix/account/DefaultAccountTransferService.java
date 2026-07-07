@@ -31,8 +31,7 @@ public class DefaultAccountTransferService implements AccountTransferService {
         validateRequest(request);
 
         // 這裡刻意不呼叫任何真實 ledger 寫入流程，避免誤解為可上線實作。
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. Real reserve/postJournal/commit flow must be reviewed and implemented later.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前刻意不接真實 reserve/postJournal/commit 流程，避免把 stub 誤認為可上線的資金路徑。
         return new AccountTransferResult(
                 request.requestId(),
                 AccountTransferStatus.PENDING_LEDGER_REVIEW,

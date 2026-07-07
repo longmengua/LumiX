@@ -16,8 +16,7 @@ public class DefaultPriceIndexService implements PriceIndexService {
     public List<ExternalPriceQuote> listExternalQuotes(String symbol) {
         validateSymbol(symbol);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub does not fetch or normalize any external venue quote.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不抓取任何外部報價，避免把未接來源的資料當成正式 price index。
         return List.of();
     }
 
@@ -25,8 +24,7 @@ public class DefaultPriceIndexService implements PriceIndexService {
     public PriceIndexView getPriceIndex(String symbol) {
         validateSymbol(symbol);
 
-        // TODO: requires high-reasoning review before production use
-        // Placeholder only. This stub does not implement weighted average, median, or outlier rejection.
+        // TODO(HUMAN_REVIEW_REQUIRED): 目前不實作 weighted average / median / outlier rejection，因為正式規則尚未在本階段定義。
         return new PriceIndexView(symbol.trim(), MoneyAmount.zero(), 0, Instant.now());
     }
 

@@ -9,12 +9,12 @@ import com.lumix.account.UserId;
  */
 public interface WalletGateway {
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 供應鏈上地址，實作時需經過 custody 與風控邊界。
     WalletAddress provisionAddress(UserId userId, AssetSymbol asset, ChainType chain);
 
-    // TODO: requires high-reasoning review before production use
+    // TODO(HUMAN_REVIEW_REQUIRED): 提現廣播入口，正式版本必須先經過提現審核與簽章流程。
     String submitWithdrawal(WithdrawRecord withdrawRecord);
 
-    // TODO: requires high-reasoning review before production use
+    // 查詢充值交易狀態，供入金確認與對帳使用。
     DepositStatus queryDepositStatus(String txHash, AssetSymbol asset, ChainType chain);
 }
