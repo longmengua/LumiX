@@ -33,15 +33,28 @@ Use a local PostgreSQL container and `psql` replay as the explicit alternative v
   docker exec -i lumix-pg psql -U postgres -d lumix -c "\\dt"
 ```
 
+## PostgreSQL replay result
+
+```text
+Replay target: PostgreSQL 16.14 (postgres:16-alpine)
+Replayed migrations: V001__create_identity_and_assets.sql through V008__create_outbox_audit_idempotency_tables.sql
+Result: PASS
+Metadata checks:
+- `orders`, `reservations`, `ledger_journals`, `ledger_entries`, `trades`, `outbox_events`, `audit_logs` comments are present in PostgreSQL `COMMENT` metadata.
+- `orders` and `reservations` constraints and indexes are visible in `\d+` output.
+- `ledger`, `reservation`, `outbox`, and idempotency structures remain schema-only; no runtime side effects were introduced.
+```
+
 ## Final review gate
 
 ```text
 - P12-T01 到 P12-T10 的狀態已逐一收斂為 completed。
 - migration sequence 已明確標示 V005 提前建立 wallet lifecycle schema，V006 補齊 reservation schema。
 - Phase 12 schema suite 已以 H2 + Flyway 驗證通過；P12-T05 的 comment expectation 已同步到已發布 migration 的實際字串。
+- 真 PostgreSQL replay 已完成並通過，版本為 PostgreSQL 16.14。
 - ledger 仍是 source of truth；balance_projections 僅是 read model。
 - reservations、orders / trades、wallet lifecycle、outbox / idempotency / audit 皆維持 schema-only，未加入 runtime service。
-- 仍需真 PostgreSQL replay 與後續 runtime / security review，故不得宣稱 production-ready。
+- 仍需後續 runtime / security review，故不得宣稱 production-ready。
 ```
 
 ## 人工簽核
