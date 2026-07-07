@@ -58,3 +58,4 @@ audit
 - 先定義 boundary，再補具體 repository。
 - 不新增真正 CRUD repository 實作。
 - 不讓 persistence 直接輸出 API DTO。
+- 不由 repository 自行決定 transaction boundary；交易範圍應由 application service 控制。

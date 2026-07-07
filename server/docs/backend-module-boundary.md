@@ -118,3 +118,11 @@ repository / persistence 存取規則另見：
 ```text
 server/docs/persistence-boundary.md
 ```
+
+## Transaction boundary
+
+application service transaction 規範另見：
+
+```text
+server/docs/transaction-boundary.md
+```
