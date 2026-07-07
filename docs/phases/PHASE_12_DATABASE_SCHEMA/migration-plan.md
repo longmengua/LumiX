@@ -22,4 +22,4 @@ V009__add_schema_comments.sql
 - 高風險資料表要加上註解。
 - 回滾備註請保留在 `rollback-notes.md`。
 - `V005__create_wallet_lifecycle_schema.sql` 已先行建立，必須保留，不可 revert。
-- 真正的 reservation / hold / release schema 由 `V006__create_reservation_schema.sql` 補上；P12-T06 不能視為 reservation 完成。
+- `V006__create_reservation_schema.sql` 是 P12-T06 的正式實作點；reservation schema 由這份 migration 完成，wallet lifecycle schema 仍保留在 V005。

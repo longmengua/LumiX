@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class P12T06SchemaMigrationTest {
 
     @Test
-    void migrationCreatesWalletLifecycleSchema() throws Exception {
+    void migrationCreatesReservationSchema() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:h2:mem:p12_t06;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
         dataSource.setUser("sa");
@@ -36,154 +36,79 @@ class P12T06SchemaMigrationTest {
         flyway.migrate();
 
         try (Connection connection = dataSource.getConnection()) {
-            // 這個測試只保護 wallet schema 與 metadata，不觸碰任何入金、提款或鏈上 runtime。
-            assertTableColumns(connection, "deposit_addresses",
-                    "deposit_address_id",
+            // 這個測試只保護 reservation schema 與 metadata，不觸碰任何 hold / release runtime。
+            assertTableColumns(connection, "reservations",
+                    "reservation_id",
                     "account_id",
                     "asset_symbol",
-                    "chain_type",
-                    "address",
-                    "address_label",
+                    "business_reference_type",
+                    "business_reference_id",
+                    "reservation_type",
                     "status",
-                    "created_at",
-                    "updated_at");
-            assertTableColumns(connection, "chain_transactions",
-                    "chain_transaction_id",
-                    "chain_type",
-                    "transaction_type",
-                    "tx_hash",
-                    "block_hash",
-                    "block_height",
-                    "from_address",
-                    "to_address",
-                    "amount",
-                    "fee_amount",
-                    "status",
-                    "observed_at",
-                    "confirmed_at",
-                    "created_at",
-                    "updated_at");
-            assertTableColumns(connection, "deposits",
-                    "deposit_id",
-                    "account_id",
-                    "asset_symbol",
-                    "deposit_address_id",
-                    "chain_transaction_id",
-                    "chain_type",
-                    "address",
-                    "amount",
-                    "confirmations",
-                    "status",
-                    "credited_at",
-                    "created_at",
-                    "updated_at");
-            assertTableColumns(connection, "withdrawals",
-                    "withdrawal_id",
+                    "original_amount",
+                    "remaining_amount",
+                    "consumed_amount",
+                    "released_amount",
                     "request_id",
-                    "account_id",
-                    "asset_symbol",
-                    "chain_type",
-                    "address",
-                    "address_label",
-                    "amount",
-                    "fee_amount",
-                    "chain_transaction_id",
-                    "status",
+                    "expires_at",
                     "created_at",
                     "updated_at");
 
-            assertPrimaryKeyColumns(connection, "deposit_addresses", "deposit_address_id");
-            assertPrimaryKeyColumns(connection, "chain_transactions", "chain_transaction_id");
-            assertPrimaryKeyColumns(connection, "deposits", "deposit_id");
-            assertPrimaryKeyColumns(connection, "withdrawals", "withdrawal_id");
+            assertPrimaryKeyColumns(connection, "reservations", "reservation_id");
+            assertForeignKeyColumns(connection, "fk_reservations_account_asset", "reservations", "account_assets", "account_id", "asset_symbol");
 
-            assertUniqueIndexColumns(connection, "deposit_addresses", "chain_type", "address");
-            assertUniqueIndexColumns(connection, "deposit_addresses", "account_id", "asset_symbol", "chain_type");
-            assertUniqueIndexColumns(connection, "chain_transactions", "chain_type", "tx_hash");
-            assertUniqueIndexColumns(connection, "deposits", "chain_transaction_id");
-            assertUniqueIndexColumns(connection, "withdrawals", "request_id");
-            assertUniqueIndexColumns(connection, "withdrawals", "chain_transaction_id");
+            assertNumericType(connection, "reservations", "original_amount");
+            assertNumericType(connection, "reservations", "remaining_amount");
+            assertNumericType(connection, "reservations", "consumed_amount");
+            assertNumericType(connection, "reservations", "released_amount");
 
-            assertForeignKeyColumns(connection, "fk_deposit_addresses_account_asset", "deposit_addresses", "account_assets", "account_id", "asset_symbol");
-            assertForeignKeyColumns(connection, "fk_deposits_account_asset", "deposits", "account_assets", "account_id", "asset_symbol");
-            assertForeignKeyColumns(connection, "fk_deposits_deposit_address_id", "deposits", "deposit_addresses", "deposit_address_id");
-            assertForeignKeyColumns(connection, "fk_deposits_chain_transaction_id", "deposits", "chain_transactions", "chain_transaction_id");
-            assertForeignKeyColumns(connection, "fk_withdrawals_account_asset", "withdrawals", "account_assets", "account_id", "asset_symbol");
-            assertForeignKeyColumns(connection, "fk_withdrawals_chain_transaction_id", "withdrawals", "chain_transactions", "chain_transaction_id");
+            assertCheckConstraintPresent(connection, "reservations", "ck_reservations_business_reference_type");
+            assertCheckConstraintPresent(connection, "reservations", "ck_reservations_reservation_type");
+            assertCheckConstraintPresent(connection, "reservations", "ck_reservations_status");
+            assertCheckConstraintPresent(connection, "reservations", "ck_reservations_original_amount_positive");
+            assertCheckConstraintPresent(connection, "reservations", "ck_reservations_amounts_non_negative");
+            assertCheckConstraintPresent(connection, "reservations", "ck_reservations_amounts_consistent");
 
-            assertNumericType(connection, "chain_transactions", "amount");
-            assertNumericType(connection, "chain_transactions", "fee_amount");
-            assertNumericType(connection, "deposits", "amount");
-            assertNumericType(connection, "withdrawals", "amount");
-            assertNumericType(connection, "withdrawals", "fee_amount");
+            assertIndexColumns(connection, "reservations", "idx_reservations_account_id", "account_id");
+            assertIndexColumns(connection, "reservations", "idx_reservations_asset_symbol", "asset_symbol");
+            assertIndexColumns(connection, "reservations", "idx_reservations_account_asset_status", "account_id", "asset_symbol", "status");
+            assertIndexColumns(connection, "reservations", "idx_reservations_business_reference", "business_reference_type", "business_reference_id");
+            assertIndexColumns(connection, "reservations", "idx_reservations_request_id", "request_id");
+            assertIndexColumns(connection, "reservations", "idx_reservations_expires_at", "expires_at");
 
-            assertCheckConstraintPresent(connection, "deposit_addresses", "ck_deposit_addresses_chain_type");
-            assertCheckConstraintPresent(connection, "deposit_addresses", "ck_deposit_addresses_status");
-            assertCheckConstraintPresent(connection, "chain_transactions", "ck_chain_transactions_chain_type");
-            assertCheckConstraintPresent(connection, "chain_transactions", "ck_chain_transactions_transaction_type");
-            assertCheckConstraintPresent(connection, "chain_transactions", "ck_chain_transactions_amount_positive");
-            assertCheckConstraintPresent(connection, "chain_transactions", "ck_chain_transactions_fee_non_negative");
-            assertCheckConstraintPresent(connection, "chain_transactions", "ck_chain_transactions_status");
-            assertCheckConstraintPresent(connection, "deposits", "ck_deposits_chain_type");
-            assertCheckConstraintPresent(connection, "deposits", "ck_deposits_amount_positive");
-            assertCheckConstraintPresent(connection, "deposits", "ck_deposits_confirmations_non_negative");
-            assertCheckConstraintPresent(connection, "deposits", "ck_deposits_status");
-            assertCheckConstraintPresent(connection, "withdrawals", "ck_withdrawals_chain_type");
-            assertCheckConstraintPresent(connection, "withdrawals", "ck_withdrawals_amount_positive");
-            assertCheckConstraintPresent(connection, "withdrawals", "ck_withdrawals_fee_non_negative");
-            assertCheckConstraintPresent(connection, "withdrawals", "ck_withdrawals_status");
-
-            assertIndexColumns(connection, "deposit_addresses", "idx_deposit_addresses_account_id", "account_id");
-            assertIndexColumns(connection, "deposit_addresses", "idx_deposit_addresses_asset_symbol", "asset_symbol");
-            assertIndexColumns(connection, "deposit_addresses", "idx_deposit_addresses_status", "status");
-            assertIndexColumns(connection, "chain_transactions", "idx_chain_transactions_chain_type_status", "chain_type", "status");
-            assertIndexColumns(connection, "chain_transactions", "idx_chain_transactions_observed_at", "observed_at");
-            assertIndexColumns(connection, "chain_transactions", "idx_chain_transactions_confirmed_at", "confirmed_at");
-            assertIndexColumns(connection, "deposits", "idx_deposits_account_id", "account_id");
-            assertIndexColumns(connection, "deposits", "idx_deposits_asset_symbol", "asset_symbol");
-            assertIndexColumns(connection, "deposits", "idx_deposits_status", "status");
-            assertIndexColumns(connection, "deposits", "idx_deposits_chain_transaction_id", "chain_transaction_id");
-            assertIndexColumns(connection, "withdrawals", "idx_withdrawals_account_id", "account_id");
-            assertIndexColumns(connection, "withdrawals", "idx_withdrawals_asset_symbol", "asset_symbol");
-            assertIndexColumns(connection, "withdrawals", "idx_withdrawals_status", "status");
-            assertIndexColumns(connection, "withdrawals", "idx_withdrawals_chain_transaction_id", "chain_transaction_id");
-
-            // 高風險欄位的 comment 必須提醒後續維護者：這些只是資料結構，不等於實際入帳、提款或簽章完成。
-            assertTableComment(connection, "DEPOSIT_ADDRESSES",
-                    "使用者入金地址主檔。這只是一份可查詢的 address registry，不代表地址已被入帳，也不代表地址私鑰由本系統持有。");
-            assertColumnComment(connection, "DEPOSIT_ADDRESSES", "ADDRESS",
-                    "入金地址字串。只保存可供查詢的地址內容，不保存密鑰或簽章材料。");
-            assertColumnComment(connection, "DEPOSIT_ADDRESSES", "STATUS",
-                    "地址狀態。ACTIVE 表示可用；DISABLED 表示停用；ARCHIVED 表示歷史保留。");
-
-            assertTableComment(connection, "CHAIN_TRANSACTIONS",
-                    "鏈上交易主檔。這是 chain observer 的可查詢結果，不是 ledger source of truth，也不是入帳完成證明。");
-            assertColumnComment(connection, "CHAIN_TRANSACTIONS", "TX_HASH",
-                    "鏈上交易哈希。這是鏈層唯一識別碼，必須保留以便查詢與對帳。");
-            assertColumnComment(connection, "CHAIN_TRANSACTIONS", "STATUS",
-                    "鏈上交易狀態。只描述觀測與確認層級，不代表本地帳務已完成。");
-            assertColumnComment(connection, "CHAIN_TRANSACTIONS", "AMOUNT",
-                    "鏈上金額。使用 NUMERIC(38, 18) 避免 binary floating point 誤差。");
-
-            assertTableComment(connection, "DEPOSITS",
-                    "充值紀錄。這只保存入金流程的查詢結果，不代表鏈上觀測一出現就已經完成 credit。");
-            assertColumnComment(connection, "DEPOSITS", "CHAIN_TRANSACTION_ID",
-                    "對應的鏈上交易。鏈上交易先被觀測，deposits 只是業務層記錄，不是入帳證明。");
-            assertColumnComment(connection, "DEPOSITS", "STATUS",
-                    "充值狀態。只描述入金流程狀態，不代表 ledger 已寫入。");
-            assertColumnComment(connection, "DEPOSITS", "AMOUNT",
-                    "充值金額。使用 NUMERIC(38, 18) 避免浮點誤差。");
-
-            assertTableComment(connection, "WITHDRAWALS",
-                    "提現紀錄。這只保存提款流程的查詢結果，不代表已核准、已簽章或已廣播。");
-            assertColumnComment(connection, "WITHDRAWALS", "REQUEST_ID",
-                    "請求識別碼。這裡只做查詢與重送辨識的輔助欄位，不把它當成完整 idempotency 保證。");
-            assertColumnComment(connection, "WITHDRAWALS", "STATUS",
-                    "提現狀態。這些值只代表流程階段，不代表資金已移出。");
-            assertColumnComment(connection, "WITHDRAWALS", "AMOUNT",
-                    "提現金額。使用 NUMERIC(38, 18) 避免浮點誤差。");
-            assertColumnComment(connection, "WITHDRAWALS", "FEE_AMOUNT",
-                    "手續費。這是展示與對帳欄位，不決定實際扣費策略。");
+            // 高風險欄位的 comment 必須提醒後續維護者：reservation 只是資料結構，不等於 ledger 或 balance 變動。
+            assertTableComment(connection, "RESERVATIONS",
+                    "預留主檔。這只是一份狀態資料結構，記錄某筆資產在特定業務目的下被保留、消耗或釋放的結果，不直接代表資金已扣款。");
+            assertColumnComment(connection, "RESERVATIONS", "RESERVATION_ID",
+                    "預留唯一識別碼。由應用層或上游流程產生，供查詢、對帳與回放使用。");
+            assertColumnComment(connection, "RESERVATIONS", "ACCOUNT_ID",
+                    "所屬帳戶。reservation 必須綁定 account，因為預留是以帳戶為邊界的資金控制資料。");
+            assertColumnComment(connection, "RESERVATIONS", "ASSET_SYMBOL",
+                    "所屬資產。與 account_id 一起約束 reservation 只可對既有 account_assets 建立。");
+            assertColumnComment(connection, "RESERVATIONS", "BUSINESS_REFERENCE_TYPE",
+                    "業務參照類型。用來標識 reservation 來源，例如 ORDER、WITHDRAWAL、SETTLEMENT 或 ADJUSTMENT。");
+            assertColumnComment(connection, "RESERVATIONS", "BUSINESS_REFERENCE_ID",
+                    "業務參照識別碼。指向對應業務物件，但不代表該物件已完成最終資金動作。");
+            assertColumnComment(connection, "RESERVATIONS", "RESERVATION_TYPE",
+                    "預留類型。描述這筆 reservation 的用途，例如下單、提款、結算或人工處理。");
+            assertColumnComment(connection, "RESERVATIONS", "STATUS",
+                    "預留狀態。這只描述資料上的生命週期，不等於 ledger 已經寫入或餘額已經結算。");
+            assertColumnComment(connection, "RESERVATIONS", "ORIGINAL_AMOUNT",
+                    "原始預留金額。使用 NUMERIC(38, 18) 保存，避免 binary floating point 誤差。");
+            assertColumnComment(connection, "RESERVATIONS", "REMAINING_AMOUNT",
+                    "剩餘可釋放或可再消耗的預留金額。這是查詢欄位，必須和其他金額欄位保持一致。");
+            assertColumnComment(connection, "RESERVATIONS", "CONSUMED_AMOUNT",
+                    "已消耗金額。這只表示 reservation 已被部分或完全用掉，不代表 ledger 已做最終 posting。");
+            assertColumnComment(connection, "RESERVATIONS", "RELEASED_AMOUNT",
+                    "已釋放金額。這只表示 reservation 已釋放回可用狀態，不代表任何 runtime 已完成扣款或退款。");
+            assertColumnComment(connection, "RESERVATIONS", "REQUEST_ID",
+                    "請求識別碼。只用於追蹤與降低重送風險，不可視為完整 idempotency 保證；完整 policy 留待後續 idempotency_keys。");
+            assertColumnComment(connection, "RESERVATIONS", "EXPIRES_AT",
+                    "到期時間。reservation 可能因業務規則到期釋放，但是否真正釋放仍由後續流程判斷。");
+            assertColumnComment(connection, "RESERVATIONS", "CREATED_AT",
+                    "資料建立時間。由資料庫預設產生，供審計與對帳使用。");
+            assertColumnComment(connection, "RESERVATIONS", "UPDATED_AT",
+                    "資料最後更新時間。狀態變更或對帳修正時由應用層維護。");
         }
     }
 
@@ -211,47 +136,6 @@ class P12T06SchemaMigrationTest {
         }
 
         assertEquals(Set.of(expectedColumns), actualColumns, "Unexpected primary key columns for table " + tableName);
-    }
-
-    private static void assertUniqueIndexColumns(Connection connection, String tableName, String... expectedColumns) throws SQLException {
-        DatabaseMetaData metaData = connection.getMetaData();
-        Set<String> expected = Set.of(expectedColumns);
-        Map<String, Set<String>> uniqueIndexes = new LinkedHashMap<>();
-
-        try (ResultSet resultSet = metaData.getIndexInfo(null, null, tableName, true, false)) {
-            while (resultSet.next()) {
-                String indexName = resultSet.getString("INDEX_NAME");
-                String columnName = resultSet.getString("COLUMN_NAME");
-                boolean nonUnique = resultSet.getBoolean("NON_UNIQUE");
-                if (!nonUnique && indexName != null && columnName != null) {
-                    uniqueIndexes.computeIfAbsent(indexName, ignored -> new LinkedHashSet<>()).add(columnName);
-                }
-            }
-        }
-
-        boolean found = uniqueIndexes.values().stream().anyMatch(columns -> columns.equals(expected));
-        assertTrue(found, "Unique index not found for table " + tableName + " with columns " + expected);
-    }
-
-    private static void assertIndexColumns(Connection connection, String tableName, String indexName, String... expectedColumns) throws SQLException {
-        DatabaseMetaData metaData = connection.getMetaData();
-        Set<String> actualColumns = new LinkedHashSet<>();
-        boolean found = false;
-
-        try (ResultSet resultSet = metaData.getIndexInfo(null, null, tableName, false, false)) {
-            while (resultSet.next()) {
-                if (indexName.equalsIgnoreCase(resultSet.getString("INDEX_NAME"))) {
-                    found = true;
-                    String columnName = resultSet.getString("COLUMN_NAME");
-                    if (columnName != null) {
-                        actualColumns.add(columnName);
-                    }
-                }
-            }
-        }
-
-        assertTrue(found, "Index not found: " + tableName + "." + indexName);
-        assertEquals(Set.of(expectedColumns), actualColumns, "Unexpected index columns for " + tableName + "." + indexName);
     }
 
     private static void assertForeignKeyColumns(Connection connection, String fkName, String tableName, String referencedTableName, String... expectedColumns) throws SQLException {
@@ -293,6 +177,27 @@ class P12T06SchemaMigrationTest {
                 assertTrue(resultSet.next(), "Constraint not found: " + tableName + "." + constraintName);
             }
         }
+    }
+
+    private static void assertIndexColumns(Connection connection, String tableName, String indexName, String... expectedColumns) throws SQLException {
+        DatabaseMetaData metaData = connection.getMetaData();
+        Set<String> actualColumns = new LinkedHashSet<>();
+        boolean found = false;
+
+        try (ResultSet resultSet = metaData.getIndexInfo(null, null, tableName, false, false)) {
+            while (resultSet.next()) {
+                if (indexName.equalsIgnoreCase(resultSet.getString("INDEX_NAME"))) {
+                    found = true;
+                    String columnName = resultSet.getString("COLUMN_NAME");
+                    if (columnName != null) {
+                        actualColumns.add(columnName);
+                    }
+                }
+            }
+        }
+
+        assertTrue(found, "Index not found: " + tableName + "." + indexName);
+        assertEquals(Set.of(expectedColumns), actualColumns, "Unexpected index columns for " + tableName + "." + indexName);
     }
 
     private static void assertTableComment(Connection connection, String tableName, String expectedComment) throws SQLException {
