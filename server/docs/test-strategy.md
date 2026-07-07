@@ -58,3 +58,4 @@ outbox
 
 - 先定義測試分層，再補具體 integration case。
 - 不把 smoke test 當成完整 runtime 驗證。
+- 架構測試若暫時無法完整 enforcement，至少要驗證目前 skeleton 不違規，並在文件中記錄未來可強化的規則。

@@ -150,3 +150,11 @@ server/docs/security-boundary.md
 ```text
 server/docs/test-strategy.md
 ```
+
+## Module dependency guardrails
+
+module dependency guardrails 另見：
+
+```text
+server/docs/module-dependency-guardrails.md
+```
