@@ -26,3 +26,4 @@ V010__add_schema_comments.sql
 - `V006__create_reservation_schema.sql` 是 P12-T06 的正式實作點；reservation schema 由這份 migration 完成，wallet lifecycle schema 仍保留在 V005。
 - `V007__normalize_wallet_lifecycle_schema.sql` 只補 wallet lifecycle 的查詢索引，不改 V005 欄位語意。
 - `V008__create_outbox_audit_idempotency_tables.sql` 是 P12-T08 的正式實作點；以 TEXT 保存 payload 與 state snapshot，維持測試相容性。
+- P12-T09 只做驗證與 rollback 文件收斂，不新增 business domain tables；若之後發現缺索引 / constraint，請用新的 corrective migration，不要回寫 V001-V008。
