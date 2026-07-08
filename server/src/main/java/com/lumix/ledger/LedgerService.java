@@ -1,23 +1,22 @@
 package com.lumix.ledger;
 
+import com.lumix.ledger.application.LedgerRuntimePrerequisite;
+import com.lumix.ledger.application.LedgerRuntimePrerequisiteReport;
+
+import java.util.Set;
+
 /**
- * 帳本服務介面。
- * 只定義行為契約，不提供真實餘額修改實作。
+ * ledger bounded context 的高風險契約入口。
+ *
+ * Phase 14-T01 只保留 runtime prerequisite inspection，不提供任何 posting、
+ * reserve、release、commit、rollback 或 balance mutation 語意。
  */
 public interface LedgerService {
 
-    // TODO(HUMAN_REVIEW_REQUIRED): 直接整批過帳的入口；正式實作前必須先定義 journal、entry 與交易邊界。
-    LedgerJournalResult postJournal(LedgerJournalRequest request);
-
-    // TODO(HUMAN_REVIEW_REQUIRED): 預留凍結 / 預占用語意，方便未來接 spot / margin / futures 流程。
-    LedgerJournalResult reserve(LedgerPostingRequest request);
-
-    // TODO(HUMAN_REVIEW_REQUIRED): 預留釋放凍結資產語意。
-    LedgerJournalResult release(LedgerPostingRequest request);
-
-    // TODO(HUMAN_REVIEW_REQUIRED): 預留從凍結轉成正式扣帳或入帳的語意。
-    LedgerJournalResult commit(LedgerPostingRequest request);
-
-    // TODO(HUMAN_REVIEW_REQUIRED): 預留回滾語意，用於失敗補償或人工修復流程。
-    LedgerJournalResult rollback(LedgerPostingRequest request);
+    /**
+     * 檢查 ledger runtime 是否已具備啟動條件。
+     *
+     * 這個 contract 只回報 prerequisite 狀態，不應觸發任何資金異動。
+     */
+    LedgerRuntimePrerequisiteReport verifyRuntimePrerequisites(Set<LedgerRuntimePrerequisite> availablePrerequisites);
 }

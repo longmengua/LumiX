@@ -6,7 +6,8 @@
 Phase 11: completed as documentation-only production architecture reset
 Phase 12: completed as production database schema and migration foundation
 Phase 13: completed as backend module foundation and API boundary
-Phase 14-36: planned, not started
+Phase 14: in progress as immutable ledger engine scope gate and runtime prerequisites
+Phase 15-36: planned, not started
 Next implementation phase: Phase 14 - Immutable Ledger Engine
 ```
 
