@@ -64,6 +64,10 @@ balance_projections 只能作為可重建的 read model，不能當成資金真�
 
 ```text
 P14-T01 scope gate and runtime prerequisites
+P14-T02 ledger journal draft and invariant contract
+P14-T03 ledger persistence port and append-only mapping contract
+P14-T04 ledger posting application command boundary
+P14-T05 ledger append transaction boundary design
 ```
 
 ## 完成條件
