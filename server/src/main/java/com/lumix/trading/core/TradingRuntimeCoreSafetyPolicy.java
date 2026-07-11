@@ -4,6 +4,8 @@ import com.lumix.trading.core.posting.LedgerPostingIntegrationDesign;
 import com.lumix.trading.core.posting.LedgerPostingIntegrationPolicy;
 import com.lumix.trading.core.projection.BalanceProjectionRuntimeDesign;
 import com.lumix.trading.core.projection.BalanceProjectionRuntimePolicy;
+import com.lumix.trading.core.reconciliation.ReconciliationDesign;
+import com.lumix.trading.core.reconciliation.ReconciliationDesignPolicy;
 import com.lumix.trading.core.reservation.ReservationHoldReleaseDesign;
 import com.lumix.trading.core.reservation.ReservationHoldReleaseDesignPolicy;
 
@@ -18,6 +20,7 @@ public final class TradingRuntimeCoreSafetyPolicy {
 
     private final LedgerPostingIntegrationPolicy ledgerPostingIntegrationPolicy = new LedgerPostingIntegrationPolicy();
     private final BalanceProjectionRuntimePolicy balanceProjectionRuntimePolicy = new BalanceProjectionRuntimePolicy();
+    private final ReconciliationDesignPolicy reconciliationDesignPolicy = new ReconciliationDesignPolicy();
     private final ReservationHoldReleaseDesignPolicy reservationHoldReleaseDesignPolicy = new ReservationHoldReleaseDesignPolicy();
 
     /**
@@ -31,6 +34,7 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         TradingRuntimeCoreScope.LEDGER_POSTING_INTEGRATION_GATE,
                         TradingRuntimeCoreScope.BALANCE_PROJECTION_REBUILD_DESIGN,
                         TradingRuntimeCoreScope.RESERVATION_HOLD_RELEASE_DESIGN,
+                        TradingRuntimeCoreScope.RECONCILIATION_DESIGN,
                         TradingRuntimeCoreScope.BASIC_RECONCILIATION_DESIGN
                 ),
                 List.of(
@@ -41,6 +45,7 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "reservation commit 必須經 settlement / ledger posting gate",
                         "order intake 可以要求 reservation，但不得直接寫 reservation DB",
                         "matching 不得偷寫 reservation 或 balance_projections",
+                        "reconciliation 必須比較 ledger_entries derived totals、balance_projections rows、reservation locked amounts、settlement expected movements",
                         "settlement 必須經過 ledger invariant、idempotency、append-only、reconciliation gate"
                 ),
                 List.of(
@@ -52,6 +57,9 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "balance projection 不可作為資金真相來源",
                         "reservation 不可直接改 ledger，必須經 application boundary",
                         "reservation hold / release 必須先做 idempotency decision，再做 hold / release",
+                        "reconciliation 必須把 ledger 視為 source of truth，balance_projections 視為 read model",
+                        "reconciliation mismatch 不得靜默自動修正",
+                        "reconciliation 必須可追蹤 requestId，但 requestId 不是 idempotency guarantee",
                         "settlement 必須是 explicit process，不可由 matching 或 order runtime 偷寫 ledger",
                         "所有正式 DB write 必須有 rollback / reconciliation 測試",
                         "所有高風險 runtime 不得 auto-commit"
@@ -63,12 +71,14 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "真正 settlement",
                         "真正交易下單",
                         "所有 reservation runtime 都屬於 HUMAN_REVIEW_REQUIRED",
+                        "所有 reconciliation runtime 都屬於 HUMAN_REVIEW_REQUIRED",
                         "任何 production-ready 宣稱"
                 ),
                 List.of(
                         "ledger posting integration design",
                         "balance projection rebuild / read model design",
                         "reservation hold / release design",
+                        "reconciliation design",
                         "reconciliation check design"
                 )
         );
@@ -99,5 +109,14 @@ public final class TradingRuntimeCoreSafetyPolicy {
      */
     public ReservationHoldReleaseDesign describeReservationHoldReleaseDesign() {
         return reservationHoldReleaseDesignPolicy.describe();
+    }
+
+    /**
+     * 建立 reconciliation 的設計契約。
+     *
+     * 這只描述對帳的邊界，不代表可以直接做自動修復或資料寫回。
+     */
+    public ReconciliationDesign describeReconciliationDesign() {
+        return reconciliationDesignPolicy.describe();
     }
 }

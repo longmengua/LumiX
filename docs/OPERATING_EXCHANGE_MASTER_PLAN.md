@@ -9,7 +9,17 @@ Phase 11: 生產架構重整 - 以文件完成
 Phase 12: 生產資料庫結構與 migration - 下一步
 Phase 13: backend module foundation & API boundary - completed
 Phase 14: Immutable Ledger Engine foundation - completed, not production-ready
-Phase 15: Trading Runtime Core - in progress
+Phase 15: COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION
+  - Phase 15 backend foundation gates completed
+  - Phase 15 trading runtime core foundation completed
+  - NOT production-ready
+  - NOT full trading runtime
+  - NOT order/matching/settlement ready
+  - NOT reservation runtime ready
+  - NOT settlement runtime ready
+  - NOT futures/liquidation/withdrawal ready
+  - NOT exchange ready
+  - NOT public user trading ready
 Phase 16-20: accelerated trading sandbox track - planned, not started
 Phase 21-36: planned, not started
 ```

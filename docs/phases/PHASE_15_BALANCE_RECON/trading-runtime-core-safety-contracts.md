@@ -18,10 +18,12 @@ reservation hold 會降低 available_amount，release 會增加 available_amount
 reservation commit 必須經 settlement / ledger posting gate
 order intake 可以要求 reservation，但不得直接寫 reservation DB
 matching 不得偷寫 reservation 或 balance_projections
+reconciliation 必須比較 ledger_entries derived totals、balance_projections rows、reservation locked amounts、settlement expected movements
 settlement 必須是 explicit process，不可由 matching 或 order runtime 偷寫 ledger
 所有正式 DB write 必須有 rollback / reconciliation 測試
 所有高風險 runtime 不得 auto-commit
 所有 reservation runtime 都屬於 HUMAN_REVIEW_REQUIRED
+所有 reconciliation runtime 都屬於 HUMAN_REVIEW_REQUIRED
 ```
 
 ## P15 內允許的設計工作
@@ -30,6 +32,7 @@ settlement 必須是 explicit process，不可由 matching 或 order runtime 偷
 ledger posting integration design
 balance projection rebuild / read model design
 reservation hold / release design
+reconciliation design
 reconciliation check design
 ```
 
