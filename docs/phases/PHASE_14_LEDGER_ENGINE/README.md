@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress
+completed
 ```
 
 ## 目標
@@ -70,6 +70,9 @@ P14-T04 ledger posting application command boundary
 P14-T05 ledger append transaction boundary design
 P14-T06 ledger append persistence adapter implementation gate
 P14-T07 PostgreSQL verification for ledger append adapter
+P14-T08 ledger idempotency and request identity design gate
+P14-T09 ledger runtime integration no-go gate
+P14-T10 phase 14 final review gate
 ```
 
 ## 完成條件
@@ -80,3 +83,4 @@ P14-T07 PostgreSQL verification for ledger append adapter
 - 不修改 balance 或 balance_projections。
 - 有清楚的 verification method。
 - 所有 ledger runtime 變更在規劃與後續實作都要保留 HUMAN_REVIEW_REQUIRED。
+- Phase 14 foundation completed，但不是 production-ready，也不是完整 ledger posting runtime。

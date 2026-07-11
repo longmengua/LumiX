@@ -9,7 +9,7 @@
 
 ```text
 command received
-  -> validate requestId and journal draft
+  -> validate requestId, idempotency contract, and journal draft
   -> verify runtime prerequisites
   -> validate journal invariant
   -> build append-only posting plan
@@ -24,6 +24,7 @@ plan 只表示後續若要進入正式寫入，應使用哪些 mapping contract
 accepted 不表示資料已寫入
 accepted 不表示 balance 已變更
 accepted 不表示任何 outbox 或 side effect 已發生
+requestId 仍然只是 trace / correlation / audit linkage，不能被誤寫成完整 idempotency guarantee
 ```
 
 ## Rejected result semantics

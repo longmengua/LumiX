@@ -31,7 +31,8 @@ balance_projections direct mutation
 ```text
 ledger append transaction 必須是 append-only
 既有 journal / entry 不得直接 update 或 delete
-requestId 必須同時進入 idempotency / audit / trace 設計
+requestId 只負責 trace / correlation / audit linkage；idempotency key 才負責 duplicate prevention contract
+business_reference_type + business_reference_id 只描述業務來源，不可單獨取代 idempotency key
 交易隔離、locking、retry、deadlock handling 只做設計記錄，不在本階段實作
 balance_projections 不是 source of truth，不能在這個 transaction 內被當成資金真相更新
 ```

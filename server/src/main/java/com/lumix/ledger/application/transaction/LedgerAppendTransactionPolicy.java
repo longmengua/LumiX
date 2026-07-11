@@ -27,7 +27,7 @@ public class LedgerAppendTransactionPolicy implements LedgerAppendTransactionBou
                 ),
                 java.util.List.of(
                         "ledger append 必須是單一 transaction",
-                        "requestId 必須同時進入 idempotency / audit / trace 設計",
+                        "requestId 只負責 trace / correlation / audit linkage；idempotency key 才負責 duplicate prevention contract",
                         "projection read model 不是 source of truth，不能在此 transaction 內直接更新",
                         "交易隔離、locking、retry、deadlock handling 只作設計記錄，不在本階段實作",
                         "所有正式 append runtime 都屬於 HUMAN_REVIEW_REQUIRED"

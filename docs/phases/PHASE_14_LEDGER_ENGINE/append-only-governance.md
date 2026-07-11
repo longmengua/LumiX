@@ -20,6 +20,15 @@ ledger_journals 與 ledger_entries 只能以 append-only 方式延伸
 balance_projections 不是這個 transaction 的 source of truth。
 ```
 
+## Request identity 與 idempotency 分工
+
+```text
+requestId 只用於 trace / correlation / audit linkage，不可被誤解成完整 idempotency 保證。
+idempotency key 才是未來用來防止同一 business operation 重複執行的主要契約。
+business_reference_type + business_reference_id 只識別業務來源，不可單獨取代 idempotency key。
+任何正式 idempotency runtime 都屬於 HUMAN_REVIEW_REQUIRED。
+```
+
 ## Phase 12 schema mapping
 
 ```text
