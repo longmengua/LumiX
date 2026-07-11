@@ -7,8 +7,9 @@ Phase 11: completed as documentation-only production architecture reset
 Phase 12: completed as production database schema and migration foundation
 Phase 13: completed as backend module foundation and API boundary
 Phase 14: completed as immutable ledger engine foundation, append-only adapter verified on PostgreSQL, not production-ready
-Phase 15-36: planned, not started
-Next implementation phase: Phase 15 - planned
+Phase 15: in progress as trading runtime core scope gate and safety contracts
+Phase 16-36: planned, not started
+Next implementation phase: Phase 15 - Trading Runtime Core
 ```
 
 ## 目前倉庫現況
