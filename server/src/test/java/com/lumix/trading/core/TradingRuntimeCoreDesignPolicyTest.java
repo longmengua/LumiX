@@ -61,10 +61,16 @@ class TradingRuntimeCoreDesignPolicyTest {
         assertTrue(design.capabilities().contains(BalanceProjectionCapability.OBSERVE_LAG));
         assertTrue(design.sourceOfTruthRules().stream().anyMatch(text -> text.contains("ledger 是 source of truth")));
         assertTrue(design.sourceOfTruthRules().stream().anyMatch(text -> text.contains("balance_projections 是 read model")));
+        assertTrue(design.sourceOfTruthRules().stream().anyMatch(text -> text.contains("CREDIT 增加 total_amount，DEBIT 減少 total_amount")));
+        assertTrue(design.sourceOfTruthRules().stream().anyMatch(text -> text.contains("目前 rebuild gate 只 materialize SPOT account 的 read model rows")));
+        assertTrue(design.sourceOfTruthRules().stream().anyMatch(text -> text.contains("projected row 以 account_id + asset_symbol 為單位")));
         assertTrue(design.observabilityRules().stream().anyMatch(text -> text.contains("lag 必須可觀測")));
+        assertTrue(design.observabilityRules().stream().anyMatch(text -> text.contains("available_amount 在 reservation runtime 完成前等於 total_amount")));
+        assertTrue(design.observabilityRules().stream().anyMatch(text -> text.contains("locked_amount 在 reservation runtime 完成前固定為 0")));
         assertTrue(design.noGoConditions().stream().anyMatch(text -> text.contains("不允許直接 insert / update / delete balance_projections runtime SQL")));
         assertTrue(design.noGoConditions().stream().anyMatch(text -> text.contains("正式 projection runtime")));
         assertTrue(design.noGoConditions().stream().anyMatch(text -> text.contains("交易邊界")));
+        assertTrue(design.noGoConditions().stream().anyMatch(text -> text.contains("不把負數 total_amount 當成可接受的 projection 結果")));
         assertTrue(design.derivedBalanceFields().contains("total"));
         assertTrue(design.derivedBalanceFields().contains("available"));
         assertTrue(design.derivedBalanceFields().contains("locked"));
