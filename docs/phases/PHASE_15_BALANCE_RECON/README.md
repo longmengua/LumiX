@@ -10,12 +10,13 @@ in progress
 
 建立 Trading Runtime Core 的 scope gate 與 safety contracts，先定義 ledger、balance、reservation 與 settlement 的 runtime 邊界，再決定後續可安全前進的 sandbox 或 integration gate。
 
-design gates completed, but runtime implementation not completed.
+design gates completed, controlled runtime gate completed, but runtime implementation not completed.
 
 ## 本 phase 可處理的最早工作
 
 ```text
 ledger posting integration design
+controlled ledger posting runtime gate
 balance projection rebuild / read model design
 reservation hold / release design
 reconciliation check design
@@ -38,6 +39,7 @@ reconciliation check design
 T01 trading runtime core scope gate and safety contracts
 T02 ledger posting integration design gate
 T03 balance projection runtime design gate
+T04 ledger posting controlled runtime gate
 ```
 
 ## 文件索引
@@ -47,6 +49,7 @@ docs/phases/PHASE_15_BALANCE_RECON/trading-runtime-core-scope.md
 docs/phases/PHASE_15_BALANCE_RECON/trading-runtime-core-safety-contracts.md
 docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T01.md
 docs/phases/PHASE_15_BALANCE_RECON/ledger-posting-integration-design.md
+docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T04.md
 docs/phases/PHASE_15_BALANCE_RECON/balance-projection-runtime-design.md
 docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T02.md
 docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T03.md
