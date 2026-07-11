@@ -48,6 +48,15 @@ database trigger
 operational review
 ```
 
+## Persistence adapter gate
+
+```text
+任何 persistence adapter 若開始把 mapping contract 寫入 ledger_journals / ledger_entries，
+仍然只代表 append-only gate 的最小實作，不能被誤解為完整 posting runtime。
+這類 adapter 不得接到 posting command boundary 的正式 runtime path。
+所有相關變更都屬於 HUMAN_REVIEW_REQUIRED。
+```
+
 ## HUMAN_REVIEW_REQUIRED
 
 ```text

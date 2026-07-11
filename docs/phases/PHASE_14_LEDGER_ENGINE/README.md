@@ -68,6 +68,7 @@ P14-T02 ledger journal draft and invariant contract
 P14-T03 ledger persistence port and append-only mapping contract
 P14-T04 ledger posting application command boundary
 P14-T05 ledger append transaction boundary design
+P14-T06 ledger append persistence adapter implementation gate
 ```
 
 ## 完成條件
