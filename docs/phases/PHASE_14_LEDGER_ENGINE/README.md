@@ -69,6 +69,7 @@ P14-T03 ledger persistence port and append-only mapping contract
 P14-T04 ledger posting application command boundary
 P14-T05 ledger append transaction boundary design
 P14-T06 ledger append persistence adapter implementation gate
+P14-T07 PostgreSQL verification for ledger append adapter
 ```
 
 ## 完成條件
