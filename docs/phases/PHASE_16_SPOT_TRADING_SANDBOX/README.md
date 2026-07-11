@@ -13,6 +13,7 @@ in progress
 P16-T01 completed as sandbox scope gate and runtime boundary only; runtime implementation not started.
 P16-T02 completed as sandbox order intake boundary only; order persistence / matching / settlement not started.
 P16-T03 completed as sandbox in-memory order book gate only; matching / settlement not started.
+P16-T04 completed as sandbox matching design gate only; matching runtime not started.
 
 ## Sandbox scope
 
@@ -56,7 +57,7 @@ reconciliation boundary
 T01 spot sandbox scope gate and runtime boundaries
 T02 sandbox order intake boundary
 T03 sandbox in-memory order book gate
-T04 sandbox matching boundary
+T04 sandbox matching design gate
 T05 sandbox settlement boundary
 T06 sandbox no-production review gate
 ```
@@ -67,6 +68,7 @@ T06 sandbox no-production review gate
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T01.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T02.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T03.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T04.md
 ```
 
 ## Runtime boundary rules
@@ -80,6 +82,7 @@ sandbox trade result 不等於 production trade result
 requestId 不是 idempotency guarantee
 idempotency key 才是 duplicate prevention contract
 amount / price / quantity 一律使用 BigDecimal，不得使用 float / double
+matching 只做 design gate，不得宣稱已完成正式撮合 runtime
 ```
 
 ## HUMAN_REVIEW_REQUIRED
