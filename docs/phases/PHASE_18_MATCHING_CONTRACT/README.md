@@ -1,4 +1,4 @@
-# 撮合核心合約
+# Phase 18 - Futures Trading Sandbox
 
 ## 狀態
 
@@ -6,14 +6,52 @@
 planned, not started
 ```
 
-## 相依
+## 目標
 
-This phase must not start until earlier required phases pass review.
+建立受限 futures trading sandbox。這是加速路線中最早可以做受限合約交易 sandbox 的 phase，但仍不是 production。
 
-## 範圍占位
+## Sandbox 內容
 
-Detailed task cards should be created by the architect agent after the previous phase is signed off.
+```text
+futures order placement
+matching reuse
+position update
+realized / unrealized PnL
+mock mark price
+mock funding
+restricted contract trade sandbox
+```
 
-## 不可跳階警告
+## 不在 phase
 
-Do not implement this phase while 第 12 階段 is still incomplete.
+```text
+single market public launch
+real money
+public users
+production trading
+```
+
+## 高層 task list
+
+```text
+T01 futures order placement
+T02 matching reuse
+T03 position update
+T04 realized / unrealized PnL
+T05 mock mark price and funding
+T06 restricted contract sandbox gate
+```
+
+## Sandbox 限制
+
+```text
+P18 最早只能做受限 futures sandbox，不能視為正式合約交易。
+單一 market、mock price only、sandbox only、不可接真錢、不可開放 public users。
+```
+
+## HUMAN_REVIEW_REQUIRED
+
+```text
+任何 futures / PnL / mark price / funding runtime 變更都屬於 HUMAN_REVIEW_REQUIRED。
+任何把受限 contract sandbox 誤寫成正式合約交易上線的行為都屬於 HUMAN_REVIEW_REQUIRED。
+```

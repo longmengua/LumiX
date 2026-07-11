@@ -8,7 +8,9 @@
 Phase 11: 生產架構重整 - 以文件完成
 Phase 12: 生產資料庫結構與 migration - 下一步
 Phase 13: backend module foundation & API boundary - completed
-Phase 14-36: planned, not started
+Phase 14: Immutable Ledger Engine foundation - completed, not production-ready
+Phase 15-20: accelerated trading sandbox track - planned, not started
+Phase 21-36: planned, not started
 ```
 
 ## Master phase ladder
@@ -20,17 +22,17 @@ P13 Identity, Account, Asset Foundation
   |
 P14 Immutable Ledger Engine
   |
-P15 Balance Projection & Reconciliation
+P15 Trading Runtime Core
   |
-P16 Reservation / Freeze Engine
+P16 Spot Trading Sandbox
   |
-P17 Order Intake & Idempotency
+P17 Futures Core Model
   |
-P18 Matching Core Contract
+P18 Futures Trading Sandbox
   |
-P19 Trade Settlement Engine
+P19 Risk Sandbox
   |
-P20 Fee Engine & Revenue Accounting
+P20 Contract Trading Integration Gate
   |
 P21 Market Data Pipeline
   |
@@ -86,3 +88,13 @@ Revenue requires:
 ```
 
 不應只做到交易畫面與 order API 就認定能營運。能賺錢代表費用、收入、風險、事故與對帳都能落地。
+
+## Accelerated track rules
+
+```text
+P15 到 P20 是加速但安全的交易 sandbox 路線，不是 production-ready。
+P18 最早只能做受限 futures sandbox，不能視為正式合約交易。
+P20 才是較完整 contract trading sandbox gate，但仍然不是正式交易上線門檻。
+production-ready 仍然需要後續 security、ops、risk、liquidity、monitoring、incident response review。
+所有 ledger / balance / reservation / settlement / futures / liquidation / withdrawal / admin / security runtime 都屬於 HUMAN_REVIEW_REQUIRED。
+```
