@@ -12,6 +12,7 @@ in progress
 
 P16-T01 completed as sandbox scope gate and runtime boundary only; runtime implementation not started.
 P16-T02 completed as sandbox order intake boundary only; order persistence / matching / settlement not started.
+P16-T03 completed as sandbox in-memory order book gate only; matching / settlement not started.
 
 ## Sandbox scope
 
@@ -54,7 +55,7 @@ reconciliation boundary
 ```text
 T01 spot sandbox scope gate and runtime boundaries
 T02 sandbox order intake boundary
-T03 sandbox reservation boundary
+T03 sandbox in-memory order book gate
 T04 sandbox matching boundary
 T05 sandbox settlement boundary
 T06 sandbox no-production review gate
@@ -65,6 +66,7 @@ T06 sandbox no-production review gate
 ```text
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T01.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T02.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T03.md
 ```
 
 ## Runtime boundary rules
