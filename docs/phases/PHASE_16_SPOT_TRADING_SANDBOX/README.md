@@ -11,6 +11,7 @@ in progress
 建立 sandbox-only spot trading runtime 的 scope gate 與 runtime boundaries。P16-T01 只定義邊界與 safety contract，不代表已經可以做正式交易。
 
 P16-T01 completed as sandbox scope gate and runtime boundary only; runtime implementation not started.
+P16-T02 completed as sandbox order intake boundary only; order persistence / matching / settlement not started.
 
 ## Sandbox scope
 
@@ -63,6 +64,7 @@ T06 sandbox no-production review gate
 
 ```text
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T01.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T02.md
 ```
 
 ## Runtime boundary rules
