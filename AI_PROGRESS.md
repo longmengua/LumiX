@@ -18,8 +18,9 @@ NOT settlement runtime ready
 NOT futures/liquidation/withdrawal ready
 NOT exchange ready
 NOT public user trading ready
-Phase 16-36: planned, not started
-Next implementation phase: Phase 15 - Trading Runtime Core
+Phase 16: in progress as spot trading sandbox scope gate/boundary, runtime implementation incomplete
+Phase 17-36: planned, not started
+Next implementation phase: Phase 16 - Spot Trading Sandbox
 ```
 
 ## 目前倉庫現況

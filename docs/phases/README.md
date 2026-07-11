@@ -7,7 +7,7 @@ PHASE_12_DATABASE_SCHEMA/      completed
 PHASE_13_IDENTITY_ACCOUNT/     completed
 PHASE_14_LEDGER_ENGINE/        completed, foundation only
 PHASE_15_BALANCE_RECON/        COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION (Trading Runtime Core foundation/review gates only; NOT production-ready; NOT full trading runtime; NOT order/matching/settlement ready; NOT reservation runtime ready; NOT settlement runtime ready; NOT futures/liquidation/withdrawal ready; NOT exchange ready; NOT public user trading ready)
-PHASE_16_RESERVATION_ENGINE/   planned
+PHASE_16_SPOT_TRADING_SANDBOX/  in progress (Spot Trading Sandbox scope gate and boundaries only)
 PHASE_17_ORDER_INTAKE/         planned
 PHASE_18_MATCHING_CONTRACT/    planned
 PHASE_19_SETTLEMENT_ENGINE/    planned
@@ -18,5 +18,5 @@ PHASE_20_FEE_ENGINE/           planned
 目前可執行的工作：
 
 ```text
-docs/phases/PHASE_15_BALANCE_RECON/
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/
 ```

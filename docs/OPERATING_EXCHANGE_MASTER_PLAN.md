@@ -20,7 +20,8 @@ Phase 15: COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION
   - NOT futures/liquidation/withdrawal ready
   - NOT exchange ready
   - NOT public user trading ready
-Phase 16-20: accelerated trading sandbox track - planned, not started
+Phase 16: Spot Trading Sandbox - in progress, sandbox gate only
+Phase 17-20: accelerated trading sandbox track - planned, not started
 Phase 21-36: planned, not started
 ```
 
