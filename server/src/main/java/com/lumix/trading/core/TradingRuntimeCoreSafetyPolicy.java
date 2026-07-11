@@ -4,6 +4,8 @@ import com.lumix.trading.core.posting.LedgerPostingIntegrationDesign;
 import com.lumix.trading.core.posting.LedgerPostingIntegrationPolicy;
 import com.lumix.trading.core.projection.BalanceProjectionRuntimeDesign;
 import com.lumix.trading.core.projection.BalanceProjectionRuntimePolicy;
+import com.lumix.trading.core.reservation.ReservationHoldReleaseDesign;
+import com.lumix.trading.core.reservation.ReservationHoldReleaseDesignPolicy;
 
 import java.util.List;
 
@@ -16,6 +18,7 @@ public final class TradingRuntimeCoreSafetyPolicy {
 
     private final LedgerPostingIntegrationPolicy ledgerPostingIntegrationPolicy = new LedgerPostingIntegrationPolicy();
     private final BalanceProjectionRuntimePolicy balanceProjectionRuntimePolicy = new BalanceProjectionRuntimePolicy();
+    private final ReservationHoldReleaseDesignPolicy reservationHoldReleaseDesignPolicy = new ReservationHoldReleaseDesignPolicy();
 
     /**
      * 建立 Trading Runtime Core 的設計契約。
@@ -34,6 +37,10 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "ledger append 是 source of truth 的候選執行路徑，但尚未正式接線",
                         "balance_projections 是 read model，不是 source of truth",
                         "reservations 是 hold / release runtime 的獨立邊界，不得偷渡進 ledger adapter",
+                        "reservation hold 會降低 available_amount，release 會增加 available_amount",
+                        "reservation commit 必須經 settlement / ledger posting gate",
+                        "order intake 可以要求 reservation，但不得直接寫 reservation DB",
+                        "matching 不得偷寫 reservation 或 balance_projections",
                         "settlement 必須經過 ledger invariant、idempotency、append-only、reconciliation gate"
                 ),
                 List.of(
@@ -44,6 +51,7 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "ledger append 成功不代表 balance projection 已同步",
                         "balance projection 不可作為資金真相來源",
                         "reservation 不可直接改 ledger，必須經 application boundary",
+                        "reservation hold / release 必須先做 idempotency decision，再做 hold / release",
                         "settlement 必須是 explicit process，不可由 matching 或 order runtime 偷寫 ledger",
                         "所有正式 DB write 必須有 rollback / reconciliation 測試",
                         "所有高風險 runtime 不得 auto-commit"
@@ -54,6 +62,7 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "真正 reservation hold / release",
                         "真正 settlement",
                         "真正交易下單",
+                        "所有 reservation runtime 都屬於 HUMAN_REVIEW_REQUIRED",
                         "任何 production-ready 宣稱"
                 ),
                 List.of(
@@ -81,5 +90,14 @@ public final class TradingRuntimeCoreSafetyPolicy {
      */
     public BalanceProjectionRuntimeDesign describeBalanceProjectionRuntime() {
         return balanceProjectionRuntimePolicy.describe();
+    }
+
+    /**
+     * 建立 reservation hold/release 的設計契約。
+     *
+     * 這只描述 hold / release / commit / cancel 的邊界，不代表可以直接操作 reservation DB。
+     */
+    public ReservationHoldReleaseDesign describeReservationHoldReleaseDesign() {
+        return reservationHoldReleaseDesignPolicy.describe();
     }
 }

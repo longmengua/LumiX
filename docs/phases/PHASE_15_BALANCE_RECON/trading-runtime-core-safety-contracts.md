@@ -14,9 +14,14 @@ idempotency key 才能代表 duplicate prevention contract
 ledger append 成功不代表 balance projection 已同步
 balance projection 不可作為資金真相來源
 reservation 不可直接改 ledger，必須經 application boundary
+reservation hold 會降低 available_amount，release 會增加 available_amount
+reservation commit 必須經 settlement / ledger posting gate
+order intake 可以要求 reservation，但不得直接寫 reservation DB
+matching 不得偷寫 reservation 或 balance_projections
 settlement 必須是 explicit process，不可由 matching 或 order runtime 偷寫 ledger
 所有正式 DB write 必須有 rollback / reconciliation 測試
 所有高風險 runtime 不得 auto-commit
+所有 reservation runtime 都屬於 HUMAN_REVIEW_REQUIRED
 ```
 
 ## P15 內允許的設計工作

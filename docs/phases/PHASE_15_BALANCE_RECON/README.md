@@ -42,6 +42,7 @@ T02 ledger posting integration design gate
 T03 balance projection runtime design gate
 T04 ledger posting controlled runtime gate
 T05 balance projection rebuild runtime gate
+T06 reservation hold/release design gate
 ```
 
 ## 文件索引
@@ -57,6 +58,8 @@ docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T02.md
 docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T03.md
 docs/phases/PHASE_15_BALANCE_RECON/balance-projection-rebuild-gate.md
 docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T05.md
+docs/phases/PHASE_15_BALANCE_RECON/reservation-hold-release-design.md
+docs/phases/PHASE_15_BALANCE_RECON/tasks/P15-T06.md
 ```
 
 ## 運行邊界
