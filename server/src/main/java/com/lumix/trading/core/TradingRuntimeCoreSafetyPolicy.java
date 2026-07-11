@@ -1,5 +1,10 @@
 package com.lumix.trading.core;
 
+import com.lumix.trading.core.posting.LedgerPostingIntegrationDesign;
+import com.lumix.trading.core.posting.LedgerPostingIntegrationPolicy;
+import com.lumix.trading.core.projection.BalanceProjectionRuntimeDesign;
+import com.lumix.trading.core.projection.BalanceProjectionRuntimePolicy;
+
 import java.util.List;
 
 /**
@@ -8,6 +13,9 @@ import java.util.List;
  * 這個 policy 只整理 scope 與 safety contracts，不會接任何 repository、transaction 或 database client。
  */
 public final class TradingRuntimeCoreSafetyPolicy {
+
+    private final LedgerPostingIntegrationPolicy ledgerPostingIntegrationPolicy = new LedgerPostingIntegrationPolicy();
+    private final BalanceProjectionRuntimePolicy balanceProjectionRuntimePolicy = new BalanceProjectionRuntimePolicy();
 
     /**
      * 建立 Trading Runtime Core 的設計契約。
@@ -55,5 +63,23 @@ public final class TradingRuntimeCoreSafetyPolicy {
                         "reconciliation check design"
                 )
         );
+    }
+
+    /**
+     * 建立 ledger posting integration 的設計契約。
+     *
+     * 這只描述正式接線前必須遵守的順序，不代表可以直接過帳。
+     */
+    public LedgerPostingIntegrationDesign describeLedgerPostingIntegration() {
+        return ledgerPostingIntegrationPolicy.describe();
+    }
+
+    /**
+     * 建立 balance projection runtime 的設計契約。
+     *
+     * 這只描述 read model 如何 rebuild / replay / reconcile，不代表可以直接修改 balance_projections。
+     */
+    public BalanceProjectionRuntimeDesign describeBalanceProjectionRuntime() {
+        return balanceProjectionRuntimePolicy.describe();
     }
 }
