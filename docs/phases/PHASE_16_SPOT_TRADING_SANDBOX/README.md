@@ -14,6 +14,8 @@ P16-T01 completed as sandbox scope gate and runtime boundary only; runtime imple
 P16-T02 completed as sandbox order intake boundary only; order persistence / matching / settlement not started.
 P16-T03 completed as sandbox in-memory order book gate only; matching / settlement not started.
 P16-T04 completed as sandbox matching design gate only; matching runtime not started.
+P16-T05 completed as sandbox in-memory matching runtime only; settlement / ledger posting not started.
+P16-T06 completed as sandbox trade/fill result boundary only; settlement runtime not started.
 
 ## Sandbox scope
 
@@ -58,8 +60,10 @@ T01 spot sandbox scope gate and runtime boundaries
 T02 sandbox order intake boundary
 T03 sandbox in-memory order book gate
 T04 sandbox matching design gate
-T05 sandbox settlement boundary
-T06 sandbox no-production review gate
+T05 sandbox in-memory matching runtime
+T06 sandbox trade/fill result boundary
+T07 sandbox settlement boundary
+T08 sandbox no-production review gate
 ```
 
 ## 文件索引
@@ -69,6 +73,8 @@ docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T01.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T02.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T03.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T04.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T05.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T06.md
 ```
 
 ## Runtime boundary rules
@@ -83,6 +89,8 @@ requestId 不是 idempotency guarantee
 idempotency key 才是 duplicate prevention contract
 amount / price / quantity 一律使用 BigDecimal，不得使用 float / double
 matching 只做 design gate，不得宣稱已完成正式撮合 runtime
+matching / trade / fill 只允許 sandbox in-memory runtime，不得寫 DB
+trade/fill result 只代表 settlement input，不代表正式 settlement completed
 ```
 
 ## HUMAN_REVIEW_REQUIRED

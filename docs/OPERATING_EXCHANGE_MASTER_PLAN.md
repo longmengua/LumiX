@@ -20,7 +20,7 @@ Phase 15: COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION
   - NOT futures/liquidation/withdrawal ready
   - NOT exchange ready
   - NOT public user trading ready
-Phase 16: Spot Trading Sandbox - in progress, sandbox gate only
+Phase 16: Spot Trading Sandbox - in progress, sandbox boundary/runtime foundation only
 Phase 17-20: accelerated trading sandbox track - planned, not started
 Phase 21-36: planned, not started
 ```
@@ -109,4 +109,5 @@ P18 最早只能做受限 futures sandbox，不能視為正式合約交易。
 P20 才是較完整 contract trading sandbox gate，但仍然不是正式交易上線門檻。
 production-ready 仍然需要後續 security、ops、risk、liquidity、monitoring、incident response review。
 所有 ledger / balance / reservation / settlement / futures / liquidation / withdrawal / admin / security runtime 都屬於 HUMAN_REVIEW_REQUIRED。
+Phase 16 目前只允許 sandbox in-memory matching 與 trade/fill boundary，不能誤寫成正式 matching 或 settlement runtime。
 ```
