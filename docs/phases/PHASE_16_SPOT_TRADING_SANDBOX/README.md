@@ -18,6 +18,7 @@ P16-T05 completed as sandbox in-memory matching runtime only; settlement / ledge
 P16-T06 completed as sandbox trade/fill result boundary only; settlement runtime not started.
 P16-T07 completed as sandbox settlement design gate only; settlement runtime not started.
 P16-T08 completed as sandbox settlement runtime gate only; ledger posting / balance refresh / reservation commit not started.
+P16-T09 completed as sandbox settlement / ledger integration design gate only; ledger posting runtime not started.
 
 ## Sandbox scope
 
@@ -66,6 +67,7 @@ T05 sandbox in-memory matching runtime
 T06 sandbox trade/fill result boundary
 T07 sandbox settlement boundary
 T08 sandbox settlement runtime gate
+T09 sandbox ledger posting integration design gate
 ```
 
 ## 文件索引
@@ -79,6 +81,7 @@ docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T05.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T06.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T07.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T08.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T09.md
 ```
 
 ## Runtime boundary rules

@@ -11,23 +11,23 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * 驗證 Phase 16-T08 只建立 spot sandbox settlement runtime gate，不會偷接成正式 settlement runtime。
+ * 驗證 Phase 16-T09 只建立 spot sandbox settlement / ledger integration design gate，不會偷接成正式 ledger runtime。
  */
-class P16T08SpotSandboxSettlementRuntimeGateTest {
+class P16T09SpotSandboxLedgerIntegrationDesignGateTest {
 
     /**
-     * 確認 main source 只保存 settlement runtime gate 契約，不會出現正式 runtime token 或寫入 SQL。
+     * 確認 main source 只保存 ledger integration 設計契約，不會出現正式 runtime token 或寫入 SQL。
      *
-     * 這個 case 必須存在，因為 P16-T08 只能產生 sandbox plan candidate，不能偷渡成正式 settlement / ledger / balance runtime。
+     * 這個 case 必須存在，因為 P16-T09 只能定義 settlement plan 與 ledger runtime 的接線邊界，不能偷渡成正式 posting runtime。
      */
     @Test
-    void settlementRuntimeSourcesDoNotContainForbiddenRuntimeTokensOrWriteSql() throws IOException {
+    void ledgerIntegrationSourcesDoNotContainForbiddenRuntimeTokensOrWriteSql() throws IOException {
         List<Path> sourceFiles = List.of(
-                resolveSourceRoot().resolve("SpotSandboxSettlementRuntimeGate.java"),
-                resolveSourceRoot().resolve("SpotSandboxSettlementRuntimeBoundary.java")
+                resolveSourceRoot().resolve("SpotSandboxLedgerIntegrationBoundary.java")
         );
 
         List<String> forbiddenTokens = List.of(
+                "LedgerPostingService",
                 "SettlementService",
                 "SettlementEngine",
                 "TradeSettlementService",
@@ -38,7 +38,6 @@ class P16T08SpotSandboxSettlementRuntimeGateTest {
                 "ReservationService",
                 "OrderPlacementService",
                 "SpotTradingService",
-                "LedgerPostingService",
                 "BalanceMutationService",
                 "BalanceProjectionService",
                 "LedgerPostingRuntimeGate",
@@ -104,25 +103,25 @@ class P16T08SpotSandboxSettlementRuntimeGateTest {
     }
 
     /**
-     * 確認 Phase 16 README 與 task 索引已列出 P16-T08。
+     * 確認 Phase 16 README 與 task 索引已列出 P16-T09。
      *
-     * 這個 case 必須存在，因為 settlement runtime gate 的文件入口就是後續 sandbox 施工與審核的起點。
+     * 這個 case 必須存在，因為 ledger integration design gate 的文件入口就是後續 sandbox 接線與審核的起點。
      */
     @Test
-    void phase16READMEAndTaskIndexIncludeT08() throws IOException {
+    void phase16READMEAndTaskIndexIncludeT09() throws IOException {
         Path docsRoot = resolveDocsRoot();
         String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
 
-        assertTrue(readme.contains("T08 sandbox settlement runtime gate"));
-        assertTrue(readme.contains("P16-T08 completed as sandbox settlement runtime gate only"));
-        assertTrue(readme.contains("settlement runtime not started"));
-        assertTrue(Files.isRegularFile(docsRoot.resolve("tasks/P16-T08.md")));
+        assertTrue(readme.contains("T09 sandbox ledger posting integration design gate"));
+        assertTrue(readme.contains("P16-T09 completed as sandbox settlement / ledger integration design gate only"));
+        assertTrue(readme.contains("ledger posting runtime not started"));
+        assertTrue(Files.isRegularFile(docsRoot.resolve("tasks/P16-T09.md")));
     }
 
     /**
      * 讓測試同時支援從 repo root 與 `server/` 目錄執行。
      *
-     * 這裡只掃 settlement runtime gate / boundary source，避免把同 package 內的 design policy 字樣誤判成 runtime 違規。
+     * 這裡只掃 settlement / ledger integration boundary source，避免把同 package 內的 design policy 字樣誤判成 runtime 違規。
      */
     private static Path resolveSourceRoot() {
         Path repoRelative = Path.of("server/src/main/java/com/lumix/trading/core/spot/settlement");

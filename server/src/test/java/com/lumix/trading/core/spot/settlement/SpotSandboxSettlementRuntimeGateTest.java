@@ -219,7 +219,7 @@ class SpotSandboxSettlementRuntimeGateTest {
         assertTrue(result.plan().ledgerPostingCommandCandidate().lines().stream().allMatch(line -> line.amount().compareTo(BigDecimal.ZERO) > 0));
     }
 
-    private static void assertRejectedMarketSymbol(String sandboxTradeId, String marketSymbol, String expectedReason) {
+    private void assertRejectedMarketSymbol(String sandboxTradeId, String marketSymbol, String expectedReason) {
         SpotSandboxSettlementRuntimeResult result = boundary.plan(settlementInput(
                 sandboxTradeId,
                 marketSymbol,
