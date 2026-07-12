@@ -35,7 +35,7 @@ git commit -m "docs: reset production architecture and agent workflow"
 1. 先讀根目錄 `AGENTS.md`。
 2. 再讀 `AI_AGENT.md`。
 3. 再讀 `docs/ai/AI_CONTEXT_ROUTING.md`。
-4. 目前只允許從 `docs/phases/PHASE_12_DATABASE_SCHEMA/` 開工。
+4. 目前只允許從 `docs/phases/PHASE_17_ORDER_INTAKE/` 開工。
 
 ## 重要原則
 

@@ -25,7 +25,7 @@ Mini engineer / Codex
   +-- AGENTS.md
   +-- AI_AGENT.md
   +-- docs/ai/AI_CONTEXT_ROUTING.md
-  +-- docs/phases/PHASE_12_DATABASE_SCHEMA/README.md
+  +-- docs/phases/PHASE_17_ORDER_INTAKE/README.md
 ```
 
 ## 章節

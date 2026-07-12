@@ -54,8 +54,8 @@ source_of_truth: docs/OPERATING_EXCHANGE_MASTER_PLAN.md
 agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/PHASE_REVIEW_WORKFLOW.md
-next_implementation_phase: docs/phases/PHASE_15_BALANCE_RECON/README.md
-first_task: docs/phases/PHASE_15_BALANCE_RECON/README.md
+next_implementation_phase: docs/phases/PHASE_17_ORDER_INTAKE/README.md
+first_task: docs/phases/PHASE_17_ORDER_INTAKE/README.md
 ```
 
 ## 完成警告

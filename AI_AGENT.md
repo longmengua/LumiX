@@ -50,7 +50,7 @@
 Layer 0: AGENTS.md / AI_AGENT.md
 Layer 1: docs/ai/AI_CONTEXT_ROUTING.md
 Layer 2: domain README, e.g. docs/exchange-core/README.md
-Layer 3: phase task card, e.g. docs/phases/PHASE_12_DATABASE_SCHEMA/tasks/P12-T01.md
+Layer 3: phase task list or task card, e.g. docs/phases/PHASE_17_ORDER_INTAKE/README.md
 ```
 
 禁止在沒有必要時讀取：
@@ -64,17 +64,17 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-開始 第 12 階段 時，請照順序執行：
+開始 第 17 階段 時，請照順序執行：
 
 ```text
 1. Read AGENTS.md
 2. Read AI_PROGRESS.md
 3. Read docs/ai/AI_CONTEXT_ROUTING.md
-4. Read docs/phases/PHASE_12_DATABASE_SCHEMA/README.md
-5. Pick the first unchecked task under docs/phases/PHASE_12_DATABASE_SCHEMA/tasks/
+4. Read docs/phases/PHASE_17_ORDER_INTAKE/README.md
+5. Pick the first unchecked task listed in docs/phases/PHASE_17_ORDER_INTAKE/README.md
 6. Implement only that task
 7. Run the narrowest useful tests
-8. Update the task file status and notes
+8. Update the task note or status and notes
 9. Stop and produce a review summary
 ```
 
@@ -116,7 +116,7 @@ secret management change
 完成任務後輸出：
 
 ```text
-Task: P12-Txx
+Task: P17-Txx
 Files changed:
   - path
 What changed:
@@ -126,5 +126,5 @@ Verification:
 Risk:
   - none / low / HUMAN_REVIEW_REQUIRED
 Next suggested task:
-  - P12-Tyy
+  - P17-Tyy
 ```

@@ -6,7 +6,7 @@
 
 ```text
 Phase 11: 生產架構重整 - 以文件完成
-Phase 12: 生產資料庫結構與 migration - 下一步
+Phase 12: 生產資料庫結構與 migration - completed
 Phase 13: backend module foundation & API boundary - completed
 Phase 14: Immutable Ledger Engine foundation - completed, not production-ready
 Phase 15: COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION
@@ -32,8 +32,8 @@ Phase 16: COMPLETED_FOR_SPOT_SANDBOX_FOUNDATION
   - NOT withdrawal-ready
   - NOT futures/margin/liquidation ready
   - P16-T10 completed as final review gate only; spot sandbox flow foundation已收斂，但 production runtime 仍未開始
-Phase 17-20: accelerated trading sandbox track - planned, not started
-Phase 21-36: planned, not started
+Phase 17: Futures Core Model - next implementation phase, planned, not started
+Phase 18-36: planned, not started
 ```
 
 ## Master phase ladder

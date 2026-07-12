@@ -10,13 +10,13 @@ First read:
 - AI_AGENT.md
 - AI_PROGRESS.md
 - docs/ai/AI_CONTEXT_ROUTING.md
-- docs/phases/PHASE_12_DATABASE_SCHEMA/README.md
+- docs/phases/PHASE_17_ORDER_INTAKE/README.md
 
 Current allowed phase:
-- Phase 12 - Production Database Schema & Migration
+- Phase 17 - Futures Core Model
 
-Pick the first incomplete P12 task under:
-- docs/phases/PHASE_12_DATABASE_SCHEMA/tasks/
+Pick the first incomplete P17 task listed in:
+- docs/phases/PHASE_17_ORDER_INTAKE/README.md
 
 Rules:
 - Do not jump phases.

@@ -18,5 +18,5 @@ PHASE_20_FEE_ENGINE/           planned
 目前可執行的工作：
 
 ```text
-docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/
+docs/phases/PHASE_17_ORDER_INTAKE/
 ```
