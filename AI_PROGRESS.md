@@ -19,6 +19,8 @@ NOT futures/liquidation/withdrawal ready
 NOT exchange ready
 NOT public user trading ready
 Phase 16: in progress as spot trading sandbox scope gate/boundary/runtime foundation, runtime implementation incomplete
+P16-T07 completed as sandbox settlement design gate only; settlement runtime not started
+P16-T08 completed as sandbox settlement runtime gate only; ledger posting / balance refresh / reservation commit not started
 Phase 17-36: planned, not started
 Next implementation phase: Phase 16 - Spot Trading Sandbox
 ```

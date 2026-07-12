@@ -57,6 +57,8 @@ public final class SpotSandboxTradeFillBoundary {
     public SpotSandboxSettlementInput toSettlementInput(SpotSandboxTradeFill tradeFill) {
         Objects.requireNonNull(tradeFill, "tradeFill must not be null");
         return new SpotSandboxSettlementInput(
+                "sandbox-settlement-request-" + tradeFill.sandboxTradeId(),
+                "sandbox-settlement-idempotency-" + tradeFill.sandboxTradeId(),
                 tradeFill.sandboxTradeId(),
                 tradeFill.marketSymbol(),
                 tradeFill.buySandboxOrderId(),

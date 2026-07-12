@@ -21,6 +21,8 @@ Phase 15: COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION
   - NOT exchange ready
   - NOT public user trading ready
 Phase 16: Spot Trading Sandbox - in progress, sandbox boundary/runtime foundation only
+  - P16-T07 completed as sandbox settlement design gate only; settlement runtime not started
+  - P16-T08 completed as sandbox settlement runtime gate only; ledger posting / balance refresh / reservation commit not started
 Phase 17-20: accelerated trading sandbox track - planned, not started
 Phase 21-36: planned, not started
 ```

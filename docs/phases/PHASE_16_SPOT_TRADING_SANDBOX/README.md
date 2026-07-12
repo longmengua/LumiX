@@ -16,6 +16,8 @@ P16-T03 completed as sandbox in-memory order book gate only; matching / settleme
 P16-T04 completed as sandbox matching design gate only; matching runtime not started.
 P16-T05 completed as sandbox in-memory matching runtime only; settlement / ledger posting not started.
 P16-T06 completed as sandbox trade/fill result boundary only; settlement runtime not started.
+P16-T07 completed as sandbox settlement design gate only; settlement runtime not started.
+P16-T08 completed as sandbox settlement runtime gate only; ledger posting / balance refresh / reservation commit not started.
 
 ## Sandbox scope
 
@@ -63,7 +65,7 @@ T04 sandbox matching design gate
 T05 sandbox in-memory matching runtime
 T06 sandbox trade/fill result boundary
 T07 sandbox settlement boundary
-T08 sandbox no-production review gate
+T08 sandbox settlement runtime gate
 ```
 
 ## 文件索引
@@ -75,6 +77,8 @@ docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T03.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T04.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T05.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T06.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T07.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T08.md
 ```
 
 ## Runtime boundary rules
@@ -91,6 +95,7 @@ amount / price / quantity 一律使用 BigDecimal，不得使用 float / double
 matching 只做 design gate，不得宣稱已完成正式撮合 runtime
 matching / trade / fill 只允許 sandbox in-memory runtime，不得寫 DB
 trade/fill result 只代表 settlement input，不代表正式 settlement completed
+settlement 只允許 design gate，不得偷渡成正式 settlement runtime
 ```
 
 ## HUMAN_REVIEW_REQUIRED

@@ -42,11 +42,16 @@ class SpotSandboxTradeFillBoundaryTest {
         assertEquals(new BigDecimal("5002.0000"), tradeFill.quoteAmount());
         assertEquals(SpotSandboxTradeFillStatus.CREATED_FOR_SANDBOX, tradeFill.status());
         assertEquals("sandbox-trade-1", settlementInput.sandboxTradeId());
+        assertNotNull(settlementInput.requestId());
+        assertNotNull(settlementInput.idempotencyKey());
         assertEquals("BTC-USDT", settlementInput.marketSymbol());
         assertEquals(new BigDecimal("50020.00"), settlementInput.price());
         assertEquals(new BigDecimal("0.10"), settlementInput.quantity());
         assertEquals(new BigDecimal("5002.0000"), settlementInput.quoteAmount());
         assertEquals(SpotSandboxTradeFillStatus.SETTLEMENT_NOT_STARTED, settlementInput.status());
+        assertFalse(settlementInput.requestId().isBlank());
+        assertFalse(settlementInput.idempotencyKey().isBlank());
+        assertFalse(settlementInput.requestId().equals(settlementInput.idempotencyKey()));
         assertEquals(1, settlementInputs.size());
         assertEquals(SpotSandboxTradeFillStatus.SETTLEMENT_NOT_STARTED, settlementInputs.get(0).status());
         assertFalse(settlementInput.toString().contains("settled"));
