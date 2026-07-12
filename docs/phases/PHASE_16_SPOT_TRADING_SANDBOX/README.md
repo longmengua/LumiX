@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress
+Phase 16: COMPLETED_FOR_SPOT_SANDBOX_FOUNDATION
 ```
 
 ## 目標
@@ -19,6 +19,7 @@ P16-T06 completed as sandbox trade/fill result boundary only; settlement runtime
 P16-T07 completed as sandbox settlement design gate only; settlement runtime not started.
 P16-T08 completed as sandbox settlement runtime gate only; ledger posting / balance refresh / reservation commit not started.
 P16-T09 completed as sandbox settlement / ledger integration design gate only; ledger posting runtime not started.
+P16-T10 completed as final review gate only; spot sandbox flow foundation已收斂，但 production runtime 仍未開始。
 
 ## Sandbox scope
 
@@ -56,6 +57,55 @@ reconciliation boundary
 正式交易上線宣稱
 ```
 
+## Final status wording
+
+```text
+Phase 16: COMPLETED_FOR_SPOT_SANDBOX_FOUNDATION
+Spot sandbox flow foundation completed
+NOT production-ready
+NOT public user trading ready
+NOT real-money ready
+NOT ledger-posting-integrated
+NOT balance-updating
+NOT reservation-backed
+NOT settlement-finalized
+NOT withdrawal-ready
+NOT futures/margin/liquidation ready
+```
+
+## 目前完成的範圍
+
+```text
+P16-T01 spot sandbox scope gate and runtime boundaries
+P16-T02 spot sandbox order intake boundary
+P16-T03 spot sandbox in-memory order book gate
+P16-T04 spot sandbox matching design gate
+P16-T05 spot sandbox in-memory matching runtime
+P16-T06 spot sandbox trade/fill result boundary
+P16-T07 spot sandbox settlement design gate
+P16-T08 spot sandbox settlement runtime gate
+P16-T09 spot sandbox ledger posting integration design gate
+P16-T10 phase 16 final review gate
+```
+
+## 目前尚未完成的 runtime
+
+```text
+DB order persistence
+DB trade persistence
+reservation runtime
+actual ledger posting integration
+balance projection refresh integration
+reconciliation runtime
+idempotency store / lookup
+outbox / audit runtime
+production security / ops / monitoring
+public user trading
+real money movement
+withdrawal
+futures / margin / liquidation
+```
+
 ## 高層 task list
 
 ```text
@@ -68,6 +118,7 @@ T06 sandbox trade/fill result boundary
 T07 sandbox settlement boundary
 T08 sandbox settlement runtime gate
 T09 sandbox ledger posting integration design gate
+T10 sandbox final review gate
 ```
 
 ## 文件索引
@@ -82,6 +133,8 @@ docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T06.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T07.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T08.md
 docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T09.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/tasks/P16-T10.md
+docs/phases/PHASE_16_SPOT_TRADING_SANDBOX/phase-16-final-review.md
 ```
 
 ## Runtime boundary rules
@@ -107,4 +160,5 @@ settlement 只允許 design gate，不得偷渡成正式 settlement runtime
 所有 money movement / settlement / reservation runtime 都屬於 HUMAN_REVIEW_REQUIRED。
 所有 order / matching / settlement / reservation / ledger / balance runtime 都屬於 HUMAN_REVIEW_REQUIRED。
 任何把 sandbox 誤寫成正式交易完成的行為都屬於 HUMAN_REVIEW_REQUIRED。
+任何把 Phase 16 誤寫成 production-ready、exchange ready、public trading ready、real-money ready、settlement finalized、balance updated、reservation committed 的行為都屬於 HUMAN_REVIEW_REQUIRED。
 ```

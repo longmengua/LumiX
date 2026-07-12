@@ -66,7 +66,7 @@ class P15T09Phase15FinalReviewGateTest {
         assertTrue(progress.contains("NOT futures/liquidation/withdrawal ready"));
         assertTrue(progress.contains("NOT exchange ready"));
         assertTrue(progress.contains("NOT public user trading ready"));
-        assertTrue(progress.contains("Next implementation phase: Phase 16 - Spot Trading Sandbox"));
+        assertTrue(progress.contains("Next implementation phase: Phase 17 - Futures Core Model"));
         assertFalse(progress.contains("Phase 15: in progress as trading runtime core foundation/review gates, runtime implementation incomplete"));
 
         assertTrue(finalReview.contains("Phase 15: COMPLETED_FOR_TRADING_RUNTIME_CORE_FOUNDATION"));
