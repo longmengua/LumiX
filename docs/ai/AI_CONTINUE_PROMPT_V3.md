@@ -1,4 +1,4 @@
-# AI_CONTINUE_PROMPT_V3.md
+# AI 接續施工提示詞
 
 當你要用 Codex 或其他 coding agent 繼續工作時，請使用這個 prompt。
 

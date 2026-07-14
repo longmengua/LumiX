@@ -50,10 +50,10 @@ docs/   : production architecture and phase planning documents
 ## 目前任務指引
 
 ```text
-source_of_truth: docs/OPERATING_EXCHANGE_MASTER_PLAN.md
+source_of_truth: docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md
 agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
-phase_governance: docs/PHASE_REVIEW_WORKFLOW.md
+phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 next_implementation_phase: docs/phases/PHASE_17_ORDER_INTAKE/README.md
 first_task: docs/phases/PHASE_17_ORDER_INTAKE/README.md
 ```

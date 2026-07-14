@@ -1,4 +1,4 @@
-# AI_START_HERE.md
+# AI 開始入口
 
 LumiX 目前進入正式營運交易所架構化施工階段。請不要把這個專案當成 demo 或 MVP。
 
@@ -32,3 +32,5 @@ docs/phases/PHASE_17_ORDER_INTAKE/README.md
 - 不要實作真實提款。
 - 不要把 stub 改名成 production。
 - 不要把 mock adapter 接成正式邏輯。
+
+如果你只是想找文件入口，先回到 `docs/README.md`；如果你是要真的開工，才從上面的 agent 路徑開始。

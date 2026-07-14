@@ -16,17 +16,17 @@ mkdir -p .backup
 mv docs .backup/docs.before-production-reset.$(date +%Y%m%d%H%M%S) 2>/dev/null || true
 
 # 3. 解壓本包，把 docs/ 與 AI agent 檔案放到 repo 根目錄
-#    解壓後應該看到：docs/、AGENTS.md、AI_AGENT.md、AI_START_HERE.md、AI_PROGRESS.md、AI_MODEL_GATE.md
+#    解壓後應該看到：docs/、AGENTS.md、AI_AGENT.md、AI_PROGRESS.md，以及 docs/ai/ 內的 AI 輔助文件
 
 # 4. 檢查文件純文字圖：若出現 Mermaid 或 PlantUML 區塊，請改成純文字圖
-grep -R -i "mermaid\|plantuml" docs AGENTS.md AI_AGENT.md AI_START_HERE.md AI_PROGRESS.md AI_MODEL_GATE.md || true
+grep -R -i "mermaid\|plantuml" docs AGENTS.md AI_AGENT.md AI_PROGRESS.md || true
 
 # 5. 檢查變更
 git status --short
 git diff --stat
 
 # 6. commit
-git add docs AGENTS.md AI_AGENT.md AI_START_HERE.md AI_PROGRESS.md AI_MODEL_GATE.md AI_CONTINUE_PROMPT_V3.md README_DOCS_REPLACEMENT.md
+git add docs AGENTS.md AI_AGENT.md AI_PROGRESS.md
 git commit -m "docs: reset production architecture and agent workflow"
 ```
 

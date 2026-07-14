@@ -16,7 +16,7 @@ Backend transaction boundary      docs/backend/transaction-boundary.md
 API contract                      docs/backend/api-contract-guidelines.md
 Frontend page work                docs/frontend/page-map.md
 Operations / deployment           docs/operations/deployment-runbook.md
-Readiness review                  docs/PRODUCTION_READINESS_GATES.md
+Readiness review                  docs/governance/PRODUCTION_READINESS_GATES.md
 ```
 
 ## Token budget rule

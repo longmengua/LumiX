@@ -7,11 +7,11 @@
 - `docs/`：完整新文件目錄。
 - `AGENTS.md`：Codex / agent 優先讀取的根規則。
 - `AI_AGENT.md`：AI 施工規則、上下文路由、Phase 17 開工指令。
-- `AI_START_HERE.md`：人與 AI 都能讀的入口。
+- `docs/ai/AI_START_HERE.md`：人與 AI 都能讀的入口。
 - `AI_PROGRESS.md`：目前權威進度。
-- `AI_MODEL_GATE.md`：不同 AI 能做什麼、不能做什麼。
-- `AI_CONTINUE_PROMPT_V3.md`：接續施工提示詞。
-- `REPLACE_DOCS.md`：替換指令。
+- `docs/ai/AI_MODEL_GATE.md`：不同 AI 能做什麼、不能做什麼。
+- `docs/ai/AI_CONTINUE_PROMPT_V3.md`：接續施工提示詞。
+- `docs/meta/REPLACE_DOCS.md`：替換指令。
 
 ## 設計重點
 

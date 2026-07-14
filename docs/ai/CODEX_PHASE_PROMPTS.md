@@ -14,6 +14,6 @@ Stop with a review summary.
 ## Review 提示詞
 
 ```text
-Review this change against AGENTS.md and docs/PHASE_REVIEW_WORKFLOW.md.
+Review this change against AGENTS.md and docs/governance/PHASE_REVIEW_WORKFLOW.md.
 Check for scope creep, phase jumping, money-impacting changes, missing tests, schema risks, and whether HUMAN_REVIEW_REQUIRED is needed.
 ```

@@ -1,4 +1,4 @@
-# AI_MODEL_GATE.md
+# AI 能力邊界
 
 本文件定義不同 AI agent 可以做什麼。
 
@@ -21,7 +21,7 @@
 
 ## Mini 可做
 
-- 一次只執行一個第 12 階段 task。
+- 一次只執行一個目前允許 phase 的 task；目前為 Phase 17 task。
 - Add migrations following the approved schema design.
 - Add tests that validate schema shape and constraints.
 - 更新 task status 文件。
