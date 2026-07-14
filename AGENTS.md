@@ -92,6 +92,17 @@ security bypass
 必要的技術名詞可以保留英文縮寫，但應優先提供中文語意，並在第一次出現時補上中文說明。
 圖內標籤、流程說明與狀態名稱也應優先中文化，避免文件主體混用英文。
 
+文件目錄治理規則：
+
+- `docs/` root 只保留總索引與主題資料夾，不再新增散落的大型主題文件。
+- 權威規則、phase review 與 readiness gate 只放 `docs/governance/`。
+- 路線圖、phase 相依與規劃性文件只放 `docs/planning/`。
+- 專案總覽、詞彙表與低風險背景參考只放 `docs/reference/`。
+- AI workflow、prompt、routing 與 agent 協作文件只放 `docs/ai/`。
+- 架構、產品、後端、前端、營運、exchange-core 文件各自留在對應主題資料夾。
+- Phase 任務、task status、implementation notes 只放 `docs/phases/`。
+- 若新增文件不屬於上述分類，必須先更新對應 `README.md` 的路由說明，再新增檔案。
+
 允許：
 
 ```text

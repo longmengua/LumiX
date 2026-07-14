@@ -65,6 +65,7 @@ docs/
 - `README.md` 只做路由，不重寫其他文件已定義的規則。
 - 權威規則放 `docs/governance/`，規劃放 `docs/planning/`，背景參考放 `docs/reference/`。
 - Phase 任務與 implementation notes 只放 `docs/phases/`，避免規則散落在其他目錄。
+- 新增文件時，先判斷應落在哪個主題資料夾；不要因為方便就回填到 `docs/` root。
 
 ## 圖表規則
 
