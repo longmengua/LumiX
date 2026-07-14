@@ -13,6 +13,9 @@ import java.util.Objects;
  *
  * 這個 model 只表達最小必要的 futures account 身分與生命週期資訊，方便 Phase 17 逐步補上
  * position / leverage / margin check，但不把任何 runtime money movement 接進來。
+ *
+ * canonical constructor 是這個型別的唯一 invariant boundary；`open(...)` 只是建立新 ACTIVE
+ * isolated account 的 convenience factory，不是唯一建構路徑。
  */
 public record FuturesAccount(
         AccountId accountId,
@@ -25,10 +28,10 @@ public record FuturesAccount(
 ) {
 
     /**
-     * 建立 futures account 的 sandbox 初始狀態。
+     * 建立新的 ACTIVE isolated futures account。
      *
-     * 目前只允許 ACTIVE + ISOLATED，因為 Phase 17-T01 只是在描述 account model，
-     * 還沒有任何 cross margin、position、liquidation 或 funding runtime。
+     * 這只是方便呼叫端快速建立標準初始狀態的 convenience factory；真正的不變式仍由
+     * canonical constructor 負責，因此 rehydration 或直接建構都會受到同一組驗證保護。
      */
     public static FuturesAccount open(
             AccountId accountId,

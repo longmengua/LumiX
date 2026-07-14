@@ -18,13 +18,13 @@ import org.junit.jupiter.api.Test;
 class FuturesAccountTest {
 
     /**
-     * 確認 legal creation path 會把 futures account 固定成 ACTIVE + ISOLATED。
+     * 確認 convenience factory 會建立標準的 ACTIVE + ISOLATED futures account。
      *
-     * 這個 case 必須存在，因為 T01 的目標是先把 futures account 的最小可用模型釘死，
-     * 讓後續 position / leverage / margin check 能夠依賴一致的 account 前置條件。
+     * 這個 case 必須存在，因為 open(...) 只是快速建立標準初始狀態的 helper，
+     * 不是取代 canonical constructor 的唯一入口。
      */
     @Test
-    void openCreatesActiveIsolatedFuturesAccount() {
+    void openCreatesConvenienceActiveIsolatedFuturesAccount() {
         Instant createdAt = Instant.parse("2026-07-14T01:02:03Z");
 
         FuturesAccount account = FuturesAccount.open(
@@ -41,6 +41,36 @@ class FuturesAccountTest {
         assertEquals(new AssetSymbol("USDT"), account.settlementAsset());
         assertEquals(createdAt, account.createdAt());
         assertEquals(createdAt, account.updatedAt());
+    }
+
+    /**
+     * 確認 canonical constructor 可以直接建立有效 futures account。
+     *
+     * 這個 case 必須存在，因為 canonical constructor 是 rehydration 與直接建構的共同驗證邊界，
+     * 不能把所有合法建構都誤寫成只剩 convenience factory。
+     */
+    @Test
+    void canonicalConstructorAllowsDirectInstantiation() {
+        Instant createdAt = Instant.parse("2026-07-14T02:03:04Z");
+        Instant updatedAt = Instant.parse("2026-07-14T02:03:05Z");
+
+        FuturesAccount account = new FuturesAccount(
+                new AccountId("futures-acct-004"),
+                new UserId("user-004"),
+                AccountStatus.CLOSED,
+                FuturesMarginMode.ISOLATED,
+                new AssetSymbol("USDT"),
+                createdAt,
+                updatedAt
+        );
+
+        assertEquals(new AccountId("futures-acct-004"), account.accountId());
+        assertEquals(new UserId("user-004"), account.ownerUserId());
+        assertEquals(AccountStatus.CLOSED, account.status());
+        assertEquals(FuturesMarginMode.ISOLATED, account.marginMode());
+        assertEquals(new AssetSymbol("USDT"), account.settlementAsset());
+        assertEquals(createdAt, account.createdAt());
+        assertEquals(updatedAt, account.updatedAt());
     }
 
     /**
