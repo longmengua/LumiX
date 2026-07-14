@@ -1,26 +1,26 @@
 # 非功能需求
 
-## Reliability
+## 可靠性
 
-- All effectful commands must be idempotent.
-- Database trans動作 boundaries must be explicit.
-- Outbox delivery must be retryable.
-- Workers must tolerate duplicate messages.
+- 所有會產生副作用的指令都必須具備冪等性。
+- 資料庫交易邊界必須明確。
+- Outbox 投遞必須可重試。
+- Worker 必須能容忍重複訊息。
 
-## Security
+## 安全性
 
-- Admin 動作s require audit trail.
-- 提款al signing requires least privilege and separation.
+- 管理員動作需要完整稽核軌跡。
+- 提款簽章需要最小權限與職責分離。
 - 密鑰不得出現在日誌或資料庫表中。
-- Risk bypass must require human approval.
+- 風控繞過必須經過人工核准。
 
-## Performance
+## 效能
 
-- Trading APIs should avoid unnecessary cross-service round trips.
+- 交易 API 應避免不必要的跨服務往返。
 - 餘額讀取應使用投影資料表。
-- Matching core should be deterministic and benchmarkable.
+- 撮合核心應具備 deterministic 與可基準測試的特性。
 
-## Auditability
+## 可稽核性
 
-- 帳本, order, trade, withdrawal, deposit, admin 動作, and risk decision must be queryable by correlation ID.
-- Data correction must be append-only where funds are involved.
+- 帳本、訂單、成交、提款、入金、管理員動作與風控決策都必須可透過 correlation ID 查詢。
+- 涉及資金的資料修正必須採 append-only 方式。

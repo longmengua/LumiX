@@ -1,59 +1,59 @@
 # 執行期流程
 
-## 入金 flow
+## 入金流程
 
 ```text
-User              Chain Listener       Wallet Service       Ledger        Balance
+使用者            鏈上監聽器           錢包服務           帳本          餘額
  |                      |                    |                 |             |
- |-- deposit address -->|                    |                 |             |
- |                      |-- tx observed ---->|                 |             |
- |                      |-- confirmations -->|                 |             |
- |                      |                    |-- credit cmd -->|             |
- |                      |                    |                 |-- entry ---->|
+ |-- 入金地址 ------->|                    |                 |             |
+ |                      |-- 觀測到交易 ---->|                 |             |
+ |                      |-- 確認數 --------->|                 |             |
+ |                      |                    |-- 入帳指令 ---->|             |
+ |                      |                    |                 |-- 寫入 ----->|
  |                      |                    |                 |             |
- |<--------------------- balance updated after credit ------------------------|
+ |<--------------------- 完成入帳後才更新餘額 -------------------------------|
 ```
 
-入金 observed is not deposit credited. Credit happens only after 確認政策 passes.
+觀測到入金交易，不代表已完成入金入帳。只有在確認政策通過後，才會發生入帳。
 
-## Spot order flow
+## 現貨下單流程
 
 ```text
-User/API        Order Service      Reservation       Matching       Settlement       Ledger
+使用者/API      訂單服務          凍結             撮合          結算             帳本
   |                  |                  |                |               |              |
-  |-- place order -->|                  |                |               |              |
-  |                  |-- reserve funds ->|                |               |              |
-  |                  |<-- reservation id-|                |               |              |
-  |                  |-- send order --------------------->|               |              |
-  |                  |                  |                |-- match ------>|              |
-  |                  |                  |                |               |-- entries -->|
-  |<---------------- accepted / filled / partially filled ---------------------|
+  |-- 送出訂單 ----->|                  |                |               |              |
+  |                  |-- 凍結資金 ----->|                |               |              |
+  |                  |<-- 凍結編號 -----|                |               |              |
+  |                  |-- 傳送訂單 ---------------------->|               |              |
+  |                  |                  |                |-- 撮合 ------->|              |
+  |                  |                  |                |               |-- 寫入 ----->|
+  |<---------------- 已接受 / 已成交 / 部分成交 ----------------------------|
 ```
 
-## Cancel order flow
+## 取消訂單流程
 
 ```text
-User/API       Order Service       Matching       Reservation       Ledger
+使用者/API     訂單服務           撮合          凍結             帳本
   |                 |                 |                |              |
-  |-- cancel ------>|                 |                |              |
-  |                 |-- cancel ------>|                |              |
-  |                 |<-- result ------|                |              |
-  |                 |-- release remaining hold --------->|              |
-  |<---------------- final order state ---------------------------------------|
+  |-- 取消 -------->|                 |                |              |
+  |                 |-- 取消 ------->|                |              |
+  |                 |<-- 結果 -------|                |              |
+  |                 |-- 釋放剩餘凍結 ------------------>|              |
+  |<---------------- 最終訂單狀態 ------------------------------------------|
 ```
 
-## 提款al flow
+## 提款流程
 
 ```text
-User/API       Wallet Service       Risk/Admin       Reservation       Signer       Chain
+使用者/API     錢包服務           風控/管理員     凍結             簽章者       鏈
   |                 |                  |                 |              |           |
-  |-- request ----->|                  |                 |              |           |
-  |                 |-- reserve funds ->|                 |              |           |
-  |                 |-- risk review --------------------->|              |           |
-  |                 |<---------------- approved / rejected|              |           |
-  |                 |-- sign request ---------------------------------->|           |
-  |                 |                                      |-- broadcast --------->|
-  |<---------------- status: requested/approved/sent/confirmed/failed --------|
+  |-- 提款請求 ---->|                  |                 |              |           |
+  |                 |-- 凍結資金 ----->|                 |              |           |
+  |                 |-- 風控審查 ----------------------->|              |           |
+  |                 |<---------------- 已核准 / 已拒絕 ---|              |           |
+  |                 |-- 簽章請求 --------------------------------------->|           |
+  |                 |                                      |-- 廣播 --------->|
+  |<---------------- 狀態：請求中 / 已核准 / 已送出 / 已確認 / 失敗 -------|
 ```
 
-提款al requested is not withdrawal paid. Signing and broadcast require stronger controls than ordinary API calls.
+「請求中」不代表提款已支付。簽章與廣播需要比一般 API 更嚴格的控制。

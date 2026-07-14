@@ -2,31 +2,31 @@
 
 ```text
 +---------------------+          +---------------------+
-| CDN / Edge          | -------> | Web App             |
+| CDN / 邊緣          | -------> | 網頁應用程式        |
 +---------------------+          +---------------------+
                                           |
                                           v
 +---------------------+          +---------------------+
-| Load Balancer       | -------> | API Pods            |
+| 負載平衡器          | -------> | API Pod             |
 +---------------------+          +---------------------+
                                           |
                   +-----------------------+-----------------------+
                   |                       |                       |
                   v                       v                       v
         +------------------+    +------------------+    +------------------+
-        | Worker Pods      |    | PostgreSQL       |    | Redis            |
+| Worker Pod       |    | PostgreSQL       |    | Redis            |
         +------------------+    +------------------+    +------------------+
                   |
                   v
         +------------------+    +------------------+
-        | Chain Nodes      |    | Signing Boundary |
+| 鏈節點           |    | 簽章邊界        |
         +------------------+    +------------------+
 ```
 
-## Deployment notes
+## 部署備註
 
-- API pods are stateless.
-- PostgreSQL is the critical stateful dependency.
-- Redis is replaceable and must not contain unique funds truth.
-- Signing boundary should be isolated from public API path.
-- Chain listener should be idempotent and replayable.
+- API Pod 是無狀態的。
+- PostgreSQL 是關鍵的有狀態依賴。
+- Redis 可替換，且不得保存唯一的資金真相。
+- 簽章邊界應與公開 API 路徑隔離。
+- 鏈上監聽器必須具備冪等與可重放特性。

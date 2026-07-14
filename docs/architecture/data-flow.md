@@ -1,36 +1,36 @@
 # 資料流
 
-## Command flow
+## 指令流程
 
 ```text
-Client command
-  -> API validation
-  -> authorization
-  -> idempotency check
-  -> application service
-  -> domain rule
-  -> database transaction
-  -> outbox event
-  -> worker delivery
+用戶指令
+  -> API 驗證
+  -> 授權
+  -> 冪等性檢查
+  -> 應用服務
+  -> 領域規則
+  -> 資料庫交易
+  -> outbox 事件
+  -> worker 投遞
 ```
 
-## Query flow
+## 查詢流程
 
 ```text
-Client query
-  -> API validation
-  -> authorization
-  -> read model / projection
-  -> response
+用戶查詢
+  -> API 驗證
+  -> 授權
+  -> 讀模型 / 投影
+  -> 回應
 ```
 
 ## 真相來源規則
 
 ```text
-Ledger journal     = truth for funds
-Balance projection = derived cache for query speed
-Order table        = truth for order lifecycle
-Trade table        = truth for executed matches
-Outbox table       = truth for pending side effects
-Audit log          = truth for privileged human/system actions
+帳本日誌          = 資金真相
+餘額投影          = 查詢加速用的衍生快取
+訂單表            = 訂單生命週期真相
+成交表            = 已執行成交的真相
+Outbox 表         = 待處理副作用的真相
+稽核日誌          = 高權限人工 / 系統動作的真相
 ```

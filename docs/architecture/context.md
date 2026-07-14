@@ -2,32 +2,32 @@
 
 ```text
 +-------------------+                  +-------------------+
-| Retail user       |                  | Operator          |
+| 零售使用者        |                  | 營運人員          |
 +-------------------+                  +-------------------+
           |                                      |
           v                                      v
 +-------------------+                  +-------------------+
-| LumiX Web         |                  | Admin Console     |
+| LumiX 網頁        |                  | 管理控制台        |
 +-------------------+                  +-------------------+
           |                                      |
           +------------------+-------------------+
                              |
                              v
                     +-------------------+
-                    | LumiX Backend     |
+                    | LumiX 後端        |
                     +-------------------+
                              |
           +------------------+------------------+
           |                  |                  |
           v                  v                  v
 +-------------------+ +-------------------+ +-------------------+
-| Database          | | Event / Workers   | | External Chains   |
+| 資料庫            | | 事件 / Worker      | | 外部鏈            |
 +-------------------+ +-------------------+ +-------------------+
 ```
 
 ## 外部角色
 
-- Retail users create accounts, deposit, trade, and withdraw.
-- Operators manage markets, risk, incidents, and reconciliation.
-- External chains provide trans動作 observations and settlement networks.
-- Future custody providers may own signing boundaries.
+- 一般使用者會建立帳戶、入金、交易與提款。
+- 營運人員負責市場、風控、事故與對帳。
+- 外部鏈提供交易觀測與結算網路。
+- 未來的託管服務商可能負責簽章邊界。
