@@ -33,8 +33,21 @@ P16-T10 completed as final review gate only; spot sandbox flow foundation已收�
 P16-T07 completed as sandbox settlement design gate only; settlement runtime not started
 P16-T08 completed as sandbox settlement runtime gate only; ledger posting / balance refresh / reservation commit not started
 P16-T09 completed as sandbox settlement / ledger integration design gate only; ledger posting runtime not started
-Phase 17-36: planned, not started
-Next implementation phase: Phase 17 - Futures Core Model
+Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW
+Futures core sandbox model foundation implemented
+NOT production-ready
+NOT public futures trading ready
+NOT real-money ready
+NOT order-intake-ready
+NOT matching-ready
+NOT settlement-ready
+NOT ledger-integrated
+NOT balance-reservation-backed
+NOT liquidation-ready
+NOT funding-ready
+NOT full margin-engine-ready
+Phase 18-36: planned, not started
+Next implementation phase: none before Phase 17 human review approval; Phase 18 not started
 ```
 
 ## 目前倉庫現況
@@ -54,8 +67,9 @@ source_of_truth: docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md
 agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
-next_implementation_phase: docs/phases/PHASE_17_ORDER_INTAKE/README.md
-first_task: docs/phases/PHASE_17_ORDER_INTAKE/README.md
+phase_17_review_status: docs/phases/PHASE_17_ORDER_INTAKE/phase-17-final-review.md
+next_implementation_phase: none before Phase 17 human review approval
+first_task: docs/phases/PHASE_17_ORDER_INTAKE/phase-17-final-review.md
 ```
 
 ## 完成警告

@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress
+implementation completed / pending human review
 ```
 
 ## 目標
@@ -35,8 +35,8 @@ formal futures trading
 T01 futures account model - completed
 T02 isolated margin position model - completed
 T03 leverage config model - completed
-T04 margin check gate - pending
-T05 no-formal-trading review - pending
+T04 margin check gate - completed
+T05 no-formal-trading review - implementation completed / pending human review
 ```
 
 ## Sandbox 限制
@@ -44,6 +44,14 @@ T05 no-formal-trading review - pending
 ```text
 這一階段只建立 futures core model，不能宣稱可正式交易。
 futures / margin runtime 仍屬 HUMAN_REVIEW_REQUIRED。
+no real money
+no order intake
+no matching
+no settlement
+no ledger mutation
+no balance reservation
+no liquidation
+no funding
 ```
 
 ## HUMAN_REVIEW_REQUIRED
@@ -51,6 +59,7 @@ futures / margin runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 ```text
 任何 futures / margin runtime 變更都屬於 HUMAN_REVIEW_REQUIRED。
 任何把 isolated margin 誤寫成完整 futures trading 的行為都屬於 HUMAN_REVIEW_REQUIRED。
+Phase 17 尚未獲得人工完成批准。
 ```
 
 ## T01 implementation notes
@@ -87,3 +96,37 @@ futures / margin runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 - Validation commands: `./mvnw -q -Dtest=FuturesAccountTest,FuturesPositionTest,FuturesMarketSymbolTest,FuturesLeverageTest,IsolatedLeverageConfigTest test`，以及 `./mvnw test`。
 - Sandbox limitations: 目前沒有硬編碼最大槓桿倍數，也沒有 initial margin、maintenance margin、available margin、margin ratio、PnL、liquidation price、funding fee、cross margin 或 hedge mode。
 - HUMAN_REVIEW_REQUIRED: 所有 futures / margin 相關變更仍保留人工審核前提，Phase 17 不代表正式 futures runtime 已啟用。
+
+## T04 implementation notes
+
+- Scope: 只建立 `com.lumix.trading.core.futures.margin` 的 pure in-memory isolated initial-margin sufficiency gate，不接 balance lookup、reservation、order intake、position creation、matching、settlement、liquidation、funding、ledger mutation 或 persistence。
+- Package placement: `IsolatedMarginCheckRequest`、`FuturesMarginCheckStatus`、`FuturesMarginCheckReason`、`IsolatedMarginCheckResult`、`IsolatedMarginCheckGate` 都放在 `com.lumix.trading.core.futures.margin`，避免把 margin gate 規則分散到 account、position 或 leverage package。
+- Runtime shape: gate 保持 pure、stateless、deterministic、thread-safe by immutability，沒有 Spring dependency、I/O、clock、database 或 external service dependency。
+- Request inputs: `FuturesAccount`、`IsolatedLeverageConfig`、`FuturesMarketSymbol`、`FuturesPositionQuantity`、`FuturesEntryPrice`、`AssetSymbol availableMarginAsset`、`MoneyAmount availableMargin`。
+- Request invariants: 所有欄位不可為 null，`availableMargin` 不可為負數，但可為 0；`quantity` 與 `entryPrice` 沿用既有 value object 的正數 invariant；request 不接受 `AccountBalanceView`、repository、service 或裸 `BigDecimal` quantity / price。
+- Account consistency checks: account status 必須是 `ACTIVE`，否則回傳 `ACCOUNT_NOT_ACTIVE`；`leverageConfig.futuresAccountId` 必須等於 `futuresAccount.accountId`，否則回傳 `ACCOUNT_MISMATCH`。
+- Market consistency checks: `request.marketSymbol` 必須等於 `leverageConfig.marketSymbol`，否則回傳 `MARKET_MISMATCH`。
+- Settlement asset consistency checks: `request.availableMarginAsset` 必須等於 `futuresAccount.settlementAsset`，否則回傳 `SETTLEMENT_ASSET_MISMATCH`；不允許拿其他 asset 的可用餘額充當 settlement margin，也不形成 cross-margin pooling。
+- Evaluation order: `account status -> account identity match -> market symbol match -> settlement asset match -> requested notional calculation -> supported notional calculation -> sufficiency comparison`。
+- Exact comparison formula: `requestedNotional = quantity × entryPrice`；`marginSupportedNotional = availableMargin × leverageMultiplier`；若 `marginSupportedNotional >= requestedNotional` 則 `APPROVED`，否則 `REJECTED / INSUFFICIENT_MARGIN`。
+- Why multiplication instead of division: 在正數條件下，`availableMargin × leverage >= requestedNotional` 與 initial-margin sufficiency 判斷等價；它可避免在 settlement asset precision 與 rounding policy 尚未定義前先做除法，因此不會偷偷引入 scale、MathContext 或四捨五入爭議；這也再次說明 T04 不是正式交易所的完整 margin engine。
+- Equality boundary: 等值邊界採 `compareTo` semantics，只要 `marginSupportedNotional` 與 `requestedNotional` 數值相等就 `APPROVED`，不受 trailing zero 影響。
+- Rejection reasons: `ACCOUNT_NOT_ACTIVE`、`ACCOUNT_MISMATCH`、`MARKET_MISMATCH`、`SETTLEMENT_ASSET_MISMATCH`、`INSUFFICIENT_MARGIN`。
+- Result design: `APPROVED` 只能搭配 `SUFFICIENT_MARGIN`；`INSUFFICIENT_MARGIN` rejection 會攜帶 `requestedNotional` 與 `marginSupportedNotional`；account / market / asset / status mismatch rejection 則不攜帶計算值，改用 `Optional.empty()` 明確表示「未計算」，避免用 `null` 或偽造數字混淆結果。
+- Rounding policy: 本題沒有 rounding policy；不使用除法、不使用 `setScale`、不注入 `MathContext`、不偷偷四捨五入。
+- Maximum leverage policy: 本題沒有 hard-coded maximum leverage policy。
+- Fee buffer policy: 本題沒有 fee buffer，也不包含手續費、滑價或 funding reserve。
+- Validation commands and result:
+  - `./mvnw -q -Dtest=IsolatedMarginCheckRequestTest,IsolatedMarginCheckResultTest,IsolatedMarginCheckGateTest test`：passed
+  - `./mvnw -q -Dtest=FuturesAccountTest,FuturesPositionTest,FuturesMarketSymbolTest,FuturesLeverageTest,IsolatedLeverageConfigTest,IsolatedMarginCheckRequestTest,IsolatedMarginCheckResultTest,IsolatedMarginCheckGateTest test`：passed
+  - `./mvnw test`：passed
+- Sandbox limitations: 這個 gate 不代表帳戶真實餘額已查核，不代表資金已被保留，不代表 order 已被接受，不代表 position 已被建立，也不代表 futures trading 可用；目前仍不包含 maintenance margin、margin ratio、liquidation、bankruptcy price、mark price、index price、PnL、funding、cross margin、hedge mode、portfolio margin、wallet mutation 或任何正式 runtime。
+- HUMAN_REVIEW_REQUIRED: 所有 futures / margin 相關變更仍保留人工審核前提；T04 只完成 sandbox capacity gate，不代表正式 futures runtime 已啟用。
+
+## T05 final review notes
+
+- Review result: T01-T04 的 scope、immutable model 邊界、BigDecimal 計算與 no-formal-trading 限制已完成實作層與測試層審查，目前可標記為 `implementation completed / pending human review`。
+- Final status wording: `Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW`，不得寫成 `completed`。
+- Final review document: `docs/phases/PHASE_17_ORDER_INTAKE/phase-17-final-review.md`。
+- No-formal-trading audit: Phase 17 只完成 sandbox core model 與 pure margin capacity gate；沒有 futures order intake、matching、settlement、ledger mutation、balance reservation、liquidation、funding、API、persistence、Spring runtime 或 real-money capability。
+- Human approval boundary: 在收到 `Phase 17 人工審核完成`、`Phase 17 human review approved` 或 `Approve Phase 17 completion` 之前，不得將 Phase 17 更新為 completed，也不得開始 Phase 18。
