@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-implementation completed / pending human review
+completed
 ```
 
 ## 目標
@@ -36,7 +36,7 @@ T01 futures account model - completed
 T02 isolated margin position model - completed
 T03 leverage config model - completed
 T04 margin check gate - completed
-T05 no-formal-trading review - implementation completed / pending human review
+T05 no-formal-trading review - completed
 ```
 
 ## Sandbox 限制
@@ -59,7 +59,9 @@ no funding
 ```text
 任何 futures / margin runtime 變更都屬於 HUMAN_REVIEW_REQUIRED。
 任何把 isolated margin 誤寫成完整 futures trading 的行為都屬於 HUMAN_REVIEW_REQUIRED。
-Phase 17 尚未獲得人工完成批准。
+Phase 17 人工審核完成。
+本輪 Phase 17 scope 的 HUMAN_REVIEW_REQUIRED 已完成審核關閉。
+後續任何 futures / margin runtime 新變更仍需重新標記 HUMAN_REVIEW_REQUIRED。
 ```
 
 ## T01 implementation notes
@@ -125,8 +127,8 @@ Phase 17 尚未獲得人工完成批准。
 
 ## T05 final review notes
 
-- Review result: T01-T04 的 scope、immutable model 邊界、BigDecimal 計算與 no-formal-trading 限制已完成實作層與測試層審查，目前可標記為 `implementation completed / pending human review`。
-- Final status wording: `Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW`，不得寫成 `completed`。
+- Review result: T01-T04 的 scope、immutable model 邊界、BigDecimal 計算與 no-formal-trading 限制已完成實作層、測試層與人工審核。
+- Final status wording: `Phase 17: COMPLETED`，並記錄 `Phase 17 human review: APPROVED` 與 `Phase 17 人工審核完成`。
 - Final review document: `docs/phases/PHASE_17_ORDER_INTAKE/phase-17-final-review.md`。
 - No-formal-trading audit: Phase 17 只完成 sandbox core model 與 pure margin capacity gate；沒有 futures order intake、matching、settlement、ledger mutation、balance reservation、liquidation、funding、API、persistence、Spring runtime 或 real-money capability。
-- Human approval boundary: 在收到 `Phase 17 人工審核完成`、`Phase 17 human review approved` 或 `Approve Phase 17 completion` 之前，不得將 Phase 17 更新為 completed，也不得開始 Phase 18。
+- Human approval result: 已收到 `Phase 17 人工審核完成`，因此本輪可將 Phase 17 更新為 completed；但這不代表 Phase 18 已開始。

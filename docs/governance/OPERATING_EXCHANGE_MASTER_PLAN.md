@@ -32,7 +32,9 @@ Phase 16: COMPLETED_FOR_SPOT_SANDBOX_FOUNDATION
   - NOT withdrawal-ready
   - NOT futures/margin/liquidation ready
   - P16-T10 completed as final review gate only; spot sandbox flow foundation已收斂，但 production runtime 仍未開始
-Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW
+Phase 17: COMPLETED
+  - Phase 17 human review: APPROVED
+  - Phase 17 人工審核完成
   - Futures core sandbox model foundation implemented
   - NOT production-ready
   - NOT public futures trading ready
@@ -45,7 +47,8 @@ Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW
   - NOT liquidation-ready
   - NOT funding-ready
   - NOT full margin-engine-ready
-Phase 18-36: planned, not started
+Phase 18: NEXT PLANNED PHASE — NOT STARTED
+Phase 19-36: planned, not started
 ```
 
 ## Master phase ladder

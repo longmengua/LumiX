@@ -11,16 +11,17 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * 驗證 Phase 17 final review gate 只收斂 futures sandbox foundation 狀態，不會誤寫成正式 futures trading。
+ * 驗證 Phase 17 final review gate 在人工批准後會收斂為 completed，
+ * 但仍不會把 futures sandbox foundation 誤寫成正式 futures trading。
  */
 class P17T05Phase17FinalReviewGateTest {
 
     /**
-     * 確認 Phase 17 的狀態文件統一使用 implementation completed / pending human review 語意，
+     * 確認 Phase 17 的狀態文件在人工批准後統一使用 completed / approved 語意，
      * 且 final review 文案沒有把 sandbox core model 誤寫成 production-ready 或正式 futures trading。
      */
     @Test
-    void phase17StatusDocumentsRemainPendingHumanReviewAndNotProductionReady() throws IOException {
+    void phase17StatusDocumentsBecomeCompletedButRemainNotProductionReady() throws IOException {
         Path docsRoot = resolveDocsRoot();
         Path repoRoot = docsRoot.getParent().getParent().getParent();
         String phaseReadme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
@@ -29,8 +30,8 @@ class P17T05Phase17FinalReviewGateTest {
         String progress = Files.readString(repoRoot.resolve("AI_PROGRESS.md"), StandardCharsets.UTF_8);
         String finalReview = Files.readString(docsRoot.resolve("phase-17-final-review.md"), StandardCharsets.UTF_8);
 
-        assertTrue(phaseReadme.contains("implementation completed / pending human review"));
-        assertTrue(phaseReadme.contains("T05 no-formal-trading review - implementation completed / pending human review"));
+        assertTrue(phaseReadme.contains("completed"));
+        assertTrue(phaseReadme.contains("T05 no-formal-trading review - completed"));
         assertTrue(phaseReadme.contains("sandbox core model"));
         assertTrue(phaseReadme.contains("no real money"));
         assertTrue(phaseReadme.contains("no order intake"));
@@ -41,17 +42,19 @@ class P17T05Phase17FinalReviewGateTest {
         assertTrue(phaseReadme.contains("no liquidation"));
         assertTrue(phaseReadme.contains("no funding"));
         assertTrue(phaseReadme.contains("phase-17-final-review.md"));
-        assertFalse(phaseReadme.contains("Phase 17: completed"));
+        assertTrue(phaseReadme.contains("Phase 17 人工審核完成"));
         assertFalse(phaseReadme.contains("Phase 17 production-ready"));
         assertFalse(phaseReadme.contains("Phase 17 futures trading ready"));
         assertFalse(phaseReadme.contains("order accepted"));
         assertFalse(phaseReadme.contains("margin reserved"));
         assertFalse(phaseReadme.contains("position opened"));
 
-        assertTrue(phaseIndex.contains("PHASE_17_ORDER_INTAKE/         implementation completed / pending human review"));
-        assertFalse(phaseIndex.contains("PHASE_17_ORDER_INTAKE/         planned"));
+        assertTrue(phaseIndex.contains("PHASE_17_ORDER_INTAKE/         completed"));
+        assertFalse(phaseIndex.contains("PHASE_17_ORDER_INTAKE/         implementation completed / pending human review"));
 
-        assertTrue(masterPlan.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
+        assertTrue(masterPlan.contains("Phase 17: COMPLETED"));
+        assertTrue(masterPlan.contains("Phase 17 human review: APPROVED"));
+        assertTrue(masterPlan.contains("Phase 17 人工審核完成"));
         assertTrue(masterPlan.contains("Futures core sandbox model foundation implemented"));
         assertTrue(masterPlan.contains("NOT production-ready"));
         assertTrue(masterPlan.contains("NOT public futures trading ready"));
@@ -66,7 +69,9 @@ class P17T05Phase17FinalReviewGateTest {
         assertTrue(masterPlan.contains("NOT full margin-engine-ready"));
         assertFalse(masterPlan.contains("Phase 17: Futures Core Model - next implementation phase, planned, not started"));
 
-        assertTrue(progress.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
+        assertTrue(progress.contains("Phase 17: COMPLETED"));
+        assertTrue(progress.contains("Phase 17 human review: APPROVED"));
+        assertTrue(progress.contains("Phase 17 人工審核完成"));
         assertTrue(progress.contains("Futures core sandbox model foundation implemented"));
         assertTrue(progress.contains("NOT production-ready"));
         assertTrue(progress.contains("NOT public futures trading ready"));
@@ -79,12 +84,14 @@ class P17T05Phase17FinalReviewGateTest {
         assertTrue(progress.contains("NOT liquidation-ready"));
         assertTrue(progress.contains("NOT funding-ready"));
         assertTrue(progress.contains("NOT full margin-engine-ready"));
-        assertTrue(progress.contains("Phase 18-36: planned, not started"));
-        assertTrue(progress.contains("Phase 18 not started"));
-        assertFalse(progress.contains("Phase 17-36: planned, not started"));
-        assertFalse(progress.contains("Next implementation phase: Phase 17 - Futures Core Model"));
+        assertTrue(progress.contains("Phase 18: NEXT PLANNED PHASE — NOT STARTED"));
+        assertTrue(progress.contains("Phase 19-36: planned, not started"));
+        assertTrue(progress.contains("Next implementation phase: Phase 18 - next planned phase, not started"));
+        assertFalse(progress.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
 
-        assertTrue(finalReview.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
+        assertTrue(finalReview.contains("Phase 17: COMPLETED"));
+        assertTrue(finalReview.contains("Phase 17 human review: APPROVED"));
+        assertTrue(finalReview.contains("Phase 17 人工審核完成"));
         assertTrue(finalReview.contains("Futures core sandbox model foundation implemented"));
         assertTrue(finalReview.contains("NOT production-ready"));
         assertTrue(finalReview.contains("NOT public futures trading ready"));
@@ -98,7 +105,7 @@ class P17T05Phase17FinalReviewGateTest {
         assertTrue(finalReview.contains("NOT funding-ready"));
         assertTrue(finalReview.contains("NOT full margin-engine-ready"));
         assertTrue(finalReview.contains("Phase 17 human review approved"));
-        assertFalse(finalReview.contains("Phase 17: completed"));
+        assertFalse(finalReview.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
         assertFalse(finalReview.contains("Phase 17 production-ready"));
         assertTrue(finalReview.contains("## 禁止誤寫"));
         assertTrue(finalReview.contains("order accepted"));

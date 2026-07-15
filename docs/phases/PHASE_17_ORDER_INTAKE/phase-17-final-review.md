@@ -58,7 +58,9 @@ real-money futures trading
 ## Final status wording
 
 ```text
-Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW
+Phase 17: COMPLETED
+Phase 17 human review: APPROVED
+Phase 17 人工審核完成
 Futures core sandbox model foundation implemented
 NOT production-ready
 NOT public futures trading ready
@@ -76,7 +78,6 @@ NOT full margin-engine-ready
 ## 禁止誤寫
 
 ```text
-Phase 17 completed
 production-ready
 exchange ready
 futures trading ready
@@ -96,11 +97,9 @@ full margin engine completed
 ## HUMAN_REVIEW_REQUIRED
 
 ```text
-所有 futures / margin 相關內容仍需人工審核。
-Phase 17 尚未獲得人工完成批准。
-收到下列任一明確句子後，下一輪才能更新為 completed：
-
 Phase 17 人工審核完成
 Phase 17 human review approved
 Approve Phase 17 completion
+本輪 Phase 17 scope 的 HUMAN_REVIEW_REQUIRED 已完成人工審核。
+後續任何 futures / margin runtime 新變更仍需重新標記 HUMAN_REVIEW_REQUIRED。
 ```
