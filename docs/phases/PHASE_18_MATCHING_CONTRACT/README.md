@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01 completed
+in progress — T01-T02 completed
 ```
 
 ## 目標
@@ -38,7 +38,7 @@ production trading
 
 ```text
 T01 futures order placement - completed
-T02 matching reuse - not started
+T02 matching reuse - completed (pure candidate evaluation only)
 T03 position update - not started
 T04 realized / unrealized PnL - not started
 T05 mock mark price and funding - not started
@@ -87,3 +87,14 @@ accepted 不代表 settled
   - `./mvnw -q -Dtest=FuturesAccountTest,FuturesPositionTest,FuturesMarketSymbolTest,FuturesLeverageTest,IsolatedLeverageConfigTest,IsolatedMarginCheckRequestTest,IsolatedMarginCheckResultTest,IsolatedMarginCheckGateTest,FuturesOrderIdTest,FuturesOrderPlacementRequestTest,FuturesOrderPlacementResultTest,FuturesOrderPlacementGateTest test`
   - `./mvnw test`
 - Sandbox limitations: T01 沒有 matching、fill、trade、position update、PnL、mark price、funding、reservation、ledger、wallet、settlement、persistence、API、Spring runtime、public-user 或 real-money capability。
+
+## T02 implementation notes
+
+- Scope: 抽出 spot 與 futures 共用的 pure、stateless 限價單候選配對規則；spot matcher 改用該規則維持既有的價格、時間與 maker priority。Futures 只把 `ACCEPTED_FOR_SANDBOX` immutable snapshots 轉為 candidate evaluation，不建立 order book、不產生 trade / fill、不更新 position、PnL、reservation、ledger 或 settlement。
+- Shared policy: `com.lumix.trading.core.sandbox.matching.SandboxLimitOrderMatchingPolicy` 只選出單一 market 的最佳 crossed pair：BUY 高價優先、SELL 低價優先、同價位依 `acceptedAt` 再依 order ID 排序，`matchedQuantity = min(buyRemaining, sellRemaining)`；不持有狀態、不迴圈撮合。
+- Futures boundary: `com.lumix.trading.core.futures.matching.FuturesSandboxMatchingGate` 要求輸入同一 market 且 order ID 不重複，並回傳 `MATCH_ELIGIBLE`、`NO_CROSS` 或 `REJECTED`。`MATCH_ELIGIBLE` 只表示候選限制價格交叉，絕不等於 matched、filled、trade created 或 position opened。
+- Reuse safety: futures adapter 不依賴 spot order book、spot trade/fill result 或任何 persistence / transaction runtime；spot runtime 保留在原 package，只改以 shared pure policy 選擇下一組候選。
+- Validation commands and result:
+  - `./mvnw -q -Dtest=SandboxLimitOrderMatchingPolicyTest,FuturesSandboxMatchingGateTest,SpotSandboxMatchingRuntimeBoundaryTest,SpotSandboxTradeFillBoundaryTest test`
+  - `./mvnw test`
+- Sandbox limitations: T02 不是 futures matching engine execution；沒有 futures order-book storage、state mutation、fill、trade、position update、PnL、mark price、funding、reservation、ledger、wallet、settlement、persistence、API、Spring runtime、public-user 或 real-money capability。

@@ -6,10 +6,13 @@ import com.lumix.trading.core.spot.orderbook.SpotSandboxOrderStatus;
 import com.lumix.trading.core.spot.orderintake.SpotOrderSide;
 import com.lumix.trading.core.spot.orderintake.SpotOrderType;
 import com.lumix.trading.core.spot.orderintake.SpotTimeInForce;
+import com.lumix.trading.core.sandbox.matching.SandboxLimitOrderCandidate;
+import com.lumix.trading.core.sandbox.matching.SandboxLimitOrderMatchPair;
+import com.lumix.trading.core.sandbox.matching.SandboxLimitOrderMatchingPolicy;
+import com.lumix.trading.core.sandbox.matching.SandboxLimitOrderSide;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 
@@ -22,6 +25,7 @@ public final class InMemorySpotSandboxMatcher {
 
     private final InMemorySpotSandboxOrderBook orderBook;
     private final SpotSandboxTradeFillBoundary tradeFillBoundary;
+    private final SandboxLimitOrderMatchingPolicy matchingPolicy = new SandboxLimitOrderMatchingPolicy();
 
     /**
      * 建立 sandbox matcher。
@@ -68,21 +72,17 @@ public final class InMemorySpotSandboxMatcher {
                 );
             }
 
-            List<SpotSandboxOrderRecord> buyOrders = sortBuys(openOrders);
-            List<SpotSandboxOrderRecord> sellOrders = sortSells(openOrders);
-            if (buyOrders.isEmpty() || sellOrders.isEmpty()) {
+            var matchedPair = matchingPolicy.selectBestCrossedPair(openOrders.stream()
+                    .map(InMemorySpotSandboxMatcher::toSharedCandidate)
+                    .toList());
+            if (matchedPair.isEmpty()) {
                 break;
             }
 
-            SpotSandboxOrderRecord bestBuy = buyOrders.get(0);
-            SpotSandboxOrderRecord bestSell = sellOrders.get(0);
-
-            if (bestBuy.price().compareTo(bestSell.price()) < 0) {
-                break;
-            }
-
-            BigDecimal matchedQuantity = bestBuy.remainingQuantity().min(bestSell.remainingQuantity());
-            SpotSandboxOrderRecord maker = comparePriority(bestBuy, bestSell) <= 0 ? bestBuy : bestSell;
+            SandboxLimitOrderMatchPair pair = matchedPair.get();
+            SpotSandboxOrderRecord bestBuy = findOrder(openOrders, pair.buyOrder().orderId());
+            SpotSandboxOrderRecord bestSell = findOrder(openOrders, pair.sellOrder().orderId());
+            SpotSandboxOrderRecord maker = findOrder(openOrders, pair.makerOrder().orderId());
             SpotSandboxTradeFill tradeFill = tradeFillBoundary.createTradeFill(
                     nextTradeId(matchedAt, bestBuy, bestSell, tradeFills.size()),
                     marketSymbol,
@@ -91,14 +91,14 @@ public final class InMemorySpotSandboxMatcher {
                     bestBuy.accountId(),
                     bestSell.accountId(),
                     maker.price(),
-                    matchedQuantity,
+                    pair.matchedQuantity(),
                     matchedAt,
                     SpotSandboxTradePriceRule.MAKER_PRICE
             );
 
             tradeFills.add(tradeFill);
-            orderBook.replaceRecord(updateOrder(bestBuy, matchedQuantity));
-            orderBook.replaceRecord(updateOrder(bestSell, matchedQuantity));
+            orderBook.replaceRecord(updateOrder(bestBuy, pair.matchedQuantity()));
+            orderBook.replaceRecord(updateOrder(bestSell, pair.matchedQuantity()));
         }
 
         if (tradeFills.isEmpty()) {
@@ -125,33 +125,23 @@ public final class InMemorySpotSandboxMatcher {
         return null;
     }
 
-    private static List<SpotSandboxOrderRecord> sortBuys(List<SpotSandboxOrderRecord> orders) {
-        return new ArrayList<>(orders.stream()
-                .filter(order -> order.side() == SpotOrderSide.BUY && InMemorySpotSandboxOrderBook.isActiveOrder(order))
-                .sorted(Comparator
-                        .comparing(SpotSandboxOrderRecord::price).reversed()
-                        .thenComparing(SpotSandboxOrderRecord::acceptedAt)
-                        .thenComparing(SpotSandboxOrderRecord::sandboxOrderId))
-                .toList());
+    private static SandboxLimitOrderCandidate toSharedCandidate(SpotSandboxOrderRecord order) {
+        return new SandboxLimitOrderCandidate(
+                order.sandboxOrderId(),
+                order.marketSymbol(),
+                order.side() == SpotOrderSide.BUY ? SandboxLimitOrderSide.BUY : SandboxLimitOrderSide.SELL,
+                order.price(),
+                order.remainingQuantity(),
+                order.acceptedAt()
+        );
     }
 
-    private static List<SpotSandboxOrderRecord> sortSells(List<SpotSandboxOrderRecord> orders) {
-        return new ArrayList<>(orders.stream()
-                .filter(order -> order.side() == SpotOrderSide.SELL && InMemorySpotSandboxOrderBook.isActiveOrder(order))
-                .sorted(Comparator
-                        .comparing(SpotSandboxOrderRecord::price)
-                        .thenComparing(SpotSandboxOrderRecord::acceptedAt)
-                        .thenComparing(SpotSandboxOrderRecord::sandboxOrderId))
-                .toList());
-    }
-
-    private static int comparePriority(SpotSandboxOrderRecord left, SpotSandboxOrderRecord right) {
-        int acceptedAtCompare = left.acceptedAt().compareTo(right.acceptedAt());
-        if (acceptedAtCompare != 0) {
-            return acceptedAtCompare;
-        }
-
-        return left.sandboxOrderId().compareTo(right.sandboxOrderId());
+    private static SpotSandboxOrderRecord findOrder(List<SpotSandboxOrderRecord> orders, String sandboxOrderId) {
+        // 共用 policy 只回傳同一輪輸入的 order ID；找不到代表 in-memory book 在同步區塊內違反不可變快照假設。
+        return orders.stream()
+                .filter(order -> order.sandboxOrderId().equals(sandboxOrderId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("shared match candidate must reference an open order"));
     }
 
     private static SpotSandboxOrderRecord updateOrder(SpotSandboxOrderRecord order, BigDecimal matchedQuantity) {
