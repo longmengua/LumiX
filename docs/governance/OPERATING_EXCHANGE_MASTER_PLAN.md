@@ -47,7 +47,16 @@ Phase 17: COMPLETED
   - NOT liquidation-ready
   - NOT funding-ready
   - NOT full margin-engine-ready
-Phase 18: NEXT PLANNED PHASE — NOT STARTED
+Phase 18: IN PROGRESS — T01 COMPLETED
+  - Futures Trading Sandbox started at T01 futures order placement only
+  - NOT matching-ready
+  - NOT fill-ready
+  - NOT position-update-ready
+  - NOT PnL-ready
+  - NOT funding-ready
+  - NOT settlement-ready
+  - NOT public futures trading ready
+  - NOT real-money ready
 Phase 19-36: planned, not started
 ```
 

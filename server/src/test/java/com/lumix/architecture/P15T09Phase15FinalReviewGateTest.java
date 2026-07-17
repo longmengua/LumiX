@@ -68,7 +68,8 @@ class P15T09Phase15FinalReviewGateTest {
         assertTrue(progress.contains("NOT public user trading ready"));
         assertTrue(progress.contains("Phase 17: COMPLETED"));
         assertTrue(progress.contains("Phase 17 human review: APPROVED"));
-        assertTrue(progress.contains("Phase 18: NEXT PLANNED PHASE — NOT STARTED"));
+        assertTrue(progress.contains("Phase 18: IN PROGRESS — T01 COMPLETED"));
+        assertTrue(progress.contains("Phase 18 Futures Trading Sandbox started at T01 futures order placement only"));
         assertFalse(progress.contains("Next implementation phase: Phase 17 - Futures Core Model"));
         assertFalse(progress.contains("Phase 15: in progress as trading runtime core foundation/review gates, runtime implementation incomplete"));
 

@@ -82,7 +82,8 @@ class P16T10SpotSandboxFinalReviewGateTest {
         assertTrue(progress.contains("NOT futures/margin/liquidation ready"));
         assertTrue(progress.contains("Phase 17: COMPLETED"));
         assertTrue(progress.contains("Phase 17 human review: APPROVED"));
-        assertTrue(progress.contains("Phase 18: NEXT PLANNED PHASE — NOT STARTED"));
+        assertTrue(progress.contains("Phase 18: IN PROGRESS — T01 COMPLETED"));
+        assertTrue(progress.contains("Phase 18 Futures Trading Sandbox started at T01 futures order placement only"));
         assertFalse(progress.contains("Next implementation phase: Phase 17 - Futures Core Model"));
         assertFalse(progress.contains("Phase 16: in progress as spot trading sandbox scope gate/boundary/runtime foundation, runtime implementation incomplete"));
 

@@ -48,9 +48,18 @@ NOT balance-reservation-backed
 NOT liquidation-ready
 NOT funding-ready
 NOT full margin-engine-ready
-Phase 18: NEXT PLANNED PHASE — NOT STARTED
+Phase 18: IN PROGRESS — T01 COMPLETED
+Phase 18 Futures Trading Sandbox started at T01 futures order placement only
+NOT matching-ready
+NOT fill-ready
+NOT position-update-ready
+NOT PnL-ready
+NOT funding-ready
+NOT settlement-ready
+NOT public futures trading ready
+NOT real-money ready
 Phase 19-36: planned, not started
-Next implementation phase: Phase 18 - next planned phase, not started
+Next implementation phase: none before explicit T02 kickoff; Phase 19 not started
 ```
 
 ## 目前倉庫現況
@@ -71,8 +80,9 @@ agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_17_review_status: docs/phases/PHASE_17_ORDER_INTAKE/phase-17-final-review.md
-next_implementation_phase: Phase 18 - next planned phase, not started
-first_task: none until explicit Phase 18 kickoff
+current_phase_task_list: docs/phases/PHASE_18_MATCHING_CONTRACT/README.md
+next_implementation_phase: none before explicit T02 kickoff; Phase 19 not started
+first_task: docs/phases/PHASE_18_MATCHING_CONTRACT/README.md
 ```
 
 ## 完成警告
