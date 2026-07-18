@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T04 completed
+in progress — T01-T05 completed
 ```
 
 ## 目標
@@ -41,7 +41,7 @@ T01 futures order placement - completed
 T02 matching reuse - completed (pure candidate evaluation only)
 T03 position update - completed (one-way, open-only sandbox snapshots)
 T04 realized / unrealized PnL - completed (pure valuation and close preview only)
-T05 mock mark price and funding - not started
+T05 mock mark price and funding - completed (manual snapshot and pure funding preview only)
 T06 restricted contract sandbox gate - not started
 ```
 
@@ -122,3 +122,16 @@ accepted 不代表 settled
   - `./mvnw -q -Dtest=FuturesSandboxPnlCalculatorTest,FuturesPositionTest,FuturesAccountTest test`
   - `./mvnw test`
 - Sandbox limitations: T04 不提供 mark-price provider、不執行 matching、不產生或持久化 fill / trade / position close、不更新 balance、不保留 margin、不寫 ledger、不處理 fee、funding、liquidation、settlement、API、Spring runtime、public-user 或 real-money capability。
+
+## T05 implementation notes
+
+- Scope: 建立獨立於既有 market runtime 的 `com.lumix.trading.core.futures.sandbox.market` 與 `com.lumix.trading.core.futures.sandbox.funding`。前者只表達 immutable、人工輸入的 mock mark-price snapshot；後者只以明確輸入的價格、rate 與時間產生 funding preview。
+- Mock mark-price boundary: `FuturesSandboxMockMarkPrice` 必須攜帶 market、正數 `BigDecimal` price、`MANUAL_SANDBOX_INPUT` source 與 `publishedAt`。它不是行情服務、不保存最新價格、也不讀取 clock；刻意不依賴 `com.lumix.market.MarkPriceService` 或其他 production market path。
+- T04 integration: `FuturesSandboxMarkPricePnlValuationGate` 只在 position market 與 mock price market 一致時，將 snapshot 轉為一次性的 T04 `FuturesSandboxUnrealizedPnlRequest`；valuation time 固定沿用 `publishedAt`，account ownership 驗證仍由 T04 request 保留。
+- Funding calculation: `FuturesSandboxFundingPreviewCalculator` 計算線性 notional `markPrice * quantity * fundingRate`。正 rate 時 LONG 為應付、SHORT 為應收；負 rate 自然反轉。`signedFundingAmount` 固定採 position 視角：正值代表應收、負值代表應付，並以 `PAY / RECEIVE / NONE` 額外標示方向。
+- Funding input guard: preview request 必須驗證 account 擁有 position、mark price market 一致，且 `fundingAt` 不早於 mark-price `publishedAt`。rate 使用 `BigDecimal`，不使用 binary floating point。
+- Deliberate boundary: T05 不設定 funding interval、rate cap、rounding / scale、index / mark-price algorithm、付款優先序或 liquidation interaction；這些屬 production economics / risk policy，必須經 HUMAN_REVIEW_REQUIRED 後在後續 task 明確定義。
+- Validation commands and result:
+  - `cd server && ./mvnw -q -Dtest=FuturesSandboxPnlCalculatorTest,FuturesSandboxMarkPricePnlValuationGateTest,FuturesSandboxFundingPreviewCalculatorTest,P18T05FuturesSandboxMarkPriceFundingScopeGateTest,FuturesPositionTest,FuturesAccountTest test`
+  - passed
+- Sandbox limitations: T05 不連接正式行情、不保存 mark price、不管理 funding schedule、不建立 payment instruction、不更新 position、margin、balance 或 ledger、不處理 fee、liquidation、settlement、persistence、API、Spring runtime、public-user 或 real-money capability。
