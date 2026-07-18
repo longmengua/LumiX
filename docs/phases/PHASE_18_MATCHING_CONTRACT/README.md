@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T02 completed
+in progress — T01-T03 completed
 ```
 
 ## 目標
@@ -39,7 +39,7 @@ production trading
 ```text
 T01 futures order placement - completed
 T02 matching reuse - completed (pure candidate evaluation only)
-T03 position update - not started
+T03 position update - completed (one-way, open-only sandbox snapshots)
 T04 realized / unrealized PnL - not started
 T05 mock mark price and funding - not started
 T06 restricted contract sandbox gate - not started
@@ -98,3 +98,15 @@ accepted 不代表 settled
   - `./mvnw -q -Dtest=SandboxLimitOrderMatchingPolicyTest,FuturesSandboxMatchingGateTest,SpotSandboxMatchingRuntimeBoundaryTest,SpotSandboxTradeFillBoundaryTest test`
   - `./mvnw test`
 - Sandbox limitations: T02 不是 futures matching engine execution；沒有 futures order-book storage、state mutation、fill、trade、position update、PnL、mark price、funding、reservation、ledger、wallet、settlement、persistence、API、Spring runtime、public-user 或 real-money capability。
+
+## T03 implementation notes
+
+- Scope: 建立 `com.lumix.trading.core.futures.position.update` 的 immutable verified-fill input 與 pure position opening gate。T03 是 one-way、open-only；只回傳買方 LONG 與賣方 SHORT 的 sandbox snapshots，不修改既有 position。
+- Verified fill boundary: `FuturesSandboxVerifiedFill` 是 T03 的唯一 position opening 依據，必須包含不同帳戶的 BUY / SELL accepted orders、同一 market、雙方限價內的 fill price、不得超過雙方原始 quantity 的 fill quantity，以及不早於接受時間的 `filledAt`。不得從 T02 candidate 直接更新 position；T03 也不提供 candidate-to-fill 或 fill producer。
+- One-way and open-only rule: BUY 固定建立 LONG，SELL 固定建立 SHORT；任一方已存在同 account / market 的 OPEN position 即拒絕。加倉、減倉、平倉、反轉、hedge mode、平均 entry price 與 realized PnL 都不在本 task。
+- Idempotency contract: request 明確帶入不可變的 `processedFillIds`；相同 fill ID 已存在時回傳 `FILL_ALREADY_PROCESSED`。pure gate 不接 idempotency store，後續 runtime 必須在 adapter 層實際保證此集合的正確性。
+- Snapshot semantics: position ID 由 `fillId + buy/sell` deterministic 產生；entry price 與 quantity 直接沿用 verified fill，`openedAt / updatedAt` 均使用 `filledAt`，避免額外 clock dependency。
+- Validation commands and result:
+  - `./mvnw -q -Dtest=FuturesSandboxVerifiedFillTest,FuturesSandboxPositionUpdateGateTest,FuturesPositionTest,FuturesSandboxMatchingGateTest test`
+  - `./mvnw test`
+- Sandbox limitations: T03 不產生 fill、不執行 matching、不持久化 position、不更新 balance、不保留 margin、不寫 ledger、不計算 realized / unrealized PnL、不接 mark price、funding、settlement、API、Spring runtime、public-user 或 real-money capability。
