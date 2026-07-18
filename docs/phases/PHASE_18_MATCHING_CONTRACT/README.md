@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T03 completed
+in progress — T01-T04 completed
 ```
 
 ## 目標
@@ -40,7 +40,7 @@ production trading
 T01 futures order placement - completed
 T02 matching reuse - completed (pure candidate evaluation only)
 T03 position update - completed (one-way, open-only sandbox snapshots)
-T04 realized / unrealized PnL - not started
+T04 realized / unrealized PnL - completed (pure valuation and close preview only)
 T05 mock mark price and funding - not started
 T06 restricted contract sandbox gate - not started
 ```
@@ -110,3 +110,15 @@ accepted 不代表 settled
   - `./mvnw -q -Dtest=FuturesSandboxVerifiedFillTest,FuturesSandboxPositionUpdateGateTest,FuturesPositionTest,FuturesSandboxMatchingGateTest test`
   - `./mvnw test`
 - Sandbox limitations: T03 不產生 fill、不執行 matching、不持久化 position、不更新 balance、不保留 margin、不寫 ledger、不計算 realized / unrealized PnL、不接 mark price、funding、settlement、API、Spring runtime、public-user 或 real-money capability。
+
+## T04 implementation notes
+
+- Scope: 建立 `com.lumix.trading.core.futures.pnl` 的 pure、stateless PnL calculator。unrealized PnL 接收呼叫端提供的單次 mark price；realized PnL 只提供不改變 position 的 close preview，不建立 close fill、closed position、settlement 或任何帳務異動。
+- Calculation: LONG 使用 `(price - entryPrice) * quantity`，SHORT 使用 `(entryPrice - price) * quantity`。unrealized 使用 position 全量與 mark price；realized preview 使用明確 close price / close quantity，且 close quantity 不得大於 position quantity。全程使用 `BigDecimal` 與 `MoneyAmount`，不做除法、rounding 或 scale policy。
+- Asset and ownership boundary: request 必須攜帶擁有 position 的 `FuturesAccount`，calculator 以其 settlement asset 標記結果；帳戶不屬於 position 時直接拒絕，避免把 PnL 計入錯誤資產或帳戶。
+- Price boundary: `FuturesSandboxPnlPrice` 只是一個正數 valuation input value object，不提供 mark-price source。T05 才負責 mock mark price / funding；T04 不依賴既有正式 mark-price service。
+- Close-preview semantics: realized PnL 只提供不改變 position 的 close preview；不會產生 trade、fill、position close / partial close、平均 entry price、fee、funding、maintenance margin、liquidation 或 balance / ledger side effect。
+- Validation commands and result:
+  - `./mvnw -q -Dtest=FuturesSandboxPnlCalculatorTest,FuturesPositionTest,FuturesAccountTest test`
+  - `./mvnw test`
+- Sandbox limitations: T04 不提供 mark-price provider、不執行 matching、不產生或持久化 fill / trade / position close、不更新 balance、不保留 margin、不寫 ledger、不處理 fee、funding、liquidation、settlement、API、Spring runtime、public-user 或 real-money capability。
