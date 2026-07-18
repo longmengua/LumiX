@@ -118,20 +118,42 @@ secret management change
 - 圖內標籤、流程名稱、狀態名稱與說明文字也應優先中文化，避免整份文件混用英文。
 - 只有在業界慣例、專有名詞或外部介面名稱無法合理翻譯時，才保留英文原文。
 
-## Mini 輸出格式
+## 任務完成回報規範
 
-完成任務後輸出：
+每個 task 完成後，agent 必須以繁體中文輸出可供人類快速審核的完整回報；不可只列 commit、檔案清單或測試結果。
+
+回報至少包含下列內容：
 
 ```text
-Task: P17-Txx
-Files changed:
-  - path
-What changed:
-  - concise summary
-Verification:
-  - command or manual check
-Risk:
-  - none / low / HUMAN_REVIEW_REQUIRED
-Next suggested task:
-  - P17-Tyy
+Task: Pxx-Tyy
+
+任務目標：
+- 說明本 task 在目前 phase 的目的，以及要解決的邊界或問題。
+
+實作方向與決策：
+- 說明採用的設計方向、關鍵不變式與重要取捨。
+- 若使用既有模型、契約或前一 task 的輸出，說明如何銜接。
+
+完成內容：
+- 說明實際新增或修改的能力與主要檔案。
+- 說明對外可觀察的行為，而非只重述類別或檔名。
+
+明確未完成事項：
+- 列出本 task 刻意未做、後續 task 才處理或不應被誤認為已完成的能力。
+
+驗證：
+- 列出執行的測試或人工檢查，以及通過結果。
+
+提交：
+- commit hash、commit message 與是否已推送；若未提交，必須說明原因。
+
+風險與人工審核：
+- 明確標示 none / low / HUMAN_REVIEW_REQUIRED。
+- 若為 HUMAN_REVIEW_REQUIRED，說明觸發原因與人類應檢查的重點。
+
+下一步：
+- 列出下一個建議 task，以及它和本 task 的依賴關係。
 ```
+
+回報應以「任務目的 -> 實作方向 -> 完成內容 -> 邊界 -> 驗證 -> 風險 -> 下一步」的順序呈現，
+使讀者不必閱讀 diff 即可理解目前進度、系統方向與仍存在的限制。
