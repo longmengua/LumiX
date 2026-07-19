@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01 completed
+in progress — T01-T02 completed
 ```
 
 ## 目標
@@ -33,7 +33,7 @@ public contract trading
 
 ```text
 T01 full sandbox contract trading flow - completed (pure eligibility integration only)
-T02 failure case coverage
+T02 failure case coverage - completed (contract / risk rejection gate regression)
 T03 reconciliation checks
 T04 admin / audit review
 T05 no-production-claim gate
@@ -57,3 +57,8 @@ P20 是較完整 contract trading sandbox gate，但仍然不是正式交易。
 
 - Scope: 整合 P18 contract inspection 與 P19 liquidation simulation 結果；inspection 拒絕或 liquidation simulated 時拒絕 flow，其餘只回傳 sandbox-flow eligibility。
 - Deliberate boundary: 不重新撮合、不建立 trade/fill、不更新 position、balance、ledger 或 settlement；eligible 不代表可執行交易。
+
+## T02 implementation notes
+
+- Scope: 驗證 contract inspection 拒絕、liquidation simulated 拒絕，以及兩者同時拒絕時 contract rejection 的固定優先序。
+- Safety boundary: 唯一放行條件為 contract eligible 且 simulation 不可爆倉；測試只檢查 immutable eligibility result，沒有產生撮合、成交、部位、資產、帳本或結算副作用。
