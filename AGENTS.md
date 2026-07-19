@@ -85,6 +85,12 @@ security bypass
 - 所有新增或修改的程式碼都必須具備足夠註解，遵守 `docs/engineering/code-commenting-standard.md`。
 - 註解必須使用繁體中文，優先說明為什麼這樣做，而不是重複程式碼表面行為。
 
+## Git staging rules
+
+- 每次準備提交前，必須先執行 `git status --short` 確認工作目錄內容。
+- 工作目錄只包含本 task 的預期變更時，統一使用 `git add .`，避免逐檔 staging 造成不必要的使用者批准。
+- 若工作目錄存在使用者、其他 task 或自動產生的未相關變更，禁止使用 `git add .`；必須改用明確路徑 staging，避免把未相關內容誤提交。
+
 ## Documentation rules
 
 所有架構圖、UML、流程圖、狀態圖、ERD 都必須用純文字圖。
