@@ -34,7 +34,7 @@ production risk controls
 T01 liquidation simulation - completed (pure threshold simulation only)
 T02 funding mock - completed (single-scenario batch preview only)
 T03 insurance fund placeholder - completed (immutable simulation snapshot only)
-T04 risk / reconciliation tests
+T04 risk / reconciliation tests - completed (sandbox conservation check only)
 T05 production no-claim review
 ```
 
@@ -75,3 +75,8 @@ risk / liquidation / reconciliation runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 
 - Scope: `FuturesSandboxInsuranceFundPlaceholder` 只保留 asset、非負 simulated amount 與 observed time 的 immutable simulation snapshot。
 - Deliberate boundary: 不接受注資、賠付、扣款、資產歸集、帳本/餘額異動或 production insurance-fund accounting。
+
+## T04 implementation notes
+
+- Scope: 對稱 LONG/SHORT funding mock scenario 必須使 signed preview 淨額為零，並確認 insurance placeholder 在檢查後保持不變。
+- Deliberate boundary: 這是 sandbox conservation check，不是 ledger/balance reconciliation runtime，也不會修正 mismatch 或發動資金操作。
