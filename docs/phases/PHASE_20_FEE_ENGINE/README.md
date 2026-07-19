@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T03 completed
+in progress — T01-T04 completed
 ```
 
 ## 目標
@@ -35,7 +35,7 @@ public contract trading
 T01 full sandbox contract trading flow - completed (pure eligibility integration only)
 T02 failure case coverage - completed (contract / risk rejection gate regression)
 T03 reconciliation checks - completed (immutable decision replay only)
-T04 admin / audit review
+T04 admin / audit review - completed (read-only review snapshot only)
 T05 no-production-claim gate
 ```
 
@@ -68,3 +68,9 @@ P20 是較完整 contract trading sandbox gate，但仍然不是正式交易。
 - Scope: 以相同 immutable contract eligibility 與 liquidation simulation 輸入重放 P20 flow gate，再與待驗證 flow result 比對；結果明確保留 replayed 與 recorded flow，供 audit 判讀。
 - Mismatch handling: 發現差異只回傳 `MISMATCH_DETECTED`，不提供自動修正、覆寫、持久化、交易重放或任何資金操作；mismatch 必須進入後續人工 review。
 - Deliberate boundary: 這不是 ledger / balance / reservation / settlement reconciliation runtime，也不會產生 trade、fill、position、fee、funding、insurance-fund、帳務或資產異動。
+
+## T04 implementation notes
+
+- Scope: 以 T03 的 immutable reconciliation result 建立唯讀 admin/audit review snapshot。一致結果固定為 `HUMAN_REVIEW_REQUIRED`；mismatch 固定升級為 `MISMATCH_REQUIRES_HUMAN_INVESTIGATION`。
+- Review contract: snapshot 保留 replayed / recorded flow、必要檢查項與禁止動作；它不接受管理員身分、帳戶、權限或 command，因此不能被誤接成管理授權。
+- Deliberate boundary: 不提供 admin API、authentication / authorization、manual balance adjustment、紀錄覆寫、自動修正、資料庫寫入、交易執行、public trading 或 real-money capability。
