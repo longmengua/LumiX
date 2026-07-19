@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 /**
  * 驗證 P20 只收斂 sandbox integration gate，避免文件或 source 被誤解成正式合約交易 runtime。
  *
- * 此測試檢查的是禁止宣稱與架構邊界，不會把 review 文件當成 Phase 20 的人類最終批准。
+ * 此測試檢查禁止宣稱與架構邊界；即使人類批准 P20 sandbox foundation，也不能把它升格為正式合約交易 runtime。
  */
 class P20T05ProductionNoClaimGateTest {
 
@@ -25,9 +25,9 @@ class P20T05ProductionNoClaimGateTest {
         String noClaimReview = Files.readString(docsRoot.resolve("phase-20-no-claim-review.md"), StandardCharsets.UTF_8);
         String finalReview = Files.readString(docsRoot.resolve("phase-20-final-review.md"), StandardCharsets.UTF_8);
 
-        assertTrue(readme.contains("completed — Contract Trading Integration Gate; HUMAN_REVIEW_REQUIRED pending final review"));
+        assertTrue(readme.contains("completed — Contract Trading Integration Gate foundation; HUMAN_REVIEW_REQUIRED approved"));
         assertTrue(readme.contains("T01-T05 已完成"));
-        assertTrue(readme.contains("最終審核尚未批准"));
+        assertTrue(readme.contains("最終審核已由人類於 2026-07-20 批准"));
         assertTrue(noClaimReview.contains("T01 contract eligibility 與 liquidation simulation 的 pure flow integration"));
         assertTrue(noClaimReview.contains("T04 read-only admin / audit review snapshot"));
         assertTrue(noClaimReview.contains("NOT production-ready"));
@@ -35,12 +35,12 @@ class P20T05ProductionNoClaimGateTest {
         assertTrue(noClaimReview.contains("NOT public contract trading ready"));
         assertTrue(noClaimReview.contains("NOT real-money contract trading ready"));
         assertTrue(noClaimReview.contains("NOT settlement completed"));
-        assertTrue(noClaimReview.contains("final review 尚待人類審核"));
-        assertTrue(finalReview.contains("Phase 20: TASKS_COMPLETED_PENDING_HUMAN_REVIEW"));
-        assertTrue(finalReview.contains("Phase 20 human review: NOT APPROVED"));
-        assertTrue(finalReview.contains("Phase 20 人工審核尚未完成"));
-        assertTrue(finalReview.contains("Next task: human sign-off for Phase 20 final review"));
-        assertFalse(finalReview.contains("Phase 20 human review: APPROVED"));
+        assertTrue(noClaimReview.contains("final review 已由人類於 2026-07-20 批准"));
+        assertTrue(finalReview.contains("Phase 20: COMPLETED_FOR_CONTRACT_TRADING_INTEGRATION_GATE_FOUNDATION"));
+        assertTrue(finalReview.contains("Phase 20 human review: APPROVED"));
+        assertTrue(finalReview.contains("Phase 20 人工審核完成"));
+        assertTrue(finalReview.contains("Next task: define and review the next phase task before implementation"));
+        assertFalse(finalReview.contains("Phase 20 human review: NOT APPROVED"));
     }
 
     @Test

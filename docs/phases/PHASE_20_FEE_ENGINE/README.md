@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-completed — Contract Trading Integration Gate; HUMAN_REVIEW_REQUIRED pending final review
+completed — Contract Trading Integration Gate foundation; HUMAN_REVIEW_REQUIRED approved
 ```
 
 ## 目標
@@ -51,6 +51,7 @@ P20 是較完整 contract trading sandbox gate，但仍然不是正式交易。
 ```text
 任何 contract trading / reconciliation / admin / audit runtime 變更都屬於 HUMAN_REVIEW_REQUIRED。
 任何把這個 phase 誤寫成正式交易上線證明的行為都屬於 HUMAN_REVIEW_REQUIRED。
+本輪 P20 scope 已由人類於 2026-07-20 明確批准；後續任何 contract trading / reconciliation / admin-audit runtime 新變更都必須重新標記並接受人類審核。
 ```
 
 ## T01 implementation notes
@@ -79,8 +80,8 @@ P20 是較完整 contract trading sandbox gate，但仍然不是正式交易。
 
 - Scope: 建立 production no-claim 文件與 architecture guard，固定 P20 只完成 sandbox eligibility integration、failure regression、decision replay 與唯讀 review。
 - Claim boundary: P20 不得宣稱 production-ready、正式合約交易已上線、public / real-money contract trading ready、matching / fill 已執行、ledger / balance 已更新或 settlement 已完成。
-- Review status: T01-T05 已完成，但 Phase 20 的 `HUMAN_REVIEW_REQUIRED` 最終審核尚未批准；完成 task 不等於可進入正式交易或跳至下一 phase。
+- Review status: T01-T05 已完成，Phase 20 的 `HUMAN_REVIEW_REQUIRED` 最終審核已由人類於 2026-07-20 批准；批准只代表 sandbox foundation 收斂，不等於正式交易或 production readiness。
 
 ## Final review
 
-- `phase-20-final-review.md` 是待人類批准的 review draft；它整理審核範圍與驗證結果，但不代表 P20 已獲批准或 production-ready。
+- `phase-20-final-review.md` 是已批准的 review record；它只記錄 P20 sandbox foundation 的批准範圍，不代表 production-ready。
