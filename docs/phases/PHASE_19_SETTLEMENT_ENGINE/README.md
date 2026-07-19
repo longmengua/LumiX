@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T05 completed; HUMAN_REVIEW_REQUIRED final review pending
+completed — Risk Sandbox foundation; HUMAN_REVIEW_REQUIRED approved
 ```
 
 ## 目標
@@ -85,3 +85,8 @@ risk / liquidation / reconciliation runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 
 - Review record: `phase-19-no-claim-review.md` 固定列出 P19 已完成的 simulation 範圍與禁止宣稱。
 - No-claim boundary: P19 不代表 production liquidation、formal funding engine、insurance fund accounting、ledger/balance reconciliation runtime、public trading 或 real-money risk control 已完成。
+
+## Final review
+
+- Phase 19 人工審核完成；詳細禁止宣稱與未完成 runtime 見 `phase-19-final-review.md`。
+- approved 只代表 risk sandbox foundation 已收斂，不代表 production risk control 或真實資金能力。
