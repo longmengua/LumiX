@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-planned, not started
+in progress — T01 completed
 ```
 
 ## 目標
@@ -31,7 +31,7 @@ production risk controls
 ## 高層 task list
 
 ```text
-T01 liquidation simulation
+T01 liquidation simulation - completed (pure threshold simulation only)
 T02 funding mock
 T03 insurance fund placeholder
 T04 risk / reconciliation tests
@@ -51,3 +51,16 @@ risk / liquidation / reconciliation runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 任何 risk / liquidation / reconciliation runtime 變更都屬於 HUMAN_REVIEW_REQUIRED。
 任何把 simulation 誤寫成 production liquidation 的行為都屬於 HUMAN_REVIEW_REQUIRED。
 ```
+
+## T01 implementation notes
+
+- Scope: 建立 `com.lumix.trading.core.futures.sandbox.liquidation` 的 pure、stateless liquidation simulator。它只接收 account-owned open position、人工 mock mark price、明確 simulated collateral 與 maintenance-margin rate。
+- Calculation: `simulatedEquity = simulatedCollateral + unrealizedPnL`，其中 LONG PnL 為 `(mark - entry) * quantity`，SHORT PnL 為 `(entry - mark) * quantity`；`simulatedMaintenanceMargin = markPrice * quantity * maintenanceMarginRate`。全程使用 `BigDecimal` 與 `MoneyAmount`，沒有除法、rounding 或 production rate policy。
+- Decision: equity 大於 maintenance margin 時回傳 `NOT_LIQUIDATABLE`；小於或等於時回傳 `LIQUIDATION_SIMULATED`。等值採保守 simulation comparison，不是正式強平優先序、破產價、價格保護或風控政策。
+- Input guard: account 必須擁有 position、mark price market 必須一致、simulated collateral 不得為負數、maintenance rate 必須大於零且小於一。
+- Deliberate boundary: 不產生強平單、不關閉 position、不更新 balance、ledger 或 settlement；不計算 liquidation price、bankruptcy price、maintenance tier、fee、funding、insurance fund、ADL、價格保護、風控限額或任何 persistence / API / Spring runtime。
+- Validation commands and result:
+  - `cd server && ./mvnw -q -Dtest=FuturesSandboxLiquidationSimulatorTest,P19T01LiquidationSimulationScopeGateTest,FuturesPositionTest,FuturesSandboxMarkPricePnlValuationGateTest test`
+  - passed
+  - `cd server && ./mvnw test`
+  - passed: 285 tests, 0 failures, 0 errors, 2 skipped
