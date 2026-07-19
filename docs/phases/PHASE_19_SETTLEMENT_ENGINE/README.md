@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01 completed
+in progress — T01-T05 completed; HUMAN_REVIEW_REQUIRED final review pending
 ```
 
 ## 目標
@@ -35,7 +35,7 @@ T01 liquidation simulation - completed (pure threshold simulation only)
 T02 funding mock - completed (single-scenario batch preview only)
 T03 insurance fund placeholder - completed (immutable simulation snapshot only)
 T04 risk / reconciliation tests - completed (sandbox conservation check only)
-T05 production no-claim review
+T05 production no-claim review - completed
 ```
 
 ## Sandbox 限制
@@ -80,3 +80,8 @@ risk / liquidation / reconciliation runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 
 - Scope: 對稱 LONG/SHORT funding mock scenario 必須使 signed preview 淨額為零，並確認 insurance placeholder 在檢查後保持不變。
 - Deliberate boundary: 這是 sandbox conservation check，不是 ledger/balance reconciliation runtime，也不會修正 mismatch 或發動資金操作。
+
+## T05 implementation notes
+
+- Review record: `phase-19-no-claim-review.md` 固定列出 P19 已完成的 simulation 範圍與禁止宣稱。
+- No-claim boundary: P19 不代表 production liquidation、formal funding engine、insurance fund accounting、ledger/balance reconciliation runtime、public trading 或 real-money risk control 已完成。
