@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T05 completed
+in progress — T01-T06 completed; HUMAN_REVIEW_REQUIRED final review pending
 ```
 
 ## 目標
@@ -42,7 +42,7 @@ T02 matching reuse - completed (pure candidate evaluation only)
 T03 position update - completed (one-way, open-only sandbox snapshots)
 T04 realized / unrealized PnL - completed (pure valuation and close preview only)
 T05 mock mark price and funding - completed (manual snapshot and pure funding preview only)
-T06 restricted contract sandbox gate - not started
+T06 restricted contract sandbox gate - completed (pure single-market inspection eligibility only)
 ```
 
 ## Sandbox 限制
@@ -137,3 +137,17 @@ accepted 不代表 settled
   - `cd server && ./mvnw test`
   - passed: 275 tests, 0 failures, 0 errors, 2 skipped
 - Sandbox limitations: T05 不連接正式行情、不保存 mark price、不管理 funding schedule、不建立 payment instruction、不更新 position、margin、balance 或 ledger、不處理 fee、liquidation、settlement、persistence、API、Spring runtime、public-user 或 real-money capability。
+
+## T06 implementation notes
+
+- Scope: 建立 `com.lumix.trading.core.futures.sandbox.contract` 的 pure restricted contract sandbox gate。它只接收 T01 的 `FuturesOrderPlacementResult`、單一 `RestrictedFuturesSandboxContract` market 與 T05 的人工 mock mark-price snapshot，不建立新的 order、price source 或 runtime state。
+- Single-market contract boundary: `RestrictedFuturesSandboxContract` 型別只持有一個 `FuturesMarketSymbol`。gate 先要求 placement result 必須包含 T01 accepted snapshot，再分別驗證 order market 與 mock mark-price market 都等於這個唯一 contract market。
+- Result semantics: 成功只回傳 `ELIGIBLE_FOR_SANDBOX_INSPECTION` 與 immutable `FuturesSandboxContractInspection`；這只代表既有輸入可在受限 sandbox 被檢視，絕不表示 order matched、trade/fill created、position opened、margin reserved、PnL/funding applied、balance changed、ledger posted 或 settled。
+- Rejection semantics: 未有 accepted snapshot 時回傳 `ORDER_NOT_ACCEPTED_FOR_SANDBOX`；order market 與 contract 不一致時回傳 `ORDER_MARKET_OUTSIDE_CONTRACT`；mock mark-price market 不一致時回傳 `MARK_PRICE_MARKET_OUTSIDE_CONTRACT`。拒絕結果不攜帶 inspection 半成品。
+- Deliberate boundary: T06 不呼叫 matching、verified fill、position update、PnL 或 funding calculator；尤其不提供 candidate-to-fill conversion，避免把 T02 的 `MATCH_ELIGIBLE` 誤接成實際交易流程。
+- Validation commands and result:
+  - `cd server && ./mvnw -q -Dtest=FuturesSandboxRestrictedContractGateTest,P18T06RestrictedFuturesSandboxContractScopeGateTest,FuturesOrderPlacementResultTest,FuturesSandboxMarkPricePnlValuationGateTest test`
+  - passed
+  - `cd server && ./mvnw test`
+  - passed: 279 tests, 0 failures, 0 errors, 2 skipped
+- Sandbox limitations: T06 不產生 fill、trade、position、PnL/funding 套用、margin reservation、balance/ledger mutation 或 settlement；不提供 persistence、API、Spring runtime、public-user 或 real-money capability。
