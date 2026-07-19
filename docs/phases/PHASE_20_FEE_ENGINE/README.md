@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T04 completed
+completed — Contract Trading Integration Gate; HUMAN_REVIEW_REQUIRED pending final review
 ```
 
 ## 目標
@@ -36,7 +36,7 @@ T01 full sandbox contract trading flow - completed (pure eligibility integration
 T02 failure case coverage - completed (contract / risk rejection gate regression)
 T03 reconciliation checks - completed (immutable decision replay only)
 T04 admin / audit review - completed (read-only review snapshot only)
-T05 no-production-claim gate
+T05 no-production-claim gate - completed (documentation and architecture guard)
 ```
 
 ## Sandbox 限制
@@ -74,3 +74,9 @@ P20 是較完整 contract trading sandbox gate，但仍然不是正式交易。
 - Scope: 以 T03 的 immutable reconciliation result 建立唯讀 admin/audit review snapshot。一致結果固定為 `HUMAN_REVIEW_REQUIRED`；mismatch 固定升級為 `MISMATCH_REQUIRES_HUMAN_INVESTIGATION`。
 - Review contract: snapshot 保留 replayed / recorded flow、必要檢查項與禁止動作；它不接受管理員身分、帳戶、權限或 command，因此不能被誤接成管理授權。
 - Deliberate boundary: 不提供 admin API、authentication / authorization、manual balance adjustment、紀錄覆寫、自動修正、資料庫寫入、交易執行、public trading 或 real-money capability。
+
+## T05 implementation notes
+
+- Scope: 建立 production no-claim 文件與 architecture guard，固定 P20 只完成 sandbox eligibility integration、failure regression、decision replay 與唯讀 review。
+- Claim boundary: P20 不得宣稱 production-ready、正式合約交易已上線、public / real-money contract trading ready、matching / fill 已執行、ledger / balance 已更新或 settlement 已完成。
+- Review status: T01-T05 已完成，但 Phase 20 的 `HUMAN_REVIEW_REQUIRED` 最終審核尚未批准；完成 task 不等於可進入正式交易或跳至下一 phase。
