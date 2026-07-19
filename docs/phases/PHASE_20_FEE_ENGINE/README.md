@@ -80,3 +80,7 @@ P20 是較完整 contract trading sandbox gate，但仍然不是正式交易。
 - Scope: 建立 production no-claim 文件與 architecture guard，固定 P20 只完成 sandbox eligibility integration、failure regression、decision replay 與唯讀 review。
 - Claim boundary: P20 不得宣稱 production-ready、正式合約交易已上線、public / real-money contract trading ready、matching / fill 已執行、ledger / balance 已更新或 settlement 已完成。
 - Review status: T01-T05 已完成，但 Phase 20 的 `HUMAN_REVIEW_REQUIRED` 最終審核尚未批准；完成 task 不等於可進入正式交易或跳至下一 phase。
+
+## Final review
+
+- `phase-20-final-review.md` 是待人類批准的 review draft；它整理審核範圍與驗證結果，但不代表 P20 已獲批准或 production-ready。

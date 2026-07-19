@@ -23,6 +23,7 @@ class P20T05ProductionNoClaimGateTest {
         Path docsRoot = resolveDocsRoot();
         String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
         String noClaimReview = Files.readString(docsRoot.resolve("phase-20-no-claim-review.md"), StandardCharsets.UTF_8);
+        String finalReview = Files.readString(docsRoot.resolve("phase-20-final-review.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("completed — Contract Trading Integration Gate; HUMAN_REVIEW_REQUIRED pending final review"));
         assertTrue(readme.contains("T01-T05 已完成"));
@@ -35,6 +36,11 @@ class P20T05ProductionNoClaimGateTest {
         assertTrue(noClaimReview.contains("NOT real-money contract trading ready"));
         assertTrue(noClaimReview.contains("NOT settlement completed"));
         assertTrue(noClaimReview.contains("final review 尚待人類審核"));
+        assertTrue(finalReview.contains("Phase 20: TASKS_COMPLETED_PENDING_HUMAN_REVIEW"));
+        assertTrue(finalReview.contains("Phase 20 human review: NOT APPROVED"));
+        assertTrue(finalReview.contains("Phase 20 人工審核尚未完成"));
+        assertTrue(finalReview.contains("Next task: human sign-off for Phase 20 final review"));
+        assertFalse(finalReview.contains("Phase 20 human review: APPROVED"));
     }
 
     @Test
