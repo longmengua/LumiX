@@ -1,0 +1,2 @@
+# 測試未使用 final/static/constructor mock，因此選擇不需動態 JVM agent 的 subclass mock maker，避免受限環境的 attach 失敗。
+mock-maker-subclass

@@ -134,4 +134,6 @@ accepted 不代表 settled
 - Validation commands and result:
   - `cd server && ./mvnw -q -Dtest=FuturesSandboxPnlCalculatorTest,FuturesSandboxMarkPricePnlValuationGateTest,FuturesSandboxFundingPreviewCalculatorTest,P18T05FuturesSandboxMarkPriceFundingScopeGateTest,FuturesPositionTest,FuturesAccountTest test`
   - passed
+  - `cd server && ./mvnw test`
+  - passed: 275 tests, 0 failures, 0 errors, 2 skipped
 - Sandbox limitations: T05 不連接正式行情、不保存 mark price、不管理 funding schedule、不建立 payment instruction、不更新 position、margin、balance 或 ledger、不處理 fee、liquidation、settlement、persistence、API、Spring runtime、public-user 或 real-money capability。
