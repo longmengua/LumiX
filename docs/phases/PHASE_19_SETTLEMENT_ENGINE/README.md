@@ -33,7 +33,7 @@ production risk controls
 ```text
 T01 liquidation simulation - completed (pure threshold simulation only)
 T02 funding mock - completed (single-scenario batch preview only)
-T03 insurance fund placeholder
+T03 insurance fund placeholder - completed (immutable simulation snapshot only)
 T04 risk / reconciliation tests
 T05 production no-claim review
 ```
@@ -70,3 +70,8 @@ risk / liquidation / reconciliation runtime 仍屬 HUMAN_REVIEW_REQUIRED。
 - Scope: `FuturesSandboxFundingMockBatchSimulator` 重用 P18-T05 的單筆 funding preview，建立同一 market、rate 與 funding time 的 batch mock scenario。
 - Input guard: 拒絕空集合、重複 position、不同 market、不同 rate 或不同 funding time；避免把不相容資料偽裝成同一 funding cycle。
 - Deliberate boundary: 不做 funding payment、跨帳戶 netting、balance/ledger mutation、settlement、schedule 管理或正式 rate/mark-price 管線。
+
+## T03 implementation notes
+
+- Scope: `FuturesSandboxInsuranceFundPlaceholder` 只保留 asset、非負 simulated amount 與 observed time 的 immutable simulation snapshot。
+- Deliberate boundary: 不接受注資、賠付、扣款、資產歸集、帳本/餘額異動或 production insurance-fund accounting。
