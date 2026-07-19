@@ -3,7 +3,7 @@
 ## 狀態
 
 ```text
-in progress — T01-T06 completed; HUMAN_REVIEW_REQUIRED final review pending
+completed — Futures Trading Sandbox foundation; HUMAN_REVIEW_REQUIRED approved
 ```
 
 ## 目標
@@ -64,6 +64,8 @@ accepted 不代表 settled
 ```text
 任何 futures / PnL / mark price / funding runtime 變更都屬於 HUMAN_REVIEW_REQUIRED。
 任何把受限 contract sandbox 誤寫成正式合約交易上線的行為都屬於 HUMAN_REVIEW_REQUIRED。
+本輪 P18 scope 已由人類於 2026-07-20 明確批准；詳見 phase-18-final-review.md。
+後續任何 futures / risk / liquidation / funding / settlement runtime 新變更都必須重新標記並接受人類審核。
 ```
 
 ## T01 implementation notes
@@ -151,3 +153,8 @@ accepted 不代表 settled
   - `cd server && ./mvnw test`
   - passed: 279 tests, 0 failures, 0 errors, 2 skipped
 - Sandbox limitations: T06 不產生 fill、trade、position、PnL/funding 套用、margin reservation、balance/ledger mutation 或 settlement；不提供 persistence、API、Spring runtime、public-user 或 real-money capability。
+
+## Final review
+
+- Phase 18 人工審核完成；詳細範圍、驗證、rollback 與禁止宣稱請見 `phase-18-final-review.md`。
+- approved 只代表 P18 的受限 futures trading sandbox foundation 已收斂；不代表正式合約交易、production readiness 或真實資金能力。
