@@ -89,19 +89,31 @@ export function TradingOrderBook({ bids, asks, trades, lastPrice, markPrice, bas
         </label>
       </div>
 
-      <div className="trading-book__table-head">
-        <span>{t('trading.orderBook.priceColumn', undefined, { currency: 'USDT' })}</span>
-        <span>{t('trading.orderBook.quantityColumn', undefined, { asset: baseAsset })}</span>
-        <span>{t('trading.orderBook.totalColumn', undefined, { asset: baseAsset })}</span>
+      <div className="trading-book__sides">
+        <div className="trading-book__side">
+          <p className="trading-book__side-title trading-book__side-title--ask">{t('trading.orderBook.asks')}</p>
+          <div className="trading-book__table-head">
+            <span>{t('trading.orderBook.priceColumn', undefined, { currency: 'USDT' })}</span>
+            <span>{t('trading.orderBook.quantityColumn', undefined, { asset: baseAsset })}</span>
+            <span>{t('trading.orderBook.totalColumn', undefined, { asset: baseAsset })}</span>
+          </div>
+          <div className="trading-book__rows">{renderRows(asks, 'ask')}</div>
+        </div>
+        <div className="trading-book__side">
+          <p className="trading-book__side-title trading-book__side-title--bid">{t('trading.orderBook.bids')}</p>
+          <div className="trading-book__table-head">
+            <span>{t('trading.orderBook.priceColumn', undefined, { currency: 'USDT' })}</span>
+            <span>{t('trading.orderBook.quantityColumn', undefined, { asset: baseAsset })}</span>
+            <span>{t('trading.orderBook.totalColumn', undefined, { asset: baseAsset })}</span>
+          </div>
+          <div className="trading-book__rows">{renderRows(bids, 'bid')}</div>
+        </div>
       </div>
-      <div className="trading-book__rows">{renderRows(asks, 'ask')}</div>
 
       <button className="trading-book__mid" type="button" onClick={() => onSelectPrice(lastPrice)}>
         <strong>{formatPrice(lastPrice, fractionDigits)}</strong>
         <span>{t('trading.orderBook.markPrice')} {formatPrice(markPrice, fractionDigits)}</span>
       </button>
-
-      <div className="trading-book__rows">{renderRows(bids, 'bid')}</div>
       <div className="trading-book__ratios">
         <div>
           <p>{t('trading.orderBook.restingRatio')}</p>

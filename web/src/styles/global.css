@@ -2847,7 +2847,7 @@ p,
 }
 
 .trading-book__table-head {
-  padding: 10px 14px 6px;
+  padding: 6px 10px;
   color: rgba(148, 163, 184, 0.86);
   font-size: 0.7rem;
 }
@@ -2864,9 +2864,28 @@ p,
   gap: 0;
 }
 
+.trading-book__sides {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+}
+
+.trading-book__side + .trading-book__side {
+  border-left: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.trading-book__side-title {
+  margin: 0;
+  padding: 9px 10px 0;
+  font-size: 0.72rem;
+}
+
+.trading-book__side-title--ask { color: #fb7185; }
+.trading-book__side-title--bid { color: #34d399; }
+
 .trading-book__row {
   width: 100%;
-  padding: 3px 14px;
+  padding: 3px 10px;
   border: 0;
   border-radius: 0;
   color: rgba(203, 213, 225, 0.9);
