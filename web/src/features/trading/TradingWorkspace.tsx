@@ -7,8 +7,6 @@ import { TradingMarketChart } from './TradingMarketChart';
 import { TradingMarketHeader } from './TradingMarketHeader';
 import { TradingOrderBook } from './TradingOrderBook';
 import { TradingOrderForm } from './TradingOrderForm';
-import { TradingOpenOrdersPanel } from './TradingOpenOrdersPanel';
-import { TradingPositionsPanel } from './TradingPositionsPanel';
 import { useTradingWorkspaceMock } from './useTradingWorkspaceMock';
 import type { TradingKind } from './mockTradingService';
 
@@ -51,11 +49,9 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
 
         <aside className="trading-workspace-grid__order-stack">
           <TradingOrderForm kind={kind} workspace={data} selectedBookPrice={selectedBookPrice} />
-          <TradingBalancePanel balances={data.balances} positions={data.positions} riskRatio={data.riskRatio} />
         </aside>
 
-        <TradingPositionsPanel positions={data.positions} baseAsset={data.baseAsset} />
-        <TradingOpenOrdersPanel orders={data.openOrders} />
+        <TradingBalancePanel balances={data.balances} positions={data.positions} openOrders={data.openOrders} riskRatio={data.riskRatio} />
       </div>
     </main>
   );
