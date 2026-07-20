@@ -2747,7 +2747,8 @@ p,
 
 .trading-workspace-grid {
   display: grid;
-  grid-template-columns: minmax(340px, 380px) minmax(0, 1fr) minmax(400px, 450px);
+  /* 主圖維持約三分之二寬度，避免委託簿與下單區擠壓價格判讀空間。 */
+  grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
   align-items: start;
   gap: 12px;
   width: 100%;
@@ -2756,7 +2757,7 @@ p,
 
 .trading-workspace-grid__book,
 .trading-workspace-grid__center,
-.trading-workspace-grid__order {
+.trading-workspace-grid__sidebar {
   display: flex;
   min-width: 0;
   flex-direction: column;
@@ -3290,7 +3291,7 @@ p,
   }
 
   .trading-workspace-grid {
-    grid-template-columns: minmax(290px, 330px) minmax(0, 1fr) minmax(360px, 400px);
+    grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
   }
 }
 
@@ -3305,12 +3306,11 @@ p,
   }
 
   .trading-workspace-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 380px);
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
   }
 
-  .trading-workspace-grid__center { grid-column: 1; grid-row: 1 / span 2; }
-  .trading-workspace-grid__order { grid-column: 2; grid-row: 1; }
-  .trading-workspace-grid__book { grid-column: 2; grid-row: 2; }
+  .trading-workspace-grid__center { grid-column: 1; }
+  .trading-workspace-grid__sidebar { grid-column: 2; }
 }
 
 @media (max-width: 767px) {
@@ -3331,16 +3331,24 @@ p,
   }
 
   .trading-workspace-grid__center,
-  .trading-workspace-grid__order,
-  .trading-workspace-grid__book {
+  .trading-workspace-grid__sidebar {
     grid-column: auto;
     grid-row: auto;
   }
 
-  .trading-workspace-grid__center { order: 1; }
-  .trading-workspace-grid__order { order: 2; }
-  .trading-workspace-grid__book { order: 3; }
   .trading-workspace-grid { display: flex; flex-direction: column; }
+
+  /* 拆開桌面欄位容器，才能讓 mobile 的下單與委託簿排在倉位之前。 */
+  .trading-workspace-grid__center,
+  .trading-workspace-grid__sidebar {
+    display: contents;
+  }
+
+  .market-chart { order: 1; }
+  .trading-form { order: 2; }
+  .trading-book { order: 3; }
+  .positions-panel { order: 4; }
+  .balance-panel { order: 5; }
 
   .positions-panel__position {
     grid-template-columns: 1fr;

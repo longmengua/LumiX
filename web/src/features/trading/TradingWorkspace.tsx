@@ -36,7 +36,12 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
       <p className="trading-page__adapter-note">{t('trading.market.adapterNotice')}</p>
 
       <div className="trading-workspace-grid">
-        <aside className="trading-workspace-grid__book">
+        <section className="trading-workspace-grid__center">
+          <TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />
+          <TradingPositionsPanel positions={data.positions} baseAsset={data.baseAsset} />
+        </section>
+
+        <aside className="trading-workspace-grid__sidebar">
           <TradingOrderBook
             asks={data.orderBook.asks}
             baseAsset={data.baseAsset}
@@ -46,14 +51,6 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
             trades={data.trades}
             onSelectPrice={setSelectedBookPrice}
           />
-        </aside>
-
-        <section className="trading-workspace-grid__center">
-          <TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />
-          <TradingPositionsPanel positions={data.positions} baseAsset={data.baseAsset} />
-        </section>
-
-        <aside className="trading-workspace-grid__order">
           <TradingOrderForm kind={kind} workspace={data} selectedBookPrice={selectedBookPrice} />
           <TradingBalancePanel balances={data.balances} positions={data.positions} riskRatio={data.riskRatio} />
         </aside>
