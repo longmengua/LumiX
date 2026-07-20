@@ -2745,6 +2745,16 @@ p,
   white-space: nowrap;
 }
 
+.market-header__metric--compact {
+  align-self: end;
+  max-width: 118px;
+}
+
+.market-header__metric--compact span,
+.market-header__metric--compact strong {
+  font-size: 0.67rem;
+}
+
 .trading-workspace-grid {
   display: grid;
   /* 橫列分區讓圖表、下單與帳戶管理依操盤順序掃讀，不再互相擠壓。 */
@@ -3006,8 +3016,8 @@ p,
 .market-chart__svg {
   display: block;
   width: 100%;
+  height: clamp(260px, 34vh, 360px);
   min-width: 0;
-  aspect-ratio: 1000 / 520;
   background: rgba(2, 6, 23, 0.25);
 }
 

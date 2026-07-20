@@ -35,11 +35,11 @@ const movingAverageStyles = [
 ] as const;
 
 const chartWidth = 1000;
-const chartHeight = 520;
-const priceTop = 28;
-const priceHeight = 330;
-const volumeTop = 388;
-const volumeHeight = 92;
+const chartHeight = 420;
+const priceTop = 24;
+const priceHeight = 255;
+const volumeTop = 310;
+const volumeHeight = 72;
 
 function createLinePath(values: Array<number | null>, minPrice: number, maxPrice: number) {
   const scaleY = (value: number) => priceTop + ((maxPrice - value) / (maxPrice - minPrice || 1)) * priceHeight;
@@ -114,7 +114,8 @@ export function TradingMarketChart({ symbol, lastPrice }: TradingMarketChartProp
         ))}
       </div>
 
-      <svg className="market-chart__svg" viewBox={`0 0 ${chartWidth} ${chartHeight}`} role="img" aria-label={t('trading.chart.candleAriaLabel')}>
+      {/* 圖表高度受版面限制時仍填滿繪圖區，讓首屏可同時看見 K 線與成交量。 */}
+      <svg className="market-chart__svg" viewBox={`0 0 ${chartWidth} ${chartHeight}`} preserveAspectRatio="none" role="img" aria-label={t('trading.chart.candleAriaLabel')}>
         {[0, 1, 2, 3, 4].map((index) => {
           const y = priceTop + (priceHeight / 4) * index;
           return <line className="market-chart__grid-line" key={y} x1="0" x2={chartWidth} y1={y} y2={y} />;

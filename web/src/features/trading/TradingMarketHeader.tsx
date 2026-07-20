@@ -17,7 +17,7 @@ export function TradingMarketHeader({ workspace }: TradingMarketHeaderProps) {
     { label: t('trading.market.volume24h'), value: `${formatAmount(marketStats.volume24h, 2)} ${workspace.baseAsset}` },
     { label: t('trading.market.turnover24h'), value: formatCurrency(marketStats.turnover24h) },
     { label: t('trading.market.openInterest'), value: `${formatAmount(marketStats.openInterest, 2)} ${workspace.baseAsset}` },
-    { label: t('trading.market.fundingRate'), value: `${formatPercent(marketStats.fundingRate, 3)} / ${marketStats.fundingCountdown}` },
+    { label: t('trading.market.fundingRate'), value: `${formatPercent(marketStats.fundingRate, 3)} / ${marketStats.fundingCountdown}`, compact: true },
   ];
 
   return (
@@ -43,7 +43,7 @@ export function TradingMarketHeader({ workspace }: TradingMarketHeaderProps) {
 
       <div className="market-header__metrics">
         {metrics.map((metric) => (
-          <div className="market-header__metric" key={metric.label}>
+          <div className={`market-header__metric${metric.compact ? ' market-header__metric--compact' : ''}`} key={metric.label}>
             <span>{metric.label}</span>
             <strong>{metric.value}</strong>
           </div>
