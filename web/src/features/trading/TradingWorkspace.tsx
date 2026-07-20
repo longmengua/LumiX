@@ -7,6 +7,7 @@ import { TradingMarketChart } from './TradingMarketChart';
 import { TradingMarketHeader } from './TradingMarketHeader';
 import { TradingOrderBook } from './TradingOrderBook';
 import { TradingOrderForm } from './TradingOrderForm';
+import { TradingOpenOrdersPanel } from './TradingOpenOrdersPanel';
 import { TradingPositionsPanel } from './TradingPositionsPanel';
 import { useTradingWorkspaceMock } from './useTradingWorkspaceMock';
 import type { TradingKind } from './mockTradingService';
@@ -36,24 +37,25 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
       <p className="trading-page__adapter-note">{t('trading.market.adapterNotice')}</p>
 
       <div className="trading-workspace-grid">
-        <section className="trading-workspace-grid__center">
-          <TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />
-          <TradingPositionsPanel positions={data.positions} baseAsset={data.baseAsset} />
-        </section>
+        <TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />
 
-        <aside className="trading-workspace-grid__sidebar">
-          <TradingOrderBook
-            asks={data.orderBook.asks}
-            baseAsset={data.baseAsset}
-            bids={data.orderBook.bids}
-            lastPrice={data.midPrice}
-            markPrice={data.marketStats.markPrice}
-            trades={data.trades}
-            onSelectPrice={setSelectedBookPrice}
-          />
+        <TradingOrderBook
+          asks={data.orderBook.asks}
+          baseAsset={data.baseAsset}
+          bids={data.orderBook.bids}
+          lastPrice={data.midPrice}
+          markPrice={data.marketStats.markPrice}
+          trades={data.trades}
+          onSelectPrice={setSelectedBookPrice}
+        />
+
+        <aside className="trading-workspace-grid__order-stack">
           <TradingOrderForm kind={kind} workspace={data} selectedBookPrice={selectedBookPrice} />
           <TradingBalancePanel balances={data.balances} positions={data.positions} riskRatio={data.riskRatio} />
         </aside>
+
+        <TradingPositionsPanel positions={data.positions} baseAsset={data.baseAsset} />
+        <TradingOpenOrdersPanel orders={data.openOrders} />
       </div>
     </main>
   );

@@ -2747,21 +2747,33 @@ p,
 
 .trading-workspace-grid {
   display: grid;
-  /* 主圖維持約三分之二寬度，避免委託簿與下單區擠壓價格判讀空間。 */
-  grid-template-columns: minmax(0, 2fr) minmax(360px, 1fr);
+  /* 橫列分區讓圖表、下單與帳戶管理依操盤順序掃讀，不再互相擠壓。 */
+  grid-template-columns: minmax(0, 1fr) minmax(400px, 0.9fr);
   align-items: start;
   gap: 12px;
   width: 100%;
   min-width: 0;
 }
 
-.trading-workspace-grid__book,
-.trading-workspace-grid__center,
-.trading-workspace-grid__sidebar {
+.trading-workspace-grid__order-stack {
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 12px;
+}
+
+.trading-workspace-grid > .market-chart {
+  grid-column: 1 / -1;
+}
+
+.trading-workspace-grid > .trading-book,
+.trading-workspace-grid > .positions-panel {
+  grid-column: 1;
+}
+
+.trading-workspace-grid__order-stack,
+.trading-workspace-grid > .open-orders-panel {
+  grid-column: 2;
 }
 
 .workspace-panel {
@@ -3063,6 +3075,28 @@ p,
   font-size: 0.8rem;
 }
 
+.open-orders-panel { overflow: hidden; }
+.open-orders-panel__list { display: grid; }
+
+.open-orders-panel__row {
+  display: grid;
+  grid-template-columns: minmax(112px, 1.3fr) minmax(0, 1fr) minmax(0, 0.9fr) minmax(92px, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.7rem;
+}
+
+.open-orders-panel__row:first-child { border-top: 0; }
+.open-orders-panel__row > div,
+.open-orders-panel__row > span { display: grid; gap: 3px; min-width: 0; }
+.open-orders-panel__row > div > strong,
+.open-orders-panel__row > span > strong { overflow: hidden; color: #dbeafe; font-size: 0.76rem; font-variant-numeric: tabular-nums; text-overflow: ellipsis; white-space: nowrap; }
+.open-orders-panel__row > div > span { font-size: 0.7rem; }
+.open-orders-panel__empty { margin: 0; padding: 14px; color: rgba(148, 163, 184, 0.9); font-size: 0.8rem; }
+
 .trading-form {
   gap: 14px;
   padding: 14px;
@@ -3291,7 +3325,7 @@ p,
   }
 
   .trading-workspace-grid {
-    grid-template-columns: minmax(0, 2fr) minmax(340px, 1fr);
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 0.9fr);
   }
 }
 
@@ -3306,11 +3340,11 @@ p,
   }
 
   .trading-workspace-grid {
-    grid-template-columns: minmax(0, 1fr) minmax(320px, 360px);
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 0.9fr);
   }
 
-  .trading-workspace-grid__center { grid-column: 1; }
-  .trading-workspace-grid__sidebar { grid-column: 2; }
+  .trading-workspace-grid__order-stack,
+  .trading-workspace-grid > .open-orders-panel { grid-column: 2; }
 }
 
 @media (max-width: 767px) {
@@ -3330,25 +3364,13 @@ p,
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .trading-workspace-grid__center,
-  .trading-workspace-grid__sidebar {
-    grid-column: auto;
-    grid-row: auto;
-  }
-
   .trading-workspace-grid { display: flex; flex-direction: column; }
 
-  /* 拆開桌面欄位容器，才能讓 mobile 的下單與委託簿排在倉位之前。 */
-  .trading-workspace-grid__center,
-  .trading-workspace-grid__sidebar {
-    display: contents;
-  }
-
   .market-chart { order: 1; }
-  .trading-form { order: 2; }
-  .trading-book { order: 3; }
+  .trading-book { order: 2; }
+  .trading-workspace-grid__order-stack { order: 3; }
   .positions-panel { order: 4; }
-  .balance-panel { order: 5; }
+  .open-orders-panel { order: 5; }
 
   .positions-panel__position {
     grid-template-columns: 1fr;
@@ -3364,5 +3386,13 @@ p,
 
   .trading-form__grid {
     grid-template-columns: 1fr;
+  }
+
+  .open-orders-panel__row {
+    grid-template-columns: minmax(100px, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  }
+
+  .open-orders-panel__row > span:last-child {
+    display: none;
   }
 }
