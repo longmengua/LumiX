@@ -28,6 +28,7 @@ export type TradingOrderBookLevel = {
 export type TradingFill = {
   time: string;
   side: 'Buy' | 'Sell';
+  aggressorSide: 'Buy' | 'Sell';
   price: number;
   size: number;
   sourceKey: string;
@@ -64,6 +65,28 @@ export type TradingBalance = {
   noteKey: string;
 };
 
+export type TradingMarketStats = {
+  markPrice: number;
+  high24h: number;
+  low24h: number;
+  volume24h: number;
+  turnover24h: number;
+  openInterest: number;
+  fundingRate: number;
+  fundingCountdown: string;
+};
+
+export type TradingCandle = {
+  time: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+};
+
+export type MarketTimeframe = 'intraday' | '1m' | '5m' | '15m' | '1h' | '4h' | '1d' | '1w' | '1mo' | '1q';
+
 export type TradingWorkspaceData = {
   kind: TradingKind;
   symbol: string;
@@ -76,6 +99,7 @@ export type TradingWorkspaceData = {
   heroCopyValues: Record<string, string | number>;
   midPrice: number;
   change24h: number;
+  marketStats: TradingMarketStats;
   metrics: TradingMetric[];
   balances: TradingBalance[];
   orderBook: {
@@ -176,18 +200,22 @@ function buildOrderBookLevels(lastPrice: number) {
   const bidSpacing = Math.max(lastPrice * 0.00032, 0.01);
   const askSpacing = Math.max(lastPrice * 0.00035, 0.01);
 
-  const bids = Array.from({ length: 5 }, (_, index) => {
+  let bidTotal = 0;
+  const bids = Array.from({ length: 10 }, (_, index) => {
     const depth = index + 1;
     const price = lastPrice - bidSpacing * depth;
     const size = depth * 1.65 + index * 0.22;
-    return { price, size, total: price * size };
+    bidTotal += size;
+    return { price, size, total: bidTotal };
   });
 
-  const asks = Array.from({ length: 5 }, (_, index) => {
+  let askTotal = 0;
+  const asks = Array.from({ length: 10 }, (_, index) => {
     const depth = index + 1;
     const price = lastPrice + askSpacing * depth;
     const size = depth * 1.48 + index * 0.18;
-    return { price, size, total: price * size };
+    askTotal += size;
+    return { price, size, total: askTotal };
   });
 
   return { bids, asks };
@@ -200,6 +228,8 @@ function buildTrades(lastPrice: number, kind: TradingKind): TradingFill[] {
   return offsets.map((offset, index) => ({
     time: new Date(Date.now() - index * 45_000).toISOString(),
     side: offset >= 0 ? 'Buy' : 'Sell',
+    // 主動方獨立保存，避免把掛單簿數量誤當作吃單量計算。
+    aggressorSide: offset >= 0 ? 'Buy' : 'Sell',
     price: lastPrice * (1 + offset / 100),
     size: 0.12 + index * 0.04,
     sourceKey:
@@ -215,6 +245,100 @@ function buildTrades(lastPrice: number, kind: TradingKind): TradingFill[] {
             ? 'trading.tradeFeed.source.marginFill'
             : 'trading.tradeFeed.source.borrowRebalance',
   }));
+}
+
+function seedFromText(value: string) {
+  // 字串種子讓相同商品與週期在重新整理後仍產生一致的 mock K 線。
+  return Array.from(value).reduce((seed, character) => ((seed * 31) + character.charCodeAt(0)) >>> 0, 2166136261);
+}
+
+function nextSeed(seed: number) {
+  return (seed * 1664525 + 1013904223) >>> 0;
+}
+
+function seededFraction(seed: number) {
+  return seed / 4294967296;
+}
+
+function buildDeterministicCandles(symbol: string, timeframe: string, count: number, intervalMs: number, initialPrice: number): TradingCandle[] {
+  let seed = seedFromText(`${symbol}-${timeframe}`);
+  let close = initialPrice;
+  const firstTime = Date.UTC(2025, 10, 1) - ((count - 1) * intervalMs);
+
+  return Array.from({ length: count }, (_, index) => {
+    seed = nextSeed(seed);
+    const drift = (seededFraction(seed) - 0.47) * 0.025;
+    const open = close;
+    close = Math.max(1, open * (1 + drift));
+    seed = nextSeed(seed);
+    const upperWick = Math.max(open, close) * (0.001 + seededFraction(seed) * 0.007);
+    seed = nextSeed(seed);
+    const lowerWick = Math.min(open, close) * (0.001 + seededFraction(seed) * 0.007);
+    seed = nextSeed(seed);
+
+    return {
+      time: firstTime + (index * intervalMs),
+      open,
+      high: Math.max(open, close) + upperWick,
+      low: Math.max(1, Math.min(open, close) - lowerWick),
+      close,
+      volume: 180 + (seededFraction(seed) * 920),
+    };
+  });
+}
+
+export function aggregateCandles(candles: TradingCandle[], groupSize: number): TradingCandle[] {
+  // 週、月、季線從同一份日線聚合，確保不同週期的 OHLC 關係不互相矛盾。
+  const aggregated: TradingCandle[] = [];
+
+  for (let start = 0; start < candles.length; start += groupSize) {
+    const group = candles.slice(start, start + groupSize);
+    if (group.length === 0) {
+      continue;
+    }
+
+    aggregated.push({
+      time: group[0].time,
+      open: group[0].open,
+      high: Math.max(...group.map((candle) => candle.high)),
+      low: Math.min(...group.map((candle) => candle.low)),
+      close: group[group.length - 1].close,
+      volume: group.reduce((sum, candle) => sum + candle.volume, 0),
+    });
+  }
+
+  return aggregated;
+}
+
+export function calculateSimpleMovingAverage(candles: TradingCandle[], period: number): Array<number | null> {
+  // 資料不足時保留 null，避免用 0 補值而畫出不存在的均線斷崖。
+  return candles.map((_, index) => {
+    if (index < period - 1) {
+      return null;
+    }
+
+    const window = candles.slice(index - period + 1, index + 1);
+    return window.reduce((sum, candle) => sum + candle.close, 0) / period;
+  });
+}
+
+export function getMockMarketCandles(symbol: string, timeframe: MarketTimeframe, initialPrice: number): TradingCandle[] {
+  const dailyCandles = buildDeterministicCandles(symbol, '1d', 252, 86_400_000, initialPrice * 0.9);
+
+  if (timeframe === '1d') return dailyCandles;
+  if (timeframe === '1w') return aggregateCandles(dailyCandles, 5);
+  if (timeframe === '1mo') return aggregateCandles(dailyCandles, 21);
+  if (timeframe === '1q') return aggregateCandles(dailyCandles, 63);
+
+  const intervals: Record<Exclude<MarketTimeframe, '1d' | '1w' | '1mo' | '1q'>, number> = {
+    intraday: 60_000,
+    '1m': 60_000,
+    '5m': 300_000,
+    '15m': 900_000,
+    '1h': 3_600_000,
+    '4h': 14_400_000,
+  };
+  return buildDeterministicCandles(symbol, timeframe, 240, intervals[timeframe], initialPrice * 0.96);
 }
 
 function buildOpenOrders(lastPrice: number): TradingOpenOrder[] {
@@ -388,6 +512,16 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
     heroCopyValues: heroCopy.values ?? {},
     midPrice: lastPrice,
     change24h: kind === 'futures' ? change24h + 0.28 : kind === 'margin' ? -0.2 : change24h,
+    marketStats: {
+      markPrice: lastPrice * 0.9998,
+      high24h: profile.spotHigh24h + (kind === 'futures' ? profile.futuresBasis : 0),
+      low24h: profile.spotLow24h + (kind === 'futures' ? profile.futuresBasis : 0),
+      volume24h: profile.spotVolume24h,
+      turnover24h: profile.spotVolume24h * lastPrice,
+      openInterest: profile.spotVolume24h * 1.82,
+      fundingRate: kind === 'futures' ? profile.futuresFunding : 0,
+      fundingCountdown: '03:42:18',
+    },
     metrics: buildMetrics(kind, profile, lastPrice),
     balances: buildBalances(kind, baseAsset),
     orderBook,
