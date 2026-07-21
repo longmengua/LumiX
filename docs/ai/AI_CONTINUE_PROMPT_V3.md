@@ -10,13 +10,13 @@ First read:
 - AI_AGENT.md
 - AI_PROGRESS.md
 - docs/ai/AI_CONTEXT_ROUTING.md
-- docs/phases/PHASE_17_ORDER_INTAKE/README.md
+- docs/phases/PHASE_21_MARKET_DATA/README.md
 
 Current allowed phase:
-- Phase 17 - Futures Core Model
+- Phase 21 - Market Data Pipeline (planned, not started)
 
-Pick the first incomplete P17 task listed in:
-- docs/phases/PHASE_17_ORDER_INTAKE/README.md
+Do not implement a Phase 21 task until a human explicitly starts the phase and approves a task card.
+After approval, implement only the first approved Phase 21 task card.
 
 Rules:
 - Do not jump phases.

@@ -34,7 +34,9 @@ Mini engineer / Codex
   +-- AI_AGENT.md
   +-- AI_PROGRESS.md
   +-- docs/ai/AI_CONTEXT_ROUTING.md
-  +-- docs/phases/PHASE_17_ORDER_INTAKE/README.md
+  +-- docs/phases/PHASE_21_MARKET_DATA/README.md
+
+Phase 21 尚待人類明確開工命令與 task card 審核；在此之前不得實作其內容。
 ```
 
 ## 目錄地圖

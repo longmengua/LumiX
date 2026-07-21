@@ -47,17 +47,21 @@ Phase 17: COMPLETED
   - NOT liquidation-ready
   - NOT funding-ready
   - NOT full margin-engine-ready
-Phase 18: IN PROGRESS — T01 COMPLETED
-  - Futures Trading Sandbox started at T01 futures order placement only
-  - NOT matching-ready
-  - NOT fill-ready
-  - NOT position-update-ready
-  - NOT PnL-ready
-  - NOT funding-ready
-  - NOT settlement-ready
-  - NOT public futures trading ready
-  - NOT real-money ready
-Phase 19-36: planned, not started
+Phase 18: COMPLETED_FOR_FUTURES_TRADING_SANDBOX_FOUNDATION
+  - Phase 18 human review: APPROVED
+  - Restricted futures trading sandbox foundation implemented
+  - NOT production-ready, matching-execution-ready, fill-producer-ready, ledger-integrated, settlement-ready, or real-money ready
+Phase 19: COMPLETED_FOR_RISK_SANDBOX_FOUNDATION
+  - Phase 19 human review: APPROVED
+  - Risk sandbox foundation implemented
+  - NOT production liquidation, formal funding engine, insurance fund accounting, or ledger/balance reconciliation runtime ready
+Phase 20: COMPLETED_FOR_CONTRACT_TRADING_INTEGRATION_GATE_FOUNDATION
+  - Phase 20 human review: APPROVED
+  - Contract Trading Integration Gate sandbox foundation implemented
+  - NOT production-ready, formal contract trading launched, matching/fill execution enabled, balance/ledger updated, or settlement completed
+Phase 21: PLANNED_NOT_STARTED
+  - Market Data Pipeline awaits explicit human kickoff and approved task cards
+Phase 22-36: planned, not started
 ```
 
 ## Master phase ladder

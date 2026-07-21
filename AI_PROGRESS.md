@@ -48,18 +48,40 @@ NOT balance-reservation-backed
 NOT liquidation-ready
 NOT funding-ready
 NOT full margin-engine-ready
-Phase 18: IN PROGRESS — T01 COMPLETED
-Phase 18 Futures Trading Sandbox started at T01 futures order placement only
-NOT matching-ready
-NOT fill-ready
-NOT position-update-ready
-NOT PnL-ready
-NOT funding-ready
-NOT settlement-ready
+Phase 18: COMPLETED_FOR_FUTURES_TRADING_SANDBOX_FOUNDATION
+Phase 18 human review: APPROVED
+Restricted futures trading sandbox foundation implemented
+NOT production-ready
 NOT public futures trading ready
 NOT real-money ready
-Phase 19-36: planned, not started
-Next implementation phase: none before explicit T02 kickoff; Phase 19 not started
+NOT matching-execution-ready
+NOT fill-producer-ready
+NOT balance-reservation-backed
+NOT ledger-integrated
+NOT settlement-ready
+NOT liquidation-ready
+NOT formal funding-engine-ready
+Phase 19: COMPLETED_FOR_RISK_SANDBOX_FOUNDATION
+Phase 19 human review: APPROVED
+Risk sandbox foundation implemented
+NOT production liquidation ready
+NOT formal funding engine ready
+NOT insurance fund accounting ready
+NOT ledger/balance reconciliation runtime ready
+Phase 20: COMPLETED_FOR_CONTRACT_TRADING_INTEGRATION_GATE_FOUNDATION
+Phase 20 human review: APPROVED
+Contract Trading Integration Gate sandbox foundation implemented
+NOT production-ready
+NOT formal contract trading launched
+NOT public contract trading ready
+NOT real-money contract trading ready
+NOT matching or fill execution enabled
+NOT position, balance or ledger updated
+NOT settlement completed
+Phase 21: PLANNED_NOT_STARTED
+Phase 21 Market Data Pipeline awaits explicit human kickoff and approved task cards
+Phase 22-36: planned, not started
+Next implementation phase: Phase 21; do not implement before explicit human kickoff and task-card review
 ```
 
 ## 目前倉庫現況
@@ -79,10 +101,10 @@ source_of_truth: docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md
 agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
-phase_17_review_status: docs/phases/PHASE_17_ORDER_INTAKE/phase-17-final-review.md
-current_phase_task_list: docs/phases/PHASE_18_MATCHING_CONTRACT/README.md
-next_implementation_phase: none before explicit T02 kickoff; Phase 19 not started
-first_task: docs/phases/PHASE_18_MATCHING_CONTRACT/README.md
+phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
+current_phase_task_list: docs/phases/PHASE_21_MARKET_DATA/README.md
+next_implementation_phase: Phase 21; awaits explicit human kickoff and approved task cards
+first_task: none; define and review the first Phase 21 task card before implementation
 ```
 
 ## 完成警告

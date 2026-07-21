@@ -40,5 +40,5 @@ production risk controls, API, monitoring, operations and real-money capability
 
 ```text
 Phase 19 T01-T05 只完成 risk sandbox foundation。
-Phase 19 final review 仍待人類審核；未經批准不得進入下一個 phase。
+Phase 19 final review 已由人類審核批准；批准只代表 simulation boundary 收斂，不代表任何 production risk runtime 已啟用。
 ```

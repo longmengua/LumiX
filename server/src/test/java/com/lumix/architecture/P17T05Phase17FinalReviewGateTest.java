@@ -84,10 +84,11 @@ class P17T05Phase17FinalReviewGateTest {
         assertTrue(progress.contains("NOT liquidation-ready"));
         assertTrue(progress.contains("NOT funding-ready"));
         assertTrue(progress.contains("NOT full margin-engine-ready"));
-        assertTrue(progress.contains("Phase 18: IN PROGRESS — T01 COMPLETED"));
-        assertTrue(progress.contains("Phase 18 Futures Trading Sandbox started at T01 futures order placement only"));
-        assertTrue(progress.contains("Phase 19-36: planned, not started"));
-        assertTrue(progress.contains("Next implementation phase: none before explicit T02 kickoff; Phase 19 not started"));
+        assertTrue(progress.contains("Phase 18: COMPLETED_FOR_FUTURES_TRADING_SANDBOX_FOUNDATION"));
+        assertTrue(progress.contains("Phase 19: COMPLETED_FOR_RISK_SANDBOX_FOUNDATION"));
+        assertTrue(progress.contains("Phase 20: COMPLETED_FOR_CONTRACT_TRADING_INTEGRATION_GATE_FOUNDATION"));
+        assertTrue(progress.contains("Phase 21: PLANNED_NOT_STARTED"));
+        assertTrue(progress.contains("Next implementation phase: Phase 21; do not implement before explicit human kickoff and task-card review"));
         assertFalse(progress.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
 
         assertTrue(finalReview.contains("Phase 17: COMPLETED"));

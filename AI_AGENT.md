@@ -64,14 +64,14 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-開始 第 17 階段 時，請照順序執行：
+Phase 21 尚未收到人類開工命令，也尚無經審核的 task card。開工命令與 task card 就緒後，請照順序執行：
 
 ```text
 1. Read AGENTS.md
 2. Read AI_PROGRESS.md
 3. Read docs/ai/AI_CONTEXT_ROUTING.md
-4. Read docs/phases/PHASE_17_ORDER_INTAKE/README.md
-5. Pick the first unchecked task listed in docs/phases/PHASE_17_ORDER_INTAKE/README.md
+4. Read docs/phases/PHASE_21_MARKET_DATA/README.md
+5. Read the first approved Phase 21 task card
 6. Implement only that task
 7. Run the narrowest useful tests
 8. Update the task note or status and notes
