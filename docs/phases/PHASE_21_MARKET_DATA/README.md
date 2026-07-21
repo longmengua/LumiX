@@ -101,3 +101,4 @@ P21-T02 ---> P21-T03
 - 規劃審核：[phase-21-task-card-review.md](phase-21-task-card-review.md)
 - proposed first task：[P21-T01 現況盤點、領域邊界與核心不變式](p21-t01-inventory-boundary-invariants.md)
 - approval status：awaiting human review；`P21-T01` 尚未取得 implementation approval。
+- 全域規劃：[Phase 21–36 規劃計畫](../../planning/PHASE_21_36_PLANNING_PROGRAM.md)

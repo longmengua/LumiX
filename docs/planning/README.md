@@ -7,6 +7,8 @@
 ```text
 PRODUCTION_ROADMAP.md   依能力面向切的整體路線圖
 PHASE_DEPENDENCY_MAP.md phase 之間的技術相依關係
+PHASE_21_36_PLANNING_PROGRAM.md  P21–P36 分層任務草案、依賴與風險門檻
+PHASE_21_36_PLANNING_REVIEW.md   P21–P36 全域規劃審核報告
 ```
 
 ## 什麼時候先讀這裡

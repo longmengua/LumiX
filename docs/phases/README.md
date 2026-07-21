@@ -12,12 +12,26 @@ PHASE_17_ORDER_INTAKE/         completed (Futures core sandbox model foundation 
 PHASE_18_MATCHING_CONTRACT/    completed — Futures Trading Sandbox foundation; HUMAN_REVIEW_REQUIRED approved (sandbox only; NOT production-ready, matching-execution-ready, fill-producer-ready, ledger-integrated, or real-money ready)
 PHASE_19_SETTLEMENT_ENGINE/    completed — Risk Sandbox foundation; HUMAN_REVIEW_REQUIRED approved (simulation only; NOT production liquidation, funding engine, insurance accounting, or reconciliation runtime ready)
 PHASE_20_FEE_ENGINE/           completed — Contract Trading Integration Gate foundation; HUMAN_REVIEW_REQUIRED approved (pure eligibility/review boundary only; NOT formal trading, balance/ledger mutation, or settlement ready)
-PHASE_21_MARKET_DATA/          TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL (planning kickoff received; runtime implementation not started; proposed first task P21-T01 awaits human review and explicit approval)
-...
+PHASE_21_MARKET_DATA/          TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL (runtime implementation not started; proposed first task P21-T01 awaits human review and explicit approval)
+PHASE_22_DEPOSIT_LISTENER/     PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (detailed task draft; runtime not started)
+PHASE_23_DEPOSIT_CREDITING/    PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (detailed task draft; runtime not started)
+PHASE_24_WITHDRAWAL_REQUEST/   PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (detailed task draft; runtime not started)
+PHASE_25_WITHDRAWAL_SIGNING/   PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (mid-level breakdown; runtime not started)
+PHASE_26_RISK_CONTROL/         PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (mid-level breakdown; runtime not started)
+PHASE_27_ADMIN_CONSOLE/        PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (mid-level breakdown; runtime not started)
+PHASE_28_AUDIT_COMPLIANCE/     PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (mid-level breakdown; runtime not started)
+PHASE_29_API_HARDENING/        PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_30_FRONTEND_PRODUCTION_UX/ PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_31_OBSERVABILITY/        PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_32_DISASTER_RECOVERY/    PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_33_SECURITY_HARDENING/   PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_34_LOAD_TESTING/         PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_35_BUSINESS_OPS/         PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_36_LAUNCH_GATE/          PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
 ```
 
 目前可執行的工作：
 
 ```text
-Phase 21 planning review only — P21-T01 is proposed and awaits human review plus explicit implementation approval; no runtime work is authorized
+Phase 21–36 planning review only — P21-T01 is proposed and all later phase drafts await human review; no runtime work is authorized
 ```

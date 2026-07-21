@@ -59,9 +59,12 @@ Phase 20: COMPLETED_FOR_CONTRACT_TRADING_INTEGRATION_GATE_FOUNDATION
   - Phase 20 human review: APPROVED
   - Contract Trading Integration Gate sandbox foundation implemented
   - NOT production-ready, formal contract trading launched, matching/fill execution enabled, balance/ledger updated, or settlement completed
-Phase 21: PLANNED_NOT_STARTED
-  - Market Data Pipeline awaits explicit human kickoff and approved task cards
-Phase 22-36: planned, not started
+Phase 21: TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL
+  - Market Data Pipeline planning kickoff received; task cards drafted
+  - runtime implementation not started; P21-T01 awaits human review and explicit approval
+Phase 22-36: PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+  - phase charter / task drafts completed as documentation only
+  - runtime implementation not started; no task has implementation approval
 ```
 
 ## Master phase ladder

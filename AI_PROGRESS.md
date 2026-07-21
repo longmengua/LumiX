@@ -82,7 +82,9 @@ Phase 21: TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL
 Phase 21 Market Data Pipeline planning kickoff received; task cards drafted
 Phase 21 runtime implementation not started
 Awaiting human review and explicit P21-T01 implementation approval
-Phase 22-36: planned, not started
+Phase 22-36: PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
+Phase 22-36 runtime implementation not started; no task has implementation approval
 Next implementation phase: Phase 21; do not implement before explicit human kickoff and task-card review
 ```
 
@@ -108,6 +110,8 @@ current_phase_task_list: docs/phases/PHASE_21_MARKET_DATA/README.md
 next_implementation_phase: Phase 21; task cards await human review and runtime implementation approval
 proposed_first_task: P21-T01
 approval_status: awaiting human review; runtime implementation not started
+phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
+phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
 ```
 
 ## 完成警告

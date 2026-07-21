@@ -18,6 +18,7 @@ Frontend page work                docs/frontend/page-map.md
 Operations / deployment           docs/operations/deployment-runbook.md
 Readiness review                  docs/governance/PRODUCTION_READINESS_GATES.md
 Market Data Pipeline              docs/phases/PHASE_21_MARKET_DATA/README.md, currently relevant task card
+Phase 21–36 planning              docs/planning/PHASE_21_36_PLANNING_PROGRAM.md, phase README and relevant draft/charter
 ```
 
 ## Token budget rule
@@ -53,4 +54,15 @@ task_card_review: docs/phases/PHASE_21_MARKET_DATA/phase-21-task-card-review.md
 proposed_first_task: docs/phases/PHASE_21_MARKET_DATA/p21-t01-inventory-boundary-invariants.md
 approval_status: awaiting human review; P21-T01 is not approved for implementation
 runtime_status: not started
+```
+
+## Phase 21–36 規劃路由
+
+```text
+planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
+planning_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
+phase_22_24: detailed task drafts in each phase README
+phase_25_28: mid-level task breakdowns in each phase README
+phase_29_36: phase charter and high-level tasks in each phase README
+approval_status: all runtime tasks await human review and explicit approval
 ```

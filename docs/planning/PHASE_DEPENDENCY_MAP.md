@@ -1,85 +1,38 @@
 # 階段依賴圖
 
-## 相依圖
+## 權威施工順序
 
 ```text
-P12 Database
+P20 已批准 sandbox foundation
   |
-  +--> P13 Identity / Account / Asset
-          |
-          +--> P14 Ledger
-                  |
-                  +--> P15 Balance Projection / Reconciliation
-                          |
-                          +--> P16 Reservation
-                                  |
-                                  +--> P17 Order Intake
-                                          |
-                                          +--> P18 Matching Contract
-                                                  |
-                                                  +--> P19 Settlement
-                                                          |
-                                                          +--> P20 Fee Engine
+  v
+P21 -> P22 -> P23 -> P24 -> P25 -> P26 -> P27 -> P28
+    -> P29 -> P30 -> P31 -> P32 -> P33 -> P34 -> P35 -> P36
+```
 
-P20 Contract Trading Integration Gate
-  |
-  +--> P21 Market Data Pipeline
-          |
-          +--> P26 Risk Control & Limits
-                  |
-                  +--> P27 Admin Console Foundation
-                          |
-                          +--> P28 Audit, Compliance, Evidence Export
-                                  |
-                                  +--> P29 Public / Private API Hardening
-                                          |
-                                          +--> P30 前端正式交易 UX
-                                                  |
-                                                  +--> P31 Observability & Alerting
-                                                          |
-                                                          +--> P32 Disaster Recovery & Replay
-                                                                  |
-                                                                  +--> P33 Security Hardening
-                                                                          |
-                                                                          +--> P34 Load / Soak / Chaos Testing
-                                                                                  |
-                                                                                  +--> P35 Business Operations Readiness
-                                                                                          |
-                                                                                          +--> P36 正式上線門檻
+上圖是 runtime 的不可跳階順序；任一 phase 未完成 review，不得開始下一 phase runtime。本文件中的能力分支只用於規劃與風險分析，不提供平行實作授權。
 
-P12 Database
-  |
-  +--> P22 Deposit Schema / Chain Listener
-          |
-          +--> P23 Deposit Crediting
+## 能力相依圖
 
-P12 Database
-  |
-  +--> P24 Withdrawal Request
-          |
-          +--> P25 Approval / Signing / Broadcast
+```text
+P21 市場資料 -----> P26 風控 --------> P27 管理 --------> P28 稽核
 
-P22 Deposit Address / Chain Listener
-  |
-  +--> P23 Deposit Crediting & Confirmation Policy
-          |
-          +--> P28 Audit, Compliance, Evidence Export
+P13 identity / asset --+-> P22 地址 / 鏈上觀測 -> P23 入金 confirmation / credit
+P14 ledger -----------+                                  |
+P15 balance/reconcile -+---------------------------------+-> P28 稽核證據
 
-P24 Withdrawal Request Workflow
-  |
-  +--> P25 Withdrawal Approval / Signing / Broadcast
-          |
-          +--> P28 Audit, Compliance, Evidence Export
-                  |
-                  +--> P31-P36 launch gates
+P13 identity / auth ---+-> P24 提款請求 -> P25 approval / signing / broadcast
+P14 ledger ------------+                                  |
+P15 balance/reconcile -+----------------------------------+-> P28 稽核證據
+P16 reservation -------+
+
+P26 + P27 + P28 -------> P29 API -> P30 UX -> P31 observability
+P23 + P25 + P31 -------> P32 DR -> P33 security -> P34 load -> P35 ops -> P36 launch gate
 ```
 
 ## Review implication
 
-若 第 12 階段 schema 設計不穩，後續帳本、凍結、撮合、結算、錢包都會返工。因此 第 12 階段 必須先以 production data model 為中心，而不是以畫面或 controller 為中心。
-
-## 加速軌限制
-
-P20 後可用波次方式加速 task card、測試 fixture、資料契約與 review checklist 的準備；但依賴圖上的 runtime 實作不得跳過相依 phase 或未批准的 review。
-
-特別是 P16-P20 已完成的 sandbox foundation 仍需 production closure：matching/fill、position/margin、fee/funding、ledger/balance/reservation 與 settlement/reconciliation 都必須在後續明確 task 中完成並重新人審。這些缺口不是可由 P20 final review 自動消除的相依關係。
+- P21 的完整 task cards 已草擬但未批准；P22–P36 的規劃草案也未提供 implementation approval。
+- P22 observation 不代表 P23 credit；P24 request 不代表 P25 approval/sign/broadcast；每一資金邊界必須各自人審。
+- P16–P20 的 sandbox foundation 仍不等於 production closure。matching/fill、position/margin、fee/funding、ledger/balance/reservation 與 settlement/reconciliation 缺口不能被任何後續 phase 自動視為完成。
+- 詳細規劃與風險門檻請讀 `PHASE_21_36_PLANNING_PROGRAM.md`。
