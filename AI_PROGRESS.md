@@ -78,8 +78,10 @@ NOT real-money contract trading ready
 NOT matching or fill execution enabled
 NOT position, balance or ledger updated
 NOT settlement completed
-Phase 21: PLANNED_NOT_STARTED
-Phase 21 Market Data Pipeline awaits explicit human kickoff and approved task cards
+Phase 21: TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL
+Phase 21 Market Data Pipeline planning kickoff received; task cards drafted
+Phase 21 runtime implementation not started
+Awaiting human review and explicit P21-T01 implementation approval
 Phase 22-36: planned, not started
 Next implementation phase: Phase 21; do not implement before explicit human kickoff and task-card review
 ```
@@ -103,8 +105,9 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_21_MARKET_DATA/README.md
-next_implementation_phase: Phase 21; awaits explicit human kickoff and approved task cards
-first_task: none; define and review the first Phase 21 task card before implementation
+next_implementation_phase: Phase 21; task cards await human review and runtime implementation approval
+proposed_first_task: P21-T01
+approval_status: awaiting human review; runtime implementation not started
 ```
 
 ## 完成警告

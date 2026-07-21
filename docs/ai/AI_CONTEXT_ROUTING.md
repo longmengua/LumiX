@@ -17,6 +17,7 @@ API contract                      docs/backend/api-contract-guidelines.md
 Frontend page work                docs/frontend/page-map.md
 Operations / deployment           docs/operations/deployment-runbook.md
 Readiness review                  docs/governance/PRODUCTION_READINESS_GATES.md
+Market Data Pipeline              docs/phases/PHASE_21_MARKET_DATA/README.md, currently relevant task card
 ```
 
 ## Token budget rule
@@ -41,4 +42,15 @@ security controls
 fee rounding
 chain confirmation policy
 admin privileged action
+```
+
+## Phase 21 路由
+
+```text
+phase: Phase 21 - Market Data Pipeline
+phase_readme: docs/phases/PHASE_21_MARKET_DATA/README.md
+task_card_review: docs/phases/PHASE_21_MARKET_DATA/phase-21-task-card-review.md
+proposed_first_task: docs/phases/PHASE_21_MARKET_DATA/p21-t01-inventory-boundary-invariants.md
+approval_status: awaiting human review; P21-T01 is not approved for implementation
+runtime_status: not started
 ```

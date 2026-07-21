@@ -12,12 +12,12 @@ PHASE_17_ORDER_INTAKE/         completed (Futures core sandbox model foundation 
 PHASE_18_MATCHING_CONTRACT/    completed — Futures Trading Sandbox foundation; HUMAN_REVIEW_REQUIRED approved (sandbox only; NOT production-ready, matching-execution-ready, fill-producer-ready, ledger-integrated, or real-money ready)
 PHASE_19_SETTLEMENT_ENGINE/    completed — Risk Sandbox foundation; HUMAN_REVIEW_REQUIRED approved (simulation only; NOT production liquidation, funding engine, insurance accounting, or reconciliation runtime ready)
 PHASE_20_FEE_ENGINE/           completed — Contract Trading Integration Gate foundation; HUMAN_REVIEW_REQUIRED approved (pure eligibility/review boundary only; NOT formal trading, balance/ledger mutation, or settlement ready)
-PHASE_21_MARKET_DATA/          planned, not started; awaits explicit human kickoff and approved task cards
+PHASE_21_MARKET_DATA/          TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL (planning kickoff received; runtime implementation not started; proposed first task P21-T01 awaits human review and explicit approval)
 ...
 ```
 
 目前可執行的工作：
 
 ```text
-none — Phase 21 requires an explicit human kickoff and approved task cards before implementation
+Phase 21 planning review only — P21-T01 is proposed and awaits human review plus explicit implementation approval; no runtime work is authorized
 ```
