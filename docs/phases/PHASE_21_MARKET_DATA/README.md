@@ -3,10 +3,10 @@
 ## 目前狀態
 
 ```text
-TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL
+FORMALLY_STARTED_P21_T01_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
 ```
 
-Phase 12–20 已完成對應 review。Phase 21 已收到 task-card planning kickoff；本輪僅完成規劃、架構邊界與審核文件。任何 runtime implementation 仍需經審核的個別 task card 與人類明確實作批准。
+Phase 12–20 已完成對應 review。Phase 21 已正式開工；P21-T01 已依人類批准完成文件盤點、領域邊界與核心不變式，現等待 implementation review。Market Data runtime 尚未開始。P21-T02 到 P21-T08 仍須各自經審核與人類明確實作批准。
 
 ## 目標
 
@@ -52,7 +52,7 @@ public production trading、real-money capability、production launch claim
 
 | Task | 名稱 | 目前狀態 |
 | --- | --- | --- |
-| P21-T01 | 現況盤點、領域邊界與核心不變式 | PROPOSED_AWAITING_HUMAN_REVIEW |
+| P21-T01 | 現況盤點、領域邊界與核心不變式 | COMPLETED_AWAITING_IMPLEMENTATION_REVIEW |
 | P21-T02 | Normalized Market Data Event Contract | PROPOSED_AWAITING_HUMAN_REVIEW |
 | P21-T03 | Sequence、Duplicate、Gap 與 Feed Health Policy | PROPOSED_AWAITING_HUMAN_REVIEW |
 | P21-T04 | 唯讀 Order Book Snapshot / Delta Projection | PROPOSED_AWAITING_HUMAN_REVIEW |
@@ -98,7 +98,8 @@ P21-T02 ---> P21-T03
 
 ## Task-card review 狀態與路由
 
-- 規劃審核：[phase-21-task-card-review.md](phase-21-task-card-review.md)
-- proposed first task：[P21-T01 現況盤點、領域邊界與核心不變式](p21-t01-inventory-boundary-invariants.md)
-- approval status：awaiting human review；`P21-T01` 尚未取得 implementation approval。
+- 規劃與執行審核：[phase-21-task-card-review.md](phase-21-task-card-review.md)
+- P21-T01 task card：[P21-T01 現況盤點、領域邊界與核心不變式](p21-t01-inventory-boundary-invariants.md)
+- P21-T01 implementation review：[P21-T01 現況、邊界與不變式審核紀錄](p21-t01-implementation-review.md)
+- approval status：P21-T01 已獲批准並完成，等待 implementation review；P21-T02 到 P21-T08 仍等待逐卡人類實作批准；Market Data runtime 尚未開始。
 - 全域規劃：[Phase 21–36 規劃計畫](../../planning/PHASE_21_36_PLANNING_PROGRAM.md)

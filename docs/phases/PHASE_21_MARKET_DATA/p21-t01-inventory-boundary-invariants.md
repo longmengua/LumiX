@@ -3,7 +3,7 @@
 ```text
 Task ID: P21-T01
 Task name: 現況盤點、領域邊界與核心不變式
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
 Objective: 將既有 market stub、sandbox order book 與前端 mock 的責任分離，建立後續實作必須遵守的唯讀行情邊界。
 Why this task exists: 現有展示 DTO、Phase 10 空 stub、sandbox matching state 與 UI fixture 的名稱相近；未先固定邊界容易把 mock 或交易狀態誤接為行情真相。
 Prerequisites: Phase 20 review completed；本 task card 已獲人類 implementation approval。
@@ -33,6 +33,6 @@ Tests required: 文件一致性檢查；確認無 runtime changed、無過期 Ph
 Acceptance criteria: inventory 明確標示 stub、sandbox 與 mock；每個後續 task 有唯一責任；禁止邊界可由 review 檢查。
 Rollback notes: 純文件變更可用 revert commit 移除；不得改寫既有 review history。
 Stop conditions: 任何需求涉及 runtime、外部 provider、公開 stream、schema 或交易/資金狀態即停止並建立新 task card。
-Documentation updates: 更新本 phase README、task status 與 review note。
+Documentation updates: 已更新本 phase README、task status、規劃/執行 review note、AI_PROGRESS.md 與 agent routing 狀態；盤點與不變式詳見 `p21-t01-implementation-review.md`。
 Next task: P21-T02，待 P21-T01 implementation review 通過後才可進行。
 ```

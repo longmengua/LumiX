@@ -64,14 +64,14 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-Phase 21 已收到 planning kickoff，task cards 已草擬，但尚無經審核且獲實作批准的 task card。收到 P21-T01 的明確批准後，請照順序執行：
+Phase 21 已正式開工。P21-T01 的文件盤點已完成並等待 implementation review，Market Data runtime 尚未開始；P21-T02 到 P21-T08 均尚無逐卡實作批准。收到任一後續 task card 的明確批准後，請照順序執行：
 
 ```text
 1. Read AGENTS.md
 2. Read AI_PROGRESS.md
 3. Read docs/ai/AI_CONTEXT_ROUTING.md
 4. Read docs/phases/PHASE_21_MARKET_DATA/README.md
-5. Read the explicitly approved Phase 21 task card（提議第一張為 P21-T01）
+5. Read the explicitly approved Phase 21 task card（下一張候選卡為 P21-T02）
 6. Implement only that task
 7. Run the narrowest useful tests
 8. Update the task note or status and notes

@@ -78,10 +78,15 @@ NOT real-money contract trading ready
 NOT matching or fill execution enabled
 NOT position, balance or ledger updated
 NOT settlement completed
-Phase 21: TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL
-Phase 21 Market Data Pipeline planning kickoff received; task cards drafted
-Phase 21 runtime implementation not started
-Awaiting human review and explicit P21-T01 implementation approval
+Phase 21: FORMALLY_STARTED_P21_T01_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
+Phase 21 Market Data Pipeline planning kickoff received; P21-T01 documentation-only boundary review completed
+P21-T01 human implementation approval received; completion awaits implementation review
+P21-T02 through P21-T08 each await explicit human implementation approval
+Phase 21 Market Data runtime implementation not started
+NOT official market data service
+NOT public market-data API or WebSocket
+NOT real-time SLA
+NOT production-ready
 Phase 22-36: PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
 Phase 22-36 runtime implementation not started; no task has implementation approval
@@ -107,9 +112,9 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_21_MARKET_DATA/README.md
-next_implementation_phase: Phase 21; task cards await human review and runtime implementation approval
-proposed_first_task: P21-T01
-approval_status: awaiting human review; runtime implementation not started
+next_implementation_phase: Phase 21; P21-T01 awaits implementation review, P21-T02 awaits explicit human approval
+completed_task: P21-T01 documentation-only inventory, domain boundary and invariant review
+approval_status: P21-T01 approved and completed awaiting implementation review; P21-T02 through P21-T08 await human approval; runtime implementation not started
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
 ```

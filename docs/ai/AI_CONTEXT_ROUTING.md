@@ -52,8 +52,9 @@ phase: Phase 21 - Market Data Pipeline
 phase_readme: docs/phases/PHASE_21_MARKET_DATA/README.md
 task_card_review: docs/phases/PHASE_21_MARKET_DATA/phase-21-task-card-review.md
 proposed_first_task: docs/phases/PHASE_21_MARKET_DATA/p21-t01-inventory-boundary-invariants.md
-approval_status: awaiting human review; P21-T01 is not approved for implementation
-runtime_status: not started
+approval_status: P21-T01 approved and completed, awaiting implementation review; P21-T02 through P21-T08 await explicit human approval
+runtime_status: Market Data runtime not started; P21-T01 was documentation-only
+completed_task_note: docs/phases/PHASE_21_MARKET_DATA/p21-t01-implementation-review.md
 ```
 
 ## Phase 21–36 規劃路由
