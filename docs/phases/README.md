@@ -12,7 +12,7 @@ PHASE_17_ORDER_INTAKE/         completed (Futures core sandbox model foundation 
 PHASE_18_MATCHING_CONTRACT/    completed — Futures Trading Sandbox foundation; HUMAN_REVIEW_REQUIRED approved (sandbox only; NOT production-ready, matching-execution-ready, fill-producer-ready, ledger-integrated, or real-money ready)
 PHASE_19_SETTLEMENT_ENGINE/    completed — Risk Sandbox foundation; HUMAN_REVIEW_REQUIRED approved (simulation only; NOT production liquidation, funding engine, insurance accounting, or reconciliation runtime ready)
 PHASE_20_FEE_ENGINE/           completed — Contract Trading Integration Gate foundation; HUMAN_REVIEW_REQUIRED approved (pure eligibility/review boundary only; NOT formal trading, balance/ledger mutation, or settlement ready)
-PHASE_21_MARKET_DATA/          TASK_CARDS_DRAFTED_AWAITING_HUMAN_APPROVAL (runtime implementation not started; proposed first task P21-T01 awaits human review and explicit approval)
+PHASE_21_MARKET_DATA/          FORMALLY_STARTED_P21_T01_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW (僅 P21-T01 已獲人類批准並完成文件盤點；Market Data runtime 未開始；P21-T02 至 P21-T08 仍等待逐卡人類批准)
 PHASE_22_DEPOSIT_LISTENER/     PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (detailed task draft; runtime not started)
 PHASE_23_DEPOSIT_CREDITING/    PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (detailed task draft; runtime not started)
 PHASE_24_WITHDRAWAL_REQUEST/   PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (detailed task draft; runtime not started)
@@ -33,5 +33,5 @@ PHASE_36_LAUNCH_GATE/          PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL 
 目前可執行的工作：
 
 ```text
-Phase 21–36 planning review only — P21-T01 is proposed and all later phase drafts await human review; no runtime work is authorized
+Phase 21 P21-T01 implementation review — 僅已完成的文件盤點、領域邊界與不變式可供人類審核；P21-T02 至 P21-T08 與 Phase 22–36 的所有 runtime 工作仍等待逐卡人類批准
 ```
