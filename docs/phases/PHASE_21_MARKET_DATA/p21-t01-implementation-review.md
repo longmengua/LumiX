@@ -4,7 +4,7 @@
 
 ```text
 Task: P21-T01 現況盤點、領域邊界與核心不變式
-Status: COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
+Status: IMPLEMENTATION_REVIEW_APPROVED
 Human implementation approval: received
 Scope: documentation-only inventory and boundary definition
 Market Data runtime: not started
@@ -98,4 +98,4 @@ frontend mock、local clock
 
 ## Rollback 與下一步
 
-本 task 僅變更文件；若 implementation review 否決，必須以新的 revert commit 回復本 task 文件，不得改寫既有 phase review history。下一步只能是人類審核本紀錄；P21-T02 必須等待其 task card 的明確人類實作批准。
+本 task 僅變更文件；若後續需要回復，必須以新的 revert commit 回復本 task 文件，不得改寫既有 phase review history。P21-T01 implementation review 已批准；P21-T02 已獲其 task card 的明確人類實作批准。P21-T03 仍須等待獨立的人類批准。

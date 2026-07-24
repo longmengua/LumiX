@@ -4,18 +4,18 @@
 
 ```text
 Phase: Phase 21 - Market Data Pipeline
-Task: Phase planning and task-card definition；P21-T01 現況盤點、領域邊界與核心不變式執行審核
-Scope: provider-neutral、唯讀 market-data foundation 的施工邊界、8 張任務卡、依賴順序與 no-claim gate；P21-T01 僅完成文件盤點與邊界定義，未實作 runtime
-Files changed: docs/phases/PHASE_21_MARKET_DATA/ task cards / review、AI status and routing entry files；未修改 server/src/、web/src/、migration、dependency、production configuration 或 CI/CD
-Tests run: git diff --check；文件一致性與禁止範圍檢查
-Test result: passed — `git diff --check`、文件連結/狀態一致性與禁止範圍檢查均通過；P21-T01 是純文件任務，未修改 runtime，故不執行 backend tests
+Task: P21-T02 Normalized Market Data Event Contract execution review
+Scope: provider-neutral、唯讀且 immutable 的 normalized event domain contract、precision/serialization 契約與 contract tests；不建立 pipeline runtime
+Files changed: `server/src/main/java/com/lumix/marketdata/**`、`server/src/test/java/com/lumix/marketdata/**`、Phase 21 文件與必要 agent/routing 狀態文件；未修改 legacy market、trading core、schema、web、dependency、production configuration 或 CI/CD
+Tests run: P21-T02 contract tests、server module regression tests、禁止依賴與範圍掃描、`git diff --check`
+Test result: P21-T02 contract tests passed；完整 server regression 有 3 個既有 architecture gate 因期待過時的 Phase 21 狀態而失敗，未修改禁止範圍掩蓋該問題；詳見 `p21-t02-implementation-review.md`
 Schema changed: no
 Money-impacting: no
 HUMAN_REVIEW_REQUIRED: yes
-Human approval status: P21-T01 已獲人類批准並完成，等待 implementation review；P21-T02 到 P21-T08 仍等待逐卡人類實作批准
-Rollback notes: P21-T01 只有文件；以新的 revert commit 回復本輪文件即可，不得改寫既有 phase review history
+Human approval status: P21-T01 implementation review 已批准；P21-T02 已完成並等待 implementation review；P21-T03 到 P21-T08 仍等待逐卡人類實作批准
+Rollback notes: P21-T02 的新 package 與文件可用新的 revert commit 回復；不得改寫既有 phase review history
 Completed task: P21-T01；結論位於 `p21-t01-implementation-review.md`
-Next action: 人類審核 P21-T01 implementation review；僅在收到 P21-T02 的明確人類批准後才可實作 P21-T02
+Next action: 人類審核 P21-T02；僅在收到 P21-T03 的明確人類批准後才可實作 P21-T03
 ```
 
 ## Repository 現況與 gap analysis
@@ -61,8 +61,8 @@ T04 與 T05 都依賴 T02/T03，施工時可在各自獲批准後獨立進行；
 ## 目前結論
 
 ```text
-Phase 21: formally started; P21-T01 completed awaiting implementation review
-Market Data runtime implementation: not started
-Human approval: P21-T01 approved; P21-T02 through P21-T08 awaiting explicit per-card approval
+Phase 21: formally started; P21-T01 implementation review approved; P21-T02 completed awaiting implementation review
+Market Data pipeline runtime implementation: not started; P21-T02 only establishes immutable domain contract
+Human approval: P21-T02 approved; P21-T03 through P21-T08 awaiting explicit per-card approval
 Production claim: prohibited
 ```

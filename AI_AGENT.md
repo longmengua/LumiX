@@ -64,14 +64,14 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-Phase 21 已正式開工。P21-T01 的文件盤點已完成並等待 implementation review，Market Data runtime 尚未開始；P21-T02 到 P21-T08 均尚無逐卡實作批准。收到任一後續 task card 的明確批准後，請照順序執行：
+Phase 21 已正式開工。P21-T01 implementation review 已批准；P21-T02 的 normalized market-data event domain contract 已完成，等待 implementation review。Market Data pipeline runtime 尚未開始；P21-T03 到 P21-T08 均尚無逐卡實作批准。未收到後續 task card 的人類批准前，請停止施工：
 
 ```text
 1. Read AGENTS.md
 2. Read AI_PROGRESS.md
 3. Read docs/ai/AI_CONTEXT_ROUTING.md
 4. Read docs/phases/PHASE_21_MARKET_DATA/README.md
-5. Read the explicitly approved Phase 21 task card（下一張候選卡為 P21-T02）
+5. Read the explicitly approved Phase 21 task card（P21-T02 已完成並等待 implementation review）
 6. Implement only that task
 7. Run the narrowest useful tests
 8. Update the task note or status and notes

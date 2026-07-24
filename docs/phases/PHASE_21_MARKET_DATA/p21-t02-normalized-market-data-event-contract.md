@@ -3,7 +3,7 @@
 ```text
 Task ID: P21-T02
 Task name: Normalized Market Data Event Contract
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
 Objective: 建立 provider-neutral、immutable 的 normalized market-data event 與明確精度/serialization 契約。
 Why this task exists: 現有 `com.lumix.market` DTO 只有展示欄位，缺少來源、channel、sequence、schema version、三種時間與可驗證 payload identity。
 Prerequisites: P21-T01 implemented and human-reviewed；本 task card 已獲 implementation approval。
@@ -33,6 +33,6 @@ Tests required: decimal precision、極端數值/overflow、空/錯誤 instrumen
 Acceptance criteria: contract 不含 provider SDK、float/double、wall-clock identity 或交易核心依賴；所有必填 event 欄位可被測試驗證。
 Rollback notes: 新 package 可由單一 revert commit 移除；不變更 legacy DTO 或 schema。
 Stop conditions: provider-specific decoding、真實連線、持久化或 public API/WebSocket 要求出現時停止並另開 card。
-Documentation updates: README 的 package map、precision/serialization decision note 與 task status。
+Documentation updates: README 的 package map、precision/serialization decision note、task status 與 `p21-t02-implementation-review.md`。
 Next task: P21-T03；T04/T05 只能依賴已審核的 T02 contract。
 ```

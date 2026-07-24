@@ -3,10 +3,10 @@
 ## 目前狀態
 
 ```text
-FORMALLY_STARTED_P21_T01_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
+FORMALLY_STARTED_P21_T01_IMPLEMENTATION_REVIEW_APPROVED_P21_T02_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
 ```
 
-Phase 12–20 已完成對應 review。Phase 21 已正式開工；P21-T01 已依人類批准完成文件盤點、領域邊界與核心不變式，現等待 implementation review。Market Data runtime 尚未開始。P21-T02 到 P21-T08 仍須各自經審核與人類明確實作批准。
+Phase 12–20 已完成對應 review。Phase 21 已正式開工；P21-T01 implementation review 已批准。P21-T02 已完成 immutable normalized market-data event domain contract，等待 implementation review。Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。P21-T03 到 P21-T08 仍須各自經審核與人類明確實作批准。
 
 ## 目標
 
@@ -52,8 +52,8 @@ public production trading、real-money capability、production launch claim
 
 | Task | 名稱 | 目前狀態 |
 | --- | --- | --- |
-| P21-T01 | 現況盤點、領域邊界與核心不變式 | COMPLETED_AWAITING_IMPLEMENTATION_REVIEW |
-| P21-T02 | Normalized Market Data Event Contract | PROPOSED_AWAITING_HUMAN_REVIEW |
+| P21-T01 | 現況盤點、領域邊界與核心不變式 | IMPLEMENTATION_REVIEW_APPROVED |
+| P21-T02 | Normalized Market Data Event Contract | COMPLETED_AWAITING_IMPLEMENTATION_REVIEW |
 | P21-T03 | Sequence、Duplicate、Gap 與 Feed Health Policy | PROPOSED_AWAITING_HUMAN_REVIEW |
 | P21-T04 | 唯讀 Order Book Snapshot / Delta Projection | PROPOSED_AWAITING_HUMAN_REVIEW |
 | P21-T05 | Trade、Ticker 與 Candle Aggregation | PROPOSED_AWAITING_HUMAN_REVIEW |
@@ -101,5 +101,6 @@ P21-T02 ---> P21-T03
 - 規劃與執行審核：[phase-21-task-card-review.md](phase-21-task-card-review.md)
 - P21-T01 task card：[P21-T01 現況盤點、領域邊界與核心不變式](p21-t01-inventory-boundary-invariants.md)
 - P21-T01 implementation review：[P21-T01 現況、邊界與不變式審核紀錄](p21-t01-implementation-review.md)
-- approval status：P21-T01 已獲批准並完成，等待 implementation review；P21-T02 到 P21-T08 仍等待逐卡人類實作批准；Market Data runtime 尚未開始。
+- P21-T02 implementation review：[P21-T02 Normalized Market Data Event Contract 實作審核紀錄](p21-t02-implementation-review.md)
+- approval status：P21-T01 implementation review 已批准；P21-T02 已完成並等待 implementation review；P21-T03 到 P21-T08 仍等待逐卡人類實作批准；Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。
 - 全域規劃：[Phase 21–36 規劃計畫](../../planning/PHASE_21_36_PLANNING_PROGRAM.md)

@@ -78,11 +78,11 @@ NOT real-money contract trading ready
 NOT matching or fill execution enabled
 NOT position, balance or ledger updated
 NOT settlement completed
-Phase 21: FORMALLY_STARTED_P21_T01_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
-Phase 21 Market Data Pipeline planning kickoff received; P21-T01 documentation-only boundary review completed
-P21-T01 human implementation approval received; completion awaits implementation review
-P21-T02 through P21-T08 each await explicit human implementation approval
-Phase 21 Market Data runtime implementation not started
+Phase 21: FORMALLY_STARTED_P21_T01_IMPLEMENTATION_REVIEW_APPROVED_P21_T02_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
+Phase 21 Market Data Pipeline P21-T01 documentation-only boundary review implementation review approved
+P21-T02 normalized event domain contract implemented; awaiting implementation review
+P21-T03 through P21-T08 each await explicit human implementation approval
+Phase 21 Market Data pipeline runtime not started; P21-T02 only establishes immutable domain contract
 NOT official market data service
 NOT public market-data API or WebSocket
 NOT real-time SLA
@@ -112,9 +112,9 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_21_MARKET_DATA/README.md
-next_implementation_phase: Phase 21; P21-T01 awaits implementation review, P21-T02 awaits explicit human approval
-completed_task: P21-T01 documentation-only inventory, domain boundary and invariant review
-approval_status: P21-T01 approved and completed awaiting implementation review; P21-T02 through P21-T08 await human approval; runtime implementation not started
+next_implementation_phase: Phase 21; P21-T02 awaits implementation review; P21-T03 awaits explicit human approval
+completed_task: P21-T02 normalized event domain contract (awaiting implementation review); P21-T01 documentation-only inventory, domain boundary and invariant review (implementation review approved)
+approval_status: P21-T01 implementation review approved; P21-T02 completed awaiting implementation review; P21-T03 through P21-T08 await human approval; pipeline runtime not started
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
 ```
