@@ -3,7 +3,7 @@
 ```text
 Task ID: P21-T03
 Task name: Sequence、Duplicate、Gap 與 Feed Health Policy
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
 Objective: 對每條 source/channel/instrument stream 定義可重放的 admission decision 與 health state machine。
 Why this task exists: 無 sequence policy 時 duplicate、亂序與 gap 會被靜默混入 projection，讓下游誤信不完整資料。
 Prerequisites: P21-T02 implemented and human-reviewed；本 task card 已獲 implementation approval。

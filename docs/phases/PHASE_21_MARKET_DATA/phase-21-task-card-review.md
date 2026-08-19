@@ -4,18 +4,18 @@
 
 ```text
 Phase: Phase 21 - Market Data Pipeline
-Task: P21-T02 Normalized Market Data Event Contract execution review
-Scope: provider-neutral、唯讀且 immutable 的 normalized event domain contract、precision/serialization 契約與 contract tests；不建立 pipeline runtime
-Files changed: `server/src/main/java/com/lumix/marketdata/**`、`server/src/test/java/com/lumix/marketdata/**`、Phase 21 文件與必要 agent/routing 狀態文件；未修改 legacy market、trading core、schema、web、dependency、production configuration 或 CI/CD
-Tests run: P21-T02 contract tests、server module regression tests、禁止依賴與範圍掃描、`git diff --check`
-Test result: P21-T02 contract tests passed；完整 server regression 有 3 個既有 architecture gate 因期待過時的 Phase 21 狀態而失敗，未修改禁止範圍掩蓋該問題；詳見 `p21-t02-implementation-review.md`
+Task: P21-T03 Sequence、Duplicate、Gap 與 Feed Health Policy execution review
+Scope: immutable per-stream sequence cursor、duplicate/integrity conflict、gap/resync、stale 與 feed-health policy；不建立 pipeline runtime 或 projection
+Files changed: `server/src/main/java/com/lumix/marketdata/policy/**`、`server/src/test/java/com/lumix/marketdata/policy/**`、Phase 21 文件與必要 agent/routing 狀態文件；未修改 legacy market、trading core、schema、web、dependency、production configuration 或 CI/CD
+Tests run: P21-T02/T03 contract and policy tests、server module regression tests、禁止依賴與範圍掃描、`git diff --check`
+Test result: P21-T02/T03 窄測試通過；完整 server regression 保留既有 architecture gate 狀態文件失敗，未修改禁止範圍掩蓋該問題；詳見 `p21-t03-implementation-review.md`
 Schema changed: no
 Money-impacting: no
 HUMAN_REVIEW_REQUIRED: yes
-Human approval status: P21-T01 implementation review 已批准；P21-T02 已完成並等待 implementation review；P21-T03 到 P21-T08 仍等待逐卡人類實作批准
-Rollback notes: P21-T02 的新 package 與文件可用新的 revert commit 回復；不得改寫既有 phase review history
-Completed task: P21-T01；結論位於 `p21-t01-implementation-review.md`
-Next action: 人類審核 P21-T02；僅在收到 P21-T03 的明確人類批准後才可實作 P21-T03
+Human approval status: P21-T01 與 P21-T02 implementation review 已批准；P21-T03 已完成並等待 implementation review；P21-T04 到 P21-T08 仍等待逐卡人類實作批准
+Rollback notes: P21-T03 的新 policy package 與文件可用新的 revert commit 回復；不得改寫既有 phase review history
+Completed task: P21-T03；結論位於 `p21-t03-implementation-review.md`
+Next action: 人類審核 P21-T03；僅在收到 P21-T04 或 P21-T05 的明確人類批准後才可實作後續 task
 ```
 
 ## Repository 現況與 gap analysis
@@ -61,8 +61,8 @@ T04 與 T05 都依賴 T02/T03，施工時可在各自獲批准後獨立進行；
 ## 目前結論
 
 ```text
-Phase 21: formally started; P21-T01 implementation review approved; P21-T02 completed awaiting implementation review
-Market Data pipeline runtime implementation: not started; P21-T02 only establishes immutable domain contract
-Human approval: P21-T02 approved; P21-T03 through P21-T08 awaiting explicit per-card approval
+Phase 21: formally started; P21-T01 and P21-T02 implementation reviews approved; P21-T03 completed awaiting implementation review
+Market Data pipeline runtime implementation: not started; P21-T02/T03 only establish immutable domain and admission-policy foundations
+Human approval: P21-T03 approved for implementation; P21-T04 through P21-T08 await explicit per-card approval
 Production claim: prohibited
 ```
