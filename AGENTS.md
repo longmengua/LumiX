@@ -18,8 +18,8 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 18 階段：completed — Futures Trading Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
 - 第 19 階段：completed — Risk Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
 - 第 20 階段：completed — Contract Trading Integration Gate foundation；HUMAN_REVIEW_REQUIRED 已批准。
-- 第 21 階段：已正式開工；P21-T01 與 P21-T02 implementation review 已批准，P21-T03 已完成 immutable sequence／health policy，等待 implementation review。Market Data pipeline runtime、外部 provider、公開 transport 尚未開始。
-- P21-T04 到 P21-T08：仍等待逐卡人類實作批准，不得施工。
+- 第 21 階段：已正式開工；P21-T01 到 P21-T04 implementation review 已批准，P21-T05 為 `COMPLETED_AWAITING_IMPLEMENTATION_REVIEW`。Market Data pipeline runtime、外部 provider、公開 transport 尚未開始。
+- P21-T06 到 P21-T08：仍等待逐卡人類實作批准，不得施工。
 - 第 22 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 均未開始，等待各 phase 的人類審核與明確 task-card 批准。
 - 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
@@ -144,11 +144,11 @@ PlantUML
 
 ## Start here for current task
 
-目前 Phase 21 已正式開工。P21-T01 與 P21-T02 implementation review 已批准；P21-T03 已完成 immutable sequence／health policy，等待 implementation review。Market Data pipeline runtime 尚未開始；P21-T04 到 P21-T08 未獲人類逐卡實作批准前，Codex / mini 只能進行狀態同步與唯讀檢查：
+目前 Phase 21 已正式開工。P21-T01 到 P21-T04 implementation review 已批准；P21-T05 為 `COMPLETED_AWAITING_IMPLEMENTATION_REVIEW`，等待人工複審。Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始；P21-T06 到 P21-T08 未獲人類逐卡實作批准前，Codex / mini 只能進行狀態同步與唯讀檢查：
 
 ```text
 Phase 21 market data pipeline task-card definition and review
 ```
 
-後續 Phase 21 的施工入口為 `docs/phases/PHASE_21_MARKET_DATA/README.md`。P21-T01 的盤點與不變式結論位於 `p21-t01-implementation-review.md`，P21-T02 的實作證據位於 `p21-t02-implementation-review.md`，P21-T03 的實作證據位於 `p21-t03-implementation-review.md`；P21-T04 仍須另行取得人類明確批准。
+後續 Phase 21 的施工入口為 `docs/phases/PHASE_21_MARKET_DATA/README.md`。P21-T01 的盤點與不變式結論位於 `p21-t01-implementation-review.md`，P21-T02 到 P21-T04 的實作證據分別位於對應 implementation review；P21-T05 已完成並等待 implementation review，P21-T06 到 P21-T08 仍須各自取得人類明確批准。
 Phase 18 到 Phase 20 的已批准歷史分別保留在各 phase 目錄的 `phase-*-final-review.md`。

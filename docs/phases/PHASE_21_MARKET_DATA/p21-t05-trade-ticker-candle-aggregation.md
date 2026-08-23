@@ -3,7 +3,7 @@
 ```text
 Task ID: P21-T05
 Task name: Trade、Ticker 與 Candle Aggregation
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
 Objective: 以 normalized trade events 建立唯讀 ticker 與 candle aggregation，並固定來源事件時間的窗口語意。
 Why this task exists: 現有 `Ticker24hView`、`KlineView` 是未實作展示模型，前端 K 線與 ticker 是 number-based mock，沒有可審計 window 或來源時間契約。
 Prerequisites: P21-T02 and P21-T03 implemented and human-reviewed；本 task card 已獲 implementation approval。

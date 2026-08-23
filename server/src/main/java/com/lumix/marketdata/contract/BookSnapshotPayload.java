@@ -12,6 +12,9 @@ public record BookSnapshotPayload(List<BookLevel> bids, List<BookLevel> asks) im
     public BookSnapshotPayload {
         bids = copyLevels(bids, "bids");
         asks = copyLevels(asks, "asks");
+        // 在 contract 邊界先限制每側價位，避免尚未批准的 runtime 面對無界 snapshot。
+        bids = OrderBookLevelLimits.requirePayloadSideWithinLimit(bids, "bids");
+        asks = OrderBookLevelLimits.requirePayloadSideWithinLimit(asks, "asks");
     }
 
     @Override

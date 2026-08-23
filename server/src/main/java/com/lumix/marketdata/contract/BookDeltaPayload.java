@@ -12,6 +12,9 @@ public record BookDeltaPayload(List<BookLevel> bidUpdates, List<BookLevel> askUp
     public BookDeltaPayload {
         bidUpdates = BookSnapshotPayload.copyLevels(bidUpdates, "bidUpdates");
         askUpdates = BookSnapshotPayload.copyLevels(askUpdates, "askUpdates");
+        // delta 同樣必須在 reducer 前受限，否則單筆更新仍可造成排序與聚合資源耗盡。
+        bidUpdates = OrderBookLevelLimits.requirePayloadSideWithinLimit(bidUpdates, "bidUpdates");
+        askUpdates = OrderBookLevelLimits.requirePayloadSideWithinLimit(askUpdates, "askUpdates");
     }
 
     @Override

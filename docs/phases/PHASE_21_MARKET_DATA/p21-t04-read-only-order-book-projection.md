@@ -3,7 +3,7 @@
 ```text
 Task ID: P21-T04
 Task name: 唯讀 Order Book Snapshot / Delta Projection
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: IMPLEMENTATION_REVIEW_APPROVED
 Objective: 以已驗證的 snapshot/delta 事件建立 immutable、唯讀的 order-book projection。
 Why this task exists: 既有 spot sandbox order book 保存交易 sandbox order，UI mock book 是合成版面資料；兩者都不是外部行情的 authoritative projection。
 Prerequisites: P21-T02 and P21-T03 implemented and human-reviewed；本 task card 已獲 implementation approval。
@@ -27,7 +27,7 @@ Persistence impact: none；不可寫 DB/cache。
 Schema changed: no。
 Money-impacting: no。
 HUMAN_REVIEW_REQUIRED: yes；需確認 projection 不被誤接成 matching order book 或正式流動性聲稱。
-Security considerations: 限制 level 數與 payload size；拒絕畸形大量 delta，避免 memory/CPU exhaustion。
+Security considerations: snapshot、delta 與 projection 每側固定最多 1,024 個 level；超限以穩定 reason code fail closed，拒絕畸形大量 payload，避免 memory/CPU exhaustion；不得使用 runtime config、provider 或 I/O 放寬此邊界。
 Observability requirements: snapshot accepted、delta applied/rejected、book status、crossed count、level count、last sequence/lag、resync-needed reason。
 Tests required: 空 book、snapshot 後 delta、缺 snapshot delta、duplicate、gap、out-of-order、crossed book、極端數值、multi-instrument isolation、deterministic replay。
 Acceptance criteria: 不足資料永不形成 authoritative book；每個 fixture 重放得到相同 level ordering/status；無交易核心依賴。

@@ -64,14 +64,14 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-Phase 21 已正式開工。P21-T01 與 P21-T02 implementation review 已批准；P21-T03 的 immutable sequence／health policy 已完成，等待 implementation review。Market Data pipeline runtime 尚未開始；P21-T04 到 P21-T08 均尚無逐卡實作批准。未收到後續 task card 的人類批准前，請停止施工：
+Phase 21 已正式開工。P21-T01 到 P21-T04 implementation review 已批准；P21-T05 為 `COMPLETED_AWAITING_IMPLEMENTATION_REVIEW`，等待人工複審。Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始；P21-T06 到 P21-T08 均尚無逐卡實作批准。未收到後續 task card 的人類批准前，請停止施工：
 
 ```text
 1. Read AGENTS.md
 2. Read AI_PROGRESS.md
 3. Read docs/ai/AI_CONTEXT_ROUTING.md
 4. Read docs/phases/PHASE_21_MARKET_DATA/README.md
-5. Read the explicitly approved Phase 21 task card（P21-T03 已完成並等待 implementation review）
+5. Read the explicitly approved Phase 21 task card（P21-T05 已完成並等待 implementation review；P21-T06 到 P21-T08 未獲批准）
 6. Implement only that task
 7. Run the narrowest useful tests
 8. Update the task note or status and notes
