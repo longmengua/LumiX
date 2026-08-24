@@ -1,0 +1,4 @@
+package com.lumix.api.gateway;
+import java.time.Instant; import java.util.Objects;
+/** transport-neutral request metadata，保留 version/identity/health，不含 token、signature 或 payload。 */
+public record ApiRequestEvidence(String apiVersion,String operationId,String idempotencyKey,ApiContractMode mode,ApiHealthState health,Instant receivedAt){public ApiRequestEvidence{apiVersion=req(apiVersion,"apiVersion");operationId=req(operationId,"operationId");idempotencyKey=req(idempotencyKey,"idempotencyKey");mode=Objects.requireNonNull(mode,"mode");health=Objects.requireNonNull(health,"health");receivedAt=Objects.requireNonNull(receivedAt,"receivedAt");}private static String req(String v,String n){v=Objects.requireNonNull(v,n).trim();if(v.isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v;}}
