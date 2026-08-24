@@ -31,9 +31,9 @@ Architecture    <= relevant directory only
 Full repo scan   only with explicit human request
 ```
 
-## Stop conditions
+## 高風險標記條件
 
-Stop and ask for human review when the task touches：
+下列任務必須標記 `HUMAN_REVIEW_REQUIRED`。逐卡 approve 機制暫停期間，仍要保持 fail-closed、不得實作被 phase 明令禁止的 runtime，並在 phase final review 記錄人類應檢查的項目：
 
 ```text
 money movement
@@ -96,7 +96,18 @@ runtime_status: 不得 ledger append、balance mutation、credit/reversal runtim
 ```text
 phase: Phase 24 - 提款請求流程
 phase_readme: docs/phases/PHASE_24_WITHDRAWAL_REQUEST/README.md
-current_task: P24-T01 withdrawal request、destination、asset/network、idempotency 與 immutable audit event contract
+current_task: completed
+completed_task_note: docs/phases/PHASE_24_WITHDRAWAL_REQUEST/phase-24-final-review.md
 approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency
-runtime_status: 不得簽章、廣播、釋放資金、approval bypass、wallet key/secret handling 或 production claim
+runtime_status: 沒有 hold 寫入、簽章、廣播、釋放資金、approval bypass、wallet key/secret handling 或 production claim
+```
+
+## Phase 25 路由
+
+```text
+phase: Phase 25 - 提款審核、簽章、廣播
+phase_readme: docs/phases/PHASE_25_WITHDRAWAL_SIGNING/README.md
+current_task: task-card definition; 先完成 approval policy 與職責分離的純契約，禁止私鑰、HSM/MPC、signer command、鏈上連線或 broadcast runtime
+approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency 與高風險 fail-closed 邊界
+runtime_status: P24 的 keyless signer input 只是資料契約；不得實作任何可簽章、可廣播或可移動資金的路徑
 ```

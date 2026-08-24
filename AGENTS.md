@@ -21,7 +21,8 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 21 階段：`COMPLETED_FOR_MARKET_DATA_FOUNDATION`；僅完成 immutable domain、projection、aggregation、replay、internal-only query foundation。Market Data pipeline runtime、外部 provider、公開 transport 尚未開始。
 - 第 22 階段：`COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION`；僅完成 address ownership、chain observation、finality/health、read-only reconciliation 與 P23 handoff contract。地址派發、RPC/provider、secret、持久化與 credit 尚未開始。
 - 第 23 階段：`COMPLETED_FOR_DEPOSIT_CREDIT_DECISION_FOUNDATION`；僅完成 eligibility、idempotency、future ledger handoff、reorg correction 與 read-only reconciliation contract。ledger append、balance mutation、credit/reversal runtime 均未開始。
-- 第 24 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
+- 第 24 階段：`COMPLETED_FOR_WITHDRAWAL_REQUEST_FOUNDATION`；僅完成 immutable request、eligibility、lifecycle、reconciliation 與 keyless P25 input contract。沒有 hold 寫入、approval bypass、簽章、廣播、鏈上確認或資金移動 runtime。
+- 第 25 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
 - 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
 
@@ -39,7 +40,7 @@ Root agent entry
   +-- docs/ai/AI_CONTEXT_ROUTING.md
   |
   +-- docs/phases/README.md
-  +-- docs/phases/PHASE_21_MARKET_DATA/README.md
+  +-- docs/phases/PHASE_25_WITHDRAWAL_SIGNING/README.md
   |
   +-- task-specific file listed by the phase README
 ```
@@ -149,11 +150,11 @@ PlantUML
 
 ## Start here for current task
 
-Phase 21 至 Phase 23 已完成 foundation；不代表正式行情、入金或 credit 服務。下一個 phase 為 Phase 24，依暫停逐卡 approve 機制可依相依順序施工：
+Phase 21 至 Phase 24 已完成 foundation；不代表正式行情、入金、credit 或提款服務。下一個 phase 為 Phase 25，依暫停逐卡 approve 機制可依相依順序施工：
 
 ```text
-Phase 24 withdrawal request task-card definition and review
+Phase 25 withdrawal signing task-card definition and review
 ```
 
-Phase 21/22/23 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 24 README；不得把既有 foundation 接到 provider、公開 transport、地址派發、credit、簽章、廣播或任何未核准的資金核心。
+Phase 21/22/23/24 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 25 README；不得把既有 foundation 接到 provider、公開 transport、地址派發、credit、私鑰、HSM/MPC、鏈上廣播或任何未核准的資金核心。
 Phase 18 到 Phase 20 的已批准歷史分別保留在各 phase 目錄的 `phase-*-final-review.md`。

@@ -101,10 +101,15 @@ P23-T01 immutable deposit candidate, asset/network confirmation policy, versione
 P23-T02 immutable credit idempotency key/decision record and bounded ledger handoff contract completed; no append, balance mutation or persistence runtime
 P23-T03 orphaned reorg freeze, append-only reversal ordering and human escalation contract completed; no delete, overwrite or ledger mutation
 P23-T04 read-only deposit/ledger/balance reconciliation, exception queue and audit export input contract completed; no repair/admin command or mutation
-Phase 24-36: PLANNING_PROGRAM_DRAFTED
+Phase 24: COMPLETED_FOR_WITHDRAWAL_REQUEST_FOUNDATION
+P24-T01 immutable withdrawal request, destination/network, idempotency and request-created audit contract completed; no hold, approval, signing, broadcast or fund movement
+P24-T02 immutable eligibility, available-balance evidence, versioned fee quote and future hold handoff contract completed; no hold creation, capture, settlement or mutation
+P24-T03 immutable cancel/expire/manual-review/approval-handoff transitions completed; no admin bypass, signing or fund movement
+P24-T04 read-only request/hold/audit reconciliation and keyless P25 signer input contract completed; no key, signer command or broadcast
+Phase 25-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
-Phase 24-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
-Next implementation phase: Phase 24; proceed by task dependency
+Phase 25-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
+Next implementation phase: Phase 25; proceed by task dependency
 ```
 
 ## 目前倉庫現況
@@ -125,9 +130,9 @@ agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
-current_phase_task_list: docs/phases/PHASE_24_WITHDRAWAL_REQUEST/README.md
-next_implementation_phase: Phase 24; proceed by task dependency
-completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T04 deposit observation foundation; Phase 23 P23-T01 through P23-T04 deposit credit decision foundation
+current_phase_task_list: docs/phases/PHASE_25_WITHDRAWAL_SIGNING/README.md
+next_implementation_phase: Phase 25; proceed by task dependency
+completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T04 deposit observation foundation; Phase 23 P23-T01 through P23-T04 deposit credit decision foundation; Phase 24 P24-T01 through P24-T04 withdrawal request foundation
 approval_status: P-task approval mode temporarily disabled by human; market-data pipeline runtime/provider/public transport and deposit RPC/credit remain unstarted; production claim prohibited
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
