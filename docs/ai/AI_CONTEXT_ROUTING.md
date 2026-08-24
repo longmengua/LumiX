@@ -74,8 +74,8 @@ approval_status: P-task approval mode is temporarily disabled by human; phase or
 ```text
 phase: Phase 22 - 入金地址與鏈上監聽器
 phase_readme: docs/phases/PHASE_22_DEPOSIT_LISTENER/README.md
-current_task: P22-T03 reorg、confirmation 與 health state contract
-completed_task_note: P22-T01 address ownership 與 P22-T02 observation/cursor contract completed
+current_task: P22-T04 read-only observation reconciliation、metrics、evidence 與 P23 handoff contract
+completed_task_note: P22-T01 address ownership、P22-T02 observation/cursor、P22-T03 finality/health contract completed
 approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency
 runtime_status: 不得建立 RPC/provider 連線、持久化、地址派發、secret handling 或 deposit credit；production claim prohibited
 ```

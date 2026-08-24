@@ -91,9 +91,10 @@ NOT official market data service
 NOT public market-data API or WebSocket
 NOT real-time SLA
 NOT production-ready
-Phase 22: IN_PROGRESS_P22_T02_COMPLETED
+Phase 22: IN_PROGRESS_P22_T03_COMPLETED
 P22-T01 immutable deposit network/address/ownership contract completed; no address provisioning, RPC, schema or credit
 P22-T02 provider-neutral chain observation, block/transaction/event identity, deterministic cursor and replay admission contract completed; no RPC, secret, persistence or credit
+P22-T03 reorg, confirmation regression, network-isolated halt/resume health-state contract completed; no credit, balance, ledger or provider runtime
 Phase 23-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
 Phase 22-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
@@ -120,7 +121,7 @@ phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_22_DEPOSIT_LISTENER/README.md
 next_implementation_phase: Phase 22; proceed by task dependency
-completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T02 deposit observation contracts
+completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T03 deposit observation contracts
 approval_status: P-task approval mode temporarily disabled by human; market-data pipeline runtime/provider/public transport and deposit RPC/credit remain unstarted; production claim prohibited
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
