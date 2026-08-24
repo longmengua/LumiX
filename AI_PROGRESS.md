@@ -112,6 +112,8 @@ Phase 26: COMPLETED_FOR_RISK_CONTROL_POLICY_FOUNDATION
 P26 completed as versioned fail-closed limit/freshness/market protection/governance evidence contracts; no freeze, override, consumption, release or production risk runtime
 Phase 27: COMPLETED_FOR_ADMIN_CONTROL_BOUNDARY_FOUNDATION
 P27 completed as immutable admin session/RBAC, dual-control, read-only source-health and audit export evidence contracts; no admin command, role mutation, UI or bypass
+Phase 28: COMPLETED_FOR_AUDIT_COMPLIANCE_EVIDENCE_FOUNDATION
+P28 completed as immutable audit metadata, gap gate, minimum-disclosure export and compliance escalation evidence contracts; no export runtime, PII payload, KYC/AML bypass or asset repair
 Phase 25-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
 Phase 25-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete

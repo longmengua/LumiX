@@ -1,0 +1,4 @@
+package com.lumix.audit.evidence;
+import com.lumix.account.UserId; import java.time.Instant; import java.util.Objects;
+/** 最小揭露 export request；manifest digest 可驗證輸出範圍，但不產生檔案、下載或資料傳送。 */
+public record AuditExportRequestEvidence(UserId requester,String scopeReference,String redactionProfile,String manifestDigest,Instant requestedAt){public AuditExportRequestEvidence{requester=Objects.requireNonNull(requester,"requester");scopeReference=req(scopeReference,"scopeReference");redactionProfile=req(redactionProfile,"redactionProfile");manifestDigest=req(manifestDigest,"manifestDigest");requestedAt=Objects.requireNonNull(requestedAt,"requestedAt");if(!manifestDigest.matches("[0-9a-f]{64}"))throw new IllegalArgumentException("manifest digest must be SHA-256 hex");}private static String req(String v,String n){v=Objects.requireNonNull(v,n).trim();if(v.isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v;}}

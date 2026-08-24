@@ -3,20 +3,20 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_AUDIT_COMPLIANCE_EVIDENCE_FOUNDATION
 ```
 
 ## Phase charter
 
-建立可驗證、可重放、最小揭露的 audit/compliance evidence path；它提供證據與例外升級，不自動修復資金、交易或身份資料。
+建立可驗證、可重放、最小揭露的 audit/compliance evidence foundation；它提供證據與例外升級，不自動修復資金、交易或身份資料。
 
 ## 中階 task breakdown
 
-1. Evidence model：資金、交易、風控、admin、security、chain observation 的 event completeness、correlation ID、retention 與 integrity metadata。
-2. Read-only evidence projection：時間範圍、as-of、source/version、缺口狀態、replay digest 與可查詢性。
-3. Export boundary：授權、資料最小化、遮罩、格式/版本、hash/manifest、可重現輸出與下載/交付稽核。
-4. Compliance workflow boundary：case、hold、review、exception escalation、legal retention；不得設計 KYC/AML bypass 或自動資產處分。
-5. Reconciliation/audit review：ledger/balance/reservation、deposit/withdrawal、sign/broadcast、risk/admin policy evidence 的一致性與不可修復 mismatch 報告。
+1. Evidence model：`COMPLETED_FOR_CONTRACT`；completeness、correlation、source/version 與 integrity digest。
+2. Read-only evidence projection：`COMPLETED_FOR_CONTRACT`；gap/unknown fail-closed projection gate。
+3. Export boundary：`COMPLETED_FOR_CONTRACT`；最小揭露、redaction profile、manifest evidence。
+4. Compliance workflow boundary：`COMPLETED_FOR_CONTRACT`；case/escalation evidence，無處分。
+5. Reconciliation/audit review：`COMPLETED_FOR_FOUNDATION`；缺口不可修復、只能調查升級。
 
 ## 風險門檻
 

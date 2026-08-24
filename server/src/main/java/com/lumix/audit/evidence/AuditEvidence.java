@@ -1,0 +1,4 @@
+package com.lumix.audit.evidence;
+import java.time.Instant; import java.util.Objects;
+/** immutable cross-domain evidence metadata；payload 留在原始受控來源，本層只保留 correlation/integrity reference。 */
+public record AuditEvidence(String correlationId,String source,String sourceVersion,String integrityDigest,AuditEvidenceCompleteness completeness,Instant occurredAt){public AuditEvidence{correlationId=req(correlationId,"correlationId");source=req(source,"source");sourceVersion=req(sourceVersion,"sourceVersion");integrityDigest=req(integrityDigest,"integrityDigest");completeness=Objects.requireNonNull(completeness,"completeness");occurredAt=Objects.requireNonNull(occurredAt,"occurredAt");if(!integrityDigest.matches("[0-9a-f]{64}"))throw new IllegalArgumentException("integrity digest must be SHA-256 hex");}private static String req(String v,String n){v=Objects.requireNonNull(v,n).trim();if(v.isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v;}}

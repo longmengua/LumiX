@@ -25,7 +25,8 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 25 階段：`COMPLETED_FOR_WITHDRAWAL_SIGNING_BOUNDARY_FOUNDATION`；僅完成 approval、keyless signing intent、capability isolation 與 broadcast evidence contract。沒有 signer、secret、RPC、broadcast 或資金完成 runtime。
 - 第 26 階段：`COMPLETED_FOR_RISK_CONTROL_POLICY_FOUNDATION`；僅完成 immutable risk policy、freshness、protection signal 與 governance evidence contract。沒有 freeze、override、limit mutation 或 production risk runtime。
 - 第 27 階段：`COMPLETED_FOR_ADMIN_CONTROL_BOUNDARY_FOUNDATION`；僅完成 immutable session/RBAC、dual-control、read-only view 與 audit evidence contract。沒有 admin command、role mutation 或 bypass。
-- 第 28 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
+- 第 28 階段：`COMPLETED_FOR_AUDIT_COMPLIANCE_EVIDENCE_FOUNDATION`；僅完成 immutable audit/compliance evidence、gap gate 與 export/case reference contract。沒有 export runtime、資料傳送或資產修復。
+- 第 29 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
 - 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
 
