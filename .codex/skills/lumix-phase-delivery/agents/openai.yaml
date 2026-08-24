@@ -1,0 +1,3 @@
+interface:
+  display_name: "LumiX Phase Delivery"
+  short_description: "Deliver LumiX phases with isolated commit and push"

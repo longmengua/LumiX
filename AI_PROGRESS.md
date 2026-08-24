@@ -96,12 +96,15 @@ P22-T01 immutable deposit network/address/ownership contract completed; no addre
 P22-T02 provider-neutral chain observation, block/transaction/event identity, deterministic cursor and replay admission contract completed; no RPC, secret, persistence or credit
 P22-T03 reorg, confirmation regression, network-isolated halt/resume health-state contract completed; no credit, balance, ledger or provider runtime
 P22-T04 read-only reconciliation, deterministic evidence digest, metrics and P23 handoff contract completed; no dashboard, API, persistence or credit
-Phase 23: IN_PROGRESS_P23_T01_COMPLETED
+Phase 23: COMPLETED_FOR_DEPOSIT_CREDIT_DECISION_FOUNDATION
 P23-T01 immutable deposit candidate, asset/network confirmation policy, versioned eligibility decision contract completed; no credit, ledger or balance mutation
-Phase 23-36: PLANNING_PROGRAM_DRAFTED
+P23-T02 immutable credit idempotency key/decision record and bounded ledger handoff contract completed; no append, balance mutation or persistence runtime
+P23-T03 orphaned reorg freeze, append-only reversal ordering and human escalation contract completed; no delete, overwrite or ledger mutation
+P23-T04 read-only deposit/ledger/balance reconciliation, exception queue and audit export input contract completed; no repair/admin command or mutation
+Phase 24-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
-Phase 22-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
-Next implementation phase: Phase 22; proceed by task dependency
+Phase 24-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
+Next implementation phase: Phase 24; proceed by task dependency
 ```
 
 ## 目前倉庫現況
@@ -122,9 +125,9 @@ agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
-current_phase_task_list: docs/phases/PHASE_22_DEPOSIT_LISTENER/README.md
-next_implementation_phase: Phase 23; proceed by task dependency
-completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T04 deposit observation foundation; Phase 23 P23-T01 policy decision contract
+current_phase_task_list: docs/phases/PHASE_24_WITHDRAWAL_REQUEST/README.md
+next_implementation_phase: Phase 24; proceed by task dependency
+completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T04 deposit observation foundation; Phase 23 P23-T01 through P23-T04 deposit credit decision foundation
 approval_status: P-task approval mode temporarily disabled by human; market-data pipeline runtime/provider/public transport and deposit RPC/credit remain unstarted; production claim prohibited
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md

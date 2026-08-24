@@ -74,8 +74,29 @@ approval_status: P-task approval mode is temporarily disabled by human; phase or
 ```text
 phase: Phase 22 - 入金地址與鏈上監聽器
 phase_readme: docs/phases/PHASE_22_DEPOSIT_LISTENER/README.md
-current_task: Phase 23 P23-T01 deposit candidate、confirmation/asset/network policy 與 decision versioning contract
+current_task: completed
 completed_task_note: docs/phases/PHASE_22_DEPOSIT_LISTENER/phase-22-final-review.md
 approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency
 runtime_status: Phase 22 不得建立 RPC/provider 連線、持久化、地址派發、secret handling 或 deposit credit；production claim prohibited
+```
+
+## Phase 23 路由
+
+```text
+phase: Phase 23 - 入金入帳與確認政策
+phase_readme: docs/phases/PHASE_23_DEPOSIT_CREDITING/README.md
+current_task: completed
+completed_task_note: docs/phases/PHASE_23_DEPOSIT_CREDITING/phase-23-final-review.md
+approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency
+runtime_status: 不得 ledger append、balance mutation、credit/reversal runtime、repair/admin command、provider 連線或 production claim
+```
+
+## Phase 24 路由
+
+```text
+phase: Phase 24 - 提款請求流程
+phase_readme: docs/phases/PHASE_24_WITHDRAWAL_REQUEST/README.md
+current_task: P24-T01 withdrawal request、destination、asset/network、idempotency 與 immutable audit event contract
+approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency
+runtime_status: 不得簽章、廣播、釋放資金、approval bypass、wallet key/secret handling 或 production claim
 ```
