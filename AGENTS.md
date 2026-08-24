@@ -30,7 +30,8 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 30 階段：`COMPLETED_FOR_TRUSTED_UX_PRESENTATION_FOUNDATION`；僅完成 trusted data state presentation 與 sensitive enablement gate。沒有 production UI flow 或 mock-to-production wiring。
 - 第 31 階段：`COMPLETED_FOR_OBSERVABILITY_EVIDENCE_FOUNDATION`；僅完成 signal/runbook routing evidence，沒有 telemetry 或 alert runtime。
 - 第 32 階段：`COMPLETED_FOR_RECOVERY_READINESS_FOUNDATION`；僅完成 backup/replay manifest、mismatch 與 human approval gate。沒有 restore 或 DR runtime。
-- 第 33 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
+- 第 33 階段：`COMPLETED_FOR_SECURITY_EVIDENCE_FOUNDATION`；僅完成 threat/remediation evidence 與 fail-closed gate。沒有 security runtime 或 bypass。
+- 第 34 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
 - 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
 

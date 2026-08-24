@@ -3,12 +3,12 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_SECURITY_EVIDENCE_FOUNDATION
 ```
 
 ## Phase charter
 
-以 threat model、defence-in-depth 與可驗證 remediation 取代安全宣稱；安全 control 不得以 convenience 或 sandbox 需求 bypass。
+以 threat model、defence-in-depth 與可驗證 remediation evidence 取代安全宣稱；安全 control 不得以 convenience 或 sandbox 需求 bypass。
 
 ## 高層任務
 

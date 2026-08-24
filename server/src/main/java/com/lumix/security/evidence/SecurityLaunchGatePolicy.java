@@ -1,0 +1,4 @@
+package com.lumix.security.evidence;
+import java.time.Instant; import java.util.Objects;
+/** P33 security evidence gate；critical finding 或過期 exception 均不能被便利性或 sandbox 理由略過。 */
+public final class SecurityLaunchGatePolicy { public SecurityLaunchGateDecision evaluate(SecurityFindingEvidence finding,SecurityRemediationEvidence remediation,Instant evaluatedAt){finding=Objects.requireNonNull(finding,"finding");remediation=Objects.requireNonNull(remediation,"remediation");evaluatedAt=Objects.requireNonNull(evaluatedAt,"evaluatedAt");if(finding.severity()==SecurityFindingSeverity.CRITICAL)return SecurityLaunchGateDecision.CRITICAL_FINDING_REJECTED;if(!evaluatedAt.isBefore(remediation.expiresAt()))return SecurityLaunchGateDecision.EXCEPTION_EXPIRED_REJECTED;return SecurityLaunchGateDecision.PASS_EVIDENCE_ONLY;} }
