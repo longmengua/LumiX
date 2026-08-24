@@ -3,12 +3,12 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_RECOVERY_READINESS_FOUNDATION
 ```
 
 ## Phase charter
 
-以 RPO/RTO、immutable evidence 與 deterministic replay 為準則，建立 backup/restore/reconciliation/incident recovery 能力；replay 不得暗中修正資金或交易資料。
+以 RPO/RTO、immutable evidence 與 deterministic replay 為準則，建立 backup/restore/reconciliation/incident recovery readiness foundation；replay 不得暗中修正資金或交易資料。
 
 ## 高層任務
 
