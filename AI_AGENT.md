@@ -64,7 +64,7 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-Phase 21 已完成 market-data foundation，且不代表正式行情服務。逐卡 approve 機制依人類指示暫停；後續從 Phase 22 起依 task 依賴順序施工，直到人類明確說「開啟 approve」才恢復等待規則：
+Phase 21 market-data 與 Phase 22 deposit-observation foundation 已完成，且不代表正式行情或入金服務。逐卡 approve 機制依人類指示暫停；後續從 Phase 23 起依 task 依賴順序施工，直到人類明確說「開啟 approve」才恢復等待規則：
 
 ```text
 1. Read AGENTS.md

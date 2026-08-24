@@ -3,10 +3,10 @@
 ## 狀態
 
 ```text
-IN_PROGRESS_P22_T03_COMPLETED
+COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION
 ```
 
-P22-T01 到 P22-T03 已完成 immutable address ownership、chain observation 與 finality/health contract；runtime、chain connection、secret、schema 與 credit 尚未開始。逐卡 approve 機制依人類指示暫停。
+P22-T01 到 P22-T04 已完成 immutable address ownership、chain observation、finality/health 與 reconciliation/handoff contract；runtime、chain connection、secret、schema 與 credit 尚未開始。逐卡 approve 機制依人類指示暫停。
 
 ## 目標與依賴
 
@@ -19,7 +19,7 @@ P22-T01 到 P22-T03 已完成 immutable address ownership、chain observation �
 | P22-T01 | 定義 network、asset、address、ownership、address lifecycle 與唯一性契約 | COMPLETED；不產生地址、不寫 schema；已測試 network/address normalization、重複 ownership、錯誤格式 |
 | P22-T02 | 定義 provider-neutral chain observation、block/transaction/log identity、cursor 與 finality observation contract | COMPLETED；不連 RPC、不存 secret；已測試 duplicate observation、錯鏈、replay 與 deterministic ordering |
 | P22-T03 | 定義 reorg、confirmation、orphan、halt/resume health state 與通知邊界 | COMPLETED；不 credit、不調 balance/ledger；已測試 reorg、confirmation regression、gap/stale、multi-network 隔離 |
-| P22-T04 | 定義 read-only observation reconciliation、metrics、evidence 與 P23 handoff contract | 不建立 production dashboard/API；驗收為可重放觀測與缺資料 fail-closed |
+| P22-T04 | 定義 read-only observation reconciliation、metrics、evidence 與 P23 handoff contract | COMPLETED；不建立 production dashboard/API；已驗證可重放觀測與缺資料 fail-closed |
 
 ## 核心不變式與風險
 
@@ -43,3 +43,7 @@ P22-T01 到 P22-T03 已完成 immutable address ownership、chain observation �
 ## P22-T03 實作紀錄
 
 `com.lumix.deposit.observation.finality` 將同一 observation identity 的 successive finality snapshot 做 pure 比對：block hash 不同標記為 `ORPHANED` 與 reorg halt，confirmation 倒退標記為 `QUARANTINED` 與 regression halt；達最低 confirmation 僅表示 `FINALITY_THRESHOLD_MET`，絕非 credit。每個 network 有獨立且 sticky 的 health snapshot；cursor gap、stale provider signal 與 reorg 皆會 halt，唯有帶有 verified cursor/time 的明確 recovery evidence 可恢復。沒有 provider 連線、持久化、帳本、餘額或資產 mutation。
+
+## P22-T04 實作紀錄
+
+`com.lumix.deposit.observation.reconciliation` 對 immutable observation、finality evidence 與 network health 做唯讀重播核對，產生固定 SHA-256 evidence digest 和可重算 metrics。資料缺漏、同 identity 證據衝突或 network health 已 halted 時，report 會 fail-closed 且不提供 handoff；只有完全 reconciliation 後，才生成含 evidence pair 的 P23 candidate envelope。此 envelope 不是 credit 指令，沒有 dashboard、API、資料庫、provider 或帳本/餘額 mutation。

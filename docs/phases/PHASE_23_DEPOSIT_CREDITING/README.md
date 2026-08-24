@@ -3,14 +3,14 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+IN_PROGRESS_P23_T01
 ```
 
-僅有文件規劃；不會 credit、寫 ledger、改 balance 或連任何 chain/provider。
+P23-T01 的純 candidate/policy decision contract 已開始；不會 credit、寫 ledger、改 balance 或連任何 chain/provider。逐卡 approve 機制依人類指示暫停。
 
 ## 目標與依賴
 
-把 P22 的唯讀鏈上 observation 轉成可稽核的 confirmation/credit decision，再以明確、冪等的受控 handoff 接到既有 ledger boundary。施工必須等待 P22 review 與個別資金 task card 的人類批准。
+把 P22 的唯讀鏈上 observation 轉成可稽核的 confirmation/credit decision，再以明確、冪等的受控 handoff 接到既有 ledger boundary。P22 foundation 已完成；逐卡 approve 暫停不解除資金與 ledger safety boundary。
 
 ## 詳細 task draft
 
