@@ -130,10 +130,9 @@ Phase 35: COMPLETED_FOR_OPERATIONAL_READINESS_EVIDENCE_FOUNDATION
 P35 completed as ownership/runbook and operational gap gate evidence; no business/legal/compliance decision or launch runtime
 Phase 36: COMPLETED_FOR_LAUNCH_GATE_EVIDENCE_FOUNDATION_NOT_PRODUCTION_READY
 P36 completed as aggregate readiness evidence and human sign-off gate contract; full readiness evidence and explicit human sign-off are missing, so production-ready/launch claim is prohibited
-Phase 25-36: PLANNING_PROGRAM_DRAFTED
-Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
-Phase 25-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
-Next implementation phase: Phase 25; proceed by task dependency
+Phase 21-36 foundation: COMPLETED_AND_PUSHED_PER_PHASE
+Phase 21-36 production runtime: NOT_STARTED
+Next work: P36 readiness evidence gap closure and explicit human production sign-off; launch remains prohibited
 ```
 
 ## 目前倉庫現況
@@ -154,10 +153,10 @@ agent_rules: AGENTS.md and AI_AGENT.md
 context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
-current_phase_task_list: docs/phases/PHASE_25_WITHDRAWAL_SIGNING/README.md
-next_implementation_phase: Phase 25; proceed by task dependency
-completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation; Phase 22 P22-T01 through P22-T04 deposit observation foundation; Phase 23 P23-T01 through P23-T04 deposit credit decision foundation; Phase 24 P24-T01 through P24-T04 withdrawal request foundation
-approval_status: P-task approval mode temporarily disabled by human; market-data pipeline runtime/provider/public transport and deposit RPC/credit remain unstarted; production claim prohibited
+current_phase_task_list: docs/phases/PHASE_36_LAUNCH_GATE/README.md
+next_implementation_phase: none; P36 requires authoritative readiness evidence and explicit human production sign-off
+completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately
+approval_status: P-task approval mode temporarily disabled by human; this does not replace P36 human production sign-off or authorize runtime/prod launch
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
 ```

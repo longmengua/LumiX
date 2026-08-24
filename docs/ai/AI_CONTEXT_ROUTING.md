@@ -112,3 +112,14 @@ completed_task_note: docs/phases/PHASE_25_WITHDRAWAL_SIGNING/phase-25-final-revi
 approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency 與高風險 fail-closed 邊界
 runtime_status: P24 的 keyless signer input 只是資料契約；不得實作任何可簽章、可廣播或可移動資金的路徑
 ```
+
+## Phase 26–36 路由
+
+```text
+phase_status: Phase 26 至 Phase 36 均完成 foundation 與 final-review evidence，但 runtime 均未開始
+current_phase: Phase 36 launch-gate evidence
+phase_readme: docs/phases/PHASE_36_LAUNCH_GATE/README.md
+completed_task_note: docs/phases/PHASE_36_LAUNCH_GATE/phase-36-final-review.md
+required_authority: docs/governance/PRODUCTION_READINESS_GATES.md
+runtime_status: 缺完整 readiness evidence 與人類明確 production sign-off；production-ready 與 launch 均禁止
+```

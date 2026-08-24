@@ -64,7 +64,7 @@ all architecture docs
 
 ## 給 Codex 的目前工作指引
 
-Phase 21 至 Phase 25 foundation 已完成，且不代表正式行情、入金、credit、提款或簽章服務。逐卡 approve 機制依人類指示暫停；後續從 Phase 26 起依 task 依賴順序施工，直到人類明確說「開啟 approve」才恢復等待規則：
+Phase 21 至 Phase 36 foundation 已完成，且不代表 production-ready 或 launch。P36 的完整 readiness evidence 與人類明確簽核尚缺；逐卡 approve 機制暫停不解除 P36 launch sign-off 門檻：
 
 ```text
 1. Read AGENTS.md

@@ -161,11 +161,11 @@ PlantUML
 
 ## Start here for current task
 
-Phase 21 至 Phase 24 已完成 foundation；不代表正式行情、入金、credit 或提款服務。下一個 phase 為 Phase 25，依暫停逐卡 approve 機制可依相依順序施工：
+Phase 21 至 Phase 36 的 foundation 已完成；不代表正式行情、入金、credit、提款、簽章、公開 API、正式 UI、營運或 production launch。P36 缺完整 readiness evidence 與人類明確簽核，所有後續施工必須先以 `PRODUCTION_READINESS_GATES.md` 的缺口為準：
 
 ```text
-Phase 25 withdrawal signing task-card definition and review
+P36 launch-gate evidence review; production launch remains prohibited
 ```
 
-Phase 21/22/23/24 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 25 README；不得把既有 foundation 接到 provider、公開 transport、地址派發、credit、私鑰、HSM/MPC、鏈上廣播或任何未核准的資金核心。
+Phase 21–36 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 36 README 與權威 readiness gates；不得把既有 foundation 接到 provider、公開 transport、地址派發、credit、私鑰、HSM/MPC、鏈上廣播或任何未核准的資金核心。
 Phase 18 到 Phase 20 的已批准歷史分別保留在各 phase 目錄的 `phase-*-final-review.md`。
