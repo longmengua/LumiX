@@ -91,7 +91,9 @@ NOT official market data service
 NOT public market-data API or WebSocket
 NOT real-time SLA
 NOT production-ready
-Phase 22-36: PLANNING_PROGRAM_DRAFTED
+Phase 22: IN_PROGRESS_P22_T01_COMPLETED
+P22-T01 immutable deposit network/address/ownership contract completed; no address provisioning, RPC, schema or credit
+Phase 23-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
 Phase 22-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
 Next implementation phase: Phase 22; proceed by task dependency

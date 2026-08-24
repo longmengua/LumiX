@@ -3,10 +3,10 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+IN_PROGRESS_P22_T01_COMPLETED
 ```
 
-僅有文件規劃；runtime、chain connection、secret、schema 與 credit 尚未開始，也沒有 implementation approval。
+P22-T01 已完成 immutable address ownership contract；runtime、chain connection、secret、schema 與 credit 尚未開始。逐卡 approve 機制依人類指示暫停。
 
 ## 目標與依賴
 
@@ -16,7 +16,7 @@ PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
 
 | Draft | 目標與交付 | 禁止事項與驗收 |
 | --- | --- | --- |
-| P22-T01 | 定義 network、asset、address、ownership、address lifecycle 與唯一性契約 | 不產生地址、不寫 schema；測試 network/address normalization、重複 ownership、錯誤 asset |
+| P22-T01 | 定義 network、asset、address、ownership、address lifecycle 與唯一性契約 | COMPLETED；不產生地址、不寫 schema；已測試 network/address normalization、重複 ownership、錯誤格式 |
 | P22-T02 | 定義 provider-neutral chain observation、block/transaction/log identity、cursor 與 finality observation contract | 不連 RPC、不存 secret；測試 duplicate observation、錯鏈、重播與 deterministic ordering |
 | P22-T03 | 定義 reorg、confirmation、orphan、halt/resume health state 與通知邊界 | 不 credit、不調 balance/ledger；測試 reorg、confirmation regression、gap/stale、multi-network 隔離 |
 | P22-T04 | 定義 read-only observation reconciliation、metrics、evidence 與 P23 handoff contract | 不建立 production dashboard/API；驗收為可重放觀測與缺資料 fail-closed |
@@ -30,4 +30,8 @@ PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
 
 ## 停止條件與下一步
 
-任何 credit、地址派發、RPC 連線、migration 或 secret 需求出現即停止並建立個別 approved task card。P23 僅可在 P22 review 通過後開始其 runtime planning/implementation。
+任何 credit、地址派發、RPC 連線、migration 或 secret 需求出現即停止並建立個別 task card。P23 僅可在 P22 的依賴 task 全數完成後開始。
+
+## P22-T01 實作紀錄
+
+`com.lumix.deposit.address` 提供 `DepositNetwork`、`DepositAddress`、`DepositAddressOwnership` 與 pure ownership policy。EVM address 只以小寫 canonical identity 比較（未宣稱 checksum 驗證）；Base58/Bech32 只接受明確格式。相同 network/address 可供同一 owner 冪等重送，不同 owner 即使 asset 不同也會拒絕。沒有任何 wallet provisioning、地址生成、持久化、鏈上讀取或資產 credit。
