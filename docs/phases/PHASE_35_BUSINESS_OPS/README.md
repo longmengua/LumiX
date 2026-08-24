@@ -3,12 +3,12 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_OPERATIONAL_READINESS_EVIDENCE_FOUNDATION
 ```
 
 ## Phase charter
 
-確認組織能安全營運，而非只確認系統能執行；此 phase 不會以文件取代法律、合規、財務或人類責任。
+建立組織安全營運所需的 readiness evidence foundation，而非只確認系統能執行；此 phase 不會以文件取代法律、合規、財務或人類責任。
 
 ## 高層任務
 
