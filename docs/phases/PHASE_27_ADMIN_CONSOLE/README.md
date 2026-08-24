@@ -3,20 +3,20 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_ADMIN_CONTROL_BOUNDARY_FOUNDATION
 ```
 
 ## Phase charter
 
-建立最小權限、可追蹤且預設唯讀的營運管理能力。管理介面不是任意資料修正工具；不得直接調整 balance、ledger、reservation 或繞過風控。
+建立最小權限、可追蹤且預設唯讀的營運管理 boundary foundation。管理介面不是任意資料修正工具；不得直接調整 balance、ledger、reservation 或繞過風控。
 
 ## 中階 task breakdown
 
-1. Admin identity/RBAC：角色、scope、MFA/session、break-glass policy 與職責分離。
-2. Read-only operational views：deposit/withdrawal、risk、market health、reconciliation、audit evidence；須保留 as-of/health 與資料來源。
-3. Controlled actions：只定義已批准 command 的 request/review/dual-control boundary；每個敏感 action 分離 task card 與 rollback/reversal 語意。
-4. Audit/security：不可否認的 actor、reason、before/after reference、approval chain、export access 與 alerting。
-5. UI/operational test evidence：權限拒絕、session expiry、雙人覆核、不可逆 action、資料最小化與無 production mock claim。
+1. Admin identity/RBAC：`COMPLETED_FOR_CONTRACT`；角色、MFA/session 與職責分離 evidence。
+2. Read-only operational views：`COMPLETED_FOR_CONTRACT`；as-of/health/source evidence。
+3. Controlled actions：`COMPLETED_FOR_CONTRACT`；request/review dual-control evidence，無 command。
+4. Audit/security：`COMPLETED_FOR_CONTRACT`；actor/reason/evidence-reference/export request contract。
+5. UI/operational test evidence：`COMPLETED_FOR_FOUNDATION`；權限拒絕、session expiry、雙人覆核與 source health 測試。
 
 ## 風險門檻
 

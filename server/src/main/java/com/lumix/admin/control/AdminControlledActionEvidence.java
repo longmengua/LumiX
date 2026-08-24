@@ -1,0 +1,4 @@
+package com.lumix.admin.control;
+import com.lumix.account.UserId; import java.time.Instant; import java.util.Objects;
+/** 已批准 command 前的雙人 evidence；reason/before-after 都是 reference，不包含 mutation payload。 */
+public record AdminControlledActionEvidence(String actionReference,UserId requester,UserId reviewer,String reason,Instant reviewedAt){public AdminControlledActionEvidence{actionReference=req(actionReference,"actionReference");requester=Objects.requireNonNull(requester,"requester");reviewer=Objects.requireNonNull(reviewer,"reviewer");reason=req(reason,"reason");reviewedAt=Objects.requireNonNull(reviewedAt,"reviewedAt");if(requester.equals(reviewer))throw new IllegalArgumentException("controlled action requires separate requester and reviewer");}private static String req(String v,String n){v=Objects.requireNonNull(v,n).trim();if(v.isEmpty())throw new IllegalArgumentException(n+" must not be blank");return v;}}
