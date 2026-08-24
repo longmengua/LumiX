@@ -107,7 +107,8 @@ runtime_status: 沒有 hold 寫入、簽章、廣播、釋放資金、approval b
 ```text
 phase: Phase 25 - 提款審核、簽章、廣播
 phase_readme: docs/phases/PHASE_25_WITHDRAWAL_SIGNING/README.md
-current_task: task-card definition; 先完成 approval policy 與職責分離的純契約，禁止私鑰、HSM/MPC、signer command、鏈上連線或 broadcast runtime
+current_task: completed
+completed_task_note: docs/phases/PHASE_25_WITHDRAWAL_SIGNING/phase-25-final-review.md
 approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency 與高風險 fail-closed 邊界
 runtime_status: P24 的 keyless signer input 只是資料契約；不得實作任何可簽章、可廣播或可移動資金的路徑
 ```

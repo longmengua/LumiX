@@ -106,6 +106,8 @@ P24-T01 immutable withdrawal request, destination/network, idempotency and reque
 P24-T02 immutable eligibility, available-balance evidence, versioned fee quote and future hold handoff contract completed; no hold creation, capture, settlement or mutation
 P24-T03 immutable cancel/expire/manual-review/approval-handoff transitions completed; no admin bypass, signing or fund movement
 P24-T04 read-only request/hold/audit reconciliation and keyless P25 signer input contract completed; no key, signer command or broadcast
+Phase 25: COMPLETED_FOR_WITHDRAWAL_SIGNING_BOUNDARY_FOUNDATION
+P25-T01 through P25-T05 completed as immutable approval, signing intent, capability isolation, broadcast evidence and audit/reconciliation contracts; no signer adapter, secret, RPC, broadcast, ledger/balance/reservation mutation or withdrawal completion runtime
 Phase 25-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
 Phase 25-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete

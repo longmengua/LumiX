@@ -22,7 +22,8 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 22 階段：`COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION`；僅完成 address ownership、chain observation、finality/health、read-only reconciliation 與 P23 handoff contract。地址派發、RPC/provider、secret、持久化與 credit 尚未開始。
 - 第 23 階段：`COMPLETED_FOR_DEPOSIT_CREDIT_DECISION_FOUNDATION`；僅完成 eligibility、idempotency、future ledger handoff、reorg correction 與 read-only reconciliation contract。ledger append、balance mutation、credit/reversal runtime 均未開始。
 - 第 24 階段：`COMPLETED_FOR_WITHDRAWAL_REQUEST_FOUNDATION`；僅完成 immutable request、eligibility、lifecycle、reconciliation 與 keyless P25 input contract。沒有 hold 寫入、approval bypass、簽章、廣播、鏈上確認或資金移動 runtime。
-- 第 25 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
+- 第 25 階段：`COMPLETED_FOR_WITHDRAWAL_SIGNING_BOUNDARY_FOUNDATION`；僅完成 approval、keyless signing intent、capability isolation 與 broadcast evidence contract。沒有 signer、secret、RPC、broadcast 或資金完成 runtime。
+- 第 26 階段 到 第 36 階段：全域規劃計畫與 phase 草案已建立；runtime 尚未開始，依 phase 順序與 task card 施工。
 - 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
 
