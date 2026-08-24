@@ -1,0 +1,4 @@
+package com.lumix.risk.control;
+import java.math.BigInteger; import java.time.Instant; import java.util.Objects;
+/** caller 將所有讀取結果與 evaluation time 顯式帶入，確保 replay 不依賴 cache 或 wall clock。 */
+public record RiskEvaluationInput(RiskAction action, BigInteger requestedAtomicAmount, RiskInputFreshness inputFreshness, RiskMarketState marketState, Instant evaluatedAt) { public RiskEvaluationInput { action=Objects.requireNonNull(action,"action"); requestedAtomicAmount=Objects.requireNonNull(requestedAtomicAmount,"requestedAtomicAmount"); inputFreshness=Objects.requireNonNull(inputFreshness,"inputFreshness"); marketState=Objects.requireNonNull(marketState,"marketState"); evaluatedAt=Objects.requireNonNull(evaluatedAt,"evaluatedAt"); if(requestedAtomicAmount.signum()<=0) throw new IllegalArgumentException("requested amount must be positive"); } }

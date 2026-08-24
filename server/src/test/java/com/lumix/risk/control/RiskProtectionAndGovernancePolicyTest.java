@@ -1,0 +1,4 @@
+package com.lumix.risk.control;
+import static org.junit.jupiter.api.Assertions.*; import com.lumix.account.UserId; import java.time.Instant; import org.junit.jupiter.api.Test;
+class RiskProtectionAndGovernancePolicyTest { @Test void protectionSignalsRejectAndPolicyEvidenceRequiresDifferentPeople() { // freeze/velocity/cooling-off 都只能收斂成拒絕，且 policy change 不可由提案者自行覆核。
+ assertEquals(RiskDecision.MARKET_PROTECTION_REJECTED,new RiskProtectionPolicy().evaluate(RiskProtectionSignal.WITHDRAWAL_COOLING_OFF)); assertEquals(RiskPolicyGovernanceDecision.VALID_DUAL_CONTROL,new RiskPolicyGovernancePolicy().evaluate(new RiskPolicyChangeEvidence("risk-v2",new UserId("a"),new UserId("b"),Instant.EPOCH))); assertThrows(IllegalArgumentException.class,()->new RiskPolicyChangeEvidence("risk-v2",new UserId("a"),new UserId("a"),Instant.EPOCH)); } }
