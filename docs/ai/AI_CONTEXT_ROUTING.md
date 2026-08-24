@@ -52,9 +52,9 @@ phase: Phase 21 - Market Data Pipeline
 phase_readme: docs/phases/PHASE_21_MARKET_DATA/README.md
 task_card_review: docs/phases/PHASE_21_MARKET_DATA/phase-21-task-card-review.md
 proposed_first_task: docs/phases/PHASE_21_MARKET_DATA/p21-t01-inventory-boundary-invariants.md
-approval_status: P21-T01 through P21-T04 implementation reviews approved; P21-T05 COMPLETED_AWAITING_IMPLEMENTATION_REVIEW; P21-T06 through P21-T08 await explicit human approval
-runtime_status: Market Data pipeline runtime, external provider and public transport not started; P21-T02/T03/T04/T05 only establish immutable domain, admission-policy and read-only projection/aggregation foundations; production claim prohibited
-completed_task_note: docs/phases/PHASE_21_MARKET_DATA/p21-t05-implementation-review.md
+approval_status: P-task approval mode temporarily disabled by human; Phase 21 complete as foundation
+runtime_status: Market Data pipeline runtime, external provider and public transport not started; P21 only establishes immutable domain, policy, projection, aggregation, replay and internal query foundations; production claim prohibited
+completed_task_note: docs/phases/PHASE_21_MARKET_DATA/phase-21-final-review.md
 ```
 
 ## Phase 21–36 規劃路由
@@ -65,5 +65,5 @@ planning_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
 phase_22_24: detailed task drafts in each phase README
 phase_25_28: mid-level task breakdowns in each phase README
 phase_29_36: phase charter and high-level tasks in each phase README
-approval_status: all runtime tasks await human review and explicit approval
+approval_status: P-task approval mode is temporarily disabled by human; phase order, task dependencies and prohibited boundaries remain mandatory
 ```

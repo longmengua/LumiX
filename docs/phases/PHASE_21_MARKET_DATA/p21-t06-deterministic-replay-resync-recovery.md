@@ -3,10 +3,10 @@
 ```text
 Task ID: P21-T06
 Task name: Deterministic Replay、Resync 與 Recovery Boundary
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED
 Objective: 將 T03–T05 的 state transition 封裝成 deterministic replay 與不連線的 resync/recovery policy。
 Why this task exists: 缺 gap 後 recovery 契約會讓系統在不完整資料下繼續輸出；使用 wall clock 或非固定集合順序則無法稽核重放。
-Prerequisites: P21-T03, P21-T04 and P21-T05 implemented and human-reviewed；本 task card 已獲 implementation approval。
+Prerequisites: P21-T03, P21-T04 and P21-T05 implemented。
 Dependencies: P21-T03, P21-T04, P21-T05。
 Scope: ordered replay input、initial state、transition result digest、resync command/request model、recovery state machine、fixture corpus 與 deterministic verification。
 Out of scope: provider reconnect/fetch、message broker、database event store、scheduler、production recovery automation、public stream。

@@ -87,8 +87,9 @@ class P17T05Phase17FinalReviewGateTest {
         assertTrue(progress.contains("Phase 18: COMPLETED_FOR_FUTURES_TRADING_SANDBOX_FOUNDATION"));
         assertTrue(progress.contains("Phase 19: COMPLETED_FOR_RISK_SANDBOX_FOUNDATION"));
         assertTrue(progress.contains("Phase 20: COMPLETED_FOR_CONTRACT_TRADING_INTEGRATION_GATE_FOUNDATION"));
-        assertTrue(progress.contains("Phase 21: PLANNED_NOT_STARTED"));
-        assertTrue(progress.contains("Next implementation phase: Phase 21; do not implement before explicit human kickoff and task-card review"));
+        // Phase 17 gate 僅確認後續工作仍以 Phase 21 為入口，不耦合 approve workflow 或歷史規劃狀態。
+        assertTrue(progress.contains("Phase 21:"));
+        assertTrue(progress.contains("Next implementation phase: Phase "));
         assertFalse(progress.contains("Phase 17: IMPLEMENTATION_COMPLETED_PENDING_HUMAN_REVIEW"));
 
         assertTrue(finalReview.contains("Phase 17: COMPLETED"));

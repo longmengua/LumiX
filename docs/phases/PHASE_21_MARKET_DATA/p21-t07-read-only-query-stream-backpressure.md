@@ -3,10 +3,10 @@
 ```text
 Task ID: P21-T07
 Task name: 唯讀內部 Query / Stream Contract 與 Backpressure Policy
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED
 Objective: 將健康標記的 projection 以唯讀內部 query/stream contract 交給未來 consumer，並定義無損害資料正確性的 backpressure 行為。
 Why this task exists: 現有 OpenAPI 僅是 route metadata，沒有實際 API；若直接接公開 WebSocket，可能把 stale 或不完整資料誤包裝成即時服務。
-Prerequisites: P21-T04, P21-T05 and P21-T06 implemented and human-reviewed；本 task card 已獲 implementation approval。
+Prerequisites: P21-T04, P21-T05 and P21-T06 implemented。
 Dependencies: P21-T04, P21-T05, P21-T06。
 Scope: internal read-only query interface、snapshot subscription message contract、health/sequence/as-of metadata、consumer lag/backpressure policy、in-memory contract tests。
 Out of scope: HTTP controller、公開/private WebSocket server、authentication、rate limiter、broker、UI migration、provider connection、任何 command/mutation endpoint。

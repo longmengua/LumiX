@@ -3,6 +3,12 @@
 ## Authoritative status
 
 ```text
+P-task approval mode: TEMPORARILY_DISABLED_BY_HUMAN_2026-08-24
+All future P tasks proceed by phase order and task dependency without per-card approval or implementation-review wait.
+This does not authorize prohibited money movement, security bypass, production launch claim, or phase skipping.
+```
+
+```text
 Phase 11: completed as documentation-only production architecture reset
 Phase 12: completed as production database schema and migration foundation
 Phase 13: completed as backend module foundation and API boundary
@@ -78,19 +84,17 @@ NOT real-money contract trading ready
 NOT matching or fill execution enabled
 NOT position, balance or ledger updated
 NOT settlement completed
-Phase 21: FORMALLY_STARTED_P21_T01_T04_IMPLEMENTATION_REVIEW_APPROVED_P21_T05_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
-Phase 21 Market Data Pipeline P21-T01 through P21-T04 implementation reviews approved
-P21-T05 immutable read-only trade/ticker/candle aggregation completed; awaiting implementation review
-P21-T06 through P21-T08 each await explicit human implementation approval
-Phase 21 Market Data pipeline runtime, external provider and public transport not started; P21-T02/T03/T04/T05 only establish immutable domain, admission-policy and read-only projection/aggregation foundations
+Phase 21: COMPLETED_FOR_MARKET_DATA_FOUNDATION
+P21-T01 through P21-T08 completed as immutable market-data domain, admission policy, order-book projection, trade/ticker/candle aggregation, deterministic replay/resync and internal-only query/backpressure foundation
+Phase 21 Market Data pipeline runtime, external provider and public transport not started; all P21 work remains pure, in-memory and read-only
 NOT official market data service
 NOT public market-data API or WebSocket
 NOT real-time SLA
 NOT production-ready
-Phase 22-36: PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+Phase 22-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
-Phase 22-36 runtime implementation not started; no task has implementation approval
-Next implementation phase: Phase 21; do not implement before explicit human kickoff and task-card review
+Phase 22-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
+Next implementation phase: Phase 22; proceed by task dependency
 ```
 
 ## 目前倉庫現況
@@ -112,9 +116,9 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_21_MARKET_DATA/README.md
-next_implementation_phase: Phase 21; P21-T05 awaits implementation review; P21-T06 awaits explicit human approval
-completed_task: P21-T05 immutable read-only trade/ticker/candle aggregation (awaiting implementation review); P21-T01 through P21-T04 implementation reviews approved
-approval_status: P21-T01 through P21-T04 implementation reviews approved; P21-T05 COMPLETED_AWAITING_IMPLEMENTATION_REVIEW; P21-T06 through P21-T08 await human approval; pipeline runtime, provider and public transport not started; production claim prohibited
+next_implementation_phase: Phase 22; proceed by task dependency
+completed_task: Phase 21 P21-T01 through P21-T08 market-data foundation
+approval_status: P-task approval mode temporarily disabled by human; pipeline runtime, provider and public transport not started; production claim prohibited
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
 ```

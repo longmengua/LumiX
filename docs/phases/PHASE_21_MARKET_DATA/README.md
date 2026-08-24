@@ -3,10 +3,10 @@
 ## 目前狀態
 
 ```text
-FORMALLY_STARTED_P21_T01_T04_IMPLEMENTATION_REVIEW_APPROVED_P21_T05_COMPLETED_AWAITING_IMPLEMENTATION_REVIEW
+COMPLETED_FOR_MARKET_DATA_FOUNDATION
 ```
 
-Phase 12–20 已完成對應 review。Phase 21 已正式開工；P21-T01 到 P21-T04 implementation review 已批准。P21-T05 已完成 immutable read-only trade/ticker/candle aggregation，等待 implementation review。Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。P21-T06 到 P21-T08 仍須各自經審核與人類明確實作批准。
+Phase 12–20 已完成對應 review。Phase 21 已完成 immutable market-data foundation。Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。依人類指示，逐卡 approve 機制暫停；後續 phase 依 task 相依順序施工。
 
 ## 目標
 
@@ -15,7 +15,7 @@ Phase 12–20 已完成對應 review。Phase 21 已正式開工；P21-T01 到 P2
 ## 前置相依
 
 - Phase 12–20 已完成其對應 review；Phase 20 的 sandbox integration gate 是本 phase 的最近依賴。
-- 每個 runtime task 必須先取得該 task card 的人類批准，並依下列順序施工。
+- 每個 runtime task 依下列 task 相依順序施工；逐卡 approve 機制暫停，直到人類明確恢復。
 - 外部 provider adapter、公開 WebSocket 或任何 production endpoint 不屬於目前已提出的 task card；各自需要後續獨立 task card 與批准。
 
 ## 範圍
@@ -56,10 +56,10 @@ public production trading、real-money capability、production launch claim
 | P21-T02 | Normalized Market Data Event Contract | IMPLEMENTATION_REVIEW_APPROVED |
 | P21-T03 | Sequence、Duplicate、Gap 與 Feed Health Policy | IMPLEMENTATION_REVIEW_APPROVED |
 | P21-T04 | 唯讀 Order Book Snapshot / Delta Projection | IMPLEMENTATION_REVIEW_APPROVED |
-| P21-T05 | Trade、Ticker 與 Candle Aggregation | COMPLETED_AWAITING_IMPLEMENTATION_REVIEW |
-| P21-T06 | Deterministic Replay、Resync 與 Recovery Boundary | PROPOSED_AWAITING_HUMAN_REVIEW |
-| P21-T07 | 唯讀內部 Query / Stream Contract 與 Backpressure Policy | PROPOSED_AWAITING_HUMAN_REVIEW |
-| P21-T08 | Integration Verification、No-Claim Gate 與 Phase Final Review | PROPOSED_AWAITING_HUMAN_REVIEW |
+| P21-T05 | Trade、Ticker 與 Candle Aggregation | COMPLETED |
+| P21-T06 | Deterministic Replay、Resync 與 Recovery Boundary | COMPLETED |
+| P21-T07 | 唯讀內部 Query / Stream Contract 與 Backpressure Policy | COMPLETED |
+| P21-T08 | Integration Verification、No-Claim Gate 與 Phase Final Review | COMPLETED |
 
 ## Task dependency graph
 
@@ -105,5 +105,8 @@ P21-T02 ---> P21-T03
 - P21-T03 implementation review：[P21-T03 Sequence、Duplicate、Gap 與 Feed Health Policy 實作審核紀錄](p21-t03-implementation-review.md)
 - P21-T04 implementation review：[P21-T04 唯讀 Order Book Snapshot / Delta Projection 實作審核紀錄](p21-t04-implementation-review.md)
 - P21-T05 implementation review：[P21-T05 Trade、Ticker 與 Candle Aggregation 實作審核紀錄](p21-t05-implementation-review.md)
-- approval status：P21-T01 到 P21-T04 implementation review 已批准；P21-T05 已完成並等待 implementation review；P21-T06 到 P21-T08 仍等待逐卡人類實作批准；Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。
+- P21-T06 implementation note：[P21-T06 Deterministic Replay、Resync 與 Recovery Boundary](p21-t06-deterministic-replay-resync-recovery.md)
+- P21-T07 implementation note：[P21-T07 唯讀內部 Query / Stream Contract 與 Backpressure Policy](p21-t07-read-only-query-stream-backpressure.md)
+- Phase final review：[Phase 21 行情資料管線 final review](phase-21-final-review.md)
+- approval status：逐卡 approve 機制依人類指示暫停；P21 foundation 已完成，Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。
 - 全域規劃：[Phase 21–36 規劃計畫](../../planning/PHASE_21_36_PLANNING_PROGRAM.md)

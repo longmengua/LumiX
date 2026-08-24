@@ -3,10 +3,10 @@
 ```text
 Task ID: P21-T08
 Task name: Integration Verification、No-Claim Gate 與 Phase Final Review
-Status: PROPOSED_AWAITING_HUMAN_REVIEW
+Status: COMPLETED
 Objective: 驗證 P21 foundation 的跨 task 不變式、no-claim 邊界與 review evidence；產出供人類判斷的 phase final review，不授權新 runtime。
 Why this task exists: 單元測試通過不代表 aggregate boundary、health 表達或 production claim 一致；需要一張獨立 gate 防止把 foundation 誤宣稱為正式行情服務。
-Prerequisites: P21-T01 through P21-T07 implemented, reviewed and approved individually；本 task card 已獲 implementation approval。
+Prerequisites: P21-T01 through P21-T07 implemented。
 Dependencies: P21-T01, P21-T02, P21-T03, P21-T04, P21-T05, P21-T06, P21-T07。
 Scope: integration fixtures、architecture/no-claim tests、review evidence、phase final review draft、rollback/revert instructions。
 Out of scope: 新增行情功能、外部 provider、API/WebSocket、schema/persistence、matching/trade/fill producer、任何資金或交易 mutation。
