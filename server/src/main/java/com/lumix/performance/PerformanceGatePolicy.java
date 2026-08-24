@@ -1,0 +1,4 @@
+package com.lumix.performance;
+import java.util.Objects;
+/** P34 policy 先保證 isolation、SLO 與 integrity evidence，再允許將觀測納入 capacity review。 */
+public final class PerformanceGatePolicy { public PerformanceGateDecision evaluate(WorkloadProfile profile,PerformanceObservation observation,long maximumLatencyMillis){profile=Objects.requireNonNull(profile,"profile");observation=Objects.requireNonNull(observation,"observation");if(!profile.isolatedEnvironment())return PerformanceGateDecision.ENVIRONMENT_NOT_ISOLATED_REJECTED;if(observation.latencyMillis()>maximumLatencyMillis||observation.errorCount()>0)return PerformanceGateDecision.SLO_EXCEEDED_REJECTED;if(!observation.integrityVerified())return PerformanceGateDecision.INTEGRITY_UNVERIFIED_REJECTED;return PerformanceGateDecision.PASS_EVIDENCE_ONLY;} }
