@@ -3,20 +3,20 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_LAUNCH_GATE_EVIDENCE_FOUNDATION_NOT_PRODUCTION_READY
 ```
 
 ## Phase charter
 
-彙整而非取代各 phase 的證據，依 `docs/governance/PRODUCTION_READINESS_GATES.md` 做正式上線判定。只有全數門檻通過並取得人類明確簽核，才可宣稱 production-ready。
+建立彙整而非取代各 phase 證據的 launch-gate foundation，依 `docs/governance/PRODUCTION_READINESS_GATES.md` 做正式上線判定。只有全數門檻通過並取得人類明確簽核，才可宣稱 production-ready；目前沒有這些證據或簽核。
 
 ## 高層任務
 
-1. Evidence inventory：data integrity、funds safety、trading safety、security、operations、business launch 的可追溯證據與 owner。
-2. Open-risk register：未解事項、risk acceptance、expiry、mitigation、launch blocker 與不可接受例外。
-3. Go/no-go review：獨立人類審查、職責分離、sign-off、scope/region/product 限制與決議紀錄。
-4. Controlled launch/rollback：phased exposure、kill switch、customer communication、incident escalation、success metric 與 abort criteria。
-5. Post-launch gates：監控期間、reconciliation、security review、customer support、後續 expansion 必須再獲批准。
+1. Evidence inventory：`COMPLETED_FOR_CONTRACT`；六類 gate evidence reference。
+2. Open-risk register：`COMPLETED_FOR_BLOCKER_GATE`；缺 evidence 不能通過。
+3. Go/no-go review：`COMPLETED_FOR_HUMAN_SIGN_OFF_GATE`；人類簽核缺失一律不就緒。
+4. Controlled launch/rollback：`NOT_IMPLEMENTED`；不得建立 launch/kill switch runtime。
+5. Post-launch gates：`NOT_IMPLEMENTED`；必須於正式 launch 後另行取得人類核准。
 
 ## Gate
 
