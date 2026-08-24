@@ -9,13 +9,14 @@ import java.util.regex.Pattern;
  *
  * <p>只在 format 明確定義大小寫無關時才做 normalization；未知格式不會被自動 trim/轉碼成看似相同的地址。</p>
  */
-public record DepositAddress(String canonicalValue) {
+public record DepositAddress(DepositAddressFormat format, String canonicalValue) {
 
     private static final Pattern EVM = Pattern.compile("0x[0-9a-fA-F]{40}");
     private static final Pattern BASE58 = Pattern.compile("[1-9A-HJ-NP-Za-km-z]{26,128}");
     private static final Pattern BECH32 = Pattern.compile("[a-z0-9]{1,83}1[ac-hj-np-z02-9]{6,87}");
 
     public DepositAddress {
+        format = Objects.requireNonNull(format, "format must not be null");
         canonicalValue = Objects.requireNonNull(canonicalValue, "canonicalValue must not be null");
         if (canonicalValue.isBlank() || !canonicalValue.equals(canonicalValue.trim())) {
             throw new IllegalArgumentException("deposit address must be non-blank and already trimmed");
@@ -33,7 +34,7 @@ public record DepositAddress(String canonicalValue) {
             case BASE58 -> requireBase58(rawValue);
             case BECH32 -> normalizeBech32(rawValue);
         };
-        return new DepositAddress(canonical);
+        return new DepositAddress(network.addressFormat(), canonical);
     }
 
     private static String normalizeEvm(String value) {

@@ -3,10 +3,10 @@
 ## 狀態
 
 ```text
-IN_PROGRESS_P22_T01_COMPLETED
+IN_PROGRESS_P22_T02_COMPLETED
 ```
 
-P22-T01 已完成 immutable address ownership contract；runtime、chain connection、secret、schema 與 credit 尚未開始。逐卡 approve 機制依人類指示暫停。
+P22-T01 與 P22-T02 已完成 immutable address ownership 與 chain observation contract；runtime、chain connection、secret、schema 與 credit 尚未開始。逐卡 approve 機制依人類指示暫停。
 
 ## 目標與依賴
 
@@ -17,7 +17,7 @@ P22-T01 已完成 immutable address ownership contract；runtime、chain connect
 | Draft | 目標與交付 | 禁止事項與驗收 |
 | --- | --- | --- |
 | P22-T01 | 定義 network、asset、address、ownership、address lifecycle 與唯一性契約 | COMPLETED；不產生地址、不寫 schema；已測試 network/address normalization、重複 ownership、錯誤格式 |
-| P22-T02 | 定義 provider-neutral chain observation、block/transaction/log identity、cursor 與 finality observation contract | 不連 RPC、不存 secret；測試 duplicate observation、錯鏈、重播與 deterministic ordering |
+| P22-T02 | 定義 provider-neutral chain observation、block/transaction/log identity、cursor 與 finality observation contract | COMPLETED；不連 RPC、不存 secret；已測試 duplicate observation、錯鏈、replay 與 deterministic ordering |
 | P22-T03 | 定義 reorg、confirmation、orphan、halt/resume health state 與通知邊界 | 不 credit、不調 balance/ledger；測試 reorg、confirmation regression、gap/stale、multi-network 隔離 |
 | P22-T04 | 定義 read-only observation reconciliation、metrics、evidence 與 P23 handoff contract | 不建立 production dashboard/API；驗收為可重放觀測與缺資料 fail-closed |
 
@@ -35,3 +35,7 @@ P22-T01 已完成 immutable address ownership contract；runtime、chain connect
 ## P22-T01 實作紀錄
 
 `com.lumix.deposit.address` 提供 `DepositNetwork`、`DepositAddress`、`DepositAddressOwnership` 與 pure ownership policy。EVM address 只以小寫 canonical identity 比較（未宣稱 checksum 驗證）；Base58/Bech32 只接受明確格式。相同 network/address 可供同一 owner 冪等重送，不同 owner 即使 asset 不同也會拒絕。沒有任何 wallet provisioning、地址生成、持久化、鏈上讀取或資產 credit。
+
+## P22-T02 實作紀錄
+
+`com.lumix.deposit.observation` 將觀測 identity 固定為 network、transaction ID 與 event/log index，並保存 block height/hash、原子整數數量與 provider finality snapshot。admission policy 使用 caller 提供的 immutable evidence 與 cursor 排序；相同內容 replay 才會被 idempotent 忽略，identity 相同但證據不同、network 不符、地址格式不符或游標倒退都會 fail-closed。沒有 RPC、provider secret、持久化、credit 或 ledger/balance mutation。

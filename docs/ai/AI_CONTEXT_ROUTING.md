@@ -18,6 +18,7 @@ Frontend page work                docs/frontend/page-map.md
 Operations / deployment           docs/operations/deployment-runbook.md
 Readiness review                  docs/governance/PRODUCTION_READINESS_GATES.md
 Market Data Pipeline              docs/phases/PHASE_21_MARKET_DATA/README.md, currently relevant task card
+Deposit Listener                  docs/phases/PHASE_22_DEPOSIT_LISTENER/README.md, currently relevant task card
 Phase 21–36 planning              docs/planning/PHASE_21_36_PLANNING_PROGRAM.md, phase README and relevant draft/charter
 ```
 
@@ -66,4 +67,15 @@ phase_22_24: detailed task drafts in each phase README
 phase_25_28: mid-level task breakdowns in each phase README
 phase_29_36: phase charter and high-level tasks in each phase README
 approval_status: P-task approval mode is temporarily disabled by human; phase order, task dependencies and prohibited boundaries remain mandatory
+```
+
+## Phase 22 路由
+
+```text
+phase: Phase 22 - 入金地址與鏈上監聽器
+phase_readme: docs/phases/PHASE_22_DEPOSIT_LISTENER/README.md
+current_task: P22-T03 reorg、confirmation 與 health state contract
+completed_task_note: P22-T01 address ownership 與 P22-T02 observation/cursor contract completed
+approval_status: P-task approval mode temporarily disabled by human; 仍必須遵守 phase/task dependency
+runtime_status: 不得建立 RPC/provider 連線、持久化、地址派發、secret handling 或 deposit credit；production claim prohibited
 ```
