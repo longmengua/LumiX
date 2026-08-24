@@ -3,12 +3,12 @@
 ## 狀態
 
 ```text
-PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL
+COMPLETED_FOR_OBSERVABILITY_EVIDENCE_FOUNDATION
 ```
 
 ## Phase charter
 
-建立能揭露資料完整性、資金安全、交易安全與營運健康的 metrics/logs/traces/alerts；觀測資料不應含 secret 或未遮罩個資。
+建立能揭露資料完整性、資金安全、交易安全與營運健康的 observability evidence foundation；觀測資料不應含 secret 或未遮罩個資。
 
 ## 高層任務
 

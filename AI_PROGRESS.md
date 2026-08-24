@@ -118,6 +118,8 @@ Phase 29: COMPLETED_FOR_API_ADMISSION_CONTRACT_FOUNDATION
 P29 completed as version/idempotency/health/rate API admission contracts; no routes, auth runtime, public funds/trading endpoint or transport enforcement
 Phase 30: COMPLETED_FOR_TRUSTED_UX_PRESENTATION_FOUNDATION
 P30 completed as trusted-data presentation and sensitive enablement contracts; no production adapter, UI execution flow or mock-to-production wiring
+Phase 31: COMPLETED_FOR_OBSERVABILITY_EVIDENCE_FOUNDATION
+P31 completed as secret-free structured signal and runbook routing evidence contract; no telemetry, alert, dashboard or on-call runtime
 Phase 25-36: PLANNING_PROGRAM_DRAFTED
 Phase 22-24 detailed task drafts; Phase 25-28 mid-level task breakdowns; Phase 29-36 phase charters drafted
 Phase 25-36 runtime implementation not started; proceed only after prerequisite phases and task dependencies are complete
