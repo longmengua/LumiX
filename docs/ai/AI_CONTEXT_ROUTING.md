@@ -116,10 +116,10 @@ runtime_status: P24 的 keyless signer input 只是資料契約；不得實作�
 ## Phase 26–36 路由
 
 ```text
-phase_status: Phase 26 至 Phase 36 均完成 foundation 與 final-review evidence，但 runtime 均未開始
-current_phase: Phase 36 launch-gate evidence
+phase_status: Phase 26 至 Phase 36 均完成 foundation 與 final-review evidence；P36 另完成 readiness documentation，但 runtime 均未開始
+current_phase: Phase 36 evidence gap closure after required runtime dependencies
 phase_readme: docs/phases/PHASE_36_LAUNCH_GATE/README.md
 completed_task_note: docs/phases/PHASE_36_LAUNCH_GATE/phase-36-final-review.md
 required_authority: docs/governance/PRODUCTION_READINESS_GATES.md
-runtime_status: 缺完整 readiness evidence 與人類明確 production sign-off；production-ready 與 launch 均禁止
+runtime_status: P36-T01 至 P36-T05 僅完成文件；六類 gate 均為 NOT_READY_EVIDENCE_MISSING，且缺必要 runtime 與人類明確 production sign-off；production-ready 與 launch 均禁止
 ```

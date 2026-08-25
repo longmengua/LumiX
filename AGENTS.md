@@ -33,7 +33,7 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 33 階段：`COMPLETED_FOR_SECURITY_EVIDENCE_FOUNDATION`；僅完成 threat/remediation evidence 與 fail-closed gate。沒有 security runtime 或 bypass。
 - 第 34 階段：`COMPLETED_FOR_PERFORMANCE_EVIDENCE_FOUNDATION`；僅完成 workload/observation/capacity gate evidence。沒有 load/chaos 或 production test runtime。
 - 第 35 階段：`COMPLETED_FOR_OPERATIONAL_READINESS_EVIDENCE_FOUNDATION`；僅完成 ownership/runbook 與 operational gap gate。沒有商業或人類 launch 決策。
-- 第 36 階段：`COMPLETED_FOR_LAUNCH_GATE_EVIDENCE_FOUNDATION_NOT_PRODUCTION_READY`；僅完成 aggregate readiness gate contract。缺完整 evidence 與人類明確簽核，禁止宣稱 production ready 或啟動 launch。
+- 第 36 階段：`COMPLETED_FOR_READINESS_DOCUMENTATION_NOT_PRODUCTION_READY`；已完成 aggregate readiness gate contract 與缺口、blocker、no-go、未來 launch/rollback、post-launch 的文件邊界。缺完整 evidence、必要 runtime 與人類明確簽核，禁止宣稱 production ready 或啟動 launch。
 - 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
 
@@ -161,10 +161,10 @@ PlantUML
 
 ## Start here for current task
 
-Phase 21 至 Phase 36 的 foundation 已完成；不代表正式行情、入金、credit、提款、簽章、公開 API、正式 UI、營運或 production launch。P36 缺完整 readiness evidence 與人類明確簽核，所有後續施工必須先以 `PRODUCTION_READINESS_GATES.md` 的缺口為準：
+Phase 21 至 Phase 36 的 foundation 已完成，且 P36 readiness documentation 已完成；這些都不代表正式行情、入金、credit、提款、簽章、公開 API、正式 UI、營運或 production launch。P36 缺完整 readiness evidence、必要 runtime 與人類明確簽核，所有後續施工必須先以 `PRODUCTION_READINESS_GATES.md` 與 P36 evidence register 的缺口為準：
 
 ```text
-P36 launch-gate evidence review; production launch remains prohibited
+P36 evidence gap closure after required runtime dependencies; production launch remains prohibited
 ```
 
 Phase 21–36 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 36 README 與權威 readiness gates；不得把既有 foundation 接到 provider、公開 transport、地址派發、credit、私鑰、HSM/MPC、鏈上廣播或任何未核准的資金核心。

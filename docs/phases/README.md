@@ -27,11 +27,11 @@ PHASE_32_DISASTER_RECOVERY/    PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL 
 PHASE_33_SECURITY_HARDENING/   PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
 PHASE_34_LOAD_TESTING/         PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
 PHASE_35_BUSINESS_OPS/         PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
-PHASE_36_LAUNCH_GATE/          PLANNING_PROGRAM_DRAFTED_AWAITING_HUMAN_APPROVAL (phase charter; runtime not started)
+PHASE_36_LAUNCH_GATE/          COMPLETED_FOR_READINESS_DOCUMENTATION_NOT_PRODUCTION_READY (launch-gate foundation 與 readiness documentation 已完成；完整 evidence、runtime 與 human sign-off 尚缺，launch 禁止)
 ```
 
 目前可執行的工作：
 
 ```text
-Phase 22 — Phase 21 P21-T01 到 P21-T08 已完成 market-data foundation；從 Phase 22 依 task 相依順序繼續施工
+P36 — readiness documentation 已完成；後續須先依相依順序補足缺失 runtime 與受控驗證 evidence，再由人類完成 go/no-go 簽核。production launch 仍禁止。
 ```
