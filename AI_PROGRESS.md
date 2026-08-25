@@ -87,6 +87,7 @@ NOT settlement completed
 Phase 21: COMPLETED_FOR_MARKET_DATA_FOUNDATION
 P21-T01 through P21-T08 completed as immutable market-data domain, admission policy, order-book projection, trade/ticker/candle aggregation, deterministic replay/resync and internal-only query/backpressure foundation
 Phase 21 Market Data pipeline runtime, external provider and public transport not started; all P21 work remains pure, in-memory and read-only
+P21-R01 provider runtime admission task card documented; no provider has been selected or authorized, so no adapter, secret handling, network connection, persistence or public transport may start
 NOT official market data service
 NOT public market-data API or WebSocket
 NOT real-time SLA
@@ -156,9 +157,9 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_36_LAUNCH_GATE/README.md
-current_task: P36-T01 through P36-T05 readiness documentation completed; evidence collection and independent verification have not started
-next_implementation_phase: missing runtime must be implemented in dependency order before P36 evidence gap closure; it requires authoritative evidence and explicit human production sign-off
-completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately; P36-T01 through P36-T05 complete the post-foundation readiness documentation only
+current_task: P21-R01 provider runtime admission documentation completed; provider selection and authorization are pending, while P36-T01 through P36-T05 readiness documentation remains complete
+next_implementation_phase: P21-R02 may begin only after a human selects and authorizes a market-data provider; all missing runtime then proceeds in dependency order before P36 evidence gap closure
+completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately; P36-T01 through P36-T05 complete the post-foundation readiness documentation only; P21-R01 is a post-foundation admission task card, not runtime
 approval_status: P-task approval mode temporarily disabled by human; this does not replace P36 human production sign-off or authorize runtime/prod launch
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md

@@ -60,6 +60,7 @@ public production trading、real-money capability、production launch claim
 | P21-T06 | Deterministic Replay、Resync 與 Recovery Boundary | COMPLETED |
 | P21-T07 | 唯讀內部 Query / Stream Contract 與 Backpressure Policy | COMPLETED |
 | P21-T08 | Integration Verification、No-Claim Gate 與 Phase Final Review | COMPLETED |
+| P21-R01 | 正式行情 provider runtime admission | DOCUMENTED_ADMISSION_TASK_READY；尚未選定 provider，沒有 adapter、secret 或連線 |
 
 ## Task dependency graph
 
@@ -108,5 +109,6 @@ P21-T02 ---> P21-T03
 - P21-T06 implementation note：[P21-T06 Deterministic Replay、Resync 與 Recovery Boundary](p21-t06-deterministic-replay-resync-recovery.md)
 - P21-T07 implementation note：[P21-T07 唯讀內部 Query / Stream Contract 與 Backpressure Policy](p21-t07-read-only-query-stream-backpressure.md)
 - Phase final review：[Phase 21 行情資料管線 final review](phase-21-final-review.md)
+- P21-R01 runtime admission task card：[P21-R01 正式行情 provider runtime admission](p21-r01-provider-runtime-admission.md)
 - approval status：逐卡 approve 機制依人類指示暫停；P21 foundation 已完成，Market Data pipeline runtime、外部 provider 與公開 transport 尚未開始。
 - 全域規劃：[Phase 21–36 規劃計畫](../../planning/PHASE_21_36_PLANNING_PROGRAM.md)
