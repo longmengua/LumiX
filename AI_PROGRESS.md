@@ -128,11 +128,12 @@ Phase 34: COMPLETED_FOR_PERFORMANCE_EVIDENCE_FOUNDATION
 P34 completed as isolated workload/observation/capacity gate evidence; no load/chaos runner or production test runtime
 Phase 35: COMPLETED_FOR_OPERATIONAL_READINESS_EVIDENCE_FOUNDATION
 P35 completed as ownership/runbook and operational gap gate evidence; no business/legal/compliance decision or launch runtime
-Phase 36: COMPLETED_FOR_LAUNCH_GATE_EVIDENCE_FOUNDATION_NOT_PRODUCTION_READY
-P36 completed as aggregate readiness evidence and human sign-off gate contract; full readiness evidence and explicit human sign-off are missing, so production-ready/launch claim is prohibited
+Phase 36: READINESS_EVIDENCE_GAP_CLOSURE_DOCUMENTATION_IN_PROGRESS_NOT_PRODUCTION_READY
+P36 launch-gate evidence foundation remains completed. P36-T01 readiness-evidence register now documents the minimum evidence, verification boundary and current missing-evidence baseline for every authoritative gate; it does not prove any gate passed.
+Full readiness evidence and explicit human sign-off are missing, so production-ready/launch claim is prohibited
 Phase 21-36 foundation: COMPLETED_AND_PUSHED_PER_PHASE
 Phase 21-36 production runtime: NOT_STARTED
-Next work: P36 readiness evidence gap closure and explicit human production sign-off; launch remains prohibited
+Next work: collect and independently verify P36 readiness evidence under the P36-T01 register, resolve blockers and obtain explicit human production sign-off; launch remains prohibited
 ```
 
 ## 目前倉庫現況
@@ -154,8 +155,9 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_36_LAUNCH_GATE/README.md
-next_implementation_phase: none; P36 requires authoritative readiness evidence and explicit human production sign-off
-completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately
+current_task: P36-T01 readiness-evidence register documented; evidence collection and independent verification have not started
+next_implementation_phase: P36 readiness evidence gap closure; requires authoritative evidence and explicit human production sign-off
+completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately; P36-T01 documents the post-foundation evidence baseline only
 approval_status: P-task approval mode temporarily disabled by human; this does not replace P36 human production sign-off or authorize runtime/prod launch
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md
 phase_21_36_review: docs/planning/PHASE_21_36_PLANNING_REVIEW.md
