@@ -1,6 +1,7 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 import { Logo } from '../brand/Logo';
+import { useAuthentication } from '../../features/auth/AuthenticationProvider';
 import { useI18n } from '../../i18n';
 
 const links = [
@@ -11,11 +12,23 @@ const links = [
   ['/assets', 'nav.assets'],
   ['/orders', 'nav.orders'],
   ['/positions', 'nav.positions'],
-  ['/account', 'nav.account'],
 ] as const;
 
 export function Header() {
   const { locale, setLocale, t } = useI18n();
+  const navigate = useNavigate();
+  const { loading, signOut, user } = useAuthentication();
+
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } catch {
+      // 網路錯誤不可阻止 UI 離開受保護畫面；provider 已清除本地使用者投影。
+    } finally {
+      // logout 失敗也不保留前端登入畫面，避免使用者誤以為 session 仍有效。
+      navigate('/login', { replace: true });
+    }
+  }
 
   return (
     <header className="topbar">
@@ -45,9 +58,16 @@ export function Header() {
             <option value="en-US">{t('locale.en-US')}</option>
           </select>
         </label>
-        <NavLink className="topbar__button" to="/login">
-          {t('header.signIn')}
-        </NavLink>
+        {loading ? null : user ? (
+          <>
+            <NavLink className="topbar__button" to="/account">{user.displayName}</NavLink>
+            <button className="topbar__button" type="button" onClick={() => void handleSignOut()}>登出</button>
+          </>
+        ) : (
+          <NavLink className="topbar__button" to="/login">
+            {t('header.signIn')}
+          </NavLink>
+        )}
       </div>
     </header>
   );

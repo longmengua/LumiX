@@ -1,36 +1,11 @@
-import { useState, type FormEvent } from 'react';
-import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { NavLink } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
-import { translateAuthError } from '../features/auth/authText';
-import { verifyTwoFactorMock } from '../features/auth/mockAuthService';
 import { useI18n } from '../i18n';
 
+/** MFA 尚未完成 server-side runtime；頁面必須 fail closed，不能再用前端驗證碼假裝通過。 */
 export function TwoFactorPage() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const { t } = useI18n();
-  const [code, setCode] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const challenge = searchParams.get('challenge') ?? t('auth.twoFactor.challengeFallback');
-  const nextPath = searchParams.get('next') ?? '/';
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      // 2FA 成功後只做前端導頁；若未來接真實 auth，這裡應改成接收 server session。
-      await verifyTwoFactorMock(code);
-      navigate(nextPath);
-    } catch (submitError) {
-      setError(translateAuthError(submitError, t, 'auth.twoFactor.errorGeneric'));
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <AuthPageShell
@@ -41,27 +16,10 @@ export function TwoFactorPage() {
         </p>
       }
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <p className="auth-form__hint">{challenge}</p>
-        <label className="field">
-          <span className="field__label">{t('auth.twoFactor.code')}</span>
-          <input
-            className="input"
-            inputMode="numeric"
-            value={code}
-            onChange={(event) => setCode(event.target.value)}
-            placeholder={t('auth.twoFactor.codePlaceholder')}
-          />
-        </label>
-
-        {error ? <p className="form-message form-message--error">{error}</p> : null}
-
-        <button className="primary-button" type="submit" disabled={loading}>
-          {loading ? t('auth.twoFactor.submitting') : t('auth.twoFactor.submit')}
-        </button>
-
-        <p className="auth-form__hint">{t('auth.twoFactor.hint')}</p>
-      </form>
+      <section className="auth-form">
+        <p className="form-message form-message--error">雙重驗證尚未啟用，系統不接受前端模擬驗證碼。</p>
+        <p className="auth-form__hint">請使用帳號密碼登入；MFA 必須在伺服器端驗證與稽核完成後才會啟用。</p>
+      </section>
     </AuthPageShell>
   );
 }

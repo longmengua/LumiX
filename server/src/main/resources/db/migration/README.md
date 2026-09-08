@@ -10,6 +10,7 @@
 - 後續修正請新增一個 corrective migration。
 - migration SQL 必須清楚標示 precision、constraint 與 foreign key。
 - 不要在 migration 中放入 runtime 資金移動邏輯。
+- 認證 migration 不得保存明文密碼、session secret 或密碼重設 token；只允許不可逆雜湊。
 
 ## 預期工具
 

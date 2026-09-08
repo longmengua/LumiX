@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 
 import { App } from './app/App';
+import { AuthenticationProvider } from './features/auth/AuthenticationProvider';
 import { I18nProvider } from './i18n';
 import './styles/global.css';
 
@@ -17,9 +18,11 @@ export function mountClient() {
   ReactDOM.createRoot(container).render(
     <React.StrictMode>
       <I18nProvider>
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <AuthenticationProvider>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </AuthenticationProvider>
       </I18nProvider>
     </React.StrictMode>,
   );

@@ -1,21 +1,22 @@
 import { useState, type FormEvent } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
-import { SecurityVerifyModal, type VerificationMethod } from '../components/auth/SecurityVerifyModal';
+import { PasswordField } from '../components/auth/PasswordField';
 import { translateAuthError } from '../features/auth/authText';
-import { resetPasswordMock } from '../features/auth/mockAuthService';
+import { resetPassword } from '../features/auth/authApi';
 import { useI18n } from '../i18n';
 
 export function ResetPasswordPage() {
   const { t } = useI18n();
-  const [identifier, setIdentifier] = useState('');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [verifyOpen, setVerifyOpen] = useState(false);
+  const token = searchParams.get('token') ?? '';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -24,25 +25,23 @@ export function ResetPasswordPage() {
     setSuccess(null);
 
     try {
-      // 重設密碼在這裡只是 demo flow；實際上還需要 server 端驗證與稽核紀錄。
-      await resetPasswordMock({ identifier, newPassword, confirmPassword });
+      if (!token) {
+        throw new Error('AUTH_REQUEST_FAILED');
+      }
+      if (newPassword.length < 12) {
+        throw new Error('Password must be at least 12 characters.');
+      }
+      if (newPassword !== confirmPassword) {
+        throw new Error('Passwords do not match.');
+      }
+      await resetPassword({ token, newPassword });
       setSuccess(t('auth.reset.success'));
+      navigate('/login', { replace: true });
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'auth.reset.errorGeneric'));
     } finally {
       setLoading(false);
     }
-  }
-
-  function handleVerify(input: { method: VerificationMethod; code: string }) {
-    // 驗證碼只用來演示流程分支，不代表正式安全驗證實作。
-    if (input.code.trim() === '123456') {
-      setVerifyOpen(false);
-      setSuccess(t('auth.reset.verified', undefined, { method: t(`auth.verify.method.${input.method}`) }));
-      return;
-    }
-
-    setError(t('auth.reset.verificationFailed'));
   }
 
   return (
@@ -55,47 +54,24 @@ export function ResetPasswordPage() {
       }
     >
       <form className="auth-form" onSubmit={handleSubmit}>
-        <label className="field">
-          <span className="field__label">{t('auth.reset.identifier')}</span>
-          <input
-            className="input"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            placeholder={t('auth.reset.identifierPlaceholder')}
-          />
-        </label>
-
         <div className="auth-form__split">
-          <label className="field">
-            <span className="field__label">{t('auth.reset.newPassword')}</span>
-            <input
-              className="input"
-              type="password"
-              value={newPassword}
-              onChange={(event) => setNewPassword(event.target.value)}
-              placeholder={t('auth.reset.newPasswordPlaceholder')}
-              autoComplete="new-password"
-            />
-          </label>
-          <label className="field">
-            <span className="field__label">{t('auth.reset.confirmPassword')}</span>
-            <input
-              className="input"
-              type="password"
-              value={confirmPassword}
-              onChange={(event) => setConfirmPassword(event.target.value)}
-              placeholder={t('auth.reset.confirmPasswordPlaceholder')}
-              autoComplete="new-password"
-            />
-          </label>
+          <PasswordField
+            label={t('auth.reset.newPassword')}
+            value={newPassword}
+            onChange={setNewPassword}
+            placeholder={t('auth.reset.newPasswordPlaceholder')}
+            autoComplete="new-password"
+          />
+          <PasswordField
+            label={t('auth.reset.confirmPassword')}
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder={t('auth.reset.confirmPasswordPlaceholder')}
+            autoComplete="new-password"
+          />
         </div>
 
-        <div className="auth-form__row">
-          <button className="secondary-button" type="button" onClick={() => setVerifyOpen(true)}>
-            {t('auth.reset.openVerify')}
-          </button>
-          <span className="auth-form__hint">{t('auth.reset.hint')}</span>
-        </div>
+        <p className="auth-form__hint">重設連結中的一次性 token 由伺服器驗證，使用後即失效。</p>
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {success ? <p className="form-message form-message--success">{success}</p> : null}
@@ -105,14 +81,6 @@ export function ResetPasswordPage() {
         </button>
       </form>
 
-      <SecurityVerifyModal
-        confirmLabel={t('auth.reset.verifyConfirm')}
-        description={t('auth.reset.verifyDescription')}
-        open={verifyOpen}
-        title={t('auth.reset.verifyTitle')}
-        onClose={() => setVerifyOpen(false)}
-        onConfirm={handleVerify}
-      />
     </AuthPageShell>
   );
 }

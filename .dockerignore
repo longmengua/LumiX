@@ -1,0 +1,9 @@
+.git
+.idea
+.codex
+**/node_modules
+**/target
+**/dist
+**/.vite
+*.tsbuildinfo
+.env

@@ -1,0 +1,64 @@
+spring:
+  # TLS ingress 終結於可信 reverse proxy 時，讓 request.isSecure() 依 X-Forwarded-Proto 正確判斷。
+  # 正式環境 server 不得直接對公網暴露，否則 client 可偽造 forwarded header。
+  web:
+    resources:
+      add-mappings: false
+  flyway:
+    # migration 必定連 primary，不能透過 runtime readOnly routing 送往 replica。
+    url: ${LUMIX_DATABASE_PRIMARY_JDBC_URL}
+    user: ${LUMIX_DATABASE_PRIMARY_USERNAME}
+    password: ${LUMIX_DATABASE_PRIMARY_PASSWORD}
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  health:
+    # 未啟用 SMTP 時沒有可驗證的 mail transport，避免空白預備設定讓整體 readiness 誤報 DOWN。
+    # 啟用密碼重設 SMTP 時會自動改為 true，mail health failure 便會阻擋 readiness。
+    mail:
+      enabled: ${LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED:false}
+
+server:
+  forward-headers-strategy: framework
+
+lumix:
+  database:
+    mode: ${LUMIX_DATABASE_MODE:SINGLE}
+    primary:
+      jdbc-url: ${LUMIX_DATABASE_PRIMARY_JDBC_URL}
+      username: ${LUMIX_DATABASE_PRIMARY_USERNAME}
+      password: ${LUMIX_DATABASE_PRIMARY_PASSWORD}
+      maximum-pool-size: ${LUMIX_DATABASE_PRIMARY_MAXIMUM_POOL_SIZE:10}
+    replica:
+      jdbc-url: ${LUMIX_DATABASE_REPLICA_JDBC_URL:}
+      username: ${LUMIX_DATABASE_REPLICA_USERNAME:}
+      password: ${LUMIX_DATABASE_REPLICA_PASSWORD:}
+      maximum-pool-size: ${LUMIX_DATABASE_REPLICA_MAXIMUM_POOL_SIZE:10}
+  redis:
+    mode: ${LUMIX_REDIS_MODE:STANDALONE}
+    host: ${LUMIX_REDIS_HOST}
+    port: ${LUMIX_REDIS_PORT:6379}
+    password: ${LUMIX_REDIS_PASSWORD:}
+    cluster-nodes: ${LUMIX_REDIS_CLUSTER_NODES:}
+  auth:
+    # Compose 的 HTTP 僅供受控開發驗證；正式 TLS ingress 必須明確設為 true。
+    cookie-secure: ${LUMIX_AUTH_COOKIE_SECURE:false}
+    cookie-name: ${LUMIX_AUTH_COOKIE_NAME:LUMIX_SESSION}
+    session-ttl: ${LUMIX_AUTH_SESSION_TTL:PT8H}
+    bcrypt-strength: ${LUMIX_AUTH_BCRYPT_STRENGTH:12}
+    password-reset:
+      ttl: ${LUMIX_AUTH_PASSWORD_RESET_TTL:PT30M}
+      smtp-enabled: ${LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED:false}
+      from-address: ${LUMIX_AUTH_PASSWORD_RESET_FROM_ADDRESS:}
+      public-base-url: ${LUMIX_AUTH_PUBLIC_BASE_URL:}
+  security:
+    # 本機 Compose HTTP 驗證維持 false；公開 deployment 必須由 TLS ingress 覆蓋為 true。
+    require-https: ${LUMIX_SECURITY_REQUIRE_HTTPS:false}

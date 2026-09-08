@@ -7,6 +7,7 @@ import { EmptyState, ErrorState, LoadingState } from '../components/base/State';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Sidebar } from '../components/layout/Sidebar';
 import { useI18n } from '../i18n';
+import { fetchLoginHistory } from '../features/account/accountApi';
 import { AccountApiKeysPage as Phase7AccountApiKeysPage } from '../features/phase7/AccountApiKeysPage';
 import { AccountNotificationsPage as Phase7AccountNotificationsPage } from '../features/phase7/AccountNotificationsPage';
 import { accountNavItems } from '../features/navigation/accountNav';
@@ -33,9 +34,20 @@ export function AccountPage() {
       setError(null);
 
       try {
-        const snapshot = await fetchAccountDashboardMock();
+        const [snapshot, loginHistory] = await Promise.all([
+          fetchAccountDashboardMock(),
+          fetchLoginHistory(),
+        ]);
         if (alive) {
-          setData(snapshot);
+          // 只有登入紀錄已接至後端；其餘帳戶區塊仍保留既有 mock foundation，不可混稱為正式資料。
+          setData({
+            ...snapshot,
+            loginHistory: loginHistory.map((record) => ({
+              title: t('account.loginHistoryEntryTitle'),
+              description: t('account.loginHistoryEntryDescription'),
+              createdAt: record.occurredAt,
+            })),
+          });
         }
       } catch (loadError) {
         if (alive) {
@@ -53,7 +65,7 @@ export function AccountPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [t]);
 
   const sidebarItems = useMemo(() => accountNavItems.map(({ to, labelKey, end }) => ({ to, label: t(labelKey), end })), [t]);
 

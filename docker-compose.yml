@@ -1,0 +1,118 @@
+name: lumix
+
+services:
+  postgres:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 10s
+    ports:
+      # 本機測試可連線；正式部署請移除此 port mapping，僅保留內部 network。
+      - "127.0.0.1:${LUMIX_POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [lumix-internal]
+
+  redis:
+    image: redis:7.4.2-alpine
+    entrypoint:
+      - /bin/sh
+      - -ec
+      - |
+        if [ -n "$$REDIS_PASSWORD" ]; then
+          exec redis-server --appendonly yes --requirepass "$$REDIS_PASSWORD"
+        fi
+        exec redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD-SHELL", "if [ -n \"$$REDIS_PASSWORD\" ]; then redis-cli --no-auth-warning -a \"$$REDIS_PASSWORD\" ping; else redis-cli ping; fi | grep -q PONG"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+    environment:
+      REDIS_PASSWORD: ${LUMIX_REDIS_PASSWORD:-}
+    ports:
+      # Redis 只應給 application network 使用；此 mapping 僅便於本機診斷。
+      - "127.0.0.1:${LUMIX_REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis-data:/data
+    networks: [lumix-internal]
+
+  server:
+    build:
+      context: .
+      dockerfile: devops/server/Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: infrastructure
+      LUMIX_DATABASE_MODE: ${LUMIX_DATABASE_MODE:-SINGLE}
+      LUMIX_DATABASE_PRIMARY_JDBC_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:?POSTGRES_DB is required}
+      LUMIX_DATABASE_PRIMARY_USERNAME: ${POSTGRES_USER:?POSTGRES_USER is required}
+      LUMIX_DATABASE_PRIMARY_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      LUMIX_DATABASE_PRIMARY_MAXIMUM_POOL_SIZE: ${LUMIX_DATABASE_PRIMARY_MAXIMUM_POOL_SIZE:-10}
+      # SINGLE 模式不使用 replica；READ_WRITE_SPLIT 必須由部署者改為真正的同步 replica endpoint。
+      LUMIX_DATABASE_REPLICA_JDBC_URL: ${LUMIX_DATABASE_REPLICA_JDBC_URL:-}
+      LUMIX_DATABASE_REPLICA_USERNAME: ${LUMIX_DATABASE_REPLICA_USERNAME:-}
+      LUMIX_DATABASE_REPLICA_PASSWORD: ${LUMIX_DATABASE_REPLICA_PASSWORD:-}
+      LUMIX_DATABASE_REPLICA_MAXIMUM_POOL_SIZE: ${LUMIX_DATABASE_REPLICA_MAXIMUM_POOL_SIZE:-10}
+      LUMIX_REDIS_MODE: ${LUMIX_REDIS_MODE:-STANDALONE}
+      LUMIX_REDIS_HOST: redis
+      LUMIX_REDIS_PORT: 6379
+      LUMIX_REDIS_PASSWORD: ${LUMIX_REDIS_PASSWORD:-}
+      LUMIX_REDIS_CLUSTER_NODES: ${LUMIX_REDIS_CLUSTER_NODES:-}
+      # 正式 TLS ingress 必須覆蓋為 true；Compose HTTP 僅限受控開發驗證。
+      LUMIX_AUTH_COOKIE_SECURE: ${LUMIX_AUTH_COOKIE_SECURE:-false}
+      LUMIX_AUTH_COOKIE_NAME: ${LUMIX_AUTH_COOKIE_NAME:-LUMIX_SESSION}
+      LUMIX_AUTH_SESSION_TTL: ${LUMIX_AUTH_SESSION_TTL:-PT8H}
+      LUMIX_AUTH_BCRYPT_STRENGTH: ${LUMIX_AUTH_BCRYPT_STRENGTH:-12}
+      LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED: ${LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED:-false}
+      LUMIX_AUTH_PASSWORD_RESET_TTL: ${LUMIX_AUTH_PASSWORD_RESET_TTL:-PT30M}
+      LUMIX_AUTH_PASSWORD_RESET_FROM_ADDRESS: ${LUMIX_AUTH_PASSWORD_RESET_FROM_ADDRESS:-}
+      LUMIX_AUTH_PUBLIC_BASE_URL: ${LUMIX_AUTH_PUBLIC_BASE_URL:-}
+      LUMIX_SECURITY_REQUIRE_HTTPS: ${LUMIX_SECURITY_REQUIRE_HTTPS:-false}
+      # SMTP 的實際帳密由部署平台 secret 注入；未啟用 reset 時可維持空白。
+      SPRING_MAIL_HOST: ${SPRING_MAIL_HOST:-}
+      SPRING_MAIL_PORT: ${SPRING_MAIL_PORT:-587}
+      SPRING_MAIL_USERNAME: ${SPRING_MAIL_USERNAME:-}
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD:-}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:-true}
+      SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:-true}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/actuator/health"]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 30s
+    ports:
+      - "127.0.0.1:${LUMIX_SERVER_PORT:-8080}:8080"
+    networks: [lumix-internal]
+
+  web:
+    build:
+      context: .
+      dockerfile: devops/web/Dockerfile
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:${LUMIX_WEB_PORT:-8088}:8080"
+    networks: [lumix-internal]
+
+networks:
+  lumix-internal:
+    driver: bridge
+
+volumes:
+  postgres-data:
+  redis-data:

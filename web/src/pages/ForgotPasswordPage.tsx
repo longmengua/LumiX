@@ -2,8 +2,8 @@ import { useState, type FormEvent } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
-import { translateAuthError, translateMaskedMessage } from '../features/auth/authText';
-import { requestPasswordResetMock } from '../features/auth/mockAuthService';
+import { translateAuthError } from '../features/auth/authText';
+import { requestPasswordReset } from '../features/auth/authApi';
 import { useI18n } from '../i18n';
 
 export function ForgotPasswordPage() {
@@ -20,8 +20,9 @@ export function ForgotPasswordPage() {
     setSuccess(null);
 
     try {
-      const result = await requestPasswordResetMock(identifier);
-      setSuccess(translateMaskedMessage(result, t, 'auth.forgot.success', 'auth.forgot.successFallback'));
+      await requestPasswordReset(identifier);
+      // server 對存在與不存在的 email 都採相同回應，UI 也不得自行推論帳號狀態。
+      setSuccess('若該信箱可重設密碼，系統已寄出後續指示。');
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'auth.forgot.errorGeneric'));
     } finally {

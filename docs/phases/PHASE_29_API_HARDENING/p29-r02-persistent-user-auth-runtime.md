@@ -1,0 +1,52 @@
+# P29-R02 — 持久化使用者認證 Runtime
+
+## 狀態
+
+```text
+COMPLETED_FOR_PERSISTENT_AUTH_RUNTIME_FOUNDATION
+HUMAN_REVIEW_REQUIRED: yes
+```
+
+## 目標
+
+讓前後端能使用 PostgreSQL 中的實際帳密與伺服器端 session 完成基本帳號流程，而不是繼續依賴前端 mock：註冊、登入、登出、目前使用者、改密碼，以及有受控 SMTP 時的忘記／重設密碼。
+
+## 已納入範圍
+
+- `V009` append-only migration：`user_credentials`、`user_sessions`、`password_reset_requests`。
+- BCrypt 密碼雜湊；資料庫、log 與 API response 不保存或輸出明文密碼。
+- 高熵 session/reset secret；資料庫只保存 SHA-256 摘要。
+- `/api/v1/auth/*` 同源 API 與 HttpOnly、SameSite=Strict Cookie。
+- 密碼變更與重設後撤銷所有既有 session。
+- PostgreSQL primary transaction 驗證 session／密碼，避免 replica lag 讓撤銷狀態失真。
+- 可選 SMTP delivery adapter；未配置時 forgot-password endpoint fail-closed，絕不以 log 或 response 回傳 reset token。
+
+## 明確不含範圍
+
+- email verification、MFA、KYC/AML、admin RBAC、API key、OAuth/SSO、rate limit、帳號風控與客服流程。
+- SMTP provider / credential / secret manager / TLS ingress 的實際部署。
+- 資金、帳本、交易、入金、提款、matching 或 settlement runtime。
+- production launch 或 production-ready 宣稱。
+
+## Migration 與 rollback
+
+`V009` 必須在既有 `V001`–`V008` 後由 Flyway append-only 套用。它不應以 production down migration 回滾：若 application rollback，先停止 auth route、保留認證稽核資料並以相容 application 版本讀取；只有未承載使用者資料的受控環境才可在人工核准後清除 schema/volume。不得透過刪除 session 或 credential 資料掩蓋安全事件。
+
+## 已完成驗證
+
+```text
+2026-09-09
+PASS  docker compose config --quiet
+PASS  server image build 與 Flyway V009，schema 共 9 migrations
+PASS  /actuator/health -> UP（SMTP 未啟用時 mail health 不誤報）
+PASS  web npm run typecheck 與 web image build
+PASS  同源 web proxy：register 201、me 200、logout 204、post-logout me 401
+PASS  完整流程：register 201、me 200、change password 200、舊密碼 login 401、新密碼 login 200、logout 204、post-logout me 401
+PASS  SMTP 未設定：forgot password 503 fail-closed，無 token 回傳
+PASS  資料庫：credential 為 BCrypt；認證 schema 無 password 明文欄位
+```
+
+## 尚待驗證／阻擋條件
+
+- SMTP 啟用需由人類指定受控提供者、`SPRING_MAIL_*` secret injection、STARTTLS、寄件地址與 HTTPS `LUMIX_AUTH_PUBLIC_BASE_URL`；目前預設為 fail-closed。
+- 公網上線前需補齊 TLS ingress、CSRF/CORS policy review、rate/abuse protection、audit/monitoring、password policy/MFA、email verification 與 security review evidence。

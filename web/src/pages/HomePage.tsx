@@ -20,9 +20,6 @@ export function HomePage() {
         description={t('home.description')}
         actions={
           <div className="hero-actions">
-            <NavLink className="primary-button" to="/login">
-              {t('home.signIn')}
-            </NavLink>
             <NavLink className="secondary-button" to="/markets">
               {t('home.exploreMarkets')}
             </NavLink>

@@ -1,19 +1,28 @@
 import { useState, type FormEvent } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
-import { translateAuthError, translateMaskedMessage } from '../features/auth/authText';
-import { signInMock } from '../features/auth/mockAuthService';
+import { PasswordField } from '../components/auth/PasswordField';
+import { translateAuthError } from '../features/auth/authText';
+import { useAuthentication } from '../features/auth/AuthenticationProvider';
 import { useI18n } from '../i18n';
 
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
-  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { signIn } = useAuthentication();
+  // 只接受站內相對路徑，避免把登入成功後的導向交給不可信的 location state。
+  const requestedReturnTo = location.state?.returnTo;
+  const returnTo = typeof requestedReturnTo === 'string'
+    && requestedReturnTo.startsWith('/')
+    && !requestedReturnTo.startsWith('//')
+    ? requestedReturnTo
+    : '/';
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -21,21 +30,8 @@ export function LoginPage() {
     setError(null);
 
     try {
-      // 登入結果可能會導向 2FA；這裡只處理前端導頁，不負責憑證核發。
-      const result = await signInMock({ identifier, password, remember });
-
-      if (result.status === 'two_factor') {
-        const challenge = translateMaskedMessage(
-          result.challengeLabel,
-          t,
-          'auth.twoFactor.challenge',
-          'auth.twoFactor.challengeFallback',
-        );
-        navigate(`/two-factor?next=${encodeURIComponent(result.nextPath)}&challenge=${encodeURIComponent(challenge)}`);
-        return;
-      }
-
-      navigate(result.nextPath);
+      await signIn({ email: identifier, password });
+      navigate(returnTo, { replace: true });
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'auth.login.errorGeneric'));
     } finally {
@@ -69,24 +65,16 @@ export function LoginPage() {
           />
         </label>
 
-        <label className="field">
-          <span className="field__label">{t('auth.login.password')}</span>
-          <input
-            className="input"
-            name="password"
-            type="password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            placeholder={t('auth.login.passwordPlaceholder')}
-            autoComplete="current-password"
-          />
-        </label>
+        <PasswordField
+          label={t('auth.login.password')}
+          name="password"
+          value={password}
+          onChange={setPassword}
+          placeholder={t('auth.login.passwordPlaceholder')}
+          autoComplete="current-password"
+        />
 
         <div className="auth-form__row">
-          <label className="checkbox">
-            <input checked={remember} type="checkbox" onChange={(event) => setRemember(event.target.checked)} />
-            <span>{t('auth.login.rememberMe')}</span>
-          </label>
           <NavLink className="auth-form__link" to="/forgot-password">
             {t('auth.login.forgotPassword')}
           </NavLink>
@@ -98,7 +86,7 @@ export function LoginPage() {
           {loading ? t('auth.login.submitting') : t('auth.login.submit')}
         </button>
 
-        <p className="auth-form__hint">{t('auth.login.hint')}</p>
+        <p className="auth-form__hint">登入狀態由同源 HttpOnly Cookie 保護，瀏覽器端不保存 session token。</p>
       </form>
     </AuthPageShell>
   );
