@@ -42,7 +42,6 @@ export function LoginPage() {
   return (
     <AuthPageShell
       variant="login"
-      homeLabel={t('auth.login.backHome')}
       footer={
         <p className="auth-page__helper">
           {t('auth.login.newHere')}{' '}

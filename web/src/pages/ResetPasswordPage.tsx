@@ -5,6 +5,7 @@ import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
 import { translateAuthError } from '../features/auth/authText';
 import { resetPassword } from '../features/auth/authApi';
+import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
 import { useI18n } from '../i18n';
 
 export function ResetPasswordPage() {
@@ -28,7 +29,7 @@ export function ResetPasswordPage() {
       if (!token) {
         throw new Error('AUTH_REQUEST_FAILED');
       }
-      if (newPassword.length < 8 || newPassword.length > 32) {
+      if (!hasValidPasswordLength(newPassword)) {
         throw new Error('Password must be between 8 and 32 characters.');
       }
       if (newPassword !== confirmPassword) {

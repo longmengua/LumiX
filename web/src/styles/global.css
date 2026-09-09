@@ -606,10 +606,13 @@ p,
 
 .auth-page {
   display: flex;
-  gap: var(--section-gap);
-  align-items: center;
+  flex-direction: row;
+  gap: 0;
+  align-items: stretch;
   inline-size: 100%;
   min-inline-size: 0;
+  padding: 0;
+  overflow: hidden;
 }
 
 .auth-page-shell {
@@ -621,19 +624,12 @@ p,
   padding: 1%;
 }
 
-.auth-page-shell__header {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-  min-inline-size: 0;
-}
-
 .auth-page-shell__body {
   min-inline-size: 0;
 }
 
 .auth-page__hero,
+.auth-page__panel-wrapper,
 .auth-page__panel {
   position: relative;
   min-inline-size: 0;
@@ -644,35 +640,11 @@ p,
   flex-direction: column;
   gap: 14px;
   align-content: start;
-  flex: 3;
+  flex: 3 1 0;
+  min-block-size: clamp(26rem, 66vh, 44rem);
   padding: 0;
 }
 
-.auth-page__hero-links {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-  min-inline-size: 0;
-}
-
-.auth-page__home-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-}
-
-.auth-page__home-link::before {
-  content: '';
-  inline-size: 0.55rem;
-  block-size: 0.55rem;
-  border: 1px solid rgba(147, 197, 253, 0.65);
-  border-radius: 999px;
-  background: rgba(96, 165, 250, 0.32);
-}
-
-.auth-page__home-link,
 .auth-page__helper a,
 .link-card__action,
 .market-preview__action {
@@ -685,18 +657,34 @@ p,
   font-size: 0.9rem;
 }
 
-.auth-page__panel {
+.auth-page__panel-wrapper {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 18px;
-  flex: 1 1 min(100%, 28rem);
+  flex: 2 1 0;
   min-inline-size: 0;
+  padding: 0 clamp(1.25rem, 2.2vw, 2rem);
+  background: transparent;
 }
 
-.auth-page__panel > * {
+.auth-page__panel-wrapper::before {
+  content: '';
+  flex: 1 1 0;
+}
+
+.auth-page__panel {
+  display: flex;
+  flex: 3 1 0;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  min-block-size: 0;
+}
+
+.auth-page__form-container,
+.auth-page__footer {
   inline-size: 100%;
   max-inline-size: 28rem;
+  margin-inline: auto;
 }
 
 .auth-page__footer {
@@ -775,16 +763,16 @@ p,
   flex-direction: column;
   justify-content: center;
   gap: 1rem;
-  min-block-size: clamp(26rem, 66vh, 44rem);
+  min-block-size: 100%;
   padding: clamp(1.25rem, 2.2vw, 2rem);
-  border-radius: 28px;
+  border-radius: 0;
   overflow: hidden;
   isolation: isolate;
   background:
     radial-gradient(circle at 20% 18%, rgba(96, 165, 250, 0.2), transparent 24%),
     radial-gradient(circle at 84% 12%, rgba(168, 85, 247, 0.2), transparent 18%),
     linear-gradient(160deg, rgba(6, 11, 24, 0.98), rgba(8, 16, 33, 0.92));
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 0;
 }
 
 .auth-visual-panel::before,
@@ -863,6 +851,20 @@ p,
   gap: 0.65rem;
   color: rgba(241, 245, 249, 0.88);
   min-width: 0;
+}
+
+.auth-visual-panel__brand-home {
+  display: inline-flex;
+  border-radius: 0.5rem;
+}
+
+.auth-visual-panel__brand-home:hover .logo__mark {
+  filter: brightness(1.16);
+}
+
+.auth-visual-panel__brand-home:focus-visible {
+  outline: 2px solid rgba(147, 197, 253, 0.9);
+  outline-offset: 0.25rem;
 }
 
 .auth-visual-panel__brand-text {
@@ -3324,6 +3326,40 @@ p,
   .modal-card {
     padding: 16px;
     border-radius: 18px;
+  }
+
+  .auth-page {
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .auth-page__hero {
+    /* 窄螢幕改為固定上方視覺區，避免表單內容差異造成切換跳動。 */
+    flex: 0 0 clamp(12rem, 26dvh, 16rem);
+    min-block-size: 0;
+  }
+
+  .auth-page__panel-wrapper {
+    flex: 0 0 auto;
+    padding-block: clamp(1.5rem, 4vh, 3rem);
+  }
+
+  .auth-page__panel-wrapper::before {
+    display: none;
+  }
+
+  .auth-page__panel {
+    flex: 0 0 auto;
+  }
+
+  /* 窄螢幕的上方圖示區維持精簡，避免在表單前消耗過多高度。 */
+  .auth-visual-panel__art {
+    flex: 1 1 auto;
+    min-block-size: 7rem;
+  }
+
+  .auth-visual-panel__svg {
+    width: min(100%, clamp(9rem, 16vw, 14rem));
   }
 
   .market-table__head,

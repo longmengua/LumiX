@@ -5,6 +5,7 @@ import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
 import { translateAuthError } from '../features/auth/authText';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
+import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
 import { useI18n } from '../i18n';
 
 /** 已登入使用者的改密碼頁面；伺服器會重新驗證舊密碼並撤銷所有舊 session。 */
@@ -23,7 +24,7 @@ export function ChangePasswordPage() {
     setError(null);
     setSuccess(null);
     try {
-      if (newPassword.length < 8 || newPassword.length > 32) {
+      if (!hasValidPasswordLength(newPassword)) {
         throw new Error('Password must be between 8 and 32 characters.');
       }
       if (newPassword !== confirmPassword) {

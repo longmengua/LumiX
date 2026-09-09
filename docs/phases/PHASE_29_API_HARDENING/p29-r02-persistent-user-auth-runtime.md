@@ -18,6 +18,7 @@ HUMAN_REVIEW_REQUIRED: yes
 - 密碼最少 8、最多 32 個字元，且最多 72 UTF-8 bytes；上限仍符合 BCrypt 不可靜默截斷的限制。
 - 高熵 session/reset secret；資料庫只保存 SHA-256 摘要。
 - `/api/v1/auth/*` 同源 API 與 HttpOnly、SameSite=Strict Cookie。
+- 註冊、登入與忘記密碼頁面採單一認證外框；桌面維持左側視覺、右側表單，右欄以 `1:3` flex 分配上方留白與表單區。平板與手機改為上圖下表單並使用自然內容高度；LumiX 文字左側圖示為唯一返回首頁控制項，避免重複的文字導航。
 - 密碼變更與重設後撤銷所有既有 session。
 - PostgreSQL primary transaction 驗證 session／密碼，避免 replica lag 讓撤銷狀態失真。
 - 可選 SMTP delivery adapter；未配置時 forgot-password endpoint fail-closed，絕不以 log 或 response 回傳 reset token。
@@ -28,6 +29,18 @@ HUMAN_REVIEW_REQUIRED: yes
 - SMTP provider / credential / secret manager / TLS ingress 的實際部署。
 - 資金、帳本、交易、入金、提款、matching 或 settlement runtime。
 - production launch 或 production-ready 宣稱。
+
+## 密碼策略同步契約
+
+```text
+產品規則：最少 8、最多 32 個字元，且不得超過 72 UTF-8 bytes
+server 裁決：UserAuthenticationService.validatePassword
+前端預先檢查：features/auth/passwordPolicy.ts
+適用入口：註冊、已登入改密碼、忘記密碼重設
+登入相容：login 只保留 BCrypt 72 bytes 防護，不以新上限阻止既有帳號登入
+```
+
+前端 policy 只提供立即錯誤訊息，不能取代 server。任何長度變更都必須同時更新上述兩處、此文件與邊界測試；UI 不主動展示密碼規格，只在驗證失敗時顯示錯誤。
 
 ## Migration 與 rollback
 

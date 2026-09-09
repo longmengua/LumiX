@@ -41,6 +41,10 @@ public class UserAuthenticationService {
     private static final SecureRandom SECURE_RANDOM = new SecureRandom();
     private static final int SECRET_BYTES = 32;
     private static final int LOGIN_HISTORY_LIMIT = 50;
+    // 這些是產品密碼 policy；前端同名規則只改善 UX，server 仍是唯一安全裁決。
+    private static final int MIN_PASSWORD_CHARACTERS = 8;
+    private static final int MAX_PASSWORD_CHARACTERS = 32;
+    private static final int MAX_BCRYPT_PASSWORD_BYTES = 72;
 
     private final UserAuthenticationRepository repository;
     private final BCryptPasswordEncoder passwordEncoder;
@@ -224,14 +228,16 @@ public class UserAuthenticationService {
     private static void validatePassword(String password) {
         validatePasswordInput(password);
         int byteLength = password.getBytes(StandardCharsets.UTF_8).length;
-        if (password.length() < 8 || password.length() > 32 || byteLength > 72) {
+        if (password.length() < MIN_PASSWORD_CHARACTERS || password.length() > MAX_PASSWORD_CHARACTERS
+            || byteLength > MAX_BCRYPT_PASSWORD_BYTES) {
             // BCrypt 只安全處理前 72 bytes；產品長度上限為 32 字元，兩者都必須拒絕而非靜默截斷。
             throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
         }
     }
 
     private static void validatePasswordInput(String password) {
-        if (password == null || password.isBlank() || password.getBytes(StandardCharsets.UTF_8).length > 72) {
+        if (password == null || password.isBlank()
+            || password.getBytes(StandardCharsets.UTF_8).length > MAX_BCRYPT_PASSWORD_BYTES) {
             throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
         }
     }

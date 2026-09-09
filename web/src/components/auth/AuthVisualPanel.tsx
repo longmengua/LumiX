@@ -1,4 +1,5 @@
 import type { CSSProperties } from 'react';
+import { NavLink } from 'react-router-dom';
 
 import { Logo } from '../brand/Logo';
 import { useI18n } from '../../i18n';
@@ -233,7 +234,10 @@ export function AuthVisualPanel({ variant }: AuthVisualPanelProps) {
 
       <div className="auth-visual-panel__content">
         <div className="auth-visual-panel__brand">
-          <Logo size="sm" title={t('nav.logo')} variant="mark" />
+          {/* 僅讓圖示承擔返回首頁操作，品牌文字維持為非互動識別。 */}
+          <NavLink className="auth-visual-panel__brand-home" to="/" aria-label={t('common.backHome')}>
+            <Logo size="sm" title={t('nav.logo')} variant="mark" />
+          </NavLink>
           <span className="auth-visual-panel__brand-text">{t('nav.logo')}</span>
         </div>
         <p className="auth-visual-panel__subtitle">{t(tone.subtitleKey)}</p>

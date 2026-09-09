@@ -5,6 +5,7 @@ import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
 import { translateAuthError } from '../features/auth/authText';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
+import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
 import { useI18n } from '../i18n';
 
 export function RegisterPage() {
@@ -28,7 +29,7 @@ export function RegisterPage() {
       if (displayName.trim().length < 2) {
         throw new Error('Display name must be at least 2 characters.');
       }
-      if (password.length < 8 || password.length > 32) {
+      if (!hasValidPasswordLength(password)) {
         throw new Error('Password must be between 8 and 32 characters.');
       }
       if (password !== confirmPassword) {

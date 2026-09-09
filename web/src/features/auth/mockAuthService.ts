@@ -1,3 +1,5 @@
+import { hasValidPasswordLength } from './passwordPolicy';
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -77,8 +79,8 @@ export async function registerMock(input: RegisterInput): Promise<string> {
     throw new Error('Verification code is required.');
   }
 
-  if (input.password.length < 8) {
-    throw new Error('Password must be at least 8 characters.');
+  if (!hasValidPasswordLength(input.password)) {
+    throw new Error('Password must be between 8 and 32 characters.');
   }
 
   if (input.password !== input.confirmPassword) {
@@ -109,8 +111,8 @@ export async function resetPasswordMock(input: ResetPasswordInput): Promise<stri
     throw new Error('Please enter an email or phone number.');
   }
 
-  if (input.newPassword.length < 8) {
-    throw new Error('Password must be at least 8 characters.');
+  if (!hasValidPasswordLength(input.newPassword)) {
+    throw new Error('Password must be between 8 and 32 characters.');
   }
 
   if (input.newPassword !== input.confirmPassword) {
