@@ -18,7 +18,7 @@ HUMAN_REVIEW_REQUIRED: yes
 - 密碼最少 8、最多 32 個字元，且最多 72 UTF-8 bytes；上限仍符合 BCrypt 不可靜默截斷的限制。
 - 高熵 session/reset secret；資料庫只保存 SHA-256 摘要。
 - `/api/v1/auth/*` 同源 API 與 HttpOnly、SameSite=Strict Cookie。
-- 註冊、登入與忘記密碼頁面採單一認證外框；桌面維持左側視覺、右側表單，右欄以 `1:3` flex 分配上方留白與表單區。平板與手機改為上圖下表單並使用自然內容高度；LumiX 文字左側圖示為唯一返回首頁控制項，避免重複的文字導航。
+- 註冊、登入與忘記密碼頁面採單一認證外框；桌面維持左側視覺、右側表單，右欄以頁面指定的 flex 比例分配上方留白與表單區：註冊 `1:5`、登入 `1:3`、忘記密碼 `1:2`。平板與手機改為上圖下表單並使用自然內容高度；完整 LumiX 品牌列為返回首頁控制項，避免重複的文字導航。
 - 密碼變更與重設後撤銷所有既有 session。
 - PostgreSQL primary transaction 驗證 session／密碼，避免 replica lag 讓撤銷狀態失真。
 - 可選 SMTP delivery adapter；未配置時 forgot-password endpoint fail-closed，絕不以 log 或 response 回傳 reset token。

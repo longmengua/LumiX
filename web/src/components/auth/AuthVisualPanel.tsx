@@ -233,13 +233,11 @@ export function AuthVisualPanel({ variant }: AuthVisualPanelProps) {
       <div className="auth-visual-panel__grid" aria-hidden="true" />
 
       <div className="auth-visual-panel__content">
-        <div className="auth-visual-panel__brand">
-          {/* 僅讓圖示承擔返回首頁操作，品牌文字維持為非互動識別。 */}
-          <NavLink className="auth-visual-panel__brand-home" to="/" aria-label={t('common.backHome')}>
-            <Logo size="sm" title={t('nav.logo')} variant="mark" />
-          </NavLink>
+        {/* 品牌列是完整的返回首頁控制項，讓圖示與名稱形成足夠大的可辨識點擊區。 */}
+        <NavLink className="auth-visual-panel__brand" to="/" aria-label={t('common.backHome')}>
+          <Logo size="md" title={t('nav.logo')} variant="mark" />
           <span className="auth-visual-panel__brand-text">{t('nav.logo')}</span>
-        </div>
+        </NavLink>
         <p className="auth-visual-panel__subtitle">{t(tone.subtitleKey)}</p>
       </div>
 

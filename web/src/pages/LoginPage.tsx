@@ -42,6 +42,7 @@ export function LoginPage() {
   return (
     <AuthPageShell
       variant="login"
+      formAreaRatio={3}
       footer={
         <p className="auth-page__helper">
           {t('auth.login.newHere')}{' '}

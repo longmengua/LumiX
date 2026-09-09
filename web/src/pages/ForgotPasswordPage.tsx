@@ -33,6 +33,7 @@ export function ForgotPasswordPage() {
   return (
     <AuthPageShell
       variant="forgot"
+      formAreaRatio={2}
       footer={
         <p className="auth-page__helper">
           {t('auth.forgot.footerPrefix')} <NavLink to="/login">{t('auth.forgot.footerSignIn')}</NavLink>{' '}

@@ -50,6 +50,7 @@ export function RegisterPage() {
   return (
     <AuthPageShell
       variant="register"
+      formAreaRatio={5}
       footer={
         <p className="auth-page__helper">
           {t('auth.register.footerPrefix')} <NavLink to="/login">{t('auth.register.footerSignIn')}</NavLink>.

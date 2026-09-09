@@ -673,7 +673,7 @@ p,
 
 .auth-page__panel {
   display: flex;
-  flex: 3 1 0;
+  flex: var(--auth-form-area-ratio, 4) 1 0;
   flex-direction: column;
   align-items: stretch;
   gap: 18px;
@@ -848,21 +848,18 @@ p,
 .auth-visual-panel__brand {
   display: inline-flex;
   align-items: center;
+  align-self: flex-start;
   gap: 0.65rem;
   color: rgba(241, 245, 249, 0.88);
   min-width: 0;
-}
-
-.auth-visual-panel__brand-home {
-  display: inline-flex;
   border-radius: 0.5rem;
 }
 
-.auth-visual-panel__brand-home:hover .logo__mark {
+.auth-visual-panel__brand:hover .logo__mark {
   filter: brightness(1.16);
 }
 
-.auth-visual-panel__brand-home:focus-visible {
+.auth-visual-panel__brand:focus-visible {
   outline: 2px solid rgba(147, 197, 253, 0.9);
   outline-offset: 0.25rem;
 }
