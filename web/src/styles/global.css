@@ -3258,6 +3258,175 @@ p,
   }
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  /* Tablet 保留品牌插圖，但不再沿用 desktop 的大型最小高度。 */
+  .auth-page {
+    flex-direction: column;
+    overflow: visible;
+  }
+
+  .auth-page__hero {
+    flex: 0 0 clamp(13rem, 30dvh, 18rem);
+    min-block-size: 0;
+  }
+
+  .auth-page__panel-wrapper {
+    flex: 0 0 auto;
+    padding-block: clamp(1.25rem, 3dvh, 2rem);
+  }
+
+  .auth-page__panel-wrapper::before {
+    display: none;
+  }
+
+  .auth-page__panel {
+    flex: 0 0 auto;
+  }
+
+  .auth-visual-panel {
+    padding: clamp(1rem, 2.5vw, 1.5rem);
+  }
+
+  .auth-visual-panel__art {
+    min-block-size: 8rem;
+  }
+
+  .auth-visual-panel__svg {
+    width: min(100%, 15rem);
+  }
+}
+
+@media (max-width: 767px) {
+  /* Mobile 以登入任務優先：取消桌面卡片與視覺區高度鎖定，讓鍵盤開啟後仍可捲動。 */
+  .auth-page-shell {
+    min-block-size: 100dvh;
+    gap: 0;
+    padding: 0;
+  }
+
+  .auth-page-shell__body.auth-page.card {
+    flex: 1 0 auto;
+    min-block-size: 100dvh;
+    padding: 0;
+    overflow: visible;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .auth-page__hero {
+    flex: 0 0 auto;
+    min-block-size: 0;
+  }
+
+  .auth-visual-panel {
+    min-block-size: 0;
+    justify-content: flex-start;
+    gap: 0.5rem;
+    padding:
+      max(1rem, env(safe-area-inset-top))
+      max(1.25rem, env(safe-area-inset-right))
+      0.75rem
+      max(1.25rem, env(safe-area-inset-left));
+  }
+
+  /* 插圖、光暈與格線只提供桌面氛圍；手機首屏應優先露出第一個輸入欄。 */
+  .auth-visual-panel::before,
+  .auth-visual-panel::after,
+  .auth-visual-panel__art,
+  .auth-visual-panel__halo,
+  .auth-visual-panel__glow,
+  .auth-visual-panel__grid {
+    display: none;
+  }
+
+  .auth-visual-panel__content {
+    gap: 0.35rem;
+    max-inline-size: 26.25rem;
+  }
+
+  .auth-visual-panel__brand {
+    gap: 0.55rem;
+  }
+
+  .auth-visual-panel__brand .logo__mark {
+    inline-size: 2rem;
+    block-size: 2rem;
+  }
+
+  .auth-visual-panel__subtitle {
+    display: -webkit-box;
+    overflow: hidden;
+    color: rgba(226, 232, 240, 0.86);
+    font-size: 0.88rem;
+    line-height: 1.4;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+
+  .auth-page__panel-wrapper {
+    flex: 0 0 auto;
+    padding:
+      1.5rem
+      max(1.25rem, env(safe-area-inset-right))
+      calc(1.5rem + env(safe-area-inset-bottom))
+      max(1.25rem, env(safe-area-inset-left));
+  }
+
+  .auth-page__panel-wrapper::before {
+    display: none;
+  }
+
+  .auth-page__panel {
+    flex: 0 0 auto;
+    gap: 1.125rem;
+  }
+
+  .auth-page__form-container,
+  .auth-page__footer,
+  .auth-form {
+    max-inline-size: 26.25rem;
+  }
+
+  .auth-form {
+    gap: 1.125rem;
+  }
+
+  .auth-page .input,
+  .auth-page .primary-button {
+    min-block-size: 3rem;
+  }
+
+  .auth-page .field__label,
+  .auth-page .auth-form__link,
+  .auth-page .auth-page__helper a {
+    color: rgba(226, 232, 240, 0.92);
+  }
+
+  .auth-page .auth-form__hint,
+  .auth-page .auth-page__footer {
+    color: rgba(203, 213, 225, 0.88);
+  }
+
+  .auth-page .password-field__toggle {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 2.75rem;
+    min-block-size: 2.75rem;
+    padding: 0.25rem;
+  }
+}
+
+@media (max-width: 399px) {
+  .auth-visual-panel {
+    padding-inline: max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-left));
+  }
+
+  .auth-page__panel-wrapper {
+    padding-inline: max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-left));
+  }
+}
+
 @media (max-width: 760px) {
   .topbar {
     flex-direction: column;
@@ -3323,40 +3492,6 @@ p,
   .modal-card {
     padding: 16px;
     border-radius: 18px;
-  }
-
-  .auth-page {
-    flex-direction: column;
-    padding: 0;
-  }
-
-  .auth-page__hero {
-    /* 窄螢幕改為固定上方視覺區，避免表單內容差異造成切換跳動。 */
-    flex: 0 0 clamp(12rem, 26dvh, 16rem);
-    min-block-size: 0;
-  }
-
-  .auth-page__panel-wrapper {
-    flex: 0 0 auto;
-    padding-block: clamp(1.5rem, 4vh, 3rem);
-  }
-
-  .auth-page__panel-wrapper::before {
-    display: none;
-  }
-
-  .auth-page__panel {
-    flex: 0 0 auto;
-  }
-
-  /* 窄螢幕的上方圖示區維持精簡，避免在表單前消耗過多高度。 */
-  .auth-visual-panel__art {
-    flex: 1 1 auto;
-    min-block-size: 7rem;
-  }
-
-  .auth-visual-panel__svg {
-    width: min(100%, clamp(9rem, 16vw, 14rem));
   }
 
   .market-table__head,

@@ -19,6 +19,7 @@ HUMAN_REVIEW_REQUIRED: yes
 - 高熵 session/reset secret；資料庫只保存 SHA-256 摘要。
 - `/api/v1/auth/*` 同源 API 與 HttpOnly、SameSite=Strict Cookie。
 - 註冊、登入與忘記密碼頁面採單一認證外框；桌面維持左側視覺、右側表單，右欄以頁面指定的 flex 比例分配上方留白與表單區：註冊 `1:5`、登入 `1:3`、忘記密碼 `1:2`。平板與手機改為上圖下表單並使用自然內容高度；完整 LumiX 品牌列為返回首頁控制項，避免重複的文字導航。
+- Auth RWD 採 desktop（至少 1024px）完整視覺、tablet（768–1023px）縮小插圖與 mobile（小於 768px）compact 品牌標頭。手機不鎖定頁面高度或捲動，隱藏純裝飾並保留完整鍵盤可操作的表單與 48px touch target。
 - 密碼變更與重設後撤銷所有既有 session。
 - PostgreSQL primary transaction 驗證 session／密碼，避免 replica lag 讓撤銷狀態失真。
 - 可選 SMTP delivery adapter；未配置時 forgot-password endpoint fail-closed，絕不以 log 或 response 回傳 reset token。
@@ -59,6 +60,8 @@ PASS  完整流程：register 201、me 200、change password 200、舊密碼 log
 PASS  SMTP 未設定：forgot password 503 fail-closed，無 token 回傳
 PASS  資料庫：credential 為 BCrypt；認證 schema 無 password 明文欄位
 PASS  密碼長度 policy：8 字元註冊 -> 201；33 字元註冊 -> 400
+PASS  auth RWD：320×568、360×800、375×667、390×844、430×932、768×1024、1024×768、1440×900 無 horizontal overflow；mobile 隱藏 decorative art 且首個 input 位於首屏。
+PASS  mobile short viewport：390×420 時頁面保持可捲動（`overflow-y: visible`），登入 CTA 位於可視區內。
 ```
 
 ## 尚待驗證／阻擋條件
