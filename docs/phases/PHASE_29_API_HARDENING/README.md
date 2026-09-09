@@ -14,6 +14,8 @@ COMPLETED_FOR_API_ADMISSION_CONTRACT_FOUNDATION
 
 `P29-R04 Authenticated Login History API` 已完成目前使用者自己的成功登入紀錄 read API 與前端帳戶頁接線；詳見 `p29-r04-authenticated-login-history-api.md`。此項目不蒐集 IP、user agent 或 session secret，且不是完整 audit/security event runtime；`HUMAN_REVIEW_REQUIRED: yes`。
 
+`P29-R05 Loopback Password Reset Delivery` 已完成同機開發用的 loopback HTTP reset link 例外與 Gmail SMTP 實際寄送 acceptance 驗證；詳見 `p29-r05-loopback-password-reset-delivery.md`。預設仍拒絕 HTTP，只有顯式開關且精確為 localhost／127.0.0.1／::1 時可用；UI 點擊 token 的最後確認仍待人類在 Gmail 收件匣執行；`HUMAN_REVIEW_REQUIRED: yes`。
+
 ## Phase charter
 
 建立已批准 domain contract 的版本化 API admission foundation；不把 OpenAPI metadata、mock 或 sandbox route 當成可公開的 production service。

@@ -5,7 +5,7 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   'Please enter your password.': 'auth.error.passwordRequired',
   'Use a valid email address or phone number.': 'auth.register.errorInvalidIdentifier',
   'Verification code is required.': 'auth.register.errorVerificationCodeRequired',
-  'Password must be at least 12 characters.': 'auth.register.errorPasswordTooShort',
+  'Password must be between 8 and 32 characters.': 'auth.register.errorPasswordLength',
   'Display name must be at least 2 characters.': 'auth.register.errorDisplayNameTooShort',
   'Passwords do not match.': 'auth.register.errorPasswordsMismatch',
   'You must accept the terms.': 'auth.register.errorTermsRequired',

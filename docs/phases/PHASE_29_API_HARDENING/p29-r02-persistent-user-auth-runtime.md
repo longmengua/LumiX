@@ -15,6 +15,7 @@ HUMAN_REVIEW_REQUIRED: yes
 
 - `V009` append-only migration：`user_credentials`、`user_sessions`、`password_reset_requests`。
 - BCrypt 密碼雜湊；資料庫、log 與 API response 不保存或輸出明文密碼。
+- 密碼最少 8、最多 32 個字元，且最多 72 UTF-8 bytes；上限仍符合 BCrypt 不可靜默截斷的限制。
 - 高熵 session/reset secret；資料庫只保存 SHA-256 摘要。
 - `/api/v1/auth/*` 同源 API 與 HttpOnly、SameSite=Strict Cookie。
 - 密碼變更與重設後撤銷所有既有 session。
@@ -44,6 +45,7 @@ PASS  同源 web proxy：register 201、me 200、logout 204、post-logout me 401
 PASS  完整流程：register 201、me 200、change password 200、舊密碼 login 401、新密碼 login 200、logout 204、post-logout me 401
 PASS  SMTP 未設定：forgot password 503 fail-closed，無 token 回傳
 PASS  資料庫：credential 為 BCrypt；認證 schema 無 password 明文欄位
+PASS  密碼長度 policy：8 字元註冊 -> 201；33 字元註冊 -> 400
 ```
 
 ## 尚待驗證／阻擋條件

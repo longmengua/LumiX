@@ -224,8 +224,8 @@ public class UserAuthenticationService {
     private static void validatePassword(String password) {
         validatePasswordInput(password);
         int byteLength = password.getBytes(StandardCharsets.UTF_8).length;
-        if (password.length() < 12 || byteLength > 72) {
-            // BCrypt 只安全處理前 72 bytes，超過時拒絕而非靜默截斷。
+        if (password.length() < 8 || password.length() > 32 || byteLength > 72) {
+            // BCrypt 只安全處理前 72 bytes；產品長度上限為 32 字元，兩者都必須拒絕而非靜默截斷。
             throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
         }
     }

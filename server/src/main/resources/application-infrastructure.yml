@@ -57,6 +57,8 @@ lumix:
     password-reset:
       ttl: ${LUMIX_AUTH_PASSWORD_RESET_TTL:PT30M}
       smtp-enabled: ${LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED:false}
+      # 僅限同機 Gmail 開發測試；正式／公開網址一律要求 HTTPS。
+      allow-loopback-http: ${LUMIX_AUTH_PASSWORD_RESET_ALLOW_LOOPBACK_HTTP:false}
       from-address: ${LUMIX_AUTH_PASSWORD_RESET_FROM_ADDRESS:}
       public-base-url: ${LUMIX_AUTH_PUBLIC_BASE_URL:}
   security:

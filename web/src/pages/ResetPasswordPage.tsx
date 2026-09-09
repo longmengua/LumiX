@@ -28,8 +28,8 @@ export function ResetPasswordPage() {
       if (!token) {
         throw new Error('AUTH_REQUEST_FAILED');
       }
-      if (newPassword.length < 12) {
-        throw new Error('Password must be at least 12 characters.');
+      if (newPassword.length < 8 || newPassword.length > 32) {
+        throw new Error('Password must be between 8 and 32 characters.');
       }
       if (newPassword !== confirmPassword) {
         throw new Error('Passwords do not match.');

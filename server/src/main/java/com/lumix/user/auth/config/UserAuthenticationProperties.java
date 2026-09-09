@@ -33,6 +33,7 @@ public class UserAuthenticationProperties {
     public static class PasswordReset {
         private Duration ttl = Duration.ofMinutes(30);
         private boolean smtpEnabled;
+        private boolean allowLoopbackHttp;
         private String fromAddress = "";
         private String publicBaseUrl = "";
 
@@ -40,6 +41,9 @@ public class UserAuthenticationProperties {
         public void setTtl(Duration ttl) { this.ttl = ttl; }
         public boolean isSmtpEnabled() { return smtpEnabled; }
         public void setSmtpEnabled(boolean smtpEnabled) { this.smtpEnabled = smtpEnabled; }
+        /** 僅限本機開發時允許 HTTP loopback reset link；任何一般 HTTP host 都不得放寬。 */
+        public boolean isAllowLoopbackHttp() { return allowLoopbackHttp; }
+        public void setAllowLoopbackHttp(boolean allowLoopbackHttp) { this.allowLoopbackHttp = allowLoopbackHttp; }
         public String getFromAddress() { return fromAddress; }
         public void setFromAddress(String fromAddress) { this.fromAddress = fromAddress; }
         public String getPublicBaseUrl() { return publicBaseUrl; }
