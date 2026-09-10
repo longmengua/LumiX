@@ -10,6 +10,7 @@ import { RegisterPage } from '../pages/RegisterPage';
 import { ForgotPasswordPage } from '../pages/ForgotPasswordPage';
 import { ChangePasswordPage } from '../pages/ChangePasswordPage';
 import { ResetPasswordPage } from '../pages/ResetPasswordPage';
+import { LoginVerificationPage } from '../pages/LoginVerificationPage';
 import { TwoFactorPage } from '../pages/TwoFactorPage';
 import { HomePage } from '../pages/HomePage';
 import { MarketsPage } from '../pages/MarketsPage';
@@ -206,6 +207,7 @@ export function AppRouter() {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/login-verification" element={<LoginVerificationPage />} />
       <Route path="/change-password" element={<ChangePasswordPage />} />
       <Route path="/two-factor" element={<TwoFactorPage />} />
       <Route path="*" element={<AppLayout header={<Header />}><NotFoundPage /></AppLayout>} />

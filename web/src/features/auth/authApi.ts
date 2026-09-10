@@ -10,13 +10,26 @@ export type AuthenticatedUser = {
   displayName: string;
 };
 
+/** 帳密正確但裝置尚未確認時，前端不得把它視為已登入使用者。 */
+export type SignInResult =
+  | { kind: 'authenticated'; user: AuthenticatedUser }
+  | { kind: 'verification-required' };
+
 type ApiError = {
   code?: string;
   message?: string;
 };
 
-export async function signIn(input: { email: string; password: string }): Promise<AuthenticatedUser> {
-  return requestUser('/login', input);
+export async function signIn(input: { email: string; password: string }): Promise<SignInResult> {
+  const response = await fetch('/api/v1/auth/login', requestOptions(input));
+  if (response.status === 202) {
+    const value: unknown = await response.json();
+    if (typeof value === 'object' && value !== null && (value as { verificationRequired?: unknown }).verificationRequired === true) {
+      return { kind: 'verification-required' };
+    }
+    throw new Error('AUTH_CONTRACT_ERROR');
+  }
+  return { kind: 'authenticated', user: await readUser(response) };
 }
 
 export async function register(input: {
@@ -29,6 +42,16 @@ export async function register(input: {
 
 export async function currentUser(): Promise<AuthenticatedUser> {
   const response = await fetch('/api/v1/auth/me', { credentials: 'same-origin' });
+  return readUser(response);
+}
+
+/**
+ * 更新目前登入者可自行維護的 profile 欄位。
+ *
+ * 後端從 HttpOnly session 取得 owner，前端不得傳送或保存 userId；回傳值用於同步導覽列的去敏使用者投影。
+ */
+export async function updateDisplayName(displayName: string): Promise<AuthenticatedUser> {
+  const response = await fetch('/api/v1/account/profile', requestOptions({ displayName }, 'PATCH'));
   return readUser(response);
 }
 
@@ -54,14 +77,41 @@ export async function resetPassword(input: { token: string; newPassword: string 
   await ensureSuccess(response);
 }
 
+/**
+ * 原始登入瀏覽器才會攜帶 pending HttpOnly cookie。
+ *
+ * 此呼叫回傳 null 代表尚未核准；前端絕不能自行假設 email 已點選就已登入。
+ */
+export async function completeLoginVerification(): Promise<AuthenticatedUser | null> {
+  const response = await fetch('/api/v1/auth/login-verification/complete', {
+    method: 'POST',
+    credentials: 'same-origin',
+  });
+  if (response.status === 202) return null;
+  return readUser(response);
+}
+
+/** email 確認頁以明確 POST 送出 Yes／No，GET link 不會有任何狀態變更。 */
+export async function decideLoginVerification(token: string, approved: boolean): Promise<'APPROVED' | 'REJECTED'> {
+  const response = await fetch(
+    '/api/v1/auth/login-verification/decision',
+    requestOptions({ token, approved }),
+  );
+  await ensureSuccess(response);
+  const value: unknown = await response.json();
+  const state = typeof value === 'object' && value !== null ? (value as { state?: unknown }).state : null;
+  if (state !== 'APPROVED' && state !== 'REJECTED') throw new Error('AUTH_CONTRACT_ERROR');
+  return state;
+}
+
 async function requestUser(path: string, body: object): Promise<AuthenticatedUser> {
   const response = await fetch(`/api/v1/auth${path}`, requestOptions(body));
   return readUser(response);
 }
 
-function requestOptions(body: object): RequestInit {
+function requestOptions(body: object, method = 'POST'): RequestInit {
   return {
-    method: 'POST',
+    method,
     credentials: 'same-origin',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),

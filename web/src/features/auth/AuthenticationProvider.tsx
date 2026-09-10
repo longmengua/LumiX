@@ -7,10 +7,12 @@ type AuthenticationContextValue = {
   user: AuthenticatedUser | null;
   loading: boolean;
   sessionResolved: boolean;
-  signIn(input: { email: string; password: string }): Promise<AuthenticatedUser>;
+  signIn(input: { email: string; password: string }): Promise<AuthenticatedUser | null>;
+  completeLoginVerification(): Promise<AuthenticatedUser | null>;
   register(input: { email: string; displayName: string; password: string }): Promise<AuthenticatedUser>;
   signOut(): Promise<void>;
   changePassword(input: { currentPassword: string; newPassword: string }): Promise<AuthenticatedUser>;
+  updateDisplayName(displayName: string): Promise<AuthenticatedUser>;
 };
 
 const AuthenticationContext = createContext<AuthenticationContextValue | null>(null);
@@ -65,8 +67,22 @@ export function AuthenticationProvider({ children }: { children: ReactNode }) {
     loading,
     sessionResolved,
     async signIn(input) {
-      const authenticatedUser = await authApi.signIn(input);
+      const result = await authApi.signIn(input);
+      if (result.kind === 'verification-required') {
+        // 帳密通過不是登入完成；等待 email 時不可提前投影出 user 或跳轉私有 route。
+        return null;
+      }
+      const authenticatedUser = result.user;
       // 使 app 初始的匿名 /me 回應失效，避免它覆寫剛登入的身份。
+      sessionOperation.current += 1;
+      setUser(authenticatedUser);
+      setLoading(false);
+      setSessionResolved(true);
+      return authenticatedUser;
+    },
+    async completeLoginVerification() {
+      const authenticatedUser = await authApi.completeLoginVerification();
+      if (authenticatedUser === null) return null;
       sessionOperation.current += 1;
       setUser(authenticatedUser);
       setLoading(false);
@@ -95,6 +111,12 @@ export function AuthenticationProvider({ children }: { children: ReactNode }) {
     },
     async changePassword(input) {
       const authenticatedUser = await authApi.changePassword(input);
+      setUser(authenticatedUser);
+      return authenticatedUser;
+    },
+    async updateDisplayName(displayName) {
+      const authenticatedUser = await authApi.updateDisplayName(displayName);
+      // 顯示名稱同時出現在 header；成功後立即同步，避免頁面內與導覽列呈現不同身份投影。
       setUser(authenticatedUser);
       return authenticatedUser;
     },

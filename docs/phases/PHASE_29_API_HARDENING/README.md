@@ -16,6 +16,12 @@ COMPLETED_FOR_API_ADMISSION_CONTRACT_FOUNDATION
 
 `P29-R05 Loopback Password Reset Delivery` 已完成同機開發用的 loopback HTTP reset link 例外與 Gmail SMTP 實際寄送 acceptance 驗證；詳見 `p29-r05-loopback-password-reset-delivery.md`。預設仍拒絕 HTTP，只有顯式開關且精確為 localhost／127.0.0.1／::1 時可用；UI 點擊 token 的最後確認仍待人類在 Gmail 收件匣執行；`HUMAN_REVIEW_REQUIRED: yes`。
 
+`P29-R06 Authenticated Personal Profile API` 已完成目前登入者本人 profile 的讀取與顯示名稱更新，並將個人中心總覽接至真實資料；詳見 `p29-r06-authenticated-personal-profile-api.md`。KYC、資產、劃轉、API Key 與偏好設定仍是既有 mock，不得誤認為已整合；`HUMAN_REVIEW_REQUIRED: yes`。
+
+`P29-R07 Login History Cursor Pagination` 已完成登入紀錄每頁預設 10 筆的 before／after／anchor cursor API 與前端雙向無限捲動；詳見 `p29-r07-login-history-cursor-pagination.md`。URL anchor 讓重新整理保留目前查看的登入時間窗口；它不是完整 security event runtime；`HUMAN_REVIEW_REQUIRED: yes`。
+
+`P29-R08 New Device Login Verification` 已完成受信任裝置、未知／變更 browser fingerprint 的 email Yes／No 確認，以及登入歷程的本人 IP／去敏裝置快照；詳見 `p29-r08-new-device-login-verification.md`。email 決定不會直接建立 session，只有原登入瀏覽器的 HttpOnly pending cookie 與 fingerprint 相符才可完成一次登入；`HUMAN_REVIEW_REQUIRED: yes`。
+
 ## Phase charter
 
 建立已批准 domain contract 的版本化 API admission foundation；不把 OpenAPI metadata、mock 或 sandbox route 當成可公開的 production service。

@@ -15,13 +15,13 @@ HUMAN_REVIEW_REQUIRED: yes
 
 - `V010` append-only migration，為 `user_sessions (user_id, created_at DESC)` 增加 bounded history 查詢索引。
 - `GET /api/v1/account/login-history`：由 P29-R03 全域 authentication filter 驗證 Cookie session 後，僅讀取 request principal 的資料。
-- 固定最多 50 筆、依成功 session 建立時間倒序回傳；不接受 userId、limit 或其他可跨帳號查詢的輸入。
-- response 僅包含 `occurredAt`；不回傳 session ID、secret digest、Cookie、IP、user agent 或密碼資料。
+- 此初始讀取契約由 P29-R07 擴充為 cursor 分頁：預設 10 筆、最大 50 筆，使用 `before`、`after` 或 `anchor` 的成功登入時間決定本人資料窗口；不接受 userId 或其他可跨帳號查詢的輸入。
+- 初版 response 僅含 `occurredAt`；P29-R08 後僅向本人追加 session 建立時的 `ipAddress` 與去敏 `deviceLabel` 快照，仍不回傳 session ID、secret digest、Cookie、完整 User-Agent 或密碼資料。
 - 前端 `/account/login-history` 改由同源 HttpOnly Cookie API 讀取；契約錯誤或 API 失敗時不回退顯示舊 mock 登入紀錄。
 
 ## 明確不含範圍
 
-- IP／裝置辨識、地理位置、異常登入偵測、MFA、通知、session 管理與撤銷 UI。
+- 地理位置、異常登入偵測、MFA、session 管理與撤銷 UI。
 - 完整 security audit event、SIEM、保留政策、資料主體權利或隱私治理；這些需要獨立安全與合規設計。
 - 帳戶總覽、資產、訂單、KYC 等其餘帳戶頁資料仍是既有 mock foundation，不能視為後端整合完成。
 - 資金、帳本、交易、入金、提款或 production launch。
@@ -44,7 +44,7 @@ GET /api/v1/account/login-history
 user_sessions (own user_id, newest 50)
         |
         v
-occurredAt only -> Account login-history view
+occurredAt + self-only IP/device snapshot -> Account login-history view
 ```
 
 session 建立時間是成功登入的既有權威資料。讀取使用 primary transaction，以避免剛成功登入後因 read replica 延遲而暫時看不到紀錄。此 API 不是 session 驗證本身，authentication filter 仍在 controller 前做唯一安全判斷。
@@ -69,4 +69,4 @@ BLOCKED  本機 ./mvnw test：使用者 Maven settings 指向的 Nexus 連線逾
 
 ## 人工審核重點
 
-`HUMAN_REVIEW_REQUIRED: yes`，因為新增了 authenticated private API 與使用者安全歷程的讀取路徑。請檢查：只能依 request principal 查詢、response 沒有認證材料、history 上限固定、primary consistency 的取捨，以及未蒐集 IP／裝置資料是否符合後續隱私與資安設計。
+`HUMAN_REVIEW_REQUIRED: yes`，因為新增了 authenticated private API 與使用者安全歷程的讀取路徑。請檢查：只能依 request principal 查詢、response 沒有認證材料、history 上限固定、primary consistency 的取捨，以及 P29-R08 的 IP／裝置快照只回傳給本人且沒有完整 User-Agent。

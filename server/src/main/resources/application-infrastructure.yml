@@ -52,7 +52,10 @@ lumix:
     # Compose 的 HTTP 僅供受控開發驗證；正式 TLS ingress 必須明確設為 true。
     cookie-secure: ${LUMIX_AUTH_COOKIE_SECURE:false}
     cookie-name: ${LUMIX_AUTH_COOKIE_NAME:LUMIX_SESSION}
+    device-cookie-name: ${LUMIX_AUTH_DEVICE_COOKIE_NAME:LUMIX_DEVICE}
+    login-verification-cookie-name: ${LUMIX_AUTH_LOGIN_VERIFICATION_COOKIE_NAME:LUMIX_LOGIN_VERIFICATION}
     session-ttl: ${LUMIX_AUTH_SESSION_TTL:PT8H}
+    device-ttl: ${LUMIX_AUTH_DEVICE_TTL:P90D}
     bcrypt-strength: ${LUMIX_AUTH_BCRYPT_STRENGTH:12}
     password-reset:
       ttl: ${LUMIX_AUTH_PASSWORD_RESET_TTL:PT30M}
@@ -61,6 +64,9 @@ lumix:
       allow-loopback-http: ${LUMIX_AUTH_PASSWORD_RESET_ALLOW_LOOPBACK_HTTP:false}
       from-address: ${LUMIX_AUTH_PASSWORD_RESET_FROM_ADDRESS:}
       public-base-url: ${LUMIX_AUTH_PUBLIC_BASE_URL:}
+    login-verification:
+      # pending cookie 與 email token 都會在此短時效後失效；不得延長為長期裝置憑證。
+      ttl: ${LUMIX_AUTH_LOGIN_VERIFICATION_TTL:PT15M}
   security:
     # 本機 Compose HTTP 驗證維持 false；公開 deployment 必須由 TLS ingress 覆蓋為 true。
     require-https: ${LUMIX_SECURITY_REQUIRE_HTTPS:false}
