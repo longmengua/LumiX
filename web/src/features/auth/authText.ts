@@ -9,6 +9,7 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   'Display name must be at least 2 characters.': 'auth.register.errorDisplayNameTooShort',
   'Passwords do not match.': 'auth.register.errorPasswordsMismatch',
   'You must accept the terms.': 'auth.register.errorTermsRequired',
+  EMAIL_ALREADY_REGISTERED: 'auth.register.errorEmailAlreadyRegistered',
 };
 
 export function translateAuthError(error: unknown, t: Translate, fallbackKey: string) {

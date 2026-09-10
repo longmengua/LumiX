@@ -122,6 +122,7 @@ export const enUS = {
   'auth.register.success': 'Verification sent to {target}.',
   'auth.register.successFallback': 'Account created successfully.',
   'auth.register.errorGeneric': 'Unable to register.',
+  'auth.register.errorEmailAlreadyRegistered': 'This email is already registered. Sign in or reset your password.',
   'auth.register.errorInvalidIdentifier': 'Use a valid email address or phone number.',
   'auth.register.errorVerificationCodeRequired': 'Verification code is required.',
   'auth.register.errorPasswordTooShort': 'Invalid password length.',

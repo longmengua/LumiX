@@ -87,8 +87,9 @@ public class UserAuthenticationService {
         try {
             repository.createUser(user, passwordEncoder.encode(password));
         } catch (DataIntegrityViolationException exception) {
-            // 唯一索引才是併發註冊的最終裁決，不以先查後寫取代資料庫約束。
-            throw new ApiException(ApiErrorCode.CONFLICT, exception, null);
+            // users.email 的唯一索引才是併發註冊的最終裁決，不以先查後寫取代資料庫約束。
+            // 產品選擇明確告知重複信箱；這會提供帳號枚舉訊號，必須由後續 rate limit 與風控補償。
+            throw new ApiException(ApiErrorCode.EMAIL_ALREADY_REGISTERED, exception, null);
         }
         return new AuthenticationResult(user, createSession(user.userId()));
     }

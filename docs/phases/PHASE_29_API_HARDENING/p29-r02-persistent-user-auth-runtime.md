@@ -23,6 +23,7 @@ HUMAN_REVIEW_REQUIRED: yes
 - 密碼變更與重設後撤銷所有既有 session。
 - PostgreSQL primary transaction 驗證 session／密碼，避免 replica lag 讓撤銷狀態失真。
 - 可選 SMTP delivery adapter；未配置時 forgot-password endpoint fail-closed，絕不以 log 或 response 回傳 reset token。
+- 註冊重複信箱回傳 `EMAIL_ALREADY_REGISTERED`（409），讓使用者可直接改走登入或重設密碼；此為明確的帳號枚舉取捨，需以後續 rate limit 與異常足跡風控補償。
 
 ## 明確不含範圍
 
@@ -62,9 +63,11 @@ PASS  資料庫：credential 為 BCrypt；認證 schema 無 password 明文欄�
 PASS  密碼長度 policy：8 字元註冊 -> 201；33 字元註冊 -> 400
 PASS  auth RWD：320×568、360×800、375×667、390×844、430×932、768×1024、1024×768、1440×900 無 horizontal overflow；mobile 隱藏 decorative art 且首個 input 位於首屏。
 PASS  mobile short viewport：390×420 時頁面保持可捲動（`overflow-y: visible`），登入 CTA 位於可視區內。
+PASS  註冊重複信箱：API 回傳 `EMAIL_ALREADY_REGISTERED`（409），前端顯示登入／重設密碼引導。
 ```
 
 ## 尚待驗證／阻擋條件
 
 - SMTP 啟用需由人類指定受控提供者、`SPRING_MAIL_*` secret injection、STARTTLS、寄件地址與 HTTPS `LUMIX_AUTH_PUBLIC_BASE_URL`；目前預設為 fail-closed。
 - 公網上線前需補齊 TLS ingress、CSRF/CORS policy review、rate/abuse protection、audit/monitoring、password policy/MFA、email verification 與 security review evidence。
+- `EMAIL_ALREADY_REGISTERED` 是人類確認接受的資訊揭露取捨；上線前必須以 rate limit、異常註冊／登入足跡與帳號風控降低可枚舉性。

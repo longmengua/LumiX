@@ -122,6 +122,7 @@ export const zhTW = {
   'auth.register.success': '已向 {target} 發送驗證碼。',
   'auth.register.successFallback': '帳號建立成功。',
   'auth.register.errorGeneric': '無法建立帳號。',
+  'auth.register.errorEmailAlreadyRegistered': '此電子郵件已被註冊，請直接登入或重設密碼。',
   'auth.register.errorInvalidIdentifier': '請輸入有效的電子郵件或手機號碼。',
   'auth.register.errorVerificationCodeRequired': '請輸入驗證碼。',
   'auth.register.errorPasswordTooShort': '密碼長度不正確。',
