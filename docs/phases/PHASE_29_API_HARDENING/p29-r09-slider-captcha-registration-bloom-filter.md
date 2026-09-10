@@ -10,7 +10,7 @@
 - `POST /api/v1/auth/captcha/slider/verify` 原子消耗 challenge，驗證位移與 browser fingerprint 後，核發 5 分鐘、用途限定的高熵通行 token。
 - `POST /api/v1/auth/register`、`/login`、`/password/forgot` 都必須消耗對應用途 token；challenge、token、用途不符、fingerprint 不符或重放一律拒絕。
 - Redis 連線故障時驗證碼流程回 `SERVICE_UNAVAILABLE`，不會降級為未驗證也能執行帳號動作。
-- React 共用 `SliderCaptcha` 元件接入三張 auth 表單。token 僅存在 React state，不能寫入 URL、localStorage 或 sessionStorage。
+- React 共用 `SliderCaptcha` 元件在三張 auth 表單按下送出後才開啟彈窗，再向 server 取得題目；使用者放開滑塊即送位移至 server 判定，成功後自動接續原本表單提交，沒有第二個「完成驗證」按鈕。token 僅在接續提交的記憶體呼叫中使用，不能寫入 URL、localStorage 或 sessionStorage。
 - `RegistrationEmailBloomFilter` 以 Redis bitmap 的六組 SHA-256 衍生 offset 進行「可能存在」預檢；命中後仍必須查 primary database。資料庫 `users.email` unique constraint 永遠是唯一的最終裁決。
 
 ## 安全不變式

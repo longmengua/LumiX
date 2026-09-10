@@ -17,14 +17,13 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState('');
+  const [captchaOpen, setCaptchaOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { register } = useAuthentication();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setLoading(true);
     setError(null);
 
     try {
@@ -40,7 +39,18 @@ export function RegisterPage() {
       if (!acceptedTerms) {
         throw new Error('You must accept the terms.');
       }
-      if (!captchaToken) throw new Error('Please complete the slider verification.');
+      setCaptchaOpen(true);
+    } catch (submitError) {
+      setError(translateAuthError(submitError, t, 'auth.register.errorGeneric'));
+    }
+  }
+
+  /** 表單欄位先在彈窗前檢查；成功滑動才把一次性 token 交給原本的註冊流程。 */
+  async function completeRegistration(captchaToken: string) {
+    setLoading(true);
+    setError(null);
+
+    try {
       await register({ email: identifier, displayName, password, captchaToken });
       navigate('/');
     } catch (submitError) {
@@ -105,13 +115,20 @@ export function RegisterPage() {
           <span>{t('auth.register.acceptTerms')}</span>
         </label>
 
-        <SliderCaptcha purpose="REGISTRATION" disabled={loading} onVerified={setCaptchaToken} />
-
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         <button className="primary-button" type="submit" disabled={loading}>
           {loading ? t('auth.register.submitting') : t('auth.register.submit')}
         </button>
       </form>
+      <SliderCaptcha
+        open={captchaOpen}
+        purpose="REGISTRATION"
+        onCancel={() => setCaptchaOpen(false)}
+        onVerified={(captchaToken) => {
+          setCaptchaOpen(false);
+          void completeRegistration(captchaToken);
+        }}
+      />
     </AuthPageShell>
   );
 }
