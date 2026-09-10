@@ -59,6 +59,7 @@ public class UserAuthenticationService {
     private static final int MAX_BCRYPT_PASSWORD_BYTES = 72;
 
     private final UserAuthenticationRepository repository;
+    private final RegistrationEmailBloomFilter registrationEmailBloomFilter;
     private final BCryptPasswordEncoder passwordEncoder;
     private final PasswordResetDeliveryPort passwordResetDelivery;
     private final LoginVerificationDeliveryPort loginVerificationDelivery;
@@ -68,16 +69,18 @@ public class UserAuthenticationService {
     @Autowired
     public UserAuthenticationService(
         UserAuthenticationRepository repository,
+        RegistrationEmailBloomFilter registrationEmailBloomFilter,
         BCryptPasswordEncoder passwordEncoder,
         PasswordResetDeliveryPort passwordResetDelivery,
         LoginVerificationDeliveryPort loginVerificationDelivery,
         UserAuthenticationProperties properties
     ) {
-        this(repository, passwordEncoder, passwordResetDelivery, loginVerificationDelivery, properties, Clock.systemUTC());
+        this(repository, registrationEmailBloomFilter, passwordEncoder, passwordResetDelivery, loginVerificationDelivery, properties, Clock.systemUTC());
     }
 
     UserAuthenticationService(
         UserAuthenticationRepository repository,
+        RegistrationEmailBloomFilter registrationEmailBloomFilter,
         BCryptPasswordEncoder passwordEncoder,
         PasswordResetDeliveryPort passwordResetDelivery,
         LoginVerificationDeliveryPort loginVerificationDelivery,
@@ -85,6 +88,7 @@ public class UserAuthenticationService {
         Clock clock
     ) {
         this.repository = repository;
+        this.registrationEmailBloomFilter = registrationEmailBloomFilter;
         this.passwordEncoder = passwordEncoder;
         this.passwordResetDelivery = passwordResetDelivery;
         this.loginVerificationDelivery = loginVerificationDelivery;
@@ -100,6 +104,11 @@ public class UserAuthenticationService {
         validatePassword(password);
         AuthenticatedUser user = new AuthenticatedUser(UUID.randomUUID().toString(), normalizedEmail, normalizedDisplayName);
 
+        // Bloom 命中只能表示「可能重複」；false positive 必須以資料庫查詢消除，不能錯拒新使用者。
+        if (registrationEmailBloomFilter.mightContain(normalizedEmail) && repository.userExistsByEmail(normalizedEmail)) {
+            throw new ApiException(ApiErrorCode.EMAIL_ALREADY_REGISTERED);
+        }
+
         try {
             repository.createUser(user, passwordEncoder.encode(password));
         } catch (DataIntegrityViolationException exception) {
@@ -107,6 +116,7 @@ public class UserAuthenticationService {
             // 產品選擇明確告知重複信箱；這會提供帳號枚舉訊號，必須由後續 rate limit 與風控補償。
             throw new ApiException(ApiErrorCode.EMAIL_ALREADY_REGISTERED, exception, null);
         }
+        registrationEmailBloomFilter.add(normalizedEmail);
         DeviceSecret device = createDeviceSecret();
         repository.createTrustedDevice(device.deviceId(), user.userId(), device.secretDigest(), metadata);
         return new AuthenticationResult(user, createSession(user.userId(), metadata, device.deviceId()), device);

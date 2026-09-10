@@ -57,6 +57,14 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     }
 
     @Override
+    public boolean userExistsByEmail(String normalizedEmail) {
+        Boolean exists = jdbcTemplate.queryForObject(
+            "SELECT EXISTS (SELECT 1 FROM users WHERE email = ?)", Boolean.class, normalizedEmail
+        );
+        return Boolean.TRUE.equals(exists);
+    }
+
+    @Override
     public Optional<PasswordCredential> findPasswordCredentialByEmail(String normalizedEmail) {
         return jdbcTemplate.query(
             "SELECT u.user_id, u.email, u.display_name, c.password_hash "

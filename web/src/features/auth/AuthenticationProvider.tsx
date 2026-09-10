@@ -7,9 +7,9 @@ type AuthenticationContextValue = {
   user: AuthenticatedUser | null;
   loading: boolean;
   sessionResolved: boolean;
-  signIn(input: { email: string; password: string }): Promise<AuthenticatedUser | null>;
+  signIn(input: { email: string; password: string; captchaToken: string }): Promise<AuthenticatedUser | null>;
   completeLoginVerification(): Promise<AuthenticatedUser | null>;
-  register(input: { email: string; displayName: string; password: string }): Promise<AuthenticatedUser>;
+  register(input: { email: string; displayName: string; password: string; captchaToken: string }): Promise<AuthenticatedUser>;
   signOut(): Promise<void>;
   changePassword(input: { currentPassword: string; newPassword: string }): Promise<AuthenticatedUser>;
   updateDisplayName(displayName: string): Promise<AuthenticatedUser>;

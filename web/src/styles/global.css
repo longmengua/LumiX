@@ -727,6 +727,83 @@ p,
   font-size: 0.9rem;
 }
 
+/* 滑動答案留在 server-side Redis；這裡只處理固定 280px 畫布在窄螢幕中的安全呈現。 */
+.slider-captcha {
+  display: grid;
+  gap: 10px;
+}
+
+.slider-captcha__header,
+.slider-captcha__controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.slider-captcha__header {
+  justify-content: space-between;
+}
+
+.slider-captcha__refresh {
+  border: 0;
+  padding: 4px 6px;
+  color: #bfdbfe;
+  background: transparent;
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.slider-captcha__refresh:hover,
+.slider-captcha__refresh:focus-visible {
+  color: #eff6ff;
+  text-decoration: underline;
+}
+
+.slider-captcha__canvas {
+  position: relative;
+  overflow: hidden;
+  inline-size: min(100%, 280px) !important;
+  max-inline-size: 280px;
+  border-radius: 10px;
+  background: rgba(15, 23, 42, 0.8);
+}
+
+.slider-captcha__background {
+  display: block;
+  inline-size: 280px;
+  max-inline-size: none;
+  block-size: 144px;
+}
+
+.slider-captcha__piece {
+  position: absolute;
+  pointer-events: none;
+  box-shadow: 0 3px 8px rgba(2, 6, 23, 0.32);
+}
+
+.slider-captcha__controls {
+  align-items: stretch;
+}
+
+.slider-captcha__range {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  accent-color: #60a5fa;
+}
+
+.slider-captcha__verify {
+  flex: 0 0 auto;
+  min-block-size: 2.5rem;
+  padding-inline: 0.75rem;
+  font-size: 0.82rem;
+}
+
+.slider-captcha__message {
+  margin: 0;
+  font-size: 0.88rem;
+}
+
 .password-field {
   position: relative;
   display: block;

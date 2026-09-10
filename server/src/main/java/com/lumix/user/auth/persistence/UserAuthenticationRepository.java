@@ -18,6 +18,8 @@ public interface UserAuthenticationRepository {
 
     void createUser(AuthenticatedUser user, String passwordHash);
 
+    boolean userExistsByEmail(String normalizedEmail);
+
     Optional<PasswordCredential> findPasswordCredentialByEmail(String normalizedEmail);
 
     Optional<AuthenticatedUser> findActiveUserByEmail(String normalizedEmail);

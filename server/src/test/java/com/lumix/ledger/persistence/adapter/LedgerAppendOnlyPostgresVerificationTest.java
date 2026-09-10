@@ -22,7 +22,6 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import javax.sql.DataSource;
 import org.flywaydb.core.Flyway;
-import org.h2.jdbcx.JdbcDataSource;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.postgresql.ds.PGSimpleDataSource;
@@ -30,7 +29,7 @@ import org.postgresql.ds.PGSimpleDataSource;
 /**
  * 驗證 ledger append adapter 可在 PostgreSQL 16 replay 與執行。
  *
- * <p>這個測試只在提供 PostgreSQL 連線資訊時執行，避免把本地 H2 回歸與 PostgreSQL verification 混在一起。</p>
+ * <p>這個測試只在提供 PostgreSQL 連線資訊時執行，避免把可選的外部 verification 與本機回歸混在一起。</p>
  */
 class LedgerAppendOnlyPostgresVerificationTest {
 
@@ -41,7 +40,7 @@ class LedgerAppendOnlyPostgresVerificationTest {
     /**
      * 確認 PostgreSQL 16 replay 後，valid ledger mapping 可以 append 進 ledger tables。
      *
-     * <p>這個 case 必須存在，因為 H2 通過不代表 PostgreSQL 行為完全一致。</p>
+     * <p>這個 case 必須存在，因為 migration 與 SQL 行為必須在正式同類型資料庫驗證。</p>
      */
     @Test
     void postgresAppendVerificationSucceeds() throws Exception {

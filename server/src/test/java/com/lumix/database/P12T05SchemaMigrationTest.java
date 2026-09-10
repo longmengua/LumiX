@@ -1,7 +1,7 @@
 package com.lumix.database;
 
 import org.flywaydb.core.Flyway;
-import org.h2.jdbcx.JdbcDataSource;
+import com.lumix.testing.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -22,7 +22,7 @@ class P12T05SchemaMigrationTest {
     @Test
     void migrationCreatesOrderAndTradeExecutionSchema() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:p12_t05;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        dataSource.setURL("jdbc:postgresql:test:p12_t05");
         dataSource.setUser("sa");
         dataSource.setPassword("");
 
@@ -301,23 +301,28 @@ class P12T05SchemaMigrationTest {
 
     private static void assertTableComment(Connection connection, String tableName, String expectedComment) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT REMARKS FROM INFORMATION_SCHEMA.TABLES WHERE UPPER(TABLE_NAME) = UPPER(?)")) {
+                "SELECT obj_description(c.oid, 'pg_class') AS comment "
+                        + "FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+                        + "WHERE c.relname = lower(?) AND n.nspname = current_schema()")) {
             statement.setString(1, tableName);
             try (ResultSet resultSet = statement.executeQuery()) {
                 assertTrue(resultSet.next(), "Table not found in metadata: " + tableName);
-                assertEquals(expectedComment, resultSet.getString("REMARKS"), "Unexpected table comment for " + tableName);
+                assertEquals(expectedComment, resultSet.getString("comment"), "Unexpected table comment for " + tableName);
             }
         }
     }
 
     private static void assertColumnComment(Connection connection, String tableName, String columnName, String expectedComment) throws SQLException {
         try (PreparedStatement statement = connection.prepareStatement(
-                "SELECT REMARKS FROM INFORMATION_SCHEMA.COLUMNS WHERE UPPER(TABLE_NAME) = UPPER(?) AND UPPER(COLUMN_NAME) = UPPER(?)")) {
+                "SELECT col_description(c.oid, a.attnum) AS comment "
+                        + "FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace "
+                        + "JOIN pg_attribute a ON a.attrelid = c.oid "
+                        + "WHERE c.relname = lower(?) AND a.attname = lower(?) AND n.nspname = current_schema()")) {
             statement.setString(1, tableName);
             statement.setString(2, columnName);
             try (ResultSet resultSet = statement.executeQuery()) {
                 assertTrue(resultSet.next(), "Column not found in metadata: " + tableName + "." + columnName);
-                assertEquals(expectedComment, resultSet.getString("REMARKS"), "Unexpected column comment for " + tableName + "." + columnName);
+                assertEquals(expectedComment, resultSet.getString("comment"), "Unexpected column comment for " + tableName + "." + columnName);
             }
         }
     }

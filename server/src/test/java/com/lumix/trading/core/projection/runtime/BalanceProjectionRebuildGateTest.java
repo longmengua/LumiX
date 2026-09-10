@@ -23,7 +23,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.flywaydb.core.Flyway;
-import org.h2.jdbcx.JdbcDataSource;
+import com.lumix.testing.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -38,7 +38,7 @@ class BalanceProjectionRebuildGateTest {
      */
     @Test
     void rebuildsSpotProjectionRowsFromLedgerEntries() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t05_rebuild;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t05_rebuild");
         migrate(dataSource);
         seedProjectionBoundaryRows(dataSource);
         appendLedgerHistory(dataSource);
@@ -75,7 +75,7 @@ class BalanceProjectionRebuildGateTest {
      */
     @Test
     void rebuildRejectsNegativeSpotProjectionTotals() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t05_negative;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t05_negative");
         migrate(dataSource);
         seedProjectionBoundaryRows(dataSource);
         appendNegativeSpotLedgerHistory(dataSource);
@@ -98,7 +98,7 @@ class BalanceProjectionRebuildGateTest {
      */
     @Test
     void rebuildKeepsNonSpotProjectionRows() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t05_non_spot_preserved;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t05_non_spot_preserved");
         migrate(dataSource);
         seedProjectionBoundaryRows(dataSource);
         insertBalanceProjection(
@@ -141,7 +141,7 @@ class BalanceProjectionRebuildGateTest {
     }
 
     /**
-     * 建立 H2 DataSource。
+     * 建立隔離 PostgreSQL schema DataSource。
      *
      * 這裡只供 gate 測試使用，不代表正式 runtime 已經完成。
      */

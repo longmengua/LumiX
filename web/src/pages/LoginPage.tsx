@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
+import { SliderCaptcha } from '../components/auth/SliderCaptcha';
 import { translateAuthError } from '../features/auth/authText';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
 import { useI18n } from '../i18n';
@@ -13,6 +14,7 @@ export function LoginPage() {
   const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
+  const [captchaToken, setCaptchaToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [verificationPending, setVerificationPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -31,7 +33,8 @@ export function LoginPage() {
     setError(null);
 
     try {
-      const authenticatedUser = await signIn({ email: identifier, password });
+      if (!captchaToken) throw new Error('Please complete the slider verification.');
+      const authenticatedUser = await signIn({ email: identifier, password, captchaToken });
       if (authenticatedUser) {
         navigate(returnTo, { replace: true });
       } else {
@@ -111,6 +114,8 @@ export function LoginPage() {
             {t('auth.login.forgotPassword')}
           </NavLink>
         </div>
+
+        <SliderCaptcha purpose="LOGIN" disabled={loading || verificationPending} onVerified={setCaptchaToken} />
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {verificationPending ? <p className="form-message form-message--success">{t('auth.login.verificationPending')}</p> : null}

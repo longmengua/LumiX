@@ -3,6 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
+import { SliderCaptcha } from '../components/auth/SliderCaptcha';
 import { translateAuthError } from '../features/auth/authText';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
 import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
@@ -16,6 +17,7 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { register } = useAuthentication();
@@ -38,7 +40,8 @@ export function RegisterPage() {
       if (!acceptedTerms) {
         throw new Error('You must accept the terms.');
       }
-      await register({ email: identifier, displayName, password });
+      if (!captchaToken) throw new Error('Please complete the slider verification.');
+      await register({ email: identifier, displayName, password, captchaToken });
       navigate('/');
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'auth.register.errorGeneric'));
@@ -101,6 +104,8 @@ export function RegisterPage() {
           <input checked={acceptedTerms} type="checkbox" onChange={(event) => setAcceptedTerms(event.target.checked)} />
           <span>{t('auth.register.acceptTerms')}</span>
         </label>
+
+        <SliderCaptcha purpose="REGISTRATION" disabled={loading} onVerified={setCaptchaToken} />
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         <button className="primary-button" type="submit" disabled={loading}>

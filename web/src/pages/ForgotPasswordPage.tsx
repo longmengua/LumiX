@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
+import { SliderCaptcha } from '../components/auth/SliderCaptcha';
 import { translateAuthError } from '../features/auth/authText';
 import { requestPasswordReset } from '../features/auth/authApi';
 import { useI18n } from '../i18n';
@@ -10,6 +11,7 @@ export function ForgotPasswordPage() {
   const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [loading, setLoading] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -20,7 +22,8 @@ export function ForgotPasswordPage() {
     setSuccess(null);
 
     try {
-      await requestPasswordReset(identifier);
+      if (!captchaToken) throw new Error('Please complete the slider verification.');
+      await requestPasswordReset({ email: identifier, captchaToken });
       // server 對存在與不存在的 email 都採相同回應，UI 也不得自行推論帳號狀態。
       setSuccess('若該信箱可重設密碼，系統已寄出後續指示。');
     } catch (submitError) {
@@ -52,6 +55,8 @@ export function ForgotPasswordPage() {
             autoComplete="username"
           />
         </label>
+
+        <SliderCaptcha purpose="PASSWORD_RESET" disabled={loading} onVerified={setCaptchaToken} />
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {success ? <p className="form-message form-message--success">{success}</p> : null}

@@ -20,7 +20,7 @@ type ApiError = {
   message?: string;
 };
 
-export async function signIn(input: { email: string; password: string }): Promise<SignInResult> {
+export async function signIn(input: { email: string; password: string; captchaToken: string }): Promise<SignInResult> {
   const response = await fetch('/api/v1/auth/login', requestOptions(input));
   if (response.status === 202) {
     const value: unknown = await response.json();
@@ -36,6 +36,7 @@ export async function register(input: {
   email: string;
   displayName: string;
   password: string;
+  captchaToken: string;
 }): Promise<AuthenticatedUser> {
   return requestUser('/register', input);
 }
@@ -67,9 +68,48 @@ export async function changePassword(input: { currentPassword: string; newPasswo
   return requestUser('/password/change', input);
 }
 
-export async function requestPasswordReset(email: string): Promise<void> {
-  const response = await fetch('/api/v1/auth/password/forgot', requestOptions({ email }));
+export async function requestPasswordReset(input: { email: string; captchaToken: string }): Promise<void> {
+  const response = await fetch('/api/v1/auth/password/forgot', requestOptions(input));
   await ensureSuccess(response);
+}
+
+export type SliderCaptchaPurpose = 'LOGIN' | 'REGISTRATION' | 'PASSWORD_RESET';
+
+export type SliderCaptchaChallenge = {
+  captchaId: string;
+  backgroundImage: string;
+  pieceImage: string;
+  pieceY: number;
+  width: number;
+  height: number;
+  pieceWidth: number;
+  pieceHeight: number;
+};
+
+/**
+ * 取得 server-side slider challenge。答案不在 response 中，前端只負責呈現與回傳使用者的位移。
+ */
+export async function createSliderCaptcha(): Promise<SliderCaptchaChallenge> {
+  const response = await fetch('/api/v1/auth/captcha/slider', { credentials: 'same-origin', cache: 'no-store' });
+  await ensureSuccess(response);
+  const value: unknown = await response.json();
+  if (!isSliderCaptchaChallenge(value)) throw new Error('CAPTCHA_CONTRACT_ERROR');
+  return value;
+}
+
+/** 成功後取得用途限定的一次性通行 token；它不是 session，也不能保存至 browser storage。 */
+export async function verifySliderCaptcha(input: {
+  captchaId: string;
+  offsetX: number;
+  purpose: SliderCaptchaPurpose;
+}): Promise<string> {
+  const response = await fetch('/api/v1/auth/captcha/slider/verify', requestOptions(input));
+  await ensureSuccess(response);
+  const value: unknown = await response.json();
+  if (typeof value !== 'object' || value === null || typeof (value as { captchaToken?: unknown }).captchaToken !== 'string') {
+    throw new Error('CAPTCHA_CONTRACT_ERROR');
+  }
+  return (value as { captchaToken: string }).captchaToken;
 }
 
 export async function resetPassword(input: { token: string; newPassword: string }): Promise<void> {
@@ -142,4 +182,17 @@ function isAuthenticatedUser(value: unknown): value is AuthenticatedUser {
   return typeof user.userId === 'string'
     && typeof user.email === 'string'
     && typeof user.displayName === 'string';
+}
+
+function isSliderCaptchaChallenge(value: unknown): value is SliderCaptchaChallenge {
+  if (typeof value !== 'object' || value === null) return false;
+  const challenge = value as Partial<SliderCaptchaChallenge>;
+  return typeof challenge.captchaId === 'string'
+    && typeof challenge.backgroundImage === 'string'
+    && typeof challenge.pieceImage === 'string'
+    && typeof challenge.pieceY === 'number'
+    && typeof challenge.width === 'number'
+    && typeof challenge.height === 'number'
+    && typeof challenge.pieceWidth === 'number'
+    && typeof challenge.pieceHeight === 'number';
 }

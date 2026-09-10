@@ -2,12 +2,14 @@ package com.lumix;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 
 /**
  * Spring Boot 啟動骨架測試。
  * 只驗證應用程式上下文可以載入，避免 Phase 9 skeleton 缺少主類。
  */
 @SpringBootTest
+@ActiveProfiles("integration-test")
 class LumiXServerApplicationTests {
 
     @Test

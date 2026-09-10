@@ -40,7 +40,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import org.flywaydb.core.Flyway;
-import org.h2.jdbcx.JdbcDataSource;
+import com.lumix.testing.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -55,7 +55,7 @@ class LedgerPostingRuntimeGateTest {
      */
     @Test
     void appendAcceptedCommandWritesLedgerTablesOnly() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t04_append;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t04_append");
         migrate(dataSource);
         seedBaseRowsWithBothAccountAssets(dataSource);
 
@@ -95,7 +95,7 @@ class LedgerPostingRuntimeGateTest {
      */
     @Test
     void rejectedPrerequisitesDoNotAppendAnything() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t04_rejected;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t04_rejected");
         migrate(dataSource);
         seedBaseRowsWithBothAccountAssets(dataSource);
 
@@ -129,7 +129,7 @@ class LedgerPostingRuntimeGateTest {
      */
     @Test
     void rollbackWhenEntryInsertFails() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t04_rollback;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t04_rollback");
         migrate(dataSource);
         seedBaseRowsWithMissingCreditAccountAsset(dataSource);
 
@@ -161,7 +161,7 @@ class LedgerPostingRuntimeGateTest {
      */
     @Test
     void requestIdConflictFailsBeforeAnyAppend() throws Exception {
-        JdbcDataSource dataSource = createDataSource("jdbc:h2:mem:p15_t04_request_id_conflict;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        JdbcDataSource dataSource = createDataSource("jdbc:postgresql:test:p15_t04_request_id_conflict");
         migrate(dataSource);
 
         LedgerPostingRuntimeGate gate = createConflictGate(dataSource::getConnection);
@@ -258,7 +258,7 @@ class LedgerPostingRuntimeGateTest {
     }
 
     /**
-     * 建立 H2 DataSource。
+     * 建立隔離 PostgreSQL schema 的 DataSource。
      *
      * 這裡只供 gate 測試，不代表正式 runtime 已完成。
      */

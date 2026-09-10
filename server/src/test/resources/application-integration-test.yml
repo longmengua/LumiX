@@ -1,6 +1,11 @@
 spring:
   main:
     banner-mode: off
+  datasource:
+    # context smoke test 直接連本機 PostgreSQL；此 profile 關閉 Flyway，不會改寫既有 schema。
+    url: ${LUMIX_TEST_POSTGRES_JDBC_URL:jdbc:postgresql://127.0.0.1:5432/lumix}
+    username: ${LUMIX_TEST_POSTGRES_USERNAME:lumix_app}
+    password: ${LUMIX_TEST_POSTGRES_PASSWORD:replace-with-a-long-unique-password}
   flyway:
     enabled: false
 logging:

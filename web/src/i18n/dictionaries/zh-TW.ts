@@ -100,6 +100,8 @@ export const zhTW = {
   'auth.login.backHome': '返回首頁',
   'auth.login.hint': '使用 LumiX 帳號即可進入 2FA 安全驗證流程。',
   'auth.login.errorGeneric': '無法登入。',
+  'auth.captcha.required': '請先完成滑動驗證。',
+  'auth.captcha.invalid': '滑動驗證已失效，請重新完成驗證。',
   'auth.login.verificationPending': '已寄出新裝置確認信。請在信件中選擇 Yes 或 No；核准後此頁會自動完成登入。',
   'auth.login.verificationRejected': '此新裝置登入已被拒絕或確認已失效。請重新登入。',
   'auth.verification.title': '確認新裝置登入',

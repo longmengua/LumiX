@@ -4,6 +4,8 @@ import com.lumix.user.auth.application.UserAuthenticationService;
 import com.lumix.user.auth.application.UserAuthenticationService.AuthenticationResult;
 import com.lumix.user.auth.application.UserAuthenticationService.LoginResult;
 import com.lumix.user.auth.application.UserAuthenticationService.LoginVerificationCompletion;
+import com.lumix.user.auth.application.SliderCaptchaService;
+import com.lumix.user.auth.application.SliderCaptchaService.CaptchaPurpose;
 import com.lumix.user.auth.config.UserAuthenticationProperties;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.DeviceSecret;
@@ -36,18 +38,22 @@ import org.springframework.web.bind.annotation.RestController;
 public class UserAuthenticationController {
 
     private final UserAuthenticationService authenticationService;
+    private final SliderCaptchaService sliderCaptchaService;
     private final UserAuthenticationProperties properties;
 
     public UserAuthenticationController(
         UserAuthenticationService authenticationService,
+        SliderCaptchaService sliderCaptchaService,
         UserAuthenticationProperties properties
     ) {
         this.authenticationService = authenticationService;
+        this.sliderCaptchaService = sliderCaptchaService;
         this.properties = properties;
     }
 
     @PostMapping("/register")
     public ResponseEntity<UserResponse> register(HttpServletRequest servletRequest, @RequestBody RegisterRequest request) {
+        sliderCaptchaService.consume(request.captchaToken(), CaptchaPurpose.REGISTRATION, LoginRequestMetadataResolver.resolve(servletRequest));
         AuthenticationResult result = authenticationService.register(
             request.email(), request.displayName(), request.password(), LoginRequestMetadataResolver.resolve(servletRequest)
         );
@@ -56,6 +62,7 @@ public class UserAuthenticationController {
 
     @PostMapping("/login")
     public ResponseEntity<?> login(HttpServletRequest servletRequest, @RequestBody LoginRequest request) {
+        sliderCaptchaService.consume(request.captchaToken(), CaptchaPurpose.LOGIN, LoginRequestMetadataResolver.resolve(servletRequest));
         LoginResult result = authenticationService.login(
             request.email(), request.password(), parseOptionalDevice(deviceCookieValue(servletRequest)),
             LoginRequestMetadataResolver.resolve(servletRequest)
@@ -131,7 +138,8 @@ public class UserAuthenticationController {
     }
 
     @PostMapping("/password/forgot")
-    public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+    public ResponseEntity<Void> forgotPassword(HttpServletRequest servletRequest, @RequestBody ForgotPasswordRequest request) {
+        sliderCaptchaService.consume(request.captchaToken(), CaptchaPurpose.PASSWORD_RESET, LoginRequestMetadataResolver.resolve(servletRequest));
         authenticationService.requestPasswordReset(request.email());
         // 不論帳號是否存在都採相同成功回應，避免由此 endpoint 枚舉 email。
         return ResponseEntity.accepted().build();
@@ -258,16 +266,35 @@ public class UserAuthenticationController {
         return UserAuthenticationService.parsePendingLoginVerificationCookieValue(cookieValue);
     }
 
+    /** 建立短時效滑動挑戰；答案只會留在 Redis，不能回傳給瀏覽器。 */
+    @GetMapping("/captcha/slider")
+    public SliderCaptchaService.SliderChallengeResponse createSliderCaptcha(HttpServletRequest servletRequest) {
+        return sliderCaptchaService.create(LoginRequestMetadataResolver.resolve(servletRequest));
+    }
+
+    /** 成功驗證後只核發用途限定的一次性 token，不能直接當成帳號 session 使用。 */
+    @PostMapping("/captcha/slider/verify")
+    public SliderCaptchaService.CaptchaVerificationResponse verifySliderCaptcha(
+        HttpServletRequest servletRequest,
+        @RequestBody SliderCaptchaVerificationRequest request
+    ) {
+        return sliderCaptchaService.verify(
+            request.captchaId(), request.offsetX(), request.purpose(), LoginRequestMetadataResolver.resolve(servletRequest)
+        );
+    }
+
     /** 註冊輸入；password 不得加入 toString、log 或 validation error 的 details。 */
-    public record RegisterRequest(String email, String displayName, String password) { }
+    public record RegisterRequest(String email, String displayName, String password, String captchaToken) { }
     /** 登入輸入；錯誤回應不能區分 email 與 password 何者錯誤。 */
-    public record LoginRequest(String email, String password) { }
+    public record LoginRequest(String email, String password, String captchaToken) { }
     /** email 確認頁只接受一次性 token 與明確 Yes／No，不接受 userId、session 或裝置資料。 */
     public record LoginVerificationDecisionRequest(String token, boolean approved) { }
     /** 變更密碼必須持有有效 session 並重新驗證舊密碼。 */
     public record ChangePasswordRequest(String currentPassword, String newPassword) { }
     /** 忘記密碼一律採非枚舉回應。 */
-    public record ForgotPasswordRequest(String email) { }
+    public record ForgotPasswordRequest(String email, String captchaToken) { }
+    /** 滑動位移採 challenge 原始像素座標，server 會以有限容錯值驗證。 */
+    public record SliderCaptchaVerificationRequest(String captchaId, int offsetX, CaptchaPurpose purpose) { }
     /** 重設 token 只可由 HTTPS 信件連結攜入，使用後立即消耗。 */
     public record ResetPasswordRequest(String token, String newPassword) { }
 

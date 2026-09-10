@@ -100,6 +100,8 @@ export const enUS = {
   'auth.login.backHome': 'Back to home',
   'auth.login.hint': 'Use your LumiX account to enter the 2FA security flow.',
   'auth.login.errorGeneric': 'Unable to sign in.',
+  'auth.captcha.required': 'Please complete the slider verification.',
+  'auth.captcha.invalid': 'The slider verification expired. Please complete it again.',
   'auth.login.verificationPending': 'A new-device confirmation email was sent. Choose Yes or No in the email; this page will finish signing in after approval.',
   'auth.login.verificationRejected': 'This new-device sign-in was rejected or the confirmation expired. Please sign in again.',
   'auth.verification.title': 'Confirm new device sign-in',

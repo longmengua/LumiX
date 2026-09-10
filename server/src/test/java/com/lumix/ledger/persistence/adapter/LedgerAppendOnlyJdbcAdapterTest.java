@@ -25,7 +25,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.flywaydb.core.Flyway;
-import org.h2.jdbcx.JdbcDataSource;
+import com.lumix.testing.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -42,7 +42,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
     @Test
     void appendOnlyAdapterWritesJournalAndEntries() throws Exception {
         JdbcDataSource dataSource = createDataSource(
-                "jdbc:h2:mem:p14_t06_append;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+                "jdbc:postgresql:test:p14_t06_append");
         migrate(dataSource);
         seedBaseRows(dataSource);
 
@@ -92,7 +92,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
     @Test
     void rollbackWhenEntryInsertFails() throws Exception {
         JdbcDataSource dataSource = createDataSource(
-                "jdbc:h2:mem:p14_t06_rollback;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+                "jdbc:postgresql:test:p14_t06_rollback");
         migrate(dataSource);
         seedBaseRows(dataSource);
 
@@ -138,7 +138,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
     @Test
     void appendRejectsEmptyEntriesBeforeAnyInsert() throws Exception {
         JdbcDataSource dataSource = createDataSource(
-                "jdbc:h2:mem:p14_t06_empty;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+                "jdbc:postgresql:test:p14_t06_empty");
         migrate(dataSource);
 
         LedgerJournalPersistenceMapping journal = new LedgerJournalPersistenceMapping(
@@ -169,7 +169,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
     @Test
     void appendRejectsNullMapping() {
         JdbcDataSource dataSource = createDataSource(
-                "jdbc:h2:mem:p14_t06_null;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+                "jdbc:postgresql:test:p14_t06_null");
         LedgerAppendOnlyJdbcAdapter adapter = new LedgerAppendOnlyJdbcAdapter(dataSource::getConnection);
 
         assertThrows(NullPointerException.class, () -> adapter.append(null));
@@ -183,7 +183,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
     @Test
     void rollbackWhenRuntimeExceptionHappensAfterJournalInsert() throws Exception {
         JdbcDataSource dataSource = createDataSource(
-                "jdbc:h2:mem:p14_t06_runtime_rollback;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+                "jdbc:postgresql:test:p14_t06_runtime_rollback");
         migrate(dataSource);
         seedBaseRows(dataSource);
 
@@ -212,7 +212,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
     }
 
     /**
-     * 建立測試用 H2 DataSource。
+     * 建立測試用隔離 PostgreSQL schema DataSource。
      *
      * <p>這裡只為 adapter gate 準備測試環境，不代表正式 runtime 已完成。</p>
      */

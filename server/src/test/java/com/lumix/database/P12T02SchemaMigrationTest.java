@@ -1,7 +1,7 @@
 package com.lumix.database;
 
 import org.flywaydb.core.Flyway;
-import org.h2.jdbcx.JdbcDataSource;
+import com.lumix.testing.JdbcDataSource;
 import org.junit.jupiter.api.Test;
 
 import java.sql.Connection;
@@ -21,7 +21,7 @@ class P12T02SchemaMigrationTest {
     @Test
     void migrationCreatesIdentityUserAccountAssetFoundationSchema() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
-        dataSource.setURL("jdbc:h2:mem:p12_t02;MODE=PostgreSQL;DATABASE_TO_UPPER=false;DB_CLOSE_DELAY=-1");
+        dataSource.setURL("jdbc:postgresql:test:p12_t02");
         dataSource.setUser("sa");
         dataSource.setPassword("");
 

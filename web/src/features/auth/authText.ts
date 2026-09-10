@@ -10,6 +10,9 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   'Passwords do not match.': 'auth.register.errorPasswordsMismatch',
   'You must accept the terms.': 'auth.register.errorTermsRequired',
   EMAIL_ALREADY_REGISTERED: 'auth.register.errorEmailAlreadyRegistered',
+  CAPTCHA_REQUIRED: 'auth.captcha.required',
+  CAPTCHA_INVALID: 'auth.captcha.invalid',
+  'Please complete the slider verification.': 'auth.captcha.required',
 };
 
 export function translateAuthError(error: unknown, t: Translate, fallbackKey: string) {
