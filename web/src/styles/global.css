@@ -742,7 +742,6 @@ p,
 .slider-captcha {
   display: grid;
   inline-size: min(100%, 20rem);
-  gap: 0.75rem;
   padding: 1.25rem;
   border: 1px solid rgba(148, 163, 184, 0.24);
   border-radius: 1rem;
@@ -759,6 +758,7 @@ p,
 
 .slider-captcha__header {
   justify-content: space-between;
+  margin-bottom: 12px;
 }
 
 .slider-captcha__title,
@@ -779,13 +779,27 @@ p,
 }
 
 .slider-captcha__refresh {
+  display: grid;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  place-items: center;
   border: 0;
-  padding: 4px 6px;
+  padding: 0;
   color: #bfdbfe;
   background: transparent;
   font: inherit;
-  font-size: 0.85rem;
   cursor: pointer;
+}
+
+.slider-captcha__refresh svg {
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+  overflow: visible;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
 }
 
 .slider-captcha__refresh:hover,
@@ -824,6 +838,25 @@ p,
   background: rgba(15, 23, 42, 0.8);
 }
 
+.slider-captcha__canvas--loading {
+  display: grid;
+  place-items: stretch;
+}
+
+.slider-captcha__skeleton {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  background: linear-gradient(110deg, rgba(30, 41, 59, 0.9) 28%, rgba(71, 85, 105, 0.7) 45%, rgba(30, 41, 59, 0.9) 62%);
+  background-size: 220% 100%;
+  animation: slider-captcha-pulse 1.15s ease-in-out infinite;
+}
+
+@keyframes slider-captcha-pulse {
+  from { background-position: 100% 0; }
+  to { background-position: -120% 0; }
+}
+
 .slider-captcha__background {
   display: block;
   inline-size: 280px;
@@ -841,6 +874,70 @@ p,
   inline-size: 100%;
   min-block-size: 2.75rem;
   accent-color: #60a5fa;
+  cursor: pointer;
+}
+
+.slider-captcha__range:disabled {
+  cursor: wait;
+}
+
+/* 多題型仍共用同一個彈窗與一次性 token；此處只處理圖片選取，不保存任何答案或 challenge 狀態。 */
+.visual-captcha {
+  display: grid;
+  justify-items: center;
+  gap: 0.625rem;
+}
+
+.visual-captcha p {
+  margin: 0;
+  color: rgba(203, 213, 225, 0.92);
+  font-size: 0.875rem;
+}
+
+.visual-captcha__reference {
+  inline-size: 4rem;
+  block-size: 4rem;
+  border-radius: 0.5rem;
+  background: #17233d;
+}
+
+.visual-captcha__icons,
+.visual-captcha__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.375rem;
+  inline-size: 100%;
+}
+
+.visual-captcha__icons button,
+.visual-captcha__grid button {
+  display: grid;
+  min-block-size: 3.75rem;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  border-radius: 0.5rem;
+  padding: 0;
+  background: #17233d;
+  cursor: pointer;
+}
+
+.visual-captcha__icons img,
+.visual-captcha__grid img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.visual-captcha__grid button.is-selected {
+  border-color: #60a5fa;
+  box-shadow: inset 0 0 0 2px #60a5fa;
+}
+
+.visual-captcha__submit {
+  min-block-size: 2.5rem;
+  padding-inline: 1rem;
 }
 
 .password-field {

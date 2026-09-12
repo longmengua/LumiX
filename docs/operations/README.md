@@ -5,6 +5,7 @@
 ```text
 deployment-runbook.md  deploy and rollback
 compose-runtime-foundation.md  Docker Compose、PostgreSQL/Redis topology 與啟動邊界
+environment-isolation.md  dev／test／pre／ol 環境、資料庫隔離與禁止共用規則
 observability.md       logs, metrics, traces
 incident-response.md   incident process
 go-no-go-checklist.md  launch decision

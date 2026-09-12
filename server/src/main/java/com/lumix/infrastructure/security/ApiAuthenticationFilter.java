@@ -36,7 +36,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String AUTHENTICATED_USER_ATTRIBUTE = "lumix.authenticatedUser";
     private static final Set<String> ANONYMOUS_POST_PATHS = Set.of(
-        "/api/v1/auth/captcha/slider/verify",
+        "/api/v1/auth/captcha/challenge/verify",
         "/api/v1/auth/register",
         "/api/v1/auth/login",
         "/api/v1/auth/login-verification/decision",
@@ -64,7 +64,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         if (!request.getRequestURI().startsWith("/api/v1/")) {
             return true;
         }
-        if ("GET".equals(request.getMethod()) && "/api/v1/auth/captcha/slider".equals(request.getRequestURI())) {
+        if ("GET".equals(request.getMethod()) && "/api/v1/auth/captcha/challenge".equals(request.getRequestURI())) {
             return true;
         }
         return "POST".equals(request.getMethod()) && ANONYMOUS_POST_PATHS.contains(request.getRequestURI());

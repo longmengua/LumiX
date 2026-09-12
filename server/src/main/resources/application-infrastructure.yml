@@ -67,6 +67,11 @@ lumix:
     login-verification:
       # pending cookie 與 email token 都會在此短時效後失效；不得延長為長期裝置憑證。
       ttl: ${LUMIX_AUTH_LOGIN_VERIFICATION_TTL:PT15M}
+    captcha:
+      # 可填 SLIDER、ICON_MATCH、IMAGE_GRID；預設只保留既有滑動驗證，新增題型須由部署者明確啟用。
+      enabled-types: ${LUMIX_AUTH_CAPTCHA_ENABLED_TYPES:SLIDER}
+      # RANDOM 均勻選題；FIRST 僅用於受控開發驗證，公開環境不應以固定題型降低不可預測性。
+      selection-mode: ${LUMIX_AUTH_CAPTCHA_SELECTION_MODE:RANDOM}
   security:
     # 本機 Compose HTTP 驗證維持 false；公開 deployment 必須由 TLS ingress 覆蓋為 true。
     require-https: ${LUMIX_SECURITY_REQUIRE_HTTPS:false}

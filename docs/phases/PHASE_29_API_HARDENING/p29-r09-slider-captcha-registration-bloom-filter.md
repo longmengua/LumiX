@@ -6,11 +6,14 @@
 
 ## 完成內容
 
-- `GET /api/v1/auth/captcha/slider` 建立 280×144 server-side 拼圖；答案只存 Redis，response 只有圖片、challenge id 與拼圖尺寸，沒有 target X。
-- `POST /api/v1/auth/captcha/slider/verify` 原子消耗 challenge，驗證位移與 browser fingerprint 後，核發 5 分鐘、用途限定的高熵通行 token。
+- `GET /api/v1/auth/captcha/challenge` 由 server-side 設定建立 `SLIDER`、`ICON_MATCH` 或 `IMAGE_GRID` 題目；答案只存 Redis，response 只有題圖、challenge id 與該題型必要的呈現資料，沒有答案、target X 或正確 index。
+- `POST /api/v1/auth/captcha/challenge/verify` 原子消耗 challenge，驗證題型特有回答與 browser fingerprint 後，核發 5 分鐘、用途限定的高熵通行 token。
 - `POST /api/v1/auth/register`、`/login`、`/password/forgot` 都必須消耗對應用途 token；challenge、token、用途不符、fingerprint 不符或重放一律拒絕。
 - Redis 連線故障時驗證碼流程回 `SERVICE_UNAVAILABLE`，不會降級為未驗證也能執行帳號動作。
 - React 共用 `SliderCaptcha` 元件在三張 auth 表單按下送出後才開啟彈窗，再向 server 取得題目；使用者放開滑塊即送位移至 server 判定，成功後自動接續原本表單提交，沒有第二個「完成驗證」按鈕。token 僅在接續提交的記憶體呼叫中使用，不能寫入 URL、localStorage 或 sessionStorage。
+- 拼圖圖塊使用貼齊 44×44 範圍的不規則輪廓，不再加上高對比白色矩形描邊；背景另放置兩個同形狀干擾缺口。這降低單純以明顯外框定位的難度，但瀏覽器持有題圖的自製滑動驗證不能宣稱可抵抗專業影像比對或 bot automation。
+- 部署可用 `LUMIX_AUTH_CAPTCHA_ENABLED_TYPES=SLIDER,ICON_MATCH,IMAGE_GRID` 明確啟用題型，並以 `LUMIX_AUTH_CAPTCHA_SELECTION_MODE=RANDOM` 由 server 均勻選題；前端不接受 type 參數，verify 時 type、答案格式與 Redis 保存值不符一律拒絕。`FIRST` 僅供受控開發驗證，公開環境不應使用固定題型。
+- `ICON_MATCH` 以參考圖示與顏色／旋轉後的候選圖示要求點選同形狀；`IMAGE_GRID` 顯示「請選出所有車子」與九宮格圖塊，必須選取所有且僅選取車子。兩者答案都只保存 index 集合，browser response 不包含正解。
 - `RegistrationEmailBloomFilter` 以 Redis bitmap 的六組 SHA-256 衍生 offset 進行「可能存在」預檢；命中後仍必須查 primary database。資料庫 `users.email` unique constraint 永遠是唯一的最終裁決。
 
 ## 安全不變式
@@ -56,6 +59,7 @@ KNOWN  server 全量測試：400 項中 7 項既有 architecture guardrail 因�
 ## 明確未完成
 
 - IP／帳號 rate limit、異常足跡、bot detection telemetry、IP reputation、WAF、SIEM 與人工風控。
+- 受獨立安全審核的 anti-bot provider 或風險型驗證；在具公開流量與高風險情境前，不能只依賴此圖片驗證作為自動化防護。
 - 視障使用者的非視覺等價驗證方案；上線前必須另行設計且避免降低防護強度。
 - CSRF、TLS ingress、HSTS、secret manager、production security review 與 production launch。
 

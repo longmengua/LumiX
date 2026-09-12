@@ -77,6 +77,7 @@ export type SliderCaptchaPurpose = 'LOGIN' | 'REGISTRATION' | 'PASSWORD_RESET';
 
 export type SliderCaptchaChallenge = {
   captchaId: string;
+  type: 'SLIDER';
   backgroundImage: string;
   pieceImage: string;
   pieceY: number;
@@ -86,24 +87,43 @@ export type SliderCaptchaChallenge = {
   pieceHeight: number;
 };
 
+export type IconMatchCaptchaChallenge = {
+  captchaId: string;
+  type: 'ICON_MATCH';
+  referenceImage: string;
+  candidateImages: string[];
+  prompt: string;
+};
+
+export type ImageGridCaptchaChallenge = {
+  captchaId: string;
+  type: 'IMAGE_GRID';
+  gridImages: string[];
+  prompt: string;
+};
+
+export type CaptchaChallenge = SliderCaptchaChallenge | IconMatchCaptchaChallenge | ImageGridCaptchaChallenge;
+
 /**
  * 取得 server-side slider challenge。答案不在 response 中，前端只負責呈現與回傳使用者的位移。
  */
-export async function createSliderCaptcha(): Promise<SliderCaptchaChallenge> {
-  const response = await fetch('/api/v1/auth/captcha/slider', { credentials: 'same-origin', cache: 'no-store' });
+export async function createCaptchaChallenge(): Promise<CaptchaChallenge> {
+  const response = await fetch('/api/v1/auth/captcha/challenge', { credentials: 'same-origin', cache: 'no-store' });
   await ensureSuccess(response);
   const value: unknown = await response.json();
-  if (!isSliderCaptchaChallenge(value)) throw new Error('CAPTCHA_CONTRACT_ERROR');
+  if (!isCaptchaChallenge(value)) throw new Error('CAPTCHA_CONTRACT_ERROR');
   return value;
 }
 
 /** 成功後取得用途限定的一次性通行 token；它不是 session，也不能保存至 browser storage。 */
 export async function verifySliderCaptcha(input: {
   captchaId: string;
-  offsetX: number;
+  type: CaptchaChallenge['type'];
   purpose: SliderCaptchaPurpose;
+  offsetX?: number;
+  selectedIndexes?: number[];
 }): Promise<string> {
-  const response = await fetch('/api/v1/auth/captcha/slider/verify', requestOptions(input));
+  const response = await fetch('/api/v1/auth/captcha/challenge/verify', requestOptions(input));
   await ensureSuccess(response);
   const value: unknown = await response.json();
   if (typeof value !== 'object' || value === null || typeof (value as { captchaToken?: unknown }).captchaToken !== 'string') {
@@ -184,15 +204,23 @@ function isAuthenticatedUser(value: unknown): value is AuthenticatedUser {
     && typeof user.displayName === 'string';
 }
 
-function isSliderCaptchaChallenge(value: unknown): value is SliderCaptchaChallenge {
+function isCaptchaChallenge(value: unknown): value is CaptchaChallenge {
   if (typeof value !== 'object' || value === null) return false;
-  const challenge = value as Partial<SliderCaptchaChallenge>;
-  return typeof challenge.captchaId === 'string'
-    && typeof challenge.backgroundImage === 'string'
-    && typeof challenge.pieceImage === 'string'
-    && typeof challenge.pieceY === 'number'
-    && typeof challenge.width === 'number'
-    && typeof challenge.height === 'number'
-    && typeof challenge.pieceWidth === 'number'
-    && typeof challenge.pieceHeight === 'number';
+  const challenge = value as Partial<CaptchaChallenge>;
+  if (typeof challenge.captchaId !== 'string' || typeof challenge.type !== 'string') return false;
+  if (challenge.type === 'SLIDER') {
+    const slider = challenge as Partial<SliderCaptchaChallenge>;
+    return typeof slider.backgroundImage === 'string' && typeof slider.pieceImage === 'string'
+      && typeof slider.pieceY === 'number' && typeof slider.width === 'number' && typeof slider.height === 'number'
+      && typeof slider.pieceWidth === 'number' && typeof slider.pieceHeight === 'number';
+  }
+  if (challenge.type === 'ICON_MATCH') {
+    const icon = challenge as Partial<IconMatchCaptchaChallenge>;
+    return typeof icon.referenceImage === 'string' && Array.isArray(icon.candidateImages) && typeof icon.prompt === 'string';
+  }
+  if (challenge.type === 'IMAGE_GRID') {
+    const grid = challenge as Partial<ImageGridCaptchaChallenge>;
+    return Array.isArray(grid.gridImages) && typeof grid.prompt === 'string';
+  }
+  return false;
 }

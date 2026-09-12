@@ -1,6 +1,7 @@
 package com.lumix.user.auth.config;
 
 import java.time.Duration;
+import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -21,6 +22,7 @@ public class UserAuthenticationProperties {
     private int bcryptStrength = 12;
     private PasswordReset passwordReset = new PasswordReset();
     private LoginVerification loginVerification = new LoginVerification();
+    private Captcha captcha = new Captcha();
 
     public boolean isCookieSecure() { return cookieSecure; }
     public void setCookieSecure(boolean cookieSecure) { this.cookieSecure = cookieSecure; }
@@ -40,6 +42,8 @@ public class UserAuthenticationProperties {
     public void setPasswordReset(PasswordReset passwordReset) { this.passwordReset = passwordReset; }
     public LoginVerification getLoginVerification() { return loginVerification; }
     public void setLoginVerification(LoginVerification loginVerification) { this.loginVerification = loginVerification; }
+    public Captcha getCaptcha() { return captcha; }
+    public void setCaptcha(Captcha captcha) { this.captcha = captcha; }
 
     /** 密碼重設寄送邊界的設定，SMTP 未啟用時必須 fail closed。 */
     public static class PasswordReset {
@@ -68,5 +72,21 @@ public class UserAuthenticationProperties {
 
         public Duration getTtl() { return ttl; }
         public void setTtl(Duration ttl) { this.ttl = ttl; }
+    }
+
+    /**
+     * 圖形驗證題型選擇設定。
+     *
+     * <p>題型只能由 server 設定選出，browser 不可自行帶入偏好的類型；空白或未知設定會在 application
+     * 層 fail-closed，而不是靜默退化成最容易的題目。</p>
+     */
+    public static class Captcha {
+        private List<String> enabledTypes = List.of("SLIDER");
+        private String selectionMode = "RANDOM";
+
+        public List<String> getEnabledTypes() { return enabledTypes; }
+        public void setEnabledTypes(List<String> enabledTypes) { this.enabledTypes = enabledTypes; }
+        public String getSelectionMode() { return selectionMode; }
+        public void setSelectionMode(String selectionMode) { this.selectionMode = selectionMode; }
     }
 }

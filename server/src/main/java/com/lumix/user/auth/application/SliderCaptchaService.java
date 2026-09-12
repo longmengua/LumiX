@@ -4,12 +4,11 @@ import com.lumix.api.error.ApiErrorCode;
 import com.lumix.api.error.ApiException;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
 import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
-import java.awt.geom.RoundRectangle2D;
+import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -42,6 +41,7 @@ public class SliderCaptchaService {
     private static final int IMAGE_HEIGHT = 144;
     private static final int PIECE_WIDTH = 44;
     private static final int PIECE_HEIGHT = 44;
+    private static final int DECOY_GAP_COUNT = 2;
     private static final int ACCEPTED_OFFSET_DEVIATION = 6;
 
     private final RedisTemplate<String, String> redisTemplate;
@@ -93,6 +93,11 @@ public class SliderCaptchaService {
             throw new ApiException(ApiErrorCode.CAPTCHA_INVALID);
         }
 
+        return issuePassToken(purpose, metadata);
+    }
+
+    /** 其他 server-side 題型驗證答案後，只能經由同一條用途限定 token 邊界核發通行證。 */
+    public CaptchaVerificationResponse issuePassToken(CaptchaPurpose purpose, LoginRequestMetadata metadata) {
         String captchaToken = randomOpaqueSecret();
         put(PASS_KEY_PREFIX + captchaToken, purpose.name() + "|" + metadata.userAgentDigest(), PASS_TTL);
         return new CaptchaVerificationResponse(captchaToken);
@@ -136,24 +141,20 @@ public class SliderCaptchaService {
         configureGraphics(backgroundGraphics);
         drawBackground(backgroundGraphics);
 
-        RoundRectangle2D pieceShape = new RoundRectangle2D.Double(0, 0, PIECE_WIDTH, PIECE_HEIGHT, 10, 10);
+        Path2D pieceShape = puzzlePieceShape(0, 0);
         BufferedImage piece = new BufferedImage(PIECE_WIDTH, PIECE_HEIGHT, BufferedImage.TYPE_INT_ARGB);
         Graphics2D pieceGraphics = piece.createGraphics();
         configureGraphics(pieceGraphics);
         pieceGraphics.setClip(pieceShape);
         pieceGraphics.drawImage(background, -targetX, -targetY, null);
-        pieceGraphics.setClip(null);
-        pieceGraphics.setColor(new Color(255, 255, 255, 220));
-        pieceGraphics.setStroke(new BasicStroke(1.2f));
-        pieceGraphics.draw(pieceShape);
         pieceGraphics.dispose();
 
-        RoundRectangle2D targetShape = new RoundRectangle2D.Double(targetX, targetY, PIECE_WIDTH, PIECE_HEIGHT, 10, 10);
-        backgroundGraphics.setColor(new Color(2, 6, 23, 120));
-        backgroundGraphics.fill(targetShape);
-        backgroundGraphics.setColor(new Color(255, 255, 255, 220));
-        backgroundGraphics.setStroke(new BasicStroke(1.2f));
-        backgroundGraphics.draw(targetShape);
+        // 白色描邊會直接暴露矩形邊界；改以貼齊圖塊的不規則輪廓，並加入同形狀干擾缺口。
+        drawMaskedGap(backgroundGraphics, puzzlePieceShape(targetX, targetY));
+        for (int index = 0; index < DECOY_GAP_COUNT; index++) {
+            int[] decoyPosition = nextDecoyPosition(targetX, targetY);
+            drawMaskedGap(backgroundGraphics, puzzlePieceShape(decoyPosition[0], decoyPosition[1]));
+        }
         backgroundGraphics.dispose();
 
         return new SliderImages(toDataUrl(background), toDataUrl(piece));
@@ -176,6 +177,54 @@ public class SliderCaptchaService {
             graphics.fillOval(randomInt(-10, IMAGE_WIDTH - 5), randomInt(-10, IMAGE_HEIGHT - 5), size, size);
         }
         graphics.setComposite(AlphaComposite.SrcOver);
+    }
+
+    /**
+     * 建立會向內凹折的拼圖輪廓，讓可移動圖塊沒有可被矩形白框標示的大片透明邊界。
+     *
+     * <p>輪廓的控制點固定在回傳的 piece 尺寸內；因此前端仍能以同一個 X offset 對齊，無須把答案或額外座標交給 browser。</p>
+     */
+    private static Path2D puzzlePieceShape(int x, int y) {
+        double left = x + 1;
+        double top = y + 1;
+        double right = x + PIECE_WIDTH - 1;
+        double bottom = y + PIECE_HEIGHT - 1;
+        Path2D.Double shape = new Path2D.Double();
+        shape.moveTo(left, top);
+        shape.lineTo(x + 14, top);
+        shape.curveTo(x + 14, y + 6, x + 16, y + 9, x + 20, y + 9);
+        shape.curveTo(x + 24, y + 9, x + 26, y + 6, x + 26, top);
+        shape.lineTo(right, top);
+        shape.lineTo(right, y + 14);
+        shape.curveTo(x + 38, y + 14, x + 35, y + 16, x + 35, y + 20);
+        shape.curveTo(x + 35, y + 24, x + 38, y + 26, right, y + 26);
+        shape.lineTo(right, bottom);
+        shape.lineTo(x + 28, bottom);
+        shape.curveTo(x + 28, y + 38, x + 26, y + 35, x + 22, y + 35);
+        shape.curveTo(x + 18, y + 35, x + 16, y + 38, x + 16, bottom);
+        shape.lineTo(left, bottom);
+        shape.lineTo(left, y + 28);
+        shape.curveTo(x + 7, y + 28, x + 10, y + 26, x + 10, y + 22);
+        shape.curveTo(x + 10, y + 18, x + 7, y + 16, left, y + 16);
+        shape.closePath();
+        return shape;
+    }
+
+    private static void drawMaskedGap(Graphics2D graphics, Path2D shape) {
+        graphics.setColor(new Color(2, 6, 23, 150));
+        graphics.fill(shape);
+    }
+
+    private static int[] nextDecoyPosition(int targetX, int targetY) {
+        for (int attempt = 0; attempt < 12; attempt++) {
+            int candidateX = randomInt(PIECE_WIDTH + 12, IMAGE_WIDTH - PIECE_WIDTH - 12);
+            int candidateY = randomInt(10, IMAGE_HEIGHT - PIECE_HEIGHT - 10);
+            if (Math.abs(candidateX - targetX) >= PIECE_WIDTH || Math.abs(candidateY - targetY) >= PIECE_HEIGHT) {
+                return new int[] { candidateX, candidateY };
+            }
+        }
+        // 極少數連續碰撞時仍回傳有效座標；這只影響干擾效果，絕不改變 Redis 保存的正確答案。
+        return new int[] { PIECE_WIDTH + 12, 10 };
     }
 
     private static String toDataUrl(BufferedImage image) {
