@@ -18,13 +18,12 @@ export type AccountProfileRecord = {
   createdAt: string;
 };
 
-/** 個人中心安全設定與目前仍有效的綁定裝置；不含 device cookie、token 或 User-Agent digest。 */
+/** 個人中心目前仍有效的受限綁定裝置；不含 device cookie、token 或 User-Agent digest。 */
 export type LoginSecurityRecord = {
-  settings: {
-    newDeviceLoginEmailNotificationEnabled: boolean;
-  };
+  fundTransferRestrictedUntil: string | null;
   devices: Array<{
     deviceId: string;
+    platform: 'DESKTOP' | 'TABLET' | 'MOBILE';
     deviceLabel: string;
     lastIpAddress: string;
     createdAt: string;
@@ -102,23 +101,6 @@ export async function fetchLoginSecurity(): Promise<LoginSecurityRecord> {
   return value;
 }
 
-/** 開關只改變未知裝置是否需要 email 核准；既有裝置與 session 不會被此操作刪除。 */
-export async function updateNewDeviceEmailNotification(enabled: boolean): Promise<LoginSecurityRecord['settings']> {
-  const response = await fetch('/api/v1/account/security/new-device-email-notification', {
-    method: 'PATCH',
-    credentials: 'same-origin',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ enabled }),
-  });
-  if (!response.ok) throw new Error('LOGIN_SECURITY_UPDATE_FAILED');
-  const value: unknown = await response.json();
-  if (typeof value !== 'object' || value === null
-    || typeof (value as { newDeviceLoginEmailNotificationEnabled?: unknown }).newDeviceLoginEmailNotificationEnabled !== 'boolean') {
-    throw new Error('LOGIN_SECURITY_CONTRACT_ERROR');
-  }
-  return value as LoginSecurityRecord['settings'];
-}
-
 /** 移除綁定裝置會讓後端撤銷該裝置所有 active session，而非只從前端清單刪除。 */
 export async function removeBoundLoginDevice(deviceId: string): Promise<void> {
   const response = await fetch(`/api/v1/account/security/devices/${encodeURIComponent(deviceId)}`, {
@@ -160,14 +142,13 @@ function isAccountProfileRecord(value: unknown): value is AccountProfileRecord {
 function isLoginSecurityRecord(value: unknown): value is LoginSecurityRecord {
   if (typeof value !== 'object' || value === null) return false;
   const security = value as Partial<LoginSecurityRecord>;
-  return typeof security.settings === 'object'
-    && security.settings !== null
-    && typeof security.settings.newDeviceLoginEmailNotificationEnabled === 'boolean'
+  return (security.fundTransferRestrictedUntil === null || typeof security.fundTransferRestrictedUntil === 'string')
     && Array.isArray(security.devices)
     && security.devices.every((device) => (
       typeof device === 'object'
       && device !== null
       && typeof (device as LoginSecurityRecord['devices'][number]).deviceId === 'string'
+      && ['DESKTOP', 'TABLET', 'MOBILE'].includes((device as LoginSecurityRecord['devices'][number]).platform)
       && typeof (device as LoginSecurityRecord['devices'][number]).deviceLabel === 'string'
       && typeof (device as LoginSecurityRecord['devices'][number]).lastIpAddress === 'string'
       && typeof (device as LoginSecurityRecord['devices'][number]).createdAt === 'string'

@@ -2,9 +2,9 @@ package com.lumix.user.auth.persistence;
 
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.BoundLoginDevice;
+import com.lumix.user.auth.domain.BoundDevicePlatform;
 import com.lumix.user.auth.domain.LoginHistoryEntry;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
-import com.lumix.user.auth.domain.LoginSecuritySettings;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
 import com.lumix.user.auth.domain.PendingRegistration;
 import com.lumix.user.auth.domain.PasswordCredential;
@@ -41,11 +41,18 @@ public interface UserAuthenticationRepository {
 
     Optional<UserProfile> findActiveUserProfile(String userId);
 
-    Optional<LoginSecuritySettings> findActiveLoginSecuritySettings(String userId);
-
     List<BoundLoginDevice> findActiveBoundLoginDevices(String userId);
 
-    boolean hasActiveBoundLoginDevices(String userId);
+    /** 先鎖住使用者列，讓同一帳戶的裝置槽位檢查與置換可以序列化。 */
+    boolean lockActiveUserForBoundDeviceChange(String userId);
+
+    boolean hasActiveBoundLoginDeviceForPlatform(String userId, BoundDevicePlatform platform);
+
+    /** 只可延長、不可縮短裝置變更後的資金外流限制，避免併發換機提早解除保護。 */
+    boolean extendFundTransferRestriction(String userId, Instant restrictedUntil);
+
+    /** 僅供帳戶本人讀取倒數；真正提款與帳戶間轉帳入口仍須各自重新做 server-side gate。 */
+    Optional<Instant> findFundTransferRestrictedUntil(String userId);
 
     Optional<AuthenticatedUser> findActiveSession(UUID sessionId, String secretDigest);
 
@@ -64,6 +71,9 @@ public interface UserAuthenticationRepository {
     void createTrustedDevice(UUID deviceId, String userId, String secretDigest, LoginRequestMetadata metadata);
 
     void touchTrustedDevice(UUID deviceId, LoginRequestMetadata metadata);
+
+    /** 置換同一平台前必須撤銷舊 device 及其所有 active session，避免同一槽位短暫存在兩台裝置。 */
+    void revokeActiveBoundDevicesForPlatform(String userId, BoundDevicePlatform platform);
 
     boolean revokeBoundLoginDevice(String userId, UUID deviceId);
 
@@ -104,8 +114,6 @@ public interface UserAuthenticationRepository {
     void updatePasswordHash(String userId, String passwordHash);
 
     boolean updateDisplayName(String userId, String displayName);
-
-    boolean updateNewDeviceLoginEmailNotificationEnabled(String userId, boolean enabled);
 
     void createPasswordReset(UUID requestId, String userId, String secretDigest, Instant expiresAt);
 

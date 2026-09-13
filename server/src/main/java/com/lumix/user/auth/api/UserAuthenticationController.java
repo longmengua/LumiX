@@ -91,6 +91,8 @@ public class UserAuthenticationController {
         if (result.requiresVerification()) {
             return ResponseEntity.status(HttpStatus.ACCEPTED)
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                // pending secret 只回到原始登入瀏覽器；email 確認頁永遠拿不到它。
+                .header(HttpHeaders.SET_COOKIE, pendingVerificationCookie(result.pendingVerification()).toString())
                 .body(new LoginVerificationPendingResponse(true));
         }
         return authenticatedResponse(HttpStatus.OK, result.authentication());
@@ -129,23 +131,17 @@ public class UserAuthenticationController {
     /**
      * email 確認頁的 Yes／No 決定。
      *
-     * <p>這個 endpoint 不設 session 要求；Yes 會原子消耗 email token，並在確認頁所在瀏覽器建立
-     * HttpOnly session 與受信任裝置 cookie。GET email link 永遠不會改變登入狀態。</p>
+     * <p>這個 endpoint 不設 session 要求；Yes 只記錄原始候選裝置已獲帳戶本人核准，真正的 session 與
+     * device cookie 只能由原始瀏覽器攜 pending cookie 完成。GET email link 永遠不會改變登入狀態。</p>
      */
     @PostMapping("/login-verification/decision")
     public ResponseEntity<?> decideLoginVerification(
-        HttpServletRequest servletRequest,
         @RequestBody LoginVerificationDecisionRequest request
     ) {
-        LoginVerificationCompletion completion = authenticationService.completeLoginVerificationByEmail(
-            request.token(), request.approved(), LoginRequestMetadataResolver.resolve(servletRequest)
-        );
-        if (completion.state() == LoginVerificationState.REJECTED) {
-            return ResponseEntity.ok()
-                .header(HttpHeaders.CACHE_CONTROL, "no-store")
-                .body(new LoginVerificationDecisionResponse(LoginVerificationState.REJECTED.name()));
-        }
-        return authenticatedResponse(HttpStatus.OK, completion.authentication());
+        LoginVerificationState state = authenticationService.decideLoginVerification(request.token(), request.approved());
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CACHE_CONTROL, "no-store")
+            .body(new LoginVerificationDecisionResponse(state.name()));
     }
 
     /** 原始登入瀏覽器以 HttpOnly pending cookie 輪詢並消耗已核准的新裝置登入。 */

@@ -15,6 +15,8 @@ public enum ApiErrorCode {
     NOT_FOUND("NOT_FOUND", "查無資料", 404, false),
     CONFLICT("CONFLICT", "資源衝突", 409, false),
     EMAIL_ALREADY_REGISTERED("EMAIL_ALREADY_REGISTERED", "此電子郵件已被註冊", 409, true),
+    CURRENT_PASSWORD_INCORRECT("CURRENT_PASSWORD_INCORRECT", "目前密碼錯誤", 400, false),
+    NEW_PASSWORD_SAME_AS_CURRENT("NEW_PASSWORD_SAME_AS_CURRENT", "新密碼不得與目前密碼相同", 400, false),
     CAPTCHA_REQUIRED("CAPTCHA_REQUIRED", "請先完成滑動驗證", 400, false),
     CAPTCHA_INVALID("CAPTCHA_INVALID", "滑動驗證已失效，請重新完成驗證", 400, false),
     SERVICE_UNAVAILABLE("SERVICE_UNAVAILABLE", "服務暫時無法使用", 503, false),

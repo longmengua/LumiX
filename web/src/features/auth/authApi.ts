@@ -21,10 +21,8 @@ export type SignInResult =
   | { kind: 'authenticated'; user: AuthenticatedUser }
   | { kind: 'verification-required' };
 
-/** email Yes 成功後，session 建立在確認頁所在的瀏覽器，而不是原始登入分頁。 */
-export type LoginVerificationDecisionResult =
-  | { state: 'APPROVED'; user: AuthenticatedUser }
-  | { state: 'REJECTED' };
+/** email Yes 只核准原始登入請求；session 只能由原始瀏覽器的 pending cookie 完成。 */
+export type LoginVerificationDecisionResult = { state: 'APPROVED' | 'REJECTED' };
 
 type ApiError = {
   code?: string;
@@ -183,17 +181,16 @@ export async function completeLoginVerification(): Promise<AuthenticatedUser | n
   return readUser(response);
 }
 
-/** email 確認頁以明確 POST 送出 Yes／No；Yes 成功後由 response 的 Set-Cookie 建立此瀏覽器 session。 */
+/** email 確認頁以明確 POST 送出 Yes／No；它不接收 session 或 device cookie。 */
 export async function decideLoginVerification(token: string, approved: boolean): Promise<LoginVerificationDecisionResult> {
   const response = await fetch(
     '/api/v1/auth/login-verification/decision',
     requestOptions({ token, approved }),
   );
-  if (approved) return { state: 'APPROVED', user: await readUser(response) };
   await ensureSuccess(response);
   const value: unknown = await response.json();
   const state = typeof value === 'object' && value !== null ? (value as { state?: unknown }).state : null;
-  if (state !== 'REJECTED') throw new Error('AUTH_CONTRACT_ERROR');
+  if (state !== 'APPROVED' && state !== 'REJECTED') throw new Error('AUTH_CONTRACT_ERROR');
   return { state };
 }
 

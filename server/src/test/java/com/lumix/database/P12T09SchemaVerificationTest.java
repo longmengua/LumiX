@@ -40,6 +40,7 @@ class P12T09SchemaVerificationTest {
                     "display_name",
                     "status",
                     "new_device_login_email_notification_enabled",
+                    "fund_transfer_restricted_until",
                     "created_at",
                     "updated_at");
             assertTableColumns(connection, "accounts",

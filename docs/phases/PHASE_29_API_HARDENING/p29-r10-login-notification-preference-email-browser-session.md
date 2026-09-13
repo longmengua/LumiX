@@ -1,5 +1,7 @@
 # P29-R10：新裝置通知偏好與 email 確認頁直接登入
 
+> 歷史紀錄：此設計已由 P29-R12 取代。現行規則是每帳戶桌上型電腦、平板、手機各一個槽位；同類別換機一律由 email 核准原始登入瀏覽器，確認信頁不建立 session。請以 `p29-r12-bound-device-platform-slots.md` 為準。
+
 ## 任務目的
 
 讓帳戶本人可在個人中心決定未知裝置登入是否需要 email Yes／No 通知，同時在核准後直接登入開啟確認頁的瀏覽器，不要求使用者返回原始登入分頁。這是 authentication／authorization runtime 變更，不是 MFA、風控、SIEM 或 production launch 宣告。
@@ -14,6 +16,7 @@
 - 開關為 `TRUE` 時，email Yes 確認頁以 POST 原子消耗短效 approval token，並在確認頁所在瀏覽器核發 HttpOnly session/device cookie；No 永遠不建立 session。
 - 每次成功 Yes 都建立新的受信任裝置與成功登入 session，因此「目前綁定裝置」與登入紀錄會保留該次核准 evidence。
 - 個人中心安全頁已接上真實通知開關與裝置清單，不以 mock 資料替代。
+- 個人中心總覽以同一個本人 security endpoint 摘要最近兩台綁定裝置、最後使用時間與總台數；完整撤銷操作只保留在安全頁，避免總覽重複敏感操作。
 
 ## 安全不變式
 

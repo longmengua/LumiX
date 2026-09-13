@@ -7,7 +7,7 @@ import { useAuthentication } from '../features/auth/AuthenticationProvider';
 import { useI18n } from '../i18n';
 
 /**
- * 信件連結只載入這個確認畫面；真正的 Yes／No 由使用者明確送出 POST。
+ * 信件連結只載入這個確認畫面；真正的 Yes／No 由使用者明確送出 POST，原始登入瀏覽器再自行完成登入。
  *
  * token 永遠只送到同源 API，畫面不保存它、更不將它寫入 analytics 或 browser storage。
  */

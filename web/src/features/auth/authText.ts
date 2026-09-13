@@ -10,6 +10,8 @@ const ERROR_MESSAGE_KEYS: Record<string, string> = {
   'Passwords do not match.': 'auth.register.errorPasswordsMismatch',
   'You must accept the terms.': 'auth.register.errorTermsRequired',
   EMAIL_ALREADY_REGISTERED: 'auth.register.errorEmailAlreadyRegistered',
+  CURRENT_PASSWORD_INCORRECT: 'auth.changePassword.errorCurrentPasswordIncorrect',
+  NEW_PASSWORD_SAME_AS_CURRENT: 'auth.changePassword.errorNewPasswordSameAsCurrent',
   CAPTCHA_REQUIRED: 'auth.captcha.required',
   CAPTCHA_INVALID: 'auth.captcha.invalid',
   'Please complete the slider verification.': 'auth.captcha.required',

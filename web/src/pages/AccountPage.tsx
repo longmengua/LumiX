@@ -10,7 +10,6 @@ import {
   fetchLoginHistoryPage,
   fetchLoginSecurity,
   removeBoundLoginDevice,
-  updateNewDeviceEmailNotification,
   type AccountProfileRecord,
   type LoginHistoryRecord,
   type LoginSecurityRecord,
@@ -105,6 +104,8 @@ function AccountOverviewPage({
 }) {
   const { t } = useI18n();
   const [displayName, setDisplayName] = useState(profile.displayName);
+  const [boundDevices, setBoundDevices] = useState<LoginSecurityRecord['devices'] | null>(null);
+  const [fundTransferRestrictedUntil, setFundTransferRestrictedUntil] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -112,6 +113,26 @@ function AccountOverviewPage({
   useEffect(() => {
     setDisplayName(profile.displayName);
   }, [profile.displayName]);
+
+  useEffect(() => {
+    let alive = true;
+
+    // 總覽僅摘要本人既有的去敏裝置資料；讀取失敗時保留可前往安全頁的入口，不能猜測為「沒有裝置」。
+    void fetchLoginSecurity()
+      .then((security) => {
+        if (alive) {
+          setBoundDevices(security.devices);
+          setFundTransferRestrictedUntil(security.fundTransferRestrictedUntil);
+        }
+      })
+      .catch(() => {
+        if (alive) setBoundDevices([]);
+      });
+
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -153,10 +174,36 @@ function AccountOverviewPage({
           />
           {error ? <p className="form-message form-message--error">{error}</p> : null}
           {success ? <p className="form-message form-message--success">{success}</p> : null}
-          <button className="primary-button" type="submit" disabled={saving}>
+          <button className="primary-button account-profile__save" type="submit" disabled={saving}>
             {saving ? t('account.profileSaving') : t('account.profileSave')}
           </button>
         </form>
+      </Card>
+      <Card title={t('account.overviewBoundDevicesTitle')}>
+        <p className="account-device-policy-note">{t('account.boundDevicesPolicy')}</p>
+        <FundTransferRestrictionNotice restrictedUntil={fundTransferRestrictedUntil} />
+        {boundDevices === null ? <p className="account-overview-devices__loading">{t('account.overviewBoundDevicesLoading')}</p> : null}
+        {boundDevices?.length === 0 ? <p className="account-overview-devices__loading">{t('account.overviewBoundDevicesUnavailable')}</p> : null}
+        {boundDevices && boundDevices.length > 0 ? (
+          <div className="account-overview-devices">
+            {boundDevices.slice(0, 3).map((device) => (
+              <div className="account-overview-devices__item" key={device.deviceId}>
+                <div className="account-overview-devices__identity">
+                  <p className="account-overview-devices__platform">{t(`account.devicePlatform.${device.platform}`)}</p>
+                  <p className="account-row__title">{device.deviceLabel}</p>
+                  <p className="account-row__meta">{t('account.boundDevicesMeta', undefined, { ipAddress: device.lastIpAddress })}</p>
+                </div>
+                <time className="account-overview-devices__time" dateTime={device.lastSeenAt}>
+                  {t('account.boundDevicesLastSeenAt', undefined, { time: formatTime(device.lastSeenAt) })}
+                </time>
+              </div>
+            ))}
+            <div className="account-overview-devices__footer">
+              <span>{t('account.overviewBoundDevicesCount', undefined, { count: boundDevices.length })}</span>
+              <NavLink to="/account/security">{t('account.overviewBoundDevicesManage')}</NavLink>
+            </div>
+          </div>
+        ) : null}
       </Card>
       <Card title={t('account.securityTitle')}>
         <AccountSecurityActions />
@@ -171,7 +218,6 @@ function AccountSecurityPage() {
   const { t } = useI18n();
   const [security, setSecurity] = useState<LoginSecurityRecord | null>(null);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [removingDeviceId, setRemovingDeviceId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -189,20 +235,6 @@ function AccountSecurityPage() {
       });
     return () => { alive = false; };
   }, [t]);
-
-  async function handleNotificationChange(enabled: boolean) {
-    if (!security) return;
-    setSaving(true);
-    setError(null);
-    try {
-      const settings = await updateNewDeviceEmailNotification(enabled);
-      setSecurity((current) => (current ? { ...current, settings } : current));
-    } catch {
-      setError(t('account.loginSecuritySaveError'));
-    } finally {
-      setSaving(false);
-    }
-  }
 
   async function handleDeviceRemoval(deviceId: string) {
     setRemovingDeviceId(deviceId);
@@ -227,31 +259,15 @@ function AccountSecurityPage() {
       <Card title={t('account.securityCenterTitle')}>
         <AccountSecurityActions />
       </Card>
-      <Card title={t('account.loginSecurityNotificationTitle')}>
-        <div className="account-row">
-          <div>
-            <p className="account-row__title">{t('account.loginSecurityNotificationLabel')}</p>
-            <p className="account-row__meta">{t('account.loginSecurityNotificationDescription')}</p>
-          </div>
-          <label className="security-switch">
-            <input
-              checked={security.settings.newDeviceLoginEmailNotificationEnabled}
-              disabled={saving}
-              type="checkbox"
-              onChange={(event) => void handleNotificationChange(event.target.checked)}
-            />
-            <span aria-hidden="true" className="security-switch__track" />
-            <span className="sr-only">{t('account.loginSecurityNotificationLabel')}</span>
-          </label>
-        </div>
-        {error ? <p className="form-message form-message--error">{error}</p> : null}
-      </Card>
       <Card title={t('account.boundDevicesTitle')}>
+        <p className="account-device-policy-note">{t('account.boundDevicesPolicy')}</p>
+        <FundTransferRestrictionNotice restrictedUntil={security.fundTransferRestrictedUntil} />
         {security.devices.length === 0 ? <EmptyState title={t('account.boundDevicesEmptyTitle')} description={t('account.boundDevicesEmptyDescription')} /> : null}
         <div className="timeline-list">
           {security.devices.map((device) => (
             <div className="timeline-item" key={device.deviceId}>
               <div>
+                <p className="account-overview-devices__platform">{t(`account.devicePlatform.${device.platform}`)}</p>
                 <p className="account-row__title">{device.deviceLabel}</p>
                 <p className="account-row__meta">{t('account.boundDevicesMeta', undefined, { ipAddress: device.lastIpAddress })}</p>
                 <p className="account-row__meta">{t('account.boundDevicesBoundAt', undefined, { time: formatTime(device.createdAt) })}</p>
@@ -275,6 +291,34 @@ function AccountSecurityPage() {
   );
 }
 
+/**
+ * 資金外流限制的倒數只改善使用者理解；真正的提款與帳戶間轉帳未來必須各自以 server 時間重新拒絕。
+ */
+function FundTransferRestrictionNotice({ restrictedUntil }: { restrictedUntil: string | null | undefined }) {
+  const { t } = useI18n();
+  const [now, setNow] = useState(() => Date.now());
+  const until = restrictedUntil === null || restrictedUntil === undefined ? Number.NaN : Date.parse(restrictedUntil);
+  const remainingSeconds = Number.isNaN(until) ? 0 : Math.max(0, Math.ceil((until - now) / 1_000));
+
+  useEffect(() => {
+    if (remainingSeconds === 0) return undefined;
+    const timerId = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(timerId);
+  }, [remainingSeconds]);
+
+  if (remainingSeconds === 0) return null;
+  const hours = Math.floor(remainingSeconds / 3_600);
+  const minutes = Math.floor((remainingSeconds % 3_600) / 60);
+  const seconds = remainingSeconds % 60;
+  const countdown = [hours, minutes, seconds].map((value) => String(value).padStart(2, '0')).join(':');
+
+  return (
+    <p className="account-fund-transfer-restriction" role="status">
+      {t('account.fundTransferRestriction', undefined, { countdown })}
+    </p>
+  );
+}
+
 function AccountSecurityActions() {
   const { t } = useI18n();
   return (
@@ -291,7 +335,6 @@ function AccountSecurityActions() {
       <div className="account-row">
         <div>
           <p className="account-row__title">{t('account.loginHistoryTitle')}</p>
-          <p className="account-row__meta">{t('account.profileLoginHistoryDescription')}</p>
         </div>
         <NavLink className="secondary-button" to="/account/login-history">
           {t('account.profileLoginHistoryAction')}

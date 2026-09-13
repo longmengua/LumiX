@@ -26,6 +26,7 @@ P24-T01 至 P24-T04 的 immutable request/eligibility/lifecycle/reconciliation c
 - request accepted 不代表 approved、signed、broadcast、settled 或資產已離開。
 - destination、network、asset、amount、fee quote 與 idempotency key 必須綁定；不得用 float/double 或無版本 fee。
 - hold/release/capture 必須可追蹤且可對帳；任何異常、風控不確定或 audit 缺失一律 fail-closed。
+- 未來任何提款與帳戶間轉帳 runtime 必須以 server 時間檢查 authentication 的 `fund_transfer_restricted_until`；裝置替換後 24 小時內一律拒絕。P24 目前沒有 runtime，這只是不可略過的後續 gate contract。
 - 所有 runtime 卡均 `HUMAN_REVIEW_REQUIRED`，人類須審查權限、併發、資產保留與取消語意。
 
 ## 停止條件與下一步

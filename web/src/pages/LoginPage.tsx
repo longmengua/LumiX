@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
@@ -18,7 +18,7 @@ export function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [verificationPending, setVerificationPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { signIn } = useAuthentication();
+  const { signIn, completeLoginVerification } = useAuthentication();
   // 只接受站內相對路徑，避免把登入成功後的導向交給不可信的 location state。
   const requestedReturnTo = location.state?.returnTo;
   const returnTo = typeof requestedReturnTo === 'string'
@@ -51,6 +51,35 @@ export function LoginPage() {
       setLoading(false);
     }
   }
+
+  useEffect(() => {
+    if (!verificationPending) return undefined;
+    let alive = true;
+    let inFlight = false;
+
+    // 原始登入頁持有 HttpOnly pending cookie，核准後由它輪詢完成一次登入；確認信頁不會取得 session。
+    const pollCompletion = () => {
+      if (inFlight) return;
+      inFlight = true;
+      void completeLoginVerification()
+        .then((authenticatedUser) => {
+          if (alive && authenticatedUser) navigate(returnTo, { replace: true });
+        })
+        .catch(() => {
+          // 尚未核准與拒絕都不可把畫面視為登入成功；使用者仍可重新載入並以新流程登入。
+        })
+        .finally(() => {
+          inFlight = false;
+        });
+    };
+
+    pollCompletion();
+    const intervalId = window.setInterval(pollCompletion, 2_500);
+    return () => {
+      alive = false;
+      window.clearInterval(intervalId);
+    };
+  }, [completeLoginVerification, navigate, returnTo, verificationPending]);
 
   return (
     <AuthPageShell

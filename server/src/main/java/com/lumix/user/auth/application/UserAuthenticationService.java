@@ -9,7 +9,6 @@ import com.lumix.user.auth.domain.DeviceSecret;
 import com.lumix.user.auth.domain.LoginHistoryEntry;
 import com.lumix.user.auth.domain.LoginHistoryPage;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
-import com.lumix.user.auth.domain.LoginSecuritySettings;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
 import com.lumix.user.auth.domain.LoginVerificationSecret;
 import com.lumix.user.auth.domain.LoginVerificationState;
@@ -28,6 +27,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -199,8 +199,8 @@ public class UserAuthenticationService {
     /**
      * 以 email/password 驗證登入。
      *
-     * <p>只有 cookie 與 browser fingerprint 均相符的可信裝置可以立即建立 session。未知裝置是否需要
-     * email 確認由帳戶本人開關決定；關閉時仍會建立可稽核的受信任裝置與 session，不會把裝置資料遺失。</p>
+     * <p>只有 cookie 與 browser fingerprint 均相符的可信裝置可以立即建立 session。每一帳戶只可各綁定
+     * 一台桌電、平板與手機；空的類別可直接建立，已有同類別裝置時一律要求 email 明確確認。</p>
      */
     @Transactional
     public LoginResult login(String email, String password, DeviceSecret existingDevice, LoginRequestMetadata metadata) {
@@ -225,11 +225,11 @@ public class UserAuthenticationService {
             }
         }
 
-        LoginSecuritySettings securitySettings = repository.findActiveLoginSecuritySettings(user.userId())
-            .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
-        if (!securitySettings.newDeviceLoginEmailNotificationEnabled()
-            || !repository.hasActiveBoundLoginDevices(user.userId())) {
-            // 沒有任何既有裝置時沒有可供比對的安全基線；直接建立第一個可稽核裝置，不寄出無意義通知。
+        if (!repository.lockActiveUserForBoundDeviceChange(user.userId())) {
+            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+        }
+        if (!repository.hasActiveBoundLoginDeviceForPlatform(user.userId(), metadata.devicePlatform())) {
+            // 同類別沒有綁定裝置時才可直接填入空槽位；user row lock 防止兩個併發登入同時填入。
             DeviceSecret newDevice = createDeviceSecret();
             repository.createTrustedDevice(newDevice.deviceId(), user.userId(), newDevice.secretDigest(), metadata);
             return LoginResult.authenticated(new AuthenticationResult(
@@ -329,27 +329,12 @@ public class UserAuthenticationService {
             .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
     }
 
-    /** 個人中心只可讀取目前登入者自己的新裝置通知偏好與受信任裝置快照。 */
+    /** 個人中心只可讀取目前登入者自己的受信任裝置槽位與資金外流限制快照。 */
     @Transactional
     public LoginSecurityOverview getLoginSecurityOverview(AuthenticatedUser authenticatedUser) {
-        LoginSecuritySettings settings = repository.findActiveLoginSecuritySettings(authenticatedUser.userId())
-            .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
         List<BoundLoginDevice> devices = repository.findActiveBoundLoginDevices(authenticatedUser.userId());
-        return new LoginSecurityOverview(settings, devices);
-    }
-
-    /**
-     * 變更新裝置通知開關。
-     *
-     * <p>owner 只能從已驗證 session 取得；不可讓 client 指定 userId。關閉只停止 email 核准流程，並不會
-     * 刪除既有裝置、session 或登入紀錄。</p>
-     */
-    @Transactional
-    public LoginSecuritySettings updateNewDeviceLoginEmailNotificationEnabled(AuthenticatedUser authenticatedUser, boolean enabled) {
-        if (!repository.updateNewDeviceLoginEmailNotificationEnabled(authenticatedUser.userId(), enabled)) {
-            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
-        }
-        return new LoginSecuritySettings(enabled);
+        Instant fundTransferRestrictedUntil = repository.findFundTransferRestrictedUntil(authenticatedUser.userId()).orElse(null);
+        return new LoginSecurityOverview(devices, fundTransferRestrictedUntil);
     }
 
     /**
@@ -404,7 +389,12 @@ public class UserAuthenticationService {
         PasswordCredential credential = repository.findPasswordCredentialByEmail(user.email())
             .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
         if (!passwordEncoder.matches(currentPassword, credential.passwordHash())) {
-            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+            // 此 endpoint 已先以有效 session 綁定本人，才可精確告知舊密碼不符；登入入口仍必須維持泛化錯誤避免枚舉。
+            throw new ApiException(ApiErrorCode.CURRENT_PASSWORD_INCORRECT);
+        }
+        if (passwordEncoder.matches(newPassword, credential.passwordHash())) {
+            // 先驗證目前密碼才檢查重複，避免外部透過新密碼欄位探測帳號既有 password。
+            throw new ApiException(ApiErrorCode.NEW_PASSWORD_SAME_AS_CURRENT);
         }
 
         repository.updatePasswordHash(user.userId(), passwordEncoder.encode(newPassword));
@@ -425,45 +415,6 @@ public class UserAuthenticationService {
             throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
         }
         return approved ? LoginVerificationState.APPROVED : LoginVerificationState.REJECTED;
-    }
-
-    /**
-     * 在 email 確認頁消耗核准 token，並直接在該瀏覽器建立 session。
-     *
-     * <p>Yes 不是 GET：確認頁必須以 POST 明確送出。token 僅保存摘要且在同一筆 `FOR UPDATE` request 中
-     * 原子消耗；每次成功 Yes 都生成新的 device cookie，因此綁定清單與登入紀錄會反映實際點選的瀏覽器。</p>
-     */
-    @Transactional
-    public LoginVerificationCompletion completeLoginVerificationByEmail(
-        String token,
-        boolean approved,
-        LoginRequestMetadata metadata
-    ) {
-        LoginVerificationRequest request = repository.lockActiveLoginVerificationByApprovalToken(digestSecret(token))
-            .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
-        if (!approved) {
-            if (request.state() == LoginVerificationState.PENDING
-                && !repository.decideLoginVerification(request.verificationRequestId(), false)) {
-                throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
-            }
-            return LoginVerificationCompletion.rejected();
-        }
-        if (request.state() == LoginVerificationState.PENDING
-            && !repository.decideLoginVerification(request.verificationRequestId(), true)) {
-            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
-        }
-        if (request.state() == LoginVerificationState.REJECTED
-            || !repository.consumeApprovedLoginVerification(request.verificationRequestId())) {
-            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
-        }
-
-        DeviceSecret emailConfirmedDevice = createDeviceSecret();
-        repository.createTrustedDevice(
-            emailConfirmedDevice.deviceId(), request.user().userId(), emailConfirmedDevice.secretDigest(), metadata
-        );
-        return LoginVerificationCompletion.authenticated(new AuthenticationResult(
-            request.user(), createSession(request.user().userId(), metadata, emailConfirmedDevice.deviceId()), emailConfirmedDevice
-        ));
     }
 
     /**
@@ -495,11 +446,26 @@ public class UserAuthenticationService {
         if (!repository.consumeApprovedLoginVerification(request.verificationRequestId())) {
             throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
         }
+        if (!repository.lockActiveUserForBoundDeviceChange(request.user().userId())) {
+            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+        }
+        // email Yes 核准的是原始候選裝置；先撤銷同平台舊 device/session，才可建立新 cookie 並維持一槽一台。
+        repository.revokeActiveBoundDevicesForPlatform(request.user().userId(), request.metadata().devicePlatform());
+        Duration restrictionDuration = properties.getDeviceChangeFundTransferRestriction();
+        if (restrictionDuration == null || restrictionDuration.isZero() || restrictionDuration.isNegative()) {
+            // 不能因部署設定錯誤讓已完成的換機流程沒有資金外流保護。
+            throw new IllegalStateException("device change fund transfer restriction must be positive");
+        }
+        Instant restrictedUntil = Instant.now(clock).plus(restrictionDuration);
+        if (!repository.extendFundTransferRestriction(request.user().userId(), restrictedUntil)) {
+            // 若限制時間無法持久化，必須 rollback 裝置替換，避免資金外流保護只停留在畫面倒數。
+            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+        }
         repository.createTrustedDevice(
-            pending.candidateDevice().deviceId(), request.user().userId(), pending.candidateDevice().secretDigest(), metadata
+            pending.candidateDevice().deviceId(), request.user().userId(), pending.candidateDevice().secretDigest(), request.metadata()
         );
         return LoginVerificationCompletion.authenticated(new AuthenticationResult(
-            request.user(), createSession(request.user().userId(), metadata, pending.candidateDevice().deviceId()),
+            request.user(), createSession(request.user().userId(), request.metadata(), pending.candidateDevice().deviceId()),
             pending.candidateDevice()
         ));
     }
@@ -789,6 +755,6 @@ public class UserAuthenticationService {
         }
     }
 
-    /** 個人中心的安全資料只限於設定與去敏裝置清單。 */
-    public record LoginSecurityOverview(LoginSecuritySettings settings, List<BoundLoginDevice> devices) { }
+    /** 個人中心的安全資料只限於去敏裝置槽位與資金外流限制截止時間。 */
+    public record LoginSecurityOverview(List<BoundLoginDevice> devices, Instant fundTransferRestrictedUntil) { }
 }

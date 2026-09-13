@@ -36,7 +36,7 @@ export function ChangePasswordPage() {
       setConfirmPassword('');
       setSuccess('密碼已更新，其他裝置的登入狀態已失效。');
     } catch (submitError) {
-      setError(translateAuthError(submitError, t, 'auth.reset.errorGeneric'));
+      setError(translateAuthError(submitError, t, 'auth.changePassword.errorGeneric'));
     } finally {
       setLoading(false);
     }

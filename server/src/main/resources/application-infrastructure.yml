@@ -54,6 +54,7 @@ lumix:
     cookie-name: ${LUMIX_AUTH_COOKIE_NAME:LUMIX_SESSION}
     device-cookie-name: ${LUMIX_AUTH_DEVICE_COOKIE_NAME:LUMIX_DEVICE}
     login-verification-cookie-name: ${LUMIX_AUTH_LOGIN_VERIFICATION_COOKIE_NAME:LUMIX_LOGIN_VERIFICATION}
+    device-change-fund-transfer-restriction: ${LUMIX_AUTH_DEVICE_CHANGE_FUND_TRANSFER_RESTRICTION:PT24H}
     session-ttl: ${LUMIX_AUTH_SESSION_TTL:PT8H}
     device-ttl: ${LUMIX_AUTH_DEVICE_TTL:P90D}
     bcrypt-strength: ${LUMIX_AUTH_BCRYPT_STRENGTH:12}

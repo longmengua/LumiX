@@ -19,6 +19,7 @@ public class UserAuthenticationProperties {
     private String loginVerificationCookieName = "LUMIX_LOGIN_VERIFICATION";
     private Duration sessionTtl = Duration.ofHours(8);
     private Duration deviceTtl = Duration.ofDays(90);
+    private Duration deviceChangeFundTransferRestriction = Duration.ofHours(24);
     private int bcryptStrength = 12;
     private PasswordReset passwordReset = new PasswordReset();
     private RegistrationVerification registrationVerification = new RegistrationVerification();
@@ -37,6 +38,11 @@ public class UserAuthenticationProperties {
     public void setSessionTtl(Duration sessionTtl) { this.sessionTtl = sessionTtl; }
     public Duration getDeviceTtl() { return deviceTtl; }
     public void setDeviceTtl(Duration deviceTtl) { this.deviceTtl = deviceTtl; }
+    /** 同類型裝置完成替換後，提款與帳戶間轉帳必須被後端拒絕的最短時間。 */
+    public Duration getDeviceChangeFundTransferRestriction() { return deviceChangeFundTransferRestriction; }
+    public void setDeviceChangeFundTransferRestriction(Duration deviceChangeFundTransferRestriction) {
+        this.deviceChangeFundTransferRestriction = deviceChangeFundTransferRestriction;
+    }
     public int getBcryptStrength() { return bcryptStrength; }
     public void setBcryptStrength(int bcryptStrength) { this.bcryptStrength = bcryptStrength; }
     public PasswordReset getPasswordReset() { return passwordReset; }

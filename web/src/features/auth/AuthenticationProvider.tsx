@@ -9,6 +9,7 @@ type AuthenticationContextValue = {
   sessionResolved: boolean;
   signIn(input: { email: string; password: string; captchaToken: string }): Promise<AuthenticatedUser | null>;
   decideLoginVerification(token: string, approved: boolean): Promise<'APPROVED' | 'REJECTED'>;
+  completeLoginVerification(): Promise<AuthenticatedUser | null>;
   register(input: { email: string; displayName: string; password: string; captchaToken: string }): Promise<RegistrationVerificationPending>;
   verifyRegistrationEmail(input: { registrationId: string; numericCode: string; letterCode: string }): Promise<AuthenticatedUser>;
   signOut(): Promise<void>;
@@ -83,12 +84,18 @@ export function AuthenticationProvider({ children }: { children: ReactNode }) {
     },
     async decideLoginVerification(token, approved) {
       const result = await authApi.decideLoginVerification(token, approved);
-      if (result.state === 'REJECTED') return result.state;
+      // email 頁只決定是否核准原始登入請求，不能把閱讀信件的瀏覽器投影為已登入。
+      return result.state;
+    },
+    async completeLoginVerification() {
+      const authenticatedUser = await authApi.completeLoginVerification();
+      if (!authenticatedUser) return null;
+      // 原始瀏覽器已由 server 原子消耗核准請求並建立 session，才可更新前端本人投影。
       sessionOperation.current += 1;
-      setUser(result.user);
+      setUser(authenticatedUser);
       setLoading(false);
       setSessionResolved(true);
-      return result.state;
+      return authenticatedUser;
     },
     async register(input) {
       return authApi.register(input);

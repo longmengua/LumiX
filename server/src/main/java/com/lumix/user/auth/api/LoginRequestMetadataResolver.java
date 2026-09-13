@@ -1,6 +1,7 @@
 package com.lumix.user.auth.api;
 
 import com.lumix.user.auth.domain.LoginRequestMetadata;
+import com.lumix.user.auth.domain.BoundDevicePlatform;
 import jakarta.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -29,7 +30,7 @@ final class LoginRequestMetadataResolver {
         );
         return new LoginRequestMetadata(
             boundedText(request.getRemoteAddr(), "Unknown IP", 64),
-            describeDevice(userAgent), digest(fingerprintInput)
+            describeDevice(userAgent), digest(fingerprintInput), classifyPlatform(userAgent)
         );
     }
 
@@ -56,6 +57,25 @@ final class LoginRequestMetadataResolver {
             : normalized.contains("chrome/") || normalized.contains("crios/") ? "Chrome"
             : normalized.contains("safari/") ? "Safari" : "Unknown browser";
         return browser + " on " + platform;
+    }
+
+    /**
+     * 只以 UA 的粗粒度訊號分配三個產品槽位。
+     *
+     * <p>UA 可遭偽造，因此真正信任仍由 device cookie、摘要比對與 email 一次性核准維持；未知 UA 落到
+     * 桌電槽位，確保不會產生無上限的第四種裝置。</p>
+     */
+    private static BoundDevicePlatform classifyPlatform(String userAgent) {
+        String normalized = userAgent.toLowerCase(Locale.ROOT);
+        if (normalized.contains("ipad") || normalized.contains("tablet")
+            || (normalized.contains("android") && !normalized.contains("mobile"))) {
+            return BoundDevicePlatform.TABLET;
+        }
+        if (normalized.contains("iphone") || normalized.contains("ipod") || normalized.contains("mobile")
+            || normalized.contains("windows phone")) {
+            return BoundDevicePlatform.MOBILE;
+        }
+        return BoundDevicePlatform.DESKTOP;
     }
 
     private static String digest(String value) {

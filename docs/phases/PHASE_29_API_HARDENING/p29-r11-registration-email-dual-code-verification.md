@@ -25,3 +25,7 @@
 沒有 SMS、寄信佇列、rate-limit/WAF、跨裝置恢復、production SMTP secret 管理或 production launch；本項是 authentication runtime 變更，仍需人工安全審核。
 
 `HUMAN_REVIEW_REQUIRED: yes`
+
+## 後續認證 UX 修正
+
+已登入的變更密碼 endpoint 在確認 session 後，對舊密碼不符回傳 `CURRENT_PASSWORD_INCORRECT`，對新舊密碼相同回傳 `NEW_PASSWORD_SAME_AS_CURRENT`，讓本人能取得精確提示；登入、忘記密碼與 reset token 等匿名路徑仍維持泛化的認證失敗語意，避免帳號或 token 枚舉。

@@ -24,9 +24,11 @@ COMPLETED_FOR_API_ADMISSION_CONTRACT_FOUNDATION
 
 `P29-R09 Slider CAPTCHA and Registration Bloom Filter` 已完成 Redis-backed server-side 多題型圖形驗證、用途／browser fingerprint 綁定的一次性通行 token，並於註冊流程加入 Bloom filter 快速預檢；可由部署設定啟用 `SLIDER`、`ICON_MATCH`、`IMAGE_GRID` 並由 server 選題，詳見 `p29-r09-slider-captcha-registration-bloom-filter.md`。拼圖採無白色外框的不規則輪廓與干擾缺口。資料庫 unique constraint 仍是重複 email 的最終裁決；Redis 不可用時驗證碼 fail-closed；此視覺強化不是反自動化保證，仍缺 rate limit、WAF 與 bot-detection；`HUMAN_REVIEW_REQUIRED: yes`。
 
-`P29-R10 Login Notification Preference and Email-browser Session` 已完成個人中心的新裝置 email 通知開關、目前綁定裝置清單，以及 email Yes 在確認頁瀏覽器直接建立一次性 session 的流程；詳見 `p29-r10-login-notification-preference-email-browser-session.md`。設定預設開啟以維持既有帳戶安全行為；每次 Yes 都會新增受信任裝置與成功登入 evidence；`HUMAN_REVIEW_REQUIRED: yes`。
+`P29-R10 Login Notification Preference and Email-browser Session` 是已被 P29-R12 取代的歷史實作紀錄。新裝置通知開關與 email 確認頁直接登入已移除，改為強制的三平台裝置槽位與原始登入瀏覽器完成流程；保留文件只供 migration/evidence 追溯；`HUMAN_REVIEW_REQUIRED: yes`。
 
 `P29-R11 Registration Email Dual-code Verification` 已完成註冊 email 的六位數字碼與五位英文字母碼雙驗證流程；驗證成功前不建立使用者或 session，兩組原始 code 僅存在於 SMTP 信件，資料庫只保存 SHA-256 digest 與 BCrypt password hash。詳見 `p29-r11-registration-email-dual-code-verification.md`；`HUMAN_REVIEW_REQUIRED: yes`。
+
+`P29-R12 Bound-device Platform Slots` 已完成每帳戶各一台桌上型電腦、平板與手機的受限綁定裝置槽位。空槽位可直接建立；同類別換機必須以 email Yes 核准原始登入瀏覽器，並原子撤銷原裝置與其 session。詳見 `p29-r12-bound-device-platform-slots.md`；`HUMAN_REVIEW_REQUIRED: yes`。
 
 ## Phase charter
 

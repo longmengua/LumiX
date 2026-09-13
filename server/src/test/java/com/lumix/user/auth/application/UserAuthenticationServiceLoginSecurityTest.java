@@ -14,7 +14,6 @@ import static org.mockito.Mockito.when;
 import com.lumix.user.auth.config.UserAuthenticationProperties;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
-import com.lumix.user.auth.domain.LoginSecuritySettings;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
 import com.lumix.user.auth.domain.LoginVerificationState;
 import com.lumix.user.auth.domain.PasswordCredential;
@@ -30,7 +29,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 class UserAuthenticationServiceLoginSecurityTest {
 
     @Test
-    void disabledEmailNotificationAllowsUnknownDeviceAndStillBindsIt() {
+    void emptyPlatformSlotBindsUnknownDeviceWithoutEmail() {
         UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
         BCryptPasswordEncoder passwordEncoder = mock(BCryptPasswordEncoder.class);
         LoginVerificationDeliveryPort delivery = mock(LoginVerificationDeliveryPort.class);
@@ -39,12 +38,13 @@ class UserAuthenticationServiceLoginSecurityTest {
         when(repository.findPasswordCredentialByEmail(user.email()))
             .thenReturn(Optional.of(new PasswordCredential(user, "bcrypt-hash")));
         when(passwordEncoder.matches("correct-password", "bcrypt-hash")).thenReturn(true);
-        when(repository.findActiveLoginSecuritySettings(user.userId())).thenReturn(Optional.of(new LoginSecuritySettings(false)));
+        when(repository.lockActiveUserForBoundDeviceChange(user.userId())).thenReturn(true);
+        when(repository.hasActiveBoundLoginDeviceForPlatform(user.userId(), metadata.devicePlatform())).thenReturn(false);
         UserAuthenticationService service = service(repository, passwordEncoder, delivery);
 
         UserAuthenticationService.LoginResult result = service.login(user.email(), "correct-password", null, metadata);
 
-        // 使用者關閉通知後不應寄信卡住登入，但未知裝置仍必須寫入可信裝置與成功 session evidence。
+        // 沒有同類別裝置時可直接填入空槽位，但仍必須寫入可信裝置與成功 session evidence。
         assertEquals(false, result.requiresVerification());
         assertNotNull(result.authentication().device());
         verify(repository).createTrustedDevice(
@@ -54,7 +54,7 @@ class UserAuthenticationServiceLoginSecurityTest {
     }
 
     @Test
-    void firstBoundDeviceSkipsEmailEvenWhenNotificationIsEnabled() {
+    void existingPlatformSlotRequiresEmailApproval() {
         UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
         BCryptPasswordEncoder passwordEncoder = mock(BCryptPasswordEncoder.class);
         LoginVerificationDeliveryPort delivery = mock(LoginVerificationDeliveryPort.class);
@@ -63,18 +63,17 @@ class UserAuthenticationServiceLoginSecurityTest {
         when(repository.findPasswordCredentialByEmail(user.email()))
             .thenReturn(Optional.of(new PasswordCredential(user, "bcrypt-hash")));
         when(passwordEncoder.matches("correct-password", "bcrypt-hash")).thenReturn(true);
-        when(repository.findActiveLoginSecuritySettings(user.userId())).thenReturn(Optional.of(new LoginSecuritySettings(true)));
-        when(repository.hasActiveBoundLoginDevices(user.userId())).thenReturn(false);
+        when(repository.lockActiveUserForBoundDeviceChange(user.userId())).thenReturn(true);
+        when(repository.hasActiveBoundLoginDeviceForPlatform(user.userId(), metadata.devicePlatform())).thenReturn(true);
+        when(delivery.isAvailable()).thenReturn(true);
 
         UserAuthenticationService.LoginResult result = service(repository, passwordEncoder, delivery)
             .login(user.email(), "correct-password", null, metadata);
 
-        // 第一個可用裝置沒有既有安全基線，不能寄出無法判讀的「新裝置」通知。
-        assertFalse(result.requiresVerification());
-        verify(delivery, never()).deliver(any(), any(), any());
-        verify(repository).createTrustedDevice(
-            result.authentication().device().deviceId(), user.userId(), result.authentication().device().secretDigest(), metadata
-        );
+        // 同一類別已占用時，任何不同 device cookie 都必須先取得 email 核准，不能由舊通知開關繞過。
+        assertEquals(true, result.requiresVerification());
+        verify(delivery).deliver(eq(user), eq(metadata), any());
+        verify(repository, never()).createTrustedDevice(any(), any(), any(), any());
     }
 
     @Test
@@ -91,7 +90,7 @@ class UserAuthenticationServiceLoginSecurityTest {
     }
 
     @Test
-    void emailYesCreatesSessionAndNewBoundDeviceInConfirmationBrowser() {
+    void emailYesOnlyApprovesOriginalCandidateAndDoesNotBindConfirmationBrowser() {
         UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
         AuthenticatedUser user = new AuthenticatedUser("user-1", "user@example.com", "User");
         LoginVerificationRequest request = new LoginVerificationRequest(
@@ -101,27 +100,47 @@ class UserAuthenticationServiceLoginSecurityTest {
         );
         when(repository.lockActiveLoginVerificationByApprovalToken(anyString())).thenReturn(Optional.of(request));
         when(repository.decideLoginVerification(request.verificationRequestId(), true)).thenReturn(true);
-        when(repository.consumeApprovedLoginVerification(request.verificationRequestId())).thenReturn(true);
         UserAuthenticationService service = service(repository);
-        LoginRequestMetadata emailBrowser = new LoginRequestMetadata("203.0.113.8", "Email 確認瀏覽器", "email-browser-digest");
 
-        UserAuthenticationService.LoginVerificationCompletion completion = service.completeLoginVerificationByEmail(
-            "one-time-email-token", true, emailBrowser
+        LoginVerificationState state = service.decideLoginVerification("one-time-email-token", true);
+
+        // email link 只改變核准狀態；不應把閱讀 email 的任意瀏覽器變成同類別受信任裝置。
+        assertEquals(LoginVerificationState.APPROVED, state);
+        verify(repository, never()).createTrustedDevice(any(), any(), any(), any());
+        verify(repository, never()).createSession(any(), any(), any(), any(), any(), any());
+    }
+
+    @Test
+    void approvedCandidateReplacesExistingDeviceInSamePlatformSlot() {
+        UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
+        AuthenticatedUser user = new AuthenticatedUser("user-1", "user@example.com", "User");
+        LoginRequestMetadata candidate = new LoginRequestMetadata("198.51.100.10", "原始登入裝置", "original-browser-digest");
+        UUID candidateDeviceId = UUID.randomUUID();
+        LoginVerificationRequest request = new LoginVerificationRequest(
+            UUID.randomUUID(), user, candidateDeviceId, "candidate-device-digest", candidate,
+            LoginVerificationState.APPROVED, Instant.parse("2026-09-11T00:15:00Z")
+        );
+        when(repository.lockActiveLoginVerificationByPendingToken(request.verificationRequestId(), "pending-digest"))
+            .thenReturn(Optional.of(request));
+        when(repository.consumeApprovedLoginVerification(request.verificationRequestId())).thenReturn(true);
+        when(repository.lockActiveUserForBoundDeviceChange(user.userId())).thenReturn(true);
+        when(repository.extendFundTransferRestriction(user.userId(), Instant.parse("2026-09-12T00:00:00Z"))).thenReturn(true);
+
+        UserAuthenticationService.LoginVerificationCompletion completion = service(repository).completeLoginVerification(
+            new com.lumix.user.auth.domain.PendingLoginVerificationSecret(
+                request.verificationRequestId(), "pending-secret", "pending-digest",
+                new com.lumix.user.auth.domain.DeviceSecret(
+                    candidateDeviceId, "candidate-device-secret", "candidate-device-digest"
+                )
+            ),
+            candidate
         );
 
-        // Yes 必須在目前確認頁瀏覽器建立 session，並為每一次成功核准建立一個新的受信任裝置紀錄。
+        // 原始候選裝置取得該類別唯一槽位前，必須撤銷舊裝置與其 session；不依賴 email 閱讀端的 metadata。
         assertEquals(LoginVerificationState.APPROVED, completion.state());
-        assertNotNull(completion.authentication());
-        assertNotNull(completion.authentication().device());
-        verify(repository).createTrustedDevice(
-            completion.authentication().device().deviceId(), user.userId(),
-            completion.authentication().device().secretDigest(), emailBrowser
-        );
-        verify(repository).createSession(
-            eq(completion.authentication().session().sessionId()), eq(user.userId()),
-            eq(completion.authentication().session().secretDigest()), any(),
-            eq(completion.authentication().device().deviceId()), eq(emailBrowser)
-        );
+        verify(repository).revokeActiveBoundDevicesForPlatform(user.userId(), candidate.devicePlatform());
+        verify(repository).extendFundTransferRestriction(user.userId(), Instant.parse("2026-09-12T00:00:00Z"));
+        verify(repository).createTrustedDevice(candidateDeviceId, user.userId(), "candidate-device-digest", candidate);
     }
 
     private static UserAuthenticationService service(UserAuthenticationRepository repository) {

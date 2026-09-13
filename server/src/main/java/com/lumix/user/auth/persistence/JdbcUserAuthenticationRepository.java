@@ -2,9 +2,9 @@ package com.lumix.user.auth.persistence;
 
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.BoundLoginDevice;
+import com.lumix.user.auth.domain.BoundDevicePlatform;
 import com.lumix.user.auth.domain.LoginHistoryEntry;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
-import com.lumix.user.auth.domain.LoginSecuritySettings;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
 import com.lumix.user.auth.domain.LoginVerificationState;
 import com.lumix.user.auth.domain.PendingRegistration;
@@ -22,6 +22,7 @@ import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Repository;
 
 /**
@@ -158,23 +159,13 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     }
 
     @Override
-    public Optional<LoginSecuritySettings> findActiveLoginSecuritySettings(String userId) {
-        return jdbcTemplate.query(
-            "SELECT new_device_login_email_notification_enabled FROM users WHERE user_id = ? AND status = 'ACTIVE'",
-            resultSet -> resultSet.next()
-                ? Optional.of(new LoginSecuritySettings(resultSet.getBoolean("new_device_login_email_notification_enabled")))
-                : Optional.empty(),
-            userId
-        );
-    }
-
-    @Override
     public List<BoundLoginDevice> findActiveBoundLoginDevices(String userId) {
         return jdbcTemplate.query(
-            "SELECT device_id, device_label, last_ip_address, created_at, last_seen_at FROM user_login_devices "
+            "SELECT device_id, device_platform, device_label, last_ip_address, created_at, last_seen_at FROM user_login_devices "
                 + "WHERE user_id = ? AND revoked_at IS NULL ORDER BY last_seen_at DESC, device_id DESC",
             (resultSet, rowNumber) -> new BoundLoginDevice(
-                resultSet.getObject("device_id", UUID.class), resultSet.getString("device_label"),
+                resultSet.getObject("device_id", UUID.class),
+                BoundDevicePlatform.valueOf(resultSet.getString("device_platform")), resultSet.getString("device_label"),
                 resultSet.getString("last_ip_address"), resultSet.getTimestamp("created_at").toInstant(),
                 resultSet.getTimestamp("last_seen_at").toInstant()
             ),
@@ -183,13 +174,42 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     }
 
     @Override
-    public boolean hasActiveBoundLoginDevices(String userId) {
+    public boolean lockActiveUserForBoundDeviceChange(String userId) {
+        return jdbcTemplate.query(
+            "SELECT user_id FROM users WHERE user_id = ? AND status = 'ACTIVE' FOR UPDATE",
+            (ResultSetExtractor<Boolean>) resultSet -> resultSet.next(), userId
+        );
+    }
+
+    @Override
+    public boolean hasActiveBoundLoginDeviceForPlatform(String userId, BoundDevicePlatform platform) {
         Boolean exists = jdbcTemplate.queryForObject(
-            "SELECT EXISTS (SELECT 1 FROM user_login_devices WHERE user_id = ? AND revoked_at IS NULL)",
-            Boolean.class,
-            userId
+            "SELECT EXISTS (SELECT 1 FROM user_login_devices WHERE user_id = ? AND device_platform = ? "
+                + "AND revoked_at IS NULL)",
+            Boolean.class, userId, platform.name()
         );
         return Boolean.TRUE.equals(exists);
+    }
+
+    @Override
+    public boolean extendFundTransferRestriction(String userId, Instant restrictedUntil) {
+        return jdbcTemplate.update(
+            "UPDATE users SET fund_transfer_restricted_until = GREATEST(COALESCE(fund_transfer_restricted_until, ?), ?), "
+                + "updated_at = CURRENT_TIMESTAMP WHERE user_id = ? AND status = 'ACTIVE'",
+            Timestamp.from(restrictedUntil), Timestamp.from(restrictedUntil), userId
+        ) == 1;
+    }
+
+    @Override
+    public Optional<Instant> findFundTransferRestrictedUntil(String userId) {
+        return jdbcTemplate.query(
+            "SELECT fund_transfer_restricted_until FROM users WHERE user_id = ? AND status = 'ACTIVE'",
+            resultSet -> resultSet.next()
+                ? Optional.ofNullable(resultSet.getTimestamp("fund_transfer_restricted_until"))
+                    .map(Timestamp::toInstant)
+                : Optional.empty(),
+            userId
+        );
     }
 
     @Override
@@ -264,9 +284,10 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     @Override
     public void createTrustedDevice(UUID deviceId, String userId, String secretDigest, LoginRequestMetadata metadata) {
         jdbcTemplate.update(
-            "INSERT INTO user_login_devices (device_id, user_id, token_digest, user_agent_digest, device_label, "
-                + "last_ip_address, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
-            deviceId, userId, secretDigest, metadata.userAgentDigest(), metadata.deviceLabel(), metadata.ipAddress()
+            "INSERT INTO user_login_devices (device_id, user_id, token_digest, user_agent_digest, device_platform, device_label, "
+                + "last_ip_address, last_seen_at) VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)",
+            deviceId, userId, secretDigest, metadata.userAgentDigest(), metadata.devicePlatform().name(), metadata.deviceLabel(),
+            metadata.ipAddress()
         );
     }
 
@@ -276,6 +297,22 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
             "UPDATE user_login_devices SET user_agent_digest = ?, device_label = ?, last_ip_address = ?, "
                 + "last_seen_at = CURRENT_TIMESTAMP WHERE device_id = ? AND revoked_at IS NULL",
             metadata.userAgentDigest(), metadata.deviceLabel(), metadata.ipAddress(), deviceId
+        );
+    }
+
+    @Override
+    public void revokeActiveBoundDevicesForPlatform(String userId, BoundDevicePlatform platform) {
+        // session 需在 device 尚為 active 時先撤銷，避免子查詢因前一步更新而遺漏舊 session。
+        jdbcTemplate.update(
+            "UPDATE user_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND revoked_at IS NULL "
+                + "AND device_id IN (SELECT device_id FROM user_login_devices WHERE user_id = ? "
+                + "AND device_platform = ? AND revoked_at IS NULL)",
+            userId, userId, platform.name()
+        );
+        jdbcTemplate.update(
+            "UPDATE user_login_devices SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND device_platform = ? "
+                + "AND revoked_at IS NULL",
+            userId, platform.name()
         );
     }
 
@@ -311,9 +348,9 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
         jdbcTemplate.update(
             "INSERT INTO login_verification_requests (verification_request_id, user_id, pending_token_digest, "
                 + "approval_token_digest, candidate_device_id, candidate_device_token_digest, user_agent_digest, "
-                + "device_label, ip_address, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                + "device_platform, device_label, ip_address, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
             verificationRequestId, userId, pendingTokenDigest, approvalTokenDigest, candidateDeviceId,
-            candidateDeviceTokenDigest, metadata.userAgentDigest(), metadata.deviceLabel(), metadata.ipAddress(),
+            candidateDeviceTokenDigest, metadata.userAgentDigest(), metadata.devicePlatform().name(), metadata.deviceLabel(), metadata.ipAddress(),
             Timestamp.from(expiresAt)
         );
     }
@@ -322,7 +359,7 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     public Optional<LoginVerificationRequest> lockActiveLoginVerificationByApprovalToken(String approvalTokenDigest) {
         return lockLoginVerification(
             "SELECT r.verification_request_id, u.user_id, u.email, u.display_name, r.candidate_device_id, "
-                + "r.candidate_device_token_digest, r.ip_address, r.device_label, r.user_agent_digest, r.state, r.expires_at "
+                + "r.candidate_device_token_digest, r.ip_address, r.device_label, r.user_agent_digest, r.device_platform, r.state, r.expires_at "
                 + "FROM login_verification_requests r JOIN users u ON u.user_id = r.user_id "
                 + "WHERE r.approval_token_digest = ? AND r.consumed_at IS NULL AND r.expires_at > CURRENT_TIMESTAMP "
                 + "AND u.status = 'ACTIVE' FOR UPDATE",
@@ -337,7 +374,7 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     ) {
         return lockLoginVerification(
             "SELECT r.verification_request_id, u.user_id, u.email, u.display_name, r.candidate_device_id, "
-                + "r.candidate_device_token_digest, r.ip_address, r.device_label, r.user_agent_digest, r.state, r.expires_at "
+                + "r.candidate_device_token_digest, r.ip_address, r.device_label, r.user_agent_digest, r.device_platform, r.state, r.expires_at "
                 + "FROM login_verification_requests r JOIN users u ON u.user_id = r.user_id "
                 + "WHERE r.verification_request_id = ? AND r.pending_token_digest = ? AND r.consumed_at IS NULL "
                 + "AND r.expires_at > CURRENT_TIMESTAMP AND u.status = 'ACTIVE' FOR UPDATE",
@@ -419,15 +456,6 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     }
 
     @Override
-    public boolean updateNewDeviceLoginEmailNotificationEnabled(String userId, boolean enabled) {
-        return jdbcTemplate.update(
-            "UPDATE users SET new_device_login_email_notification_enabled = ?, updated_at = CURRENT_TIMESTAMP "
-                + "WHERE user_id = ? AND status = 'ACTIVE'",
-            enabled, userId
-        ) == 1;
-    }
-
-    @Override
     public void createPasswordReset(UUID requestId, String userId, String secretDigest, Instant expiresAt) {
         jdbcTemplate.update(
             "INSERT INTO password_reset_requests (reset_request_id, user_id, token_digest, expires_at) "
@@ -484,7 +512,8 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
                 resultSet.getObject("verification_request_id", UUID.class), mapUser(resultSet),
                 resultSet.getObject("candidate_device_id", UUID.class), resultSet.getString("candidate_device_token_digest"),
                 new LoginRequestMetadata(
-                    resultSet.getString("ip_address"), resultSet.getString("device_label"), resultSet.getString("user_agent_digest")
+                    resultSet.getString("ip_address"), resultSet.getString("device_label"), resultSet.getString("user_agent_digest"),
+                    BoundDevicePlatform.valueOf(resultSet.getString("device_platform"))
                 ),
                 LoginVerificationState.valueOf(resultSet.getString("state")), resultSet.getTimestamp("expires_at").toInstant()
             ))
