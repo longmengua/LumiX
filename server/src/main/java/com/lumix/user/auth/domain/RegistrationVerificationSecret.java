@@ -1,6 +1,7 @@
 package com.lumix.user.auth.domain;
 
 import java.util.Objects;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -13,6 +14,7 @@ public record RegistrationVerificationSecret(
     UUID registrationId,
     String numericCode,
     String letterCode,
+    List<String> letterOptions,
     String numericCodeDigest,
     String letterCodeDigest
 ) {
@@ -20,6 +22,7 @@ public record RegistrationVerificationSecret(
         Objects.requireNonNull(registrationId, "registrationId must not be null");
         Objects.requireNonNull(numericCode, "numericCode must not be null");
         Objects.requireNonNull(letterCode, "letterCode must not be null");
+        letterOptions = List.copyOf(Objects.requireNonNull(letterOptions, "letterOptions must not be null"));
         Objects.requireNonNull(numericCodeDigest, "numericCodeDigest must not be null");
         Objects.requireNonNull(letterCodeDigest, "letterCodeDigest must not be null");
     }

@@ -19,6 +19,7 @@ export function RegisterPage() {
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [captchaOpen, setCaptchaOpen] = useState(false);
   const [registrationId, setRegistrationId] = useState<string | null>(null);
+  const [letterOptions, setLetterOptions] = useState<string[]>([]);
   const [numericCode, setNumericCode] = useState('');
   const [letterCode, setLetterCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -56,6 +57,7 @@ export function RegisterPage() {
     try {
       const pending = await register({ email: identifier, displayName, password, captchaToken });
       setRegistrationId(pending.registrationId);
+      setLetterOptions(pending.letterOptions);
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'auth.register.errorGeneric'));
     } finally {
@@ -128,7 +130,6 @@ export function RegisterPage() {
             autoComplete="new-password"
           />
         </div>
-
         <label className="checkbox">
           <input checked={acceptedTerms} type="checkbox" onChange={(event) => setAcceptedTerms(event.target.checked)} />
           <span>{t('auth.register.acceptTerms')}</span>
@@ -152,18 +153,20 @@ export function RegisterPage() {
             required
           />
         </label>
-        <label className="field">
-          <span className="field__label">{t('auth.register.letterCode', '英文字母驗證碼')}</span>
-          <input
-            className="input"
-            value={letterCode}
-            onChange={(event) => setLetterCode(event.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5))}
-            placeholder={t('auth.register.letterCodePlaceholder', '5 位英文字母')}
-            autoCapitalize="characters"
-            autoComplete="off"
-            required
-          />
-        </label>
+        <fieldset className="field registration-letter-options">
+          <legend className="field__label">{t('auth.register.letterCode', '英文字母驗證碼')}</legend>
+          <p className="auth-form__hint">{t('auth.register.letterCodeHint', '請依 Email 中的 5 碼英文字母，勾選相同選項。')}</p>
+          {letterOptions.map((option) => (
+            <label className="checkbox registration-letter-options__item" key={option}>
+              <input
+                checked={letterCode === option}
+                type="checkbox"
+                onChange={() => setLetterCode((current) => current === option ? '' : option)}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
+        </fieldset>
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         <button className="primary-button" type="submit" disabled={loading || numericCode.length !== 6 || letterCode.length !== 5}>
           {loading ? t('auth.register.verifyingEmail', '驗證中…') : t('auth.register.verifyEmail', '驗證並建立帳號')}

@@ -41,6 +41,9 @@ public class UserAuthenticationConfiguration {
         Assert.isTrue(properties.getRegistrationVerification().getMaxAttempts() >= 1
                 && properties.getRegistrationVerification().getMaxAttempts() <= 10,
             "lumix.auth.registrationVerification.maxAttempts must be between 1 and 10");
+        Assert.isTrue(properties.getRegistrationVerification().getLetterOptionCount() >= 3
+                && properties.getRegistrationVerification().getLetterOptionCount() <= 5,
+            "lumix.auth.registrationVerification.letterOptionCount must be between 3 and 5");
         return new BCryptPasswordEncoder(properties.getBcryptStrength());
     }
 }

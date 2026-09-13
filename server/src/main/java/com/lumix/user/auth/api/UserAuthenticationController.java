@@ -15,6 +15,7 @@ import com.lumix.user.auth.domain.LoginVerificationState;
 import com.lumix.user.auth.domain.PendingLoginVerificationSecret;
 import com.lumix.user.auth.domain.SessionSecret;
 import java.time.Duration;
+import java.util.List;
 import java.util.UUID;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -66,7 +67,7 @@ public class UserAuthenticationController {
         // 此刻沒有使用者或 session；202 明確告知 browser 必須完成 email 雙碼，不能把寄信誤解為註冊成功。
         return ResponseEntity.accepted()
             .header(HttpHeaders.CACHE_CONTROL, "no-store")
-            .body(new RegistrationVerificationPendingResponse(result.registrationId()));
+            .body(new RegistrationVerificationPendingResponse(result.registrationId(), result.letterOptions()));
     }
 
     @PostMapping("/register/verify-email")
@@ -328,8 +329,8 @@ public class UserAuthenticationController {
 
     /** 原始登入頁只需知道是否等待 email，不取得 request id 或任何認證材料。 */
     public record LoginVerificationPendingResponse(boolean verificationRequired) { }
-    /** 註冊申請尚未建立帳號；前端僅以這個 id 送回兩組 email code。 */
-    public record RegistrationVerificationPendingResponse(UUID registrationId) { }
+    /** 註冊申請尚未建立帳號；email 內的正確五碼會由使用者在候選 checkbox 選項中比對。 */
+    public record RegistrationVerificationPendingResponse(UUID registrationId, List<String> letterOptions) { }
     /** 確認頁回傳目前決定，讓重複點選不能悄悄反轉既有 Yes／No。 */
     public record LoginVerificationDecisionResponse(String state) { }
 

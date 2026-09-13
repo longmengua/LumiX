@@ -146,7 +146,9 @@ public class UserAuthenticationService {
         if (registrationEmailBloomFilter.mightContain(normalizedEmail) && repository.userExistsByEmail(normalizedEmail)) {
             throw new ApiException(ApiErrorCode.EMAIL_ALREADY_REGISTERED);
         }
-        RegistrationVerificationSecret secret = createRegistrationVerificationSecret();
+        RegistrationVerificationSecret secret = createRegistrationVerificationSecret(
+            properties.getRegistrationVerification().getLetterOptionCount()
+        );
         AuthenticatedUser user = new AuthenticatedUser(UUID.randomUUID().toString(), normalizedEmail, normalizedDisplayName);
         PendingRegistration pending = new PendingRegistration(
             secret.registrationId(), user, passwordEncoder.encode(password), secret.numericCodeDigest(), secret.letterCodeDigest(),
@@ -155,7 +157,7 @@ public class UserAuthenticationService {
         // 同一地址重寄時由 repository 原子淘汰舊碼；寄送失敗會讓 transaction rollback，不留下失聯申請。
         repository.upsertRegistrationVerification(pending);
         registrationVerificationDelivery.deliver(normalizedEmail, secret);
-        return new RegistrationVerificationRequested(secret.registrationId());
+        return new RegistrationVerificationRequested(secret.registrationId(), secret.letterOptions());
     }
 
     /**
@@ -611,17 +613,34 @@ public class UserAuthenticationService {
         return new PasswordResetSecret(UUID.randomUUID(), secret, digestSecret(secret));
     }
 
-    private static RegistrationVerificationSecret createRegistrationVerificationSecret() {
+    private static RegistrationVerificationSecret createRegistrationVerificationSecret(int letterOptionCount) {
         String numericCode = String.format(Locale.ROOT, "%0" + REGISTRATION_NUMERIC_CODE_LENGTH + "d",
             SECURE_RANDOM.nextInt(1_000_000));
+        String letters = randomRegistrationLetterCode();
+        List<String> options = new ArrayList<>(letterOptionCount);
+        options.add(letters);
+        while (options.size() < letterOptionCount) {
+            String decoy = randomRegistrationLetterCode();
+            if (!options.contains(decoy)) options.add(decoy);
+        }
+        // 順序也使用 SecureRandom 洗牌，避免永遠固定答案位置成為不必要的自動化提示。
+        for (int index = options.size() - 1; index > 0; index--) {
+            int swapIndex = SECURE_RANDOM.nextInt(index + 1);
+            String value = options.get(index);
+            options.set(index, options.get(swapIndex));
+            options.set(swapIndex, value);
+        }
+        return new RegistrationVerificationSecret(
+            UUID.randomUUID(), numericCode, letters, options, digestSecret(numericCode), digestSecret(letters)
+        );
+    }
+
+    private static String randomRegistrationLetterCode() {
         StringBuilder letterCode = new StringBuilder(REGISTRATION_LETTER_CODE_LENGTH);
         for (int index = 0; index < REGISTRATION_LETTER_CODE_LENGTH; index++) {
             letterCode.append(REGISTRATION_LETTER_ALPHABET[SECURE_RANDOM.nextInt(REGISTRATION_LETTER_ALPHABET.length)]);
         }
-        String letters = letterCode.toString();
-        return new RegistrationVerificationSecret(
-            UUID.randomUUID(), numericCode, letters, digestSecret(numericCode), digestSecret(letters)
-        );
+        return letterCode.toString();
     }
 
     private static String normalizeNumericRegistrationCode(String value) {
@@ -734,8 +753,11 @@ public class UserAuthenticationService {
     /** 認證結果只供 controller 建立 cookie 與安全使用者投影，不含 password/token。 */
     public record AuthenticationResult(AuthenticatedUser user, SessionSecret session, DeviceSecret device) { }
 
-    /** 註冊信已排入受控 SMTP 後，browser 只能得到無秘密的 request id 用於下一步驗證。 */
-    public record RegistrationVerificationRequested(UUID registrationId) { }
+    /**
+     * 註冊信已排入受控 SMTP 後，browser 只取得無秘密的 request id 與候選字母碼。
+     * email 內才會告知正確五碼，候選清單不可視為第二組 code 的答案。
+     */
+    public record RegistrationVerificationRequested(UUID registrationId, List<String> letterOptions) { }
 
     /** 登入只有立即認證或等待 email 確認兩種結果，避免未知裝置默默取得 session。 */
     public record LoginResult(AuthenticationResult authentication, PendingLoginVerificationSecret pendingVerification) {

@@ -81,11 +81,14 @@ public class UserAuthenticationProperties {
     public static class RegistrationVerification {
         private Duration ttl = Duration.ofMinutes(10);
         private int maxAttempts = 5;
+        private int letterOptionCount = 4;
 
         public Duration getTtl() { return ttl; }
         public void setTtl(Duration ttl) { this.ttl = ttl; }
         public int getMaxAttempts() { return maxAttempts; }
         public void setMaxAttempts(int maxAttempts) { this.maxAttempts = maxAttempts; }
+        public int getLetterOptionCount() { return letterOptionCount; }
+        public void setLetterOptionCount(int letterOptionCount) { this.letterOptionCount = letterOptionCount; }
     }
 
     /**

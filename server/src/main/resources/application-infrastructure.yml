@@ -71,6 +71,8 @@ lumix:
       # 註冊前只保存 password hash 與兩組 code digest；過期或五次錯誤後必須重走 CAPTCHA 與寄信。
       ttl: ${LUMIX_AUTH_REGISTRATION_VERIFICATION_TTL:PT10M}
       max-attempts: ${LUMIX_AUTH_REGISTRATION_VERIFICATION_MAX_ATTEMPTS:5}
+      # 前端只呈現選項，email 內的五碼字母才是正確答案；選項數可在 3 至 5 間調整。
+      letter-option-count: ${LUMIX_AUTH_REGISTRATION_VERIFICATION_LETTER_OPTION_COUNT:4}
     captcha:
       # 可填 SLIDER、ICON_MATCH、IMAGE_GRID；預設只保留既有滑動驗證，新增題型須由部署者明確啟用。
       enabled-types: ${LUMIX_AUTH_CAPTCHA_ENABLED_TYPES:SLIDER}

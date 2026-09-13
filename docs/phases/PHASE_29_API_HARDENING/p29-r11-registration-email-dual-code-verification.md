@@ -6,11 +6,11 @@
 
 ## 目標與範圍
 
-註冊 CAPTCHA 通過後，先以受控 SMTP 寄送六位數字碼與五位英文字母碼；兩組都通過前，不建立 `users`、`user_credentials`、受信任裝置或 session。
+註冊 CAPTCHA 通過後，先以受控 SMTP 寄送六位數字碼與五位英文字母碼；前端會提供 3 至 5 個五碼字母候選 checkbox，使用者須勾選 Email 所示的正確碼。兩組都通過前，不建立 `users`、`user_credentials`、受信任裝置或 session。
 
 ## 安全邊界
 
-- 原始數字碼、五位字母碼與密碼均不回傳 API、不寫入 log；資料庫只保存兩個 code 的 SHA-256 digest 與 BCrypt password hash。
+- 原始數字碼、五位字母碼與密碼均不回傳 API、不寫入 log；候選字母碼只用於前端比對，Email 內容才告知答案；資料庫只保存兩個 code 的 SHA-256 digest 與 BCrypt password hash。
 - 每個 email 同一時間只保留一個待驗證申請；重新申請會原子失效舊信中的 code。
 - 驗證採 row lock、constant-time digest 比較與最多五次失敗限制；達上限、過期或已使用都 fail-closed，必須重新通過 CAPTCHA 並寄信。
 - SMTP 未啟用時 API 回應 `SERVICE_UNAVAILABLE`，不建立半成品帳號。

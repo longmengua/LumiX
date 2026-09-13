@@ -13,6 +13,7 @@ export type AuthenticatedUser = {
 /** 信件寄出後只有無秘密的申請識別可留在前端記憶體，兩組驗證碼均不可保存。 */
 export type RegistrationVerificationPending = {
   registrationId: string;
+  letterOptions: string[];
 };
 
 /** 帳密正確但裝置尚未確認時，前端不得把它視為已登入使用者。 */
@@ -51,10 +52,16 @@ export async function register(input: {
   const response = await fetch('/api/v1/auth/register', requestOptions(input));
   if (response.status !== 202) await ensureSuccess(response);
   const value: unknown = await response.json();
-  if (typeof value !== 'object' || value === null || typeof (value as { registrationId?: unknown }).registrationId !== 'string') {
+  if (typeof value !== 'object' || value === null || typeof (value as { registrationId?: unknown }).registrationId !== 'string'
+    || !isRegistrationLetterOptions((value as { letterOptions?: unknown }).letterOptions)) {
     throw new Error('AUTH_CONTRACT_ERROR');
   }
   return value as RegistrationVerificationPending;
+}
+
+function isRegistrationLetterOptions(value: unknown): value is string[] {
+  return Array.isArray(value) && value.length >= 3 && value.length <= 5
+    && value.every((option) => typeof option === 'string' && /^[A-Z]{5}$/.test(option));
 }
 
 /** 兩組 email code 必須在同一次 request 送出；成功後才會收到包含 Set-Cookie 的新帳號 session。 */
