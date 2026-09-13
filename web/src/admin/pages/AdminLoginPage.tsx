@@ -103,15 +103,18 @@ export function AdminLoginPage() {
   return (
     <div className="admin-login admin-login--portal">
       <div className="admin-login__ambient-ellipse" aria-hidden="true" />
-      <label className="admin-login__language-switcher">
-        <GlobeIcon />
-        <span className="sr-only">{t('header.language')}</span>
-        <select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label={t('header.language')}>
-                <option value="zh-TW">{t('locale.zh-TW')}</option>
-                <option value="en-US">{t('locale.en-US')}</option>
-        </select>
-        <ChevronDownIcon />
-      </label>
+      {/* 語言切換器放在正常 header 流程，矮視窗捲動時仍會和其他內容一起可達。 */}
+      <header className="admin-login__portal-header">
+        <label className="admin-login__language-switcher">
+          <GlobeIcon />
+          <span className="sr-only">{t('header.language')}</span>
+          <select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label={t('header.language')}>
+            <option value="zh-TW">{t('locale.zh-TW')}</option>
+            <option value="en-US">{t('locale.en-US')}</option>
+          </select>
+          <ChevronDownIcon />
+        </label>
+      </header>
 
       <main className="admin-login__portal-main">
         <Card className="admin-login__card">
