@@ -14,4 +14,14 @@ public interface PasswordResetDeliveryPort {
     boolean isAvailable();
 
     void deliver(AuthenticatedUser user, PasswordResetSecret secret);
+
+    /**
+     * 最高管理員首次啟用沿用同一受控的一次性連結傳遞通道，但必須使用可辨識的信件文案。
+     *
+     * <p>保留 default 實作讓非 SMTP adapter 仍維持既有 fail-closed 行為；不得為了 bootstrap 把 token
+     * 改由 log、管理 API 或設定檔送出。</p>
+     */
+    default void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret) {
+        deliver(user, secret);
+    }
 }

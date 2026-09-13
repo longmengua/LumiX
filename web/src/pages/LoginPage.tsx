@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
@@ -11,6 +11,7 @@ import { useI18n } from '../i18n';
 export function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { t } = useI18n();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
@@ -20,7 +21,7 @@ export function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const { signIn, completeLoginVerification } = useAuthentication();
   // 只接受站內相對路徑，避免把登入成功後的導向交給不可信的 location state。
-  const requestedReturnTo = location.state?.returnTo;
+  const requestedReturnTo = location.state?.returnTo ?? searchParams.get('returnTo');
   const returnTo = typeof requestedReturnTo === 'string'
     && requestedReturnTo.startsWith('/')
     && !requestedReturnTo.startsWith('//')

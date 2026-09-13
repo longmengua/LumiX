@@ -1,43 +1,51 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { clearAdminSession, readAdminSession, saveAdminSession, signInAdminMock, type AdminLoginInput, type AdminSession } from './mockAdminAuthService';
+import { fetchAdminSession, type AdminSession } from '../api/adminSessionApi';
 
 type AdminAuthContextValue = {
   session: AdminSession | null;
   isAuthenticated: boolean;
-  signIn: (input: AdminLoginInput) => Promise<AdminSession>;
-  signOut: () => void;
+  loading: boolean;
+  signOut: () => Promise<void>;
 };
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null);
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  // 這層只保存前端 session 快照，不能當成安全來源；真正的後台授權仍要由 server 驗證。
-  const [session, setSession] = useState<AdminSession | null>(() => readAdminSession());
+  // 每次掛載都由 HttpOnly session 向 server 重新確認，避免沿用可被竄改的瀏覽器儲存資料。
+  const [session, setSession] = useState<AdminSession | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (session) {
-      saveAdminSession(session);
-    } else {
-      clearAdminSession();
-    }
-  }, [session]);
+    let active = true;
+    void fetchAdminSession()
+      .then((nextSession) => {
+        if (active) setSession(nextSession);
+      })
+      .catch(() => {
+        // 未登入、尚未啟用或權限不足都不應在 browser 區分，以免洩漏管理員狀態。
+        if (active) setSession(null);
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const value = useMemo<AdminAuthContextValue>(
     () => ({
       session,
       isAuthenticated: session !== null,
-      signIn: async (input: AdminLoginInput) => {
-        const nextSession = await signInAdminMock(input);
-        setSession(nextSession);
-        return nextSession;
-      },
-      signOut: () => {
-        clearAdminSession();
+      loading,
+      signOut: async () => {
+        // 登出請求由既有使用者 authentication endpoint 消耗 HttpOnly session，不保留假前端 session。
+        await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => undefined);
         setSession(null);
       },
     }),
-    [session],
+    [loading, session],
   );
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>;

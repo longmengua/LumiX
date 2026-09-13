@@ -53,12 +53,21 @@ public class SmtpPasswordResetDelivery implements PasswordResetDeliveryPort {
 
     @Override
     public void deliver(AuthenticatedUser user, PasswordResetSecret secret) {
+        send(user, secret, "LumiX 密碼重設通知", "我們收到您的密碼重設請求。請於有效時間內開啟下列連結：");
+    }
+
+    /** 最高管理員啟用不應偽裝成一般忘記密碼信，讓收件人能辨識高權限帳戶的設定動作。 */
+    @Override
+    public void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret) {
+        send(user, secret, "LumiX 最高管理員帳號啟用", "此信箱被設定為 LumiX 最高管理員。請於有效時間內設定密碼以完成啟用：");
+    }
+
+    private void send(AuthenticatedUser user, PasswordResetSecret secret, String subject, String introduction) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(user.email());
-        message.setSubject("LumiX 密碼重設通知");
-        message.setText("我們收到您的密碼重設請求。請於有效時間內開啟下列連結：\n"
-            + publicBaseUrl + "/reset-password?token=" + secret.secret());
+        message.setSubject(subject);
+        message.setText(introduction + "\n" + publicBaseUrl + "/reset-password?token=" + secret.secret());
         mailSender.send(message);
     }
 

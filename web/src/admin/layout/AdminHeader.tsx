@@ -34,9 +34,8 @@ export function AdminHeader() {
           className="secondary-button"
           type="button"
           onClick={() => {
-            // 登出只清掉前端 session 快照，真正的服務端 token 撤銷要由後端實作。
-            signOut();
-            navigate('/login', { replace: true });
+            // 等 server 撤銷 HttpOnly session 後才導回登入，避免只是把畫面切走卻保留可用憑證。
+            void signOut().finally(() => navigate('/login', { replace: true }));
           }}
         >
           {t('admin.header.signOut')}

@@ -6,17 +6,6 @@ export type AdminSummaryItem = {
   hint: string;
 };
 
-export type AdminUserRecord = {
-  id: string;
-  name: string;
-  email: string;
-  status: 'Active' | 'Frozen' | 'KYC Pending';
-  role: 'Operator' | 'Risk' | 'Support' | 'Auditor';
-  kycLevel: string;
-  lastLoginAt: string;
-  twoFactorState: 'Enabled' | 'Reset pending';
-};
-
 export type AdminAssetRecord = {
   asset: string;
   spotBalance: string;
@@ -118,7 +107,6 @@ export type AdminSettings = {
 export type AdminConsoleSnapshot = {
   adapterNotice: string;
   summary: AdminSummaryItem[];
-  users: AdminUserRecord[];
   assets: AdminAssetRecord[];
   wallets: AdminWalletRecord[];
   spotMarkets: AdminSpotRecord[];
@@ -145,38 +133,6 @@ const snapshot: AdminConsoleSnapshot = {
     { label: 'Insurance Fund Balance', value: '$18.2M', hint: 'Displayed for ops review only.' },
     { label: 'Reconciliation Status', value: '1 mismatch', hint: 'Daily settlement diff is awaiting review.' },
     { label: 'System Status', value: 'Degraded', hint: 'Maint. window pending on two admin switches.' },
-  ],
-  users: [
-    {
-      id: 'usr-10021',
-      name: 'Maya Chen',
-      email: 'maya.chen@example.com',
-      status: 'Active',
-      role: 'Operator',
-      kycLevel: 'Advanced',
-      lastLoginAt: '2026-07-04T22:10:00Z',
-      twoFactorState: 'Enabled',
-    },
-    {
-      id: 'usr-10488',
-      name: 'Jared Ng',
-      email: 'jared.ng@example.com',
-      status: 'Frozen',
-      role: 'Support',
-      kycLevel: 'Intermediate',
-      lastLoginAt: '2026-07-04T15:12:00Z',
-      twoFactorState: 'Reset pending',
-    },
-    {
-      id: 'usr-11007',
-      name: 'TradeDesk Bot',
-      email: 'trade-desk@lumix.exchange',
-      status: 'KYC Pending',
-      role: 'Auditor',
-      kycLevel: 'Pending',
-      lastLoginAt: '2026-07-03T09:40:00Z',
-      twoFactorState: 'Enabled',
-    },
   ],
   assets: [
     { asset: 'USDT', spotBalance: '842,221,440.00', futuresBalance: '211,996,300.00', marginBalance: '88,122,000.00', frozenBalance: '12,050,000.00', ledgerDelta: '+18,240.00' },

@@ -3,6 +3,7 @@ package com.lumix.user.auth.application;
 import com.lumix.api.error.ApiErrorCode;
 import com.lumix.api.error.ApiException;
 import com.lumix.user.auth.config.UserAuthenticationProperties;
+import com.lumix.admin.superadmin.SuperAdminActivationPort;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.BoundLoginDevice;
 import com.lumix.user.auth.domain.DeviceSecret;
@@ -72,6 +73,7 @@ public class UserAuthenticationService {
     private final PasswordResetDeliveryPort passwordResetDelivery;
     private final RegistrationVerificationDeliveryPort registrationVerificationDelivery;
     private final LoginVerificationDeliveryPort loginVerificationDelivery;
+    private final SuperAdminActivationPort superAdminActivation;
     private final UserAuthenticationProperties properties;
     private final Clock clock;
 
@@ -83,10 +85,11 @@ public class UserAuthenticationService {
         PasswordResetDeliveryPort passwordResetDelivery,
         RegistrationVerificationDeliveryPort registrationVerificationDelivery,
         LoginVerificationDeliveryPort loginVerificationDelivery,
+        SuperAdminActivationPort superAdminActivation,
         UserAuthenticationProperties properties
     ) {
         this(repository, registrationEmailBloomFilter, passwordEncoder, passwordResetDelivery, registrationVerificationDelivery,
-            loginVerificationDelivery, properties, Clock.systemUTC());
+            loginVerificationDelivery, superAdminActivation, properties, Clock.systemUTC());
     }
 
     UserAuthenticationService(
@@ -104,7 +107,7 @@ public class UserAuthenticationService {
                 @Override public void deliver(String email, RegistrationVerificationSecret secret) {
                     throw new IllegalStateException("Registration verification delivery is unavailable");
                 }
-            }, loginVerificationDelivery, properties, clock);
+            }, loginVerificationDelivery, userId -> { }, properties, clock);
     }
 
     UserAuthenticationService(
@@ -114,6 +117,7 @@ public class UserAuthenticationService {
         PasswordResetDeliveryPort passwordResetDelivery,
         RegistrationVerificationDeliveryPort registrationVerificationDelivery,
         LoginVerificationDeliveryPort loginVerificationDelivery,
+        SuperAdminActivationPort superAdminActivation,
         UserAuthenticationProperties properties,
         Clock clock
     ) {
@@ -123,6 +127,7 @@ public class UserAuthenticationService {
         this.passwordResetDelivery = passwordResetDelivery;
         this.registrationVerificationDelivery = registrationVerificationDelivery;
         this.loginVerificationDelivery = loginVerificationDelivery;
+        this.superAdminActivation = superAdminActivation;
         this.properties = properties;
         this.clock = clock;
     }
@@ -505,6 +510,8 @@ public class UserAuthenticationService {
         repository.updatePasswordHash(resettableCredential.user().userId(), passwordEncoder.encode(newPassword));
         repository.revokeAllSessions(resettableCredential.user().userId());
         repository.consumePasswordReset(resettableCredential.requestId());
+        // 同一 transaction 內才可啟用待啟用最高管理員，避免已獲後台權限卻尚未完成密碼更新或 token 消耗。
+        superAdminActivation.activateIfPending(resettableCredential.user().userId());
     }
 
     private SessionSecret createSession(String userId, LoginRequestMetadata metadata, UUID deviceId) {

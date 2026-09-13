@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 
 import { Badge } from '../../components/base/Badge';
@@ -10,14 +10,10 @@ import { useAdminAuth } from '../auth/AdminAuthProvider';
 const SHOW_DEV_NOTICES = import.meta.env.VITE_SHOW_DEV_NOTICES === 'true';
 
 export function AdminLoginPage() {
-  // 這個頁面只處理後台 demo session 的登入體驗，不代表正式 operator 驗證流程。
+  // 後台不再有獨立 mock 登入；最高管理員必須先完成一般登入，再由 server 檢查其 admin principal。
   const { locale, setLocale, t } = useI18n();
-  const { isAuthenticated, signIn } = useAdminAuth();
+  const { isAuthenticated, loading } = useAdminAuth();
   const navigate = useNavigate();
-  const [email, setEmail] = useState('operator@lumix.exchange');
-  const [password, setPassword] = useState('admin-demo');
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,23 +21,8 @@ export function AdminLoginPage() {
     }
   }, [isAuthenticated, navigate]);
 
-  if (isAuthenticated) {
+  if (!loading && isAuthenticated) {
     return <Navigate replace to="/" />;
-  }
-
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-
-    try {
-      await signIn({ email, password });
-      navigate('/', { replace: true });
-    } catch (submitError) {
-      setError(submitError instanceof Error ? submitError.message : t('admin.auth.login.errorGeneric'));
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -68,23 +49,10 @@ export function AdminLoginPage() {
         </div>
 
         <Card title={t('admin.auth.login.cardTitle')}>
-          <form className="auth-form" onSubmit={handleSubmit}>
-            <label className="field">
-              <span className="field__label">{t('admin.auth.login.email')}</span>
-              <input className="input" value={email} onChange={(event) => setEmail(event.target.value)} />
-            </label>
-
-            <label className="field">
-              <span className="field__label">{t('admin.auth.login.password')}</span>
-              <input className="input" type="password" value={password} onChange={(event) => setPassword(event.target.value)} />
-            </label>
-
-            {error ? <p className="form-message form-message--error">{error}</p> : null}
-
-            <button className="primary-button" type="submit" disabled={loading}>
-              {loading ? t('admin.auth.login.submitting') : t('admin.auth.login.submit')}
-            </button>
-          </form>
+          <div className="auth-form">
+            <p className="lead">請先以最高管理員帳號完成前台登入；後台會再由伺服器確認已啟用的管理員身分。</p>
+            <a className="primary-button" href="/login?returnTo=%2Fadmin">前往登入</a>
+          </div>
         </Card>
 
       </div>

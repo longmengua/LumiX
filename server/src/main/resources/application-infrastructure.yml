@@ -82,3 +82,7 @@ lumix:
   security:
     # 本機 Compose HTTP 驗證維持 false；公開 deployment 必須由 TLS ingress 覆蓋為 true。
     require-https: ${LUMIX_SECURITY_REQUIRE_HTTPS:false}
+  admin:
+    super-admin:
+      # 只在尚無 principal 時指定啟用信收件人；啟用後與資料庫信箱不符會 fail closed，絕不是授權白名單。
+      email: ${LUMIX_ADMIN_SUPER_ADMIN_EMAIL:}

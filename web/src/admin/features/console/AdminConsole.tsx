@@ -11,9 +11,9 @@ import {
   fetchAdminConsoleMock,
   type AdminConsoleSnapshot,
   type AdminMarketMakerRecord,
-  type AdminUserRecord,
   type AdminWalletRecord,
 } from './mockAdminService';
+import { findAdminUsers, getAdminUser, type AdminUser, type AdminUserDetail } from '../../api/adminUsersApi';
 
 type ConfirmState = {
   title: string;
@@ -103,7 +103,7 @@ export function AdminConsole() {
 
           <Routes>
             <Route index element={<AdminDashboardPage summary={data.summary} />} />
-            <Route path="users" element={<AdminUsersPage users={data.users} onPrompt={openConfirm} />} />
+            <Route path="users" element={<AdminUsersPage />} />
             <Route path="assets" element={<AdminAssetsPage assets={data.assets} />} />
             <Route path="wallet" element={<AdminWalletPage wallets={data.wallets} onPrompt={openConfirm} />} />
             <Route path="spot" element={<AdminSpotPage markets={data.spotMarkets} onPrompt={openConfirm} />} />
@@ -165,62 +165,69 @@ function AdminDashboardPage({ summary }: { summary: AdminConsoleSnapshot['summar
   );
 }
 
-function AdminUsersPage({ users, onPrompt }: { users: AdminUserRecord[]; onPrompt: (confirm: ConfirmState) => void }) {
+function AdminUsersPage() {
   const { t } = useI18n();
-  const [items, setItems] = useState(users);
+  const [query, setQuery] = useState('');
+  const [items, setItems] = useState<AdminUser[]>([]);
+  const [detail, setDetail] = useState<AdminUserDetail | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    setItems(users);
-  }, [users]);
-
-  function promptToggle(user: AdminUserRecord) {
-    const nextStatus = user.status === 'Frozen' ? 'Active' : 'Frozen';
-    onPrompt({
-      title: `${user.name} · ${nextStatus === 'Frozen' ? t('admin.user.freezeTitle') : t('admin.user.unfreezeTitle')}`,
-      description: t('admin.user.stateChangeDescription', undefined, {
-        email: user.email,
-        status: nextStatus.toLowerCase(),
-      }),
-      confirmLabel: nextStatus === 'Frozen' ? t('admin.user.freeze') : t('admin.user.unfreeze'),
-      action: () => setItems((current) => current.map((item) => (item.id === user.id ? { ...item, status: nextStatus } : item))),
-    });
+  function load(searchQuery = query) {
+    // 使用者 mock 已移除；API 拒絕時保留 server code，不把前端狀態誤當成查詢結果。
+    void findAdminUsers(searchQuery)
+      .then(setItems)
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'ADMIN_USER_QUERY_FAILED'));
   }
 
-  function promptReset2fa(user: AdminUserRecord) {
-    onPrompt({
-      title: `${user.name} · ${t('admin.user.reset2faTitle')}`,
-      description: t('admin.user.reset2faDescription'),
-      confirmLabel: t('admin.user.reset2fa'),
-      action: () => setItems((current) => current.map((item) => (item.id === user.id ? { ...item, twoFactorState: 'Reset pending' } : item))),
-    });
+  useEffect(() => {
+    load('');
+  }, []);
+
+  function showDetail(userId: string) {
+    void getAdminUser(userId)
+      .then(setDetail)
+      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'ADMIN_USER_QUERY_FAILED'));
   }
 
   return (
     <Card title={t('admin.usersTitle')}>
-      <AdminTable columns={[t('admin.column.id'), t('admin.column.user'), t('admin.column.status'), t('admin.column.role'), t('admin.column.kyc'), t('admin.column.2fa'), t('admin.column.lastLogin'), t('admin.column.actions')]}>
+      <form className="hero-actions" onSubmit={(event) => {
+        event.preventDefault();
+        setError(null);
+        load();
+      }}>
+        <input
+          className="input"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="UID、email、顯示名稱"
+        />
+        <button className="secondary-button">搜尋</button>
+      </form>
+      {error ? <p className="form-message form-message--error">{error}</p> : null}
+      <AdminTable
+        columns={[t('admin.column.id'), t('admin.column.user'), t('admin.column.status'), t('admin.column.lastLogin'), t('admin.column.actions')]}
+      >
         {items.map((user) => (
-          <AdminTableRow key={user.id}>
-            <span>{user.id}</span>
+          <AdminTableRow key={user.userId}>
+            <span>{user.userId}</span>
             <div>
-              <strong>{user.name}</strong>
+              <strong>{user.displayName}</strong>
               <p className="assets-metric__hint">{user.email}</p>
             </div>
             <Badge tone={getStatusTone(user.status)}>{user.status}</Badge>
-            <span>{user.role}</span>
-            <span>{user.kycLevel}</span>
-            <Badge tone={user.twoFactorState === 'Enabled' ? 'success' : 'warning'}>{user.twoFactorState}</Badge>
-            <span>{formatTime(user.lastLoginAt)}</span>
-            <div className="hero-actions">
-              <button className="secondary-button" type="button" onClick={() => promptToggle(user)}>
-                {user.status === 'Frozen' ? t('admin.user.unfreeze') : t('admin.user.freeze')}
-              </button>
-              <button className="ghost-button" type="button" onClick={() => promptReset2fa(user)}>
-                {t('admin.user.reset2fa')}
-              </button>
-            </div>
+            <span>{user.lastLoginAt ? formatTime(user.lastLoginAt) : '—'}</span>
+            <button className="secondary-button" type="button" onClick={() => showDetail(user.userId)}>詳情</button>
           </AdminTableRow>
         ))}
       </AdminTable>
+      {detail ? (
+        <Card title={detail.user.displayName}>
+          <p>{detail.user.userId} · {detail.user.email}</p>
+          <p>註冊：{formatTime(detail.user.createdAt)}</p>
+          <p>免驗證裝置：{detail.devices.map((device) => `${device.platform}／${device.label}`).join('、') || '無'}</p>
+        </Card>
+      ) : null}
     </Card>
   );
 }

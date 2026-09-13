@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import com.lumix.api.error.ApiException;
 import com.lumix.api.error.ApiErrorCode;
 import com.lumix.user.auth.config.UserAuthenticationProperties;
+import com.lumix.admin.superadmin.SuperAdminActivationPort;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
 import com.lumix.user.auth.domain.PendingRegistration;
@@ -139,7 +140,7 @@ class UserAuthenticationServiceRegistrationVerificationTest {
     ) {
         return new UserAuthenticationService(
             repository, bloomFilter, passwordEncoder, mock(PasswordResetDeliveryPort.class), delivery,
-            mock(LoginVerificationDeliveryPort.class), new UserAuthenticationProperties(),
+            mock(LoginVerificationDeliveryPort.class), mock(SuperAdminActivationPort.class), new UserAuthenticationProperties(),
             Clock.fixed(Instant.parse("2026-09-12T00:00:00Z"), ZoneOffset.UTC)
         );
     }

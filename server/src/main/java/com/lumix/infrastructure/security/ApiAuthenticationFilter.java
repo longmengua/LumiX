@@ -24,7 +24,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * `/api/v1` 的全域 authentication gate。
+ * `/api` 的全域 authentication gate。
  *
  * <p>只有明列的帳號建立／登入／密碼重設入口可以匿名；其餘 API 在進 controller 前必須驗證 HttpOnly
  * session，並把去敏後的 principal 放進 request attribute。這避免未來新增 endpoint 時遺漏個別鑒權。</p>
@@ -62,7 +62,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        if (!request.getRequestURI().startsWith("/api/v1/")) {
+        if (!request.getRequestURI().startsWith("/api/")) {
             return true;
         }
         if ("GET".equals(request.getMethod()) && "/api/v1/auth/captcha/challenge".equals(request.getRequestURI())) {
