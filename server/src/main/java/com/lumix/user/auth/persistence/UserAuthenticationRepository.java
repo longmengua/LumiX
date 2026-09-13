@@ -1,9 +1,12 @@
 package com.lumix.user.auth.persistence;
 
 import com.lumix.user.auth.domain.AuthenticatedUser;
+import com.lumix.user.auth.domain.BoundLoginDevice;
 import com.lumix.user.auth.domain.LoginHistoryEntry;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
+import com.lumix.user.auth.domain.LoginSecuritySettings;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
+import com.lumix.user.auth.domain.PendingRegistration;
 import com.lumix.user.auth.domain.PasswordCredential;
 import com.lumix.user.auth.domain.ResettableCredential;
 import com.lumix.user.auth.domain.TrustedLoginDevice;
@@ -18,6 +21,18 @@ public interface UserAuthenticationRepository {
 
     void createUser(AuthenticatedUser user, String passwordHash);
 
+    /** 儲存或取代同一 email 的未驗證註冊申請；原始 code 與密碼都不得傳進這個 boundary。 */
+    void upsertRegistrationVerification(PendingRegistration registration);
+
+    /** 驗證程序必須在同一個 primary transaction 鎖定申請，避免兩個 browser 同時完成同一註冊。 */
+    Optional<PendingRegistration> lockActiveRegistrationVerification(UUID registrationId);
+
+    /** 錯誤次數達上限會原子消耗申請，避免短碼被無限制暴力嘗試。 */
+    void recordRegistrationVerificationFailure(UUID registrationId, int maxAttempts);
+
+    /** 成功建立使用者後才可消耗申請；失敗 transaction 必須 rollback，避免有效申請被誤刪。 */
+    void consumeRegistrationVerification(UUID registrationId);
+
     boolean userExistsByEmail(String normalizedEmail);
 
     Optional<PasswordCredential> findPasswordCredentialByEmail(String normalizedEmail);
@@ -25,6 +40,12 @@ public interface UserAuthenticationRepository {
     Optional<AuthenticatedUser> findActiveUserByEmail(String normalizedEmail);
 
     Optional<UserProfile> findActiveUserProfile(String userId);
+
+    Optional<LoginSecuritySettings> findActiveLoginSecuritySettings(String userId);
+
+    List<BoundLoginDevice> findActiveBoundLoginDevices(String userId);
+
+    boolean hasActiveBoundLoginDevices(String userId);
 
     Optional<AuthenticatedUser> findActiveSession(UUID sessionId, String secretDigest);
 
@@ -43,6 +64,10 @@ public interface UserAuthenticationRepository {
     void createTrustedDevice(UUID deviceId, String userId, String secretDigest, LoginRequestMetadata metadata);
 
     void touchTrustedDevice(UUID deviceId, LoginRequestMetadata metadata);
+
+    boolean revokeBoundLoginDevice(String userId, UUID deviceId);
+
+    void revokeSessionsForDevice(String userId, UUID deviceId);
 
     void createLoginVerification(
         UUID verificationRequestId,
@@ -79,6 +104,8 @@ public interface UserAuthenticationRepository {
     void updatePasswordHash(String userId, String passwordHash);
 
     boolean updateDisplayName(String userId, String displayName);
+
+    boolean updateNewDeviceLoginEmailNotificationEnabled(String userId, boolean enabled);
 
     void createPasswordReset(UUID requestId, String userId, String secretDigest, Instant expiresAt);
 

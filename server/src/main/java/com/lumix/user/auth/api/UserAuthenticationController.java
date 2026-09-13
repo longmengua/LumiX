@@ -15,6 +15,7 @@ import com.lumix.user.auth.domain.LoginVerificationState;
 import com.lumix.user.auth.domain.PendingLoginVerificationSecret;
 import com.lumix.user.auth.domain.SessionSecret;
 import java.time.Duration;
+import java.util.UUID;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Profile;
@@ -54,10 +55,27 @@ public class UserAuthenticationController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<UserResponse> register(HttpServletRequest servletRequest, @RequestBody RegisterRequest request) {
+    public ResponseEntity<RegistrationVerificationPendingResponse> register(
+        HttpServletRequest servletRequest,
+        @RequestBody RegisterRequest request
+    ) {
         visualCaptchaService.consume(request.captchaToken(), CaptchaPurpose.REGISTRATION, LoginRequestMetadataResolver.resolve(servletRequest));
-        AuthenticationResult result = authenticationService.register(
-            request.email(), request.displayName(), request.password(), LoginRequestMetadataResolver.resolve(servletRequest)
+        UserAuthenticationService.RegistrationVerificationRequested result = authenticationService.requestRegistrationVerification(
+            request.email(), request.displayName(), request.password()
+        );
+        // 此刻沒有使用者或 session；202 明確告知 browser 必須完成 email 雙碼，不能把寄信誤解為註冊成功。
+        return ResponseEntity.accepted()
+            .header(HttpHeaders.CACHE_CONTROL, "no-store")
+            .body(new RegistrationVerificationPendingResponse(result.registrationId()));
+    }
+
+    @PostMapping("/register/verify-email")
+    public ResponseEntity<UserResponse> verifyRegistrationEmail(
+        HttpServletRequest servletRequest,
+        @RequestBody RegistrationEmailVerificationRequest request
+    ) {
+        AuthenticationResult result = authenticationService.completeRegistrationVerification(
+            request.registrationId(), request.numericCode(), request.letterCode(), LoginRequestMetadataResolver.resolve(servletRequest)
         );
         return authenticatedResponse(HttpStatus.CREATED, result);
     }
@@ -71,7 +89,6 @@ public class UserAuthenticationController {
         );
         if (result.requiresVerification()) {
             return ResponseEntity.status(HttpStatus.ACCEPTED)
-                .header(HttpHeaders.SET_COOKIE, pendingVerificationCookie(result.pendingVerification()).toString())
                 .header(HttpHeaders.CACHE_CONTROL, "no-store")
                 .body(new LoginVerificationPendingResponse(true));
         }
@@ -111,12 +128,23 @@ public class UserAuthenticationController {
     /**
      * email 確認頁的 Yes／No 決定。
      *
-     * <p>這個 endpoint 不設 session cookie；核准後仍只能由原始登入瀏覽器的 pending cookie 完成登入。</p>
+     * <p>這個 endpoint 不設 session 要求；Yes 會原子消耗 email token，並在確認頁所在瀏覽器建立
+     * HttpOnly session 與受信任裝置 cookie。GET email link 永遠不會改變登入狀態。</p>
      */
     @PostMapping("/login-verification/decision")
-    public LoginVerificationDecisionResponse decideLoginVerification(@RequestBody LoginVerificationDecisionRequest request) {
-        LoginVerificationState state = authenticationService.decideLoginVerification(request.token(), request.approved());
-        return new LoginVerificationDecisionResponse(state.name());
+    public ResponseEntity<?> decideLoginVerification(
+        HttpServletRequest servletRequest,
+        @RequestBody LoginVerificationDecisionRequest request
+    ) {
+        LoginVerificationCompletion completion = authenticationService.completeLoginVerificationByEmail(
+            request.token(), request.approved(), LoginRequestMetadataResolver.resolve(servletRequest)
+        );
+        if (completion.state() == LoginVerificationState.REJECTED) {
+            return ResponseEntity.ok()
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(new LoginVerificationDecisionResponse(LoginVerificationState.REJECTED.name()));
+        }
+        return authenticatedResponse(HttpStatus.OK, completion.authentication());
     }
 
     /** 原始登入瀏覽器以 HttpOnly pending cookie 輪詢並消耗已核准的新裝置登入。 */
@@ -285,6 +313,8 @@ public class UserAuthenticationController {
 
     /** 註冊輸入；password 不得加入 toString、log 或 validation error 的 details。 */
     public record RegisterRequest(String email, String displayName, String password, String captchaToken) { }
+    /** email 信的兩組 code 必須同時正確；registrationId 不是秘密，僅用來定位待驗證的短時效申請。 */
+    public record RegistrationEmailVerificationRequest(UUID registrationId, String numericCode, String letterCode) { }
     /** 登入輸入；錯誤回應不能區分 email 與 password 何者錯誤。 */
     public record LoginRequest(String email, String password, String captchaToken) { }
     /** email 確認頁只接受一次性 token 與明確 Yes／No，不接受 userId、session 或裝置資料。 */
@@ -298,6 +328,8 @@ public class UserAuthenticationController {
 
     /** 原始登入頁只需知道是否等待 email，不取得 request id 或任何認證材料。 */
     public record LoginVerificationPendingResponse(boolean verificationRequired) { }
+    /** 註冊申請尚未建立帳號；前端僅以這個 id 送回兩組 email code。 */
+    public record RegistrationVerificationPendingResponse(UUID registrationId) { }
     /** 確認頁回傳目前決定，讓重複點選不能悄悄反轉既有 Yes／No。 */
     public record LoginVerificationDecisionResponse(String state) { }
 

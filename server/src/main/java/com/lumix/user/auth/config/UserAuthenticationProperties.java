@@ -21,6 +21,7 @@ public class UserAuthenticationProperties {
     private Duration deviceTtl = Duration.ofDays(90);
     private int bcryptStrength = 12;
     private PasswordReset passwordReset = new PasswordReset();
+    private RegistrationVerification registrationVerification = new RegistrationVerification();
     private LoginVerification loginVerification = new LoginVerification();
     private Captcha captcha = new Captcha();
 
@@ -40,6 +41,8 @@ public class UserAuthenticationProperties {
     public void setBcryptStrength(int bcryptStrength) { this.bcryptStrength = bcryptStrength; }
     public PasswordReset getPasswordReset() { return passwordReset; }
     public void setPasswordReset(PasswordReset passwordReset) { this.passwordReset = passwordReset; }
+    public RegistrationVerification getRegistrationVerification() { return registrationVerification; }
+    public void setRegistrationVerification(RegistrationVerification registrationVerification) { this.registrationVerification = registrationVerification; }
     public LoginVerification getLoginVerification() { return loginVerification; }
     public void setLoginVerification(LoginVerification loginVerification) { this.loginVerification = loginVerification; }
     public Captcha getCaptcha() { return captcha; }
@@ -72,6 +75,17 @@ public class UserAuthenticationProperties {
 
         public Duration getTtl() { return ttl; }
         public void setTtl(Duration ttl) { this.ttl = ttl; }
+    }
+
+    /** 註冊 email 雙驗證碼的短時效與可審核嘗試上限；SMTP 沿用 password-reset 的受控設定。 */
+    public static class RegistrationVerification {
+        private Duration ttl = Duration.ofMinutes(10);
+        private int maxAttempts = 5;
+
+        public Duration getTtl() { return ttl; }
+        public void setTtl(Duration ttl) { this.ttl = ttl; }
+        public int getMaxAttempts() { return maxAttempts; }
+        public void setMaxAttempts(int maxAttempts) { this.maxAttempts = maxAttempts; }
     }
 
     /**

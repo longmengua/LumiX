@@ -39,6 +39,7 @@ class P12T09SchemaVerificationTest {
                     "email",
                     "display_name",
                     "status",
+                    "new_device_login_email_notification_enabled",
                     "created_at",
                     "updated_at");
             assertTableColumns(connection, "accounts",

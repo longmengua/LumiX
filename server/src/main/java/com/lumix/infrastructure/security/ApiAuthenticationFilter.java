@@ -38,6 +38,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
     private static final Set<String> ANONYMOUS_POST_PATHS = Set.of(
         "/api/v1/auth/captcha/challenge/verify",
         "/api/v1/auth/register",
+        "/api/v1/auth/register/verify-email",
         "/api/v1/auth/login",
         "/api/v1/auth/login-verification/decision",
         "/api/v1/auth/login-verification/complete",

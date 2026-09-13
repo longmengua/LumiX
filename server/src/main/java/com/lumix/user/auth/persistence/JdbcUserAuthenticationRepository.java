@@ -1,10 +1,13 @@
 package com.lumix.user.auth.persistence;
 
 import com.lumix.user.auth.domain.AuthenticatedUser;
+import com.lumix.user.auth.domain.BoundLoginDevice;
 import com.lumix.user.auth.domain.LoginHistoryEntry;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
+import com.lumix.user.auth.domain.LoginSecuritySettings;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
 import com.lumix.user.auth.domain.LoginVerificationState;
+import com.lumix.user.auth.domain.PendingRegistration;
 import com.lumix.user.auth.domain.PasswordCredential;
 import com.lumix.user.auth.domain.ResettableCredential;
 import com.lumix.user.auth.domain.TrustedLoginDevice;
@@ -57,6 +60,59 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
     }
 
     @Override
+    public void upsertRegistrationVerification(PendingRegistration registration) {
+        // 同一 email 的新寄送必須使舊信中的 code 立即無效，因此以 email unique key 原子覆寫申請。
+        jdbcTemplate.update(
+            "INSERT INTO registration_verification_requests (registration_id, user_id, email, display_name, password_hash, "
+                + "numeric_code_digest, letter_code_digest, attempt_count, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?) "
+                + "ON CONFLICT (email) DO UPDATE SET registration_id = EXCLUDED.registration_id, user_id = EXCLUDED.user_id, "
+                + "display_name = EXCLUDED.display_name, password_hash = EXCLUDED.password_hash, "
+                + "numeric_code_digest = EXCLUDED.numeric_code_digest, letter_code_digest = EXCLUDED.letter_code_digest, "
+                + "attempt_count = 0, expires_at = EXCLUDED.expires_at, consumed_at = NULL, updated_at = CURRENT_TIMESTAMP",
+            registration.registrationId(), registration.user().userId(), registration.user().email(), registration.user().displayName(),
+            registration.passwordHash(), registration.numericCodeDigest(), registration.letterCodeDigest(), Timestamp.from(registration.expiresAt())
+        );
+    }
+
+    @Override
+    public Optional<PendingRegistration> lockActiveRegistrationVerification(UUID registrationId) {
+        return jdbcTemplate.query(
+            "SELECT registration_id, user_id, email, display_name, password_hash, numeric_code_digest, letter_code_digest, "
+                + "attempt_count, expires_at FROM registration_verification_requests "
+                + "WHERE registration_id = ? AND consumed_at IS NULL AND expires_at > CURRENT_TIMESTAMP FOR UPDATE",
+            resultSet -> resultSet.next()
+                ? Optional.of(new PendingRegistration(
+                    resultSet.getObject("registration_id", UUID.class),
+                    new AuthenticatedUser(resultSet.getString("user_id"), resultSet.getString("email"), resultSet.getString("display_name")),
+                    resultSet.getString("password_hash"), resultSet.getString("numeric_code_digest"),
+                    resultSet.getString("letter_code_digest"), resultSet.getInt("attempt_count"),
+                    resultSet.getTimestamp("expires_at").toInstant()
+                ))
+                : Optional.empty(),
+            registrationId
+        );
+    }
+
+    @Override
+    public void recordRegistrationVerificationFailure(UUID registrationId, int maxAttempts) {
+        jdbcTemplate.update(
+            "UPDATE registration_verification_requests SET attempt_count = attempt_count + 1, "
+                + "consumed_at = CASE WHEN attempt_count + 1 >= ? THEN CURRENT_TIMESTAMP ELSE consumed_at END, "
+                + "updated_at = CURRENT_TIMESTAMP WHERE registration_id = ? AND consumed_at IS NULL",
+            maxAttempts, registrationId
+        );
+    }
+
+    @Override
+    public void consumeRegistrationVerification(UUID registrationId) {
+        jdbcTemplate.update(
+            "UPDATE registration_verification_requests SET consumed_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE registration_id = ? AND consumed_at IS NULL",
+            registrationId
+        );
+    }
+
+    @Override
     public boolean userExistsByEmail(String normalizedEmail) {
         Boolean exists = jdbcTemplate.queryForObject(
             "SELECT EXISTS (SELECT 1 FROM users WHERE email = ?)", Boolean.class, normalizedEmail
@@ -99,6 +155,41 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
                 : Optional.empty(),
             userId
         );
+    }
+
+    @Override
+    public Optional<LoginSecuritySettings> findActiveLoginSecuritySettings(String userId) {
+        return jdbcTemplate.query(
+            "SELECT new_device_login_email_notification_enabled FROM users WHERE user_id = ? AND status = 'ACTIVE'",
+            resultSet -> resultSet.next()
+                ? Optional.of(new LoginSecuritySettings(resultSet.getBoolean("new_device_login_email_notification_enabled")))
+                : Optional.empty(),
+            userId
+        );
+    }
+
+    @Override
+    public List<BoundLoginDevice> findActiveBoundLoginDevices(String userId) {
+        return jdbcTemplate.query(
+            "SELECT device_id, device_label, last_ip_address, created_at, last_seen_at FROM user_login_devices "
+                + "WHERE user_id = ? AND revoked_at IS NULL ORDER BY last_seen_at DESC, device_id DESC",
+            (resultSet, rowNumber) -> new BoundLoginDevice(
+                resultSet.getObject("device_id", UUID.class), resultSet.getString("device_label"),
+                resultSet.getString("last_ip_address"), resultSet.getTimestamp("created_at").toInstant(),
+                resultSet.getTimestamp("last_seen_at").toInstant()
+            ),
+            userId
+        );
+    }
+
+    @Override
+    public boolean hasActiveBoundLoginDevices(String userId) {
+        Boolean exists = jdbcTemplate.queryForObject(
+            "SELECT EXISTS (SELECT 1 FROM user_login_devices WHERE user_id = ? AND revoked_at IS NULL)",
+            Boolean.class,
+            userId
+        );
+        return Boolean.TRUE.equals(exists);
     }
 
     @Override
@@ -185,6 +276,24 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
             "UPDATE user_login_devices SET user_agent_digest = ?, device_label = ?, last_ip_address = ?, "
                 + "last_seen_at = CURRENT_TIMESTAMP WHERE device_id = ? AND revoked_at IS NULL",
             metadata.userAgentDigest(), metadata.deviceLabel(), metadata.ipAddress(), deviceId
+        );
+    }
+
+    @Override
+    public boolean revokeBoundLoginDevice(String userId, UUID deviceId) {
+        return jdbcTemplate.update(
+            "UPDATE user_login_devices SET revoked_at = CURRENT_TIMESTAMP "
+                + "WHERE user_id = ? AND device_id = ? AND revoked_at IS NULL",
+            userId, deviceId
+        ) == 1;
+    }
+
+    @Override
+    public void revokeSessionsForDevice(String userId, UUID deviceId) {
+        jdbcTemplate.update(
+            "UPDATE user_sessions SET revoked_at = CURRENT_TIMESTAMP "
+                + "WHERE user_id = ? AND device_id = ? AND revoked_at IS NULL",
+            userId, deviceId
         );
     }
 
@@ -306,6 +415,15 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
             "UPDATE users SET display_name = ?, updated_at = CURRENT_TIMESTAMP "
                 + "WHERE user_id = ? AND status = 'ACTIVE'",
             displayName, userId
+        ) == 1;
+    }
+
+    @Override
+    public boolean updateNewDeviceLoginEmailNotificationEnabled(String userId, boolean enabled) {
+        return jdbcTemplate.update(
+            "UPDATE users SET new_device_login_email_notification_enabled = ?, updated_at = CURRENT_TIMESTAMP "
+                + "WHERE user_id = ? AND status = 'ACTIVE'",
+            enabled, userId
         ) == 1;
     }
 

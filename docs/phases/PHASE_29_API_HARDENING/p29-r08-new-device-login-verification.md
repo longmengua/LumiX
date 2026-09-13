@@ -2,7 +2,7 @@
 
 ## 任務目的
 
-當帳密被用於新的瀏覽器／裝置，或既有裝置的 browser fingerprint 改變時，不能直接建立 server-side session。系統必須把本次登入的 IP、去敏裝置名稱與時間通知帳號 email，由使用者明確選擇 Yes 或 No；只有 Yes 後原本發起登入的瀏覽器才能完成一次登入。
+當帳密被用於新的瀏覽器／裝置，或既有裝置的 browser fingerprint 改變時，不能直接建立 server-side session。系統必須把本次登入的 IP、去敏裝置名稱與時間通知帳號 email，由使用者明確選擇 Yes 或 No。此文件的「原登入瀏覽器完成登入」舊行為已由 P29-R10 取代，現行行為請見 `p29-r10-login-notification-preference-email-browser-session.md`。
 
 ```text
 原登入 browser                         Email 確認 browser

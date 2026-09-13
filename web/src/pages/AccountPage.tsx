@@ -8,8 +8,12 @@ import { Sidebar } from '../components/layout/Sidebar';
 import {
   fetchAccountProfile,
   fetchLoginHistoryPage,
+  fetchLoginSecurity,
+  removeBoundLoginDevice,
+  updateNewDeviceEmailNotification,
   type AccountProfileRecord,
   type LoginHistoryRecord,
+  type LoginSecurityRecord,
 } from '../features/account/accountApi';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
 import { accountNavItems } from '../features/navigation/accountNav';
@@ -165,10 +169,109 @@ function AccountOverviewPage({
 /** 已接入的安全操作只連向已驗證 route，不把尚未提供的 MFA 或裝置資料偽裝成可用功能。 */
 function AccountSecurityPage() {
   const { t } = useI18n();
+  const [security, setSecurity] = useState<LoginSecurityRecord | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [removingDeviceId, setRemovingDeviceId] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    void fetchLoginSecurity()
+      .then((value) => {
+        if (alive) setSecurity(value);
+      })
+      .catch(() => {
+        if (alive) setError(t('account.loginSecurityLoadError'));
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => { alive = false; };
+  }, [t]);
+
+  async function handleNotificationChange(enabled: boolean) {
+    if (!security) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const settings = await updateNewDeviceEmailNotification(enabled);
+      setSecurity((current) => (current ? { ...current, settings } : current));
+    } catch {
+      setError(t('account.loginSecuritySaveError'));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function handleDeviceRemoval(deviceId: string) {
+    setRemovingDeviceId(deviceId);
+    setError(null);
+    try {
+      await removeBoundLoginDevice(deviceId);
+      setSecurity((current) => current
+        ? { ...current, devices: current.devices.filter((device) => device.deviceId !== deviceId) }
+        : current);
+    } catch {
+      setError(t('account.boundDevicesRemoveError'));
+    } finally {
+      setRemovingDeviceId(null);
+    }
+  }
+
+  if (loading) return <LoadingState title={t('account.loginSecurityLoadingTitle')} description={t('account.loginSecurityLoadingDescription')} />;
+  if (!security) return <ErrorState title={t('account.errorTitle')} description={error ?? t('account.loginSecurityLoadError')} />;
+
   return (
-    <Card title={t('account.securityCenterTitle')}>
-      <AccountSecurityActions />
-    </Card>
+    <div className="stack">
+      <Card title={t('account.securityCenterTitle')}>
+        <AccountSecurityActions />
+      </Card>
+      <Card title={t('account.loginSecurityNotificationTitle')}>
+        <div className="account-row">
+          <div>
+            <p className="account-row__title">{t('account.loginSecurityNotificationLabel')}</p>
+            <p className="account-row__meta">{t('account.loginSecurityNotificationDescription')}</p>
+          </div>
+          <label className="security-switch">
+            <input
+              checked={security.settings.newDeviceLoginEmailNotificationEnabled}
+              disabled={saving}
+              type="checkbox"
+              onChange={(event) => void handleNotificationChange(event.target.checked)}
+            />
+            <span aria-hidden="true" className="security-switch__track" />
+            <span className="sr-only">{t('account.loginSecurityNotificationLabel')}</span>
+          </label>
+        </div>
+        {error ? <p className="form-message form-message--error">{error}</p> : null}
+      </Card>
+      <Card title={t('account.boundDevicesTitle')}>
+        {security.devices.length === 0 ? <EmptyState title={t('account.boundDevicesEmptyTitle')} description={t('account.boundDevicesEmptyDescription')} /> : null}
+        <div className="timeline-list">
+          {security.devices.map((device) => (
+            <div className="timeline-item" key={device.deviceId}>
+              <div>
+                <p className="account-row__title">{device.deviceLabel}</p>
+                <p className="account-row__meta">{t('account.boundDevicesMeta', undefined, { ipAddress: device.lastIpAddress })}</p>
+                <p className="account-row__meta">{t('account.boundDevicesBoundAt', undefined, { time: formatTime(device.createdAt) })}</p>
+              </div>
+              <div className="account-device__actions">
+                <span className="timeline-item__time">{t('account.boundDevicesLastSeenAt', undefined, { time: formatTime(device.lastSeenAt) })}</span>
+                <button
+                  className="secondary-button account-device__remove"
+                  disabled={removingDeviceId !== null}
+                  type="button"
+                  onClick={() => void handleDeviceRemoval(device.deviceId)}
+                >
+                  {removingDeviceId === device.deviceId ? t('account.boundDevicesRemoving') : t('account.boundDevicesRemove')}
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
+    </div>
   );
 }
 

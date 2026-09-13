@@ -18,9 +18,12 @@ export function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [captchaOpen, setCaptchaOpen] = useState(false);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
+  const [numericCode, setNumericCode] = useState('');
+  const [letterCode, setLetterCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { register } = useAuthentication();
+  const { register, verifyRegistrationEmail } = useAuthentication();
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,16 +48,32 @@ export function RegisterPage() {
     }
   }
 
-  /** 表單欄位先在彈窗前檢查；成功滑動才把一次性 token 交給原本的註冊流程。 */
-  async function completeRegistration(captchaToken: string) {
+  /** CAPTCHA 通過後只發起 email 驗證，帳號與 session 仍不得在這一步建立。 */
+  async function requestRegistrationVerification(captchaToken: string) {
     setLoading(true);
     setError(null);
 
     try {
-      await register({ email: identifier, displayName, password, captchaToken });
-      navigate('/');
+      const pending = await register({ email: identifier, displayName, password, captchaToken });
+      setRegistrationId(pending.registrationId);
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'auth.register.errorGeneric'));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  /** 兩組 code 都只停留在受控 input state；成功後 server 才會建立帳號並回傳 HttpOnly session。 */
+  async function completeEmailVerification(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (registrationId === null) return;
+    setLoading(true);
+    setError(null);
+    try {
+      await verifyRegistrationEmail({ registrationId, numericCode, letterCode });
+      navigate('/');
+    } catch (submitError) {
+      setError(translateAuthError(submitError, t, 'auth.register.errorVerificationInvalid'));
     } finally {
       setLoading(false);
     }
@@ -70,7 +89,7 @@ export function RegisterPage() {
         </p>
       }
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
+      {registrationId === null ? <form className="auth-form" onSubmit={handleSubmit}>
         <label className="field">
           <span className="field__label">{t('auth.register.identifier')}</span>
           <input
@@ -119,14 +138,44 @@ export function RegisterPage() {
         <button className="primary-button" type="submit" disabled={loading}>
           {loading ? t('auth.register.submitting') : t('auth.register.submit')}
         </button>
-      </form>
+      </form> : <form className="auth-form" onSubmit={completeEmailVerification}>
+        <p className="auth-form__hint">{t('auth.register.emailVerificationHint', '驗證碼已寄至您的電子郵件；兩組皆須輸入正確。')}</p>
+        <label className="field">
+          <span className="field__label">{t('auth.register.numericCode', '數字驗證碼')}</span>
+          <input
+            className="input"
+            value={numericCode}
+            onChange={(event) => setNumericCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+            placeholder={t('auth.register.numericCodePlaceholder', '6 位數字')}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            required
+          />
+        </label>
+        <label className="field">
+          <span className="field__label">{t('auth.register.letterCode', '英文字母驗證碼')}</span>
+          <input
+            className="input"
+            value={letterCode}
+            onChange={(event) => setLetterCode(event.target.value.toUpperCase().replace(/[^A-Z]/g, '').slice(0, 5))}
+            placeholder={t('auth.register.letterCodePlaceholder', '5 位英文字母')}
+            autoCapitalize="characters"
+            autoComplete="off"
+            required
+          />
+        </label>
+        {error ? <p className="form-message form-message--error">{error}</p> : null}
+        <button className="primary-button" type="submit" disabled={loading || numericCode.length !== 6 || letterCode.length !== 5}>
+          {loading ? t('auth.register.verifyingEmail', '驗證中…') : t('auth.register.verifyEmail', '驗證並建立帳號')}
+        </button>
+      </form>}
       <SliderCaptcha
         open={captchaOpen}
         purpose="REGISTRATION"
         onCancel={() => setCaptchaOpen(false)}
         onVerified={(captchaToken) => {
           setCaptchaOpen(false);
-          void completeRegistration(captchaToken);
+          void requestRegistrationVerification(captchaToken);
         }}
       />
     </AuthPageShell>

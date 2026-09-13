@@ -18,6 +18,20 @@ export type AccountProfileRecord = {
   createdAt: string;
 };
 
+/** 個人中心安全設定與目前仍有效的綁定裝置；不含 device cookie、token 或 User-Agent digest。 */
+export type LoginSecurityRecord = {
+  settings: {
+    newDeviceLoginEmailNotificationEnabled: boolean;
+  };
+  devices: Array<{
+    deviceId: string;
+    deviceLabel: string;
+    lastIpAddress: string;
+    createdAt: string;
+    lastSeenAt: string;
+  }>;
+};
+
 type LoginHistoryResponse = {
   records: LoginHistoryRecord[];
   hasOlder: boolean;
@@ -79,6 +93,41 @@ export async function fetchAccountProfile(): Promise<AccountProfileRecord> {
   return value;
 }
 
+/** 讀取目前 session owner 的新裝置通知開關與綁定裝置，不能由 client 指定其他 userId。 */
+export async function fetchLoginSecurity(): Promise<LoginSecurityRecord> {
+  const response = await fetch('/api/v1/account/security', { credentials: 'same-origin' });
+  if (!response.ok) throw new Error('LOGIN_SECURITY_REQUEST_FAILED');
+  const value: unknown = await response.json();
+  if (!isLoginSecurityRecord(value)) throw new Error('LOGIN_SECURITY_CONTRACT_ERROR');
+  return value;
+}
+
+/** 開關只改變未知裝置是否需要 email 核准；既有裝置與 session 不會被此操作刪除。 */
+export async function updateNewDeviceEmailNotification(enabled: boolean): Promise<LoginSecurityRecord['settings']> {
+  const response = await fetch('/api/v1/account/security/new-device-email-notification', {
+    method: 'PATCH',
+    credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ enabled }),
+  });
+  if (!response.ok) throw new Error('LOGIN_SECURITY_UPDATE_FAILED');
+  const value: unknown = await response.json();
+  if (typeof value !== 'object' || value === null
+    || typeof (value as { newDeviceLoginEmailNotificationEnabled?: unknown }).newDeviceLoginEmailNotificationEnabled !== 'boolean') {
+    throw new Error('LOGIN_SECURITY_CONTRACT_ERROR');
+  }
+  return value as LoginSecurityRecord['settings'];
+}
+
+/** 移除綁定裝置會讓後端撤銷該裝置所有 active session，而非只從前端清單刪除。 */
+export async function removeBoundLoginDevice(deviceId: string): Promise<void> {
+  const response = await fetch(`/api/v1/account/security/devices/${encodeURIComponent(deviceId)}`, {
+    method: 'DELETE',
+    credentials: 'same-origin',
+  });
+  if (!response.ok) throw new Error('LOGIN_SECURITY_REMOVE_DEVICE_FAILED');
+}
+
 function isLoginHistoryResponse(value: unknown): value is LoginHistoryResponse {
   if (typeof value !== 'object' || value === null || !Array.isArray((value as Partial<LoginHistoryResponse>).records)) {
     return false;
@@ -106,4 +155,22 @@ function isAccountProfileRecord(value: unknown): value is AccountProfileRecord {
     && typeof profile.email === 'string'
     && typeof profile.displayName === 'string'
     && typeof profile.createdAt === 'string';
+}
+
+function isLoginSecurityRecord(value: unknown): value is LoginSecurityRecord {
+  if (typeof value !== 'object' || value === null) return false;
+  const security = value as Partial<LoginSecurityRecord>;
+  return typeof security.settings === 'object'
+    && security.settings !== null
+    && typeof security.settings.newDeviceLoginEmailNotificationEnabled === 'boolean'
+    && Array.isArray(security.devices)
+    && security.devices.every((device) => (
+      typeof device === 'object'
+      && device !== null
+      && typeof (device as LoginSecurityRecord['devices'][number]).deviceId === 'string'
+      && typeof (device as LoginSecurityRecord['devices'][number]).deviceLabel === 'string'
+      && typeof (device as LoginSecurityRecord['devices'][number]).lastIpAddress === 'string'
+      && typeof (device as LoginSecurityRecord['devices'][number]).createdAt === 'string'
+      && typeof (device as LoginSecurityRecord['devices'][number]).lastSeenAt === 'string'
+    ));
 }

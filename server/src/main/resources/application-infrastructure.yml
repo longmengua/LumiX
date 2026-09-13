@@ -67,6 +67,10 @@ lumix:
     login-verification:
       # pending cookie 與 email token 都會在此短時效後失效；不得延長為長期裝置憑證。
       ttl: ${LUMIX_AUTH_LOGIN_VERIFICATION_TTL:PT15M}
+    registration-verification:
+      # 註冊前只保存 password hash 與兩組 code digest；過期或五次錯誤後必須重走 CAPTCHA 與寄信。
+      ttl: ${LUMIX_AUTH_REGISTRATION_VERIFICATION_TTL:PT10M}
+      max-attempts: ${LUMIX_AUTH_REGISTRATION_VERIFICATION_MAX_ATTEMPTS:5}
     captcha:
       # 可填 SLIDER、ICON_MATCH、IMAGE_GRID；預設只保留既有滑動驗證，新增題型須由部署者明確啟用。
       enabled-types: ${LUMIX_AUTH_CAPTCHA_ENABLED_TYPES:SLIDER}

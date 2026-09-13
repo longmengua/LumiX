@@ -10,10 +10,20 @@ export type AuthenticatedUser = {
   displayName: string;
 };
 
+/** 信件寄出後只有無秘密的申請識別可留在前端記憶體，兩組驗證碼均不可保存。 */
+export type RegistrationVerificationPending = {
+  registrationId: string;
+};
+
 /** 帳密正確但裝置尚未確認時，前端不得把它視為已登入使用者。 */
 export type SignInResult =
   | { kind: 'authenticated'; user: AuthenticatedUser }
   | { kind: 'verification-required' };
+
+/** email Yes 成功後，session 建立在確認頁所在的瀏覽器，而不是原始登入分頁。 */
+export type LoginVerificationDecisionResult =
+  | { state: 'APPROVED'; user: AuthenticatedUser }
+  | { state: 'REJECTED' };
 
 type ApiError = {
   code?: string;
@@ -37,8 +47,23 @@ export async function register(input: {
   displayName: string;
   password: string;
   captchaToken: string;
+}): Promise<RegistrationVerificationPending> {
+  const response = await fetch('/api/v1/auth/register', requestOptions(input));
+  if (response.status !== 202) await ensureSuccess(response);
+  const value: unknown = await response.json();
+  if (typeof value !== 'object' || value === null || typeof (value as { registrationId?: unknown }).registrationId !== 'string') {
+    throw new Error('AUTH_CONTRACT_ERROR');
+  }
+  return value as RegistrationVerificationPending;
+}
+
+/** 兩組 email code 必須在同一次 request 送出；成功後才會收到包含 Set-Cookie 的新帳號 session。 */
+export async function verifyRegistrationEmail(input: {
+  registrationId: string;
+  numericCode: string;
+  letterCode: string;
 }): Promise<AuthenticatedUser> {
-  return requestUser('/register', input);
+  return requestUser('/register/verify-email', input);
 }
 
 export async function currentUser(): Promise<AuthenticatedUser> {
@@ -151,17 +176,18 @@ export async function completeLoginVerification(): Promise<AuthenticatedUser | n
   return readUser(response);
 }
 
-/** email 確認頁以明確 POST 送出 Yes／No，GET link 不會有任何狀態變更。 */
-export async function decideLoginVerification(token: string, approved: boolean): Promise<'APPROVED' | 'REJECTED'> {
+/** email 確認頁以明確 POST 送出 Yes／No；Yes 成功後由 response 的 Set-Cookie 建立此瀏覽器 session。 */
+export async function decideLoginVerification(token: string, approved: boolean): Promise<LoginVerificationDecisionResult> {
   const response = await fetch(
     '/api/v1/auth/login-verification/decision',
     requestOptions({ token, approved }),
   );
+  if (approved) return { state: 'APPROVED', user: await readUser(response) };
   await ensureSuccess(response);
   const value: unknown = await response.json();
   const state = typeof value === 'object' && value !== null ? (value as { state?: unknown }).state : null;
-  if (state !== 'APPROVED' && state !== 'REJECTED') throw new Error('AUTH_CONTRACT_ERROR');
-  return state;
+  if (state !== 'REJECTED') throw new Error('AUTH_CONTRACT_ERROR');
+  return { state };
 }
 
 async function requestUser(path: string, body: object): Promise<AuthenticatedUser> {

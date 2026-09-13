@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
-import { decideLoginVerification } from '../features/auth/authApi';
 import { translateAuthError } from '../features/auth/authText';
+import { useAuthentication } from '../features/auth/AuthenticationProvider';
 import { useI18n } from '../i18n';
 
 /**
@@ -13,6 +13,7 @@ import { useI18n } from '../i18n';
  */
 export function LoginVerificationPage() {
   const { t } = useI18n();
+  const { decideLoginVerification } = useAuthentication();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') ?? '';
   const [loading, setLoading] = useState(false);

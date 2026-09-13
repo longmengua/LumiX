@@ -1,15 +1,16 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import * as authApi from './authApi';
-import type { AuthenticatedUser } from './authApi';
+import type { AuthenticatedUser, RegistrationVerificationPending } from './authApi';
 
 type AuthenticationContextValue = {
   user: AuthenticatedUser | null;
   loading: boolean;
   sessionResolved: boolean;
   signIn(input: { email: string; password: string; captchaToken: string }): Promise<AuthenticatedUser | null>;
-  completeLoginVerification(): Promise<AuthenticatedUser | null>;
-  register(input: { email: string; displayName: string; password: string; captchaToken: string }): Promise<AuthenticatedUser>;
+  decideLoginVerification(token: string, approved: boolean): Promise<'APPROVED' | 'REJECTED'>;
+  register(input: { email: string; displayName: string; password: string; captchaToken: string }): Promise<RegistrationVerificationPending>;
+  verifyRegistrationEmail(input: { registrationId: string; numericCode: string; letterCode: string }): Promise<AuthenticatedUser>;
   signOut(): Promise<void>;
   changePassword(input: { currentPassword: string; newPassword: string }): Promise<AuthenticatedUser>;
   updateDisplayName(displayName: string): Promise<AuthenticatedUser>;
@@ -80,18 +81,21 @@ export function AuthenticationProvider({ children }: { children: ReactNode }) {
       setSessionResolved(true);
       return authenticatedUser;
     },
-    async completeLoginVerification() {
-      const authenticatedUser = await authApi.completeLoginVerification();
-      if (authenticatedUser === null) return null;
+    async decideLoginVerification(token, approved) {
+      const result = await authApi.decideLoginVerification(token, approved);
+      if (result.state === 'REJECTED') return result.state;
       sessionOperation.current += 1;
-      setUser(authenticatedUser);
+      setUser(result.user);
       setLoading(false);
       setSessionResolved(true);
-      return authenticatedUser;
+      return result.state;
     },
     async register(input) {
-      const authenticatedUser = await authApi.register(input);
-      // 註冊成功已核發 session，不能再讓較早的匿名查詢把它清空。
+      return authApi.register(input);
+    },
+    async verifyRegistrationEmail(input) {
+      const authenticatedUser = await authApi.verifyRegistrationEmail(input);
+      // email 雙碼成功後才核發 session，不能讓較早的匿名查詢把它清空。
       sessionOperation.current += 1;
       setUser(authenticatedUser);
       setLoading(false);

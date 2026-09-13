@@ -35,6 +35,12 @@ public class UserAuthenticationConfiguration {
         Assert.isTrue(!properties.getLoginVerification().getTtl().isNegative()
                 && !properties.getLoginVerification().getTtl().isZero(),
             "lumix.auth.loginVerification.ttl must be positive");
+        Assert.isTrue(!properties.getRegistrationVerification().getTtl().isNegative()
+                && !properties.getRegistrationVerification().getTtl().isZero(),
+            "lumix.auth.registrationVerification.ttl must be positive");
+        Assert.isTrue(properties.getRegistrationVerification().getMaxAttempts() >= 1
+                && properties.getRegistrationVerification().getMaxAttempts() <= 10,
+            "lumix.auth.registrationVerification.maxAttempts must be between 1 and 10");
         return new BCryptPasswordEncoder(properties.getBcryptStrength());
     }
 }
