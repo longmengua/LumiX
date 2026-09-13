@@ -2,9 +2,24 @@
 <project version="4">
   <component name="RemoteRepositoriesConfiguration">
     <remote-repository>
+      <option name="id" value="nexus-admin" />
+      <option name="name" value="nexus-admin" />
+      <option name="url" value="http://34.87.63.170:8081/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
       <option name="id" value="central" />
       <option name="name" value="Central Repository" />
       <option name="url" value="https://repo.maven.apache.org/maven2" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="getui-nexus" />
+      <option name="name" value="getui-nexus" />
+      <option name="url" value="http://34.87.63.170:8081/repository/maven-public/" />
+    </remote-repository>
+    <remote-repository>
+      <option name="id" value="central" />
+      <option name="name" value="Central Repository" />
+      <option name="url" value="http://34.87.63.170:8081/repository/maven-public/" />
     </remote-repository>
     <remote-repository>
       <option name="id" value="central" />
