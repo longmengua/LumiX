@@ -43,7 +43,9 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         "/api/v1/auth/login-verification/decision",
         "/api/v1/auth/login-verification/complete",
         "/api/v1/auth/password/forgot",
-        "/api/v1/auth/password/reset"
+        "/api/v1/auth/password/reset",
+        "/api/admin/v1/auth/password/forgot",
+        "/api/admin/v1/auth/password/reset"
     );
 
     private final UserAuthenticationService authenticationService;

@@ -372,8 +372,27 @@ p,
   display: flex;
   flex-direction: column;
   gap: 18px;
-  width: min(100%, 36rem);
+  /* 後台登入欄位本身決定卡片寬度，避免沿用 36rem 寬容器而在表單右側留下無意義留白。 */
+  inline-size: fit-content;
+  max-inline-size: 100%;
   min-width: 0;
+}
+
+/* 卡片維持內容自適應，同時保留比一般資訊卡更舒適的左右呼吸空間。 */
+.admin-login__shell > .card {
+  padding-inline: clamp(1.5rem, 3vw, 2rem);
+}
+
+/* 空白狀態區也保有相同高度，讓登入按鈕不因訊息顯示而跳動。 */
+.admin-login__status {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+
+/* 忘記密碼是表單內的收尾連結，不額外佔用段落預設的上下空間。 */
+.admin-login .auth-page__helper {
+  margin-block: 0;
 }
 
 .admin-login__brand {
@@ -395,6 +414,409 @@ p,
 .admin-login__brand h1 {
   margin: 6px 0 0;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
+/*
+ * Admin Portal 登入頁採獨立的視覺 scope，避免深色企業入口的尺寸與輸入樣式滲入客戶端登入、帳戶或交易表單。
+ * 裝飾只用低對比漸層與輪廓，讓高權限登入的可讀性永遠優先於視覺效果。
+ */
+.admin-login--portal {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-block-size: 100dvh;
+  padding: 6rem 2.5rem 5rem;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(55, 105, 255, 0.13), rgba(10, 20, 45, 0.05) 35%, transparent 65%),
+    linear-gradient(145deg, #050914 0%, #071020 53%, #081329 100%);
+}
+
+.admin-login--portal::before {
+  position: absolute;
+  z-index: -2;
+  inset: 0;
+  content: '';
+  background: radial-gradient(ellipse 65% 42% at 50% 46%, rgba(78, 113, 255, 0.08), transparent 74%);
+  pointer-events: none;
+}
+
+.admin-login__ambient-ellipse {
+  position: absolute;
+  z-index: -1;
+  inset-inline-start: 50%;
+  inset-block-start: 54%;
+  inline-size: min(78rem, 118vw);
+  block-size: min(43rem, 70vw);
+  border: 1px solid rgba(102, 126, 255, 0.09);
+  border-radius: 50%;
+  opacity: 0.68;
+  transform: translate(-50%, -50%) rotate(-11deg);
+  pointer-events: none;
+}
+
+.admin-login__portal-main {
+  display: grid;
+  place-items: center;
+  inline-size: 100%;
+}
+
+.admin-login--portal .admin-login__card {
+  flex: 0 0 auto;
+  inline-size: min(28.75rem, calc(100vw - 2rem));
+  max-inline-size: calc(100vw - 2.5rem);
+  padding: 2.75rem 3rem;
+  border: 1px solid rgba(91, 130, 255, 0.4);
+  border-radius: 1.125rem;
+  background: rgba(7, 16, 35, 0.82);
+  box-shadow: 0 1.5rem 5rem rgba(0, 0, 0, 0.28);
+}
+
+.admin-login__identity {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.admin-login__identity .logo {
+  color: #f4f7ff;
+}
+
+.admin-login__identity .logo__mark {
+  inline-size: 3rem;
+  block-size: 3rem;
+}
+
+.admin-login__identity .logo__wordmark {
+  font-size: 1.35rem;
+}
+
+.admin-login__heading {
+  display: grid;
+  gap: 0.5rem;
+  margin-block-start: 2rem;
+}
+
+.admin-login__heading h1 {
+  margin: 0;
+  color: #f4f7ff;
+  font-size: clamp(1.625rem, 2.35vw, 2.125rem);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+.admin-login__heading p {
+  margin: 0;
+  color: rgba(189, 201, 230, 0.68);
+  font-size: 0.95rem;
+}
+
+.admin-login__language-switcher {
+  position: absolute;
+  z-index: 1;
+  inset-block-start: 1.75rem;
+  inset-inline-end: 2.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: #b8c5e5;
+  font-size: 0.875rem;
+  transition: color 160ms ease;
+}
+
+.admin-login__language-switcher:focus-within,
+.admin-login__language-switcher:hover {
+  color: #fff;
+}
+
+.admin-login__language-switcher > svg,
+.admin-login__language-switcher > svg path,
+.admin-login__input-shell > svg,
+.password-field__leading-adornment svg,
+.admin-login__submit svg,
+.admin-login__security-notice svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.admin-login__language-switcher > svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  flex: 0 0 auto;
+}
+
+.admin-login__language-switcher > svg:last-child {
+  inline-size: 1rem;
+  block-size: 1rem;
+  pointer-events: none;
+}
+
+.admin-login__language-switcher select {
+  appearance: none;
+  max-inline-size: 9rem;
+  border: 0;
+  padding: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  outline: none;
+}
+
+.admin-login__language-switcher select:focus-visible {
+  outline: 2px solid rgba(112, 158, 255, 0.78);
+  outline-offset: 0.3rem;
+  border-radius: 0.25rem;
+}
+
+.admin-login__form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  margin-block-start: 2rem;
+}
+
+.admin-login__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  color: #e4eaf8;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-login__field .field__label {
+  color: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+.admin-login__input-shell,
+.admin-login__field .password-field {
+  position: relative;
+  display: block;
+  color: #8394be;
+}
+
+.admin-login__input-shell > svg,
+.password-field__leading-adornment {
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 1rem;
+  inset-block-start: 50%;
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.password-field__leading-adornment {
+  display: grid;
+  place-items: center;
+}
+
+.password-field__leading-adornment svg {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+}
+
+.admin-login__input {
+  min-block-size: 3.5rem;
+  padding-inline: 3rem 3.25rem;
+  border: 1px solid rgba(120, 145, 200, 0.28);
+  border-radius: 0.8125rem;
+  background: rgba(7, 15, 32, 0.7);
+  color: #f4f7ff;
+  font-size: 1rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.admin-login__input::placeholder {
+  color: rgba(178, 191, 220, 0.48);
+}
+
+.admin-login__input:focus,
+.admin-login__field .password-field:focus-within .admin-login__input {
+  border-color: rgba(80, 135, 255, 0.8);
+  box-shadow: 0 0 0 3px rgba(70, 120, 255, 0.1);
+  background: rgba(7, 15, 32, 0.9);
+}
+
+.admin-login__field .password-field__input {
+  padding-inline-start: 3rem;
+  padding-inline-end: 3.5rem;
+}
+
+.admin-login__field .password-field__toggle--icon-only {
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  inset-inline-end: 0.5rem;
+  padding: 0;
+  color: #8394be;
+}
+
+.admin-login__field .password-field__toggle--icon-only svg {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.admin-login__field .password-field__toggle--icon-only:hover,
+.admin-login__field .password-field__toggle--icon-only:focus-visible {
+  color: #eff6ff;
+  background: rgba(80, 135, 255, 0.12);
+}
+
+.admin-login__field .password-field__caps-lock {
+  margin-block-start: -0.1rem;
+  color: #f8c886;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.admin-login__forgot-password {
+  align-self: flex-end;
+  margin: -0.65rem 0 -0.1rem;
+  font-size: 0.8125rem;
+}
+
+.admin-login__forgot-password a {
+  color: #4ea1ff;
+}
+
+.admin-login__forgot-password a:hover,
+.admin-login__forgot-password a:focus-visible {
+  color: #8fc7ff;
+  text-decoration: underline;
+}
+
+.admin-login--portal .admin-login__status {
+  min-block-size: 2.875rem;
+  margin: -0.2rem 0 -0.1rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid transparent;
+  border-radius: 0.625rem;
+  color: transparent;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.admin-login--portal .admin-login__status.form-message--error {
+  border-color: rgba(255, 90, 110, 0.25);
+  background: rgba(255, 70, 90, 0.08);
+  color: #ff9daa;
+}
+
+.admin-login--portal .admin-login__status.form-message--success {
+  border-color: rgba(78, 217, 164, 0.22);
+  background: rgba(41, 177, 126, 0.08);
+  color: #a8f0d1;
+}
+
+.admin-login__submit {
+  inline-size: 100%;
+  min-block-size: 3.5rem;
+  margin-block-start: -0.1rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3ea1ff 0%, #4d7fff 55%, #8174ff 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform 160ms ease, filter 160ms ease, opacity 160ms ease;
+}
+
+.admin-login__submit svg {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+}
+
+.admin-login__submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.admin-login__security-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin: 2rem 0 0;
+  color: rgba(175, 189, 218, 0.58);
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.admin-login__security-notice svg {
+  flex: 0 0 auto;
+  inline-size: 1rem;
+  block-size: 1rem;
+  margin-block-start: 0.1rem;
+}
+
+.admin-login__footer {
+  position: absolute;
+  z-index: 1;
+  inset-inline: 2.5rem;
+  inset-block-end: 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: rgba(184, 197, 229, 0.58);
+  font-size: 0.8125rem;
+}
+
+.admin-login__footer p {
+  margin: 0;
+}
+
+@media (max-width: 767px) {
+  .admin-login--portal {
+    align-items: flex-start;
+    padding: 5.25rem 1.25rem 2rem;
+  }
+
+  .admin-login__portal-main {
+    min-block-size: calc(100dvh - 7.25rem);
+  }
+
+  .admin-login--portal .admin-login__card {
+    inline-size: min(100%, calc(100vw - 2.5rem));
+    padding: 1.75rem 1.5rem;
+    border-color: rgba(91, 130, 255, 0.28);
+    box-shadow: 0 1.25rem 3.5rem rgba(0, 0, 0, 0.2);
+  }
+
+  .admin-login__language-switcher {
+    inset-block-start: 1.25rem;
+    inset-inline-end: 1.25rem;
+  }
+
+  .admin-login__identity .logo__mark {
+    inline-size: 2.625rem;
+    block-size: 2.625rem;
+  }
+
+  .admin-login__heading {
+    margin-block-start: 1.5rem;
+  }
+
+  .admin-login__form {
+    margin-block-start: 1.75rem;
+  }
+
+  .admin-login__footer {
+    display: none;
+  }
 }
 
 .modal-card__note {

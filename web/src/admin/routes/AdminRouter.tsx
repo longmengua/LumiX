@@ -2,7 +2,9 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AdminRequireAuth } from '../auth/AdminRequireAuth';
 import { AdminLayout } from '../layout/AdminLayout';
+import { AdminForgotPasswordPage } from '../pages/AdminForgotPasswordPage';
 import { AdminLoginPage } from '../pages/AdminLoginPage';
+import { AdminResetPasswordPage } from '../pages/AdminResetPasswordPage';
 import { AdminConsole } from '../features/console/AdminConsole';
 
 export function AdminRouter() {
@@ -10,6 +12,8 @@ export function AdminRouter() {
   return (
     <Routes>
       <Route path="login" element={<AdminLoginPage />} />
+      <Route path="forgot-password" element={<AdminForgotPasswordPage />} />
+      <Route path="reset-password" element={<AdminResetPasswordPage />} />
       <Route
         path="*"
         element={

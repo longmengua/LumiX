@@ -15,11 +15,12 @@ import java.util.Locale;
  * 單獨複製 cookie 後的普通跨瀏覽器重放，但 browser header 仍可能遭高能力攻擊者模擬，所以不可取代一次性
  * 高熵秘密、短時效與原子消耗。</p>
  */
-final class LoginRequestMetadataResolver {
+public final class LoginRequestMetadataResolver {
 
     private LoginRequestMetadataResolver() { }
 
-    static LoginRequestMetadata resolve(HttpServletRequest request) {
+    /** 供同樣受 API filter 保護的後台認證端點建立一致的瀏覽器安全快照。 */
+    public static LoginRequestMetadata resolve(HttpServletRequest request) {
         String userAgent = boundedHeader(request.getHeader("User-Agent"), "Unknown browser", 512);
         String fingerprintInput = String.join("\n",
             userAgent,

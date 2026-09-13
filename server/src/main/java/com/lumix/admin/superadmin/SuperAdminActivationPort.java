@@ -9,4 +9,12 @@ package com.lumix.admin.superadmin;
 public interface SuperAdminActivationPort {
 
     void activateIfPending(String userId);
+
+    /**
+     * 後台密碼復原只接受已啟用的最高管理員，不能因為知道一般使用者 email 就寄發後台連結。
+     * 預設拒絕讓沒有實作後台 principal 查驗的測試或替代 adapter 維持 fail-closed。
+     */
+    default boolean isActiveSuperAdmin(String userId) {
+        return false;
+    }
 }

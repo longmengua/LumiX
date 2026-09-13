@@ -24,4 +24,12 @@ public interface PasswordResetDeliveryPort {
     default void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret) {
         deliver(user, secret);
     }
+
+    /**
+     * 後台復原信必須導向專用的後台重設頁，不能悄悄退回一般客戶端路徑。
+     * 未明確支援此能力的 adapter 必須拒絕，避免高權限帳戶重設流程在設定缺漏時降級。
+     */
+    default void deliverSuperAdminPasswordRecovery(AuthenticatedUser user, PasswordResetSecret secret) {
+        throw new IllegalStateException("Super admin password recovery delivery is unavailable");
+    }
 }

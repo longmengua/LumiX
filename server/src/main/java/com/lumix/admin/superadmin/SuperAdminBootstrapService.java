@@ -104,6 +104,12 @@ public class SuperAdminBootstrapService implements SuperAdminActivationPort {
         repository.activatePendingSuperAdmin(userId);
     }
 
+    /** 後台密碼復原前需再次確認 principal 與一般使用者帳號都仍為 ACTIVE。 */
+    @Override
+    public boolean isActiveSuperAdmin(String userId) {
+        return repository.isActiveSuperAdmin(userId);
+    }
+
     private AuthenticatedUser createBootstrapUser(String email) {
         AuthenticatedUser user = new AuthenticatedUser("admin-" + UUID.randomUUID(), email, "最高管理員");
         // placeholder 僅為滿足既有 credential 非空約束；隨機原文立刻丟棄，唯一可用密碼必須由 email 連結設定。

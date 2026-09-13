@@ -10,7 +10,12 @@
 /wallet           balances
 /wallet/deposit   deposit instructions
 /wallet/withdraw  withdrawal request
-/admin            operator dashboard
+/admin/login      後台專用登入入口；不提供自助註冊
+/admin/forgot-password
+                 後台專用密碼復原申請；維持通用回應，且只允許 ACTIVE 管理員 principal
+/admin/reset-password
+                 後台一次性密碼重設連結目的地
+/admin            操作員儀表板（必須通過管理員 principal 驗證）
 ```
 
 ## Trading page responsibilities

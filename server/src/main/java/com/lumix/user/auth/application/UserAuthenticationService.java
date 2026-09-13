@@ -501,17 +501,63 @@ public class UserAuthenticationService {
         passwordResetDelivery.deliver(user.get(), secret);
     }
 
+    /**
+     * 發起最高管理員專用密碼復原。
+     *
+     * <p>對外仍維持與一般忘記密碼相同的成功語意；只有查到 ACTIVE admin principal 才會寫入 token 並寄送
+     * 專用連結，避免這個入口成為帳號或權限枚舉工具。</p>
+     */
+    @Transactional
+    public void requestSuperAdminPasswordReset(String email) {
+        if (!passwordResetDelivery.isAvailable()) {
+            throw new ApiException(ApiErrorCode.SERVICE_UNAVAILABLE);
+        }
+        String normalizedEmail = normalizeEmailForReset(email);
+        Optional<AuthenticatedUser> user = repository.findActiveUserByEmail(normalizedEmail);
+        if (user.isEmpty() || !superAdminActivation.isActiveSuperAdmin(user.get().userId())) {
+            return;
+        }
+
+        PasswordResetSecret secret = createPasswordResetSecret();
+        repository.createPasswordReset(
+            secret.requestId(), user.get().userId(), secret.secretDigest(),
+            Instant.now(clock).plus(properties.getPasswordReset().getTtl())
+        );
+        // adapter 未明確支援後台專用連結時必須 rollback，不能將 token 寄到一般客戶端重設頁。
+        passwordResetDelivery.deliverSuperAdminPasswordRecovery(user.get(), secret);
+    }
+
     /** 使用 email 寄送的一次性 token 設定新密碼，並撤銷所有既有 session。 */
     @Transactional
     public void resetPassword(String token, String newPassword) {
+        resetPassword(token, newPassword, false);
+    }
+
+    /**
+     * 消耗後台復原 token 並更新密碼。
+     *
+     * <p>即使 token digest 有效，也必須在同一 transaction 再驗證該帳戶仍是 ACTIVE admin principal；這讓
+     * 一般客戶端 token 無法透過後台重設 endpoint 使用。</p>
+     */
+    @Transactional
+    public void resetSuperAdminPassword(String token, String newPassword) {
+        resetPassword(token, newPassword, true);
+    }
+
+    private void resetPassword(String token, String newPassword, boolean requiresActiveSuperAdmin) {
         validatePassword(newPassword);
         ResettableCredential resettableCredential = repository.lockActivePasswordReset(digestSecret(token))
             .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
+        if (requiresActiveSuperAdmin && !superAdminActivation.isActiveSuperAdmin(resettableCredential.user().userId())) {
+            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+        }
         repository.updatePasswordHash(resettableCredential.user().userId(), passwordEncoder.encode(newPassword));
         repository.revokeAllSessions(resettableCredential.user().userId());
         repository.consumePasswordReset(resettableCredential.requestId());
         // 同一 transaction 內才可啟用待啟用最高管理員，避免已獲後台權限卻尚未完成密碼更新或 token 消耗。
-        superAdminActivation.activateIfPending(resettableCredential.user().userId());
+        if (!requiresActiveSuperAdmin) {
+            superAdminActivation.activateIfPending(resettableCredential.user().userId());
+        }
     }
 
     private SessionSecret createSession(String userId, LoginRequestMetadata metadata, UUID deviceId) {

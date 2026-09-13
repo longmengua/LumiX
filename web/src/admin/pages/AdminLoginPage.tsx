@@ -1,19 +1,30 @@
-import { useEffect } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { Navigate, NavLink, useNavigate } from 'react-router-dom';
 
-import { Badge } from '../../components/base/Badge';
 import { Card } from '../../components/base/Card';
 import { Logo } from '../../components/brand/Logo';
+import { PasswordField } from '../../components/auth/PasswordField';
+import { SliderCaptcha } from '../../components/auth/SliderCaptcha';
+import { translateAuthError } from '../../features/auth/authText';
+import { completeLoginVerification, signIn } from '../../features/auth/authApi';
 import { useI18n } from '../../i18n';
+import { fetchAdminSession } from '../api/adminSessionApi';
 import { useAdminAuth } from '../auth/AdminAuthProvider';
 
-const SHOW_DEV_NOTICES = import.meta.env.VITE_SHOW_DEV_NOTICES === 'true';
-
 export function AdminLoginPage() {
-  // 後台不再有獨立 mock 登入；最高管理員必須先完成一般登入，再由 server 檢查其 admin principal。
+  // 後台必須維持自己的登入入口；雖共用受控的 HttpOnly session 契約，權限仍由後端 admin principal 決定。
   const { locale, setLocale, t } = useI18n();
   const { isAuthenticated, loading } = useAdminAuth();
   const navigate = useNavigate();
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+  const [captchaOpen, setCaptchaOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [verificationPending, setVerificationPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const verificationInFlight = useRef(false);
+  const statusMessage = error ?? (verificationPending ? t('auth.login.verificationPending') : null);
+  const statusTone = error ? 'form-message--error' : verificationPending ? 'form-message--success' : '';
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -25,37 +36,179 @@ export function AdminLoginPage() {
     return <Navigate replace to="/" />;
   }
 
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setCaptchaOpen(true);
+  }
+
+  /**
+   * 認證成功後仍需立即查驗 admin principal，避免一般客戶 session 被誤導向後台首頁。
+   * 失敗訊息刻意不區分帳密、帳號狀態或權限不足，避免成為帳號與權限枚舉來源。
+   */
+  async function completeAdminSignIn(captchaToken: string) {
+    setSubmitting(true);
+    setError(null);
+
+    try {
+      const authenticatedUser = await signIn({ email: identifier, password, captchaToken });
+      if (!authenticatedUser) {
+        setVerificationPending(true);
+        return;
+      }
+      await enterAdminConsole();
+    } catch (submitError) {
+      setError(translateAuthError(submitError, t, 'admin.auth.login.errorGeneric'));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  /** 裝置驗證完成後只能由原始登入瀏覽器建立 session，並以同一個後台權限檢查收斂結果。 */
+  async function completePendingVerification() {
+    if (verificationInFlight.current) return;
+    verificationInFlight.current = true;
+    setSubmitting(true);
+    try {
+      const authenticatedUser = await completeLoginVerification();
+      if (authenticatedUser) {
+        await enterAdminConsole();
+      }
+    } catch {
+      setError(t('admin.auth.login.errorGeneric'));
+      setVerificationPending(false);
+    } finally {
+      verificationInFlight.current = false;
+      setSubmitting(false);
+    }
+  }
+
+  async function enterAdminConsole() {
+    await fetchAdminSession();
+    // 重新掛載後台 provider，讓畫面只使用 server 查驗過的管理員 session 投影。
+    window.location.assign('/admin');
+  }
+
+  useEffect(() => {
+    if (!verificationPending) return undefined;
+
+    const intervalId = window.setInterval(() => {
+      void completePendingVerification();
+    }, 2_500);
+
+    void completePendingVerification();
+    return () => window.clearInterval(intervalId);
+  }, [verificationPending]);
+
   return (
-    <div className="admin-login">
-      <div className="admin-login__shell">
-        <div className="admin-login__brand">
-          <Logo size="lg" title={t('nav.logo')} variant="full" />
-          <div>
-            <p className="eyebrow">{t('admin.auth.login.eyebrow')}</p>
-            <h1>{t('admin.auth.login.title')}</h1>
-            <p className="lead">{t('admin.auth.login.subtitle')}</p>
-          </div>
-        </div>
+    <div className="admin-login admin-login--portal">
+      <div className="admin-login__ambient-ellipse" aria-hidden="true" />
+      <label className="admin-login__language-switcher">
+        <GlobeIcon />
+        <span className="sr-only">{t('header.language')}</span>
+        <select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label={t('header.language')}>
+                <option value="zh-TW">{t('locale.zh-TW')}</option>
+                <option value="en-US">{t('locale.en-US')}</option>
+        </select>
+        <ChevronDownIcon />
+      </label>
 
-        <div className="admin-login__toolbar">
-          <label className="admin-header__locale-switcher">
-            <span className="admin-header__locale-label">{t('header.language')}</span>
-            <select className="admin-header__locale-select" value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)}>
-              <option value="zh-TW">{t('locale.zh-TW')}</option>
-              <option value="en-US">{t('locale.en-US')}</option>
-            </select>
-          </label>
-          {SHOW_DEV_NOTICES ? <Badge tone="warning">{t('admin.notice.developmentAdapter')}</Badge> : null}
-        </div>
-
-        <Card title={t('admin.auth.login.cardTitle')}>
-          <div className="auth-form">
-            <p className="lead">請先以最高管理員帳號完成前台登入；後台會再由伺服器確認已啟用的管理員身分。</p>
-            <a className="primary-button" href="/login?returnTo=%2Fadmin">前往登入</a>
+      <main className="admin-login__portal-main">
+        <Card className="admin-login__card">
+          <div className="admin-login__identity">
+            <Logo size="lg" title={t('nav.logo')} variant="full" />
+            <div className="admin-login__heading">
+              <h1>{t('admin.auth.login.portalTitle')}</h1>
+              <p>{t('admin.auth.login.portalSubtitle')}</p>
+            </div>
           </div>
+
+          <form className="admin-login__form" onSubmit={handleSubmit}>
+
+            <label className="admin-login__field">
+              <span>{t('admin.auth.login.email')}</span>
+              <span className="admin-login__input-shell">
+                <MailIcon />
+                <input
+                className="input admin-login__input"
+                name="identifier"
+                value={identifier}
+                onChange={(event) => setIdentifier(event.target.value)}
+                placeholder={t('admin.auth.login.emailPlaceholder')}
+                autoComplete="username"
+                />
+              </span>
+            </label>
+
+            <PasswordField
+              label={t('admin.auth.login.password')}
+              name="password"
+              value={password}
+              onChange={setPassword}
+              placeholder={t('admin.auth.login.passwordPlaceholder')}
+              autoComplete="current-password"
+              className="admin-login__field"
+              inputClassName="admin-login__input"
+              leadingAdornment={<LockIcon />}
+              iconOnlyToggle
+              showPasswordLabel={t('admin.auth.login.showPassword')}
+              hidePasswordLabel={t('admin.auth.login.hidePassword')}
+              capsLockWarning={t('admin.auth.login.capsLockOn')}
+            />
+            <p className="admin-login__forgot-password">
+              <NavLink to="/forgot-password">{t('admin.auth.login.forgotPassword')}</NavLink>
+            </p>
+
+            {/* 狀態區固定保留一行高度，避免錯誤或裝置驗證訊息出現時推動下方按鈕與連結。 */}
+            <p className={`form-message admin-login__status ${statusTone}`} aria-live="polite">
+              {statusMessage ?? '\u00a0'}
+            </p>
+
+            <button className="primary-button admin-login__submit" type="submit" disabled={submitting || verificationPending}>
+              {submitting ? t('admin.auth.login.submitting') : t('admin.auth.login.submit')}
+              <ArrowRightIcon />
+            </button>
+          </form>
+          <p className="admin-login__security-notice"><ShieldIcon />{t('admin.auth.login.securityNotice')}</p>
         </Card>
-
-      </div>
+      </main>
+      <footer className="admin-login__footer">
+        <p>{t('admin.auth.login.footerTagline')}</p>
+        <p>{t('admin.auth.login.contactAdmin')}</p>
+      </footer>
+      <SliderCaptcha
+        open={captchaOpen}
+        purpose="LOGIN"
+        onCancel={() => setCaptchaOpen(false)}
+        onVerified={(captchaToken) => {
+          setCaptchaOpen(false);
+          void completeAdminSignIn(captchaToken);
+        }}
+      />
     </div>
   );
+}
+
+function MailIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2" /><path d="m4.5 7 7.5 5.6L19.5 7" /></svg>;
+}
+
+function LockIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" /><path d="M12 14.5v2.2" /></svg>;
+}
+
+function GlobeIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M3.8 12h16.4M12 3.5c2.1 2.3 3.2 5.1 3.2 8.5S14.1 18.2 12 20.5C9.9 18.2 8.8 15.4 8.8 12S9.9 5.8 12 3.5Z" /></svg>;
+}
+
+function ChevronDownIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 9.5 4.5 4.5 4.5-4.5" /></svg>;
+}
+
+function ArrowRightIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13M13.5 6.5 19 12l-5.5 5.5" /></svg>;
+}
+
+function ShieldIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5 19 6v5.4c0 4.3-2.8 7.3-7 9.1-4.2-1.8-7-4.8-7-9.1V6l7-2.5Z" /><path d="m8.9 12.1 2 2 4.2-4.3" /></svg>;
 }
