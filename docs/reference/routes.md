@@ -6,6 +6,7 @@
 | --- | --- | --- |
 | `8080` | `/actuator/health` | API health check |
 | `8080` | `/api/**` | API endpoint |
+| `8080` | `GET /api/v1/assets/balances` | 已登入使用者本人之唯讀 asset balance projection；不接受 userId／accountId 指定 owner |
 | `8080` | 所有 HTML route，例如 `/login`、`/admin/login` | `404` |
 
 ## 前台

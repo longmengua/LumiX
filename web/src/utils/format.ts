@@ -12,6 +12,20 @@ export function formatAmount(value: number, fractionDigits = 4) {
   }).format(value);
 }
 
+/**
+ * 對 API 回傳的十進位字串只加上千分位，不轉成 JavaScript number。
+ *
+ * <p>資產 amount 可達 NUMERIC(36,18)，以 number 格式化會讓尾數精度遺失；此 helper 不做四捨五入或截斷。</p>
+ */
+export function formatDecimalString(value: string) {
+  const [integerPart, fractionPart] = value.split('.');
+  if (!integerPart || !/^\d+$/.test(integerPart) || (fractionPart !== undefined && !/^\d+$/.test(fractionPart))) {
+    return value;
+  }
+  const groupedInteger = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return fractionPart === undefined ? groupedInteger : `${groupedInteger}.${fractionPart}`;
+}
+
 export function formatCurrency(value: number, currency = 'USD') {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',

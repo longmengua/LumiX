@@ -100,3 +100,14 @@ settlement 必須經過 ledger invariant、idempotency、append-only、reconcili
 所有 admin runtime 都屬於 HUMAN_REVIEW_REQUIRED。
 任何把 Phase 15 誤寫成 production-ready 的行為都屬於 HUMAN_REVIEW_REQUIRED。
 ```
+
+## 後續唯讀資產查詢 handoff
+
+```text
+ASSET-T01：COMPLETED_FOR_READ_ONLY_PROJECTION_API（2026-09-15）
+```
+
+`/api/v1/assets/balances` 僅以 authenticated session principal 的 userId 讀取既有 `balance_projections`，並回傳
+account／asset metadata、精確十進位 amount、projection version、projectedAt、reconciledAt 與 freshness。它是 read model
+presentation boundary，不會建立帳戶、重建 projection 或更新 ledger／balance／reservation；沒有 projection row 時回傳空集合，
+不會以 mock 或假零餘額取代。此 handoff 不改變本 phase 的完成狀態，也不表示 balance mutation runtime 或正式資產功能已完成。
