@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:client": "VITE_LUMIX_SURFACE=client vite --port 8088",
+    "dev:admin": "VITE_LUMIX_SURFACE=admin vite --port 8089",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false"
