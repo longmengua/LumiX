@@ -54,7 +54,10 @@ export function Header() {
         </label>
         {loading ? null : user ? (
           <NavLink className="topbar__button" to="/account">{user.displayName}</NavLink>
-        ) : null}
+        ) : (
+          // 前台匿名訪客必須有自己的登入入口；此連結只在 web surface 指向 `/login`，不會導向管理端。
+          <NavLink className="topbar__button" to="/login">{t('header.signIn')}</NavLink>
+        )}
       </div>
     </header>
   );
