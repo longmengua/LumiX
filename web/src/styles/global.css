@@ -472,6 +472,40 @@ p,
   min-width: 0;
 }
 
+/* 錯誤頁保留後台 chrome，僅以低調深藍 surface 建立焦點，不把技術錯誤放大成破壞性的警示畫面。 */
+.admin-error-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: min(38rem, calc(100dvh - 11rem));
+  padding: clamp(1.25rem, 4vw, 3rem);
+}
+
+.admin-error-page__card {
+  inline-size: min(100%, 40rem);
+  padding: clamp(2.5rem, 5vw, 3rem);
+  border: 1px solid rgba(93, 148, 243, 0.22);
+  border-radius: 1.35rem;
+  background: radial-gradient(circle at 50% 0, rgba(63, 124, 255, 0.13), transparent 54%), linear-gradient(145deg, rgba(10, 29, 60, 0.94), rgba(4, 15, 34, 0.97));
+  box-shadow: inset 0 1px rgba(211, 229, 255, 0.05), 0 1.5rem 4rem rgba(0, 0, 0, 0.24);
+  text-align: center;
+}
+
+.admin-error-page__icon { display: inline-flex; align-items: center; justify-content: center; inline-size: 3.5rem; block-size: 3.5rem; border: 1px solid rgba(102, 163, 255, 0.3); border-radius: 1rem; background: rgba(54, 114, 235, 0.15); color: #a9ceff; }
+.admin-error-page__icon svg, .admin-inline-error > svg { inline-size: 1.75rem; block-size: 1.75rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.75; }
+.admin-error-page__code { margin: 1.2rem 0 0; color: #78acff; font-size: 0.9rem; font-weight: 700; letter-spacing: 0.14em; }
+.admin-error-page h1 { margin: 0.55rem 0 0; color: #f4f7ff; font-size: clamp(1.75rem, 3vw, 2.3rem); letter-spacing: -0.025em; }
+.admin-error-page__description { max-inline-size: 31rem; margin: 0.8rem auto 0; color: rgba(190, 209, 246, 0.72); line-height: 1.65; }
+.admin-error-page__actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.8rem; }
+.admin-error-page__actions .primary-button, .admin-error-page__actions .secondary-button { min-block-size: 2.8rem; }
+
+/* 資料錯誤留在原本工作區，讓篩選、header 與列表結構不因單一 API 失敗消失。 */
+.admin-inline-error { display: flex; align-items: center; justify-content: center; gap: 0.85rem; min-block-size: 11.5rem; margin-top: 1rem; padding: 1.5rem; border: 1px solid rgba(98, 150, 240, 0.17); border-radius: 1rem; background: rgba(7, 23, 50, 0.45); color: #a8caff; text-align: center; }
+.admin-inline-error > div { max-inline-size: 26rem; }
+.admin-inline-error h2 { margin: 0; color: #eff5ff; font-size: 1rem; }
+.admin-inline-error p { margin: 0.4rem 0 0; color: rgba(190, 209, 246, 0.7); line-height: 1.55; }
+.admin-inline-error .secondary-button { flex: 0 0 auto; }
+
 .admin-login {
   display: flex;
   align-items: center;
@@ -5427,6 +5461,12 @@ p,
   .admin-main {
     padding: 16px;
   }
+
+  .admin-error-page { align-items: flex-start; min-block-size: auto; padding: 1rem 0; }
+  .admin-error-page__card { padding: 2rem 1.35rem; }
+  .admin-error-page__actions { flex-direction: column; }
+  .admin-error-page__actions .primary-button, .admin-error-page__actions .secondary-button { inline-size: 100%; }
+  .admin-inline-error { flex-direction: column; }
 
   .topbar__brand--full {
     display: none;

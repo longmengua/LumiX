@@ -1,4 +1,5 @@
 import { ADMIN_API_BASE_PATH } from './adminApi';
+import { createAdminApiError, notifyAdminUnauthorized } from './adminError';
 
 export type AdminUser = {
   userId: string;
@@ -66,7 +67,9 @@ export function getAdminUser(id: string): Promise<AdminUserDetail> {
 async function read<T>(path: string): Promise<T> {
   const response = await fetch(`${ADMIN_API_BASE_PATH}${path}`, { credentials: 'same-origin' });
   if (!response.ok) {
-    throw new Error((await response.json().catch(() => null) as { code?: string } | null)?.code ?? 'ADMIN_USER_QUERY_FAILED');
+    const error = await createAdminApiError(response);
+    if (error.kind === 'unauthorized') notifyAdminUnauthorized();
+    throw error;
   }
   return response.json() as Promise<T>;
 }

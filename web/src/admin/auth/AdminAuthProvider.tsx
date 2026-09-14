@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { fetchAdminSession, type AdminSession } from '../api/adminSessionApi';
 import { signOutAdmin } from '../api/adminAuthenticationApi';
+import { ADMIN_UNAUTHORIZED_EVENT } from '../api/adminError';
 
 type AdminAuthContextValue = {
   session: AdminSession | null;
@@ -33,6 +34,13 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
     return () => {
       active = false;
     };
+  }, []);
+
+  useEffect(() => {
+    // 任一 admin API 收到 401 時只撤銷本地投影，RequireAuth 會保留 return path 導回專用登入頁。
+    const invalidate = () => setSession(null);
+    window.addEventListener(ADMIN_UNAUTHORIZED_EVENT, invalidate);
+    return () => window.removeEventListener(ADMIN_UNAUTHORIZED_EVENT, invalidate);
   }, []);
 
   const value = useMemo<AdminAuthContextValue>(

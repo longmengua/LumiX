@@ -1,6 +1,8 @@
 import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '../../../components/base/State';
+import { InlineErrorState } from '../../components/AdminErrorPage';
+import { normalizeAdminError } from '../../api/adminError';
 import { useI18n } from '../../../i18n';
 import { getInputDateRangePreset, type DateRangePreset } from '../../../utils/dateRange';
 import { formatDateTimeParts, formatTime } from '../../../utils/format';
@@ -70,8 +72,10 @@ export function AdminUsersPage() {
         setTotal(page.total);
         setPageSize(page.pageSize);
       })
-      .catch(() => {
-        if (requestId === requestSequence.current) setError(t('admin.usersQueryError'));
+      .catch((requestError: unknown) => {
+        if (requestId !== requestSequence.current) return;
+        const error = normalizeAdminError(requestError);
+        setError(error.kind === 'network' ? t('admin.errors.network.description') : t('admin.usersQueryError'));
       })
       .finally(() => {
         if (requestId === requestSequence.current) setLoading(false);
@@ -267,12 +271,7 @@ export function AdminUsersPage() {
           </div>
         </form>
 
-        {error ? (
-          <div className="admin-users-inline-error" role="alert">
-            <span>{error}</span>
-            <button className="ghost-button" type="button" onClick={() => load(appliedSearch, pageStarts[pageNumber - 1] ?? null, pageNumber, false)}>{t('common.retry')}</button>
-          </div>
-        ) : null}
+        {error ? <InlineErrorState title={t('admin.errors.data.title')} description={error} retryLabel={t('common.retry')} onRetry={() => load(appliedSearch, pageStarts[pageNumber - 1] ?? null, pageNumber, false)} /> : null}
 
         {loading && items.length === 0 ? <UserListSkeleton /> : null}
         {!loading && items.length === 0 && !error ? (

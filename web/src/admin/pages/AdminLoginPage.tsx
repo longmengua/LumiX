@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react';
-import { Navigate, NavLink, useNavigate } from 'react-router-dom';
+import { Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 
 import { Card } from '../../components/base/Card';
 import { Logo } from '../../components/brand/Logo';
@@ -16,6 +16,7 @@ export function AdminLoginPage() {
   const { locale, setLocale, t } = useI18n();
   const { isAuthenticated, loading } = useAdminAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [captchaOpen, setCaptchaOpen] = useState(false);
@@ -61,7 +62,10 @@ export function AdminLoginPage() {
   async function enterAdminConsole() {
     await fetchAdminSession();
     // 重新掛載後台 provider，讓畫面只使用 server 查驗過的管理員 session 投影。
-    window.location.assign('/admin');
+    const returnTo = typeof location.state?.from === 'string' && location.state.from.startsWith('/') && !location.state.from.startsWith('//')
+      ? location.state.from
+      : '/';
+    window.location.assign(`/admin${returnTo}`);
   }
 
   return (

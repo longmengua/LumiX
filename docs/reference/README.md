@@ -7,6 +7,7 @@
 ```text
 overview.md   LumiX 的產品與系統總覽
 glossary.md   常見核心名詞對照
+routes.md     API、前台與管理端 routes 總覽
 ```
 
 ## 建議用法

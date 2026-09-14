@@ -111,6 +111,16 @@ secret management change
 - 測試程式要註解測試意圖，尤其是資金、安全、資料一致性與錯誤案例。
 - 如果需要大量註解才能理解，應優先重構或拆小函式，不可用註解掩蓋壞設計。
 
+## 前後台服務入口隔離規則
+
+- LumiX 必須維持三個獨立 service 與 port：`server:8080`（API）、`web:8088`（前台）、`admin-web:8089`（後台）。
+- 不得將三者合併為單一 SPA、單一 bundle、單一 service，或以 browser path 決定掛載前台／後台 App。
+- `server:8080` 只可提供 `/api/**` 與 health；它不得提供任何 HTML route。
+- `web:8088` 不得提供 `/admin`、`/admin/**` 或 proxy `/api/admin/**`；`admin-web:8089` 不得提供前台 HTML route 或 proxy `/api/v1/**`。
+- Vite 開發必須分別使用 `npm run dev:client` 與 `npm run dev:admin`，並保持相同 route/API 拒絕邊界。
+- 修改 Compose、Nginx、Vite entry、router、authentication cookie 或 API proxy 前，必須先閱讀 `docs/reference/routes.md` 與 `docs/frontend/page-map.md`，並驗證三個 port 的 route 回應。
+- 不得以共同 ingress、path rewrite 或 reverse proxy 為理由重新合併服務；需要降低故障域時，正式部署還必須採取獨立 runtime、資源限制、health check 與擴縮策略。
+
 ## 文件規則
 
 - 專案內所有新增或修改的文件，原則上都要以繁體中文表達為主。
