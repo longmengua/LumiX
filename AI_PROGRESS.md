@@ -145,6 +145,8 @@ Phase 21-36 foundation: COMPLETED_AND_PUSHED_PER_PHASE
 Phase 21-36 production runtime: NOT_STARTED
 Next work: implement the missing runtime by the phase dependencies, then collect and independently verify P36 readiness evidence, resolve blockers and obtain explicit human production sign-off; launch remains prohibited
 Next implementation phase: Phase 36 - readiness evidence gap closure, after the required runtime dependencies are implemented
+
+資產交付計畫：已建立 `docs/planning/ASSET_RUNTIME_DELIVERY_PROGRAM.md`。ASSET-T00 為 `COMPLETED_FOR_PLANNING`；下一張為 ASSET-T01：authenticated owner scoped 的真實唯讀資產 projection/API。最終正式資產路徑不得使用 asset 或 wallet mock adapter；劃轉、入金 credit、提款、簽章與廣播仍受 ledger/reservation 與 Phase 22–25 runtime gate 阻擋。
 ```
 
 ## 目前倉庫現況

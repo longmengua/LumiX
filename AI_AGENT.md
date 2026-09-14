@@ -137,6 +137,13 @@ secret management change
 
 任何 redirect 若將 browser 從 `8080`、`8088` 或 `8089` 導向另一個 port，均為不合格；必須先修正 container 內部 listener 與 host port mapping 造成的 absolute redirect，才能提交。
 
+## 真實資產與營運交付規則
+
+- 後續資產、錢包、入金、提款、帳本、風控、後台營運與使用者流程的規劃，必須以最終可上線營運的真實資料來源、可審計 runtime 與受控部署為目標；不得把 mock 當作產品完成方案。
+- mock fixture、fake adapter 與前端寫死資產資料只能存在於隔離測試或明確標示的開發驗證；不得接入正式 browser route、正式 API path、營運後台或任何會被使用者當成真實資產資訊的畫面。
+- 每份 task plan 必須標明真實資料來源、權限／owner scope、資料新鮮度、失敗模式、稽核證據、測試與部署依賴；若依賴尚未具備，狀態必須是 blocked/unavailable，不能以假成功或 mock fallback 掩蓋。
+- 以真實營運為目標不授權跳過 phase、ledger/reservation、風控、provider/secret、簽章或資金安全 gate；任何未完成 runtime 仍必須如實標示，且不得宣稱 production ready 或已可處理真實資金。
+
 ## 文件規則
 
 - 專案內所有新增或修改的文件，原則上都要以繁體中文表達為主。
