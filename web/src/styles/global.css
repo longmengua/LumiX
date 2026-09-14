@@ -3362,6 +3362,35 @@ p,
   color: rgba(226, 232, 240, 0.72);
 }
 
+.asset-projection-evidence {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 18px;
+  border: 1px solid rgba(96, 165, 250, 0.16);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(15, 35, 72, 0.58), rgba(5, 15, 33, 0.68));
+}
+
+.asset-projection-evidence > div {
+  display: flex;
+  flex: 1 1 11rem;
+  flex-direction: column;
+  gap: 6px;
+  min-inline-size: 0;
+}
+
+.asset-projection-evidence span {
+  color: rgba(184, 199, 229, 0.7);
+  font-size: 0.82rem;
+}
+
+.asset-projection-evidence strong {
+  color: #f4f7ff;
+  font-size: 0.94rem;
+  font-weight: 600;
+}
+
 .wallet-section-nav {
   display: flex;
   flex-wrap: wrap;
@@ -3667,6 +3696,13 @@ p,
   min-inline-size: 47.5rem;
   width: max-content;
   min-width: 100%;
+}
+
+.asset-overview-table__asset-name {
+  display: block;
+  margin-top: 3px;
+  color: rgba(184, 199, 229, 0.64);
+  font-size: 0.78rem;
 }
 
 .asset-overview-table__head {

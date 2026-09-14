@@ -5,15 +5,14 @@ import { EmptyState, ErrorState, LoadingState } from '../../components/base/Stat
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useI18n } from '../../i18n';
 import { AssetAccountTable } from '../../features/assets/AssetAccountTable';
-import { AssetHistoryList } from '../../features/assets/AssetHistoryList';
 import { AssetOverviewMetrics } from '../../features/assets/AssetOverviewMetrics';
+import { accountLabelKeyByTab, assetTabs, type AssetTabKey } from '../../features/assets/assetAccountTypes';
 import { AssetSectionNav } from '../../features/assets/AssetSectionNav';
-import { useAssetOverviewMock } from '../../features/assets/useAssetOverviewMock';
-import type { AssetTabKey } from '../../features/assets/mockAssetService';
+import { useAssetProjectionSnapshot } from '../../features/assets/useAssetProjectionSnapshot';
 
 export function AssetsOverviewPage() {
   const { t } = useI18n();
-  const { data, loading, error, reload } = useAssetOverviewMock();
+  const { data, loading, errorCode, reload } = useAssetProjectionSnapshot();
   const [activeTab, setActiveTab] = useState<AssetTabKey>('spot');
   const activeAccount = useMemo(() => data?.accounts.find((account) => account.key === activeTab) ?? null, [activeTab, data]);
 
@@ -26,33 +25,33 @@ export function AssetsOverviewPage() {
       <AssetSectionNav />
 
       {loading ? <LoadingState title={t('assets.loadingTitle')} description={t('assets.loadingDescription')} /> : null}
-      {error ? <ErrorState title={t('assets.errorTitle')} description={error} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
+      {errorCode ? <ErrorState title={t('assets.errorTitle')} description={t('assets.errorDescription')} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
 
-      {!loading && !error && data ? (
+      {!loading && !errorCode && data ? (
         <>
-          <AssetOverviewMetrics metrics={data.metrics} />
+          <AssetOverviewMetrics accounts={data.accounts} />
 
           <Card title={t('assets.accountTabs')}>
             <div className="assets-tabs">
-              {data.accounts.map((account) => (
+              {assetTabs.map((accountKey) => (
                 <button
-                  key={account.key}
-                  className={`tab-button${activeTab === account.key ? ' tab-button--active' : ''}`}
+                  key={accountKey}
+                  className={`tab-button${activeTab === accountKey ? ' tab-button--active' : ''}`}
                   type="button"
-                  onClick={() => setActiveTab(account.key)}
+                  onClick={() => setActiveTab(accountKey)}
                 >
-                  {account.label}
+                  {t(accountLabelKeyByTab[accountKey])}
                 </button>
               ))}
             </div>
-            <p className="assets-tabs__hint">{activeAccount?.description ?? t('assets.accountTabHint')}</p>
+            <p className="assets-tabs__hint">{t('assets.accountTabHint')}</p>
           </Card>
 
-          <Card title={activeAccount?.label ?? t('account.assetTableTitle')}>
-            {activeAccount ? <AssetAccountTable account={activeAccount} /> : <EmptyState title={t('assets.noAccountSelected')} description={t('assets.noAccountSelectedDescription')} />}
+          <Card title={t(accountLabelKeyByTab[activeTab])}>
+            {activeAccount && activeAccount.items.length > 0
+              ? <AssetAccountTable account={activeAccount} />
+              : <EmptyState title={t('assets.noProjectionTitle')} description={t('assets.noProjectionDescription')} />}
           </Card>
-
-          <AssetHistoryList history={data.history} />
         </>
       ) : null}
     </div>

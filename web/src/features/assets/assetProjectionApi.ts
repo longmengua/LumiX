@@ -74,9 +74,11 @@ function isProjectionItem(value: unknown): value is AssetProjectionItem {
     && typeof value.assetSymbol === 'string'
     && typeof value.assetDisplayName === 'string'
     && isOneOf(value.assetStatus, ['ACTIVE', 'HALTED', 'DELISTED'])
-    && Number.isInteger(value.precisionScale) && value.precisionScale >= 0 && value.precisionScale <= 18
+    && typeof value.precisionScale === 'number' && Number.isInteger(value.precisionScale)
+    && value.precisionScale >= 0 && value.precisionScale <= 18
     && isDecimalString(value.total) && isDecimalString(value.available) && isDecimalString(value.locked)
-    && Number.isSafeInteger(value.projectionVersion) && value.projectionVersion >= 0
+    && typeof value.projectionVersion === 'number' && Number.isSafeInteger(value.projectionVersion)
+    && value.projectionVersion >= 0
     && isInstantString(value.projectedAt) && (value.reconciledAt === null || isInstantString(value.reconciledAt))
     && isOneOf(value.freshness, ['RECONCILED', 'UNRECONCILED']);
 }

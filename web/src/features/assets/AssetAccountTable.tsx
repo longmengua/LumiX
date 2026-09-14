@@ -14,12 +14,12 @@ export function AssetAccountTable({ account }: AssetAccountTableProps) {
     <div className="asset-overview-table">
       <div className="asset-overview-table__head">
         {['assets.columnAsset', 'assets.columnAvailable', 'assets.columnLocked', 'assets.columnTotal', 'assets.columnFreshness'].map((label) => (
-          <span key={label}>{label}</span>
+          <span key={label}>{t(label)}</span>
         ))}
       </div>
       <div className="asset-overview-table__body">
         {account.items.map((asset) => (
-          <div className="asset-overview-table__row" key={asset.accountId}>
+          <div className="asset-overview-table__row" key={`${asset.accountId}-${asset.assetSymbol}`}>
             <span>
               <strong>{asset.assetSymbol}</strong>
               <small className="asset-overview-table__asset-name">{asset.assetDisplayName}</small>

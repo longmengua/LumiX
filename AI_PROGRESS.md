@@ -146,7 +146,7 @@ Phase 21-36 production runtime: NOT_STARTED
 Next work: implement the missing runtime by the phase dependencies, then collect and independently verify P36 readiness evidence, resolve blockers and obtain explicit human production sign-off; launch remains prohibited
 Next implementation phase: Phase 36 - readiness evidence gap closure, after the required runtime dependencies are implemented
 
-資產交付計畫：`docs/planning/ASSET_RUNTIME_DELIVERY_PROGRAM.md` 的 ASSET-T00 為 `COMPLETED_FOR_PLANNING`，ASSET-T01 為 `COMPLETED_FOR_READ_ONLY_PROJECTION_API`。`GET /api/v1/assets/balances` 已以 authenticated owner scope 從既有 `accounts`、`assets`、`balance_projections` 提供真實唯讀 projection，回傳 amount decimal string、projection/reconciliation evidence 與 freshness；不會 fallback mock 或假零餘額，且沒有任何 mutation。ASSET-T02 為 `IN_PROGRESS`：已新增 browser API adapter、response validation、abortable hook、precision-safe formatter 與表格改造起點，但尚未完成總覽／現貨／合約／槓桿頁接線與前端驗證，不能宣稱正式資產頁已轉換完成。劃轉、入金 credit、提款、簽章與廣播仍受 ledger/reservation 與 Phase 22–25 runtime gate 阻擋。
+資產交付計畫：`docs/planning/ASSET_RUNTIME_DELIVERY_PROGRAM.md` 的 ASSET-T00 為 `COMPLETED_FOR_PLANNING`，ASSET-T01 為 `COMPLETED_FOR_READ_ONLY_PROJECTION_API`，ASSET-T02 為 `COMPLETED_FOR_READ_ONLY_PROJECTION_PRESENTATION`。`GET /api/v1/assets/balances` 以 authenticated owner scope 從既有 `accounts`、`assets`、`balance_projections` 提供真實唯讀 projection，回傳 amount decimal string、projection/reconciliation evidence 與 freshness；前台 `/assets`、`/assets/spot`、`/assets/futures`、`/assets/margin` 已移除 mock adapter，且不會 fallback 假零餘額或假估值、PnL、劃轉、歷史。下一張為 ASSET-T03：immutable ledger/audit read boundary 的 owner-scoped 真實資產歷史 query 與 presentation。劃轉、入金 credit、提款、簽章與廣播仍受 ledger/reservation 與 Phase 22–25 runtime gate 阻擋。
 ```
 
 ## 目前倉庫現況

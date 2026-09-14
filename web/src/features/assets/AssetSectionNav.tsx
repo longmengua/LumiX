@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 
 import { useI18n } from '../../i18n';
-import type { AssetTabKey } from './mockAssetService';
+import type { AssetTabKey } from './assetAccountTypes';
 
 const sectionLinks = [
   { to: '/assets', labelKey: 'nav.assets.overview' },

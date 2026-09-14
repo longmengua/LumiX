@@ -2,25 +2,22 @@ import { Card } from '../../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../../components/base/State';
 import { PageHeader } from '../../components/layout/PageHeader';
 import { useI18n } from '../../i18n';
-import type { AssetTabKey } from './mockAssetService';
+import { accountLabelKeyByTab, type AssetTabKey } from './assetAccountTypes';
 import { AssetAccountTable } from './AssetAccountTable';
-import { AssetHistoryList } from './AssetHistoryList';
+import { AssetProjectionEvidence } from './AssetProjectionEvidence';
 import { AssetSectionNav } from './AssetSectionNav';
-import { useAssetOverviewMock } from './useAssetOverviewMock';
+import { useAssetProjectionSnapshot } from './useAssetProjectionSnapshot';
 
 type AssetAccountPageProps = {
   accountKey: AssetTabKey;
   title: string;
   description: string;
-  summaryTitle: string;
-  summaryPoints: Array<{ label: string; value: string }>;
 };
 
-export function AssetAccountPage({ accountKey, title, description, summaryTitle, summaryPoints }: AssetAccountPageProps) {
+export function AssetAccountPage({ accountKey, title, description }: AssetAccountPageProps) {
   const { t } = useI18n();
-  const { data, loading, error, reload } = useAssetOverviewMock();
+  const { data, loading, errorCode, reload } = useAssetProjectionSnapshot();
   const account = data?.accounts.find((item) => item.key === accountKey) ?? null;
-  const history = data?.history.filter((item) => item.account.toLowerCase().includes(accountKey)) ?? [];
 
   return (
     <div className="stack assets-page">
@@ -28,31 +25,17 @@ export function AssetAccountPage({ accountKey, title, description, summaryTitle,
       <AssetSectionNav active={accountKey} />
 
       {loading ? <LoadingState title={t('assets.loadingTitle')} description={t('assets.loadingDescription')} /> : null}
-      {error ? <ErrorState title={t('assets.errorTitle')} description={error} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
+      {errorCode ? <ErrorState title={t('assets.errorTitle')} description={t('assets.errorDescription')} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} /> : null}
 
-      {!loading && !error && data ? (
+      {!loading && !errorCode && data ? (
         <>
-          <Card title={summaryTitle}>
-            <div className="dashboard-grid dashboard-grid--three">
-              {summaryPoints.map((item) => (
-                <div className="stat-card" key={item.label}>
-                  <span className="stat-card__label">{item.label}</span>
-                  <strong>{item.value}</strong>
-                </div>
-              ))}
-            </div>
-          </Card>
+          {account ? <AssetProjectionEvidence account={account} /> : null}
 
-          <Card title={account?.label ?? title}>
-            {account ? <AssetAccountTable account={account} /> : <EmptyState title={t('account.noAssetsSelected')} description={t('account.noAssetsSelectedDescription')} />}
+          <Card title={t(accountLabelKeyByTab[accountKey])}>
+            {account && account.items.length > 0
+              ? <AssetAccountTable account={account} />
+              : <EmptyState title={t('assets.noProjectionTitle')} description={t('assets.noProjectionDescription')} />}
           </Card>
-
-          <AssetHistoryList
-            title={t('assets.recentHistoryTitle')}
-            history={history}
-            emptyTitle={t('assets.noHistoryTitle')}
-            emptyDescription={t('assets.noHistoryDescription')}
-          />
         </>
       ) : null}
     </div>

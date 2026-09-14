@@ -11,6 +11,12 @@ export const accountTypeByTab: Readonly<Record<AssetTabKey, AssetAccountType>> =
   margin: 'MARGIN',
 };
 
+export const accountLabelKeyByTab: Readonly<Record<AssetTabKey, string>> = {
+  spot: 'account.spotAccount',
+  futures: 'account.futuresAccount',
+  margin: 'account.marginAccount',
+};
+
 export function tabForAccountType(accountType: AssetAccountType): AssetTabKey {
   switch (accountType) {
     case 'SPOT':

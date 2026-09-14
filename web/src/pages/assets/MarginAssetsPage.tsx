@@ -9,12 +9,6 @@ export function MarginAssetsPage() {
       accountKey="margin"
       title={t('assets.marginTitle')}
       description={t('assets.marginDescription')}
-      summaryTitle={t('assets.marginSnapshot')}
-      summaryPoints={[
-        { label: 'Net Asset', value: '$21,120.50 USDT' },
-        { label: 'Borrowed', value: '$6,800.05 USDT' },
-        { label: 'Risk Ratio', value: '62.4%' },
-      ]}
     />
   );
 }

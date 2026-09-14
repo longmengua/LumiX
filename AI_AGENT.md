@@ -130,6 +130,7 @@ secret management change
 | `8080/`、`8080/login`、`8080/admin/login` | 原 port `8080`，`404` |
 | `8080/actuator/health` | 原 port `8080`，`200` |
 | `8088/`、`8088/login` | 原 port `8088`，`200` |
+| `8088/assets`、`8088/assets/` | 原 port `8088`，`200` 前台 SPA route；不得因 Nginx trailing slash redirect 導向 `8080`，也不得與 Vite bundle 的 `/assets/` 實體目錄衝突而回 `403` |
 | `8088/admin`、`8088/admin/login` | 原 port `8088`，`404` |
 | `8089/`、`8089/admin` | `8089/admin/login`，`200` |
 | `8089/admin/login` | 原 port `8089`，`200` |

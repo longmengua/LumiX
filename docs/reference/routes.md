@@ -18,6 +18,7 @@
 | `8088` | `/register` | 用戶註冊 |
 | `8088` | `/forgot-password` | 用戶忘記密碼 |
 | `8088` | `/account/**` | 用戶帳戶頁面 |
+| `8088` | `/assets/**` | 用戶資產頁面 |
 | `8088` | `/api/v1/**` | 前台 API proxy |
 | `8088` | `/admin`、`/admin/**`、`/api/admin/**` | `404` |
 
