@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
-import { NavLink, Route, Routes } from 'react-router-dom';
+import { NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 
 import { Card } from '../components/base/Card';
 import { EmptyState, ErrorState, LoadingState } from '../components/base/State';
@@ -30,7 +30,8 @@ const LOGIN_HISTORY_ANCHOR_PARAM = 'anchor';
  */
 export function AccountPage() {
   const { t } = useI18n();
-  const { updateDisplayName } = useAuthentication();
+  const navigate = useNavigate();
+  const { signOut, updateDisplayName } = useAuthentication();
   const [profile, setProfile] = useState<AccountProfileRecord | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -64,6 +65,15 @@ export function AccountPage() {
     setProfile((current) => (current ? { ...current, displayName: updatedUser.displayName } : current));
   }
 
+  async function handleSignOut() {
+    try {
+      await signOut();
+    } finally {
+      // 無論遠端撤銷結果為何，都離開受保護頁面，避免使用者誤以為目前 session 仍可使用。
+      navigate('/login', { replace: true });
+    }
+  }
+
   const sidebarItems = useMemo(
     () => accountNavItems.map(({ to, labelKey, end }) => ({ to, label: t(labelKey), end })),
     [t],
@@ -71,7 +81,15 @@ export function AccountPage() {
 
   return (
     <div className="two-column">
-      <Sidebar title={t('account.sidebarTitle')} items={sidebarItems} />
+      <Sidebar
+        title={t('account.sidebarTitle')}
+        items={sidebarItems}
+        footer={(
+          <button className="sidebar__action" type="button" onClick={() => void handleSignOut()}>
+            {t('header.signOut')}
+          </button>
+        )}
+      />
       <div className="stack">
         <PageHeader title={t('account.pageTitle')} description={t('account.pageDescription')} />
         {loading ? <LoadingState title={t('account.loadingTitle')} description={t('account.loadingDescription')} /> : null}

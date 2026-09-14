@@ -5,6 +5,7 @@ export const zhTW = {
   'locale.en-US': 'English',
   'header.language': '語言',
   'header.signIn': '登入',
+  'header.signOut': '登出',
   'auth.session.loadingTitle': '正在確認登入狀態…',
   'auth.session.loadingDescription': '請稍候。',
   'nav.logo': 'LumiX',

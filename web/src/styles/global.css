@@ -193,26 +193,51 @@ p,
 }
 
 .topbar__locale-switcher {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(148, 163, 184, 0.08);
+  gap: 0.35rem;
+  color: rgba(184, 197, 229, 0.84);
+  cursor: pointer;
+  transition: color 160ms ease;
 }
 
-.topbar__locale-label {
-  color: rgba(226, 232, 240, 0.72);
-  font-size: 0.85rem;
+.topbar__locale-switcher:hover,
+.topbar__locale-switcher:focus-within {
+  color: #fff;
+}
+
+.topbar__locale-switcher > svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.topbar__locale-switcher > svg:last-child {
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  pointer-events: none;
+}
+
+.topbar__locale-value {
+  font-size: 0.75rem;
+  line-height: 1;
 }
 
 .topbar__locale-select {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
   border: 0;
-  outline: none;
-  background: transparent;
-  color: rgba(241, 245, 249, 0.96);
-  font: inherit;
+  opacity: 0;
+  cursor: pointer;
 }
 
 .topbar__link,
@@ -948,14 +973,31 @@ p,
   gap: 6px;
 }
 
-.sidebar__link {
+.sidebar__link,
+.sidebar__action {
+  inline-size: 100%;
   padding: 10px 12px;
   border-radius: 12px;
   color: rgba(226, 232, 240, 0.9);
+  text-align: start;
+}
+
+.sidebar__action {
+  border: 0;
+  background: transparent;
+  color: rgba(252, 165, 165, 0.92);
+  font: inherit;
+  cursor: pointer;
 }
 
 .sidebar__link--active {
   background: rgba(59, 130, 246, 0.2);
+}
+
+.sidebar__footer {
+  margin-block-start: 1rem;
+  padding-block-start: 0.75rem;
+  border-block-start: 1px solid rgba(148, 163, 184, 0.12);
 }
 
 .page-header {
@@ -4618,8 +4660,7 @@ p,
   }
 
   .topbar__locale-switcher {
-    width: 100%;
-    justify-content: space-between;
+    width: auto;
   }
 
   .app-layout__content {

@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 
 function normalizePathname(value: string) {
@@ -18,9 +19,10 @@ function isSidebarItemActive(pathname: string, to: string) {
 type SidebarProps = {
   title: string;
   items: Array<{ to: string; label: string; end?: boolean }>;
+  footer?: ReactNode;
 };
 
-export function Sidebar({ title, items }: SidebarProps) {
+export function Sidebar({ title, items, footer }: SidebarProps) {
   const location = useLocation();
 
   return (
@@ -38,6 +40,7 @@ export function Sidebar({ title, items }: SidebarProps) {
           </Link>
         ))}
       </nav>
+      {footer ? <div className="sidebar__footer">{footer}</div> : null}
     </div>
   );
 }

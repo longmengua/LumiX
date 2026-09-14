@@ -5,6 +5,7 @@ export const enUS = {
   'locale.en-US': 'English',
   'header.language': 'Language',
   'header.signIn': 'Sign in',
+  'header.signOut': 'Sign out',
   'auth.session.loadingTitle': 'Checking your sign-in status…',
   'auth.session.loadingDescription': 'Please wait.',
   'nav.logo': 'LumiX',
