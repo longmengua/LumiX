@@ -29,6 +29,7 @@ public class SmtpPasswordResetDelivery implements PasswordResetDeliveryPort {
     private final JavaMailSender mailSender;
     private final String fromAddress;
     private final String publicBaseUrl;
+    private final String adminPublicBaseUrl;
 
     public SmtpPasswordResetDelivery(
         JavaMailSender mailSender,
@@ -39,11 +40,15 @@ public class SmtpPasswordResetDelivery implements PasswordResetDeliveryPort {
         this.mailSender = mailSender;
         this.fromAddress = properties.getPasswordReset().getFromAddress();
         this.publicBaseUrl = removeTrailingSlash(properties.getPasswordReset().getPublicBaseUrl());
+        this.adminPublicBaseUrl = removeTrailingSlash(properties.getAdminPublicBaseUrl());
         Assert.hasText(fromAddress, "lumix.auth.passwordReset.fromAddress is required when SMTP is enabled");
         Assert.hasText(smtpHost, "spring.mail.host is required when SMTP is enabled");
         Assert.isTrue(startTlsEnabled, "SMTP STARTTLS must be enabled when password reset SMTP is enabled");
         Assert.isTrue(isAllowedResetBaseUrl(publicBaseUrl, properties.getPasswordReset().isAllowLoopbackHttp()),
             "lumix.auth.passwordReset.publicBaseUrl must use HTTPS, except explicitly enabled loopback HTTP development URLs");
+        Assert.hasText(adminPublicBaseUrl, "lumix.auth.adminPublicBaseUrl is required when SMTP is enabled");
+        Assert.isTrue(isAllowedResetBaseUrl(adminPublicBaseUrl, properties.getPasswordReset().isAllowLoopbackHttp()),
+            "lumix.auth.adminPublicBaseUrl must use HTTPS, except explicitly enabled loopback HTTP development URLs");
     }
 
     @Override
@@ -53,27 +58,34 @@ public class SmtpPasswordResetDelivery implements PasswordResetDeliveryPort {
 
     @Override
     public void deliver(AuthenticatedUser user, PasswordResetSecret secret) {
-        send(user, secret, "LumiX 密碼重設通知", "我們收到您的密碼重設請求。請於有效時間內開啟下列連結：", "/reset-password");
+        send(user, secret, "LumiX 密碼重設通知", "我們收到您的密碼重設請求。請於有效時間內開啟下列連結：", publicBaseUrl, "/reset-password");
     }
 
     /** 最高管理員啟用不應偽裝成一般忘記密碼信，讓收件人能辨識高權限帳戶的設定動作。 */
     @Override
     public void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret) {
-        send(user, secret, "LumiX 最高管理員帳號啟用", "此信箱被設定為 LumiX 最高管理員。請於有效時間內設定密碼以完成啟用：", "/admin/reset-password");
+        send(user, secret, "LumiX 最高管理員帳號啟用", "此信箱被設定為 LumiX 最高管理員。請於有效時間內設定密碼以完成啟用：", adminPublicBaseUrl, "/admin/reset-password");
     }
 
     /** 管理員重設連結需固定前往後台路由，避免在客戶端重設頁混用高權限帳號流程。 */
     @Override
     public void deliverSuperAdminPasswordRecovery(AuthenticatedUser user, PasswordResetSecret secret) {
-        send(user, secret, "LumiX 後台密碼重設通知", "我們收到後台帳號的密碼重設請求。請於有效時間內開啟下列連結：", "/admin/reset-password");
+        send(user, secret, "LumiX 後台密碼重設通知", "我們收到後台帳號的密碼重設請求。請於有效時間內開啟下列連結：", adminPublicBaseUrl, "/admin/reset-password");
     }
 
-    private void send(AuthenticatedUser user, PasswordResetSecret secret, String subject, String introduction, String resetPath) {
+    private void send(
+        AuthenticatedUser user,
+        PasswordResetSecret secret,
+        String subject,
+        String introduction,
+        String destinationBaseUrl,
+        String resetPath
+    ) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom(fromAddress);
         message.setTo(user.email());
         message.setSubject(subject);
-        message.setText(introduction + "\n" + publicBaseUrl + resetPath + "?token=" + secret.secret());
+        message.setText(introduction + "\n" + destinationBaseUrl + resetPath + "?token=" + secret.secret());
         mailSender.send(message);
     }
 

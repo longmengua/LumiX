@@ -137,8 +137,8 @@ export type CaptchaChallenge = SliderCaptchaChallenge | IconMatchCaptchaChalleng
 /**
  * 取得 server-side slider challenge。答案不在 response 中，前端只負責呈現與回傳使用者的位移。
  */
-export async function createCaptchaChallenge(): Promise<CaptchaChallenge> {
-  const response = await fetch('/api/v1/auth/captcha/challenge', { credentials: 'same-origin', cache: 'no-store' });
+export async function createCaptchaChallenge(authBasePath = '/api/v1/auth'): Promise<CaptchaChallenge> {
+  const response = await fetch(`${authBasePath}/captcha/challenge`, { credentials: 'same-origin', cache: 'no-store' });
   await ensureSuccess(response);
   const value: unknown = await response.json();
   if (!isCaptchaChallenge(value)) throw new Error('CAPTCHA_CONTRACT_ERROR');
@@ -152,8 +152,8 @@ export async function verifySliderCaptcha(input: {
   purpose: SliderCaptchaPurpose;
   offsetX?: number;
   selectedIndexes?: number[];
-}): Promise<string> {
-  const response = await fetch('/api/v1/auth/captcha/challenge/verify', requestOptions(input));
+}, authBasePath = '/api/v1/auth'): Promise<string> {
+  const response = await fetch(`${authBasePath}/captcha/challenge/verify`, requestOptions(input));
   await ensureSuccess(response);
   const value: unknown = await response.json();
   if (typeof value !== 'object' || value === null || typeof (value as { captchaToken?: unknown }).captchaToken !== 'string') {

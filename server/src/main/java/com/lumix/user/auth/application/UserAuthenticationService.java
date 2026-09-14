@@ -256,6 +256,29 @@ public class UserAuthenticationService {
         return LoginResult.verificationRequired(pending);
     }
 
+    /**
+     * 最高管理員的獨立登入流程。
+     *
+     * <p>此流程刻意不讀取或建立一般使用者的 trusted device，也不寄送裝置確認信；它必須先確認
+     * ACTIVE super-admin principal，才建立只供 admin API 使用的 session。帳密、帳戶狀態與權限不足
+     * 對外全部收斂為同一認證錯誤，避免權限枚舉。</p>
+     */
+    @Transactional
+    public AuthenticationResult loginActiveSuperAdmin(String email, String password, LoginRequestMetadata metadata) {
+        String normalizedEmail = normalizeEmail(email);
+        validatePasswordInput(password);
+        Optional<PasswordCredential> credential = repository.findPasswordCredentialByEmail(normalizedEmail);
+        if (credential.isEmpty() || !passwordEncoder.matches(password, credential.get().passwordHash())) {
+            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+        }
+        AuthenticatedUser user = credential.get().user();
+        if (!superAdminActivation.isActiveSuperAdmin(user.userId())) {
+            throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+        }
+        // 管理端不採一般裝置綁定契約，deviceId 保持 null，不能將前台裝置誤認為已核准管理裝置。
+        return new AuthenticationResult(user, createSession(user.userId(), metadata, null), null);
+    }
+
     /** 取得目前 session 的使用者投影；失效、撤銷與不存在都採同一失敗語意。 */
     @Transactional
     public AuthenticatedUser authenticate(SessionSecret sessionSecret) {

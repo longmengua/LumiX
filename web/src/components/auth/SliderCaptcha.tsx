@@ -10,6 +10,8 @@ import {
 type SliderCaptchaProps = {
   open: boolean;
   purpose: SliderCaptchaPurpose;
+  /** 管理端可傳入自己的 auth boundary，避免 challenge URL 又回到前台入口。 */
+  authBasePath?: string;
   onCancel(): void;
   onVerified(captchaToken: string): void;
 };
@@ -19,7 +21,7 @@ type SliderCaptchaProps = {
  *
  * 拼圖答案與通行 token 都由後端維護；前端僅在放開滑塊時送出位移，避免把可繞過的 UI 當成安全邊界。
  */
-export function SliderCaptcha({ open, purpose, onCancel, onVerified }: SliderCaptchaProps) {
+export function SliderCaptcha({ open, purpose, authBasePath, onCancel, onVerified }: SliderCaptchaProps) {
   const [challenge, setChallenge] = useState<CaptchaChallenge | null>(null);
   const [offsetX, setOffsetX] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -35,14 +37,14 @@ export function SliderCaptcha({ open, purpose, onCancel, onVerified }: SliderCap
     // 畫布尺寸固定保留，載入時改為 skeleton，避免題目圖片插入 DOM 時造成彈窗重新置中。
     setChallenge(null);
     try {
-      setChallenge(await createCaptchaChallenge());
+      setChallenge(await createCaptchaChallenge(authBasePath));
     } catch {
       setChallenge(null);
       setError('載入失敗，請重試。');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [authBasePath]);
 
   useEffect(() => {
     // 僅在彈窗開啟後建立短時效題目，避免使用者停留表單時 challenge 已過期。
@@ -54,7 +56,9 @@ export function SliderCaptcha({ open, purpose, onCancel, onVerified }: SliderCap
     setVerifying(true);
     setError(null);
     try {
-      const captchaToken = await verifySliderCaptcha({ captchaId: challenge.captchaId, type: 'SLIDER', offsetX: currentOffset, purpose });
+      const captchaToken = await verifySliderCaptcha(
+        { captchaId: challenge.captchaId, type: 'SLIDER', offsetX: currentOffset, purpose }, authBasePath
+      );
       onVerified(captchaToken);
     } catch {
       // reload 會清除舊狀態；必須在取得新題目後再顯示錯誤，否則使用者看不到失敗原因。
@@ -81,12 +85,9 @@ export function SliderCaptcha({ open, purpose, onCancel, onVerified }: SliderCap
     setVerifying(true);
     setError(null);
     try {
-      const captchaToken = await verifySliderCaptcha({
-        captchaId: challenge.captchaId,
-        type: challenge.type,
-        selectedIndexes: indexes,
-        purpose,
-      });
+      const captchaToken = await verifySliderCaptcha(
+        { captchaId: challenge.captchaId, type: challenge.type, selectedIndexes: indexes, purpose }, authBasePath
+      );
       onVerified(captchaToken);
     } catch {
       await reload();

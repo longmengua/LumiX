@@ -21,6 +21,7 @@ public class UserAuthenticationConfiguration {
         Assert.isTrue(properties.getBcryptStrength() >= 10 && properties.getBcryptStrength() <= 16,
             "lumix.auth.bcryptStrength must be between 10 and 16");
         Assert.hasText(properties.getCookieName(), "lumix.auth.cookieName is required");
+        Assert.hasText(properties.getAdminCookieName(), "lumix.auth.adminCookieName is required");
         Assert.hasText(properties.getDeviceCookieName(), "lumix.auth.deviceCookieName is required");
         Assert.hasText(properties.getLoginVerificationCookieName(), "lumix.auth.loginVerificationCookieName is required");
         Assert.isTrue(!securityProperties.isRequireHttps() || properties.isCookieSecure(),

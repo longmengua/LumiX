@@ -15,6 +15,8 @@ public class UserAuthenticationProperties {
 
     private boolean cookieSecure;
     private String cookieName = "LUMIX_SESSION";
+    private String adminCookieName = "LUMIX_ADMIN_SESSION";
+    private String adminPublicBaseUrl = "";
     private String deviceCookieName = "LUMIX_DEVICE";
     private String loginVerificationCookieName = "LUMIX_LOGIN_VERIFICATION";
     private Duration sessionTtl = Duration.ofHours(8);
@@ -30,6 +32,10 @@ public class UserAuthenticationProperties {
     public void setCookieSecure(boolean cookieSecure) { this.cookieSecure = cookieSecure; }
     public String getCookieName() { return cookieName; }
     public void setCookieName(String cookieName) { this.cookieName = cookieName; }
+    public String getAdminCookieName() { return adminCookieName; }
+    public void setAdminCookieName(String adminCookieName) { this.adminCookieName = adminCookieName; }
+    public String getAdminPublicBaseUrl() { return adminPublicBaseUrl; }
+    public void setAdminPublicBaseUrl(String adminPublicBaseUrl) { this.adminPublicBaseUrl = adminPublicBaseUrl; }
     public String getDeviceCookieName() { return deviceCookieName; }
     public void setDeviceCookieName(String deviceCookieName) { this.deviceCookieName = deviceCookieName; }
     public String getLoginVerificationCookieName() { return loginVerificationCookieName; }

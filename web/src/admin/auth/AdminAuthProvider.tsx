@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { fetchAdminSession, type AdminSession } from '../api/adminSessionApi';
+import { signOutAdmin } from '../api/adminAuthenticationApi';
 
 type AdminAuthContextValue = {
   session: AdminSession | null;
@@ -40,8 +41,8 @@ export function AdminAuthProvider({ children }: { children: ReactNode }) {
       isAuthenticated: session !== null,
       loading,
       signOut: async () => {
-        // 登出請求由既有使用者 authentication endpoint 消耗 HttpOnly session，不保留假前端 session。
-        await fetch('/api/v1/auth/logout', { method: 'POST', credentials: 'same-origin' }).catch(() => undefined);
+        // 管理端只能呼叫自己的登出 endpoint，避免被 Nginx 隔離的前台 API 造成假登出。
+        await signOutAdmin().catch(() => undefined);
         setSession(null);
       },
     }),

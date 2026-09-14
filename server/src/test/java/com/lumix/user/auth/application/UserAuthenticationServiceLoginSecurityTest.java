@@ -6,12 +6,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.lumix.user.auth.config.UserAuthenticationProperties;
+import com.lumix.admin.superadmin.SuperAdminActivationPort;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.LoginRequestMetadata;
 import com.lumix.user.auth.domain.LoginVerificationRequest;
@@ -27,6 +29,34 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 class UserAuthenticationServiceLoginSecurityTest {
+
+    @Test
+    void activeSuperAdminUsesDedicatedSessionWithoutDeviceVerification() {
+        UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
+        BCryptPasswordEncoder passwordEncoder = mock(BCryptPasswordEncoder.class);
+        SuperAdminActivationPort superAdmin = mock(SuperAdminActivationPort.class);
+        AuthenticatedUser user = new AuthenticatedUser("admin-1", "admin@lumix.example", "管理員");
+        LoginRequestMetadata metadata = new LoginRequestMetadata("203.0.113.25", "管理瀏覽器", "admin-browser-digest");
+        when(repository.findPasswordCredentialByEmail(user.email()))
+            .thenReturn(Optional.of(new PasswordCredential(user, "bcrypt-hash")));
+        when(passwordEncoder.matches("correct-password", "bcrypt-hash")).thenReturn(true);
+        when(superAdmin.isActiveSuperAdmin(user.userId())).thenReturn(true);
+        UserAuthenticationService service = new UserAuthenticationService(
+            repository, mock(RegistrationEmailBloomFilter.class), passwordEncoder, mock(PasswordResetDeliveryPort.class),
+            mock(RegistrationVerificationDeliveryPort.class), mock(LoginVerificationDeliveryPort.class), superAdmin,
+            new UserAuthenticationProperties(), Clock.fixed(Instant.parse("2026-09-14T00:00:00Z"), ZoneOffset.UTC)
+        );
+
+        UserAuthenticationService.AuthenticationResult result = service.loginActiveSuperAdmin(
+            user.email(), "correct-password", metadata
+        );
+
+        // 管理登入不應建立或信任前台裝置；只有通過 ACTIVE principal 查驗才可寫入專用 session。
+        assertNotNull(result.session());
+        assertEquals(null, result.device());
+        verify(repository).createSession(any(), eq(user.userId()), anyString(), any(), isNull(), eq(metadata));
+        verify(repository, never()).createTrustedDevice(any(), any(), any(), any());
+    }
 
     @Test
     void emptyPlatformSlotBindsUnknownDeviceWithoutEmail() {

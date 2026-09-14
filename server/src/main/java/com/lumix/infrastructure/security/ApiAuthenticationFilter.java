@@ -44,6 +44,8 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         "/api/v1/auth/login-verification/complete",
         "/api/v1/auth/password/forgot",
         "/api/v1/auth/password/reset",
+        "/api/admin/v1/auth/captcha/challenge/verify",
+        "/api/admin/v1/auth/login",
         "/api/admin/v1/auth/password/forgot",
         "/api/admin/v1/auth/password/reset"
     );
@@ -67,10 +69,16 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         if (!request.getRequestURI().startsWith("/api/")) {
             return true;
         }
-        if ("GET".equals(request.getMethod()) && "/api/v1/auth/captcha/challenge".equals(request.getRequestURI())) {
+        if ("GET".equals(request.getMethod()) && isAnonymousCaptchaChallenge(request.getRequestURI())) {
             return true;
         }
         return "POST".equals(request.getMethod()) && ANONYMOUS_POST_PATHS.contains(request.getRequestURI());
+    }
+
+    /** CAPTCHA 題目本身不含答案，可匿名建立；前後台仍使用各自的 URL boundary。 */
+    private static boolean isAnonymousCaptchaChallenge(String requestUri) {
+        return "/api/v1/auth/captcha/challenge".equals(requestUri)
+            || "/api/admin/v1/auth/captcha/challenge".equals(requestUri);
     }
 
     @Override
@@ -90,12 +98,19 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         Cookie[] cookies = request.getCookies();
         if (cookies != null) {
             for (Cookie cookie : cookies) {
-                if (authenticationProperties.getCookieName().equals(cookie.getName())) {
+                if (sessionCookieName(request).equals(cookie.getName())) {
                     return UserAuthenticationService.parseCookieValue(cookie.getValue());
                 }
             }
         }
         throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
+    }
+
+    /** 管理 API 僅接受專用 cookie，避免同一 host 的一般使用者 session 意外跨越權限邊界。 */
+    private String sessionCookieName(HttpServletRequest request) {
+        return request.getRequestURI().startsWith("/api/admin/")
+            ? authenticationProperties.getAdminCookieName()
+            : authenticationProperties.getCookieName();
     }
 
     private void writeError(HttpServletResponse response, ApiErrorCode errorCode) throws IOException {

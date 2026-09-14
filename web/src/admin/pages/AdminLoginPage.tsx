@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { Navigate, NavLink, useNavigate } from 'react-router-dom';
 
 import { Card } from '../../components/base/Card';
@@ -6,8 +6,8 @@ import { Logo } from '../../components/brand/Logo';
 import { PasswordField } from '../../components/auth/PasswordField';
 import { SliderCaptcha } from '../../components/auth/SliderCaptcha';
 import { translateAuthError } from '../../features/auth/authText';
-import { completeLoginVerification, signIn } from '../../features/auth/authApi';
 import { useI18n } from '../../i18n';
+import { signInAdmin } from '../api/adminAuthenticationApi';
 import { fetchAdminSession } from '../api/adminSessionApi';
 import { useAdminAuth } from '../auth/AdminAuthProvider';
 
@@ -20,11 +20,9 @@ export function AdminLoginPage() {
   const [password, setPassword] = useState('');
   const [captchaOpen, setCaptchaOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const [verificationPending, setVerificationPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const verificationInFlight = useRef(false);
-  const statusMessage = error ?? (verificationPending ? t('auth.login.verificationPending') : null);
-  const statusTone = error ? 'form-message--error' : verificationPending ? 'form-message--success' : '';
+  const statusMessage = error;
+  const statusTone = error ? 'form-message--error' : '';
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -43,7 +41,7 @@ export function AdminLoginPage() {
   }
 
   /**
-   * 認證成功後仍需立即查驗 admin principal，避免一般客戶 session 被誤導向後台首頁。
+   * 管理端只接受專用 endpoint 發出的 admin session，避免一般客戶 session 被誤導向後台首頁。
    * 失敗訊息刻意不區分帳密、帳號狀態或權限不足，避免成為帳號與權限枚舉來源。
    */
   async function completeAdminSignIn(captchaToken: string) {
@@ -51,34 +49,11 @@ export function AdminLoginPage() {
     setError(null);
 
     try {
-      const authenticatedUser = await signIn({ email: identifier, password, captchaToken });
-      if (!authenticatedUser) {
-        setVerificationPending(true);
-        return;
-      }
+      await signInAdmin({ email: identifier, password, captchaToken });
       await enterAdminConsole();
     } catch (submitError) {
       setError(translateAuthError(submitError, t, 'admin.auth.login.errorGeneric'));
     } finally {
-      setSubmitting(false);
-    }
-  }
-
-  /** 裝置驗證完成後只能由原始登入瀏覽器建立 session，並以同一個後台權限檢查收斂結果。 */
-  async function completePendingVerification() {
-    if (verificationInFlight.current) return;
-    verificationInFlight.current = true;
-    setSubmitting(true);
-    try {
-      const authenticatedUser = await completeLoginVerification();
-      if (authenticatedUser) {
-        await enterAdminConsole();
-      }
-    } catch {
-      setError(t('admin.auth.login.errorGeneric'));
-      setVerificationPending(false);
-    } finally {
-      verificationInFlight.current = false;
       setSubmitting(false);
     }
   }
@@ -88,17 +63,6 @@ export function AdminLoginPage() {
     // 重新掛載後台 provider，讓畫面只使用 server 查驗過的管理員 session 投影。
     window.location.assign('/admin');
   }
-
-  useEffect(() => {
-    if (!verificationPending) return undefined;
-
-    const intervalId = window.setInterval(() => {
-      void completePendingVerification();
-    }, 2_500);
-
-    void completePendingVerification();
-    return () => window.clearInterval(intervalId);
-  }, [verificationPending]);
 
   return (
     <div className="admin-login admin-login--portal">
@@ -166,12 +130,12 @@ export function AdminLoginPage() {
               <NavLink to="/forgot-password">{t('admin.auth.login.forgotPassword')}</NavLink>
             </p>
 
-            {/* 狀態區固定保留一行高度，避免錯誤或裝置驗證訊息出現時推動下方按鈕與連結。 */}
+            {/* 狀態區固定保留一行高度，避免錯誤訊息出現時推動下方按鈕與連結。 */}
             <p className={`form-message admin-login__status ${statusTone}`} aria-live="polite">
               {statusMessage ?? '\u00a0'}
             </p>
 
-            <button className="primary-button admin-login__submit" type="submit" disabled={submitting || verificationPending}>
+            <button className="primary-button admin-login__submit" type="submit" disabled={submitting}>
               {submitting ? t('admin.auth.login.submitting') : t('admin.auth.login.submit')}
               <ArrowRightIcon />
             </button>
@@ -186,6 +150,7 @@ export function AdminLoginPage() {
       <SliderCaptcha
         open={captchaOpen}
         purpose="LOGIN"
+        authBasePath="/api/admin/v1/auth"
         onCancel={() => setCaptchaOpen(false)}
         onVerified={(captchaToken) => {
           setCaptchaOpen(false);

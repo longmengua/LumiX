@@ -4,6 +4,7 @@ import { AdminRequireAuth } from '../auth/AdminRequireAuth';
 import { AdminLayout } from '../layout/AdminLayout';
 import { AdminForgotPasswordPage } from '../pages/AdminForgotPasswordPage';
 import { AdminLoginPage } from '../pages/AdminLoginPage';
+import { AdminAccountPage } from '../pages/AdminAccountPage';
 import { AdminResetPasswordPage } from '../pages/AdminResetPasswordPage';
 import { AdminConsole } from '../features/console/AdminConsole';
 
@@ -20,6 +21,7 @@ export function AdminRouter() {
           <AdminRequireAuth>
             <AdminLayout>
               <Routes>
+                <Route path="account/*" element={<AdminAccountPage />} />
                 <Route index element={<AdminConsole />} />
                 <Route path="users" element={<AdminConsole />} />
                 <Route path="assets" element={<AdminConsole />} />

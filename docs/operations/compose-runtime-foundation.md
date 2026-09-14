@@ -21,7 +21,7 @@ docker compose ps
 curl http://127.0.0.1:8080/actuator/health
 ```
 
-前端入口預設為 `http://127.0.0.1:8088`。Compose 將前端的 `/api/*` 同源反向代理至 server，避免把 backend host 寫進 browser bundle 或以 CORS 放寬安全邊界。
+前台入口預設為 `http://127.0.0.1:8088`，管理端入口預設為 `http://127.0.0.1:8089/admin/login`。Compose 將兩個入口各自的 `/api/*` 同源反向代理至 server，避免把 backend host 寫進 browser bundle 或以 CORS 放寬安全邊界。兩者分別使用 `web` 與 `admin-web` service、獨立 build target 與 Nginx route boundary；不可再合併成單一 SPA service。
 
 停止服務但保留測試資料：
 
@@ -75,8 +75,8 @@ application RedisConnectionFactory
 
 - Compose 可提供 PostgreSQL 持久化 credential/session；密碼只能以 BCrypt 雜湊保存，Cookie secret 與 reset token 只保存 SHA-256 摘要。
 - `LUMIX_AUTH_COOKIE_SECURE=false` 只允許本機 HTTP 驗證。交由 TLS ingress 對外時必須設為 `true`，並保持 web 與 `/api` 同源。
-- Cookie 使用 `HttpOnly`、`SameSite=Strict`、`Path=/api`；前端 JavaScript 不可讀取 session 值。
-- 忘記密碼預設 `LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED=false`，endpoint 會 fail-closed。啟用時還必須由 secret manager 提供 `SPRING_MAIL_HOST`、`PORT`、`USERNAME`、`PASSWORD` 與 `SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true`；設定寄件地址，並將 `LUMIX_AUTH_PUBLIC_BASE_URL` 設為 HTTPS URL。
+- 前台 Cookie `LUMIX_SESSION` 使用 `HttpOnly`、`SameSite=Strict`、`Path=/api`；管理 Cookie `LUMIX_ADMIN_SESSION` 使用同等屬性但限定 `Path=/api/admin`。前端 JavaScript 不可讀取任一 session 值，且 admin API 不能接受前台 cookie。
+- 忘記密碼預設 `LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED=false`，endpoint 會 fail-closed。啟用時還必須由 secret manager 提供 `SPRING_MAIL_HOST`、`PORT`、`USERNAME`、`PASSWORD` 與 `SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE=true`；設定寄件地址、前台 `LUMIX_AUTH_PUBLIC_BASE_URL` 與管理端 `LUMIX_AUTH_ADMIN_PUBLIC_BASE_URL` 為各自獨立的 HTTPS URL。管理員啟用／密碼復原信只能導向後者。
 - 未啟用 SMTP 時 mail health indicator 會停用，避免空白預備參數讓整體 readiness 誤報；一旦啟用 SMTP，它會自動加入 health gate。
 - SMTP 未配置時不可為了測試而把 reset token 寫進 Docker log、Redis、資料庫明文或 API response。
 - `/api/v1/**` 預設 deny；只允許 register、login、forgot/reset password 匿名存取，其餘 route 必須先通過 session 鑒權。

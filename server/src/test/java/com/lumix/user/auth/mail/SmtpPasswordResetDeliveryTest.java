@@ -39,6 +39,7 @@ class SmtpPasswordResetDeliveryTest {
         UserAuthenticationProperties properties = new UserAuthenticationProperties();
         properties.getPasswordReset().setFromAddress("security@lumix.example");
         properties.getPasswordReset().setPublicBaseUrl("https://app.lumix.example");
+        properties.setAdminPublicBaseUrl("https://admin.lumix.example");
         SmtpPasswordResetDelivery delivery = new SmtpPasswordResetDelivery(mailSender, properties, "smtp.lumix.example", true);
 
         delivery.deliverSuperAdminPasswordRecovery(
@@ -49,6 +50,6 @@ class SmtpPasswordResetDeliveryTest {
         ArgumentCaptor<SimpleMailMessage> message = ArgumentCaptor.forClass(SimpleMailMessage.class);
         verify(mailSender).send(message.capture());
         // 高權限信件不可導回一般客戶端的 /reset-password，避免使用者誤入錯誤的身分流程。
-        assertTrue(message.getValue().getText().contains("https://app.lumix.example/admin/reset-password?token=one-time-secret"));
+        assertTrue(message.getValue().getText().contains("https://admin.lumix.example/admin/reset-password?token=one-time-secret"));
     }
 }
