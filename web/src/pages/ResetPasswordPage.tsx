@@ -54,7 +54,7 @@ export function ResetPasswordPage() {
         </p>
       }
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form auth-form--credential" onSubmit={handleSubmit}>
         <div className="auth-form__split">
           <PasswordField
             label={t('auth.reset.newPassword')}

@@ -2,7 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
-import { ArrowRightIcon, LockIcon, MailIcon } from '../components/auth/AuthFieldIcons';
+import { ArrowRightIcon, LockIcon, MailIcon, UserIcon } from '../components/auth/AuthFieldIcons';
 import { PasswordField } from '../components/auth/PasswordField';
 import { SliderCaptcha } from '../components/auth/SliderCaptcha';
 import { translateAuthError } from '../features/auth/authText';
@@ -92,13 +92,13 @@ export function RegisterPage() {
         </p>
       }
     >
-      {registrationId === null ? <form className="auth-form client-auth-form client-auth-form--register" onSubmit={handleSubmit}>
+      {registrationId === null ? <form className="auth-form auth-form--credential client-auth-form client-auth-form--register" onSubmit={handleSubmit}>
         <label className="field client-auth-form__field">
           <span className="field__label">{t('auth.register.identifier')}</span>
           <span className="client-auth-form__input-shell">
             <MailIcon />
             <input
-              className="input client-auth-form__input"
+              className="input client-auth-form__input auth-input--with-leading-icon"
               value={identifier}
               onChange={(event) => setIdentifier(event.target.value)}
               placeholder={t('auth.register.identifierPlaceholder')}
@@ -107,15 +107,18 @@ export function RegisterPage() {
           </span>
         </label>
 
-        <label className="field">
+        <label className="field client-auth-form__field">
           <span className="field__label">顯示名稱</span>
-          <input
-            className="input"
-            value={displayName}
-            onChange={(event) => setDisplayName(event.target.value)}
-            placeholder="至少 2 個字元"
-            autoComplete="name"
-          />
+          <span className="client-auth-form__input-shell">
+            <UserIcon />
+            <input
+              className="input client-auth-form__input auth-input--with-leading-icon"
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder="至少 2 個字元"
+              autoComplete="name"
+            />
+          </span>
         </label>
 
         <div className="auth-form__split">
@@ -158,7 +161,7 @@ export function RegisterPage() {
           {loading ? t('auth.register.submitting') : t('auth.register.submit')}
           <ArrowRightIcon />
         </button>
-      </form> : <form className="auth-form client-auth-form" onSubmit={completeEmailVerification}>
+      </form> : <form className="auth-form auth-form--credential client-auth-form" onSubmit={completeEmailVerification}>
         <p className="auth-form__hint">{t('auth.register.emailVerificationHint', '驗證碼已寄至您的電子郵件；兩組皆須輸入正確。')}</p>
         <label className="field">
           <span className="field__label">{t('auth.register.numericCode', '數字驗證碼')}</span>

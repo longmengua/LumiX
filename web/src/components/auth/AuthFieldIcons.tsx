@@ -24,6 +24,16 @@ export function LockIcon({ className }: IconProps) {
   );
 }
 
+/** 顯示名稱屬於個人識別資訊，使用 user 輪廓而非帳號或權限圖示，避免誤導為登入憑證。 */
+export function UserIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="12" cy="8.1" r="3.15" />
+      <path d="M5.35 19.25c.72-3.15 3.15-5.05 6.65-5.05s5.93 1.9 6.65 5.05" />
+    </svg>
+  );
+}
+
 export function ArrowRightIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true" focusable="false">

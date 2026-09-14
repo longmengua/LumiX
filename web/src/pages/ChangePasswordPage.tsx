@@ -55,7 +55,7 @@ export function ChangePasswordPage() {
       variant="reset"
       footer={<p className="auth-page__helper"><NavLink to="/">返回首頁</NavLink></p>}
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form auth-form--credential" onSubmit={handleSubmit}>
         <p className="auth-form__hint">目前帳號：{user.email}</p>
         <PasswordField label="目前密碼" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
         <div className="auth-form__split">

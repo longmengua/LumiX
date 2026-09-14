@@ -61,7 +61,13 @@ export function PasswordField({
       <span className={['password-field', leadingAdornment ? 'password-field--has-leading-adornment' : ''].filter(Boolean).join(' ')}>
         {leadingAdornment ? <span className="password-field__leading-adornment" aria-hidden="true">{leadingAdornment}</span> : null}
         <input
-          className={['input', 'password-field__input', inputClassName].filter(Boolean).join(' ')}
+          className={[
+            'input',
+            'password-field__input',
+            // 前綴圖示由元件自動宣告安全內距契約，呼叫端不必重複處理而遺漏。
+            leadingAdornment ? 'auth-input--with-leading-icon' : '',
+            inputClassName,
+          ].filter(Boolean).join(' ')}
           name={name}
           type={visible ? 'text' : 'password'}
           value={value}

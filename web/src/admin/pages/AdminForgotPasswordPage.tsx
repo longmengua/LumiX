@@ -59,7 +59,7 @@ export function AdminForgotPasswordPage() {
           </label>
         </div>
         <Card title={t('admin.auth.forgot.cardTitle')}>
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form auth-form--credential" onSubmit={handleSubmit}>
             <label className="field">
               <span className="field__label">{t('admin.auth.login.email')}</span>
               <input className="input" name="email" value={email} onChange={(event) => setEmail(event.target.value)} autoComplete="email" />

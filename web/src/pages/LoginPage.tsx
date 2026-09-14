@@ -96,13 +96,13 @@ export function LoginPage() {
         </p>
       }
     >
-      <form className="auth-form client-auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form auth-form--credential client-auth-form" onSubmit={handleSubmit}>
         <label className="field client-auth-form__field">
           <span className="field__label">{t('auth.login.identifier')}</span>
           <span className="client-auth-form__input-shell">
             <MailIcon />
             <input
-              className="input client-auth-form__input"
+              className="input client-auth-form__input auth-input--with-leading-icon"
               name="identifier"
               value={identifier}
               onChange={(event) => setIdentifier(event.target.value)}

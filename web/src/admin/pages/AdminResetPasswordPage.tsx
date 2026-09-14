@@ -58,7 +58,7 @@ export function AdminResetPasswordPage() {
           </label>
         </div>
         <Card title={t('admin.auth.reset.cardTitle')}>
-          <form className="auth-form" onSubmit={handleSubmit}>
+          <form className="auth-form auth-form--credential" onSubmit={handleSubmit}>
             <PasswordField label={t('admin.auth.reset.newPassword')} name="new-password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} sanitizeInput={sanitizeNewPasswordInput} passwordRuleHint={t('auth.password.rules')} />
             <PasswordField label={t('admin.auth.reset.confirmPassword')} name="confirm-password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} sanitizeInput={sanitizeNewPasswordInput} passwordRuleHint={t('auth.password.rules')} />
             {error ? <p className="form-message form-message--error">{error}</p> : null}

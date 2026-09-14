@@ -49,7 +49,7 @@ export function ForgotPasswordPage() {
         </p>
       }
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
+      <form className="auth-form auth-form--credential" onSubmit={handleSubmit}>
         <label className="field">
           <span className="field__label">{t('auth.forgot.identifier')}</span>
           <input

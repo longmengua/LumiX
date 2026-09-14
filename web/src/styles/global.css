@@ -665,7 +665,7 @@ p,
 
 /* 比通用 .input 更具體，避免後方的共用 padding 覆寫前綴圖示所需的文字安全距離。 */
 .admin-login--portal .admin-login__input {
-  min-block-size: 3.5rem;
+  min-block-size: 3rem;
   padding-inline: 3rem 3.25rem;
   border: 1px solid rgba(120, 145, 200, 0.28);
   border-radius: 0.8125rem;
@@ -1343,6 +1343,43 @@ p,
   font-size: 0.9rem;
 }
 
+/* 所有帳號生命週期表單共用同一組欄位節奏，避免註冊的顯示名稱與帳密欄位出現高度、底色不一致。 */
+.auth-form--credential .input {
+  min-block-size: 3rem;
+  padding-inline: 1rem;
+  border: 1px solid rgba(120, 145, 200, 0.28);
+  border-radius: 0.8125rem;
+  background: rgba(7, 15, 32, 0.72);
+  color: #f4f7ff;
+  font-size: 1rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.auth-form--credential .input::placeholder {
+  color: rgba(178, 191, 220, 0.48);
+}
+
+.auth-form--credential .input:focus,
+.auth-form--credential .password-field:focus-within .input {
+  border-color: rgba(80, 135, 255, 0.82);
+  box-shadow: 0 0 0 3px rgba(70, 120, 255, 0.1);
+  background: rgba(7, 15, 32, 0.9);
+}
+
+/*
+ * 帶左側圖示的輸入框一律標示此契約 class；它把可輸入文字推過 icon，
+ * 不再由各登入頁各自猜測 padding，避免共用表單樣式更新後再次遮住 placeholder。
+ */
+.admin-login--portal .auth-input--with-leading-icon,
+.auth-page .client-auth-form .auth-input--with-leading-icon {
+  padding-inline-start: 3rem;
+}
+
+.admin-login--portal .password-field__input.auth-input--with-leading-icon,
+.auth-page .client-auth-form .password-field__input.auth-input--with-leading-icon {
+  padding-inline-end: 3.5rem;
+}
+
 /* 前台帳密欄位沿用後台的圖示、圓角與焦點語言，但不帶入管理員入口的安全提示或版面。 */
 .client-auth-form {
   gap: 1.25rem;
@@ -1397,7 +1434,7 @@ p,
 
 /* 提高 selector 優先度，避免通用 .input 在較後方覆寫圖示欄位的安全內距。 */
 .auth-page .client-auth-form__input {
-  min-block-size: 3.5rem;
+  min-block-size: 3rem;
   padding-inline: 3rem 3.25rem;
   border: 1px solid rgba(120, 145, 200, 0.28);
   border-radius: 0.8125rem;

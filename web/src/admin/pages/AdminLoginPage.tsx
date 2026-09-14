@@ -130,14 +130,14 @@ export function AdminLoginPage() {
             </div>
           </div>
 
-          <form className="admin-login__form" onSubmit={handleSubmit}>
+          <form className="admin-login__form auth-form--credential" onSubmit={handleSubmit}>
 
             <label className="admin-login__field">
               <span>{t('admin.auth.login.email')}</span>
               <span className="admin-login__input-shell">
                 <MailIcon />
                 <input
-                className="input admin-login__input"
+                className="input admin-login__input auth-input--with-leading-icon"
                 name="identifier"
                 value={identifier}
                 onChange={(event) => setIdentifier(event.target.value)}
