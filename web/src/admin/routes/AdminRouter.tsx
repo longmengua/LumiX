@@ -7,6 +7,7 @@ import { AdminLoginPage } from '../pages/AdminLoginPage';
 import { AdminAccountPage } from '../pages/AdminAccountPage';
 import { AdminResetPasswordPage } from '../pages/AdminResetPasswordPage';
 import { AdminConsole } from '../features/console/AdminConsole';
+import { AdminUsersPage } from '../features/users/AdminUsersPage';
 
 export function AdminRouter() {
   // 後台子路由全部由 AdminConsole 承接，方便未來把每個區塊逐步拆成真實 API 頁面。
@@ -23,7 +24,7 @@ export function AdminRouter() {
               <Routes>
                 <Route path="account/*" element={<AdminAccountPage />} />
                 <Route index element={<AdminConsole />} />
-                <Route path="users" element={<AdminConsole />} />
+                <Route path="users" element={<AdminUsersPage />} />
                 <Route path="assets" element={<AdminConsole />} />
                 <Route path="wallet" element={<AdminConsole />} />
                 <Route path="spot" element={<AdminConsole />} />

@@ -3,6 +3,7 @@ package com.lumix.admin.user;
 import com.lumix.infrastructure.security.ApiAuthenticationFilter;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,14 +25,35 @@ public class AdminUserQueryController {
         this.service = service;
     }
 
-    /** 搜尋 UID、email 或顯示名稱，回傳去敏摘要且受 server-side limit 保護。 */
+    /**
+     * 以顯示名稱前綴與註冊時間區間搜尋去敏摘要。
+     *
+     * <p>createdBefore 與 lastLoginBefore 均為排他上界；游標由上一頁回應提供，不能以 offset 取代，避免高頁數查詢
+     * 隨資料量線性變慢。</p>
+     */
     @GetMapping
-    public List<UserResponse> find(
+    public UserSearchResponse find(
         @RequestAttribute(ApiAuthenticationFilter.AUTHENTICATED_USER_ATTRIBUTE) AuthenticatedUser actor,
-        @RequestParam(required = false) String q,
+        @RequestParam(required = false) String displayNamePrefix,
+        @RequestParam(required = false) String createdFrom,
+        @RequestParam(required = false) String createdBefore,
+        @RequestParam(required = false) String lastLoginFrom,
+        @RequestParam(required = false) String lastLoginBefore,
+        @RequestParam(required = false) String cursorCreatedAt,
+        @RequestParam(required = false) String cursorUserId,
         @RequestParam(required = false) Integer limit
     ) {
-        return service.find(actor, q, limit).stream().map(UserResponse::from).toList();
+        AdminUserSearchPage page = service.find(
+            actor, displayNamePrefix, parseInstant(createdFrom), parseInstant(createdBefore),
+            parseInstant(lastLoginFrom), parseInstant(lastLoginBefore),
+            parseInstant(cursorCreatedAt), cursorUserId, limit
+        );
+        return new UserSearchResponse(
+            page.items().stream().map(UserResponse::from).toList(),
+            page.nextCursor() == null ? null : UserCursorResponse.from(page.nextCursor()),
+            page.total(),
+            page.pageSize()
+        );
     }
 
     /** 取得單一使用者的去敏裝置摘要，不提供任何狀態變更命令。 */
@@ -43,6 +65,17 @@ public class AdminUserQueryController {
         return UserDetailResponse.from(service.detail(actor, userId));
     }
 
+    private static Instant parseInstant(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return null;
+        }
+        try {
+            return Instant.parse(rawValue);
+        } catch (DateTimeParseException exception) {
+            throw new com.lumix.api.error.ApiException(com.lumix.api.error.ApiErrorCode.VALIDATION_ERROR);
+        }
+    }
+
     record UserResponse(
         String userId,
         String email,
@@ -50,13 +83,23 @@ public class AdminUserQueryController {
         String status,
         Instant createdAt,
         Instant lastLoginAt,
-        Instant fundTransferRestrictedUntil
+        Instant fundTransferRestrictedUntil,
+        boolean hasActiveRestriction
     ) {
         static UserResponse from(AdminUserSummary user) {
             return new UserResponse(
                 user.userId(), user.email(), user.displayName(), user.status(), user.createdAt(), user.lastLoginAt(),
-                user.fundTransferRestrictedUntil()
+                user.fundTransferRestrictedUntil(), user.hasActiveRestriction()
             );
+        }
+    }
+
+    /** total 與 pageSize 只描述目前篩選快照；翻頁位置仍必須使用 nextCursor。 */
+    record UserSearchResponse(List<UserResponse> items, UserCursorResponse nextCursor, long total, int pageSize) { }
+
+    record UserCursorResponse(Instant createdAt, String userId) {
+        static UserCursorResponse from(AdminUserSearchCursor cursor) {
+            return new UserCursorResponse(cursor.createdAt(), cursor.userId());
         }
     }
 

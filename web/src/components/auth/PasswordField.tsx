@@ -1,5 +1,7 @@
 import { useState, type KeyboardEvent, type ReactNode } from 'react';
 
+import { HelpTooltip } from '../base/HelpTooltip';
+
 type PasswordFieldProps = {
   label: string;
   value: string;
@@ -56,7 +58,7 @@ export function PasswordField({
     <label className={['field', className].filter(Boolean).join(' ')}>
       <span className="field__label password-field__label">
         <span>{label}</span>
-        {passwordRuleHint ? <PasswordRuleHint message={passwordRuleHint} /> : null}
+        {passwordRuleHint ? <HelpTooltip message={passwordRuleHint} label={passwordRuleHint} /> : null}
       </span>
       <span className={['password-field', leadingAdornment ? 'password-field--has-leading-adornment' : ''].filter(Boolean).join(' ')}>
         {leadingAdornment ? <span className="password-field__leading-adornment" aria-hidden="true">{leadingAdornment}</span> : null}
@@ -92,20 +94,6 @@ export function PasswordField({
       </span>
       {capsLockWarning && capsLockOn ? <span className="password-field__caps-lock" role="status">{capsLockWarning}</span> : null}
     </label>
-  );
-}
-
-/** 規則提示不需改變表單 state；以可聚焦元素補足純 hover 對鍵盤使用者的不足。 */
-function PasswordRuleHint({ message }: { message: string }) {
-  return (
-    <span className="password-field__rule-hint" tabIndex={0} role="img" aria-label={message}>
-      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="M9.8 9a2.35 2.35 0 1 1 3.9 1.76c-.95.78-1.7 1.26-1.7 2.64" />
-        <path d="M12 16.9h.01" />
-      </svg>
-      <span className="password-field__rule-tooltip" role="tooltip">{message}</span>
-    </span>
   );
 }
 

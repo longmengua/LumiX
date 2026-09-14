@@ -10,5 +10,6 @@ public record AdminUserSummary(
     String status,
     Instant createdAt,
     Instant lastLoginAt,
-    Instant fundTransferRestrictedUntil
+    Instant fundTransferRestrictedUntil,
+    boolean hasActiveRestriction
 ) { }

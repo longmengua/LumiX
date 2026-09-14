@@ -1,4 +1,72 @@
 import { ADMIN_API_BASE_PATH } from './adminApi';
-export type AdminUser={userId:string;email:string;displayName:string;status:string;createdAt:string;lastLoginAt:string|null;fundTransferRestrictedUntil:string|null}; export type AdminUserDetail={user:AdminUser;devices:Array<{platform:string;label:string;lastSeenAt:string}>};
-async function read<T>(path:string):Promise<T>{const r=await fetch(`${ADMIN_API_BASE_PATH}${path}`,{credentials:'same-origin'});if(!r.ok)throw new Error((await r.json().catch(()=>null) as {code?:string}|null)?.code??'ADMIN_USER_QUERY_FAILED');return r.json() as Promise<T>;}
-export const findAdminUsers=(q:string)=>read<AdminUser[]>(`/users?q=${encodeURIComponent(q)}`); export const getAdminUser=(id:string)=>read<AdminUserDetail>(`/users/${encodeURIComponent(id)}`);
+
+export type AdminUser = {
+  userId: string;
+  email: string;
+  displayName: string;
+  status: string;
+  createdAt: string;
+  lastLoginAt: string | null;
+  fundTransferRestrictedUntil: string | null;
+  hasActiveRestriction: boolean;
+};
+
+export type AdminUserDetail = {
+  user: AdminUser;
+  devices: Array<{ platform: string; label: string; lastSeenAt: string }>;
+};
+
+export type AdminUserSearchCursor = {
+  createdAt: string;
+  userId: string;
+};
+
+export type AdminUserSearch = {
+  displayNamePrefix?: string;
+  createdFrom?: string;
+  createdBefore?: string;
+  lastLoginFrom?: string;
+  lastLoginBefore?: string;
+  cursor?: AdminUserSearchCursor;
+};
+
+export type AdminUserSearchPage = {
+  items: AdminUser[];
+  nextCursor: AdminUserSearchCursor | null;
+  /** 同一篩選條件的完整筆數，不會因為目前 cursor 而縮小。 */
+  total: number;
+  /** 後端實際採用的 page size，供前端計算總頁數而非猜測預設值。 */
+  pageSize: number;
+};
+
+/**
+ * 管理端只傳送已套用的篩選條件，避免輸入中的每個字元都觸發讀取使用者資料。
+ * API 的名稱條件是 prefix 搜尋，不能在此自行改成前綴萬用字元。
+ */
+export function findAdminUsers(search: AdminUserSearch): Promise<AdminUserSearchPage> {
+  const parameters = new URLSearchParams();
+  if (search.displayNamePrefix) parameters.set('displayNamePrefix', search.displayNamePrefix);
+  if (search.createdFrom) parameters.set('createdFrom', search.createdFrom);
+  if (search.createdBefore) parameters.set('createdBefore', search.createdBefore);
+  if (search.lastLoginFrom) parameters.set('lastLoginFrom', search.lastLoginFrom);
+  if (search.lastLoginBefore) parameters.set('lastLoginBefore', search.lastLoginBefore);
+  if (search.cursor) {
+    parameters.set('cursorCreatedAt', search.cursor.createdAt);
+    parameters.set('cursorUserId', search.cursor.userId);
+  }
+
+  const query = parameters.size > 0 ? `?${parameters.toString()}` : '';
+  return read<AdminUserSearchPage>(`/users${query}`);
+}
+
+export function getAdminUser(id: string): Promise<AdminUserDetail> {
+  return read<AdminUserDetail>(`/users/${encodeURIComponent(id)}`);
+}
+
+async function read<T>(path: string): Promise<T> {
+  const response = await fetch(`${ADMIN_API_BASE_PATH}${path}`, { credentials: 'same-origin' });
+  if (!response.ok) {
+    throw new Error((await response.json().catch(() => null) as { code?: string } | null)?.code ?? 'ADMIN_USER_QUERY_FAILED');
+  }
+  return response.json() as Promise<T>;
+}

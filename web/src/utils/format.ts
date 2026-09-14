@@ -34,6 +34,17 @@ export function formatTime(value: string | Date) {
   }).format(typeof value === 'string' ? new Date(value) : value);
 }
 
+/**
+ * 密集清單將日期與時間分行，讓欄位可維持窄且整齊；沿用既有的 en-US 顯示慣例，不改變時間來源或時區換算。
+ */
+export function formatDateTimeParts(value: string | Date) {
+  const date = typeof value === 'string' ? new Date(value) : value;
+  return {
+    date: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date),
+    time: new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(date),
+  };
+}
+
 export function maskEmail(email: string) {
   const [local, domain] = email.split('@');
   if (!local || !domain) return email;
@@ -54,4 +65,3 @@ export function maskAddress(address: string) {
   if (address.length <= 12) return address;
   return `${address.slice(0, 6)}...${address.slice(-4)}`;
 }
-

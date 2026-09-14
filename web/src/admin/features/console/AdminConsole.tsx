@@ -1,9 +1,10 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { Fragment, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { Badge } from '../../../components/base/Badge';
 import { Card } from '../../../components/base/Card';
 import { ConfirmDialog } from '../../../components/base/ConfirmDialog';
+import { HelpTooltip } from '../../../components/base/HelpTooltip';
 import { ErrorState, LoadingState } from '../../../components/base/State';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { useI18n } from '../../../i18n';
@@ -13,7 +14,14 @@ import {
   type AdminMarketMakerRecord,
   type AdminWalletRecord,
 } from './mockAdminService';
-import { findAdminUsers, getAdminUser, type AdminUser, type AdminUserDetail } from '../../api/adminUsersApi';
+import {
+  findAdminUsers,
+  getAdminUser,
+  type AdminUser,
+  type AdminUserDetail,
+  type AdminUserSearch,
+  type AdminUserSearchCursor,
+} from '../../api/adminUsersApi';
 
 type ConfirmState = {
   title: string;
@@ -21,6 +29,9 @@ type ConfirmState = {
   confirmLabel: string;
   action: () => void;
 };
+
+type UserDateFilter = 'created' | 'last-login';
+type AdminUserVisualStatus = 'active' | 'inactive' | 'frozen';
 
 export function AdminConsole() {
   const { t } = useI18n();
@@ -103,7 +114,6 @@ export function AdminConsole() {
 
           <Routes>
             <Route index element={<AdminDashboardPage summary={data.summary} />} />
-            <Route path="users" element={<AdminUsersPage />} />
             <Route path="assets" element={<AdminAssetsPage assets={data.assets} />} />
             <Route path="wallet" element={<AdminWalletPage wallets={data.wallets} onPrompt={openConfirm} />} />
             <Route path="spot" element={<AdminSpotPage markets={data.spotMarkets} onPrompt={openConfirm} />} />
@@ -165,68 +175,334 @@ function AdminDashboardPage({ summary }: { summary: AdminConsoleSnapshot['summar
   );
 }
 
-function AdminUsersPage() {
+/**
+ * 使用者檢視獨立由外層 router 掛載，避免 AdminConsole 的巢狀 Routes 在 `/users` 再次附加路徑而沒有命中。
+ * 其他 mock 模組仍暫留在 AdminConsole，這個真實唯讀頁不需要等待 mock snapshot 才能顯示。
+ */
+export function AdminUsersPage() {
   const { t } = useI18n();
-  const [query, setQuery] = useState('');
+  const [displayNamePrefix, setDisplayNamePrefix] = useState('');
+  const [createdFromDate, setCreatedFromDate] = useState('');
+  const [createdToDate, setCreatedToDate] = useState('');
+  const [lastLoginFromDate, setLastLoginFromDate] = useState('');
+  const [lastLoginToDate, setLastLoginToDate] = useState('');
+  const [activeDateFilter, setActiveDateFilter] = useState<UserDateFilter | null>(null);
   const [items, setItems] = useState<AdminUser[]>([]);
-  const [detail, setDetail] = useState<AdminUserDetail | null>(null);
+  const [nextCursor, setNextCursor] = useState<AdminUserSearchCursor | null>(null);
+  const [appliedSearch, setAppliedSearch] = useState<AdminUserSearch>({});
+  const [expandedUserIds, setExpandedUserIds] = useState<Set<string>>(() => new Set());
+  const [detailsByUserId, setDetailsByUserId] = useState<Record<string, AdminUserDetail>>({});
+  const [detailLoadingUserIds, setDetailLoadingUserIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const requestSequence = useRef(0);
+  const hasCreatedDateFilter = Boolean(createdFromDate || createdToDate);
+  const hasLastLoginDateFilter = Boolean(lastLoginFromDate || lastLoginToDate);
 
-  function load(searchQuery = query) {
-    // 使用者 mock 已移除；API 拒絕時保留 server code，不把前端狀態誤當成查詢結果。
-    void findAdminUsers(searchQuery)
-      .then(setItems)
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'ADMIN_USER_QUERY_FAILED'));
+  function load(search: AdminUserSearch, append: boolean) {
+    const requestId = ++requestSequence.current;
+    setLoading(true);
+    setError(null);
+    if (!append) {
+      // 新條件送出後先移除舊清單與游標，避免管理員誤把前一次篩選結果當成目前條件的資料。
+      setItems([]);
+      setNextCursor(null);
+      // 篩選結果已變更，收合舊列詳情，避免不同查詢的資料在同一表格中混在一起。
+      setExpandedUserIds(new Set());
+      setDetailsByUserId({});
+      setDetailLoadingUserIds(new Set());
+    }
+
+    // 使用者資料屬權限資料；快速連續篩選時，舊 request 的結果不能覆蓋最新條件的畫面。
+    void findAdminUsers(search)
+      .then((page) => {
+        if (requestId !== requestSequence.current) return;
+        setItems((current) => append ? [...current, ...page.items] : page.items);
+        setNextCursor(page.nextCursor);
+      })
+      .catch(() => {
+        if (requestId !== requestSequence.current) return;
+        setError(t('admin.usersQueryError'));
+      })
+      .finally(() => {
+        if (requestId === requestSequence.current) setLoading(false);
+      });
   }
 
   useEffect(() => {
-    load('');
+    load({}, false);
   }, []);
 
-  function showDetail(userId: string) {
+  function buildSearch(cursor?: AdminUserSearchCursor): AdminUserSearch {
+    const search: AdminUserSearch = {
+      displayNamePrefix: displayNamePrefix.trim() || undefined,
+      cursor,
+    };
+    if (createdFromDate) search.createdFrom = toUtcDayStart(createdFromDate);
+    if (createdToDate) search.createdBefore = toUtcDayAfter(createdToDate);
+    if (lastLoginFromDate) search.lastLoginFrom = toUtcDayStart(lastLoginFromDate);
+    if (lastLoginToDate) search.lastLoginBefore = toUtcDayAfter(lastLoginToDate);
+    return search;
+  }
+
+  function submitSearch() {
+    if (createdFromDate && createdToDate && createdFromDate > createdToDate) {
+      setError(t('admin.usersInvalidDateRange'));
+      return;
+    }
+    if (lastLoginFromDate && lastLoginToDate && lastLoginFromDate > lastLoginToDate) {
+      setError(t('admin.usersInvalidLastLoginRange'));
+      return;
+    }
+    const search = buildSearch();
+    setAppliedSearch(search);
+    load(search, false);
+  }
+
+  function resetSearch() {
+    setDisplayNamePrefix('');
+    setCreatedFromDate('');
+    setCreatedToDate('');
+    setLastLoginFromDate('');
+    setLastLoginToDate('');
+    setActiveDateFilter(null);
+    setAppliedSearch({});
+    load({}, false);
+  }
+
+  function toggleDateFilter(filter: UserDateFilter) {
+    setActiveDateFilter((current) => current === filter ? null : filter);
+  }
+
+  function clearActiveDateFilter() {
+    if (activeDateFilter === 'created') {
+      setCreatedFromDate('');
+      setCreatedToDate('');
+    }
+    if (activeDateFilter === 'last-login') {
+      setLastLoginFromDate('');
+      setLastLoginToDate('');
+    }
+  }
+
+  function toggleDetail(userId: string) {
+    if (expandedUserIds.has(userId)) {
+      setExpandedUserIds((current) => {
+        const next = new Set(current);
+        next.delete(userId);
+        return next;
+      });
+      return;
+    }
+
+    setExpandedUserIds((current) => new Set(current).add(userId));
+    if (detailsByUserId[userId] || detailLoadingUserIds.has(userId)) return;
+
+    setDetailLoadingUserIds((current) => new Set(current).add(userId));
+    // 每列的詳情獨立快取與載入，讓管理員能同時展開多位使用者，而不會互相覆蓋。
     void getAdminUser(userId)
-      .then(setDetail)
-      .catch((loadError) => setError(loadError instanceof Error ? loadError.message : 'ADMIN_USER_QUERY_FAILED'));
+      .then((userDetail) => setDetailsByUserId((current) => ({ ...current, [userId]: userDetail })))
+      .catch(() => setError(t('admin.usersQueryError')))
+      .finally(() => {
+        setDetailLoadingUserIds((current) => {
+          const next = new Set(current);
+          next.delete(userId);
+          return next;
+        });
+      });
   }
 
   return (
-    <Card title={t('admin.usersTitle')}>
-      <form className="hero-actions" onSubmit={(event) => {
+    <Card className="admin-users-card" title={t('admin.usersTitle')}>
+      <form className="admin-user-search" onSubmit={(event) => {
         event.preventDefault();
-        setError(null);
-        load();
+        submitSearch();
       }}>
-        <input
-          className="input"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder="UID、email、顯示名稱"
-        />
-        <button className="secondary-button">搜尋</button>
+        <label className="admin-user-search__query">
+          <span className="sr-only">{t('admin.usersNamePrefix')}</span>
+          <SearchIcon />
+          <input
+            className="input"
+            value={displayNamePrefix}
+            onChange={(event) => setDisplayNamePrefix(event.target.value)}
+            maxLength={128}
+            placeholder={t('admin.usersNamePrefixPlaceholder')}
+          />
+        </label>
+        <div className="admin-user-search__filters" aria-label={t('admin.usersDateFilters')}>
+          <button
+            className={`admin-user-filter-chip${activeDateFilter === 'created' ? ' admin-user-filter-chip--active' : ''}`}
+            type="button"
+            aria-expanded={activeDateFilter === 'created'}
+            onClick={() => toggleDateFilter('created')}
+          >
+            <span>{t('admin.usersRegistrationFilter')}</span>
+            {hasCreatedDateFilter ? <strong>{formatDateRangeSummary(createdFromDate, createdToDate, t('admin.usersAllDates'))}</strong> : null}
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <button
+            className={`admin-user-filter-chip${activeDateFilter === 'last-login' ? ' admin-user-filter-chip--active' : ''}`}
+            type="button"
+            aria-expanded={activeDateFilter === 'last-login'}
+            onClick={() => toggleDateFilter('last-login')}
+          >
+            <span>{t('admin.usersLastLoginFilter')}</span>
+            {hasLastLoginDateFilter ? <strong>{formatDateRangeSummary(lastLoginFromDate, lastLoginToDate, t('admin.usersAllDates'))}</strong> : null}
+            <span aria-hidden="true">⌄</span>
+          </button>
+          <HelpTooltip message={t('admin.usersSearchHint')} label={t('admin.usersSearchHelpLabel')} />
+        </div>
+        <div className="admin-user-search__actions">
+          <button className="primary-button" disabled={loading}>{loading ? t('admin.usersSearching') : t('admin.usersSearch')}</button>
+          <button className="ghost-button" type="button" disabled={loading} onClick={resetSearch}>{t('admin.usersReset')}</button>
+        </div>
+        {activeDateFilter ? (
+          <section className="admin-user-date-panel" aria-label={activeDateFilter === 'created' ? t('admin.usersRegistrationFilter') : t('admin.usersLastLoginFilter')}>
+            <div className="admin-user-date-panel__header">
+              <strong>{activeDateFilter === 'created' ? t('admin.usersRegistrationFilter') : t('admin.usersLastLoginFilter')}</strong>
+              <button
+                className="admin-user-date-panel__clear"
+                type="button"
+                aria-label={t('admin.usersClearThisFilter')}
+                title={t('admin.usersClearThisFilter')}
+                onClick={clearActiveDateFilter}
+              >
+                <CloseIcon />
+              </button>
+            </div>
+            <div className="admin-user-date-panel__range">
+              <label className="field">
+                <span className="field__label">{t('admin.usersRangeFrom')}</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={activeDateFilter === 'created' ? createdFromDate : lastLoginFromDate}
+                  onChange={(event) => activeDateFilter === 'created' ? setCreatedFromDate(event.target.value) : setLastLoginFromDate(event.target.value)}
+                />
+              </label>
+              <span className="admin-user-date-panel__separator" aria-hidden="true">→</span>
+              <label className="field">
+                <span className="field__label">{t('admin.usersRangeTo')}</span>
+                <input
+                  className="input"
+                  type="date"
+                  value={activeDateFilter === 'created' ? createdToDate : lastLoginToDate}
+                  onChange={(event) => activeDateFilter === 'created' ? setCreatedToDate(event.target.value) : setLastLoginToDate(event.target.value)}
+                />
+              </label>
+            </div>
+          </section>
+        ) : null}
       </form>
       {error ? <p className="form-message form-message--error">{error}</p> : null}
       <AdminTable
-        columns={[t('admin.column.id'), t('admin.column.user'), t('admin.column.status'), t('admin.column.lastLogin'), t('admin.column.actions')]}
+        className="admin-users-table"
+        columns={[
+          t('admin.column.user'), t('admin.column.registeredAt'), t('admin.column.lastLogin'), t('admin.column.actions'),
+        ]}
       >
-        {items.map((user) => (
-          <AdminTableRow key={user.userId}>
-            <span>{user.userId}</span>
-            <div>
-              <strong>{user.displayName}</strong>
-              <p className="assets-metric__hint">{user.email}</p>
-            </div>
-            <Badge tone={getStatusTone(user.status)}>{user.status}</Badge>
-            <span>{user.lastLoginAt ? formatTime(user.lastLoginAt) : '—'}</span>
-            <button className="secondary-button" type="button" onClick={() => showDetail(user.userId)}>詳情</button>
-          </AdminTableRow>
-        ))}
+        {items.map((user) => {
+          const visualStatus = getAdminUserVisualStatus(user);
+          const statusLabel = getAdminUserStatusLabel(visualStatus, t);
+          const expanded = expandedUserIds.has(user.userId);
+          const detail = detailsByUserId[user.userId];
+          const detailLoading = detailLoadingUserIds.has(user.userId);
+          const detailId = `admin-user-detail-${user.userId}`;
+          const restrictionMessages = getAdminUserRestrictionMessages(user, t);
+
+          return (
+            <Fragment key={user.userId}>
+              <AdminTableRow>
+                <div className="admin-user-identity">
+                  <span
+                    className={`admin-user-identity__status admin-user-identity__status--${visualStatus}`}
+                    role="img"
+                    aria-label={statusLabel}
+                    title={statusLabel}
+                  />
+                  <div>
+                    <strong>
+                      {user.displayName} <span className="admin-user-identity__email">({user.email})</span>
+                      <CopyButton value={user.email} label={t('admin.usersCopyEmail')} />
+                    </strong>
+                    <p className="assets-metric__hint">
+                      {user.userId}<CopyButton value={user.userId} label={t('admin.usersCopyUserId')} />
+                    </p>
+                  </div>
+                </div>
+                <span>{formatTime(user.createdAt)}</span>
+                <span>{user.lastLoginAt ? formatTime(user.lastLoginAt) : '—'}</span>
+                <button
+                  className="secondary-button"
+                  type="button"
+                  aria-expanded={expanded}
+                  aria-controls={detailId}
+                  onClick={() => toggleDetail(user.userId)}
+                >
+                  {expanded ? t('admin.usersHideDetails') : t('admin.usersShowDetails')}
+                </button>
+              </AdminTableRow>
+              {expanded ? (
+                <section className="admin-user-detail" id={detailId} aria-label={t('admin.usersDetailsFor', undefined, { name: user.displayName })}>
+                  <div className="admin-user-detail__panel">
+                    {detailLoading ? <p className="assets-metric__hint">{t('admin.usersDetailsLoading')}</p> : null}
+                    {!detailLoading && detail ? (
+                      <dl className="admin-user-detail__fields">
+                        <div className="admin-user-detail__access-status">
+                          <dt>{t('admin.usersDetailStatus')}</dt>
+                          <dd>
+                            <span className={`admin-user-identity__status admin-user-identity__status--${visualStatus}`} aria-hidden="true" />
+                            {statusLabel}
+                          </dd>
+                        </div>
+                        <div className={`admin-user-detail__restrictions${user.hasActiveRestriction ? '' : ' admin-user-detail__restrictions--clear'}`}>
+                          <dt>{t('admin.usersDetailRestrictions')}</dt>
+                          <dd>
+                            <ul>
+                              {restrictionMessages.map((message) => <li key={message}>{message}</li>)}
+                            </ul>
+                          </dd>
+                        </div>
+                        <div>
+                          <dt>{t('admin.column.id')}</dt>
+                          <dd>{detail.user.userId}<CopyButton value={detail.user.userId} label={t('admin.usersCopyUserId')} /></dd>
+                        </div>
+                        <div>
+                          <dt>{t('admin.account.email')}</dt>
+                          <dd>{detail.user.email}<CopyButton value={detail.user.email} label={t('admin.usersCopyEmail')} /></dd>
+                        </div>
+                        <div>
+                          <dt>{t('admin.usersDetailRegistered')}</dt>
+                          <dd>{formatTime(detail.user.createdAt)}</dd>
+                        </div>
+                        <div>
+                          <dt>{t('admin.usersDetailLastLogin')}</dt>
+                          <dd>{detail.user.lastLoginAt ? formatTime(detail.user.lastLoginAt) : '—'}</dd>
+                        </div>
+                        <div className="admin-user-detail__devices">
+                          <dt>{t('admin.usersDetailDevices')}</dt>
+                          <dd>{detail.devices.map((device) => `${device.platform}／${device.label}`).join('、') || t('admin.usersDetailNoDevices')}</dd>
+                        </div>
+                      </dl>
+                    ) : null}
+                    {!detailLoading && !detail ? <p className="form-message form-message--error">{t('admin.usersQueryError')}</p> : null}
+                  </div>
+                </section>
+              ) : null}
+            </Fragment>
+          );
+        })}
       </AdminTable>
-      {detail ? (
-        <Card title={detail.user.displayName}>
-          <p>{detail.user.userId} · {detail.user.email}</p>
-          <p>註冊：{formatTime(detail.user.createdAt)}</p>
-          <p>免驗證裝置：{detail.devices.map((device) => `${device.platform}／${device.label}`).join('、') || '無'}</p>
-        </Card>
+      {!loading && items.length === 0 ? <p className="assets-metric__hint">{t('admin.usersEmpty')}</p> : null}
+      {nextCursor ? (
+        <button
+          className="secondary-button admin-user-search__more"
+          type="button"
+          disabled={loading}
+          onClick={() => load({ ...appliedSearch, cursor: nextCursor }, true)}
+        >
+          {loading ? t('admin.usersSearching') : t('admin.usersLoadMore')}
+        </button>
       ) : null}
     </Card>
   );
@@ -639,9 +915,9 @@ function AdminSettingsPage({
   );
 }
 
-function AdminTable({ columns, children }: { columns: string[]; children: ReactNode }) {
+function AdminTable({ columns, children, className = '' }: { columns: string[]; children: ReactNode; className?: string }) {
   return (
-    <div className="trading-table">
+    <div className={['trading-table', className].filter(Boolean).join(' ')}>
       <div className="trading-table__head">
         {columns.map((column) => (
           <span key={column}>{column}</span>
@@ -673,9 +949,40 @@ function RiskSwitch({ label, enabled, onClick }: { label: string; enabled: boole
 }
 
 function getStatusTone(status: string) {
-  if (status === 'Active' || status === 'Matched' || status === 'Approved' || status === 'Enabled') return 'success';
-  if (status === 'Paused' || status === 'Investigating' || status === 'KYC Pending' || status === 'Reduce only') return 'warning';
+  if (status === 'ACTIVE' || status === 'Active' || status === 'Matched' || status === 'Approved' || status === 'Enabled') return 'success';
+  if (status === 'SUSPENDED' || status === 'Paused' || status === 'Investigating' || status === 'KYC Pending' || status === 'Reduce only') return 'warning';
   return 'danger';
+}
+
+/**
+ * 限制狀態由後端聚合帳號、資金與帳戶凍結來源；前端只負責呈現，避免用到期時間等欄位自行推測。
+ */
+function getAdminUserVisualStatus(user: AdminUser): AdminUserVisualStatus {
+  if (user.hasActiveRestriction) return 'frozen';
+  return user.status === 'ACTIVE' ? 'active' : 'inactive';
+}
+
+function getAdminUserStatusLabel(status: AdminUserVisualStatus, t: ReturnType<typeof useI18n>['t']) {
+  if (status === 'active') return t('admin.usersStatusActive');
+  if (status === 'frozen') return t('admin.usersStatusFrozen');
+  return t('admin.usersStatusInactive');
+}
+
+/** 將後端已聚合的限制轉成可審閱的文字，避免管理員只看見黃色色點卻不知道限制範圍。 */
+function getAdminUserRestrictionMessages(user: AdminUser, t: ReturnType<typeof useI18n>['t']) {
+  const messages: string[] = [];
+  if (user.status === 'SUSPENDED') messages.push(t('admin.usersRestrictionSuspended'));
+  if (hasActiveFundTransferRestriction(user)) {
+    messages.push(t('admin.usersRestrictionFundTransfer', undefined, { until: formatTime(user.fundTransferRestrictedUntil!) }));
+  }
+  if (user.hasActiveRestriction && messages.length === 0) messages.push(t('admin.usersRestrictionFrozenAccount'));
+  if (messages.length === 0) messages.push(t('admin.usersNoRestrictions'));
+  return messages;
+}
+
+function hasActiveFundTransferRestriction(user: AdminUser) {
+  const restrictedUntil = user.fundTransferRestrictedUntil ? Date.parse(user.fundTransferRestrictedUntil) : Number.NaN;
+  return Number.isFinite(restrictedUntil) && restrictedUntil > Date.now();
 }
 
 function getRiskTone(risk: string) {
@@ -690,4 +997,108 @@ function formatTime(value: string) {
     timeStyle: 'short',
     timeZone: 'UTC',
   }).format(new Date(value));
+}
+
+/** date input 沒有時區資訊，統一轉為 UTC 的半開區間，才能穩定涵蓋管理員選取的完整日期。 */
+function toUtcDayStart(date: string) {
+  return `${date}T00:00:00.000Z`;
+}
+
+function toUtcDayAfter(date: string) {
+  const endOfSelectedDay = new Date(`${date}T00:00:00.000Z`);
+  endOfSelectedDay.setUTCDate(endOfSelectedDay.getUTCDate() + 1);
+  return endOfSelectedDay.toISOString();
+}
+
+function formatDateRangeSummary(from: string, to: string, allDatesLabel: string) {
+  if (!from && !to) return allDatesLabel;
+  return `${from || '…'} – ${to || '…'}`;
+}
+
+function SearchIcon() {
+  return (
+    <svg className="admin-user-search__query-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <circle cx="10.8" cy="10.8" r="5.8" />
+      <path d="m15.1 15.1 4.3 4.3" />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m7.5 7.5 9 9M16.5 7.5l-9 9" />
+    </svg>
+  );
+}
+
+/**
+ * 電子郵件與使用者 ID 常需貼到支援或稽核工具；集中處理複製與回饋可避免每個欄位各自實作不一致的行為。
+ */
+function CopyButton({ value, label }: { value: string; label: string }) {
+  const { t } = useI18n();
+  const [copied, setCopied] = useState(false);
+  const resetTimer = useRef<number | null>(null);
+
+  async function copy() {
+    const copiedSuccessfully = await copyToClipboard(value);
+    if (!copiedSuccessfully) return;
+
+    setCopied(true);
+    if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
+    resetTimer.current = window.setTimeout(() => setCopied(false), 1600);
+  }
+
+  return (
+    <button
+      className="admin-user-copy-button"
+      type="button"
+      aria-label={copied ? t('admin.usersCopied') : label}
+      title={copied ? t('admin.usersCopied') : label}
+      onClick={() => void copy()}
+    >
+      {copied ? <CheckIcon /> : <CopyIcon />}
+      <span className="sr-only" aria-live="polite">{copied ? t('admin.usersCopied') : ''}</span>
+    </button>
+  );
+}
+
+/** Clipboard API 在 HTTPS / localhost 可用；舊瀏覽器才退回到同步選取方式，讓管理操作不因環境差異失效。 */
+async function copyToClipboard(value: string) {
+  try {
+    if (navigator.clipboard) {
+      await navigator.clipboard.writeText(value);
+      return true;
+    }
+  } catch {
+    // Clipboard 權限遭拒時仍嘗試相容 fallback，不將例外暴露成使用者看不懂的 console error。
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = value;
+  textArea.setAttribute('readonly', '');
+  textArea.style.position = 'fixed';
+  textArea.style.opacity = '0';
+  document.body.append(textArea);
+  textArea.select();
+  const copied = document.execCommand('copy');
+  textArea.remove();
+  return copied;
+}
+
+function CopyIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <rect x="9" y="8" width="9" height="10" rx="1.5" />
+      <path d="M15 8V6.5A1.5 1.5 0 0 0 13.5 5h-8A1.5 1.5 0 0 0 4 6.5v8A1.5 1.5 0 0 0 5.5 16H9" />
+    </svg>
+  );
+}
+
+function CheckIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+      <path d="m5.5 12.5 4 4 9-9" />
+    </svg>
+  );
 }

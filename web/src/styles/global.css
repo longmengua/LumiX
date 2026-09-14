@@ -270,12 +270,70 @@ p,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  min-height: 72px;
-  padding: 0 24px;
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(4, 9, 20, 0.92);
+  flex-wrap: nowrap;
+  gap: clamp(0.75rem, 1.5vw, 1.5rem);
+  min-height: 6.1rem;
+  padding: 0 clamp(1.25rem, 2.55vw, 2.6rem);
+  border-bottom: 1px solid rgba(85, 140, 239, 0.16);
+  background:
+    radial-gradient(circle at 55% -180%, rgba(51, 112, 241, 0.36), transparent 34rem),
+    linear-gradient(100deg, rgba(3, 13, 31, 0.98), rgba(5, 22, 54, 0.96));
   backdrop-filter: blur(18px);
+}
+
+/* 導覽在同一水平帶內捲動；品牌與帳戶入口固定可見，避免小筆電寬度時誤把關鍵入口推到第二行。 */
+.admin-header__nav {
+  flex: 1 1 auto;
+  flex-wrap: nowrap;
+  gap: 0.16rem;
+  min-inline-size: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  scroll-padding-inline: 0.5rem;
+}
+
+.admin-header__nav::-webkit-scrollbar { display: none; }
+
+.admin-header .topbar__link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  flex: 0 0 auto;
+  min-block-size: 2.85rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid transparent;
+  border-radius: 0.82rem;
+  color: rgba(205, 220, 247, 0.78);
+  font-size: 0.87rem;
+  font-weight: 560;
+  white-space: nowrap;
+  transition: color 170ms ease, border-color 170ms ease, background 170ms ease, box-shadow 170ms ease, transform 170ms ease;
+}
+
+.admin-header .topbar__link:hover { color: #f2f7ff; background: rgba(63, 119, 233, 0.14); }
+
+.admin-header .topbar__link:focus-visible,
+.admin-header__account:focus-visible,
+.admin-header .topbar__locale-switcher:focus-within {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(91, 151, 255, 0.26);
+}
+
+.admin-header .topbar__link--active {
+  border-color: rgba(70, 141, 255, 0.75);
+  background: linear-gradient(135deg, rgba(34, 111, 252, 0.36), rgba(29, 72, 180, 0.24));
+  box-shadow: 0 0 1.45rem rgba(47, 112, 255, 0.27), inset 0 1px rgba(187, 217, 255, 0.17);
+  color: #e8f2ff;
+}
+
+.admin-header__nav-icon {
+  inline-size: 1.08rem;
+  block-size: 1.08rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.75;
 }
 
 .admin-header__brand {
@@ -305,8 +363,9 @@ p,
 .admin-header__actions {
   display: flex;
   align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
+  gap: 0.8rem;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
   justify-content: flex-end;
   min-width: 0;
 }
@@ -314,11 +373,12 @@ p,
 .admin-header__locale-switcher {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
+  gap: 0.45rem;
+  min-block-size: 2.85rem;
+  padding: 0.55rem 0.72rem;
   border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(98, 150, 243, 0.3);
+  background: rgba(13, 39, 86, 0.46);
 }
 
 .admin-header__locale-label {
@@ -332,6 +392,34 @@ p,
   background: transparent;
   color: rgba(241, 245, 249, 0.96);
   font: inherit;
+}
+
+.admin-header__account {
+  flex: 0 0 auto;
+  min-block-size: 2.85rem;
+  padding-inline: 0.9rem;
+  border: 1px solid rgba(57, 131, 253, 0.65);
+  background: linear-gradient(135deg, rgba(24, 86, 203, 0.3), rgba(13, 52, 132, 0.46));
+  box-shadow: inset 0 1px rgba(166, 204, 255, 0.12);
+  color: #9ec9ff;
+  font-size: 0.86rem;
+  font-weight: 650;
+}
+
+.admin-header__account svg {
+  inline-size: 1.06rem;
+  block-size: 1.06rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.admin-header__account:hover {
+  border-color: rgba(111, 174, 255, 0.92);
+  background: linear-gradient(135deg, rgba(36, 102, 226, 0.44), rgba(17, 61, 151, 0.58));
+  color: #e2f0ff;
 }
 
 .admin-top-nav {
@@ -894,6 +982,79 @@ p,
     gap: 0.5rem;
     padding-block-start: 0.5rem;
     text-align: center;
+  }
+}
+
+/* 行動版將品牌與帳戶控制留在第一列，完整導覽則成為下一列的可橫向捲動帶；不隱藏任何管理功能。 */
+@media (max-width: 760px) {
+  .admin-header.topbar {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.6rem 0.75rem;
+    min-height: 0;
+    padding: 0.8rem 1rem 0.65rem;
+  }
+
+  .admin-header .topbar__brand {
+    flex: 0 0 auto;
+  }
+
+  .admin-header .topbar__brand--full {
+    display: inline-flex;
+  }
+
+  .admin-header .topbar__brand--mark {
+    display: none;
+  }
+
+  .admin-header .admin-header__nav {
+    order: 3;
+    flex: 1 0 100%;
+    inline-size: 100%;
+    padding: 0.08rem 0 0.16rem;
+  }
+
+  .admin-header .topbar__actions {
+    inline-size: auto;
+    margin-inline-start: auto;
+  }
+
+  .admin-header .topbar__locale-switcher {
+    inline-size: auto;
+  }
+
+  .admin-header .topbar__locale-value {
+    display: none;
+  }
+
+  .admin-header__account {
+    inline-size: 2.85rem;
+    padding-inline: 0;
+  }
+
+  .admin-header__account span {
+    display: none;
+  }
+}
+
+@media (max-width: 390px) {
+  .admin-header.topbar {
+    padding-inline: 0.75rem;
+  }
+
+  .admin-header .topbar__brand--full {
+    display: none;
+  }
+
+  .admin-header .topbar__brand--mark {
+    display: inline-flex;
+  }
+
+  .admin-header .topbar__link {
+    min-block-size: 2.65rem;
+    padding-inline: 0.62rem;
+    font-size: 0.82rem;
   }
 }
 
@@ -1815,26 +1976,29 @@ p,
   background: rgba(96, 165, 250, 0.18);
 }
 
-/* 問號只揭露規則，不參與表單提交；focus 也可取得說明，避免規則僅對滑鼠使用者可見。 */
 .password-field__label {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
 }
 
-.password-field__rule-hint {
+/* 共用補充說明：預設不佔版面，hover 與鍵盤 focus 都能揭露同一段訊息。 */
+.help-tooltip {
   position: relative;
   display: inline-grid;
   place-items: center;
   inline-size: 1rem;
   block-size: 1rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
   flex: 0 0 auto;
   color: rgba(147, 197, 253, 0.88);
   cursor: help;
   outline: none;
 }
 
-.password-field__rule-hint svg {
+.help-tooltip svg {
   inline-size: 100%;
   block-size: 100%;
   fill: none;
@@ -1844,7 +2008,7 @@ p,
   stroke-width: 1.8;
 }
 
-.password-field__rule-tooltip {
+.help-tooltip__content {
   position: absolute;
   z-index: 8;
   inset-inline-start: 50%;
@@ -1866,8 +2030,8 @@ p,
   visibility: hidden;
 }
 
-.password-field__rule-hint:hover .password-field__rule-tooltip,
-.password-field__rule-hint:focus-visible .password-field__rule-tooltip {
+.help-tooltip:hover .help-tooltip__content,
+.help-tooltip:focus-visible .help-tooltip__content {
   opacity: 1;
   transform: translate(-50%, 0);
   visibility: visible;
@@ -2322,6 +2486,581 @@ p,
   align-items: center;
   gap: 12px;
   width: 100%;
+}
+
+/* 後台使用者查詢採明確送出而非輸入即查，避免高權限資料隨每個鍵入字元重複請求。 */
+.admin-users-card .card__title {
+  margin-bottom: 16px;
+}
+
+.admin-user-search {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.admin-user-search__query {
+  position: relative;
+  flex: 1 1 15rem;
+  min-inline-size: 0;
+  max-inline-size: 22rem;
+}
+
+.admin-user-search__query .input {
+  min-block-size: 40px;
+  padding-inline-start: 2.55rem;
+  border-radius: 11px;
+}
+
+.admin-user-search__query-icon {
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 0.85rem;
+  inset-block-start: 50%;
+  inline-size: 1rem;
+  block-size: 1rem;
+  color: rgba(148, 163, 184, 0.82);
+  fill: none;
+  pointer-events: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.9;
+  transform: translateY(-50%);
+}
+
+.admin-user-search__filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 3px;
+  padding-inline: 4px;
+  border-inline: 1px solid rgba(148, 163, 184, 0.14);
+}
+
+/* 日期條件保持像工具列按鈕；只有已選日期才顯示摘要，避免「全部」等冗字干擾主搜尋。 */
+.admin-user-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 9px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(203, 213, 225, 0.76);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.84rem;
+}
+
+.admin-user-filter-chip strong {
+  color: #bcd3ff;
+  font-weight: 600;
+}
+
+.admin-user-filter-chip:hover,
+.admin-user-filter-chip--active {
+  border-color: rgba(96, 165, 250, 0.34);
+  background: rgba(59, 130, 246, 0.1);
+  color: rgba(239, 246, 255, 0.96);
+}
+
+.admin-user-filter-chip:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.admin-user-search__actions {
+  display: flex;
+  gap: 8px;
+}
+
+.admin-user-search__actions .primary-button,
+.admin-user-search__actions .ghost-button {
+  min-height: 40px;
+  border-radius: 9px;
+}
+
+.admin-user-search__actions .primary-button {
+  padding-inline: 16px;
+  background: linear-gradient(135deg, #4d8cff, #657cf5);
+}
+
+.admin-user-search__actions .ghost-button {
+  color: rgba(148, 163, 184, 0.92);
+  border-color: transparent;
+}
+
+.admin-user-date-panel {
+  flex: 1 0 100%;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.34);
+}
+
+.admin-user-date-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  align-self: center;
+}
+
+.admin-user-date-panel__range {
+  display: grid;
+  grid-template-columns: minmax(10rem, 13rem) auto minmax(10rem, 13rem);
+  gap: 10px;
+  align-items: end;
+  max-inline-size: 30rem;
+}
+
+.admin-user-date-panel__range .input {
+  min-block-size: 40px;
+  border-radius: 10px;
+}
+
+.admin-user-date-panel__clear {
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1.8rem;
+  block-size: 1.8rem;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.84);
+  cursor: pointer;
+}
+
+.admin-user-date-panel__clear:hover,
+.admin-user-date-panel__clear:focus-visible {
+  border-color: rgba(96, 165, 250, 0.58);
+  background: rgba(59, 130, 246, 0.14);
+  color: #e0ecff;
+  outline: none;
+}
+
+.admin-user-date-panel__clear svg {
+  inline-size: 0.9rem;
+  block-size: 0.9rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.9;
+}
+
+.admin-user-date-panel__separator {
+  padding-bottom: 10px;
+  color: rgba(148, 163, 184, 0.74);
+}
+
+.admin-user-search__more {
+  margin-top: 16px;
+}
+
+/* 移除獨立狀態欄，把表格寬度留給名稱與時間；狀態改由名稱左側的小圓點傳達。 */
+.admin-users-table .trading-table__head,
+.admin-users-table .trading-table__row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-inline-size: 50rem;
+  /* 寬螢幕不讓單列無限制延展，讓欄位群組維持易讀比例並水平置中。 */
+  width: min(100%, 68rem);
+  margin-inline: auto;
+}
+
+.admin-users-table .trading-table__head > *,
+.admin-users-table .trading-table__row > * {
+  min-inline-size: 0;
+}
+
+/* 欄寬以 flex basis 管理，讓使用者名稱吸收彈性空間，時間與操作欄則維持可預期的寬度。 */
+.admin-users-table .trading-table__head > :first-child,
+.admin-users-table .trading-table__row > :first-child {
+  flex: 1 1 20rem;
+}
+
+.admin-users-table .trading-table__head > :nth-child(2),
+.admin-users-table .trading-table__head > :nth-child(3),
+.admin-users-table .trading-table__row > :nth-child(2),
+.admin-users-table .trading-table__row > :nth-child(3) {
+  flex: 0 0 9rem;
+  text-align: center;
+}
+
+.admin-users-table .trading-table__head > :last-child,
+.admin-users-table .trading-table__row > :last-child {
+  flex: 0 0 auto;
+}
+
+/* 欄位標題統一置中，列內容仍維持靠左才不會降低識別資料的掃讀效率。 */
+.admin-users-table .trading-table__head > * {
+  text-align: center;
+}
+
+/* 移除列間 gap 後，表頭自身保留底部空間，讓標題不會緊貼第一條資料分隔線。 */
+.admin-users-table .trading-table__head {
+  padding-bottom: 12px;
+}
+
+.admin-user-identity {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.admin-user-identity__email {
+  color: rgba(148, 163, 184, 0.9);
+  font-size: 0.88em;
+  font-weight: 500;
+}
+
+/* 複製動作使用小型 icon button，避免在密集表格中以文字按鈕搶走名稱與 ID 的閱讀層級。 */
+.admin-user-copy-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.55rem;
+  block-size: 1.55rem;
+  margin-inline-start: 7px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: rgba(148, 163, 184, 0.78);
+  cursor: pointer;
+  vertical-align: -0.35em;
+}
+
+.admin-user-copy-button:hover {
+  background: rgba(96, 165, 250, 0.14);
+  color: #dce9ff;
+}
+
+.admin-user-copy-button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.5);
+}
+
+.admin-user-copy-button svg {
+  inline-size: 0.88rem;
+  block-size: 0.88rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+/* 色點保留文字替代與 title；顏色是輔助訊號，不能是辨識帳戶狀態的唯一方式。 */
+.admin-user-identity__status {
+  flex: 0 0 auto;
+  inline-size: 0.58rem;
+  block-size: 0.58rem;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, 0.1);
+}
+
+.admin-user-identity__status--active { background: #45c887; }
+.admin-user-identity__status--inactive { background: #ef6674; }
+.admin-user-identity__status--frozen { background: #e7b651; }
+
+/* 詳情綁定所在列，避免全表共用一張底部卡片而使多筆資料無法並列比對。 */
+.admin-user-detail {
+  inline-size: 100%;
+  min-inline-size: 50rem;
+  padding-bottom: 4px;
+}
+
+.admin-user-detail__panel {
+  padding: 14px 16px;
+  border: 1px solid rgba(96, 165, 250, 0.18);
+  border-radius: 11px;
+  background: rgba(15, 23, 42, 0.42);
+}
+
+.admin-user-detail__panel > p {
+  margin: 0;
+}
+
+.admin-user-detail__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 18px;
+  margin: 0;
+}
+
+.admin-user-detail__fields > div {
+  flex: 1 1 10rem;
+  min-inline-size: 0;
+}
+
+.admin-user-detail__fields dt {
+  margin-bottom: 4px;
+  color: rgba(148, 163, 184, 0.86);
+  font-size: 0.78rem;
+}
+
+.admin-user-detail__fields dd {
+  margin: 0;
+  color: rgba(226, 232, 240, 0.92);
+  overflow-wrap: anywhere;
+}
+
+.admin-user-detail__access-status dd {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-user-detail__fields > .admin-user-detail__restrictions {
+  flex: 2 1 20rem;
+}
+
+/* 限制原因以低調清單呈現，讓色點有可讀的文字依據，同時不偽造尚未存在的解除命令。 */
+.admin-user-detail__restrictions ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admin-user-detail__restrictions li {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(231, 182, 81, 0.12);
+  color: rgba(249, 222, 158, 0.94);
+  font-size: 0.82rem;
+}
+
+.admin-user-detail__restrictions--clear li {
+  background: rgba(69, 200, 135, 0.1);
+  color: rgba(169, 235, 194, 0.94);
+}
+
+.admin-user-detail__fields > .admin-user-detail__devices {
+  flex-basis: 100%;
+}
+
+/*
+ * 使用者管理採獨立的高密度唯讀工作區：資料列與詳情皆用 Flexbox，避免表格欄寬在動態內容下被 Grid 固定切割。
+ * 深藍漸層只建立層次，不依賴圖片或強烈發光來掩蓋資料密度。
+ */
+.admin-users-page {
+  --users-page-padding: clamp(1.5rem, 2.35vw, 2.15rem);
+  overflow: hidden;
+  border: 1px solid rgba(70, 132, 255, 0.2);
+  border-radius: 1.5rem;
+  background:
+    radial-gradient(circle at 65% -12%, rgba(48, 104, 220, 0.16), transparent 45%),
+    radial-gradient(circle at 7% 12%, rgba(27, 84, 181, 0.11), transparent 29%),
+    linear-gradient(135deg, rgba(9, 27, 58, 0.96), rgba(3, 13, 30, 0.985));
+  box-shadow: inset 0 1px rgba(167, 202, 255, 0.05), 0 1.5rem 4.5rem rgba(0, 0, 0, 0.18);
+}
+
+.admin-users-hero,
+.admin-users-hero__heading,
+.admin-users-hero__decoration,
+.admin-users-toolbar,
+.admin-users-toolbar__filters,
+.admin-users-toolbar__actions,
+.admin-users-date-drawer,
+.admin-users-date-drawer__title,
+.admin-users-date-drawer__fields,
+.admin-users-inline-error,
+.admin-users-pagination,
+.admin-users-list,
+.admin-users-list__head,
+.admin-users-list__row,
+.admin-users-list__identity,
+.admin-users-list__detail dl,
+.admin-users-list__detail dd,
+.admin-users-list__restrictions dd {
+  display: flex;
+}
+
+.admin-users-hero {
+  align-items: center;
+  justify-content: space-between;
+  min-height: 8.55rem;
+  padding: clamp(2.1rem, 2.5vw, 2.5rem) var(--users-page-padding);
+  border-bottom: 1px solid rgba(115, 159, 255, 0.09);
+  background: linear-gradient(100deg, rgba(5, 19, 44, 0.5), rgba(9, 37, 88, 0.12));
+}
+
+.admin-users-hero__heading { align-items: center; gap: 1.1rem; }
+.admin-users-hero__icon { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; inline-size: 4.8rem; block-size: 4.8rem; border: 1px solid rgba(100, 157, 255, 0.4); border-radius: 1.2rem; background: linear-gradient(145deg, rgba(50, 110, 220, 0.25), rgba(15, 40, 90, 0.2)); box-shadow: inset 0 1px rgba(194, 218, 255, 0.13), inset 0 -1rem 1.8rem rgba(3, 19, 61, 0.18), 0 0.7rem 1.75rem rgba(16, 78, 205, 0.12); color: #a9ceff; }
+
+.admin-users-hero svg,
+.admin-users-toolbar svg,
+.admin-users-list svg,
+.admin-users-date-drawer svg { display: block; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.admin-users-hero__icon svg { inline-size: 2.35rem; block-size: 2.35rem; }
+.admin-users-hero h1 { margin: 0; color: #f4f7ff; font-size: clamp(2.2rem, 3vw, 2.65rem); font-weight: 680; letter-spacing: -0.035em; }
+.admin-users-hero p { margin: 0.35rem 0 0; color: rgba(190, 209, 246, 0.68); font-size: 1rem; }
+.admin-users-hero__decoration { align-items: center; gap: 1.25rem; color: #8fbeff; }
+.admin-users-hero__decoration strong { font-size: 1rem; letter-spacing: 0.04em; }
+.admin-users-hero__decoration p { font-size: 0.86rem; }
+
+.admin-users-hero__orbs { position: relative; inline-size: 9rem; block-size: 5.45rem; overflow: hidden; border-radius: 2rem 3.5rem 2.8rem 3.4rem; background: linear-gradient(135deg, transparent 20%, rgba(65, 124, 255, 0.11) 56%, transparent 84%); transform: skewX(-19deg); }
+.admin-users-hero__orbs::before,
+.admin-users-hero__orbs::after,
+.admin-users-hero__orbs span { position: absolute; display: block; border-radius: 50%; background: radial-gradient(circle at 30% 23%, rgba(156, 198, 255, 0.94), #4f86f5 35%, rgba(19, 51, 143, 0.36) 72%); box-shadow: 0 0.55rem 1.45rem rgba(62, 113, 241, 0.24); content: ''; }
+.admin-users-hero__orbs::before { inset: 0.1rem auto auto 4.1rem; inline-size: 2.42rem; block-size: 2.42rem; }
+.admin-users-hero__orbs::after { inset: 2.25rem auto auto 3.35rem; inline-size: 4.6rem; block-size: 3.3rem; border-radius: 55% 55% 0.95rem 0.95rem; }
+.admin-users-hero__orbs span:nth-child(1) { inset: 1.3rem auto auto 1.6rem; inline-size: 1.8rem; block-size: 1.8rem; }
+.admin-users-hero__orbs span:nth-child(2) { inset: 2.95rem auto auto 0.55rem; inline-size: 3.35rem; block-size: 2.45rem; border-radius: 55% 55% 0.8rem 0.8rem; }
+.admin-users-hero__orbs span:nth-child(3) { display: none; }
+
+.admin-users-workspace { padding: var(--users-page-padding); }
+.admin-users-toolbar { position: relative; flex-wrap: wrap; align-items: center; gap: 0.8rem; }
+.admin-users-toolbar__query { position: relative; flex: 1 1 27rem; min-inline-size: 18rem; }
+.admin-users-toolbar__query > svg { position: absolute; z-index: 1; inset-inline-start: 1.05rem; inset-block-start: 50%; inline-size: 1.2rem; block-size: 1.2rem; color: rgba(159, 183, 232, 0.7); pointer-events: none; transform: translateY(-50%); }
+.admin-users-toolbar__query .input { min-block-size: 3.35rem; border-color: rgba(102, 146, 230, 0.22); border-radius: 0.85rem; background: rgba(3, 15, 36, 0.68); padding-inline-start: 3.05rem; }
+.admin-users-toolbar__query .input:focus { border-color: rgba(84, 147, 255, 0.9); box-shadow: 0 0 0 3px rgba(70, 126, 255, 0.14); }
+.admin-users-toolbar__filters { align-items: center; flex: 0 1 27rem; gap: 0.8rem; }
+.admin-users-toolbar__actions { align-items: center; flex: 0 0 auto; gap: 0.8rem; }
+
+.admin-users-filter,
+.admin-users-toolbar__search,
+.admin-users-toolbar__reset { display: inline-flex; align-items: center; justify-content: center; gap: 0.6rem; min-block-size: 3.35rem; border-radius: 0.9rem; font: inherit; font-weight: 600; }
+.admin-users-filter { flex: 1 1 0; min-inline-size: 0; padding-inline: 0.9rem; border: 1px solid rgba(102, 146, 230, 0.22); background: rgba(5, 20, 47, 0.62); color: rgba(221, 233, 255, 0.84); cursor: pointer; }
+.admin-users-filter svg { inline-size: 1.1rem; block-size: 1.1rem; color: #9fc5ff; }
+.admin-users-filter > svg:last-child { margin-inline-start: auto; }
+.admin-users-filter strong { max-inline-size: 8.5rem; overflow: hidden; color: #a7c8ff; font-size: 0.76rem; text-overflow: ellipsis; white-space: nowrap; }
+.admin-users-filter:hover,
+.admin-users-filter--active { border-color: rgba(95, 156, 255, 0.58); background: rgba(32, 86, 184, 0.17); color: #fff; }
+.admin-users-filter:focus-visible,
+.admin-users-toolbar__reset:focus-visible,
+.admin-users-list__action .secondary-button:focus-visible,
+.admin-users-date-drawer button:focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(79, 139, 255, 0.28); }
+.admin-users-toolbar__search { min-inline-size: 8.75rem; padding-inline: 1.2rem; border: 1px solid rgba(147, 190, 255, 0.28); border-radius: 0.85rem; background: linear-gradient(135deg, #4f82ff, #2f6eff); box-shadow: inset 0 1px rgba(226, 239, 255, 0.25), 0 0.55rem 1.25rem rgba(42, 105, 245, 0.16); }
+.admin-users-toolbar__search:hover:not(:disabled) { background: linear-gradient(135deg, #5c8cff, #3978ff); }
+.admin-users-toolbar__search svg,
+.admin-users-toolbar__reset svg { inline-size: 1.2rem; block-size: 1.2rem; }
+.admin-users-toolbar__reset { min-inline-size: 7.8rem; padding-inline: 1rem; border: 1px solid rgba(108, 149, 224, 0.22); color: rgba(224, 235, 255, 0.8); }
+
+.admin-users-date-drawer { flex: 1 1 100%; align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.25rem; padding: 0.9rem 1rem; border: 1px solid rgba(90, 142, 244, 0.17); border-radius: 0.85rem; background: rgba(3, 16, 38, 0.6); }
+.admin-users-date-drawer__title,
+.admin-users-date-drawer__fields { align-items: center; gap: 0.75rem; }
+.admin-users-date-drawer__title { color: #cfe0ff; }
+.admin-users-date-drawer__title button { display: inline-flex; align-items: center; justify-content: center; inline-size: 2rem; block-size: 2rem; padding: 0; border: 0; border-radius: 50%; background: transparent; color: #9cb9e9; cursor: pointer; }
+.admin-users-date-drawer__title button:hover { background: rgba(83, 137, 244, 0.17); color: #fff; }
+.admin-users-date-drawer__title svg { inline-size: 1rem; block-size: 1rem; }
+.admin-users-date-drawer__fields > span { color: rgba(160, 185, 233, 0.64); }
+.admin-users-date-drawer .field { min-inline-size: 10.5rem; }
+.admin-users-date-drawer .input { min-block-size: 2.75rem; border-radius: 0.7rem; }
+
+.admin-users-inline-error { align-items: center; justify-content: space-between; gap: 1rem; margin: 1rem 0; padding: 0.75rem 0.9rem; border: 1px solid rgba(255, 104, 124, 0.3); border-radius: 0.75rem; background: rgba(255, 70, 90, 0.08); color: #ffb0ba; }
+.admin-users-list { flex-direction: column; gap: 0.55rem; margin-top: 1.35rem; }
+/* 表頭與每一列共用同一組 flex basis，避免各欄資料的 x 軸在視覺上漂移。 */
+.admin-users-list__head,
+.admin-users-list__row { align-items: center; gap: 1.15rem; min-inline-size: 0; }
+.admin-users-list__head { min-block-size: 3.5rem; padding: 0.85rem 1.45rem; border: 1px solid rgba(91, 143, 239, 0.16); border-radius: 0.85rem; background: linear-gradient(180deg, rgba(27, 65, 120, 0.3), rgba(17, 45, 88, 0.2)); color: rgba(192, 214, 252, 0.76); font-size: 0.86rem; font-weight: 620; }
+.admin-users-list__head > :first-child,
+.admin-users-list__row > :first-child { flex: 1 1 0; min-inline-size: 15rem; }
+.admin-users-list__head > :nth-child(2),
+.admin-users-list__head > :nth-child(3),
+.admin-users-list__row > :nth-child(2),
+.admin-users-list__row > :nth-child(3) { flex: 0 0 10.8rem; min-inline-size: 0; }
+.admin-users-list__head > :last-child,
+.admin-users-list__row > :last-child { flex: 0 0 6.85rem; }
+.admin-users-list__row { min-block-size: 6.25rem; padding: 0.8rem 1.45rem; border: 1px solid rgba(70, 130, 220, 0.14); border-radius: 0.9rem; background: linear-gradient(105deg, rgba(8, 24, 50, 0.62), rgba(6, 22, 48, 0.48)); color: rgba(237, 244, 255, 0.94); transition: border-color 170ms ease, background 170ms ease, transform 170ms ease; }
+.admin-users-list__row:hover { border-color: rgba(92, 152, 255, 0.29); background: linear-gradient(105deg, rgba(13, 38, 78, 0.72), rgba(8, 28, 60, 0.61)); transform: translateY(-1px); }
+.admin-users-list__date { display: flex; flex-direction: column; gap: 0.18rem; color: rgba(228, 237, 253, 0.88); font-variant-numeric: tabular-nums; line-height: 1.35; }
+.admin-users-list__date > span:last-child { color: rgba(159, 187, 234, 0.78); }
+.admin-users-list__identity { align-items: center; gap: 0.85rem; min-inline-size: 0; }
+.admin-users-list__identity > div { min-inline-size: 0; }
+.admin-users-list__identity strong { color: #f4f7ff; font-size: 0.98rem; font-weight: 650; }
+.admin-users-list__identity strong > span { color: rgba(167, 193, 239, 0.72); font-size: 0.91rem; font-weight: 500; }
+.admin-users-list__identity p { display: flex; align-items: center; gap: 0.15rem; margin: 0.23rem 0 0; color: rgba(139, 174, 232, 0.7); font-size: 0.82rem; }
+.admin-users-list__identity p > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.admin-users-avatar { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; inline-size: 3.6rem; block-size: 3.6rem; border: 1px solid rgba(120, 163, 255, 0.36); border-radius: 50%; background: linear-gradient(145deg, #567cf0, #1b3c95); box-shadow: inset 0 1px rgba(214, 230, 255, 0.17), 0 0.45rem 1rem rgba(15, 60, 156, 0.17); color: #fff; font-size: 1rem; font-weight: 760; }
+.admin-users-avatar--icon { background: linear-gradient(145deg, rgba(64, 125, 240, 0.92), rgba(25, 58, 151, 0.95)); }
+.admin-users-avatar--icon svg { inline-size: 1.8rem; block-size: 1.8rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.admin-users-status { display: inline-block; flex: 0 0 auto; inline-size: 0.6rem; block-size: 0.6rem; border: 2px solid #091c40; border-radius: 50%; }
+.admin-users-avatar > .admin-users-status { position: absolute; inset-inline-end: 0; inset-block-end: 0.1rem; inline-size: 0.78rem; block-size: 0.78rem; }
+.admin-users-status--active { background: #30d889; box-shadow: 0 0 0.65rem rgba(48, 216, 137, 0.56); }
+.admin-users-status--inactive { background: #ed6d7c; }
+.admin-users-status--frozen { background: #efbe5c; box-shadow: 0 0 0.65rem rgba(239, 190, 92, 0.42); }
+
+.admin-users-copy { display: inline-flex; align-items: center; justify-content: center; inline-size: 1.5rem; block-size: 1.5rem; margin-inline-start: 0.35rem; padding: 0; border: 0; border-radius: 0.38rem; background: transparent; color: rgba(115, 172, 255, 0.78); cursor: pointer; vertical-align: -0.38em; }
+.admin-users-copy:hover { background: rgba(80, 143, 255, 0.13); color: #cae0ff; }
+.admin-users-copy:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(98, 154, 255, 0.6); }
+.admin-users-copy svg { inline-size: 1.05rem; block-size: 1.05rem; }
+.admin-users-list__action .secondary-button { display: inline-flex; align-items: center; justify-content: center; gap: 0.35rem; min-block-size: 2.85rem; min-inline-size: 6.65rem; border-color: rgba(78, 143, 255, 0.48); border-radius: 0.78rem; background: rgba(6, 25, 61, 0.52); color: #e7f0ff; }
+.admin-users-list__action .secondary-button:hover { border-color: rgba(120, 176, 255, 0.76); background: rgba(42, 101, 212, 0.17); }
+.admin-users-list__action svg { inline-size: 1rem; block-size: 1rem; transition: transform 170ms ease; }
+.admin-users-list__action button[aria-expanded='true'] svg { transform: rotate(90deg); }
+
+.admin-users-list__detail { margin-top: -0.55rem; padding: 1.35rem 1.45rem; border: 1px solid rgba(89, 143, 246, 0.15); border-radius: 0 0 0.9rem 0.9rem; background: rgba(3, 16, 40, 0.63); color: rgba(215, 229, 254, 0.86); }
+.admin-users-list__detail dl { flex-wrap: wrap; gap: 1rem 1.5rem; margin: 0; }
+.admin-users-list__detail dl > div { flex: 1 1 10rem; min-inline-size: 0; }
+.admin-users-list__detail dt { margin-bottom: 0.25rem; color: rgba(151, 183, 237, 0.7); font-size: 0.76rem; }
+.admin-users-list__detail dd { align-items: center; gap: 0.45rem; margin: 0; overflow-wrap: anywhere; }
+.admin-users-list__detail dl > .admin-users-list__restrictions { flex: 2 1 18rem; }
+.admin-users-list__restrictions dd { flex-wrap: wrap; }
+.admin-users-list__restrictions span { padding: 0.28rem 0.55rem; border-radius: 999px; background: rgba(234, 184, 79, 0.13); color: #f4d38e; font-size: 0.8rem; }
+.admin-users-list__restrictions--clear span { background: rgba(48, 216, 137, 0.1); color: #a8eccb; }
+.admin-users-list__detail dl > .admin-users-list__devices { flex-basis: 100%; }
+
+.admin-users-pagination { align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.85rem; padding: 0.15rem 0.3rem 0; color: rgba(169, 194, 239, 0.78); font-size: 0.9rem; }
+.admin-users-pagination__controls { display: inline-flex; align-items: center; gap: 0.7rem; }
+.admin-users-pagination .secondary-button { display: inline-flex; align-items: center; justify-content: center; min-inline-size: 2.8rem; min-block-size: 2.8rem; padding: 0; }
+.admin-users-pagination .secondary-button:disabled { opacity: 0.42; }
+.admin-users-pagination svg { inline-size: 1rem; block-size: 1rem; }
+.admin-users-pagination__end { color: rgba(135, 166, 221, 0.66); }
+.admin-users-skeleton { display: flex; flex-direction: column; gap: 0.65rem; margin-top: 1.45rem; }
+.admin-users-skeleton span { display: block; min-block-size: 6.25rem; border-radius: 0.9rem; background: linear-gradient(100deg, rgba(18, 46, 92, 0.28), rgba(55, 100, 181, 0.13), rgba(18, 46, 92, 0.28)); background-size: 200% 100%; animation: admin-users-shimmer 1.4s ease infinite; }
+@keyframes admin-users-shimmer { from { background-position: 100% 0; } to { background-position: -100% 0; } }
+
+@media (max-width: 1100px) {
+  .admin-users-toolbar__query { flex-basis: 100%; }
+  .admin-users-hero__decoration { display: none; }
+}
+
+@media (max-width: 767px) {
+  .admin-users-page { border-radius: 1.1rem; }
+  .admin-users-hero { min-height: auto; padding: 1.4rem; }
+  .admin-users-hero__icon { inline-size: 3.8rem; block-size: 3.8rem; border-radius: 1rem; }
+  .admin-users-hero__icon svg { inline-size: 1.85rem; block-size: 1.85rem; }
+  .admin-users-hero h1 { font-size: 1.7rem; }
+  .admin-users-workspace { padding: 1rem; }
+  .admin-users-toolbar__filters,
+  .admin-users-toolbar__actions { flex: 1 1 100%; }
+  .admin-users-filter { flex: 1 1 0; min-inline-size: 0; }
+  .admin-users-toolbar__search { flex: 1 1 0; }
+  .admin-users-date-drawer { align-items: stretch; flex-direction: column; }
+  .admin-users-date-drawer__fields { align-items: stretch; flex-direction: column; }
+  .admin-users-date-drawer__fields > span { display: none; }
+  .admin-users-date-drawer .field { min-inline-size: 0; }
+  .admin-users-list__head { display: none; }
+  .admin-users-list__row { flex-wrap: wrap; gap: 0.9rem; min-block-size: 0; padding: 1rem; }
+  .admin-users-list__row > :first-child { flex: 1 1 100%; min-inline-size: 0; }
+  .admin-users-list__row > :nth-child(2),
+  .admin-users-list__row > :nth-child(3) { flex: 1 1 calc(50% - 0.45rem); min-inline-size: 0; }
+  .admin-users-list__row > time { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.86rem; }
+  .admin-users-list__row > time::before,
+  .admin-users-list__action::before { color: rgba(151, 183, 237, 0.7); content: attr(data-label); font-size: 0.75rem; }
+  .admin-users-list__row > :last-child { flex: 1 1 100%; }
+  .admin-users-list__action { display: flex; align-items: center; justify-content: space-between; }
+  .admin-users-list__action .secondary-button { min-inline-size: 7.2rem; }
+  .admin-users-list__detail { margin-top: -0.65rem; padding: 1rem; }
+  .admin-users-pagination { align-items: flex-start; flex-direction: column; }
+  .admin-users-pagination__controls { inline-size: 100%; justify-content: flex-end; }
+  .admin-users-list__detail dl { flex-direction: column; gap: 0.85rem; }
+  .admin-users-list__detail dl > div { flex-basis: auto; }
+  .admin-users-pagination { align-items: flex-start; flex-direction: column; }
 }
 
 .home-grid {
@@ -3690,10 +4429,14 @@ p,
 .trading-table {
   display: flex;
   flex-direction: column;
-  gap: 12px;
   min-width: 0;
   overflow-x: auto;
   padding-bottom: 4px;
+}
+
+/* 使用者清單靠每列自己的分隔線與內距排版；其他交易表格才維持通用列間距。 */
+.trading-table:not(.admin-users-table) {
+  gap: 12px;
 }
 
 .trading-table__head,
@@ -4733,6 +5476,82 @@ p,
 }
 
 @media (max-width: 767px) {
+  .admin-user-search {
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .admin-user-search__query,
+  .admin-user-search__filters,
+  .admin-user-search__actions {
+    flex-basis: 100%;
+    max-inline-size: none;
+  }
+
+  .admin-user-search__filters {
+    gap: 7px;
+    padding-inline: 0;
+    border-inline: 0;
+  }
+
+  .admin-user-filter-chip {
+    flex: 1 1 100%;
+    justify-content: space-between;
+  }
+
+  .admin-user-search__actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .admin-user-search__actions .primary-button {
+    inline-size: 100%;
+  }
+
+  .admin-user-date-panel {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .admin-user-date-panel__range {
+    grid-template-columns: minmax(0, 1fr);
+    max-inline-size: none;
+  }
+
+  .admin-user-date-panel__separator {
+    display: none;
+  }
+
+  /* 小螢幕仍保留可橫向捲動的表格結構，但縮小非主要欄位，優先讓使用者名稱可讀。 */
+  .admin-users-table .trading-table__head,
+  .admin-users-table .trading-table__row {
+    gap: 10px;
+    min-inline-size: 43rem;
+  }
+
+  .admin-users-table .trading-table__head > :first-child,
+  .admin-users-table .trading-table__row > :first-child {
+    flex-basis: 15rem;
+  }
+
+  .admin-users-table .trading-table__head > :nth-child(2),
+  .admin-users-table .trading-table__head > :nth-child(3),
+  .admin-users-table .trading-table__row > :nth-child(2),
+  .admin-users-table .trading-table__row > :nth-child(3) {
+    flex-basis: 7.5rem;
+  }
+
+  .admin-user-detail {
+    min-inline-size: 43rem;
+  }
+
+  .admin-user-detail__fields {
+    gap: 12px 16px;
+  }
+
+  .admin-user-detail__fields > .admin-user-detail__restrictions {
+    flex-basis: 100%;
+  }
+
   .market-header {
     grid-template-columns: 1fr;
     gap: 12px;
