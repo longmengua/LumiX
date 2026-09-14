@@ -59,8 +59,6 @@ public class UserAuthenticationService {
     private static final int DEFAULT_LOGIN_HISTORY_PAGE_SIZE = 10;
     private static final int MAX_LOGIN_HISTORY_PAGE_SIZE = 50;
     // 這些是產品密碼 policy；前端同名規則只改善 UX，server 仍是唯一安全裁決。
-    private static final int MIN_PASSWORD_CHARACTERS = 8;
-    private static final int MAX_PASSWORD_CHARACTERS = 32;
     private static final int MAX_BCRYPT_PASSWORD_BYTES = 72;
     private static final int REGISTRATION_NUMERIC_CODE_LENGTH = 6;
     private static final int REGISTRATION_LETTER_CODE_LENGTH = 5;
@@ -601,11 +599,8 @@ public class UserAuthenticationService {
     }
 
     private static void validatePassword(String password) {
-        validatePasswordInput(password);
-        int byteLength = password.getBytes(StandardCharsets.UTF_8).length;
-        if (password.length() < MIN_PASSWORD_CHARACTERS || password.length() > MAX_PASSWORD_CHARACTERS
-            || byteLength > MAX_BCRYPT_PASSWORD_BYTES) {
-            // BCrypt 只安全處理前 72 bytes；產品長度上限為 32 字元，兩者都必須拒絕而非靜默截斷。
+        if (!PasswordPolicy.isValidNewPassword(password)) {
+            // 不允許字元、長度與 BCrypt 截斷風險都必須拒絕，不能靜默正規化或截斷密碼。
             throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
         }
     }

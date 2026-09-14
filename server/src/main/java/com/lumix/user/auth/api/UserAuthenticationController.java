@@ -4,6 +4,7 @@ import com.lumix.user.auth.application.UserAuthenticationService;
 import com.lumix.user.auth.application.UserAuthenticationService.AuthenticationResult;
 import com.lumix.user.auth.application.UserAuthenticationService.LoginResult;
 import com.lumix.user.auth.application.UserAuthenticationService.LoginVerificationCompletion;
+import com.lumix.user.auth.application.PasswordPolicy;
 import com.lumix.user.auth.application.SliderCaptchaService;
 import com.lumix.user.auth.application.VisualCaptchaService;
 import com.lumix.user.auth.application.VisualCaptchaService.CaptchaVerificationRequest;
@@ -14,6 +15,8 @@ import com.lumix.user.auth.domain.DeviceSecret;
 import com.lumix.user.auth.domain.LoginVerificationState;
 import com.lumix.user.auth.domain.PendingLoginVerificationSecret;
 import com.lumix.user.auth.domain.SessionSecret;
+import com.lumix.api.error.ApiErrorCode;
+import com.lumix.api.error.ApiException;
 import java.time.Duration;
 import java.util.List;
 import java.util.UUID;
@@ -60,6 +63,7 @@ public class UserAuthenticationController {
         HttpServletRequest servletRequest,
         @RequestBody RegisterRequest request
     ) {
+        requireValidNewPassword(request.password());
         visualCaptchaService.consume(request.captchaToken(), CaptchaPurpose.REGISTRATION, LoginRequestMetadataResolver.resolve(servletRequest));
         UserAuthenticationService.RegistrationVerificationRequested result = authenticationService.requestRegistrationVerification(
             request.email(), request.displayName(), request.password()
@@ -121,6 +125,7 @@ public class UserAuthenticationController {
         HttpServletRequest servletRequest,
         @RequestBody ChangePasswordRequest request
     ) {
+        requireValidNewPassword(request.newPassword());
         AuthenticationResult result = authenticationService.changePassword(
             parseSession(sessionCookieValue(servletRequest)), request.currentPassword(), request.newPassword(),
             parseOptionalDevice(deviceCookieValue(servletRequest)), LoginRequestMetadataResolver.resolve(servletRequest)
@@ -174,12 +179,20 @@ public class UserAuthenticationController {
 
     @PostMapping("/password/reset")
     public ResponseEntity<Void> resetPassword(@RequestBody ResetPasswordRequest request) {
+        requireValidNewPassword(request.newPassword());
         authenticationService.resetPassword(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
     }
 
     private ResponseEntity<UserResponse> authenticatedResponse(HttpStatus status, AuthenticationResult result) {
         return authenticatedResponse(status, result, false);
+    }
+
+    /** 在 HTTP 邊界先拒絕不合規新密碼，避免消耗 CAPTCHA、token 或進入後續 application 流程。 */
+    private static void requireValidNewPassword(String password) {
+        if (!PasswordPolicy.isValidNewPassword(password)) {
+            throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+        }
     }
 
     private ResponseEntity<UserResponse> authenticatedResponse(

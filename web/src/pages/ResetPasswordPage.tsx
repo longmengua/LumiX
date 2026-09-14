@@ -5,7 +5,7 @@ import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
 import { translateAuthError } from '../features/auth/authText';
 import { resetPassword } from '../features/auth/authApi';
-import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
+import { hasValidNewPassword, MAX_PASSWORD_LENGTH, sanitizeNewPasswordInput } from '../features/auth/passwordPolicy';
 import { useI18n } from '../i18n';
 
 export function ResetPasswordPage() {
@@ -29,7 +29,7 @@ export function ResetPasswordPage() {
       if (!token) {
         throw new Error('AUTH_REQUEST_FAILED');
       }
-      if (!hasValidPasswordLength(newPassword)) {
+      if (!hasValidNewPassword(newPassword)) {
         throw new Error('Password must be between 8 and 32 characters.');
       }
       if (newPassword !== confirmPassword) {
@@ -62,6 +62,9 @@ export function ResetPasswordPage() {
             onChange={setNewPassword}
             placeholder={t('auth.reset.newPasswordPlaceholder')}
             autoComplete="new-password"
+            maxLength={MAX_PASSWORD_LENGTH}
+            sanitizeInput={sanitizeNewPasswordInput}
+            passwordRuleHint={t('auth.password.rules')}
           />
           <PasswordField
             label={t('auth.reset.confirmPassword')}
@@ -69,6 +72,9 @@ export function ResetPasswordPage() {
             onChange={setConfirmPassword}
             placeholder={t('auth.reset.confirmPasswordPlaceholder')}
             autoComplete="new-password"
+            maxLength={MAX_PASSWORD_LENGTH}
+            sanitizeInput={sanitizeNewPasswordInput}
+            passwordRuleHint={t('auth.password.rules')}
           />
         </div>
 

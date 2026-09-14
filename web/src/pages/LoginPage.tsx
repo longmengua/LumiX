@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
+import { ArrowRightIcon, LockIcon, MailIcon } from '../components/auth/AuthFieldIcons';
 import { PasswordField } from '../components/auth/PasswordField';
 import { SliderCaptcha } from '../components/auth/SliderCaptcha';
 import { translateAuthError } from '../features/auth/authText';
@@ -95,17 +96,20 @@ export function LoginPage() {
         </p>
       }
     >
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <label className="field">
+      <form className="auth-form client-auth-form" onSubmit={handleSubmit}>
+        <label className="field client-auth-form__field">
           <span className="field__label">{t('auth.login.identifier')}</span>
-          <input
-            className="input"
-            name="identifier"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            placeholder={t('auth.login.identifierPlaceholder')}
-            autoComplete="username"
-          />
+          <span className="client-auth-form__input-shell">
+            <MailIcon />
+            <input
+              className="input client-auth-form__input"
+              name="identifier"
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+              placeholder={t('auth.login.identifierPlaceholder')}
+              autoComplete="username"
+            />
+          </span>
         </label>
 
         <PasswordField
@@ -115,13 +119,18 @@ export function LoginPage() {
           onChange={setPassword}
           placeholder={t('auth.login.passwordPlaceholder')}
           autoComplete="current-password"
+          className="client-auth-form__field"
+          inputClassName="client-auth-form__input"
+          leadingAdornment={<LockIcon />}
+          iconOnlyToggle
         />
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {verificationPending ? <p className="form-message form-message--success">{t('auth.login.verificationPending')}</p> : null}
 
-        <button className="primary-button" type="submit" disabled={loading || verificationPending}>
+        <button className="primary-button client-auth-form__submit" type="submit" disabled={loading || verificationPending}>
           {loading ? t('auth.login.submitting') : t('auth.login.submit')}
+          <ArrowRightIcon />
         </button>
 
       </form>

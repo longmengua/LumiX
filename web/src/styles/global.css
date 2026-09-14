@@ -556,16 +556,21 @@ p,
 }
 
 .admin-login__language-switcher {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   color: #b8c5e5;
   font-size: 0.875rem;
+  cursor: pointer;
   transition: color 160ms ease;
 }
 
-.admin-login__language-switcher:focus-within,
 .admin-login__language-switcher:hover {
+  color: #fff;
+}
+
+.admin-login__language-switcher:focus-within {
   color: #fff;
 }
 
@@ -596,21 +601,15 @@ p,
 }
 
 .admin-login__language-switcher select {
-  appearance: none;
-  max-inline-size: 9rem;
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
   border: 0;
   padding: 0;
-  color: inherit;
-  background: transparent;
+  opacity: 0;
   cursor: pointer;
-  font: inherit;
-  outline: none;
-}
-
-.admin-login__language-switcher select:focus-visible {
-  outline: 2px solid rgba(112, 158, 255, 0.78);
-  outline-offset: 0.3rem;
-  border-radius: 0.25rem;
 }
 
 .admin-login__form {
@@ -664,24 +663,26 @@ p,
   block-size: 1.2rem;
 }
 
-.admin-login__input {
+/* 比通用 .input 更具體，避免後方的共用 padding 覆寫前綴圖示所需的文字安全距離。 */
+.admin-login--portal .admin-login__input {
   min-block-size: 3.5rem;
   padding-inline: 3rem 3.25rem;
   border: 1px solid rgba(120, 145, 200, 0.28);
   border-radius: 0.8125rem;
-  background: rgba(7, 15, 32, 0.7);
+  /* 與前台帳密欄位共用相同底色層次，讓兩個登入入口維持一致的輸入辨識度。 */
+  background: rgba(7, 15, 32, 0.72);
   color: #f4f7ff;
   font-size: 1rem;
   transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
 }
 
-.admin-login__input::placeholder {
+.admin-login--portal .admin-login__input::placeholder {
   color: rgba(178, 191, 220, 0.48);
 }
 
-.admin-login__input:focus,
-.admin-login__field .password-field:focus-within .admin-login__input {
-  border-color: rgba(80, 135, 255, 0.8);
+.admin-login--portal .admin-login__input:focus,
+.admin-login--portal .admin-login__field .password-field:focus-within .admin-login__input {
+  border-color: rgba(80, 135, 255, 0.82);
   box-shadow: 0 0 0 3px rgba(70, 120, 255, 0.1);
   background: rgba(7, 15, 32, 0.9);
 }
@@ -1342,6 +1343,144 @@ p,
   font-size: 0.9rem;
 }
 
+/* 前台帳密欄位沿用後台的圖示、圓角與焦點語言，但不帶入管理員入口的安全提示或版面。 */
+.client-auth-form {
+  gap: 1.25rem;
+}
+
+.client-auth-form__field {
+  gap: 0.5rem;
+  color: #e4eaf8;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.client-auth-form__input-shell,
+.client-auth-form__field .password-field {
+  position: relative;
+  display: block;
+  color: #8394be;
+}
+
+.client-auth-form__input-shell > svg,
+.client-auth-form__field .password-field__leading-adornment {
+  position: absolute;
+  z-index: 1;
+  inset-inline-start: 1rem;
+  inset-block-start: 50%;
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.client-auth-form__input-shell > svg,
+.client-auth-form__field .password-field__leading-adornment svg,
+.client-auth-form__submit svg {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.client-auth-form__field .password-field__leading-adornment {
+  display: grid;
+  place-items: center;
+}
+
+.client-auth-form__field .password-field__leading-adornment svg {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+}
+
+/* 提高 selector 優先度，避免通用 .input 在較後方覆寫圖示欄位的安全內距。 */
+.auth-page .client-auth-form__input {
+  min-block-size: 3.5rem;
+  padding-inline: 3rem 3.25rem;
+  border: 1px solid rgba(120, 145, 200, 0.28);
+  border-radius: 0.8125rem;
+  background: rgba(7, 15, 32, 0.72);
+  color: #f4f7ff;
+  font-size: 1rem;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+}
+
+.auth-page .client-auth-form__input::placeholder {
+  color: rgba(178, 191, 220, 0.48);
+}
+
+.auth-page .client-auth-form__input:focus,
+.auth-page .client-auth-form__field .password-field:focus-within .client-auth-form__input {
+  border-color: rgba(80, 135, 255, 0.82);
+  box-shadow: 0 0 0 3px rgba(70, 120, 255, 0.1);
+  background: rgba(7, 15, 32, 0.9);
+}
+
+.client-auth-form__field .password-field__input {
+  padding-inline-start: 3rem;
+  padding-inline-end: 3.5rem;
+}
+
+.client-auth-form__field .password-field__toggle--icon-only {
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  inset-inline-end: 0.5rem;
+  padding: 0;
+  color: #8394be;
+}
+
+.client-auth-form__field .password-field__toggle--icon-only svg {
+  inline-size: 1.2rem;
+  block-size: 1.2rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.client-auth-form__field .password-field__toggle--icon-only:hover,
+.client-auth-form__field .password-field__toggle--icon-only:focus-visible {
+  color: #eff6ff;
+  background: rgba(80, 135, 255, 0.12);
+}
+
+.auth-page .client-auth-form__submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  inline-size: 100%;
+  /* 前台 CTA 保持與既有後台按鈕一致的緊湊高度，欄位高度不因此縮小。 */
+  min-block-size: 2.5rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #3ea1ff 0%, #4d7fff 55%, #8174ff 100%);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: transform 160ms ease, filter 160ms ease, opacity 160ms ease;
+}
+
+.client-auth-form__submit svg {
+  inline-size: 1.05rem;
+  block-size: 1.05rem;
+}
+
+.client-auth-form__submit:hover:not(:disabled) {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.client-auth-form__submit:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.55);
+  opacity: 0.62;
+}
+
 /* fieldset 的瀏覽器預設邊框過亮；候選碼仍需分組，但以低對比線條避免搶走驗證選項的視覺焦點。 */
 .registration-letter-options {
   margin: 0;
@@ -1595,6 +1734,64 @@ p,
 .password-field__toggle:focus-visible {
   color: #eff6ff;
   background: rgba(96, 165, 250, 0.18);
+}
+
+/* 問號只揭露規則，不參與表單提交；focus 也可取得說明，避免規則僅對滑鼠使用者可見。 */
+.password-field__label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.password-field__rule-hint {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  inline-size: 1rem;
+  block-size: 1rem;
+  flex: 0 0 auto;
+  color: rgba(147, 197, 253, 0.88);
+  cursor: help;
+  outline: none;
+}
+
+.password-field__rule-hint svg {
+  inline-size: 100%;
+  block-size: 100%;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.password-field__rule-tooltip {
+  position: absolute;
+  z-index: 8;
+  inset-inline-start: 50%;
+  inset-block-end: calc(100% + 0.5rem);
+  inline-size: min(19rem, 72vw);
+  padding: 0.625rem 0.75rem;
+  border: 1px solid rgba(120, 145, 200, 0.3);
+  border-radius: 0.625rem;
+  background: #0a1429;
+  box-shadow: 0 0.75rem 2rem rgba(0, 0, 0, 0.28);
+  color: rgba(228, 234, 248, 0.92);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.5;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 0.25rem);
+  transition: opacity 120ms ease, transform 120ms ease;
+  visibility: hidden;
+}
+
+.password-field__rule-hint:hover .password-field__rule-tooltip,
+.password-field__rule-hint:focus-visible .password-field__rule-tooltip {
+  opacity: 1;
+  transform: translate(-50%, 0);
+  visibility: visible;
 }
 
 .auth-visual-panel {

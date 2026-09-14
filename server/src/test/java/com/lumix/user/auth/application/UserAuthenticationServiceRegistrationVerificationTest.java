@@ -90,6 +90,24 @@ class UserAuthenticationServiceRegistrationVerificationTest {
     }
 
     @Test
+    void rejectsUnsupportedPasswordCharactersBeforeCreatingPendingRegistration() {
+        UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
+        RegistrationVerificationDeliveryPort delivery = mock(RegistrationVerificationDeliveryPort.class);
+        when(delivery.isAvailable()).thenReturn(true);
+        UserAuthenticationService service = service(repository, mock(RegistrationEmailBloomFilter.class),
+            mock(BCryptPasswordEncoder.class), delivery);
+
+        ApiException exception = assertThrows(ApiException.class, () -> service.requestRegistrationVerification(
+            "new@example.com", "New User", "invalid password"
+        ));
+
+        // 字元規則必須在 pending registration、hash 與寄信前拒絕，不能等到資料寫入後才發現不合規。
+        assertEquals(ApiErrorCode.VALIDATION_ERROR, exception.getErrorCode());
+        verify(repository, org.mockito.Mockito.never()).upsertRegistrationVerification(any());
+        verify(delivery, org.mockito.Mockito.never()).deliver(anyString(), any());
+    }
+
+    @Test
     void authenticatedPasswordChangeIdentifiesOnlyTheWrongCurrentPassword() {
         UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
         BCryptPasswordEncoder passwordEncoder = mock(BCryptPasswordEncoder.class);

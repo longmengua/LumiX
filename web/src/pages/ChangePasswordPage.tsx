@@ -5,7 +5,7 @@ import { AuthPageShell } from '../components/auth/AuthPageShell';
 import { PasswordField } from '../components/auth/PasswordField';
 import { translateAuthError } from '../features/auth/authText';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
-import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
+import { hasValidNewPassword, MAX_PASSWORD_LENGTH, sanitizeNewPasswordInput } from '../features/auth/passwordPolicy';
 import { useI18n } from '../i18n';
 
 /** 已登入使用者的改密碼頁面；伺服器會重新驗證舊密碼並撤銷所有舊 session。 */
@@ -24,7 +24,7 @@ export function ChangePasswordPage() {
     setError(null);
     setSuccess(null);
     try {
-      if (!hasValidPasswordLength(newPassword)) {
+      if (!hasValidNewPassword(newPassword)) {
         throw new Error('Password must be between 8 and 32 characters.');
       }
       if (newPassword !== confirmPassword) {
@@ -59,8 +59,8 @@ export function ChangePasswordPage() {
         <p className="auth-form__hint">目前帳號：{user.email}</p>
         <PasswordField label="目前密碼" value={currentPassword} onChange={setCurrentPassword} autoComplete="current-password" />
         <div className="auth-form__split">
-          <PasswordField label="新密碼" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
-          <PasswordField label="確認新密碼" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
+          <PasswordField label="新密碼" value={newPassword} onChange={setNewPassword} autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} sanitizeInput={sanitizeNewPasswordInput} passwordRuleHint={t('auth.password.rules')} />
+          <PasswordField label="確認新密碼" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} sanitizeInput={sanitizeNewPasswordInput} passwordRuleHint={t('auth.password.rules')} />
         </div>
         {error ? <p className="form-message form-message--error">{error}</p> : null}
         {success ? <p className="form-message form-message--success">{success}</p> : null}

@@ -108,6 +108,10 @@ export function AdminLoginPage() {
         <label className="admin-login__language-switcher">
           <GlobeIcon />
           <span className="sr-only">{t('header.language')}</span>
+          <span className="admin-login__language-label" aria-hidden="true">
+            {locale === 'zh-TW' ? t('locale.zh-TW') : t('locale.en-US')}
+          </span>
+          {/* 透明原生 select 覆蓋整個控制區，讓圖示、文字與箭頭都有相同且可鍵盤操作的 hit area。 */}
           <select value={locale} onChange={(event) => setLocale(event.target.value as typeof locale)} aria-label={t('header.language')}>
             <option value="zh-TW">{t('locale.zh-TW')}</option>
             <option value="en-US">{t('locale.en-US')}</option>

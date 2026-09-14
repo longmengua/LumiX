@@ -2,11 +2,12 @@ import { useState, type FormEvent } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 
 import { AuthPageShell } from '../components/auth/AuthPageShell';
+import { ArrowRightIcon, LockIcon, MailIcon } from '../components/auth/AuthFieldIcons';
 import { PasswordField } from '../components/auth/PasswordField';
 import { SliderCaptcha } from '../components/auth/SliderCaptcha';
 import { translateAuthError } from '../features/auth/authText';
 import { useAuthentication } from '../features/auth/AuthenticationProvider';
-import { hasValidPasswordLength } from '../features/auth/passwordPolicy';
+import { hasValidNewPassword, MAX_PASSWORD_LENGTH, sanitizeNewPasswordInput } from '../features/auth/passwordPolicy';
 import { useI18n } from '../i18n';
 
 export function RegisterPage() {
@@ -34,7 +35,7 @@ export function RegisterPage() {
       if (displayName.trim().length < 2) {
         throw new Error('Display name must be at least 2 characters.');
       }
-      if (!hasValidPasswordLength(password)) {
+      if (!hasValidNewPassword(password)) {
         throw new Error('Password must be between 8 and 32 characters.');
       }
       if (password !== confirmPassword) {
@@ -91,16 +92,19 @@ export function RegisterPage() {
         </p>
       }
     >
-      {registrationId === null ? <form className="auth-form" onSubmit={handleSubmit}>
-        <label className="field">
+      {registrationId === null ? <form className="auth-form client-auth-form client-auth-form--register" onSubmit={handleSubmit}>
+        <label className="field client-auth-form__field">
           <span className="field__label">{t('auth.register.identifier')}</span>
-          <input
-            className="input"
-            value={identifier}
-            onChange={(event) => setIdentifier(event.target.value)}
-            placeholder={t('auth.register.identifierPlaceholder')}
-            autoComplete="username"
-          />
+          <span className="client-auth-form__input-shell">
+            <MailIcon />
+            <input
+              className="input client-auth-form__input"
+              value={identifier}
+              onChange={(event) => setIdentifier(event.target.value)}
+              placeholder={t('auth.register.identifierPlaceholder')}
+              autoComplete="username"
+            />
+          </span>
         </label>
 
         <label className="field">
@@ -121,6 +125,13 @@ export function RegisterPage() {
             onChange={setPassword}
             placeholder={t('auth.register.passwordPlaceholder')}
             autoComplete="new-password"
+            className="client-auth-form__field"
+            inputClassName="client-auth-form__input"
+            leadingAdornment={<LockIcon />}
+            iconOnlyToggle
+            maxLength={MAX_PASSWORD_LENGTH}
+            sanitizeInput={sanitizeNewPasswordInput}
+            passwordRuleHint={t('auth.password.rules')}
           />
           <PasswordField
             label={t('auth.register.confirmPassword')}
@@ -128,6 +139,13 @@ export function RegisterPage() {
             onChange={setConfirmPassword}
             placeholder={t('auth.register.confirmPasswordPlaceholder')}
             autoComplete="new-password"
+            className="client-auth-form__field"
+            inputClassName="client-auth-form__input"
+            leadingAdornment={<LockIcon />}
+            iconOnlyToggle
+            maxLength={MAX_PASSWORD_LENGTH}
+            sanitizeInput={sanitizeNewPasswordInput}
+            passwordRuleHint={t('auth.password.rules')}
           />
         </div>
         <label className="checkbox">
@@ -136,10 +154,11 @@ export function RegisterPage() {
         </label>
 
         {error ? <p className="form-message form-message--error">{error}</p> : null}
-        <button className="primary-button" type="submit" disabled={loading}>
+        <button className="primary-button client-auth-form__submit" type="submit" disabled={loading}>
           {loading ? t('auth.register.submitting') : t('auth.register.submit')}
+          <ArrowRightIcon />
         </button>
-      </form> : <form className="auth-form" onSubmit={completeEmailVerification}>
+      </form> : <form className="auth-form client-auth-form" onSubmit={completeEmailVerification}>
         <p className="auth-form__hint">{t('auth.register.emailVerificationHint', '驗證碼已寄至您的電子郵件；兩組皆須輸入正確。')}</p>
         <label className="field">
           <span className="field__label">{t('auth.register.numericCode', '數字驗證碼')}</span>
@@ -168,8 +187,9 @@ export function RegisterPage() {
           ))}
         </fieldset>
         {error ? <p className="form-message form-message--error">{error}</p> : null}
-        <button className="primary-button" type="submit" disabled={loading || numericCode.length !== 6 || letterCode.length !== 5}>
+        <button className="primary-button client-auth-form__submit" type="submit" disabled={loading || numericCode.length !== 6 || letterCode.length !== 5}>
           {loading ? t('auth.register.verifyingEmail', '驗證中…') : t('auth.register.verifyEmail', '驗證並建立帳號')}
+          <ArrowRightIcon />
         </button>
       </form>}
       <SliderCaptcha

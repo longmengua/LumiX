@@ -1,6 +1,9 @@
 package com.lumix.admin.superadmin;
 
 import com.lumix.user.auth.application.UserAuthenticationService;
+import com.lumix.user.auth.application.PasswordPolicy;
+import com.lumix.api.error.ApiErrorCode;
+import com.lumix.api.error.ApiException;
 import com.lumix.user.auth.application.VisualCaptchaService;
 import com.lumix.user.auth.application.VisualCaptchaService.CaptchaVerificationRequest;
 import com.lumix.user.auth.application.SliderCaptchaService.CaptchaPurpose;
@@ -46,6 +49,9 @@ public class SuperAdminPasswordRecoveryController {
     /** 後台 token 只能重設仍屬 ACTIVE admin principal 的帳戶，並在成功時撤銷全部既有 session。 */
     @PostMapping("/reset")
     public ResponseEntity<Void> reset(@RequestBody ResetPasswordRequest request) {
+        if (!PasswordPolicy.isValidNewPassword(request.newPassword())) {
+            throw new ApiException(ApiErrorCode.VALIDATION_ERROR);
+        }
         authenticationService.resetSuperAdminPassword(request.token(), request.newPassword());
         return ResponseEntity.noContent().build();
     }

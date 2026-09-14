@@ -5,7 +5,7 @@ import { PasswordField } from '../../components/auth/PasswordField';
 import { Card } from '../../components/base/Card';
 import { Logo } from '../../components/brand/Logo';
 import { translateAuthError } from '../../features/auth/authText';
-import { hasValidPasswordLength } from '../../features/auth/passwordPolicy';
+import { hasValidNewPassword, MAX_PASSWORD_LENGTH, sanitizeNewPasswordInput } from '../../features/auth/passwordPolicy';
 import { useI18n } from '../../i18n';
 import { resetAdminPassword } from '../api/adminAuthenticationApi';
 
@@ -26,7 +26,7 @@ export function AdminResetPasswordPage() {
     setError(null);
     try {
       if (!token) throw new Error('ADMIN_AUTH_REQUEST_FAILED');
-      if (!hasValidPasswordLength(newPassword)) throw new Error('Password must be between 8 and 32 characters.');
+      if (!hasValidNewPassword(newPassword)) throw new Error('Password must be between 8 and 32 characters.');
       if (newPassword !== confirmPassword) throw new Error('Passwords do not match.');
       await resetAdminPassword({ token, newPassword });
       navigate('/login', { replace: true });
@@ -59,8 +59,8 @@ export function AdminResetPasswordPage() {
         </div>
         <Card title={t('admin.auth.reset.cardTitle')}>
           <form className="auth-form" onSubmit={handleSubmit}>
-            <PasswordField label={t('admin.auth.reset.newPassword')} name="new-password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" />
-            <PasswordField label={t('admin.auth.reset.confirmPassword')} name="confirm-password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" />
+            <PasswordField label={t('admin.auth.reset.newPassword')} name="new-password" value={newPassword} onChange={setNewPassword} autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} sanitizeInput={sanitizeNewPasswordInput} passwordRuleHint={t('auth.password.rules')} />
+            <PasswordField label={t('admin.auth.reset.confirmPassword')} name="confirm-password" value={confirmPassword} onChange={setConfirmPassword} autoComplete="new-password" maxLength={MAX_PASSWORD_LENGTH} sanitizeInput={sanitizeNewPasswordInput} passwordRuleHint={t('auth.password.rules')} />
             {error ? <p className="form-message form-message--error">{error}</p> : null}
             <button className="primary-button" type="submit" disabled={loading}>
               {loading ? t('admin.auth.reset.submitting') : t('admin.auth.reset.submit')}
