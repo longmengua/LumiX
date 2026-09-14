@@ -121,6 +121,22 @@ secret management change
 - 修改 Compose、Nginx、Vite entry、router、authentication cookie 或 API proxy 前，必須先閱讀 `docs/reference/routes.md` 與 `docs/frontend/page-map.md`，並驗證三個 port 的 route 回應。
 - 不得以共同 ingress、path rewrite 或 reverse proxy 為理由重新合併服務；需要降低故障域時，正式部署還必須採取獨立 runtime、資源限制、health check 與擴縮策略。
 
+### Port redirect 校驗
+
+修改入口後，必須以可跟隨 redirect 的 HTTP 驗證確認最終 URL 不跨 port：
+
+| 起點 | 預期最終 URL／狀態 |
+| --- | --- |
+| `8080/`、`8080/login`、`8080/admin/login` | 原 port `8080`，`404` |
+| `8080/actuator/health` | 原 port `8080`，`200` |
+| `8088/`、`8088/login` | 原 port `8088`，`200` |
+| `8088/admin`、`8088/admin/login` | 原 port `8088`，`404` |
+| `8089/`、`8089/admin` | `8089/admin/login`，`200` |
+| `8089/admin/login` | 原 port `8089`，`200` |
+| `8089/login` | 原 port `8089`，`404` |
+
+任何 redirect 若將 browser 從 `8080`、`8088` 或 `8089` 導向另一個 port，均為不合格；必須先修正 container 內部 listener 與 host port mapping 造成的 absolute redirect，才能提交。
+
 ## 文件規則
 
 - 專案內所有新增或修改的文件，原則上都要以繁體中文表達為主。
