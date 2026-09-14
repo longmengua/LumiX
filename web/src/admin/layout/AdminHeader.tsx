@@ -26,7 +26,7 @@ export function AdminHeader() {
           </NavLink>
         ))}
       </nav>
-      <div className="topbar__actions">
+      <div className="topbar__actions admin-header__actions">
         <label className="topbar__locale-switcher">
           <GlobeIcon />
           <span className="sr-only">{t('header.language')}</span>

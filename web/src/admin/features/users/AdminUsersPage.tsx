@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '../../../components/base/State';
 import { useI18n } from '../../../i18n';
+import { getInputDateRangePreset, type DateRangePreset } from '../../../utils/dateRange';
 import { formatDateTimeParts, formatTime } from '../../../utils/format';
 import {
   findAdminUsers,
@@ -13,6 +14,12 @@ import {
 } from '../../api/adminUsersApi';
 
 type UserDateFilter = 'created' | 'last-login';
+type UserDateFilterValues = {
+  createdFromDate: string;
+  createdToDate: string;
+  lastLoginFromDate: string;
+  lastLoginToDate: string;
+};
 type VisualStatus = 'active' | 'inactive' | 'frozen';
 
 /**
@@ -25,7 +32,7 @@ export function AdminUsersPage() {
   const [createdToDate, setCreatedToDate] = useState('');
   const [lastLoginFromDate, setLastLoginFromDate] = useState('');
   const [lastLoginToDate, setLastLoginToDate] = useState('');
-  const [activeDateFilter, setActiveDateFilter] = useState<UserDateFilter | null>(null);
+  const [openDateFilter, setOpenDateFilter] = useState<UserDateFilter | null>(null);
   const [items, setItems] = useState<AdminUser[]>([]);
   const [nextCursor, setNextCursor] = useState<AdminUserSearchCursor | null>(null);
   const [pageStarts, setPageStarts] = useState<Array<AdminUserSearchCursor | null>>([null]);
@@ -39,8 +46,6 @@ export function AdminUsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const requestSequence = useRef(0);
-  const hasCreatedDateFilter = Boolean(createdFromDate || createdToDate);
-  const hasLastLoginDateFilter = Boolean(lastLoginFromDate || lastLoginToDate);
 
   function load(search: AdminUserSearch, cursor: AdminUserSearchCursor | null, targetPage: number, clearSnapshot: boolean) {
     const requestId = ++requestSequence.current;
@@ -77,12 +82,18 @@ export function AdminUsersPage() {
     load({}, null, 1, true);
   }, []);
 
-  function buildSearch(cursor?: AdminUserSearchCursor): AdminUserSearch {
-    const search: AdminUserSearch = { displayNamePrefix: displayNamePrefix.trim() || undefined, cursor };
-    if (createdFromDate) search.createdFrom = toUtcDayStart(createdFromDate);
-    if (createdToDate) search.createdBefore = toUtcDayAfter(createdToDate);
-    if (lastLoginFromDate) search.lastLoginFrom = toUtcDayStart(lastLoginFromDate);
-    if (lastLoginToDate) search.lastLoginBefore = toUtcDayAfter(lastLoginToDate);
+  function buildSearch(overrides: Partial<UserDateFilterValues> = {}): AdminUserSearch {
+    const filters: UserDateFilterValues = {
+      createdFromDate: overrides.createdFromDate ?? createdFromDate,
+      createdToDate: overrides.createdToDate ?? createdToDate,
+      lastLoginFromDate: overrides.lastLoginFromDate ?? lastLoginFromDate,
+      lastLoginToDate: overrides.lastLoginToDate ?? lastLoginToDate,
+    };
+    const search: AdminUserSearch = { displayNamePrefix: displayNamePrefix.trim() || undefined };
+    if (filters.createdFromDate) search.createdFrom = toUtcDayStart(filters.createdFromDate);
+    if (filters.createdToDate) search.createdBefore = toUtcDayAfter(filters.createdToDate);
+    if (filters.lastLoginFromDate) search.lastLoginFrom = toUtcDayStart(filters.lastLoginFromDate);
+    if (filters.lastLoginToDate) search.lastLoginBefore = toUtcDayAfter(filters.lastLoginToDate);
     return search;
   }
 
@@ -107,7 +118,7 @@ export function AdminUsersPage() {
     setCreatedToDate('');
     setLastLoginFromDate('');
     setLastLoginToDate('');
-    setActiveDateFilter(null);
+    setOpenDateFilter(null);
     setAppliedSearch({});
     setPageStarts([null]);
     load({}, null, 1, true);
@@ -125,6 +136,42 @@ export function AdminUsersPage() {
     // 保存每一頁起始 cursor，上一頁才能維持 keyset 查詢效能而無須退回 offset。
     setPageStarts((current) => [...current.slice(0, pageNumber), nextCursor]);
     load(appliedSearch, nextCursor, nextPage, false);
+  }
+
+  function applyDateFilter(filter: UserDateFilter, startDate: string, endDate: string) {
+    const overrides = filter === 'created'
+      ? { createdFromDate: startDate, createdToDate: endDate }
+      : { lastLoginFromDate: startDate, lastLoginToDate: endDate };
+    if (filter === 'created') {
+      setCreatedFromDate(startDate);
+      setCreatedToDate(endDate);
+    } else {
+      setLastLoginFromDate(startDate);
+      setLastLoginToDate(endDate);
+    }
+    const search = buildSearch(overrides);
+    setAppliedSearch(search);
+    setPageStarts([null]);
+    setOpenDateFilter(null);
+    load(search, null, 1, true);
+  }
+
+  function clearDateFilter(filter: UserDateFilter) {
+    const overrides = filter === 'created'
+      ? { createdFromDate: '', createdToDate: '' }
+      : { lastLoginFromDate: '', lastLoginToDate: '' };
+    if (filter === 'created') {
+      setCreatedFromDate('');
+      setCreatedToDate('');
+    } else {
+      setLastLoginFromDate('');
+      setLastLoginToDate('');
+    }
+    const search = buildSearch(overrides);
+    setAppliedSearch(search);
+    setPageStarts([null]);
+    setOpenDateFilter(null);
+    load(search, null, 1, true);
   }
 
   function toggleDetail(userId: string) {
@@ -153,8 +200,6 @@ export function AdminUsersPage() {
         });
       });
   }
-
-  const activeFilterLabel = activeDateFilter === 'created' ? t('admin.usersRegistrationFilter') : t('admin.usersLastLoginFilter');
 
   return (
     <section className="admin-users-page">
@@ -189,17 +234,27 @@ export function AdminUsersPage() {
             />
           </label>
           <div className="admin-users-toolbar__filters" aria-label={t('admin.usersDateFilters')}>
-            <DateFilterButton
-              active={activeDateFilter === 'created'}
+            <DateRangeFilter
+              filter="created"
+              open={openDateFilter === 'created'}
               label={t('admin.usersRegistrationFilter')}
-              summary={hasCreatedDateFilter ? formatDateRangeSummary(createdFromDate, createdToDate) : undefined}
-              onClick={() => setActiveDateFilter((current) => current === 'created' ? null : 'created')}
+              startDate={createdFromDate}
+              endDate={createdToDate}
+              onToggle={() => setOpenDateFilter((current) => current === 'created' ? null : 'created')}
+              onClose={() => setOpenDateFilter(null)}
+              onApply={(startDate, endDate) => applyDateFilter('created', startDate, endDate)}
+              onClear={() => clearDateFilter('created')}
             />
-            <DateFilterButton
-              active={activeDateFilter === 'last-login'}
+            <DateRangeFilter
+              filter="last-login"
+              open={openDateFilter === 'last-login'}
               label={t('admin.usersLastLoginFilter')}
-              summary={hasLastLoginDateFilter ? formatDateRangeSummary(lastLoginFromDate, lastLoginToDate) : undefined}
-              onClick={() => setActiveDateFilter((current) => current === 'last-login' ? null : 'last-login')}
+              startDate={lastLoginFromDate}
+              endDate={lastLoginToDate}
+              onToggle={() => setOpenDateFilter((current) => current === 'last-login' ? null : 'last-login')}
+              onClose={() => setOpenDateFilter(null)}
+              onApply={(startDate, endDate) => applyDateFilter('last-login', startDate, endDate)}
+              onClear={() => clearDateFilter('last-login')}
             />
           </div>
           <div className="admin-users-toolbar__actions">
@@ -210,30 +265,6 @@ export function AdminUsersPage() {
               <ResetIcon />{t('admin.usersReset')}
             </button>
           </div>
-          {activeDateFilter ? (
-            <section className="admin-users-date-drawer" aria-label={activeFilterLabel}>
-              <div className="admin-users-date-drawer__title">
-                <strong>{activeFilterLabel}</strong>
-                <button type="button" aria-label={t('admin.usersClearThisFilter')} title={t('admin.usersClearThisFilter')} onClick={() => {
-                  if (activeDateFilter === 'created') { setCreatedFromDate(''); setCreatedToDate(''); }
-                  else { setLastLoginFromDate(''); setLastLoginToDate(''); }
-                }}>
-                  <CloseIcon />
-                </button>
-              </div>
-              <div className="admin-users-date-drawer__fields">
-                <label className="field">
-                  <span className="field__label">{t('admin.usersRangeFrom')}</span>
-                  <input className="input" type="date" value={activeDateFilter === 'created' ? createdFromDate : lastLoginFromDate} onChange={(event) => activeDateFilter === 'created' ? setCreatedFromDate(event.target.value) : setLastLoginFromDate(event.target.value)} />
-                </label>
-                <span aria-hidden="true">→</span>
-                <label className="field">
-                  <span className="field__label">{t('admin.usersRangeTo')}</span>
-                  <input className="input" type="date" value={activeDateFilter === 'created' ? createdToDate : lastLoginToDate} onChange={(event) => activeDateFilter === 'created' ? setCreatedToDate(event.target.value) : setLastLoginToDate(event.target.value)} />
-                </label>
-              </div>
-            </section>
-          ) : null}
         </form>
 
         {error ? (
@@ -343,8 +374,123 @@ function UserDetail({ user, detail, loading, id }: { user: AdminUser; detail?: A
   );
 }
 
-function DateFilterButton({ active, label, summary, onClick }: { active: boolean; label: string; summary?: string; onClick: () => void }) {
-  return <button className={`admin-users-filter${active ? ' admin-users-filter--active' : ''}`} type="button" aria-expanded={active} onClick={onClick}><CalendarIcon /><span>{label}</span>{summary ? <strong>{summary}</strong> : null}<ChevronDownIcon /></button>;
+/**
+ * 兩個日期條件共用同一個 anchored popover；草稿只存在此元件內，關閉或點外部時絕不改動已套用的 API 條件。
+ */
+function DateRangeFilter({
+  filter, open, label, startDate, endDate, onToggle, onClose, onApply, onClear,
+}: {
+  filter: UserDateFilter;
+  open: boolean;
+  label: string;
+  startDate: string;
+  endDate: string;
+  onToggle: () => void;
+  onClose: () => void;
+  onApply: (startDate: string, endDate: string) => void;
+  onClear: () => void;
+}) {
+  const { t } = useI18n();
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [draftStartDate, setDraftStartDate] = useState(startDate);
+  const [draftEndDate, setDraftEndDate] = useState(endDate);
+  const [validationMessage, setValidationMessage] = useState<string | null>(null);
+  const [selectedPreset, setSelectedPreset] = useState<DateRangePreset | null>(null);
+  const hasAppliedRange = Boolean(startDate || endDate);
+  const summary = hasAppliedRange ? formatCompactDateRange(startDate, endDate) : null;
+
+  useEffect(() => {
+    if (!open) return;
+    // 每次重新打開都從已套用值建立草稿，取消不會遺留上一次未套用的輸入。
+    setDraftStartDate(startDate);
+    setDraftEndDate(endDate);
+    setValidationMessage(null);
+    setSelectedPreset(null);
+  }, [open, startDate, endDate]);
+
+  useEffect(() => {
+    if (!open) return;
+    function closeOnOutsidePointer(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) onClose();
+    }
+    function closeOnEscape(event: KeyboardEvent) {
+      if (event.key === 'Escape') onClose();
+    }
+    document.addEventListener('pointerdown', closeOnOutsidePointer);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsidePointer);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [open, onClose]);
+
+  function apply() {
+    if (draftStartDate && draftEndDate && draftStartDate > draftEndDate) {
+      setValidationMessage(t('admin.usersDateRangeEndBeforeStart'));
+      return;
+    }
+    onApply(draftStartDate, draftEndDate);
+  }
+
+  function selectPreset(preset: DateRangePreset) {
+    const range = getInputDateRangePreset(preset);
+    setDraftStartDate(range.startDate);
+    setDraftEndDate(range.endDate);
+    setValidationMessage(null);
+    setSelectedPreset(preset);
+  }
+
+  const presets: Array<{ value: DateRangePreset; label: string }> = [
+    { value: 'today', label: t('admin.usersDatePresetToday') },
+    { value: 'last-7-days', label: t('admin.usersDatePresetLast7Days') },
+    { value: 'last-30-days', label: t('admin.usersDatePresetLast30Days') },
+    { value: 'this-month', label: t('admin.usersDatePresetThisMonth') },
+    { value: 'last-month', label: t('admin.usersDatePresetLastMonth') },
+  ];
+
+  return (
+    <div ref={containerRef} className={`admin-users-filter-control${open ? ' admin-users-filter-control--open' : ''}${hasAppliedRange ? ' admin-users-filter-control--applied' : ''}${filter === 'last-login' ? ' admin-users-filter-control--align-end' : ''}`}>
+      <button className="admin-users-filter" type="button" aria-haspopup="dialog" aria-expanded={open} onClick={onToggle}>
+        <CalendarIcon />
+        <span className="admin-users-filter__label">{label}</span>
+        {summary ? <strong>{summary}</strong> : null}
+        {hasAppliedRange ? <span className="admin-users-filter__indicator" aria-hidden="true" /> : null}
+        <ChevronDownIcon />
+      </button>
+      {hasAppliedRange ? (
+        <button className="admin-users-filter__clear" type="button" aria-label={t('admin.usersClearDateFilter', undefined, { label })} title={t('admin.usersClearDateFilter', undefined, { label })} onClick={(event) => { event.stopPropagation(); onClear(); }}>
+          <CloseIcon />
+        </button>
+      ) : null}
+      {open ? (
+        <section className="admin-users-date-popover" role="dialog" aria-label={label}>
+          <header className="admin-users-date-popover__header">
+            <strong>{label}</strong>
+            <button type="button" aria-label={t('admin.usersCloseDateFilter')} onClick={onClose}><CloseIcon /></button>
+          </header>
+          <div className="admin-users-date-popover__presets" aria-label={t('admin.usersDateQuickRanges')}>
+            {presets.map((preset) => <button key={preset.value} className={`admin-users-date-popover__preset${selectedPreset === preset.value ? ' admin-users-date-popover__preset--active' : ''}`} type="button" onClick={() => selectPreset(preset.value)}>{preset.label}</button>)}
+          </div>
+          <div className="admin-users-date-popover__custom">
+            <span>{t('admin.usersCustomDate')}</span>
+            <label className="field">
+              <span className="field__label">{t('admin.usersRangeFrom')}</span>
+              <input className="input" type="date" value={draftStartDate} max={draftEndDate || undefined} onChange={(event) => { setDraftStartDate(event.target.value); setValidationMessage(null); setSelectedPreset(null); }} />
+            </label>
+            <label className="field">
+              <span className="field__label">{t('admin.usersRangeTo')}</span>
+              <input className="input" type="date" value={draftEndDate} min={draftStartDate || undefined} onChange={(event) => { setDraftEndDate(event.target.value); setValidationMessage(null); setSelectedPreset(null); }} />
+            </label>
+          </div>
+          {validationMessage ? <p className="admin-users-date-popover__error" role="alert">{validationMessage}</p> : null}
+          <footer className="admin-users-date-popover__actions">
+            <button className="ghost-button" type="button" onClick={onClear}>{t('admin.usersClearThisFilter')}</button>
+            <button className="primary-button" type="button" onClick={apply}>{t('admin.usersApplyDateFilter')}</button>
+          </footer>
+        </section>
+      ) : null}
+    </div>
+  );
 }
 
 function UserListSkeleton() {
@@ -413,7 +559,10 @@ function isFundTransferRestricted(user: AdminUser) { return user.fundTransferRes
 function initials(name: string) { return name.trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1)).join('').toUpperCase() || '?'; }
 function toUtcDayStart(date: string) { return `${date}T00:00:00.000Z`; }
 function toUtcDayAfter(date: string) { const value = new Date(`${date}T00:00:00.000Z`); value.setUTCDate(value.getUTCDate() + 1); return value.toISOString(); }
-function formatDateRangeSummary(from: string, to: string) { return `${from || '…'} – ${to || '…'}`; }
+function formatCompactDateRange(from: string, to: string) {
+  const format = (value: string) => value ? `${value.slice(5, 7)}/${value.slice(8, 10)}` : '…';
+  return `${format(from)}–${format(to)}`;
+}
 
 function UsersIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.4a4.6 4.6 0 0 0-4.6-4.6H7.6A4.6 4.6 0 0 0 3 18.6V20M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4M16.5 3.7a3.5 3.5 0 0 1 0 6.6" /></svg>; }
 function SearchIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.8" /><path d="m15.1 15.1 4.3 4.3" /></svg>; }
