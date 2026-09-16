@@ -693,6 +693,7 @@ export const zhTW = {
   'admin.workspaceUnavailableTitle': '此功能尚未提供',
   'admin.workspaceUnavailableDescription': '目前尚未建立可用的後端資料契約或受治理操作流程，因此不顯示示意資料或假設定。',
   'admin.assetsRuntimeTitle': '資產管理',
+  'admin.assetsRuntimeDescription': '透過受治理資產調整流程入帳，並保留完整帳本與稽核紀錄。',
   'admin.assetsSections': '資產工作台區段',
   'admin.assetsUsersTab': '用戶資產',
   'admin.assetsRiskConfigTab': '資產風控配置',

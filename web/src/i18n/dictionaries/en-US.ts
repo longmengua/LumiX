@@ -693,6 +693,7 @@ export const enUS = {
   'admin.workspaceUnavailableTitle': 'This feature is not available yet',
   'admin.workspaceUnavailableDescription': 'No usable backend data contract or governed operation flow exists yet, so this page provides no sample data or fake settings.',
   'admin.assetsRuntimeTitle': 'Asset Management',
+  'admin.assetsRuntimeDescription': 'Post changes through the governed asset adjustment flow with complete ledger and audit records.',
   'admin.assetsSections': 'Asset workspace sections',
   'admin.assetsUsersTab': 'User assets',
   'admin.assetsRiskConfigTab': 'Asset risk config',

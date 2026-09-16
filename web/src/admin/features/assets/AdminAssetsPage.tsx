@@ -40,7 +40,7 @@ export function AdminAssetsPage() {
 
   return (
     <div className="stack">
-      <PageHeader title={t('admin.assetsRuntimeTitle')} />
+      <PageHeader title={t('admin.assetsRuntimeTitle')} description={t('admin.assetsRuntimeDescription')} />
       <div className="admin-assets-workspace">
         <aside className="admin-assets-workspace__sidebar" aria-label={t('admin.assetsSections')}>
           <button className={`admin-assets-workspace__tab${section === 'users' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.users)}>{t('admin.assetsUsersTab')}</button>
