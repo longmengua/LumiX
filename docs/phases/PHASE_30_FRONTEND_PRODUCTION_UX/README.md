@@ -36,6 +36,10 @@ freshness 呈現為 evidence；沒有 materialized row 時顯示 empty state，�
 entry/reference，並以 server 提供的 cursor 載入更早紀錄。瀏覽器保持 amount／bigint ID 字串精度，且區分 loading、
 empty 與 error；沒有 ledger entry 時不顯示 mock history。這不是 ledger posting、資產估值、PnL、劃轉、入金或提款 UI runtime。
 
+## 2026-09-17 UI 設計治理文件
+
+文件任務狀態：完成。已建立 [LumiX Institutional Blue](../../governance/lumix-institutional-blue.md) 視覺權威、[元件盤點](../../frontend/ui-components.md) 與 [token 契約](../../frontend/ui-tokens.md)，並接入 AGENTS 及 AI context routing。僅完成文件及可追蹤入口；未變更產品程式碼，語意 token／共用 Hero 的 runtime 遷移尚未實作，原有 P30 foundation 與上線 gate 狀態不變。驗證方式為文件 diff、實際檔案／class／script 盤點及相對連結檢查。
+
 ## Gate
 
 `HUMAN_REVIEW_REQUIRED: yes`；P29 contract、P26 risk、P27 admin policy 與 P28 audit evidence 未通過前，不得啟用 production-affecting UI flow。

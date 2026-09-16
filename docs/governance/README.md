@@ -12,6 +12,8 @@ PRODUCTION_READINESS_GATES.md       宣稱正式上線前必須通過的門檻
 
 ## 什麼時候先讀這裡
 
+- 後台 UI 設計、美化與視覺一致性：[LumiX Institutional Blue](lumix-institutional-blue.md)，為唯一視覺設計權威；實作盤點與 token 契約由該文件連到前端文件。
+
 - 想確認目前做到哪一階段。
 - 想確認某個任務能不能做、是否屬於跳階。
 - 想確認什麼情況才可以宣稱 production ready。

@@ -108,6 +108,15 @@ security bypass
 - 所有新增或修改的程式碼都必須具備足夠註解，遵守 `docs/engineering/code-commenting-standard.md`。
 - 註解必須使用繁體中文，優先說明為什麼這樣做，而不是重複程式碼表面行為。
 
+## UI 設計治理
+
+- 管理後台採用 **LumiX Institutional Blue**；完整視覺權威為 [UI Design Governance](docs/governance/lumix-institutional-blue.md)。UI 工作開始前必讀，並依其連結檢查現有元件及 token。
+- 「美化、優化 UI、統一設計、增加科技感、改得更高級」預設只改善呈現，保留產品結構與業務功能；不授權改 API、資料模型、流程、權限、導航或新增虛構資料及 CTA。
+- 修改前檢查共用元件、theme／CSS variables、字級／間距／圓角、既有 Hero、icon 與 responsive 實作；遵循 reuse > extend > create，不逐頁複製樣式。
+- 以可用性、資訊層級、一致性、可及性、視覺品質、裝飾效果依序決策；窄畫面不得以裁切或隱藏 overflow 掩蓋內容重疊。
+- 使用者指定的局部修改／Golden Reference 只作用於授權範圍；通用 Hero pattern 不授權自行補 chips、改文案或重做全頁。視覺差異在任務範圍內收斂到權威規範，不另創一套風格。
+- 本規範不取代既有資金安全、真實資料、服務隔離與 phase gate；文件完成不代表 token、共用元件或正式 UI runtime 已實作。
+
 ## Git staging rules
 
 - 每次準備提交前，必須先執行 `git status --short` 確認工作目錄內容。

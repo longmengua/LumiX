@@ -2,6 +2,14 @@
 
 前端負責呈現狀態，不負責決定資金真相。
 
+## UI 設計入口
+
+- [LumiX Institutional Blue](../governance/lumix-institutional-blue.md)：管理後台視覺權威、AI 修改邊界與驗收流程。
+- [元件與樣式盤點](ui-components.md)：現存 React／CSS／SVG 來源及重用方式。
+- [語意 token 契約](ui-tokens.md)：現有 variables、待導入 token 與漸進遷移規則。
+
+此處既有資料表 Flexbox 規則、`state-management.md` 與 `ux-safety.md` 繼續生效；設計文件以連結引用，不重寫其業務規則。
+
 ```text
 page-map.md          route and page ownership
 state-management.md client state rules

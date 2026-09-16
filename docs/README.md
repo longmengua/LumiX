@@ -6,6 +6,8 @@
 
 ## 建議閱讀路徑
 
+管理後台 UI 任務：[LumiX Institutional Blue](governance/lumix-institutional-blue.md) → [元件盤點](frontend/ui-components.md) → [token 契約](frontend/ui-tokens.md)。權威規則留在 governance，前端實作說明留在 frontend。
+
 ```text
 第一次看專案
   |

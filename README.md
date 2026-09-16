@@ -9,6 +9,7 @@ LumiX 的目標是建立一套可正式營運的線上交易所系統，涵蓋�
 ## 建議閱讀入口
 
 - 第一次看專案：`docs/README.md`
+- 後台 UI 設計：[LumiX Institutional Blue](docs/governance/lumix-institutional-blue.md)
 - 先理解專案範圍：`docs/reference/overview.md`
 - 先理解權威狀態與施工節奏：`docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md`
 - 先理解整體系統形狀：`docs/architecture/ARCHITECTURE_TEXT_MAP.md`
