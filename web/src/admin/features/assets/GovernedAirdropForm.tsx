@@ -111,14 +111,14 @@ export function GovernedAirdropForm() {
         <section className="admin-airdrop-form__section" aria-label={t('admin.assetsAirdropType')}>
           <div className="admin-airdrop-form__grid">
             <FieldError error={errors.targetUserId}>
-              <label className="field"><span className="field__label">{t('admin.assetsAirdropUserId')}</span><input className="input" aria-invalid={Boolean(errors.targetUserId)} required maxLength={64} placeholder={t('admin.assetsAirdropUserIdPlaceholder')} value={form.targetUserId} onChange={(event) => update('targetUserId', event.target.value)} /></label>
+              <label className="field"><span className="field__label">{t('admin.assetsAirdropUserId')}<RequiredMark /></span><input className="input" aria-invalid={Boolean(errors.targetUserId)} required maxLength={64} placeholder={t('admin.assetsAirdropUserIdPlaceholder')} value={form.targetUserId} onChange={(event) => update('targetUserId', event.target.value)} /></label>
             </FieldError>
             <FieldError error={errors.activityId}>
-              <label className="field"><span className="field__label">{t('admin.assetsAirdropActivity')}</span><FormSelect ariaLabel={t('admin.assetsAirdropActivity')} options={activityOptions} placeholder={t('admin.assetsAirdropRequired')} value={form.activityId} onChange={(value) => update('activityId', value)} /></label>
+              <label className="field"><span className="field__label">{t('admin.assetsAirdropActivity')}<RequiredMark /></span><FormSelect ariaLabel={t('admin.assetsAirdropActivity')} options={activityOptions} placeholder={t('admin.assetsAirdropRequired')} value={form.activityId} onChange={(value) => update('activityId', value)} /></label>
               {form.activityId === 'REVERSAL' ? <p className="admin-airdrop-form__activity-hint">{t('admin.assetsReversalUnavailable')}</p> : null}
             </FieldError>
             <FieldError className="admin-airdrop-form__field--amount" error={errors.amount ?? errors.assetSymbol ?? assetLoadError ?? undefined}>
-              <label className="field"><span className="field__label">{t('admin.assetsAirdropAmount')}</span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
+              <label className="field"><span className="field__label">{t('admin.assetsAirdropAmount')}<RequiredMark /></span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
             </FieldError>
           </div>
         </section>
@@ -126,7 +126,7 @@ export function GovernedAirdropForm() {
         <section className="admin-airdrop-form__section admin-airdrop-form__remarks" aria-labelledby="airdrop-remarks">
           <div className="admin-airdrop-form__remarks-heading">
             <div className="admin-airdrop-form__remarks-icon" aria-hidden="true"><NoteIcon /></div>
-            <div><h3 id="airdrop-remarks">{t('admin.assetsAirdropRemarksTitle')}</h3><p>{t('admin.assetsAirdropRemarksHint')}</p></div>
+            <div><h3 id="airdrop-remarks">{t('admin.assetsAirdropRemarksTitle')}<RequiredMark /></h3><p>{t('admin.assetsAirdropRemarksHint')}</p></div>
           </div>
           <FieldError error={errors.reason}>
             <label className="field"><span className="sr-only">{t('admin.assetsAirdropReason')}</span><span className="admin-airdrop-form__textarea-wrap"><textarea className="input" aria-invalid={Boolean(errors.reason)} required maxLength={256} placeholder={t('admin.assetsAirdropReasonPlaceholder')} value={form.reason} onChange={(event) => update('reason', event.target.value)} /><span className="admin-airdrop-form__counter">{form.reason.length}/256</span></span></label>
@@ -149,6 +149,9 @@ export function GovernedAirdropForm() {
 function FieldError({ children, error, className }: { children: ReactNode; error?: string; className?: string }) {
   return <div className={['admin-airdrop-form__field-wrap', className].filter(Boolean).join(' ')}>{children}{error ? <p className="admin-airdrop-form__field-error" role="alert">{error}</p> : null}</div>;
 }
+
+/** 必填標記只補足視覺辨識；原有的 HTML required 與 submit validation 仍是實際驗證來源。 */
+function RequiredMark() { return <span className="admin-airdrop-form__required" aria-hidden="true">*</span>; }
 
 /** 輕量選單保留鍵盤操作與選取狀態，避免管理介面退回作業系統原生灰色選單。 */
 function FormSelect({ ariaLabel, compact = false, disabled = false, options, placeholder, value, onChange }: { ariaLabel: string; compact?: boolean; disabled?: boolean; options: SelectOption[]; placeholder: string; value: string; onChange: (value: string) => void }) {

@@ -581,6 +581,7 @@ p,
 .admin-airdrop-form__field--wide { grid-column: 1 / -1; }
 .admin-airdrop-form .field { gap: 0.5rem; }
 .admin-airdrop-form .field__label { color: rgba(234, 241, 255, 0.92); font-size: 0.9rem; font-weight: 600; }
+.admin-airdrop-form__required { margin-left: 0.22rem; color: #fb7185; }
 .admin-airdrop-form .input {
   min-block-size: 3.1rem;
   border-color: rgba(103, 148, 224, 0.23);
