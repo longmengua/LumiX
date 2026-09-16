@@ -111,3 +111,11 @@ ASSET-T01：COMPLETED_FOR_READ_ONLY_PROJECTION_API（2026-09-15）
 account／asset metadata、精確十進位 amount、projection version、projectedAt、reconciledAt 與 freshness。它是 read model
 presentation boundary，不會建立帳戶、重建 projection 或更新 ledger／balance／reservation；沒有 projection row 時回傳空集合，
 不會以 mock 或假零餘額取代。此 handoff 不改變本 phase 的完成狀態，也不表示 balance mutation runtime 或正式資產功能已完成。
+
+## 2026-09-15 資產 runtime：ledger-derived projection
+
+`com.lumix.ledger.runtime.LedgerBalanceProjectionUpdater` 只接受已 append 的 immutable ledger entry identity，對每一個
+受影響 USER `account_id + asset_symbol` 從 `ledger_entries` 重新加總，再於同一 posting transaction materialize
+`balance_projections`。`V019__add_account_category_for_ledger_projection.sql` 將帳戶分為 USER 與 EXCHANGE，EXCHANGE
+分錄不會變成使用者可見餘額。尚未有 reservation 時，available 等於 total、locked 為零，且 `reconciled_at` 保持 null；
+這不是 reconciliation completed 宣稱。`HUMAN_REVIEW_REQUIRED`。

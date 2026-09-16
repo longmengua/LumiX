@@ -69,6 +69,7 @@ Root agent entry
 ```text
 server/
   current phase implementation
+  資產帳本入帳服務、資產保留、餘額投影更新，以及受治理的內部劃轉／空投執行服務
   schema / contract / runtime tests
   read-only technical documentation updates
 
@@ -77,17 +78,17 @@ docs/phases/
   current phase task card 與 implementation notes
 ```
 
-目前不允許施工範圍：
+資產帳本入帳與受治理的內部劃轉／空投執行服務已由人類於 2026-09-15 明確授權施工；仍必須依
+`docs/planning/ASSET_RUNTIME_PREREQUISITE_SEQUENCE.md` 的順序、維持不可變稽核證據、冪等性、
+權限審核與失敗即拒絕，且每個高風險交付都要標記「需要人工審核」。
+
+目前不允許以未受控方式施工範圍：
 
 ```text
-production ledger mutation
-real fund transfer
-real wallet deposit
-real wallet withdrawal
 matching engine execution
 settlement engine mutation
 fee collection runtime
-admin manual balance adjustment
+未經權限審核與不可變稽核紀錄的管理員手動調帳
 KYC / AML bypass
 security bypass
 ```
@@ -102,7 +103,8 @@ security bypass
 - 帳本必須 immutable append-only；修正只能追加 reversal / adjustment entry。
 - API 需要 idempotency 設計，尤其是下單、取消、提款、入金確認。
 - 不允許用 TODO / placeholder 偽裝完成。
-- 不允許把 mock adapter 接到 production path。
+- 不得使用 mock、fake adapter、固定餘額、假地址、假 txid 或假成功狀態作為任何開發路徑的替代實作；測試 fixture 僅可存在於測試 source set，且不得被 application runtime 載入。
+- 真實 wallet deposit／withdrawal、私鑰、HSM/MPC、鏈上 provider 與廣播可依 phase 相依開始施工，但每一條路徑都必須有具名 provider、secret isolation、權限審核、immutable audit、idempotency、reconciliation、失敗即拒絕與對應 runtime test；未滿足任一條件不得啟用。
 - 所有新增或修改的程式碼都必須具備足夠註解，遵守 `docs/engineering/code-commenting-standard.md`。
 - 註解必須使用繁體中文，優先說明為什麼這樣做，而不是重複程式碼表面行為。
 
@@ -167,5 +169,5 @@ Phase 21 至 Phase 36 的 foundation 已完成，且 P36 readiness documentation
 P36 evidence gap closure after required runtime dependencies; production launch remains prohibited
 ```
 
-Phase 21–36 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 36 README 與權威 readiness gates；不得把既有 foundation 接到 provider、公開 transport、地址派發、credit、私鑰、HSM/MPC、鏈上廣播或任何未核准的資金核心。
+Phase 21–36 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 36 README 與權威 readiness gates；provider、公開 transport、地址派發、credit、私鑰、HSM/MPC 與鏈上廣播必須依 phase 相依與具名 security / audit gate 實作，不得以未審核捷徑接線。
 Phase 18 到 Phase 20 的已批准歷史分別保留在各 phase 目錄的 `phase-*-final-review.md`。

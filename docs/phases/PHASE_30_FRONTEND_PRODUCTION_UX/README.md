@@ -30,6 +30,12 @@ freshness 呈現為 evidence；沒有 materialized row 時顯示 empty state，�
 價格、資產歷史、劃轉／reservation 或 PnL runtime，這些頁面刻意不顯示估值、總權益、PnL、操作按鈕或假歷史。
 此 handoff 只完成 read-only projection presentation，不代表 ledger truth、資金異動或正式資產營運已完成。
 
+## 2026-09-15 ASSET-T03 immutable ledger 歷史呈現
+
+`/assets` 已新增 authenticated owner 的 immutable ledger 歷史唯讀區塊，讀取 `GET /api/v1/assets/history` 的既有
+entry/reference，並以 server 提供的 cursor 載入更早紀錄。瀏覽器保持 amount／bigint ID 字串精度，且區分 loading、
+empty 與 error；沒有 ledger entry 時不顯示 mock history。這不是 ledger posting、資產估值、PnL、劃轉、入金或提款 UI runtime。
+
 ## Gate
 
 `HUMAN_REVIEW_REQUIRED: yes`；P29 contract、P26 risk、P27 admin policy 與 P28 audit evidence 未通過前，不得啟用 production-affecting UI flow。

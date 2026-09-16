@@ -6,6 +6,7 @@
 Task type                         Required docs
 --------------------------------------------------------------------------------
 Any task                          AGENTS.md, AI_AGENT.md, AI_PROGRESS.md
+Asset mutation prerequisite       docs/planning/ASSET_RUNTIME_DELIVERY_PROGRAM.md, docs/planning/ASSET_RUNTIME_PREREQUISITE_SEQUENCE.md
 Phase 12 schema                   docs/phases/PHASE_12_DATABASE_SCHEMA/README.md
 Database migration                docs/phases/PHASE_12_DATABASE_SCHEMA/migration-plan.md
 Ledger table design               docs/exchange-core/ledger-invariants.md

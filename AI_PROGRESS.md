@@ -146,7 +146,19 @@ Phase 21-36 production runtime: NOT_STARTED
 Next work: implement the missing runtime by the phase dependencies, then collect and independently verify P36 readiness evidence, resolve blockers and obtain explicit human production sign-off; launch remains prohibited
 Next implementation phase: Phase 36 - readiness evidence gap closure, after the required runtime dependencies are implemented
 
-資產交付計畫：`docs/planning/ASSET_RUNTIME_DELIVERY_PROGRAM.md` 的 ASSET-T00 為 `COMPLETED_FOR_PLANNING`，ASSET-T01 為 `COMPLETED_FOR_READ_ONLY_PROJECTION_API`，ASSET-T02 為 `COMPLETED_FOR_READ_ONLY_PROJECTION_PRESENTATION`。`GET /api/v1/assets/balances` 以 authenticated owner scope 從既有 `accounts`、`assets`、`balance_projections` 提供真實唯讀 projection，回傳 amount decimal string、projection/reconciliation evidence 與 freshness；前台 `/assets`、`/assets/spot`、`/assets/futures`、`/assets/margin` 已移除 mock adapter，且不會 fallback 假零餘額或假估值、PnL、劃轉、歷史。下一張為 ASSET-T03：immutable ledger/audit read boundary 的 owner-scoped 真實資產歷史 query 與 presentation。劃轉、入金 credit、提款、簽章與廣播仍受 ledger/reservation 與 Phase 22–25 runtime gate 阻擋。
+資產交付計畫：`docs/planning/ASSET_RUNTIME_DELIVERY_PROGRAM.md` 的 ASSET-T00 至 ASSET-T03 已完成唯讀 foundation。`GET /api/v1/assets/balances` 從現有 projection 提供 authenticated owner 的精確餘額與 freshness evidence；`GET /api/v1/assets/history` 從既有 immutable ledger 以 owner scope 與 keyset cursor 提供 entry/reference，不接受 userId、accountId 或 mock fallback。前台 `/assets`、`/assets/spot`、`/assets/futures`、`/assets/margin` 已移除正式 asset mock adapter，`/assets` 另呈現真實 immutable history 的 loading／empty／error state。這些均不代表資金真相以外的估值、PnL、劃轉、入金或提款已完成；ASSET-T04 仍被 ledger/reservation/risk runtime gate 阻擋。
+
+ASSET-T09 已完成管理端指定使用者的唯讀 asset projection view：`GET /api/admin/v1/users/{userId}/assets` 與 `/assets/accounts` 必須通過 active super-admin server-side authorization；前者只呈現既有 projection，後者只呈現帳戶容器，使用者詳情不會把空帳戶誤當成零餘額。沒有空投、管理員調帳、ledger append、開戶或任何資金寫入。空投另列為 ASSET-T10，受 ledger posting、projection、risk、dual-control 與 immutable audit runtime gate 阻擋，屬 `HUMAN_REVIEW_REQUIRED`。
+
+資產寫入的固定前置順序已收斂至 `docs/planning/ASSET_RUNTIME_PREREQUISITE_SEQUENCE.md`：帳本入帳、餘額投影更新／對帳、資產保留、帳戶所有權檢查／權限審核／稽核紀錄、內部劃轉／空投、入金、提款。人類於 2026-09-15 已授權前五項所需的帳本入帳、資產保留、內部劃轉與受治理空投施工；雙人覆核不納入本流程。凍結帳戶不可轉出給他人或外部地址，但同一使用者自己帳戶間的劃轉與空投轉入不受凍結限制；金額上限與頻率等規則延後規劃。執行服務尚未開始，仍不得跳過安全 gate 或宣稱 production ready。
+
+ASSET-T11 已完成新註冊使用者的帳戶容器 provisioning：email 雙驗證完成的原子註冊 transaction 會建立 SPOT／FUTURES／MARGIN 空帳戶。這只補齊 account boundary，沒有餘額、projection、ledger entry 或任何資金 mutation。
+
+ASSET-T12 已完成 authenticated owner 的帳戶 inventory 讀取：`GET /api/v1/assets/accounts` 與 `/assets` 帳戶狀態區塊呈現既有 SPOT／FUTURES／MARGIN 容器，明確區分空帳戶與無 projection；不提供或推測餘額。
+
+資產 runtime 前置第 1 項已開始且完成 internal ledger posting：`TransactionalLedgerPostingService` 以單一 database transaction 對 `idempotency_keys`、`ledger_journals`、`ledger_entries`、`outbox_events` 與 `audit_logs` 寫入可重送的 immutable evidence；它驗證 double-entry、帳戶／帳戶資產／資產狀態與 precision，沒有直接更新 `balance_projections`、沒有 mock 或 HTTP endpoint。這是 `HUMAN_REVIEW_REQUIRED`；下一步為 P15 餘額 projection rebuild／reconciliation runtime，再接 reservation。
+
+資產 runtime 前置第 2 項已完成：同一 posting transaction 會由 immutable ledger 重算受影響 USER account/asset 的 `balance_projections`；`V019` 新增 `account_category`，讓 EXCHANGE 對應帳戶不會被投影成使用者資產。reservation 尚未開始，因此 available 暫等於 total、locked 為零；下一步為 reservation hold/release/capture 的 owner、asset、atomic amount 與 idempotency runtime。
 ```
 
 ## 目前倉庫現況

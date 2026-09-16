@@ -8,12 +8,11 @@ completed
 
 ## 目標
 
-建立 immutable ledger engine 的範圍門檻與 runtime prerequisite，先把 ledger 與其他 bounded context 的交界說清楚，再進入後續 posting runtime。
+建立 immutable ledger engine 的範圍門檻與 runtime prerequisite，並在資產 runtime 授權後交付最小但真實的 internal posting service。
 
 ## 不在範圍內
 
 ```text
-ledger posting runtime
 balance mutation
 balance_projections runtime mutation
 double-entry posting service
@@ -77,10 +76,28 @@ P14-T10 phase 14 final review gate
 
 ## 完成條件
 
-- 只建立 scope gate、runtime prerequisite、boundary skeleton。
-- 不實作 ledger posting runtime。
+- 已建立 scope gate、runtime prerequisite、boundary skeleton。
+- 2026-09-15 已交付受控 internal ledger posting runtime；它不提供 HTTP endpoint，也不處理 balance projection、reservation、settlement、入金或提款。
 - 不修改 migration。
 - 不修改 balance 或 balance_projections。
 - 有清楚的 verification method。
 - 所有 ledger runtime 變更在規劃與後續實作都要保留 HUMAN_REVIEW_REQUIRED。
 - Phase 14 foundation completed，但不是 production-ready，也不是完整 ledger posting runtime。
+
+## 2026-09-15 ASSET-T03 immutable ledger 唯讀 history handoff
+
+`GET /api/v1/assets/history` 僅使用 authenticated session principal，在資料庫層以 `accounts.user_id` 限制既有
+`ledger_entries` 與 `ledger_journals` 的讀取範圍。以 `(posted_at, ledger_entry_id)` keyset cursor 回傳 bounded
+entry/reference，amount 維持十進位字串；同一 journal 的其他帳戶 entry 不會回傳。此 handoff 沒有 append、修改、
+projection rebuild、reservation、入金、提款或資金移動，且不改變 Phase 14 ledger runtime foundation 的完成界線。
+
+## 2026-09-15 資產 runtime：受控帳本入帳服務
+
+`com.lumix.ledger.runtime.TransactionalLedgerPostingService` 是不暴露 HTTP route 的內部 runtime boundary。它在單一
+database transaction 內依序完成 durable `LEDGER_POSTING` idempotency claim、double-entry invariant、帳戶／資產／精度
+驗證、append-only `ledger_journals`／`ledger_entries`、transactional outbox evidence、immutable audit evidence 與 completed
+idempotency resource binding。相同 key 與相同 immutable payload 只回放既有 journal；不同 payload 或尚未完成的 key 一律
+fail-closed。它不直接寫 `balance_projections`、不建立 reservation、沒有公開 API，也沒有 provider、wallet、簽章或廣播接線。
+
+`HUMAN_REVIEW_REQUIRED`：審核時必須確認 idempotency hash 對所有 journal / entry / actor 欄位都穩定，及任一後續 SQL
+失敗會使 journal、entry、outbox、audit 與 idempotency claim 一併回滾。
