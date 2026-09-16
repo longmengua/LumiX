@@ -571,7 +571,7 @@ p,
 .admin-airdrop-form__hero-aside span { color: rgba(190, 209, 246, 0.68); font-size: 0.82rem; }
 .admin-airdrop-form__illustration { display: block; flex: 0 1 13.5rem; inline-size: 13.5rem; block-size: 6.2rem; overflow: visible; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.6; filter: drop-shadow(0 0.45rem 0.8rem rgba(54, 111, 244, 0.2)); }
 .admin-airdrop-form__illustration ellipse { fill: rgba(50, 112, 240, 0.12); stroke: rgba(93, 160, 255, 0.7); }
-.admin-airdrop-form__illustration rect { fill: url(#asset-adjustment-gradient); stroke: rgba(128, 174, 255, 0.74); }
+.admin-airdrop-form__illustration rect { fill: url(#asset-adjustment-gradient); stroke: rgba(128, 174, 255, 0.74); filter: drop-shadow(0 0.45rem 0.55rem rgba(31, 66, 175, 0.3)); }
 .admin-airdrop-form__illustration circle { fill: #6b8fff; stroke: none; }
 .admin-airdrop-form__header p,
 .admin-airdrop-form__section-heading p,

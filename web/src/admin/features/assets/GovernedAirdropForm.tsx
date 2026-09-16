@@ -168,9 +168,10 @@ function AssetAdjustmentIllustration() {
   return <svg className="admin-airdrop-form__illustration" viewBox="0 0 220 100" aria-hidden="true">
     <defs><linearGradient id="asset-adjustment-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#6b78f5" stopOpacity=".82" /><stop offset="1" stopColor="#315ed8" stopOpacity=".62" /></linearGradient></defs>
     <ellipse cx="82" cy="78" rx="58" ry="12" />
+    <path d="M25 70c10-15 35-24 62-22 22 2 43 10 54 22" />
     <path d="M35 67c0-7 20-13 45-13s45 6 45 13v8c0 7-20 13-45 13s-45-6-45-13zM35 58c0-7 20-13 45-13s45 6 45 13-20 13-45 13-45-6-45-13ZM35 48c0-7 20-13 45-13s45 6 45 13-20 13-45 13-45-6-45-13Z" />
     <rect x="116" y="17" width="65" height="57" rx="13" transform="rotate(14 116 17)" />
-    <path d="m137 43 29 8m-25-16 20 18m-1-22-20 27" />
+    <path d="M137 43h27m-8-7 8 7-8 7M164 54h-27m8-7-8 7 8 7" />
     <circle cx="190" cy="22" r="7" /><circle cx="202" cy="76" r="9" />
   </svg>;
 }
