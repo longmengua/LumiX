@@ -1,6 +1,7 @@
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { Card } from '../../../components/base/Card';
+import { PageHeader } from '../../../components/layout/PageHeader';
 import { useI18n } from '../../../i18n';
 import { GovernedAirdropForm } from './GovernedAirdropForm';
 
@@ -39,15 +40,7 @@ export function AdminAssetsPage() {
 
   return (
     <div className="stack">
-      <header className="admin-assets-page-header">
-        <div className="admin-assets-page-header__heading">
-          <div className="admin-assets-page-header__icon" aria-hidden="true"><AssetManagementIcon /></div>
-          <div>
-            <h1>{t('admin.assetsRuntimeTitle')}</h1>
-            <p>{t('admin.assetsRuntimeDescription')}</p>
-          </div>
-        </div>
-      </header>
+      <PageHeader title={t('admin.assetsRuntimeTitle')} description={t('admin.assetsRuntimeDescription')} />
       <div className="admin-assets-workspace">
         <aside className="admin-assets-workspace__sidebar" aria-label={t('admin.assetsSections')}>
           <button className={`admin-assets-workspace__tab${section === 'users' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.users)}>{t('admin.assetsUsersTab')}</button>
@@ -68,10 +61,6 @@ function AdjustmentWorkspace() {
   return <div className="stack"><GovernedAirdropForm /></div>;
 }
 
-/** 使用與使用者管理頁一致的標題層級，僅替換成資產調整語意的圖示。 */
-function AssetManagementIcon() {
-  return <svg viewBox="0 0 24 24" focusable="false"><path d="M5 7h10M12 3l4 4-4 4M19 17H9M12 21l-4-4 4-4" /></svg>;
-}
 
 function sectionFromPath(pathname: string): AssetSection {
   if (pathname.startsWith('/assets/audit')) return 'audit';
