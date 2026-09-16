@@ -100,7 +100,7 @@ export function GovernedAirdropForm() {
     <section className="admin-airdrop-form" aria-label={t('admin.assetsAirdropType')}>
       <header className="admin-airdrop-form__header">
         <div className="admin-airdrop-form__header-main">
-          <div className="admin-airdrop-form__header-icon" aria-hidden="true"><AdjustmentIcon /></div>
+          <AssetAdjustmentHeroIcon />
           <div><h2>{t('admin.assetsAdjustmentTitle')}</h2><p>{t('admin.assetsAdjustmentSubtitle')}</p></div>
         </div>
         <div className="admin-airdrop-form__hero-aside">
@@ -163,7 +163,53 @@ function FormSelect({ ariaLabel, compact = false, disabled = false, options, pla
 }
 
 function NoteIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M14 4l6 6M14 4v6h6M8 15h8M8 11h3" /></svg>; }
-function AdjustmentIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M5 7h10M12 3l4 4-4 4M19 17H9M12 21l-4-4 4-4" /></svg>; }
+/**
+ * Hero icon 以獨立 SVG 建立完整景深，避免通用線框 icon 被誤認為可點擊的功能按鈕。
+ */
+function AssetAdjustmentHeroIcon() {
+  return <div className="admin-airdrop-form__header-icon" aria-hidden="true">
+    <svg viewBox="0 0 84 84" focusable="false">
+      <defs>
+        <linearGradient id="asset-adjustment-hero-tile" x1="8" y1="5" x2="77" y2="80" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stopColor="var(--asset-adjustment-icon-violet)" />
+          <stop offset=".5" stopColor="var(--asset-adjustment-icon-indigo)" />
+          <stop offset="1" stopColor="var(--asset-adjustment-icon-blue)" />
+        </linearGradient>
+        <linearGradient id="asset-adjustment-hero-edge" x1="42" y1="3" x2="42" y2="82" gradientUnits="userSpaceOnUse">
+          <stop stopColor="var(--asset-adjustment-icon-edge-light)" />
+          <stop offset=".58" stopColor="var(--asset-adjustment-icon-edge-mid)" />
+          <stop offset="1" stopColor="var(--asset-adjustment-icon-edge-dark)" />
+        </linearGradient>
+        <linearGradient id="asset-adjustment-hero-glyph" x1="28" y1="26" x2="57" y2="59" gradientUnits="userSpaceOnUse">
+          <stop stopColor="var(--asset-adjustment-icon-glyph-start)" />
+          <stop offset="1" stopColor="var(--asset-adjustment-icon-glyph-end)" />
+        </linearGradient>
+        <radialGradient id="asset-adjustment-hero-highlight" cx="0" cy="0" r="1" gradientTransform="translate(25 17) rotate(48) scale(58)" gradientUnits="userSpaceOnUse">
+          <stop stopColor="#fff" stopOpacity=".25" />
+          <stop offset=".52" stopColor="#fff" stopOpacity=".045" />
+          <stop offset="1" stopColor="#fff" stopOpacity="0" />
+        </radialGradient>
+        <filter id="asset-adjustment-hero-shadow" x="-35%" y="-30%" width="170%" height="185%">
+          <feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="var(--asset-adjustment-icon-shadow)" floodOpacity=".28" />
+        </filter>
+        <filter id="asset-adjustment-hero-glyph-glow" x="-40%" y="-40%" width="180%" height="180%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="1.15" result="glyphBlur" />
+          <feMerge><feMergeNode in="glyphBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      <g filter="url(#asset-adjustment-hero-shadow)">
+        <rect x="2" y="4" width="80" height="78" rx="19" fill="var(--asset-adjustment-icon-depth)" opacity=".72" />
+        <rect x="2" y="2" width="80" height="78" rx="19" fill="url(#asset-adjustment-hero-tile)" />
+        <rect x="2.5" y="2.5" width="79" height="77" rx="18.5" fill="none" stroke="url(#asset-adjustment-hero-edge)" />
+        <rect x="3" y="3" width="78" height="76" rx="18" fill="url(#asset-adjustment-hero-highlight)" />
+      </g>
+      <g fill="none" stroke="url(#asset-adjustment-hero-glyph)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" filter="url(#asset-adjustment-hero-glyph-glow)">
+        <path d="M27 33h29m-8-8 8 8-8 8" />
+        <path d="M57 51H28m8 8-8-8 8-8" />
+      </g>
+    </svg>
+  </div>;
+}
 function AssetAdjustmentIllustration() {
   return <svg className="admin-airdrop-form__illustration" viewBox="0 0 260 130" aria-hidden="true">
     <defs>

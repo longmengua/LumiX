@@ -536,24 +536,23 @@ p,
 .admin-airdrop-form__header-main::before { position: absolute; z-index: -1; inset: 50% auto auto -1.5rem; inline-size: 8rem; block-size: 8rem; border-radius: 50%; content: ''; background: radial-gradient(circle, rgba(101, 87, 255, 0.19), transparent 68%); filter: blur(0.35rem); pointer-events: none; transform: translateY(-50%); }
 .admin-airdrop-form__header-main > div:last-child { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .admin-airdrop-form__header-icon {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  display: inline-flex;
+  --asset-adjustment-icon-violet: #9270f5;
+  --asset-adjustment-icon-indigo: #6266ed;
+  --asset-adjustment-icon-blue: #3474e6;
+  --asset-adjustment-icon-depth: #273da4;
+  --asset-adjustment-icon-edge-light: rgba(255, 255, 255, 0.28);
+  --asset-adjustment-icon-edge-mid: rgba(214, 224, 255, 0.11);
+  --asset-adjustment-icon-edge-dark: rgba(24, 52, 143, 0.42);
+  --asset-adjustment-icon-glyph-start: #f8fbff;
+  --asset-adjustment-icon-glyph-end: #c7ddff;
+  --asset-adjustment-icon-shadow: #4f46e5;
+  display: grid;
   flex: 0 0 auto;
-  align-items: center;
-  justify-content: center;
-  inline-size: 5.15rem;
-  block-size: 5.15rem;
-  border: 1px solid rgba(161, 119, 255, 0.38);
-  border-radius: 1.2rem;
-  background: radial-gradient(circle at 24% 15%, rgba(221, 211, 255, 0.32), transparent 34%), linear-gradient(145deg, #8f52f2 0%, #665fe8 48%, #3269df 100%);
-  box-shadow: inset 0 1px rgba(248, 242, 255, 0.42), inset 0 -1.25rem 1.8rem rgba(35, 41, 151, 0.3), inset -0.45rem 0 1.1rem rgba(27, 75, 191, 0.18), 0 0.85rem 1.8rem rgba(44, 54, 180, 0.34), 0 0 1.6rem rgba(103, 86, 255, 0.18);
-  color: #e7edff;
+  inline-size: 5.25rem;
+  block-size: 5.25rem;
+  place-items: center;
 }
-.admin-airdrop-form__header-icon::after { position: absolute; z-index: -1; inset: 0.35rem 0.5rem auto; block-size: 40%; border-radius: 0.8rem 0.8rem 50% 50%; content: ''; background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent); pointer-events: none; }
 
-.admin-airdrop-form__header-icon svg,
 .admin-airdrop-form__remarks-icon svg,
 .admin-airdrop-form__notice-icon svg,
 .admin-airdrop-form__reset svg,
@@ -566,7 +565,7 @@ p,
   stroke-linejoin: round;
   stroke-width: 1.8;
 }
-.admin-airdrop-form__header-icon svg { inline-size: 2.35rem; block-size: 2.35rem; stroke-width: 2.45; filter: drop-shadow(0 0.15rem 0.35rem rgba(213, 226, 255, 0.22)); }
+.admin-airdrop-form__header-icon svg { display: block; inline-size: 100%; block-size: 100%; overflow: visible; }
 
 .admin-airdrop-form__header h2,
 .admin-airdrop-form__section-heading h3,
@@ -671,8 +670,7 @@ p,
   .admin-airdrop-form { border-radius: 1rem; }
   .admin-airdrop-form__header { min-height: auto; align-items: flex-start; padding: 1.5rem 1.25rem; }
   .admin-airdrop-form__hero-aside { display: none; }
-  .admin-airdrop-form__header-icon { inline-size: 3.25rem; block-size: 3.25rem; }
-  .admin-airdrop-form__header-icon svg { inline-size: 1.45rem; block-size: 1.45rem; }
+  .admin-airdrop-form__header-icon { inline-size: 4.125rem; block-size: 4.125rem; }
   .admin-airdrop-form__header h2 { font-size: 1.75rem; }
   .admin-airdrop-form__header-main p { font-size: 0.86rem; }
   .admin-airdrop-form__body { padding: 1.25rem; }
