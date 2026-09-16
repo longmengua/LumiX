@@ -1,3 +1,32 @@
+/* 後台共用語意 token；只由採用新 pattern 的元件消費，避免改動前台。 */
+.admin-layout {
+  --color-bg-surface: #07172f;
+  --color-bg-control: rgba(3, 16, 40, .65);
+  --color-border-subtle: rgba(100, 153, 242, .25);
+  --color-border-focus: rgba(87, 155, 255, .6);
+  --color-text-primary: #edf5ff;
+  --color-text-secondary: #adbedc;
+  --color-accent-primary: #73b1ff;
+  --color-accent-secondary: #8579f4;
+  --gradient-hero: radial-gradient(ellipse at 18% 4%, rgba(59, 126, 255, .28), transparent 38%), radial-gradient(ellipse at 62% -18%, rgba(111, 93, 255, .18), transparent 42%), radial-gradient(ellipse at 92% 78%, rgba(25, 105, 234, .13), transparent 37%), linear-gradient(116deg, #0b2856 0%, #081b3e 52%, #09173a 100%);
+  --shadow-surface: 0 14px 36px rgba(0, 6, 22, .18);
+  --shadow-hero: 0 1.25rem 3.4rem rgba(1, 10, 35, .28), 0 0 2.25rem rgba(34, 99, 234, .08);
+  --color-hero-rim: rgba(103, 165, 255, .52);
+  --color-hero-highlight: rgba(207, 229, 255, .16);
+  --color-hero-value: #d8e9ff;
+  --radius-card: 1.25rem;
+  --radius-control: .7rem;
+  --radius-pill: 999px;
+  --font-size-hero-title: 2.5rem;
+  --font-size-body: .9375rem;
+  --font-size-helper: .8125rem;
+  --space-2: .5rem;
+  --space-3: .75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+}
+
 :root {
   --content-max: 90rem;
   --content-gutter: clamp(1rem, 2vw, 2rem);
@@ -478,6 +507,12 @@ p,
 .admin-assets-workspace__tab { width: 100%; padding: 0.7rem 0.8rem; border: 0; border-radius: 0.55rem; background: transparent; color: rgba(226, 232, 240, 0.76); text-align: left; cursor: pointer; }
 .admin-assets-workspace__tab:hover, .admin-assets-workspace__tab--active { background: rgba(14, 165, 233, 0.14); color: #e0f2fe; }
 .admin-assets-workspace__content { min-width: 0; }
+/* 窄畫面保留原有三個導覽項目及順序，讓操作區取得完整可用寬度。 */
+@media (max-width: 767px) {
+  .admin-assets-workspace { grid-template-columns: minmax(0, 1fr); }
+  .admin-assets-workspace__sidebar { display: flex; flex-wrap: wrap; }
+  .admin-assets-workspace__tab { width: auto; flex: 1 1 auto; }
+}
 
 /* 幣種設定只顯示後端主檔狀態，讓啟用／暫停的治理動作與餘額操作保持清楚分隔。 */
 .admin-spot-asset-config__form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(7rem, 0.55fr) auto; gap: 1rem; align-items: end; margin-top: 1.25rem; }
@@ -514,14 +549,13 @@ p,
   overflow: hidden;
   padding: 0;
   border: 1px solid rgba(88, 139, 242, 0.22);
-  border-radius: 1.25rem;
+  border-radius: var(--radius-card, 1.25rem);
   background:
     radial-gradient(circle at 15% 0%, rgba(55, 105, 220, 0.12), transparent 42%),
     linear-gradient(145deg, rgba(8, 26, 56, 0.96), rgba(4, 15, 34, 0.98));
   box-shadow: inset 0 1px rgba(211, 229, 255, 0.05), 0 1.5rem 3.5rem rgba(0, 0, 0, 0.26);
 }
 
-.admin-airdrop-form__header,
 .admin-airdrop-form__remarks-heading,
 .admin-airdrop-form__footer,
 .admin-airdrop-form__actions,
@@ -530,15 +564,10 @@ p,
   align-items: center;
 }
 
-.admin-airdrop-form__header { position: relative; box-sizing: border-box; min-height: 10.75rem; justify-content: space-between; gap: 2rem; padding: 1.75rem 2.25rem; border-bottom: 1px solid rgba(101, 154, 255, 0.24); background: radial-gradient(circle at 83% 18%, rgba(105, 85, 255, 0.22), transparent 34%), radial-gradient(circle at 15% 100%, rgba(40, 116, 236, 0.18), transparent 44%), linear-gradient(112deg, rgba(12, 45, 96, 0.94), rgba(8, 27, 66, 0.98) 52%, rgba(24, 31, 95, 0.94)); box-shadow: inset 0 1px rgba(225, 237, 255, 0.08), inset 0 -1.5rem 3rem rgba(3, 14, 38, 0.12); }
-.admin-airdrop-form__header::after { position: absolute; inset: auto 8% -1px 8%; block-size: 1px; content: ''; background: linear-gradient(90deg, transparent, rgba(78, 145, 255, 0.55), transparent); }
-.admin-airdrop-form__header-main { position: relative; z-index: 1; display: flex; align-items: center; flex: 1 1 58%; gap: 1.5rem; min-width: 0; }
-.admin-airdrop-form__header-main::before { position: absolute; z-index: -1; inset: 50% auto auto -1.5rem; inline-size: 8rem; block-size: 8rem; border-radius: 50%; content: ''; background: radial-gradient(circle, rgba(101, 87, 255, 0.19), transparent 68%); filter: blur(0.35rem); pointer-events: none; transform: translateY(-50%); }
-.admin-airdrop-form__header-main > div:last-child { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .admin-airdrop-form__header-icon {
-  --asset-adjustment-icon-violet: #9270f5;
-  --asset-adjustment-icon-indigo: #6266ed;
-  --asset-adjustment-icon-blue: #3474e6;
+  --asset-adjustment-icon-violet: var(--color-accent-secondary);
+  --asset-adjustment-icon-indigo: #4168ed;
+  --asset-adjustment-icon-blue: var(--color-accent-primary);
   --asset-adjustment-icon-depth: #273da4;
   --asset-adjustment-icon-edge-light: rgba(255, 255, 255, 0.28);
   --asset-adjustment-icon-edge-mid: rgba(214, 224, 255, 0.11);
@@ -548,8 +577,8 @@ p,
   --asset-adjustment-icon-shadow: #4f46e5;
   display: grid;
   flex: 0 0 auto;
-  inline-size: 5.25rem;
-  block-size: 5.25rem;
+  inline-size: 100%;
+  aspect-ratio: 1;
   place-items: center;
 }
 
@@ -567,18 +596,9 @@ p,
 }
 .admin-airdrop-form__header-icon svg { display: block; inline-size: 100%; block-size: 100%; overflow: visible; }
 
-.admin-airdrop-form__header h2,
 .admin-airdrop-form__section-heading h3,
 .admin-airdrop-form__remarks h3,
 .admin-airdrop-form__notice h3 { margin: 0; color: #f0f5ff; }
-.admin-airdrop-form__header h2 { font-size: clamp(2.25rem, 3vw, 2.5rem); font-weight: 720; line-height: 1.08; letter-spacing: -0.04em; }
-.admin-airdrop-form__header-main p { max-inline-size: 38rem; margin-top: 0.75rem; font-size: 0.95rem; }
-.admin-airdrop-form__hero-aside { display: flex; align-items: center; justify-content: flex-end; flex: 0 1 42%; gap: 1.65rem; min-width: 0; color: #a9caff; }
-.admin-airdrop-form__hero-aside > div { display: flex; flex: 0 0 auto; flex-direction: column; gap: 0.38rem; white-space: nowrap; }
-.admin-airdrop-form__hero-aside strong { font-size: 1.08rem; font-weight: 680; letter-spacing: 0.035em; }
-.admin-airdrop-form__hero-aside span { color: rgba(190, 209, 246, 0.7); font-size: 0.84rem; }
-.admin-airdrop-form__illustration { display: block; flex: 0 0 18.75rem; inline-size: 18.75rem; block-size: 9.375rem; overflow: visible; }
-.admin-airdrop-form__header p,
 .admin-airdrop-form__section-heading p,
 .admin-airdrop-form__remarks p,
 .admin-airdrop-form__notice p { margin: 0.4rem 0 0; color: rgba(194, 212, 245, 0.72); font-size: 0.88rem; line-height: 1.55; }
@@ -598,9 +618,9 @@ p,
 .admin-airdrop-form__required { margin-left: 0.22rem; color: #fb7185; }
 .admin-airdrop-form .input {
   min-block-size: 3.1rem;
-  border-color: rgba(103, 148, 224, 0.23);
-  border-radius: 0.7rem;
-  background: rgba(2, 13, 33, 0.64);
+  border-color: var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-control);
   color: #eff5ff;
 }
 .admin-airdrop-form .input::placeholder { color: rgba(164, 188, 228, 0.5); }
@@ -658,21 +678,8 @@ p,
 .admin-airdrop-form__feedback--success { background: rgba(16, 185, 129, 0.11); color: #a7f3d0; }
 .admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
 
-@media (max-width: 1199px) and (min-width: 768px) {
-  .admin-airdrop-form__header { min-height: 9.75rem; padding-inline: 1.75rem; }
-  .admin-airdrop-form__header-main { gap: 1rem; }
-  .admin-airdrop-form__illustration { flex-basis: 15rem; inline-size: 15rem; block-size: 7.5rem; }
-  .admin-airdrop-form__hero-aside { flex-basis: 38%; gap: 0.75rem; }
-  .admin-airdrop-form__hero-aside span { white-space: normal; }
-}
-
 @media (max-width: 767px) {
   .admin-airdrop-form { border-radius: 1rem; }
-  .admin-airdrop-form__header { min-height: auto; align-items: flex-start; padding: 1.5rem 1.25rem; }
-  .admin-airdrop-form__hero-aside { display: none; }
-  .admin-airdrop-form__header-icon { inline-size: 4.125rem; block-size: 4.125rem; }
-  .admin-airdrop-form__header h2 { font-size: 1.75rem; }
-  .admin-airdrop-form__header-main p { font-size: 0.86rem; }
   .admin-airdrop-form__body { padding: 1.25rem; }
   .admin-airdrop-form__grid { grid-template-columns: minmax(0, 1fr); }
   .admin-airdrop-form__field--amount { grid-column: auto; }

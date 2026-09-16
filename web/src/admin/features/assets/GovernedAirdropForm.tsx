@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 
 import { useI18n } from '../../../i18n';
+import { AssetAdjustmentHeroIcon, AssetAdjustmentIllustration } from './AssetAdjustmentArtwork';
+import { AdminPageHero } from '../../components/AdminPageHero';
 import { createAdminAirdrop, fetchAdminAirdropAssetOptions, type AdminAirdropAssetOption, type AdminAirdropRequest, type AdminAirdropResult } from '../../api/adminAssetsApi';
 
 const INITIAL_FORM: AdminAirdropRequest = {
@@ -98,16 +100,19 @@ export function GovernedAirdropForm() {
 
   return (
     <section className="admin-airdrop-form" aria-label={t('admin.assetsAirdropType')}>
-      <header className="admin-airdrop-form__header">
-        <div className="admin-airdrop-form__header-main">
-          <AssetAdjustmentHeroIcon />
-          <div><h2>{t('admin.assetsAdjustmentTitle')}</h2><p>{t('admin.assetsAdjustmentSubtitle')}</p></div>
-        </div>
-        <div className="admin-airdrop-form__hero-aside">
-          <AssetAdjustmentIllustration />
-          <div><strong>{t('admin.assetsAdjustmentSlogan')}</strong><span>{t('admin.assetsAdjustmentSloganDescription')}</span></div>
-        </div>
-      </header>
+      <AdminPageHero
+        icon={<AssetAdjustmentHeroIcon />}
+        title={t('admin.assetsAdjustmentTitle')}
+        description={t('admin.assetsAdjustmentSubtitle')}
+        chips={[
+          { id: 'reversal', label: t('admin.assetsAdjustmentChipReversal'), icon: <SelectIcon kind="activity" /> },
+          { id: 'correction', label: t('admin.assetsAdjustmentChipCorrection'), icon: <NoteIcon /> },
+          { id: 'audit', label: t('admin.assetsAdjustmentChipAudit'), icon: <CheckIcon /> },
+        ]}
+        illustration={<AssetAdjustmentIllustration />}
+        slogan={t('admin.assetsAdjustmentSlogan')}
+        supportingText={t('admin.assetsAdjustmentSloganDescription')}
+      />
       <form className="admin-airdrop-form__body" noValidate onSubmit={(event) => void submit(event)}>
         <section className="admin-airdrop-form__section" aria-label={t('admin.assetsAirdropType')}>
           <div className="admin-airdrop-form__grid">
@@ -163,100 +168,6 @@ function FormSelect({ ariaLabel, compact = false, disabled = false, options, pla
 }
 
 function NoteIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M14 4l6 6M14 4v6h6M8 15h8M8 11h3" /></svg>; }
-/**
- * Hero icon 以獨立 SVG 建立完整景深，避免通用線框 icon 被誤認為可點擊的功能按鈕。
- */
-function AssetAdjustmentHeroIcon() {
-  return <div className="admin-airdrop-form__header-icon" aria-hidden="true">
-    <svg viewBox="0 0 84 84" focusable="false">
-      <defs>
-        <linearGradient id="asset-adjustment-hero-tile" x1="8" y1="5" x2="77" y2="80" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="var(--asset-adjustment-icon-violet)" />
-          <stop offset=".5" stopColor="var(--asset-adjustment-icon-indigo)" />
-          <stop offset="1" stopColor="var(--asset-adjustment-icon-blue)" />
-        </linearGradient>
-        <linearGradient id="asset-adjustment-hero-edge" x1="42" y1="3" x2="42" y2="82" gradientUnits="userSpaceOnUse">
-          <stop stopColor="var(--asset-adjustment-icon-edge-light)" />
-          <stop offset=".58" stopColor="var(--asset-adjustment-icon-edge-mid)" />
-          <stop offset="1" stopColor="var(--asset-adjustment-icon-edge-dark)" />
-        </linearGradient>
-        <linearGradient id="asset-adjustment-hero-glyph" x1="28" y1="26" x2="57" y2="59" gradientUnits="userSpaceOnUse">
-          <stop stopColor="var(--asset-adjustment-icon-glyph-start)" />
-          <stop offset="1" stopColor="var(--asset-adjustment-icon-glyph-end)" />
-        </linearGradient>
-        <radialGradient id="asset-adjustment-hero-highlight" cx="0" cy="0" r="1" gradientTransform="translate(25 17) rotate(48) scale(58)" gradientUnits="userSpaceOnUse">
-          <stop stopColor="#fff" stopOpacity=".25" />
-          <stop offset=".52" stopColor="#fff" stopOpacity=".045" />
-          <stop offset="1" stopColor="#fff" stopOpacity="0" />
-        </radialGradient>
-        <filter id="asset-adjustment-hero-shadow" x="-35%" y="-30%" width="170%" height="185%">
-          <feDropShadow dx="0" dy="7" stdDeviation="7" floodColor="var(--asset-adjustment-icon-shadow)" floodOpacity=".28" />
-        </filter>
-        <filter id="asset-adjustment-hero-glyph-glow" x="-40%" y="-40%" width="180%" height="180%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="1.15" result="glyphBlur" />
-          <feMerge><feMergeNode in="glyphBlur" /><feMergeNode in="SourceGraphic" /></feMerge>
-        </filter>
-      </defs>
-      <g filter="url(#asset-adjustment-hero-shadow)">
-        <rect x="2" y="4" width="80" height="78" rx="19" fill="var(--asset-adjustment-icon-depth)" opacity=".72" />
-        <rect x="2" y="2" width="80" height="78" rx="19" fill="url(#asset-adjustment-hero-tile)" />
-        <rect x="2.5" y="2.5" width="79" height="77" rx="18.5" fill="none" stroke="url(#asset-adjustment-hero-edge)" />
-        <rect x="3" y="3" width="78" height="76" rx="18" fill="url(#asset-adjustment-hero-highlight)" />
-      </g>
-      <g fill="none" stroke="url(#asset-adjustment-hero-glyph)" strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" filter="url(#asset-adjustment-hero-glyph-glow)">
-        <path d="M27 33h29m-8-8 8 8-8 8" />
-        <path d="M57 51H28m8 8-8-8 8-8" />
-      </g>
-    </svg>
-  </div>;
-}
-function AssetAdjustmentIllustration() {
-  return <svg className="admin-airdrop-form__illustration" viewBox="0 0 320 160" aria-hidden="true">
-    <defs>
-      <linearGradient id="asset-adjustment-illustration-coin" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#60A5FA" />
-        <stop offset=".55" stopColor="#4F6BEF" />
-        <stop offset="1" stopColor="#3743B5" />
-      </linearGradient>
-      <linearGradient id="asset-adjustment-illustration-card" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stopColor="#8B7CFF" />
-        <stop offset=".45" stopColor="#6675F5" />
-        <stop offset="1" stopColor="#315BCB" />
-      </linearGradient>
-      <radialGradient id="asset-adjustment-illustration-sphere" cx="30%" cy="25%" r="75%">
-        <stop offset="0" stopColor="#93C5FD" />
-        <stop offset="1" stopColor="#5267E8" />
-      </radialGradient>
-      <filter id="asset-adjustment-illustration-shadow" x="-30%" y="-30%" width="160%" height="160%">
-        <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#1D4ED8" floodOpacity=".22" />
-      </filter>
-    </defs>
-    <ellipse cx="150" cy="126" rx="88" ry="16" fill="none" stroke="#5B8CFF" strokeOpacity=".56" strokeWidth="1.8" />
-    <ellipse cx="150" cy="126" rx="62" ry="10" fill="#315BCB" fillOpacity=".12" />
-    <g filter="url(#asset-adjustment-illustration-shadow)">
-      <rect x="88" y="86" width="60" height="18" rx="9" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="118" cy="86" rx="30" ry="8.5" fill="#6FA8FF" />
-      <rect x="91" y="75" width="55" height="17" rx="8.5" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="118" cy="75" rx="27.5" ry="8" fill="#6398FF" />
-      <rect x="94" y="64" width="50" height="16" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="119" cy="64" rx="25" ry="7.5" fill="#79ACFF" />
-      <rect x="98" y="54" width="42" height="14" rx="7" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="119" cy="54" rx="21" ry="6.8" fill="#91BCFF" />
-    </g>
-    <g transform="rotate(13 193 77)" filter="url(#asset-adjustment-illustration-shadow)">
-      <rect x="156" y="42" width="74" height="70" rx="16" fill="url(#asset-adjustment-illustration-card)" stroke="#9DB6FF" strokeOpacity=".42" />
-      <g stroke="#DCEBFF" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" fill="none">
-        <path d="M171 62h34" />
-        <path d="m198 55 7 7-7 7" />
-        <path d="M213 84h-34" />
-        <path d="m186 77-7 7 7 7" />
-      </g>
-    </g>
-    <circle cx="74" cy="60" r="4" fill="url(#asset-adjustment-illustration-sphere)" />
-    <circle cx="223" cy="50" r="8" fill="url(#asset-adjustment-illustration-sphere)" />
-    <circle cx="238" cy="91" r="10" fill="url(#asset-adjustment-illustration-sphere)" />
-  </svg>;
-}
 function SelectIcon({ kind }: { kind?: SelectOption['icon'] }) { return <svg className="admin-form-select__icon" viewBox="0 0 24 24" aria-hidden="true"><path d={kind === 'airdrop' ? 'm21 3-7.7 18-3.9-7.1L3 10.7 21 3Z' : kind === 'asset' ? 'M12 3 19 7v10l-7 4-7-4V7l7-4ZM5 7l7 4 7-4M12 11v10' : 'M7 7h10M14 3l4 4-4 4M17 17H7M10 21l-4-4 4-4'} /></svg>; }
 function ChevronIcon() { return <svg className="admin-form-select__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>; }
 function CheckIcon() { return <svg className="admin-form-select__check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>; }

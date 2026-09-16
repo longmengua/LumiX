@@ -7,13 +7,13 @@
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-17 |
-| Repository revision | `3388816`（建立本快照時的 `HEAD`；工作區另有未提交 UI 變更，見「實作快照」） |
+| Repository revision | `c171e0f`（建立初版治理文件）；本輪資產調整 Hero refinement 尚在工作區，未對應新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system | 沒有第三方 icon package；使用頁面內 inline React SVG |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.0` |
+| UI Governance Version | `1.1`（working tree snapshot） |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -71,10 +71,14 @@
 | Secondary accent | `--color-accent-secondary` | `#8579f4` |
 | Hero surface | `--gradient-hero` | radial blue glow + navy linear gradient |
 | Surface shadow | `--shadow-surface` | `0 14px 36px rgba(0, 6, 22, .18)` |
+| Hero shadow / glow | `--shadow-hero` | deep surface shadow + restrained blue outer glow |
+| Hero rim | `--color-hero-rim` | `rgba(103, 165, 255, .52)`，Hero thin cool-blue border |
+| Hero inner highlight | `--color-hero-highlight` | `rgba(207, 229, 255, .16)`，頂部 edge lighting |
+| Hero value text | `--color-hero-value` | `#d8e9ff`，右側 value proposition |
 | Card / hero radius | `--radius-card` | `1.25rem`（20px） |
 | Control radius | `--radius-control` | `.7rem`（約 11px） |
 | Pill radius | `--radius-pill` | `999px` |
-| Hero title | `--font-size-hero-title` | `2.25rem`（36px） |
+| Hero title | `--font-size-hero-title` | `2.5rem`（40px） |
 | Body | `--font-size-body` | `.9375rem`（15px） |
 | Helper | `--font-size-helper` | `.8125rem`（13px） |
 | Spacing | `--space-2/3/4/6/8` | `.5/.75/1/1.5/2rem`（8/12/16/24/32px） |
@@ -93,7 +97,7 @@
 | --- | --- | --- | --- | --- |
 | `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 管理頁 Hero；`icon`、`title`、`description`、`chips`、`illustration`、`slogan`、`supportingText`；只組合呈現，不含 mutation 或資料請求 | `web/src/admin/components/AdminPageHero.css` | Canonical（目前資產調整唯一 consumer；尚未由 barrel export） |
 | `AssetAdjustmentHeroIcon` | `web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` | 84×84 內嵌 SVG 紫藍 icon tile | feature SVG + `global.css` 的 `--asset-adjustment-icon-*` aliases | Feature-specific |
-| `AssetAdjustmentIllustration` | 同上 | inline SVG coins／tilted adjustment card／spheres／ground ellipse | inline SVG gradients + CSS 控制寬度 | Feature-specific |
+| `AssetAdjustmentIllustration` | 同上 | inline SVG：layered spotlight、orbit、four-disc coin stack、tilted adjustment card、spheres、platform/reflection | inline SVG gradients + CSS 控制寬度 | Feature-specific |
 | `PageHeader` | `web/src/components/layout/PageHeader.tsx` | 外層頁名、description、actions；不是 dashboard Hero | `global.css` | Canonical base component |
 | `Card` | `web/src/components/base/Card.tsx` | 通用 card，`title`、`children`、`className` | `global.css` | Canonical base component |
 | `Badge` | `web/src/components/base/Badge.tsx` | neutral／success／warning／danger 狀態標籤 | `global.css` | Canonical base component |
@@ -115,16 +119,16 @@
 | 項目 | 實際設定 |
 | --- | --- |
 | Layout | Flexbox，`justify-content: space-between` |
-| Minimum height | `196px` |
-| Padding | `--space-8`（32px）；容器 ≤1050px 時 `--space-6`（24px） |
+| Minimum height | `196px`；desktop visual validation result 約 206px（content-driven） |
+| Padding | desktop `20px 36px`；容器 ≤1050px 時 `--space-6`（24px） |
 | Radius | `--radius-card`（20px） |
 | Icon box | `84×84px`；容器 ≤480px 改為 `64×64px` |
 | Icon-to-copy gap | `--space-6`（24px） |
-| Title | 36px / weight 700 / line-height 1.2；≤480px 為 28px |
+| Title | 40px / weight 740 / line-height 1.16；≤480px 為 28px |
 | Description | 15px / line-height 1.6 |
 | Chips | 13px；padding 8px 12px；gap 8px；pill radius |
-| Visual region | `flex-basis: 420px`，含 illustration 與 slogan；gap 16px |
-| Illustration box | desktop 240px；Hero 容器 ≤1050px 時 160px |
+| Visual region | desktop `flex-basis: 470px`，含 illustration 與 slogan；gap 28px；≤1050px 時 360px / 24px gap |
+| Illustration box | desktop 260px；Hero 容器 ≤1050px 時 190px |
 
 此 pattern 是呈現規範，不授權自行為任何頁面加入 chips、改文案或新增 Hero；需有明確任務範圍與真實產品語意。
 
@@ -139,7 +143,7 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 
 | Illustration | Path | Implementation | Status |
 | --- | --- | --- | --- |
-| `AssetAdjustmentIllustration` | `web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` | Inline React SVG：spotlight、兩層 ground ellipse、四層 coins、傾斜 card、雙向箭頭、三顆 spheres | Implemented / needs visual refinement |
+| `AssetAdjustmentIllustration` | `web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` | Inline React SVG：layered spotlight、orbit arc、三層 platform/reflection、四層 coins、larger tilted card、雙向箭頭、三顆 spheres | Implemented / refined in working tree |
 | 使用者 Hero decoration | `web/src/admin/features/users/AdminUsersPage.tsx` + `.admin-users-hero__orbs*` in `global.css` | CSS gradients + pseudo elements + spans；不是獨立 component | Legacy page-specific |
 
 沒有名為 `UserHeroIllustration` 的 component；外部協作者不得假設其存在。
@@ -157,7 +161,7 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 | Hero | `AdminPageHero` |
 | Illustration | `AssetAdjustmentHeroIcon`、`AssetAdjustmentIllustration` |
 | Shared components used | `PageHeader`、`Card`、`AdminPageHero`；native controls with global classes |
-| Current status | Implemented; Hero refinement in current uncommitted worktree |
+| Current status | Implemented; institutional material-depth refinement in current uncommitted worktree |
 | Business behavior | Preserved: user ID / activity / signed amount / configured asset / required note validation, reset, loading / double-submit guard, server API and result/error feedback |
 
 Hero content is i18n-driven (`zh-TW.ts`) and currently resolves to:
@@ -240,7 +244,7 @@ AdminUsersWorkspacePage
 
 | Area | Desktop | Narrow desktop / tablet | Mobile |
 | --- | --- | --- | --- |
-| `AdminPageHero` | identity + visual in one flex row; illustration 240px | container ≤1050px: padding 24px, illustration 160px, visual basis 340px | container ≤800px: entire visual region hidden; ≤480px icon 64px, title 28px, padding 16px |
+| `AdminPageHero` | identity + visual in one flex row; illustration 260px | container ≤1050px: padding 24px, illustration 190px, visual basis 360px | container ≤800px: entire visual region hidden; ≤480px icon 64px, title 28px, padding 16px |
 | Asset workspace | left grid sidebar 11–14rem | same until viewport 767px | viewport ≤767px: single-column workspace; tabs become flex-wrap |
 | Adjustment form | user/type two columns; amount occupies first column | follows available container | viewport ≤767px: field grid becomes one column; footer/actions stack as defined in `global.css` |
 | Users Hero | heading + right decoration | viewport ≤1100px hides decoration | viewport ≤767px: icon 3.8rem, title 1.7rem, reduced padding; workspace controls wrap |
@@ -270,12 +274,12 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 
 ## 12. Known Visual Gaps
 
-### Asset Adjustment Hero illustration
+### Asset Adjustment Hero material depth — Resolved in working tree
 
-| Field | Current | Target | Gap | Priority |
-| --- | --- | --- | --- | --- |
-| Area | Inline SVG has spotlight, four coin layers, tilted adjustment card, arrows, spheres and ground ellipse | Approved institutional pseudo-3D reference | Current SVG remains a compact vector composition; depth, floor reflection and material contrast may still read lighter than the approved 3D mockup at production dimensions | High |
-| Area | `AdminPageHero` illustration box is 240px desktop / 160px at ≤1050px | Illustration should retain clear visual priority without crowding copy | Container query reduces it materially as content narrows; verify against each target viewport before making it larger | Medium |
+| Field | Current | Target | Resolution |
+| --- | --- | --- | --- |
+| Area | Hero uses layered navy / blue / indigo surface lighting, inner edge highlight, curved arc, far-right dot texture, 40px title, semantic chips and an accent-led value block | Approved institutional pseudo-3D reference | Desktop screenshot at 1600px validates a compact four-part Hero at about 206px high; refinement remains uncommitted until its owning UI change is reviewed and committed |
+| Area | Illustration has a larger tilted card, four coin discs, platform/reflection, orbit arc, spotlight and controlled shadow | Larger premium vector illustration with material separation | CSS box is 260px desktop / 190px at narrow desktop; 1024px and 390px screenshot checks showed no horizontal overflow |
 
 ### Cross-page Hero consistency
 
@@ -352,6 +356,16 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** Enables reuse without leaking asset API or form semantics into a shared component.
 
+### 2026-09-17 — Refine the shared Hero surface without changing the asset command form
+
+**Context:** The approved asset-adjustment reference showed the existing Hero lacked material separation and the illustration/value block had insufficient independent weight.
+
+**Decision:** Extend only existing Hero semantic tokens, `AdminPageHero.css` and the existing asset SVG. Keep all text, layout ownership, form state and API behavior unchanged.
+
+**Affected:** `AdminPageHero`, `AssetAdjustmentHeroIcon`, `AssetAdjustmentIllustration`.
+
+**Reason:** The refinement strengthens the canonical Hero pattern while avoiding a second visual system or a page-level copy of shared CSS.
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -359,3 +373,8 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 建立 UI 長期治理與實作同步文件。
 - 登錄已落地 token、`AdminPageHero`、資產調整 SVG artwork 與使用者頁 page-specific Hero。
 - 建立資產調整與使用者頁 registry、受保護行為、responsive snapshot 與已知視覺缺口。
+
+### v1.1 — 2026-09-17（working tree）
+
+- 強化資產調整 Hero 的 layered surface、semantic Hero tokens、icon material depth、SVG illustration 與 value accent line。
+- 以 1600px、1024px 與 390px 截圖確認 Hero geometry 與無 horizontal overflow。

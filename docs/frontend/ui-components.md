@@ -11,6 +11,8 @@
 
 ## 可重用來源
 
+2026-09-17 實作更新：`web/src/admin/components/AdminPageHero.tsx` 與同目錄 `AdminPageHero.css` 已提供共用 Hero；資產調整為第一個 consumer，使用者頁保留既有實作。Props 包含 title、description、icon、chips（id／label／icon）、illustration、slogan、supportingText，皆為呈現資料，不包含 mutation。容器低於 800px 隱藏右側裝飾，低於 480px 縮小 icon 與標題。資產圖像已移至 `features/assets/AssetAdjustmentArtwork.tsx`，SVG defs 以 `useId` 隔離。
+
 | 目的 | 真實來源 | 使用限制 |
 | --- | --- | --- |
 | 卡片 | `web/src/components/base/Card.tsx` | 支援 title、children、className；先延伸已有結構 |
@@ -21,14 +23,14 @@
 | 基礎匯出 | `web/src/components/index.ts` | 先查 export，未匯出的元件按既有路徑引用 |
 | Admin 外框 | `web/src/admin/layout/AdminLayout.tsx`、`AdminHeader.tsx`、`AdminTopNav.tsx` | 局部頁面美化預設不修改 |
 | 使用者 Hero | `web/src/admin/features/users/AdminUsersPage.tsx`、`.admin-users-hero*` | inline markup／SVG 及 CSS，並非共用 `PageHero` |
-| 資產調整 Hero | `web/src/admin/features/assets/GovernedAirdropForm.tsx`、`.admin-airdrop-form__header*` | 局部 `AssetAdjustmentHeroIcon`／`AssetAdjustmentIllustration`，不搬動 form state |
+| 資產調整 Hero | `web/src/admin/components/AdminPageHero.tsx`、`web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` | 共用結構與 feature 圖像分離；form state 留在 `GovernedAirdropForm` |
 | 表單 control | `global.css` 的 `.field`、`.input`、`.primary-button`、`.secondary-button` | 目前主要是原生 React 元素配 class，未有通用 Input／Button／Textarea TSX 元件 |
 | 深色 dropdown | 同上資產表單的局部 `FormSelect` 與 `.admin-form-select*` | 外觀參考；抽取前驗證完整鍵盤操作，勿直接當成熟共享元件 |
 | 翻譯 | `web/src/i18n/index.ts`、`web/src/i18n/dictionaries/zh-TW.ts`、`en-US.ts` | 沿用 `useI18n`／`t`；新增可見文案需同步語系 |
 
 ## 共用化時機
 
-當第二個頁面確實需要同樣的 Hero／dropdown pattern，先檢查共用範圍及相依，再把 presentation 與資料／mutation 分離。可考慮 title、description、icon、chips、illustration、slogan 等 slots，但這是未來介面方向，並非現存 API。
+其他頁面需要相同 Hero 時優先採用現有 `AdminPageHero`，先檢查相依與標題階層；它目前使用 h2，頁面主標題仍由 page entry 負責。Dropdown 尚未抽成共用元件，仍須在抽取前檢查行為與可及性。
 
 只抽取範圍內可驗證的共用樣式與行為，保持各頁語意、enum、API、權限及 reset defaults；不把資產 API、假 options 或 activity-specific 文案帶入共用 Hero。新的共享元件依現有目錄習慣落在 `web/src/components/` 或僅後台使用的 `web/src/admin/components/`，並更新本表。
 

@@ -1,6 +1,8 @@
 # LumiX UI 語意 token 契約
 
-本文件是 [設計治理](../governance/lumix-institutional-blue.md) 的工程映射。**以下「待導入」名稱是規格，不是已存在於產品的 variables。** 本輪只改文件，未建立 runtime tokens 或遷移 CSS。
+本文件是 [設計治理](../governance/lumix-institutional-blue.md) 的工程映射。2026-09-17 已在 `global.css` 的 `.admin-layout` 導入第一批 tokens，供 `AdminPageHero.css` 與資產表單使用，未全面遷移其他頁面。
+
+已導入：`--color-bg-surface`、`--color-bg-control`、`--color-border-subtle`、`--color-border-focus`、`--color-text-primary`、`--color-text-secondary`、`--color-accent-primary`、`--color-accent-secondary`、`--gradient-hero`、`--shadow-surface`、`--radius-card`、`--radius-control`、`--radius-pill`、`--font-size-hero-title`、`--font-size-body`、`--font-size-helper`、`--space-2/3/4/6/8`。下表其餘名稱仍待導入；局部 illustration shading 保留 SVG 高光色。
 
 ## 已有 token 與缺口
 

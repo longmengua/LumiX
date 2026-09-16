@@ -1,0 +1,46 @@
+/* 依實際容器切換裝飾密度，側欄與長語系不會把主資訊壓到插圖下方。 */
+.admin-page-hero {
+  container-type: inline-size;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-hero-rim);
+  background: var(--gradient-hero);
+  box-shadow: var(--shadow-hero), inset 0 1px var(--color-hero-highlight), inset 0 -1px rgba(1, 9, 34, .32);
+  color: var(--color-text-primary);
+}
+.admin-page-hero::before { position: absolute; z-index: 0; inline-size: 78%; block-size: 248%; inset: -190% auto auto 19%; border: 1px solid rgba(114, 174, 255, .24); border-radius: 50%; background: linear-gradient(180deg, transparent 63%, rgba(46, 110, 240, .12)); box-shadow: 0 0 2.5rem rgba(46, 110, 240, .08); content: ''; pointer-events: none; }
+.admin-page-hero::after { position: absolute; z-index: 0; inset: 0 0 0 auto; inline-size: 26%; background-image: radial-gradient(circle, rgba(144, 193, 255, .44) .7px, transparent .9px); background-position: 0 0; background-size: 7px 7px; mask-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, .75) 44%, rgba(0, 0, 0, .2)); opacity: .22; content: ''; pointer-events: none; }
+.admin-page-hero__layout { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); min-height: 196px; padding: 1.25rem 2.25rem; }
+.admin-page-hero__identity { display: flex; align-items: center; gap: var(--space-6); min-width: 0; flex: 1; }
+.admin-page-hero__icon { flex: 0 0 84px; width: 84px; }
+.admin-page-hero__copy { min-width: 0; }
+.admin-page-hero__copy h2 { margin: 0; font-size: var(--font-size-hero-title); font-weight: 740; letter-spacing: -.025em; line-height: 1.16; text-shadow: 0 1px rgba(4, 17, 47, .48); }
+.admin-page-hero__copy > p { max-inline-size: 34rem; margin: .65rem 0 0; color: var(--color-text-secondary); font-size: var(--font-size-body); line-height: 1.6; }
+.admin-page-hero__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0; margin: var(--space-4) 0 0; list-style: none; }
+.admin-page-hero__chips li { display: flex; align-items: center; gap: var(--space-2); padding: .45rem .78rem; border: 1px solid rgba(113, 168, 255, .28); border-radius: var(--radius-pill); background: linear-gradient(135deg, rgba(5, 30, 72, .66), rgba(13, 54, 126, .3)); box-shadow: inset 0 1px rgba(183, 217, 255, .07); color: rgba(208, 226, 255, .82); font-size: var(--font-size-helper); }
+.admin-page-hero__chips span { display: inline-flex; color: #8cc3ff; }
+.admin-page-hero__chips svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.admin-page-hero__visual { display: flex; align-items: center; gap: 1.75rem; flex: 0 0 470px; min-width: 0; }
+.admin-page-hero__illustration { flex: 0 0 260px; width: 260px; filter: drop-shadow(0 .75rem 1.25rem rgba(1, 13, 54, .24)); }
+.admin-page-hero__illustration > svg { display: block; width: 100%; height: auto; overflow: visible; }
+.admin-page-hero__slogan { position: relative; min-width: 0; flex: 1; padding-top: .75rem; }
+.admin-page-hero__slogan::before { position: absolute; inset: 0 auto auto 0; inline-size: 2.8rem; block-size: 2px; border-radius: var(--radius-pill); background: linear-gradient(90deg, #65b6ff, #697cff); box-shadow: 0 0 .8rem rgba(78, 149, 255, .45); content: ''; }
+.admin-page-hero__slogan strong { color: var(--color-hero-value); font-size: 1.12rem; font-weight: 680; line-height: 1.5; letter-spacing: .02em; white-space: nowrap; }
+.admin-page-hero__slogan p { color: var(--color-text-secondary); font-size: var(--font-size-helper); line-height: 1.6; margin: var(--space-2) 0 0; }
+@container (max-width: 1050px) {
+  .admin-page-hero__visual { flex-basis: 360px; gap: var(--space-6); }
+  .admin-page-hero__illustration { flex-basis: 190px; width: 190px; }
+  .admin-page-hero__layout { gap: var(--space-6); padding: var(--space-6); }
+}
+@container (max-width: 800px) {
+  .admin-page-hero__visual { display: none; }
+}
+@container (max-width: 480px) {
+  .admin-page-hero__identity { align-items: flex-start; gap: var(--space-4); }
+  .admin-page-hero__icon { flex-basis: 64px; width: 64px; }
+  .admin-page-hero__copy h2 { font-size: 1.75rem; }
+  .admin-page-hero__layout { min-height: 0; padding: var(--space-4); }
+  .admin-page-hero__chips { gap: var(--space-2); }
+}
