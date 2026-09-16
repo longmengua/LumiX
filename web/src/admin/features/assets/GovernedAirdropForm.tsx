@@ -213,31 +213,46 @@ function AssetAdjustmentHeroIcon() {
 function AssetAdjustmentIllustration() {
   return <svg className="admin-airdrop-form__illustration" viewBox="0 0 260 130" aria-hidden="true">
     <defs>
-      <linearGradient id="asset-adjustment-card" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8d7bff" /><stop offset=".48" stopColor="#5976f2" /><stop offset="1" stopColor="#274db8" /></linearGradient>
-      <linearGradient id="asset-adjustment-coin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#91b8ff" /><stop offset=".48" stopColor="#577ff0" /><stop offset="1" stopColor="#284eb9" /></linearGradient>
-      <radialGradient id="asset-adjustment-sphere" cx="30%" cy="22%"><stop offset="0" stopColor="#c8d9ff" /><stop offset=".3" stopColor="#8498ff" /><stop offset="1" stopColor="#4155c4" /></radialGradient>
-      <radialGradient id="asset-adjustment-ground"><stop offset="0" stopColor="#456ff0" stopOpacity=".3" /><stop offset="1" stopColor="#233f9e" stopOpacity="0" /></radialGradient>
-      <filter id="asset-adjustment-shadow" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="8" stdDeviation="7" floodColor="#142c83" floodOpacity=".48" /></filter>
+      <linearGradient id="asset-adjustment-illustration-coin" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#60A5FA" />
+        <stop offset=".55" stopColor="#4F6BEF" />
+        <stop offset="1" stopColor="#3743B5" />
+      </linearGradient>
+      <linearGradient id="asset-adjustment-illustration-card" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stopColor="#8B7CFF" />
+        <stop offset=".45" stopColor="#6675F5" />
+        <stop offset="1" stopColor="#315BCB" />
+      </linearGradient>
+      <radialGradient id="asset-adjustment-illustration-sphere" cx="30%" cy="25%" r="75%">
+        <stop offset="0" stopColor="#93C5FD" />
+        <stop offset="1" stopColor="#5267E8" />
+      </radialGradient>
+      <filter id="asset-adjustment-illustration-shadow" x="-30%" y="-30%" width="160%" height="160%">
+        <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#1D4ED8" floodOpacity=".22" />
+      </filter>
     </defs>
-    <ellipse cx="124" cy="108" rx="104" ry="18" fill="url(#asset-adjustment-ground)" />
-    <ellipse cx="116" cy="103" rx="87" ry="16" fill="none" stroke="#5683ff" strokeOpacity=".55" strokeWidth="1.5" />
-    <g filter="url(#asset-adjustment-shadow)">
-      <path d="M46 78v12c0 7 17 13 38 13s38-6 38-13V78Z" fill="#3158c6" />
-      <ellipse cx="84" cy="78" rx="38" ry="13" fill="url(#asset-adjustment-coin)" />
-      <path d="M50 64v12c0 7 15 12 34 12s34-5 34-12V64Z" fill="#355fce" />
-      <ellipse cx="84" cy="64" rx="34" ry="12" fill="url(#asset-adjustment-coin)" />
-      <path d="M55 51v11c0 6 13 11 29 11s29-5 29-11V51Z" fill="#3a67d7" />
-      <ellipse cx="84" cy="51" rx="29" ry="11" fill="url(#asset-adjustment-coin)" />
-      <ellipse cx="77" cy="48" rx="13" ry="4" fill="#c5d7ff" fillOpacity=".26" />
+    <ellipse cx="130" cy="103" rx="83" ry="14" fill="none" stroke="#5B8CFF" strokeOpacity=".55" strokeWidth="1.5" />
+    <ellipse cx="130" cy="103" rx="58" ry="9" fill="#315BCB" fillOpacity=".1" />
+    <g filter="url(#asset-adjustment-illustration-shadow)">
+      <rect x="62" y="78" width="60" height="17" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="92" cy="78" rx="30" ry="8" fill="#6FA8FF" />
+      <rect x="65" y="68" width="55" height="17" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="92.5" cy="68" rx="27.5" ry="7.5" fill="#6398FF" />
+      <rect x="68" y="58" width="48" height="16" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="92" cy="58" rx="24" ry="7" fill="#79ACFF" />
     </g>
-    <g transform="rotate(13 161 57)" filter="url(#asset-adjustment-shadow)">
-      <rect x="128" y="21" width="76" height="72" rx="17" fill="url(#asset-adjustment-card)" />
-      <path d="M145 50h33m-9-9 9 9-9 9M185 65h-33m9-9-9 9 9 9" fill="none" stroke="#d7e5ff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M140 30c14-8 37-8 52 1" fill="none" stroke="#fff" strokeOpacity=".2" strokeWidth="3" strokeLinecap="round" />
+    <g transform="rotate(12 155 68)" filter="url(#asset-adjustment-illustration-shadow)">
+      <rect x="122" y="37" width="66" height="63" rx="14" fill="url(#asset-adjustment-illustration-card)" stroke="#9DB6FF" strokeOpacity=".45" />
+      <g stroke="#DCEBFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M137 57h31" />
+        <path d="m161 50 7 7-7 7" />
+        <path d="M170 77h-31" />
+        <path d="m146 70-7 7 7 7" />
+      </g>
     </g>
-    <circle cx="206" cy="29" r="9" fill="url(#asset-adjustment-sphere)" filter="url(#asset-adjustment-shadow)" />
-    <circle cx="229" cy="91" r="12" fill="url(#asset-adjustment-sphere)" filter="url(#asset-adjustment-shadow)" />
-    <circle cx="34" cy="47" r="5" fill="url(#asset-adjustment-sphere)" opacity=".75" />
+    <circle cx="53" cy="52" r="4" fill="url(#asset-adjustment-illustration-sphere)" />
+    <circle cx="202" cy="45" r="8" fill="url(#asset-adjustment-illustration-sphere)" />
+    <circle cx="218" cy="82" r="10" fill="url(#asset-adjustment-illustration-sphere)" />
   </svg>;
 }
 function SelectIcon({ kind }: { kind?: SelectOption['icon'] }) { return <svg className="admin-form-select__icon" viewBox="0 0 24 24" aria-hidden="true"><path d={kind === 'airdrop' ? 'm21 3-7.7 18-3.9-7.1L3 10.7 21 3Z' : kind === 'asset' ? 'M12 3 19 7v10l-7 4-7-4V7l7-4ZM5 7l7 4 7-4M12 11v10' : 'M7 7h10M14 3l4 4-4 4M17 17H7M10 21l-4-4 4-4'} /></svg>; }

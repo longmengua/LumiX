@@ -661,7 +661,7 @@ p,
 @media (max-width: 1199px) and (min-width: 768px) {
   .admin-airdrop-form__header { min-height: 9.75rem; padding-inline: 1.75rem; }
   .admin-airdrop-form__header-main { gap: 1rem; }
-  .admin-airdrop-form__illustration { inline-size: 11rem; block-size: 6.5rem; }
+  .admin-airdrop-form__illustration { inline-size: 13rem; block-size: 6.5rem; }
   .admin-airdrop-form__hero-aside { flex-basis: 38%; gap: 0.75rem; }
   .admin-airdrop-form__hero-aside span { white-space: normal; }
 }
