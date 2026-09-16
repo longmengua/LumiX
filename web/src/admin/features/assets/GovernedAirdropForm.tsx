@@ -99,8 +99,14 @@ export function GovernedAirdropForm() {
   return (
     <section className="admin-airdrop-form" aria-label={t('admin.assetsAirdropType')}>
       <header className="admin-airdrop-form__header">
-        <div className="admin-airdrop-form__header-icon" aria-hidden="true"><AdjustmentIcon /></div>
-        <h2>{t('admin.assetsAdjustmentTitle')}</h2>
+        <div className="admin-airdrop-form__header-main">
+          <div className="admin-airdrop-form__header-icon" aria-hidden="true"><AdjustmentIcon /></div>
+          <div><h2>{t('admin.assetsAdjustmentTitle')}</h2><p>{t('admin.assetsAdjustmentSubtitle')}</p></div>
+        </div>
+        <div className="admin-airdrop-form__hero-aside">
+          <AssetAdjustmentIllustration />
+          <div><strong>{t('admin.assetsAdjustmentSlogan')}</strong><span>{t('admin.assetsAdjustmentSloganDescription')}</span></div>
+        </div>
       </header>
       <form className="admin-airdrop-form__body" noValidate onSubmit={(event) => void submit(event)}>
         <section className="admin-airdrop-form__section" aria-label={t('admin.assetsAirdropType')}>
@@ -158,6 +164,16 @@ function FormSelect({ ariaLabel, compact = false, disabled = false, options, pla
 
 function NoteIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M14 4l6 6M14 4v6h6M8 15h8M8 11h3" /></svg>; }
 function AdjustmentIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M5 7h10M12 3l4 4-4 4M19 17H9M12 21l-4-4 4-4" /></svg>; }
+function AssetAdjustmentIllustration() {
+  return <svg className="admin-airdrop-form__illustration" viewBox="0 0 220 100" aria-hidden="true">
+    <defs><linearGradient id="asset-adjustment-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#6b78f5" stopOpacity=".82" /><stop offset="1" stopColor="#315ed8" stopOpacity=".62" /></linearGradient></defs>
+    <ellipse cx="82" cy="78" rx="58" ry="12" />
+    <path d="M35 67c0-7 20-13 45-13s45 6 45 13v8c0 7-20 13-45 13s-45-6-45-13zM35 58c0-7 20-13 45-13s45 6 45 13-20 13-45 13-45-6-45-13ZM35 48c0-7 20-13 45-13s45 6 45 13-20 13-45 13-45-6-45-13Z" />
+    <rect x="116" y="17" width="65" height="57" rx="13" transform="rotate(14 116 17)" />
+    <path d="m137 43 29 8m-25-16 20 18m-1-22-20 27" />
+    <circle cx="190" cy="22" r="7" /><circle cx="202" cy="76" r="9" />
+  </svg>;
+}
 function SelectIcon({ kind }: { kind?: SelectOption['icon'] }) { return <svg className="admin-form-select__icon" viewBox="0 0 24 24" aria-hidden="true"><path d={kind === 'airdrop' ? 'm21 3-7.7 18-3.9-7.1L3 10.7 21 3Z' : kind === 'asset' ? 'M12 3 19 7v10l-7 4-7-4V7l7-4ZM5 7l7 4 7-4M12 11v10' : 'M7 7h10M14 3l4 4-4 4M17 17H7M10 21l-4-4 4-4'} /></svg>; }
 function ChevronIcon() { return <svg className="admin-form-select__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>; }
 function CheckIcon() { return <svg className="admin-form-select__check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>; }
