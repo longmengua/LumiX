@@ -6,11 +6,10 @@ import { useI18n } from '../../../i18n';
 import { GovernedAirdropForm } from './GovernedAirdropForm';
 
 type AssetSection = 'users' | 'adjustments' | 'audit';
-type AdjustmentType = 'activity' | 'airdrop' | 'reversal';
 
 const SECTION_PATHS: Record<AssetSection, string> = {
   users: '/assets/users',
-  adjustments: '/assets/adjustments/reversal',
+  adjustments: '/assets/adjustments',
   audit: '/assets/audit',
 };
 
@@ -25,7 +24,6 @@ export function AdminAssetsPage() {
   const navigate = useNavigate();
   const normalizedPath = pathname.replace(/\/+$/, '') || '/';
   const section = sectionFromPath(normalizedPath);
-  const adjustmentType = adjustmentTypeFromPath(normalizedPath);
 
   // 舊的 /assets 入口導向可分享的預設子頁，避免重整後只依賴 component 的暫存 state。
   if (normalizedPath === '/assets') return <Navigate replace to={SECTION_PATHS.adjustments} />;
@@ -36,11 +34,13 @@ export function AdminAssetsPage() {
   // 資產風控已歸屬風控模組，避免資產工作台與風控政策分散在不同入口。
   if (normalizedPath.startsWith('/assets/risk')) return <Navigate replace to="/risk/assets" />;
   // 補償已不再提供於此工作台；既有連結導回唯一預設的帳務異常沖銷頁。
-  if (normalizedPath.endsWith('/compensation')) return <Navigate replace to="/assets/adjustments/reversal" />;
+  if (normalizedPath.endsWith('/compensation')) return <Navigate replace to={SECTION_PATHS.adjustments} />;
+  // 類型是表單欄位，不再以路徑拆成多個頁面；舊書籤統一導回單一資產沖銷工作台。
+  if (normalizedPath.startsWith('/assets/adjustments/')) return <Navigate replace to={SECTION_PATHS.adjustments} />;
 
   return (
     <div className="stack">
-      <PageHeader title={t('admin.assetsRuntimeTitle')} description={t('admin.assetsRuntimeDescription')} />
+      <PageHeader title={t('admin.assetsRuntimeTitle')} />
       <div className="admin-assets-workspace">
         <aside className="admin-assets-workspace__sidebar" aria-label={t('admin.assetsSections')}>
           <button className={`admin-assets-workspace__tab${section === 'users' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.users)}>{t('admin.assetsUsersTab')}</button>
@@ -50,29 +50,19 @@ export function AdminAssetsPage() {
         <div className="admin-assets-workspace__content">
           {section === 'users' ? <Card title={t('admin.assetsUsersTitle')}><p className="assets-metric__hint">{t('admin.assetsUsersDescription')}</p><Link className="secondary-button" to="/users">{t('admin.assetsUsersAction')}</Link></Card> : null}
           {section === 'audit' ? <Card title={t('admin.assetsAuditTitle')}><p className="assets-metric__hint">{t('admin.assetsAuditDescription')}</p><Link className="secondary-button" to="/users">{t('admin.assetsAuditAction')}</Link></Card> : null}
-          {section === 'adjustments' ? <AdjustmentWorkspace activeType={adjustmentType} onSelect={(type) => navigate(`/assets/adjustments/${type}`)} /> : null}
+          {section === 'adjustments' ? <AdjustmentWorkspace /> : null}
         </div>
       </div>
     </div>
   );
 }
 
-function AdjustmentWorkspace({ activeType, onSelect }: { activeType: AdjustmentType; onSelect: (type: AdjustmentType) => void }) {
-  const { t } = useI18n();
-  return <div className="stack">
-    {activeType === 'airdrop' || activeType === 'reversal' ? <GovernedAirdropForm /> : <><label className="field admin-adjustment-type-select"><span className="field__label">{t('admin.assetsAdjustmentType')}</span><select className="input" value={activeType} onChange={(event) => onSelect(event.target.value as AdjustmentType)}><option value="activity">{t('admin.assetsAdjustmentActivity')}</option><option value="reversal">{t('admin.assetsAdjustmentReversal')}</option><option value="airdrop">{t('admin.assetsAirdropType')}</option></select></label><Card title={t('admin.assetsAdjustmentActivity')}><p className="assets-metric__hint">{t('admin.assetsFutureTypeUnavailable')}</p></Card></>}
-  </div>;
+function AdjustmentWorkspace() {
+  return <div className="stack"><GovernedAirdropForm /></div>;
 }
 
 function sectionFromPath(pathname: string): AssetSection {
   if (pathname.startsWith('/assets/audit')) return 'audit';
   if (pathname.startsWith('/assets/users')) return 'users';
   return 'adjustments';
-}
-
-function adjustmentTypeFromPath(pathname: string): AdjustmentType {
-  if (pathname.endsWith('/activity')) return 'activity';
-  if (pathname.endsWith('/airdrop')) return 'airdrop';
-  if (pathname.endsWith('/reversal')) return 'reversal';
-  return 'reversal';
 }

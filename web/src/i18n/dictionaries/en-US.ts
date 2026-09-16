@@ -693,7 +693,6 @@ export const enUS = {
   'admin.workspaceUnavailableTitle': 'This feature is not available yet',
   'admin.workspaceUnavailableDescription': 'No usable backend data contract or governed operation flow exists yet, so this page provides no sample data or fake settings.',
   'admin.assetsRuntimeTitle': 'Asset Management',
-  'admin.assetsRuntimeDescription': 'Execute governed airdrops through immutable ledger posting, replayable projections, and audit evidence.',
   'admin.assetsSections': 'Asset workspace sections',
   'admin.assetsUsersTab': 'User assets',
   'admin.assetsRiskConfigTab': 'Asset risk config',
