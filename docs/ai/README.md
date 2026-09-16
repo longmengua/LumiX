@@ -20,6 +20,7 @@ phase task card
 
 ```text
 AI_CONTEXT_ROUTING.md    任務類型對應該讀哪些文件
+LUMIX_UI_GOVERNANCE.md   管理後台 UI 的真實實作快照、治理同步與變更台帳
 AI_REVIEW_CHECKLIST.md   AI review 時的檢查清單
 MINI_WORKFLOW.md         mini / coding agent 的任務節奏
 AI_START_HERE.md         人類與 AI 共用的快速入口
@@ -32,4 +33,5 @@ AI_DOCUMENT_SPLIT_PLAN.md 為什麼這樣拆文件與 token 策略
 ## 閱讀建議
 
 - 一般 AI 任務不要把整個 `docs/ai/` 全讀完；優先讀 `AI_CONTEXT_ROUTING.md`。
+- UI 任務在讀完 `AI_CONTEXT_ROUTING.md` 後，必讀 `LUMIX_UI_GOVERNANCE.md`；它記錄 canonical 元件、token、頁面狀態與需同步的治理欄位。
 - 只有在調整 agent workflow、prompt、文件拆分策略時，才需要讀 `AI_DOCUMENT_SPLIT_PLAN.md` 或 `CODEX_PHASE_PROMPTS.md`。

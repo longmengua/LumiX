@@ -16,7 +16,7 @@ Wallet table design               docs/exchange-core/wallet-boundary.md
 Backend transaction boundary      docs/backend/transaction-boundary.md
 API contract                      docs/backend/api-contract-guidelines.md
 Frontend page work                docs/frontend/page-map.md
-Admin UI / visual refinement      docs/governance/lumix-institutional-blue.md -> docs/frontend/ui-components.md, docs/frontend/ui-tokens.md
+Admin UI / visual refinement      docs/ai/LUMIX_UI_GOVERNANCE.md -> docs/governance/lumix-institutional-blue.md -> docs/frontend/ui-components.md, docs/frontend/ui-tokens.md
 Operations / deployment           docs/operations/deployment-runbook.md
 Readiness review                  docs/governance/PRODUCTION_READINESS_GATES.md
 Market Data Pipeline              docs/phases/PHASE_21_MARKET_DATA/README.md, currently relevant task card

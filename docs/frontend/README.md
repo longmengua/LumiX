@@ -5,6 +5,7 @@
 ## UI 設計入口
 
 - [LumiX Institutional Blue](../governance/lumix-institutional-blue.md)：管理後台視覺權威、AI 修改邊界與驗收流程。
+- [UI 長期治理與實作同步文件](../ai/LUMIX_UI_GOVERNANCE.md)：canonical 元件、token、頁面實作快照、已知視覺缺口與 UI task 同步責任。
 - [元件與樣式盤點](ui-components.md)：現存 React／CSS／SVG 來源及重用方式。
 - [語意 token 契約](ui-tokens.md)：現有 variables、待導入 token 與漸進遷移規則。
 
