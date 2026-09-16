@@ -60,7 +60,7 @@ export function AdminAssetsPage() {
 function AdjustmentWorkspace({ activeType, onSelect }: { activeType: AdjustmentType; onSelect: (type: AdjustmentType) => void }) {
   const { t } = useI18n();
   return <div className="stack">
-    {activeType === 'airdrop' ? <GovernedAirdropForm /> : <><label className="field admin-adjustment-type-select"><span className="field__label">{t('admin.assetsAdjustmentType')}</span><select className="input" value={activeType} onChange={(event) => onSelect(event.target.value as AdjustmentType)}><option value="activity">{t('admin.assetsAdjustmentActivity')}</option><option value="reversal">{t('admin.assetsAdjustmentReversal')}</option><option value="airdrop">{t('admin.assetsAirdropType')}</option></select></label><Card title={activeType === 'activity' ? t('admin.assetsAdjustmentActivity') : t('admin.assetsReversalType')}><p className="assets-metric__hint">{t('admin.assetsFutureTypeUnavailable')}</p></Card></>}
+    {activeType === 'airdrop' || activeType === 'reversal' ? <GovernedAirdropForm /> : <><label className="field admin-adjustment-type-select"><span className="field__label">{t('admin.assetsAdjustmentType')}</span><select className="input" value={activeType} onChange={(event) => onSelect(event.target.value as AdjustmentType)}><option value="activity">{t('admin.assetsAdjustmentActivity')}</option><option value="reversal">{t('admin.assetsAdjustmentReversal')}</option><option value="airdrop">{t('admin.assetsAirdropType')}</option></select></label><Card title={t('admin.assetsAdjustmentActivity')}><p className="assets-metric__hint">{t('admin.assetsFutureTypeUnavailable')}</p></Card></>}
   </div>;
 }
 
