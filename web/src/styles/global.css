@@ -532,20 +532,26 @@ p,
 
 .admin-airdrop-form__header { position: relative; box-sizing: border-box; min-height: 10.75rem; justify-content: space-between; gap: 2rem; padding: 1.75rem 2.25rem; border-bottom: 1px solid rgba(101, 154, 255, 0.24); background: radial-gradient(circle at 83% 18%, rgba(105, 85, 255, 0.22), transparent 34%), radial-gradient(circle at 15% 100%, rgba(40, 116, 236, 0.18), transparent 44%), linear-gradient(112deg, rgba(12, 45, 96, 0.94), rgba(8, 27, 66, 0.98) 52%, rgba(24, 31, 95, 0.94)); box-shadow: inset 0 1px rgba(225, 237, 255, 0.08), inset 0 -1.5rem 3rem rgba(3, 14, 38, 0.12); }
 .admin-airdrop-form__header::after { position: absolute; inset: auto 8% -1px 8%; block-size: 1px; content: ''; background: linear-gradient(90deg, transparent, rgba(78, 145, 255, 0.55), transparent); }
-.admin-airdrop-form__header-main { display: flex; align-items: center; flex: 1 1 58%; gap: 1.45rem; min-width: 0; }
+.admin-airdrop-form__header-main { position: relative; z-index: 1; display: flex; align-items: center; flex: 1 1 58%; gap: 1.5rem; min-width: 0; }
+.admin-airdrop-form__header-main::before { position: absolute; z-index: -1; inset: 50% auto auto -1.5rem; inline-size: 8rem; block-size: 8rem; border-radius: 50%; content: ''; background: radial-gradient(circle, rgba(101, 87, 255, 0.19), transparent 68%); filter: blur(0.35rem); pointer-events: none; transform: translateY(-50%); }
+.admin-airdrop-form__header-main > div:last-child { display: flex; flex-direction: column; justify-content: center; min-width: 0; }
 .admin-airdrop-form__header-icon {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
   display: inline-flex;
   flex: 0 0 auto;
   align-items: center;
   justify-content: center;
-  inline-size: 5rem;
-  block-size: 5rem;
+  inline-size: 5.15rem;
+  block-size: 5.15rem;
   border: 1px solid rgba(161, 119, 255, 0.38);
-  border-radius: 1.15rem;
-  background: linear-gradient(145deg, rgba(139, 82, 246, 0.96), rgba(54, 101, 235, 0.9));
-  box-shadow: inset 0 1px rgba(242, 235, 255, 0.3), inset 0 -1.1rem 1.8rem rgba(40, 42, 156, 0.24), 0 0.8rem 1.8rem rgba(45, 58, 184, 0.3);
-  color: #dfd4ff;
+  border-radius: 1.2rem;
+  background: radial-gradient(circle at 24% 15%, rgba(221, 211, 255, 0.32), transparent 34%), linear-gradient(145deg, #8f52f2 0%, #665fe8 48%, #3269df 100%);
+  box-shadow: inset 0 1px rgba(248, 242, 255, 0.42), inset 0 -1.25rem 1.8rem rgba(35, 41, 151, 0.3), inset -0.45rem 0 1.1rem rgba(27, 75, 191, 0.18), 0 0.85rem 1.8rem rgba(44, 54, 180, 0.34), 0 0 1.6rem rgba(103, 86, 255, 0.18);
+  color: #e7edff;
 }
+.admin-airdrop-form__header-icon::after { position: absolute; z-index: -1; inset: 0.35rem 0.5rem auto; block-size: 40%; border-radius: 0.8rem 0.8rem 50% 50%; content: ''; background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent); pointer-events: none; }
 
 .admin-airdrop-form__header-icon svg,
 .admin-airdrop-form__remarks-icon svg,
@@ -560,14 +566,14 @@ p,
   stroke-linejoin: round;
   stroke-width: 1.8;
 }
-.admin-airdrop-form__header-icon svg { inline-size: 2rem; block-size: 2rem; stroke-width: 2.2; }
+.admin-airdrop-form__header-icon svg { inline-size: 2.35rem; block-size: 2.35rem; stroke-width: 2.45; filter: drop-shadow(0 0.15rem 0.35rem rgba(213, 226, 255, 0.22)); }
 
 .admin-airdrop-form__header h2,
 .admin-airdrop-form__section-heading h3,
 .admin-airdrop-form__remarks h3,
 .admin-airdrop-form__notice h3 { margin: 0; color: #f0f5ff; }
-.admin-airdrop-form__header h2 { font-size: clamp(2.25rem, 3vw, 2.5rem); font-weight: 720; letter-spacing: -0.04em; }
-.admin-airdrop-form__header-main p { max-inline-size: 38rem; margin-top: 0.65rem; font-size: 0.95rem; }
+.admin-airdrop-form__header h2 { font-size: clamp(2.25rem, 3vw, 2.5rem); font-weight: 720; line-height: 1.08; letter-spacing: -0.04em; }
+.admin-airdrop-form__header-main p { max-inline-size: 38rem; margin-top: 0.75rem; font-size: 0.95rem; }
 .admin-airdrop-form__hero-aside { display: flex; align-items: center; justify-content: flex-end; flex: 0 1 42%; gap: 1.65rem; min-width: 0; color: #a9caff; }
 .admin-airdrop-form__hero-aside > div { display: flex; flex: 0 0 auto; flex-direction: column; gap: 0.38rem; white-space: nowrap; }
 .admin-airdrop-form__hero-aside strong { font-size: 1.08rem; font-weight: 680; letter-spacing: 0.035em; }
