@@ -6,6 +6,7 @@ import { normalizeAdminError } from '../../api/adminError';
 import { useI18n } from '../../../i18n';
 import { getInputDateRangePreset, type DateRangePreset } from '../../../utils/dateRange';
 import { formatDateTimeParts, formatTime } from '../../../utils/format';
+import { formatDecimalString } from '../../../utils/format';
 import {
   findAdminUsers,
   getAdminUser,
@@ -13,6 +14,12 @@ import {
   type AdminUserDetail,
   type AdminUserSearch,
   type AdminUserSearchCursor,
+  type AdminUserAssetSnapshot,
+  type AdminUserLedgerHistoryItem,
+  type AdminUserAccountInventoryItem,
+  getAdminUserAssets,
+  getAdminUserAssetHistory,
+  getAdminUserAccounts,
 } from '../../api/adminUsersApi';
 
 type UserDateFilter = 'created' | 'last-login';
@@ -44,6 +51,9 @@ export function AdminUsersPage() {
   const [appliedSearch, setAppliedSearch] = useState<AdminUserSearch>({});
   const [expandedUserIds, setExpandedUserIds] = useState<Set<string>>(() => new Set());
   const [detailsByUserId, setDetailsByUserId] = useState<Record<string, AdminUserDetail>>({});
+  const [assetsByUserId, setAssetsByUserId] = useState<Record<string, AdminUserAssetSnapshot>>({});
+  const [historyByUserId, setHistoryByUserId] = useState<Record<string, AdminUserLedgerHistoryItem[]>>({});
+  const [accountsByUserId, setAccountsByUserId] = useState<Record<string, AdminUserAccountInventoryItem[]>>({});
   const [detailLoadingUserIds, setDetailLoadingUserIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -61,6 +71,9 @@ export function AdminUsersPage() {
       setTotal(0);
       setExpandedUserIds(new Set());
       setDetailsByUserId({});
+      setAssetsByUserId({});
+      setHistoryByUserId({});
+      setAccountsByUserId({});
       setDetailLoadingUserIds(new Set());
     }
 
@@ -193,8 +206,9 @@ export function AdminUsersPage() {
 
     setDetailLoadingUserIds((current) => new Set(current).add(userId));
     // 各列獨立載入與快取，才能讓支援人員同時比對多位使用者的詳情。
-    void getAdminUser(userId)
-      .then((detail) => setDetailsByUserId((current) => ({ ...current, [userId]: detail })))
+    // 容器、projection 與 immutable history 各自是不同 read model，並行取得可避免其中一項被誤當成另一項的 fallback。
+    void Promise.all([getAdminUser(userId), getAdminUserAccounts(userId), getAdminUserAssets(userId), getAdminUserAssetHistory(userId)])
+      .then(([detail, accounts, assets, history]) => { setDetailsByUserId((current) => ({ ...current, [userId]: detail })); setAccountsByUserId((current) => ({ ...current, [userId]: accounts })); setAssetsByUserId((current) => ({ ...current, [userId]: assets })); setHistoryByUserId((current) => ({ ...current, [userId]: history })); })
       .catch(() => setError(t('admin.usersQueryError')))
       .finally(() => {
         setDetailLoadingUserIds((current) => {
@@ -266,7 +280,7 @@ export function AdminUsersPage() {
               <SearchIcon />{loading ? t('admin.usersSearching') : t('admin.usersSearch')}
             </button>
             <button className="ghost-button admin-users-toolbar__reset" type="button" disabled={loading} onClick={resetSearch}>
-              <ResetIcon />{t('admin.usersReset')}
+              {t('admin.usersReset')}
             </button>
           </div>
         </form>
@@ -281,6 +295,9 @@ export function AdminUsersPage() {
           <UserList
             items={items}
             detailsByUserId={detailsByUserId}
+            assetsByUserId={assetsByUserId}
+            historyByUserId={historyByUserId}
+            accountsByUserId={accountsByUserId}
             detailLoadingUserIds={detailLoadingUserIds}
             expandedUserIds={expandedUserIds}
             onToggleDetail={toggleDetail}
@@ -303,10 +320,13 @@ export function AdminUsersPage() {
 }
 
 function UserList({
-  items, detailsByUserId, detailLoadingUserIds, expandedUserIds, onToggleDetail,
+  items, detailsByUserId, assetsByUserId, historyByUserId, accountsByUserId, detailLoadingUserIds, expandedUserIds, onToggleDetail,
 }: {
   items: AdminUser[];
   detailsByUserId: Record<string, AdminUserDetail>;
+  assetsByUserId: Record<string, AdminUserAssetSnapshot>;
+  historyByUserId: Record<string, AdminUserLedgerHistoryItem[]>;
+  accountsByUserId: Record<string, AdminUserAccountInventoryItem[]>;
   detailLoadingUserIds: Set<string>;
   expandedUserIds: Set<string>;
   onToggleDetail: (userId: string) => void;
@@ -344,7 +364,7 @@ function UserList({
                 </button>
               </div>
             </div>
-            {expanded ? <UserDetail user={user} detail={detail} loading={detailLoading} id={detailId} /> : null}
+            {expanded ? <UserDetail user={user} detail={detail} accounts={accountsByUserId[user.userId]} assets={assetsByUserId[user.userId]} history={historyByUserId[user.userId]} loading={detailLoading} id={detailId} /> : null}
           </Fragment>
         );
       })}
@@ -352,7 +372,7 @@ function UserList({
   );
 }
 
-function UserDetail({ user, detail, loading, id }: { user: AdminUser; detail?: AdminUserDetail; loading: boolean; id: string }) {
+function UserDetail({ user, detail, accounts, assets, history, loading, id }: { user: AdminUser; detail?: AdminUserDetail; accounts?: AdminUserAccountInventoryItem[]; assets?: AdminUserAssetSnapshot; history?: AdminUserLedgerHistoryItem[]; loading: boolean; id: string }) {
   const { t } = useI18n();
   const visualStatus = getVisualStatus(user);
   const restrictions = getRestrictionMessages(user, t);
@@ -366,6 +386,9 @@ function UserDetail({ user, detail, loading, id }: { user: AdminUser; detail?: A
           <div><dt>{t('admin.usersDetailRegistered')}</dt><dd>{formatTime(detail.user.createdAt)}</dd></div>
           <div><dt>{t('admin.usersDetailLastLogin')}</dt><dd>{detail.user.lastLoginAt ? formatTime(detail.user.lastLoginAt) : '—'}</dd></div>
           <div className="admin-users-list__devices"><dt>{t('admin.usersDetailDevices')}</dt><dd>{detail.devices.map((device) => `${device.platform}／${device.label}`).join('、') || t('admin.usersDetailNoDevices')}</dd></div>
+          <div className="admin-users-list__assets admin-users-list__assets--full"><dt>{t('admin.usersAccounts')}</dt><dd>{accounts?.length ? <div className="admin-user-assets">{accounts.map((account) => <div className="admin-user-assets__item" key={account.accountId}><strong>{account.accountType}</strong><span>{t('admin.usersAccountStatus')} {account.accountStatus}</span><small>{t('admin.usersAccountCreated')} {formatTime(account.createdAt)}</small></div>)}</div> : t('admin.usersNoAccounts')}</dd></div>
+          <div className="admin-users-list__assets admin-users-list__assets--full"><dt>{t('admin.usersAssets')}</dt><dd>{assets?.items.length ? <div className="admin-user-assets">{assets.items.map((asset) => <div className="admin-user-assets__item" key={`${asset.accountType}-${asset.assetSymbol}`}><strong>{asset.accountType} · {asset.assetSymbol}</strong><span>{t('admin.usersAssetAvailable')} {formatDecimalString(asset.available)}</span><span>{t('admin.usersAssetLocked')} {formatDecimalString(asset.locked)}</span><b>{t('admin.usersAssetTotal')} {formatDecimalString(asset.total)}</b><small>{asset.reconciledAt ? t('admin.usersAssetReconciled') : t('admin.usersAssetUnreconciled')} · {formatTime(asset.projectedAt)}</small></div>)}</div> : t('admin.usersNoAssets')}</dd></div>
+          <div className="admin-users-list__assets admin-users-list__assets--full"><dt>{t('admin.usersAssetHistory')}</dt><dd>{history?.length ? <div className="admin-user-assets">{history.map((item) => <div className="admin-user-assets__item" key={item.entryId}><strong>{item.direction === 'CREDIT' ? '+' : '-'}{formatDecimalString(item.amount)} {item.assetSymbol}</strong><span>{item.accountType} · {item.referenceType} #{item.referenceId}</span><small>{formatTime(item.postedAt)}</small></div>)}</div> : t('admin.usersNoAssetHistory')}</dd></div>
         </dl>
       ) : null}
       {!loading && !detail ? <p className="form-message form-message--error">{t('admin.usersQueryError')}</p> : null}
@@ -566,7 +589,6 @@ function formatCompactDateRange(from: string, to: string) {
 function UsersIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 20v-1.4a4.6 4.6 0 0 0-4.6-4.6H7.6A4.6 4.6 0 0 0 3 18.6V20M9.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM21 20v-1.4a4.6 4.6 0 0 0-3.2-4.4M16.5 3.7a3.5 3.5 0 0 1 0 6.6" /></svg>; }
 function SearchIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="5.8" /><path d="m15.1 15.1 4.3 4.3" /></svg>; }
 function CalendarIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5.5" width="16" height="14" rx="2" /><path d="M8 3.5v4M16 3.5v4M4 10h16" /></svg>; }
-function ResetIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8v4h4M5.5 15.5A7 7 0 1 0 5 8" /></svg>; }
 function ChevronDownIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 9.5 4.5 4.5 4.5-4.5" /></svg>; }
 function ChevronRightIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>; }
 function ChevronLeftIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>; }
