@@ -74,6 +74,9 @@ function AdminNavIcon({ destination }: { destination: string }) {
     case '/assets':
       path = <><path d="m12 3 7.5 4.3v9.4L12 21l-7.5-4.3V7.3L12 3Z" /><path d="m4.5 7.3 7.5 4.3 7.5-4.3M12 11.6V21" /></>;
       break;
+    case '/activities':
+      path = <><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4M16 3v4M4 10h16M9 14h6M9 17h3" /></>;
+      break;
     case '/wallet':
       path = <><path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H18a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6.5A2.5 2.5 0 0 1 4 17.5v-10Z" /><path d="M4 8h13v4H4M16 14h4" /></>;
       break;
@@ -82,9 +85,6 @@ function AdminNavIcon({ destination }: { destination: string }) {
       break;
     case '/futures':
       path = <><rect x="5" y="4" width="14" height="16" rx="2" /><path d="M9 8h6M9 12h6M9 16h3" /></>;
-      break;
-    case '/margin':
-      path = <><path d="M5 19V9l7-5 7 5v10" /><path d="M9 19v-5h6v5M8 9h.01M16 9h.01" /></>;
       break;
     case '/risk':
       path = <path d="M12 3 20 6v5.4c0 4.4-3.1 7.4-8 9.6-4.9-2.2-8-5.2-8-9.6V6l8-3Z" />;

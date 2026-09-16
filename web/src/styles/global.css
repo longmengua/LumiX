@@ -472,6 +472,192 @@ p,
   min-width: 0;
 }
 
+/* 資產工作台將可執行類型放在固定左側，避免空投、沖銷與補償混成沒有治理語意的同一個按鈕。 */
+.admin-assets-workspace { display: grid; grid-template-columns: minmax(11rem, 14rem) minmax(0, 1fr); gap: 1rem; align-items: start; }
+.admin-assets-workspace__sidebar { display: grid; gap: 0.35rem; padding: 0.6rem; border: 1px solid rgba(148, 163, 184, 0.16); border-radius: 0.8rem; background: rgba(15, 23, 42, 0.52); }
+.admin-assets-workspace__tab { width: 100%; padding: 0.7rem 0.8rem; border: 0; border-radius: 0.55rem; background: transparent; color: rgba(226, 232, 240, 0.76); text-align: left; cursor: pointer; }
+.admin-assets-workspace__tab:hover, .admin-assets-workspace__tab--active { background: rgba(14, 165, 233, 0.14); color: #e0f2fe; }
+.admin-assets-workspace__content { min-width: 0; }
+
+/* 幣種設定只顯示後端主檔狀態，讓啟用／暫停的治理動作與餘額操作保持清楚分隔。 */
+.admin-spot-asset-config__form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr) minmax(7rem, 0.55fr) auto; gap: 1rem; align-items: end; margin-top: 1.25rem; }
+.admin-spot-asset-config__form .primary-button { min-block-size: 2.75rem; }
+.admin-spot-asset-config__notice { margin: 1rem 0 0; color: rgba(191, 219, 254, 0.76); font-size: 0.85rem; line-height: 1.5; }
+.admin-spot-asset-config .form-message { margin-top: 0.9rem; }
+.admin-spot-asset-config__list-header,
+.admin-spot-asset-config__item,
+.admin-spot-asset-config__actions { display: flex; align-items: center; }
+.admin-spot-asset-config__list-header { justify-content: space-between; gap: 1rem; }
+.admin-spot-asset-config__list-header .card__title { margin-bottom: 0.3rem; }
+.admin-spot-asset-config__refresh { display: inline-flex; flex: 0 0 auto; align-items: center; justify-content: center; inline-size: 1.45rem; block-size: 1.45rem; padding: 0; border: 0; border-radius: 0.36rem; background: transparent; color: rgba(162, 194, 244, 0.8); cursor: pointer; }
+.admin-spot-asset-config__refresh:hover:not(:disabled) { background: rgba(89, 145, 244, 0.17); color: #e4efff; }
+.admin-spot-asset-config__refresh:focus-visible { outline: none; box-shadow: 0 0 0 2px rgba(89, 145, 244, 0.55); }
+.admin-spot-asset-config__refresh:disabled { cursor: not-allowed; opacity: 0.55; }
+.admin-spot-asset-config__refresh svg { inline-size: 0.85rem; block-size: 0.85rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+.admin-spot-asset-config__list { display: grid; gap: 0.65rem; margin-top: 1rem; }
+.admin-spot-asset-config__item { justify-content: space-between; gap: 1rem; padding: 0.9rem 1rem; border: 1px solid rgba(113, 157, 230, 0.16); border-radius: 0.8rem; background: rgba(7, 24, 53, 0.4); }
+.admin-spot-asset-config__item > div:first-child { display: grid; gap: 0.2rem; min-width: 0; }
+.admin-spot-asset-config__item strong { color: #f0f6ff; font-size: 1rem; }
+.admin-spot-asset-config__item span:not(.admin-spot-asset-config__status),
+.admin-spot-asset-config__item small { color: rgba(189, 211, 248, 0.7); font-size: 0.84rem; }
+.admin-spot-asset-config__actions { flex: 0 0 auto; gap: 0.7rem; }
+.admin-spot-asset-config__status { padding: 0.3rem 0.55rem; border-radius: 999px; font-size: 0.78rem; font-weight: 700; }
+.admin-spot-asset-config__status--active { background: rgba(16, 185, 129, 0.12); color: #a7f3d0; }
+.admin-spot-asset-config__status--halted { background: rgba(251, 191, 36, 0.12); color: #fde68a; }
+.admin-spot-asset-config__status--delisted { background: rgba(148, 163, 184, 0.14); color: #cbd5e1; }
+@media (max-width: 960px) { .admin-spot-asset-config__form { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 640px) { .admin-spot-asset-config__form { grid-template-columns: minmax(0, 1fr); } .admin-spot-asset-config__form .primary-button { inline-size: 100%; } .admin-spot-asset-config__list-header, .admin-spot-asset-config__item { align-items: stretch; flex-direction: column; } .admin-spot-asset-config__actions { justify-content: space-between; } }
+
+/* 空投是高風險資產操作，表單以清楚層級與低對比 surface 聚焦資訊，而不改動資產工作台的導覽或頁面框架。 */
+.admin-airdrop-form {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(1.75rem, 3vw, 2.125rem);
+  border: 1px solid rgba(88, 139, 242, 0.22);
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(circle at 15% 0%, rgba(55, 105, 220, 0.12), transparent 42%),
+    linear-gradient(145deg, rgba(8, 26, 56, 0.96), rgba(4, 15, 34, 0.98));
+  box-shadow: inset 0 1px rgba(211, 229, 255, 0.05), 0 1.5rem 3.5rem rgba(0, 0, 0, 0.26);
+}
+
+.admin-airdrop-form__header,
+.admin-airdrop-form__remarks-heading,
+.admin-airdrop-form__footer,
+.admin-airdrop-form__actions,
+.admin-airdrop-form__notice {
+  display: flex;
+  align-items: center;
+}
+
+.admin-airdrop-form__header { gap: 0.8rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(129, 166, 226, 0.14); }
+.admin-airdrop-form__header-icon {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  inline-size: 2.7rem;
+  block-size: 2.7rem;
+  border: 1px solid rgba(161, 119, 255, 0.38);
+  border-radius: 0.95rem;
+  background: linear-gradient(145deg, rgba(121, 78, 235, 0.76), rgba(48, 99, 213, 0.55));
+  box-shadow: inset 0 1px rgba(237, 229, 255, 0.2), 0 0.6rem 1.4rem rgba(48, 73, 182, 0.2);
+  color: #dfd4ff;
+}
+
+.admin-airdrop-form__header-icon svg,
+.admin-airdrop-form__remarks-icon svg,
+.admin-airdrop-form__notice-icon svg,
+.admin-airdrop-form__reset svg,
+.admin-airdrop-form__submit svg {
+  inline-size: 1.35rem;
+  block-size: 1.35rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.admin-airdrop-form__header h2,
+.admin-airdrop-form__section-heading h3,
+.admin-airdrop-form__remarks h3,
+.admin-airdrop-form__notice h3 { margin: 0; color: #f0f5ff; }
+.admin-airdrop-form__header h2 { font-size: 1.35rem; letter-spacing: -0.02em; }
+.admin-airdrop-form__header p,
+.admin-airdrop-form__section-heading p,
+.admin-airdrop-form__remarks p,
+.admin-airdrop-form__notice p { margin: 0.4rem 0 0; color: rgba(194, 212, 245, 0.72); font-size: 0.88rem; line-height: 1.55; }
+
+.admin-airdrop-form__body { display: grid; gap: 1.45rem; padding-top: 1.25rem; }
+.admin-airdrop-form__section { min-inline-size: 0; }
+.admin-airdrop-form__section-heading { position: relative; margin-bottom: 1rem; padding-left: 1rem; }
+.admin-airdrop-form__section-heading::before { position: absolute; inset: 0 auto 0 0; inline-size: 0.22rem; content: ''; border-radius: 999px; background: linear-gradient(#4da4ff, #3978ed); }
+.admin-airdrop-form__section-heading h3,
+.admin-airdrop-form__remarks h3 { font-size: 1.08rem; }
+.admin-airdrop-form__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.35rem; }
+.admin-airdrop-form__field-wrap { min-inline-size: 0; }
+.admin-airdrop-form__field--amount { grid-column: 1 / span 1; }
+.admin-airdrop-form__field--wide { grid-column: 1 / -1; }
+.admin-airdrop-form .field { gap: 0.5rem; }
+.admin-airdrop-form .field__label { color: rgba(234, 241, 255, 0.92); font-size: 0.9rem; font-weight: 600; }
+.admin-airdrop-form .input {
+  min-block-size: 3.1rem;
+  border-color: rgba(103, 148, 224, 0.23);
+  border-radius: 0.7rem;
+  background: rgba(2, 13, 33, 0.64);
+  color: #eff5ff;
+}
+.admin-airdrop-form .input::placeholder { color: rgba(164, 188, 228, 0.5); }
+.admin-airdrop-form .input:hover { border-color: rgba(116, 166, 255, 0.36); }
+.admin-airdrop-form .input:focus { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); }
+.admin-airdrop-form .input[aria-invalid="true"] { border-color: rgba(248, 113, 113, 0.74); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
+.admin-airdrop-form__field-error { margin: 0.45rem 0 0; color: #fca5a5; font-size: 0.78rem; line-height: 1.4; }
+.admin-airdrop-form__activity-hint { margin: 0.45rem 0 0; color: rgba(190, 212, 249, 0.7); font-size: 0.78rem; line-height: 1.45; }
+
+.admin-airdrop-form__amount-control { display: flex; align-items: center; min-block-size: 3.1rem; border: 1px solid rgba(103, 148, 224, 0.23); border-radius: 0.7rem; background: rgba(2, 13, 33, 0.64); }
+.admin-airdrop-form__amount-control:focus-within { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); }
+.admin-airdrop-form__amount-control--error { border-color: rgba(248, 113, 113, 0.74); box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1); }
+.admin-airdrop-form__amount-control .input { min-inline-size: 0; border: 0; background: transparent; box-shadow: none; }
+.admin-airdrop-form__amount-control .input:focus { border: 0; box-shadow: none; }
+.admin-airdrop-form__amount-row { display: flex; align-items: stretch; gap: 0.55rem; }
+.admin-airdrop-form__amount-row > .input { flex: 1 1 auto; min-inline-size: 0; }
+.admin-airdrop-form__asset-suffix { flex: 0 0 auto; margin-right: 0.9rem; color: rgba(224, 234, 252, 0.76); font-size: 0.88rem; font-weight: 650; }
+
+.admin-form-select { position: relative; display: block; min-inline-size: 0; }
+.admin-form-select__trigger { display: flex; align-items: center; gap: 0.62rem; inline-size: 100%; min-block-size: 3.1rem; padding: 0 0.9rem; border: 1px solid rgba(103, 148, 224, 0.23); border-radius: 0.7rem; background: rgba(2, 13, 33, 0.64); color: #eff5ff; font: inherit; text-align: left; cursor: pointer; }
+.admin-form-select__trigger:hover { border-color: rgba(116, 166, 255, 0.36); }
+.admin-form-select--open .admin-form-select__trigger, .admin-form-select__trigger:focus-visible { outline: 0; border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); }
+.admin-form-select__trigger:disabled { cursor: not-allowed; opacity: 0.55; }
+.admin-form-select__trigger > span { overflow: hidden; flex: 1 1 auto; text-overflow: ellipsis; white-space: nowrap; }
+.admin-form-select__icon, .admin-form-select__chevron, .admin-form-select__check { flex: 0 0 auto; inline-size: 1.2rem; block-size: 1.2rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+.admin-form-select__icon { color: #6cb5ff; }
+.admin-form-select__chevron { color: rgba(190, 212, 249, 0.78); }
+.admin-form-select__menu { position: absolute; z-index: 12; top: calc(100% + 0.45rem); right: 0; left: 0; display: grid; gap: 0.2rem; padding: 0.35rem; border: 1px solid rgba(103, 148, 224, 0.3); border-radius: 0.7rem; background: #061a3a; box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.38); }
+.admin-form-select__option { display: flex; align-items: center; gap: 0.62rem; inline-size: 100%; min-block-size: 2.65rem; padding: 0 0.6rem; border: 0; border-radius: 0.5rem; background: transparent; color: #e5efff; font: inherit; text-align: left; cursor: pointer; }
+.admin-form-select__option span { flex: 1 1 auto; }.admin-form-select__option:hover, .admin-form-select__option:focus-visible { outline: 0; background: rgba(59, 130, 246, 0.18); }.admin-form-select__option--selected { background: rgba(38, 111, 231, 0.32); }.admin-form-select__check { color: #8ac2ff; }
+.admin-form-select--compact { flex: 0 0 9rem; }.admin-form-select--compact .admin-form-select__trigger { min-block-size: 3.1rem; padding-inline: 0.7rem; border: 1px solid rgba(103, 148, 224, 0.23); border-radius: 0.7rem; background: transparent; }.admin-form-select--compact .admin-form-select__menu { left: auto; min-inline-size: 10rem; }
+
+.admin-airdrop-form__remarks { padding-top: 1.45rem; border-top: 1px solid rgba(129, 166, 226, 0.13); }
+.admin-airdrop-form__remarks-heading { gap: 0.65rem; margin-bottom: 0.85rem; }
+.admin-airdrop-form__remarks-icon { display: inline-flex; color: #5ba8ff; }
+.admin-airdrop-form__remarks-icon svg { inline-size: 1.45rem; block-size: 1.45rem; }
+.admin-airdrop-form__textarea-wrap { position: relative; display: block; }
+.admin-airdrop-form textarea.input { display: block; min-block-size: 5.5rem; padding: 0.85rem 0.9rem 1.65rem; resize: vertical; }
+.admin-airdrop-form__counter { position: absolute; right: 0.9rem; bottom: 0.65rem; color: rgba(174, 198, 237, 0.62); font-size: 0.76rem; pointer-events: none; }
+
+.admin-airdrop-form__footer { align-items: stretch; justify-content: space-between; gap: 1.25rem; padding-top: 0.2rem; }
+.admin-airdrop-form__footer--actions-only { justify-content: flex-end; }
+.admin-adjustment-type-select { max-inline-size: 18rem; }
+.admin-airdrop-form__notice { flex: 1 1 28rem; align-items: flex-start; gap: 0.75rem; padding: 1rem 1.05rem; border: 1px solid rgba(60, 130, 255, 0.2); border-radius: 0.85rem; background: rgba(30, 90, 190, 0.08); }
+.admin-airdrop-form__notice-icon { display: inline-flex; flex: 0 0 auto; margin-top: 0.05rem; color: #67b0ff; }
+.admin-airdrop-form__notice-icon svg { inline-size: 1.35rem; block-size: 1.35rem; }
+.admin-airdrop-form__notice h3 { font-size: 0.9rem; }
+.admin-airdrop-form__notice p { margin-top: 0.2rem; font-size: 0.8rem; }
+.admin-airdrop-form__actions { flex: 0 0 auto; gap: 0.75rem; align-self: center; }
+.admin-airdrop-form__reset,
+.admin-airdrop-form__submit { min-block-size: 3.1rem; border-radius: 0.72rem; font-weight: 650; }
+.admin-airdrop-form__reset { min-inline-size: 7.7rem; background: rgba(7, 23, 53, 0.68); border-color: rgba(122, 162, 224, 0.34); }
+.admin-airdrop-form__submit { min-inline-size: 10rem; background: linear-gradient(135deg, #3b8fff, #356df2); box-shadow: 0 0.55rem 1.25rem rgba(31, 105, 240, 0.2); }
+.admin-airdrop-form__feedback { margin: -0.45rem 0 0; padding: 0.75rem 0.9rem; border-radius: 0.72rem; font-size: 0.88rem; line-height: 1.5; }
+.admin-airdrop-form__feedback--success { background: rgba(16, 185, 129, 0.11); color: #a7f3d0; }
+.admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
+
+@media (max-width: 767px) {
+  .admin-airdrop-form { padding: 1.25rem; border-radius: 1rem; }
+  .admin-airdrop-form__header { align-items: flex-start; }
+  .admin-airdrop-form__header-icon { inline-size: 3.25rem; block-size: 3.25rem; }
+  .admin-airdrop-form__grid { grid-template-columns: minmax(0, 1fr); }
+  .admin-airdrop-form__field--amount { grid-column: auto; }
+  .admin-airdrop-form__field--wide { grid-column: auto; }
+  .admin-airdrop-form__footer,
+  .admin-airdrop-form__actions { flex-direction: column; }
+  .admin-airdrop-form__notice { flex-basis: auto; }
+  .admin-airdrop-form__actions { inline-size: 100%; }
+  .admin-airdrop-form__reset,
+  .admin-airdrop-form__submit { inline-size: 100%; }
+}
+
 /* 錯誤頁保留後台 chrome，僅以低調深藍 surface 建立焦點，不把技術錯誤放大成破壞性的警示畫面。 */
 .admin-error-page {
   display: flex;
@@ -3089,6 +3275,12 @@ p,
 .admin-users-list__restrictions span { padding: 0.28rem 0.55rem; border-radius: 999px; background: rgba(234, 184, 79, 0.13); color: #f4d38e; font-size: 0.8rem; }
 .admin-users-list__restrictions--clear span { background: rgba(48, 216, 137, 0.1); color: #a8eccb; }
 .admin-users-list__detail dl > .admin-users-list__devices { flex-basis: 100%; }
+.admin-users-list__detail dl > .admin-users-list__assets--full { flex-basis: 100%; }
+.admin-user-assets { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-user-assets__item { display: flex; flex: 1 1 15rem; flex-wrap: wrap; align-items: baseline; gap: 6px 10px; padding: 10px 12px; border: 1px solid rgba(92, 145, 245, .12); border-radius: 10px; background: rgba(10, 29, 61, .42); }
+.admin-user-assets__item strong, .admin-user-assets__item b { color: rgba(238, 246, 255, .96); }
+.admin-user-assets__item span, .admin-user-assets__item small { color: rgba(180, 205, 247, .7); font-size: .82rem; }
+.admin-user-assets__item small { flex-basis: 100%; }
 
 .admin-users-pagination { align-items: center; justify-content: space-between; gap: 1rem; margin-top: 0.85rem; padding: 0.15rem 0.3rem 0; color: rgba(169, 194, 239, 0.78); font-size: 0.9rem; }
 .admin-users-pagination__controls { display: inline-flex; align-items: center; gap: 0.7rem; }
@@ -3379,6 +3571,20 @@ p,
   gap: 6px;
   min-inline-size: 0;
 }
+
+.asset-ledger-history { display: flex; flex-direction: column; gap: 16px; }
+.asset-account-inventory { display: flex; flex-wrap: wrap; gap: 10px; }
+.asset-account-inventory > div { display: flex; flex: 1 1 10rem; justify-content: space-between; gap: 12px; padding: 12px 14px; border: 1px solid rgba(96, 165, 250, .12); border-radius: 12px; background: rgba(8, 24, 50, .42); }
+.asset-account-inventory span { color: rgba(147, 197, 253, .78); font-size: .82rem; }
+.asset-ledger-history__header, .asset-ledger-history__item { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; }
+.asset-ledger-history__header p, .asset-ledger-history__item p { margin: 6px 0 0; color: rgba(226, 232, 240, .62); font-size: .9rem; }
+.asset-ledger-history__header > span { color: rgba(147, 197, 253, .82); font-size: .82rem; white-space: nowrap; }
+.asset-ledger-history__list { display: flex; flex-direction: column; gap: 8px; }
+.asset-ledger-history__item { padding: 14px 16px; border: 1px solid rgba(96, 165, 250, .12); border-radius: 14px; background: rgba(8, 24, 50, .42); }
+.asset-ledger-history__item > :last-child { text-align: right; }
+.asset-ledger-history__more { align-self: center; }
+.asset-ledger-history__error { margin: 0; color: #fda4af; text-align: center; }
+@media (max-width: 640px) { .asset-ledger-history__header, .asset-ledger-history__item { flex-direction: column; } .asset-ledger-history__item > :last-child { text-align: left; } }
 
 .asset-projection-evidence span {
   color: rgba(184, 199, 229, 0.7);
