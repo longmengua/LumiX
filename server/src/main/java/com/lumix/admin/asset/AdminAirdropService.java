@@ -29,10 +29,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 受治理的管理端空投入帳服務。
+ * 受治理的管理端資產調整入帳服務。
  *
- * <p>此服務只能由已驗證的 super-admin 呼叫。它不直接寫入餘額：使用者 CREDIT 與交易所空投帳戶 DEBIT
- * 一律透過 immutable ledger posting 成對追加，再由 ledger runtime 重建 projection。</p>
+ * <p>類別與 endpoint 沿用既有 airdrop 名稱以維持相容性；實際行為由 {@code activityId} 類型分流。
+ * 此服務只能由已驗證的 super-admin 呼叫，且不直接寫入餘額：所有加扣款都透過 immutable ledger posting
+ * 成對追加，再由 ledger runtime 重建 projection。</p>
  */
 @Service
 public class AdminAirdropService {
@@ -66,10 +67,10 @@ public class AdminAirdropService {
     }
 
     /**
-     * 以活動／使用者／帳戶／資產的固定去重鍵執行一次空投。
+     * 以類型／使用者／帳戶／資產的固定去重鍵執行一次資產調整。
      *
      * <p>相同活動的安全重送會讀回同一筆 ledger journal；任一欄位不同則 fail closed，避免 UI 重送或
-     * 操作者誤用活動識別碼造成第二次資金發放。</p>
+     * 操作者誤用類型造成第二次資金調整。</p>
      */
     @Transactional
     public AdminAirdropResult grant(AuthenticatedUser actor, AdminAirdropCommand command) {
@@ -79,32 +80,35 @@ public class AdminAirdropService {
         String targetAccountId = resolveTargetAccount(command);
         ensureActiveAccountAsset(targetAccountId, command.assetSymbol());
         ensureActiveAccountAsset(EXCHANGE_AIRDROP_ACCOUNT_ID, command.assetSymbol());
+        AdminAssetAdjustmentType type = AdminAssetAdjustmentType.fromActivityId(command.activityId());
+        if (type == AdminAssetAdjustmentType.REVERSAL && command.amount().signum() < 0) {
+            ensureSufficientAvailableBalance(targetAccountId, command);
+        }
 
-        String businessReferenceId = airdropReference(command);
-        String idempotencyKey = "airdrop:" + digest(businessReferenceId);
+        String businessReferenceId = adjustmentReference(command);
+        String idempotencyKey = "asset-adjustment:" + digest(businessReferenceId);
+        java.math.BigDecimal amount = command.amount().abs();
+        List<LedgerEntryDraft> entries = command.amount().signum() > 0
+                ? List.of(new LedgerEntryDraft(new AccountId(EXCHANGE_AIRDROP_ACCOUNT_ID), new AssetSymbol(command.assetSymbol()), LedgerDirection.DEBIT, amount, 1L), new LedgerEntryDraft(new AccountId(targetAccountId), new AssetSymbol(command.assetSymbol()), LedgerDirection.CREDIT, amount, 2L))
+                : List.of(new LedgerEntryDraft(new AccountId(targetAccountId), new AssetSymbol(command.assetSymbol()), LedgerDirection.DEBIT, amount, 1L), new LedgerEntryDraft(new AccountId(EXCHANGE_AIRDROP_ACCOUNT_ID), new AssetSymbol(command.assetSymbol()), LedgerDirection.CREDIT, amount, 2L));
         LedgerJournalDraft journal = new LedgerJournalDraft(
                 LedgerBusinessReferenceType.ADJUSTMENT,
                 businessReferenceId,
-                List.of(
-                        new LedgerEntryDraft(new AccountId(EXCHANGE_AIRDROP_ACCOUNT_ID), new AssetSymbol(command.assetSymbol()),
-                                LedgerDirection.DEBIT, command.amount(), 1L),
-                        new LedgerEntryDraft(new AccountId(targetAccountId), new AssetSymbol(command.assetSymbol()),
-                                LedgerDirection.CREDIT, command.amount(), 2L)
-                )
+                entries
         );
         LedgerPostingExecutionResult posting = ledgerPostingService.post(new LedgerPostingExecutionCommand(
-                new LedgerPostingCommand(new RequestId("airdrop-" + digest(businessReferenceId).substring(0, 48)), journal, Instant.now(clock)),
+                new LedgerPostingCommand(new RequestId("asset-adjustment-" + digest(businessReferenceId).substring(0, 40)), journal, Instant.now(clock)),
                 idempotencyKey,
                 new LedgerPostingActor("ADMIN", actor.userId())
         ));
 
-        // ledger 層已記錄 journal evidence；此筆補上活動、原因與目標使用者，供管理端稽核而不曝露到一般用戶。
+        // ledger 層已記錄 journal evidence；此筆補上類型、原因與目標使用者，供管理端稽核而不曝露到一般用戶。
         if (!posting.replayed()) {
             jdbcTemplate.update(
                     "INSERT INTO audit_logs (actor_type, actor_id, action_type, target_type, target_id, request_id, outcome, reason) "
-                            + "VALUES ('ADMIN', ?, 'ADMIN_AIRDROP', 'USER_ACCOUNT', ?, ?, 'SUCCESS', ?)",
-                    actor.userId(), targetAccountId, "airdrop-" + digest(businessReferenceId).substring(0, 48),
-                    "activity=" + command.activityId() + ";asset=" + command.assetSymbol() + ";amount="
+                            + "VALUES ('ADMIN', ?, 'ADMIN_ASSET_ADJUSTMENT', 'USER_ACCOUNT', ?, ?, 'SUCCESS', ?)",
+                    actor.userId(), targetAccountId, "asset-adjustment-" + digest(businessReferenceId).substring(0, 40),
+                    "type=" + type.name() + ";asset=" + command.assetSymbol() + ";amount="
                             + command.amount().toPlainString() + ";reason=" + command.reason()
             );
         }
@@ -127,9 +131,9 @@ public class AdminAirdropService {
                 "SELECT status FROM assets WHERE asset_symbol = ?", assetSymbol
         );
         if (assets.size() != 1 || !"ACTIVE".equals(assets.getFirst().get("status"))) {
-            throw new IllegalArgumentException("asset is not active for airdrop");
+            throw new IllegalArgumentException("asset is not active for adjustment");
         }
-        // account_assets 是 ledger entry 的前置關聯；只在 active asset 下建立，避免以空投繞過資產啟用流程。
+        // account_assets 是 ledger entry 的前置關聯；只在 active asset 下建立，避免以資產調整繞過資產啟用流程。
         jdbcTemplate.update(
                 "INSERT INTO account_assets (account_id, asset_symbol, status) VALUES (?, ?, 'ACTIVE') "
                         + "ON CONFLICT (account_id, asset_symbol) DO NOTHING",
@@ -140,12 +144,23 @@ public class AdminAirdropService {
                 Integer.class, accountId, assetSymbol
         );
         if (active == null || active != 1) {
-            throw new IllegalArgumentException("account asset is not active for airdrop");
+            throw new IllegalArgumentException("account asset is not active for adjustment");
         }
     }
 
-    private static String airdropReference(AdminAirdropCommand command) {
-        return "airdrop:" + command.activityId() + ":" + command.targetUserId() + ":"
+    private void ensureSufficientAvailableBalance(String accountId, AdminAirdropCommand command) {
+        List<java.math.BigDecimal> availableAmounts = jdbcTemplate.query(
+                "SELECT available_amount FROM balance_projections WHERE account_id = ? AND asset_symbol = ? FOR UPDATE",
+                (resultSet, rowNumber) -> resultSet.getBigDecimal(1), accountId, command.assetSymbol()
+        );
+        // 負向沖銷一定先鎖定並檢查 read model 的可用餘額，避免 immutable journal 將帳戶推入負餘額。
+        if (availableAmounts.size() != 1 || availableAmounts.getFirst().compareTo(command.amount().abs()) < 0) {
+            throw new IllegalArgumentException("insufficient available balance for negative adjustment");
+        }
+    }
+
+    private static String adjustmentReference(AdminAirdropCommand command) {
+        return "asset-adjustment:" + command.activityId() + ":" + command.targetUserId() + ":"
                 + AIRDROP_DESTINATION_ACCOUNT_TYPE + ":" + command.assetSymbol();
     }
 

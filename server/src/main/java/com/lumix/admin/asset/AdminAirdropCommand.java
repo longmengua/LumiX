@@ -4,9 +4,10 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 /**
- * 管理端空投的已驗證輸入。
+ * 管理端資產調整的已驗證輸入。
  *
- * <p>活動識別碼是業務去重鍵的一部分，不能由畫面顯示名稱替代；同一活動不能對同一帳戶資產重複發放。</p>
+ * <p>{@code activityId} 是既有 API 的類型欄位與業務去重鍵的一部分，不能由畫面顯示名稱替代；同一類型
+ * 不能對同一帳戶資產重複執行。</p>
  */
 public record AdminAirdropCommand(
         String targetUserId,
@@ -21,8 +22,12 @@ public record AdminAirdropCommand(
         activityId = text(activityId, "activityId", 64);
         reason = text(reason, "reason", 256);
         amount = Objects.requireNonNull(amount, "amount must not be null").stripTrailingZeros();
-        if (amount.signum() <= 0) {
-            throw new IllegalArgumentException("amount must be greater than zero");
+        if (amount.signum() == 0) {
+            throw new IllegalArgumentException("amount must not be zero");
+        }
+        AdminAssetAdjustmentType type = AdminAssetAdjustmentType.fromActivityId(activityId);
+        if (type == AdminAssetAdjustmentType.AIRDROP && amount.signum() < 0) {
+            throw new IllegalArgumentException("airdrop amount must be positive");
         }
     }
 

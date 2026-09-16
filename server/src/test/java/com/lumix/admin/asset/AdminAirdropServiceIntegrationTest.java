@@ -2,6 +2,7 @@ package com.lumix.admin.asset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
@@ -24,11 +25,11 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-/** 以真實 PostgreSQL 驗證空投絕不直接改餘額，且活動重送只產生一筆 immutable journal。 */
+/** 以真實 PostgreSQL 驗證資產調整絕不直接改餘額，且同類型重送只產生一筆 immutable journal。 */
 class AdminAirdropServiceIntegrationTest {
 
     @Test
-    void airdropPostsDoubleEntryProjectsUserBalanceAndReplaysByActivity() throws Exception {
+    void adjustmentPostsDoubleEntryProjectsUserBalanceAndReplaysByType() throws Exception {
         JdbcDataSource dataSource = dataSource("admin_airdrop_service");
         migrate(dataSource);
         seed(dataSource);
@@ -41,7 +42,7 @@ class AdminAirdropServiceIntegrationTest {
         AdminAirdropService service = new AdminAirdropService(access, jdbcTemplate, ledger,
                 Clock.fixed(Instant.parse("2026-09-15T00:00:00Z"), ZoneOffset.UTC));
         AdminAirdropCommand command = new AdminAirdropCommand(
-                "target-user", "USDT", new BigDecimal("25.125000"), "welcome-2026", "新戶獎勵"
+                "target-user", "USDT", new BigDecimal("25.125000"), "AIRDROP", "新戶獎勵"
         );
         TransactionTemplate transaction = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
 
@@ -60,6 +61,18 @@ class AdminAirdropServiceIntegrationTest {
                 "SELECT available_amount FROM balance_projections WHERE account_id = 'target-user:spot' AND asset_symbol = 'USDT'", BigDecimal.class)));
         assertEquals(0L, count(jdbcTemplate, "balance_projections WHERE account_id = 'system:airdrop:spot'"));
 
+        AdminAirdropResult reversal = transaction.execute(status -> service.grant(actor, new AdminAirdropCommand(
+                "target-user", "USDT", new BigDecimal("-5.125000"), "REVERSAL", "更正重複入帳"
+        )));
+        assertFalse(reversal.replayed());
+        assertEquals(2L, count(jdbcTemplate, "ledger_journals"));
+        assertEquals(4L, count(jdbcTemplate, "ledger_entries"));
+        assertEquals(0, new BigDecimal("20.000000").compareTo(jdbcTemplate.queryForObject(
+                "SELECT available_amount FROM balance_projections WHERE account_id = 'target-user:spot' AND asset_symbol = 'USDT'", BigDecimal.class)));
+        assertThrows(IllegalArgumentException.class, () -> transaction.execute(status -> service.grant(actor,
+                new AdminAirdropCommand("target-user", "USDT", new BigDecimal("-20.000001"), "REVERSAL", "餘額不足測試"))));
+        assertEquals(2L, count(jdbcTemplate, "ledger_journals"));
+
         AdminAirdropAssetConfigurationService configuration = new AdminAirdropAssetConfigurationService(access, jdbcTemplate);
         assertEquals(List.of("USDT"), configuration.listActiveSpotAssets(actor).stream()
                 .map(AdminAirdropAssetOption::assetSymbol).toList());
@@ -73,7 +86,7 @@ class AdminAirdropServiceIntegrationTest {
         assertEquals("ACTIVE", activatedAsset.status());
         assertEquals(List.of("BTC", "USDT"), spotConfiguration.list(actor).stream()
                 .map(AdminSpotAssetConfiguration::assetSymbol).toList());
-        assertEquals(4L, count(jdbcTemplate, "audit_logs"));
+        assertEquals(6L, count(jdbcTemplate, "audit_logs"));
     }
 
     private static JdbcDataSource dataSource(String schema) {

@@ -11,7 +11,7 @@ type FormErrors = Partial<Record<keyof AdminAirdropRequest, string>>;
 type SelectOption = { value: string; label: string; icon?: 'activity' | 'airdrop' | 'asset' };
 
 /**
- * 受治理空投僅負責呈現與收集既有管理命令；雙分錄、冪等與稽核證據仍完全由 server-side 邊界處理。
+ * 資產調整表單僅呈現與收集既有管理命令；雙分錄、冪等與稽核證據仍完全由 server-side 邊界處理。
  */
 export function GovernedAirdropForm() {
   const { t } = useI18n();
@@ -58,7 +58,7 @@ export function GovernedAirdropForm() {
     if (!form.assetSymbol.trim()) next.assetSymbol = t('admin.assetsAirdropRequired');
     if (!form.amount.trim()) {
       next.amount = t('admin.assetsAirdropRequired');
-    } else if (!/^\d+(?:\.\d+)?$/.test(form.amount)) {
+    } else if (!/^-?\d+(?:\.\d+)?$/.test(form.amount)) {
       next.amount = t('admin.assetsAirdropAmountInvalid');
     }
     if (!form.reason.trim()) next.reason = t('admin.assetsAirdropRequired');
@@ -75,11 +75,6 @@ export function GovernedAirdropForm() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
-    // 異常沖銷必須綁定原始 journal 與 append-only reversal evidence；現有 API 僅能安全執行空投，絕不可借用空投命令處理沖銷。
-    if (form.activityId !== 'AIRDROP') {
-      setSubmissionError(t('admin.assetsReversalUnavailable'));
-      return;
-    }
     if (assetsLoading || assetLoadError || assetOptions.length === 0) {
       setSubmissionError(t('admin.assetsAirdropAssetUnavailable'));
       return;
@@ -115,7 +110,6 @@ export function GovernedAirdropForm() {
             </FieldError>
             <FieldError error={errors.activityId}>
               <label className="field"><span className="field__label">{t('admin.assetsAirdropActivity')}<RequiredMark /></span><FormSelect ariaLabel={t('admin.assetsAirdropActivity')} options={activityOptions} placeholder={t('admin.assetsAirdropRequired')} value={form.activityId} onChange={(value) => update('activityId', value)} /></label>
-              {form.activityId === 'REVERSAL' ? <p className="admin-airdrop-form__activity-hint">{t('admin.assetsReversalUnavailable')}</p> : null}
             </FieldError>
             <FieldError className="admin-airdrop-form__field--amount" error={errors.amount ?? errors.assetSymbol ?? assetLoadError ?? undefined}>
               <label className="field"><span className="field__label">{t('admin.assetsAirdropAmount')}<RequiredMark /></span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
@@ -136,10 +130,10 @@ export function GovernedAirdropForm() {
         <div className="admin-airdrop-form__footer admin-airdrop-form__footer--actions-only">
           <div className="admin-airdrop-form__actions">
             <button className="secondary-button admin-airdrop-form__reset" type="button" disabled={submitting} onClick={reset}><ResetIcon />{t('admin.assetsAirdropReset')}</button>
-            <button className="primary-button admin-airdrop-form__submit" type="submit" disabled={submitting || form.activityId !== 'AIRDROP'}><SendIcon />{submitting ? t('admin.assetsAirdropSubmitting') : t('admin.assetsAirdropSubmit')}</button>
+            <button className="primary-button admin-airdrop-form__submit" type="submit" disabled={submitting}><SendIcon />{submitting ? t('admin.assetsAirdropSubmitting') : t('admin.assetsAirdropSubmit')}</button>
           </div>
         </div>
-        {result ? <p className="admin-airdrop-form__feedback admin-airdrop-form__feedback--success" role="status">{t('admin.assetsAirdropSucceeded', undefined, { journalId: result.ledgerJournalId, replay: result.replayed ? t('admin.assetsAirdropReplay') : t('admin.assetsAirdropNew') })}</p> : null}
+        {result ? <p className="admin-airdrop-form__feedback admin-airdrop-form__feedback--success" role="status">{t('admin.assetsAdjustmentSucceeded', undefined, { journalId: result.ledgerJournalId, replay: result.replayed ? t('admin.assetsAirdropReplay') : t('admin.assetsAirdropNew') })}</p> : null}
         {submissionError ? <p className="admin-airdrop-form__feedback admin-airdrop-form__feedback--error" role="alert">{submissionError}</p> : null}
       </form>
     </section>

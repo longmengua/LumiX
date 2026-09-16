@@ -759,6 +759,7 @@ export const zhTW = {
   'admin.assetsAirdropSubmit': '確認並入帳',
   'admin.assetsAirdropSubmitting': '入帳中',
   'admin.assetsAirdropSucceeded': '空投已入帳。Journal #{journalId}（{replay}）',
+  'admin.assetsAdjustmentSucceeded': '資產調整已入帳。Journal #{journalId}（{replay}）',
   'admin.assetsAirdropReplay': '安全重送',
   'admin.assetsAirdropNew': '首次執行',
   'admin.assetsAirdropFailed': '空投未完成',

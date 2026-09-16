@@ -759,6 +759,7 @@ export const enUS = {
   'admin.assetsAirdropSubmit': 'Confirm and post',
   'admin.assetsAirdropSubmitting': 'Posting',
   'admin.assetsAirdropSucceeded': 'Airdrop posted. Journal #{journalId} ({replay})',
+  'admin.assetsAdjustmentSucceeded': 'Asset adjustment posted. Journal #{journalId} ({replay})',
   'admin.assetsAirdropReplay': 'safe replay',
   'admin.assetsAirdropNew': 'first execution',
   'admin.assetsAirdropFailed': 'Airdrop was not completed',
