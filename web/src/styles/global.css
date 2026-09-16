@@ -577,7 +577,7 @@ p,
 .admin-airdrop-form__hero-aside > div { display: flex; flex: 0 0 auto; flex-direction: column; gap: 0.38rem; white-space: nowrap; }
 .admin-airdrop-form__hero-aside strong { font-size: 1.08rem; font-weight: 680; letter-spacing: 0.035em; }
 .admin-airdrop-form__hero-aside span { color: rgba(190, 209, 246, 0.7); font-size: 0.84rem; }
-.admin-airdrop-form__illustration { display: block; flex: 0 1 16.25rem; inline-size: 16.25rem; block-size: 7.1rem; overflow: visible; }
+.admin-airdrop-form__illustration { display: block; flex: 0 0 18.75rem; inline-size: 18.75rem; block-size: 9.375rem; overflow: visible; }
 .admin-airdrop-form__header p,
 .admin-airdrop-form__section-heading p,
 .admin-airdrop-form__remarks p,
@@ -661,7 +661,7 @@ p,
 @media (max-width: 1199px) and (min-width: 768px) {
   .admin-airdrop-form__header { min-height: 9.75rem; padding-inline: 1.75rem; }
   .admin-airdrop-form__header-main { gap: 1rem; }
-  .admin-airdrop-form__illustration { inline-size: 13rem; block-size: 6.5rem; }
+  .admin-airdrop-form__illustration { flex-basis: 15rem; inline-size: 15rem; block-size: 7.5rem; }
   .admin-airdrop-form__hero-aside { flex-basis: 38%; gap: 0.75rem; }
   .admin-airdrop-form__hero-aside span { white-space: normal; }
 }

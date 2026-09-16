@@ -211,7 +211,7 @@ function AssetAdjustmentHeroIcon() {
   </div>;
 }
 function AssetAdjustmentIllustration() {
-  return <svg className="admin-airdrop-form__illustration" viewBox="0 0 260 130" aria-hidden="true">
+  return <svg className="admin-airdrop-form__illustration" viewBox="0 0 320 160" aria-hidden="true">
     <defs>
       <linearGradient id="asset-adjustment-illustration-coin" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0" stopColor="#60A5FA" />
@@ -231,28 +231,30 @@ function AssetAdjustmentIllustration() {
         <feDropShadow dx="0" dy="6" stdDeviation="6" floodColor="#1D4ED8" floodOpacity=".22" />
       </filter>
     </defs>
-    <ellipse cx="130" cy="103" rx="83" ry="14" fill="none" stroke="#5B8CFF" strokeOpacity=".55" strokeWidth="1.5" />
-    <ellipse cx="130" cy="103" rx="58" ry="9" fill="#315BCB" fillOpacity=".1" />
+    <ellipse cx="150" cy="126" rx="88" ry="16" fill="none" stroke="#5B8CFF" strokeOpacity=".56" strokeWidth="1.8" />
+    <ellipse cx="150" cy="126" rx="62" ry="10" fill="#315BCB" fillOpacity=".12" />
     <g filter="url(#asset-adjustment-illustration-shadow)">
-      <rect x="62" y="78" width="60" height="17" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="92" cy="78" rx="30" ry="8" fill="#6FA8FF" />
-      <rect x="65" y="68" width="55" height="17" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="92.5" cy="68" rx="27.5" ry="7.5" fill="#6398FF" />
-      <rect x="68" y="58" width="48" height="16" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
-      <ellipse cx="92" cy="58" rx="24" ry="7" fill="#79ACFF" />
+      <rect x="88" y="86" width="60" height="18" rx="9" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="118" cy="86" rx="30" ry="8.5" fill="#6FA8FF" />
+      <rect x="91" y="75" width="55" height="17" rx="8.5" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="118" cy="75" rx="27.5" ry="8" fill="#6398FF" />
+      <rect x="94" y="64" width="50" height="16" rx="8" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="119" cy="64" rx="25" ry="7.5" fill="#79ACFF" />
+      <rect x="98" y="54" width="42" height="14" rx="7" fill="url(#asset-adjustment-illustration-coin)" />
+      <ellipse cx="119" cy="54" rx="21" ry="6.8" fill="#91BCFF" />
     </g>
-    <g transform="rotate(12 155 68)" filter="url(#asset-adjustment-illustration-shadow)">
-      <rect x="122" y="37" width="66" height="63" rx="14" fill="url(#asset-adjustment-illustration-card)" stroke="#9DB6FF" strokeOpacity=".45" />
-      <g stroke="#DCEBFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none">
-        <path d="M137 57h31" />
-        <path d="m161 50 7 7-7 7" />
-        <path d="M170 77h-31" />
-        <path d="m146 70-7 7 7 7" />
+    <g transform="rotate(13 193 77)" filter="url(#asset-adjustment-illustration-shadow)">
+      <rect x="156" y="42" width="74" height="70" rx="16" fill="url(#asset-adjustment-illustration-card)" stroke="#9DB6FF" strokeOpacity=".42" />
+      <g stroke="#DCEBFF" strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" fill="none">
+        <path d="M171 62h34" />
+        <path d="m198 55 7 7-7 7" />
+        <path d="M213 84h-34" />
+        <path d="m186 77-7 7 7 7" />
       </g>
     </g>
-    <circle cx="53" cy="52" r="4" fill="url(#asset-adjustment-illustration-sphere)" />
-    <circle cx="202" cy="45" r="8" fill="url(#asset-adjustment-illustration-sphere)" />
-    <circle cx="218" cy="82" r="10" fill="url(#asset-adjustment-illustration-sphere)" />
+    <circle cx="74" cy="60" r="4" fill="url(#asset-adjustment-illustration-sphere)" />
+    <circle cx="223" cy="50" r="8" fill="url(#asset-adjustment-illustration-sphere)" />
+    <circle cx="238" cy="91" r="10" fill="url(#asset-adjustment-illustration-sphere)" />
   </svg>;
 }
 function SelectIcon({ kind }: { kind?: SelectOption['icon'] }) { return <svg className="admin-form-select__icon" viewBox="0 0 24 24" aria-hidden="true"><path d={kind === 'airdrop' ? 'm21 3-7.7 18-3.9-7.1L3 10.7 21 3Z' : kind === 'asset' ? 'M12 3 19 7v10l-7 4-7-4V7l7-4ZM5 7l7 4 7-4M12 11v10' : 'M7 7h10M14 3l4 4-4 4M17 17H7M10 21l-4-4 4-4'} /></svg>; }
