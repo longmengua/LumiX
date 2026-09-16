@@ -16,6 +16,11 @@ export type AdminUserDetail = {
   user: AdminUser;
   devices: Array<{ platform: string; label: string; lastSeenAt: string }>;
 };
+export type AdminUserAssetProjection = { accountType: string; assetSymbol: string; total: string; available: string; locked: string; projectionVersion: number; projectedAt: string; reconciledAt: string | null; };
+export type AdminUserAssetSnapshot = { source: 'BALANCE_PROJECTION'; items: AdminUserAssetProjection[]; };
+export type AdminUserLedgerHistoryItem = { entryId: string; accountType: string; assetSymbol: string; direction: 'CREDIT' | 'DEBIT'; amount: string; referenceType: string; referenceId: string; postedAt: string; };
+/** 帳戶容器不含任何金額，前端不得將它當成零餘額 projection。 */
+export type AdminUserAccountInventoryItem = { accountId: string; accountType: string; accountStatus: string; createdAt: string; };
 
 export type AdminUserSearchCursor = {
   createdAt: string;
@@ -63,6 +68,10 @@ export function findAdminUsers(search: AdminUserSearch): Promise<AdminUserSearch
 export function getAdminUser(id: string): Promise<AdminUserDetail> {
   return read<AdminUserDetail>(`/users/${encodeURIComponent(id)}`);
 }
+/** 管理端資產只讀取現有 projection；不提供餘額調整、空投或任何資金寫入 action。 */
+export function getAdminUserAssets(id: string): Promise<AdminUserAssetSnapshot> { return read<AdminUserAssetSnapshot>(`/users/${encodeURIComponent(id)}/assets`); }
+export function getAdminUserAssetHistory(id: string): Promise<AdminUserLedgerHistoryItem[]> { return read<AdminUserLedgerHistoryItem[]>(`/users/${encodeURIComponent(id)}/assets/history`); }
+export function getAdminUserAccounts(id: string): Promise<AdminUserAccountInventoryItem[]> { return read<AdminUserAccountInventoryItem[]>(`/users/${encodeURIComponent(id)}/assets/accounts`); }
 
 async function read<T>(path: string): Promise<T> {
   const response = await fetch(`${ADMIN_API_BASE_PATH}${path}`, { credentials: 'same-origin' });

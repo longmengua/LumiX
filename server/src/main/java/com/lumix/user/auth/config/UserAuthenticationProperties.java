@@ -83,8 +83,12 @@ public class UserAuthenticationProperties {
 
     /** 新裝置登入確認的短時效設定；SMTP 與公開網址刻意沿用 password-reset 的受控邊界。 */
     public static class LoginVerification {
+        // 這是可逆的營運開關；關閉時仍會撤銷同平台舊裝置與限制資金外流，不能只略過確認就保留舊信任狀態。
+        private boolean enabled;
         private Duration ttl = Duration.ofMinutes(15);
 
+        public boolean isEnabled() { return enabled; }
+        public void setEnabled(boolean enabled) { this.enabled = enabled; }
         public Duration getTtl() { return ttl; }
         public void setTtl(Duration ttl) { this.ttl = ttl; }
     }

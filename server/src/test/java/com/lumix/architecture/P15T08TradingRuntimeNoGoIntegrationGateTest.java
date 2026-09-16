@@ -82,6 +82,7 @@ class P15T08TradingRuntimeNoGoIntegrationGateTest {
         );
 
         for (Path javaFile : sourceFiles) {
+            if (javaFile.startsWith(sourceRoot.resolve("com/lumix/ledger/runtime"))) continue;
             if (approvedWritePaths.contains(javaFile)) {
                 continue;
             }

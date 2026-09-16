@@ -96,14 +96,42 @@ class UserAuthenticationServiceLoginSecurityTest {
         when(repository.lockActiveUserForBoundDeviceChange(user.userId())).thenReturn(true);
         when(repository.hasActiveBoundLoginDeviceForPlatform(user.userId(), metadata.devicePlatform())).thenReturn(true);
         when(delivery.isAvailable()).thenReturn(true);
+        UserAuthenticationProperties properties = new UserAuthenticationProperties();
+        properties.getLoginVerification().setEnabled(true);
 
-        UserAuthenticationService.LoginResult result = service(repository, passwordEncoder, delivery)
+        UserAuthenticationService.LoginResult result = service(repository, passwordEncoder, delivery, properties)
             .login(user.email(), "correct-password", null, metadata);
 
         // 同一類別已占用時，任何不同 device cookie 都必須先取得 email 核准，不能由舊通知開關繞過。
         assertEquals(true, result.requiresVerification());
         verify(delivery).deliver(eq(user), eq(metadata), any());
         verify(repository, never()).createTrustedDevice(any(), any(), any(), any());
+    }
+
+    @Test
+    void disabledLoginVerificationReplacesDeviceWithoutEmailApproval() {
+        UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
+        BCryptPasswordEncoder passwordEncoder = mock(BCryptPasswordEncoder.class);
+        AuthenticatedUser user = new AuthenticatedUser("first-user", "first@example.com", "First User");
+        LoginRequestMetadata metadata = new LoginRequestMetadata("203.0.113.11", "第一個裝置", "first-device-digest");
+        when(repository.findPasswordCredentialByEmail(user.email()))
+            .thenReturn(Optional.of(new PasswordCredential(user, "bcrypt-hash")));
+        when(passwordEncoder.matches("correct-password", "bcrypt-hash")).thenReturn(true);
+        when(repository.lockActiveUserForBoundDeviceChange(user.userId())).thenReturn(true);
+        when(repository.hasActiveBoundLoginDeviceForPlatform(user.userId(), metadata.devicePlatform())).thenReturn(true);
+        when(repository.extendFundTransferRestriction(eq(user.userId()), any())).thenReturn(true);
+        UserAuthenticationProperties properties = new UserAuthenticationProperties();
+        properties.getLoginVerification().setEnabled(false);
+
+        UserAuthenticationService.LoginResult result = service(repository, passwordEncoder, mock(LoginVerificationDeliveryPort.class), properties)
+            .login(user.email(), "correct-password", null, metadata);
+
+        // 停用確認只省略 email 核准，換機的撤銷、資金限制、可信裝置與 session 證據仍須完整保留。
+        assertFalse(result.requiresVerification());
+        assertNotNull(result.authentication().device());
+        verify(repository).revokeActiveBoundDevicesForPlatform(user.userId(), metadata.devicePlatform());
+        verify(repository).extendFundTransferRestriction(eq(user.userId()), any());
+        verify(repository).createTrustedDevice(any(), eq(user.userId()), anyString(), eq(metadata));
     }
 
     @Test
@@ -182,13 +210,22 @@ class UserAuthenticationServiceLoginSecurityTest {
         BCryptPasswordEncoder passwordEncoder,
         LoginVerificationDeliveryPort loginVerificationDelivery
     ) {
+        return service(repository, passwordEncoder, loginVerificationDelivery, new UserAuthenticationProperties());
+    }
+
+    private static UserAuthenticationService service(
+        UserAuthenticationRepository repository,
+        BCryptPasswordEncoder passwordEncoder,
+        LoginVerificationDeliveryPort loginVerificationDelivery,
+        UserAuthenticationProperties properties
+    ) {
         return new UserAuthenticationService(
             repository,
             mock(RegistrationEmailBloomFilter.class),
             passwordEncoder,
             mock(PasswordResetDeliveryPort.class),
             loginVerificationDelivery,
-            new UserAuthenticationProperties(),
+            properties,
             Clock.fixed(Instant.parse("2026-09-11T00:00:00Z"), ZoneOffset.UTC)
         );
     }

@@ -19,12 +19,8 @@ import { AssetsOverviewPage } from '../pages/assets/AssetsOverviewPage';
 import { SpotAssetsPage } from '../pages/assets/SpotAssetsPage';
 import { FuturesAssetsPage } from '../pages/assets/FuturesAssetsPage';
 import { MarginAssetsPage } from '../pages/assets/MarginAssetsPage';
-import { TransferAssetsPage } from '../pages/assets/TransferAssetsPage';
-import { DepositPage } from '../pages/assets/DepositPage';
-import { WithdrawPage } from '../pages/assets/WithdrawPage';
-import { DepositHistoryPage } from '../pages/assets/DepositHistoryPage';
-import { WithdrawHistoryPage } from '../pages/assets/WithdrawHistoryPage';
-import { WithdrawAddressesPage } from '../pages/assets/WithdrawAddressesPage';
+import { AssetRuntimeUnavailablePage } from '../pages/assets/AssetRuntimeUnavailablePage';
+import { AssetTransferRuntimePage } from '../pages/assets/AssetTransferRuntimePage';
 import { OrdersPage } from '../pages/OrdersPage';
 import { PositionsPage } from '../pages/PositionsPage';
 import { AccountPage } from '../pages/AccountPage';
@@ -134,7 +130,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <TransferAssetsPage />
+            <AssetTransferRuntimePage />
           </AppLayout>
         }
         path="/assets/transfer"
@@ -142,7 +138,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <DepositPage />
+            <AssetRuntimeUnavailablePage />
           </AppLayout>
         }
         path="/assets/deposit"
@@ -150,7 +146,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <WithdrawPage />
+            <AssetRuntimeUnavailablePage />
           </AppLayout>
         }
         path="/assets/withdraw"
@@ -158,7 +154,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <DepositHistoryPage />
+            <AssetRuntimeUnavailablePage />
           </AppLayout>
         }
         path="/assets/deposit/history"
@@ -166,7 +162,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <WithdrawHistoryPage />
+            <AssetRuntimeUnavailablePage />
           </AppLayout>
         }
         path="/assets/withdraw/history"
@@ -174,7 +170,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <WithdrawAddressesPage />
+            <AssetRuntimeUnavailablePage />
           </AppLayout>
         }
         path="/assets/withdraw/addresses"

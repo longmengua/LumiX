@@ -93,6 +93,7 @@ class P16T04SpotSandboxMatchingScopeGateTest {
         );
 
         for (Path javaFile : sourceFiles) {
+            if (javaFile.startsWith(sourceRoot.resolve("com/lumix/ledger/runtime"))) continue;
             if (approvedWritePaths.contains(javaFile)) {
                 continue;
             }

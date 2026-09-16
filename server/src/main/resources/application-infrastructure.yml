@@ -66,6 +66,8 @@ lumix:
       from-address: ${LUMIX_AUTH_PASSWORD_RESET_FROM_ADDRESS:}
       public-base-url: ${LUMIX_AUTH_PUBLIC_BASE_URL:}
     login-verification:
+      # 本機營運暫停新裝置 email 確認；設為 true 即恢復既有的雙裝置驗證流程。
+      enabled: ${LUMIX_AUTH_LOGIN_VERIFICATION_ENABLED:false}
       # pending cookie 與 email token 都會在此短時效後失效；不得延長為長期裝置憑證。
       ttl: ${LUMIX_AUTH_LOGIN_VERIFICATION_TTL:PT15M}
     registration-verification:

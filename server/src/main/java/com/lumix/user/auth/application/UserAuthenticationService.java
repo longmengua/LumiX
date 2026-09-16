@@ -240,6 +240,15 @@ public class UserAuthenticationService {
             ));
         }
 
+        if (!properties.getLoginVerification().isEnabled()) {
+            // 營運明確停用確認時，仍完整執行換機撤銷與資金限制，避免關閉 email 流程變成保留多台同平台裝置的繞過。
+            DeviceSecret replacementDevice = createDeviceSecret();
+            replaceBoundDevice(user, replacementDevice, metadata);
+            return LoginResult.authenticated(new AuthenticationResult(
+                user, createSession(user.userId(), metadata, replacementDevice.deviceId()), replacementDevice
+            ));
+        }
+
         if (!loginVerificationDelivery.isAvailable()) {
             // 沒有可用 email delivery 時絕不能因便利而把未知裝置直接視為可信。
             throw new ApiException(ApiErrorCode.SERVICE_UNAVAILABLE);
@@ -475,25 +484,35 @@ public class UserAuthenticationService {
         if (!repository.lockActiveUserForBoundDeviceChange(request.user().userId())) {
             throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
         }
-        // email Yes 核准的是原始候選裝置；先撤銷同平台舊 device/session，才可建立新 cookie 並維持一槽一台。
-        repository.revokeActiveBoundDevicesForPlatform(request.user().userId(), request.metadata().devicePlatform());
+        replaceBoundDevice(request.user(), pending.candidateDevice(), request.metadata());
+        return LoginVerificationCompletion.authenticated(new AuthenticationResult(
+            request.user(), createSession(request.user().userId(), request.metadata(), pending.candidateDevice().deviceId()),
+            pending.candidateDevice()
+        ));
+    }
+
+    /**
+     * 完成同平台裝置替換。
+     *
+     * <p>呼叫端必須已持有 user row lock。無論替換由 email 核准或受控營運開關觸發，都必須共用這條路徑，
+     * 使既有 session 撤銷與資金外流限制不會因流程分歧而遺漏。</p>
+     */
+    private void replaceBoundDevice(AuthenticatedUser user, DeviceSecret replacementDevice, LoginRequestMetadata metadata) {
+        // 先撤銷同平台舊 device/session，才可建立新 cookie 並維持一槽一台。
+        repository.revokeActiveBoundDevicesForPlatform(user.userId(), metadata.devicePlatform());
         Duration restrictionDuration = properties.getDeviceChangeFundTransferRestriction();
         if (restrictionDuration == null || restrictionDuration.isZero() || restrictionDuration.isNegative()) {
             // 不能因部署設定錯誤讓已完成的換機流程沒有資金外流保護。
             throw new IllegalStateException("device change fund transfer restriction must be positive");
         }
         Instant restrictedUntil = Instant.now(clock).plus(restrictionDuration);
-        if (!repository.extendFundTransferRestriction(request.user().userId(), restrictedUntil)) {
+        if (!repository.extendFundTransferRestriction(user.userId(), restrictedUntil)) {
             // 若限制時間無法持久化，必須 rollback 裝置替換，避免資金外流保護只停留在畫面倒數。
             throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
         }
         repository.createTrustedDevice(
-            pending.candidateDevice().deviceId(), request.user().userId(), pending.candidateDevice().secretDigest(), request.metadata()
+            replacementDevice.deviceId(), user.userId(), replacementDevice.secretDigest(), metadata
         );
-        return LoginVerificationCompletion.authenticated(new AuthenticationResult(
-            request.user(), createSession(request.user().userId(), request.metadata(), pending.candidateDevice().deviceId()),
-            pending.candidateDevice()
-        ));
     }
 
     /**

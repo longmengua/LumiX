@@ -58,6 +58,20 @@ public class JdbcUserAuthenticationRepository implements UserAuthenticationRepos
             "INSERT INTO user_credentials (user_id, password_hash, password_algorithm) VALUES (?, ?, 'BCRYPT')",
             user.userId(), passwordHash
         );
+        // 帳戶容器不含任何餘額；在同一個註冊 transaction 建立可避免後續資產 projection、風控或劃轉
+        // 面對「已有使用者但缺帳戶類型」的半成品狀態。真正資金只能經後續 ledger runtime 進入。
+        jdbcTemplate.update(
+            "INSERT INTO accounts (account_id, user_id, account_type, status) VALUES "
+                + "(?, ?, 'SPOT', 'ACTIVE'), (?, ?, 'FUTURES', 'ACTIVE'), (?, ?, 'MARGIN', 'ACTIVE')",
+            accountId(user.userId(), "spot"), user.userId(),
+            accountId(user.userId(), "futures"), user.userId(),
+            accountId(user.userId(), "margin"), user.userId()
+        );
+    }
+
+    /** account id 以 immutable user id 與固定 type 組成，讓註冊 transaction 的資料關聯可追溯且不需隨機猜測。 */
+    private static String accountId(String userId, String accountType) {
+        return userId + ":" + accountType;
     }
 
     @Override

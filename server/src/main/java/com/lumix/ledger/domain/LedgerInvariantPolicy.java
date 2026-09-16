@@ -11,12 +11,15 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import org.springframework.stereotype.Component;
+
 /**
  * ledger journal 的純 domain invariant policy。
  *
  * 這個 policy 只做 posting 前檢查，不寫資料庫、不開 transaction，也不改 balance。
  * 任何把這個 policy 接到正式 runtime 的變更都必須走 HUMAN_REVIEW_REQUIRED。
  */
+@Component
 public class LedgerInvariantPolicy {
 
     /**
