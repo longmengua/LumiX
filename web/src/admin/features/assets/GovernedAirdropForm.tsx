@@ -165,14 +165,33 @@ function FormSelect({ ariaLabel, compact = false, disabled = false, options, pla
 function NoteIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M14 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8M14 4l6 6M14 4v6h6M8 15h8M8 11h3" /></svg>; }
 function AdjustmentIcon() { return <svg viewBox="0 0 24 24" focusable="false"><path d="M5 7h10M12 3l4 4-4 4M19 17H9M12 21l-4-4 4-4" /></svg>; }
 function AssetAdjustmentIllustration() {
-  return <svg className="admin-airdrop-form__illustration" viewBox="0 0 220 100" aria-hidden="true">
-    <defs><linearGradient id="asset-adjustment-gradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#6b78f5" stopOpacity=".82" /><stop offset="1" stopColor="#315ed8" stopOpacity=".62" /></linearGradient></defs>
-    <ellipse cx="82" cy="78" rx="58" ry="12" />
-    <path d="M25 70c10-15 35-24 62-22 22 2 43 10 54 22" />
-    <path d="M35 67c0-7 20-13 45-13s45 6 45 13v8c0 7-20 13-45 13s-45-6-45-13zM35 58c0-7 20-13 45-13s45 6 45 13-20 13-45 13-45-6-45-13ZM35 48c0-7 20-13 45-13s45 6 45 13-20 13-45 13-45-6-45-13Z" />
-    <rect x="116" y="17" width="65" height="57" rx="13" transform="rotate(14 116 17)" />
-    <path d="M137 43h27m-8-7 8 7-8 7M164 54h-27m8-7-8 7 8 7" />
-    <circle cx="190" cy="22" r="7" /><circle cx="202" cy="76" r="9" />
+  return <svg className="admin-airdrop-form__illustration" viewBox="0 0 260 130" aria-hidden="true">
+    <defs>
+      <linearGradient id="asset-adjustment-card" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#8d7bff" /><stop offset=".48" stopColor="#5976f2" /><stop offset="1" stopColor="#274db8" /></linearGradient>
+      <linearGradient id="asset-adjustment-coin" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#91b8ff" /><stop offset=".48" stopColor="#577ff0" /><stop offset="1" stopColor="#284eb9" /></linearGradient>
+      <radialGradient id="asset-adjustment-sphere" cx="30%" cy="22%"><stop offset="0" stopColor="#c8d9ff" /><stop offset=".3" stopColor="#8498ff" /><stop offset="1" stopColor="#4155c4" /></radialGradient>
+      <radialGradient id="asset-adjustment-ground"><stop offset="0" stopColor="#456ff0" stopOpacity=".3" /><stop offset="1" stopColor="#233f9e" stopOpacity="0" /></radialGradient>
+      <filter id="asset-adjustment-shadow" x="-40%" y="-40%" width="180%" height="200%"><feDropShadow dx="0" dy="8" stdDeviation="7" floodColor="#142c83" floodOpacity=".48" /></filter>
+    </defs>
+    <ellipse cx="124" cy="108" rx="104" ry="18" fill="url(#asset-adjustment-ground)" />
+    <ellipse cx="116" cy="103" rx="87" ry="16" fill="none" stroke="#5683ff" strokeOpacity=".55" strokeWidth="1.5" />
+    <g filter="url(#asset-adjustment-shadow)">
+      <path d="M46 78v12c0 7 17 13 38 13s38-6 38-13V78Z" fill="#3158c6" />
+      <ellipse cx="84" cy="78" rx="38" ry="13" fill="url(#asset-adjustment-coin)" />
+      <path d="M50 64v12c0 7 15 12 34 12s34-5 34-12V64Z" fill="#355fce" />
+      <ellipse cx="84" cy="64" rx="34" ry="12" fill="url(#asset-adjustment-coin)" />
+      <path d="M55 51v11c0 6 13 11 29 11s29-5 29-11V51Z" fill="#3a67d7" />
+      <ellipse cx="84" cy="51" rx="29" ry="11" fill="url(#asset-adjustment-coin)" />
+      <ellipse cx="77" cy="48" rx="13" ry="4" fill="#c5d7ff" fillOpacity=".26" />
+    </g>
+    <g transform="rotate(13 161 57)" filter="url(#asset-adjustment-shadow)">
+      <rect x="128" y="21" width="76" height="72" rx="17" fill="url(#asset-adjustment-card)" />
+      <path d="M145 50h33m-9-9 9 9-9 9M185 65h-33m9-9-9 9 9 9" fill="none" stroke="#d7e5ff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M140 30c14-8 37-8 52 1" fill="none" stroke="#fff" strokeOpacity=".2" strokeWidth="3" strokeLinecap="round" />
+    </g>
+    <circle cx="206" cy="29" r="9" fill="url(#asset-adjustment-sphere)" filter="url(#asset-adjustment-shadow)" />
+    <circle cx="229" cy="91" r="12" fill="url(#asset-adjustment-sphere)" filter="url(#asset-adjustment-shadow)" />
+    <circle cx="34" cy="47" r="5" fill="url(#asset-adjustment-sphere)" opacity=".75" />
   </svg>;
 }
 function SelectIcon({ kind }: { kind?: SelectOption['icon'] }) { return <svg className="admin-form-select__icon" viewBox="0 0 24 24" aria-hidden="true"><path d={kind === 'airdrop' ? 'm21 3-7.7 18-3.9-7.1L3 10.7 21 3Z' : kind === 'asset' ? 'M12 3 19 7v10l-7 4-7-4V7l7-4ZM5 7l7 4 7-4M12 11v10' : 'M7 7h10M14 3l4 4-4 4M17 17H7M10 21l-4-4 4-4'} /></svg>; }
