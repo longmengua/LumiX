@@ -8,6 +8,7 @@ const sectionLinks = [
   { to: '/assets', labelKey: 'nav.assets.overview' },
   { to: '/assets/spot', labelKey: 'nav.assets.spot' },
   { to: '/assets/futures', labelKey: 'nav.assets.futures' },
+  { to: '/assets/transfer', labelKey: 'nav.assets.transfer' },
 ] as const;
 
 type AssetSectionNavProps = {

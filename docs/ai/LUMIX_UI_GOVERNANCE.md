@@ -211,7 +211,7 @@ AdminRouter
       └─ AdminAssetsPage
          ├─ PageHeader
          └─ admin-assets-workspace
-            ├─ asset workspace sidebar tabs
+            ├─ asset workspace sidebar tabs（總覽／現貨／合約／劃轉）
             └─ AdjustmentWorkspace
                └─ GovernedAirdropForm
                   └─ admin-airdrop-form
@@ -440,3 +440,7 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 登錄產品帳戶範圍收斂為現貨與合約；獨立現貨槓桿 UI／route 不再是可用頁面。
 - 明確區分「已移除的現貨借貸」與「合約交易必要的保證金／槓桿」兩個不同領域，避免後續 UI 任務誤刪合約風控資訊。
+
+### v1.6 — 2026-09-17（working tree）
+
+- 修正資產劃轉頁的導航入口，`AssetSectionNav` 現在明確列出總覽／現貨／合約／劃轉；劃轉仍使用既有 `POST /api/v1/assets/transfers` 與 SPOT／FUTURES contract。

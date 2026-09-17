@@ -9,7 +9,7 @@ import { useI18n } from '../../i18n';
 type TransferForm = { sourceAccountType: string; destinationAccountType: string; assetSymbol: string; amount: string; };
 const initialForm: TransferForm = { sourceAccountType: 'SPOT', destinationAccountType: 'FUTURES', assetSymbol: 'USDT', amount: '' };
 
-/** 真實劃轉表單；成功 only 由 server journal response 決定，不能用 local state 假裝資產已移動。 */
+/** 真實劃轉表單；成功只由 server journal response 決定，不能用 local state 假裝資產已移動。 */
 export function AssetTransferRuntimePage() {
   const { t } = useI18n();
   const [form, setForm] = useState<TransferForm>(initialForm);
