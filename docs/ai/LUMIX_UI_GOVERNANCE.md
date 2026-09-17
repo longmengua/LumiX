@@ -7,13 +7,13 @@
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-17 |
-| Repository revision | `d8e01bd`（Users／Assets Hero consistency）；本次產品範圍收斂尚在工作區，未對應新 revision |
+| Repository revision | 工作區同步資產頁雙語顯示規則，尚未對應新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system | 沒有第三方 icon package；使用頁面內 inline React SVG |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.4`（working tree snapshot） |
+| UI Governance Version | `1.7`（working tree snapshot） |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -446,3 +446,8 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 修正資產劃轉頁的導航入口，`AssetSectionNav` 現在明確列出總覽／現貨／合約／劃轉；劃轉仍使用既有 `POST /api/v1/assets/transfers` 與 SPOT／FUTURES contract。
 - 資產總覽收斂為標題、分頁、帳戶切換、資產明細與帳本歷史，移除重複的 metrics／帳戶 inventory 卡片；資料 API 與資產帳戶切換邏輯保持不變。
 - 資產總覽移除第二層帳戶 tab，改由單一資產分頁導航搭配現貨／合約明細卡片呈現，避免總覽內重複導航。
+
+### v1.7 — 2026-09-17（working tree）
+
+- 資產前台顯示文字改由雙語字典提供；中文介面不再直接呈現 `SPOT`／`FUTURES`、帳本參照類型或開發用英文說明，英文介面維持完整英文顯示。
+- 劃轉表單保留 `SPOT`／`FUTURES` API 值，只將選單顯示名稱本地化；資產歷史的帳戶類型與參照類型同樣只在顯示層轉換，不改動後端資料契約。

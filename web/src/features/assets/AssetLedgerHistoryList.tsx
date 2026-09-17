@@ -15,7 +15,7 @@ export function AssetLedgerHistoryList() {
       {items.length === 0 ? <EmptyState title={t('assets.historyEmptyTitle')} description={t('assets.historyEmptyDescription')} /> : (
         <div className="asset-ledger-history__list">
           {items.map((item) => { const occurred = formatDateTimeParts(item.postedAt); return <article className="asset-ledger-history__item" key={item.entryId}>
-            <div><strong>{item.direction === 'CREDIT' ? t('assets.historyCredit') : t('assets.historyDebit')} · {item.assetSymbol}</strong><p>{item.accountType} · {item.referenceType} #{item.referenceId}</p></div>
+            <div><strong>{item.direction === 'CREDIT' ? t('assets.historyCredit') : t('assets.historyDebit')} · {item.assetSymbol}</strong><p>{item.accountType === 'SPOT' ? t('account.spotAccount') : t('account.futuresAccount')} · {referenceTypeLabel(item.referenceType, t)} #{item.referenceId}</p></div>
             <div><strong>{item.direction === 'CREDIT' ? '+' : '-'}{formatDecimalString(item.amount)} {item.assetSymbol}</strong><p>{occurred.date} · {occurred.time}</p></div>
           </article>; })}
         </div>
@@ -24,4 +24,17 @@ export function AssetLedgerHistoryList() {
       {nextCursor ? <button className="secondary-button asset-ledger-history__more" type="button" disabled={loadingMore} onClick={loadMore}>{loadingMore ? t('assets.historyLoadingMore') : t('assets.historyLoadMore')}</button> : null}
     </section>
   );
+}
+
+function referenceTypeLabel(referenceType: string, t: (key: string, fallback?: string) => string): string {
+  const labels: Record<string, string> = {
+    ADJUSTMENT: 'assets.historyReferenceAdjustment',
+    INTERNAL_TRANSFER: 'assets.historyReferenceTransfer',
+    TRANSFER: 'assets.historyReferenceTransfer',
+    DEPOSIT: 'assets.historyReferenceDeposit',
+    WITHDRAWAL: 'assets.historyReferenceWithdrawal',
+    ORDER: 'assets.historyReferenceOrder',
+    SETTLEMENT: 'assets.historyReferenceSettlement',
+  };
+  return t(labels[referenceType] ?? 'assets.historyReferenceGeneric');
 }
