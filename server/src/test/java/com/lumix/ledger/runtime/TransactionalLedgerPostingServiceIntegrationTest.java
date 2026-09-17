@@ -107,7 +107,7 @@ class TransactionalLedgerPostingServiceIntegrationTest {
                     + "('ledger-user', 'ledger@example.com', 'Ledger User', 'ACTIVE')");
             statement.executeUpdate("INSERT INTO accounts (account_id, user_id, account_type, status) VALUES "
                     + "('ledger-debit', 'ledger-user', 'SPOT', 'ACTIVE'), "
-                    + "('ledger-credit', 'ledger-user', 'MARGIN', 'ACTIVE')");
+                    + "('ledger-credit', 'ledger-user', 'FUTURES', 'ACTIVE')");
             statement.executeUpdate("INSERT INTO assets (asset_symbol, display_name, precision_scale, status) "
                     + "VALUES ('USDT', 'Tether', 6, 'ACTIVE')");
             statement.executeUpdate("INSERT INTO account_assets (account_id, asset_symbol, status) VALUES "

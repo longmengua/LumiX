@@ -159,7 +159,7 @@ class LedgerAppendOnlyPostgresVerificationTest {
             try {
                 insertUser(connection, "pg-user-p14-t07", "pg-p14-t07@example.com");
                 insertAccount(connection, "pg-acct-debit", "pg-user-p14-t07", "SPOT");
-                insertAccount(connection, "pg-acct-credit", "pg-user-p14-t07", "MARGIN");
+                insertAccount(connection, "pg-acct-credit", "pg-user-p14-t07", "FUTURES");
                 insertAsset(connection, "USDT", "Tether USD");
                 insertAccountAsset(connection, "pg-acct-debit", "USDT");
                 insertAccountAsset(connection, "pg-acct-credit", "USDT");

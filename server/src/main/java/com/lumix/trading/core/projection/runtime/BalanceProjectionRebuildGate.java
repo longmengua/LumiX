@@ -145,7 +145,7 @@ public final class BalanceProjectionRebuildGate {
     /**
      * 在重建前先刪除既有 SPOT projection rows。
      *
-     * <p>這是保守的 SPOT-only rebuild gate，所以只清掉 SPOT rows，不動 MARGIN / FUTURES / 其他 account type 的 projection rows。</p>
+     * <p>這是保守的 SPOT-only rebuild gate，所以只清掉 SPOT rows，不動 FUTURES 或其他 account type 的 projection rows。</p>
      */
     private static void deleteSpotBalanceProjections(Connection connection) throws SQLException {
         final String sql = "DELETE FROM " + "balance_projections bp "

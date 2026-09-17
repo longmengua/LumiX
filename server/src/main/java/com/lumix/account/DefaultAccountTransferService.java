@@ -15,7 +15,7 @@ import java.util.Set;
 public class DefaultAccountTransferService implements AccountTransferService {
 
     private static final Set<AccountType> SUPPORTED_ACCOUNT_TYPES =
-            EnumSet.of(AccountType.SPOT, AccountType.FUTURES, AccountType.MARGIN);
+            EnumSet.of(AccountType.SPOT, AccountType.FUTURES);
 
     private final LedgerService ledgerService;
 
@@ -52,17 +52,17 @@ public class DefaultAccountTransferService implements AccountTransferService {
                     "fromAccountType and toAccountType must be different"
             );
         }
-        // 只接受 Phase 9 已定義的三種帳戶域。
+        // 只接受現貨與合約帳戶域；現貨槓桿帳戶已不在產品範圍內。
         validateAccountType(request.fromAccountType(), "fromAccountType");
         validateAccountType(request.toAccountType(), "toAccountType");
     }
 
     private void validateAccountType(AccountType accountType, String fieldName) {
-        // 目前只允許現貨、合約、槓桿三個帳戶域，禁止拿 generic account 當萬用桶。
+        // 目前只允許現貨與合約兩個帳戶域，禁止拿 generic account 當萬用桶。
         if (!SUPPORTED_ACCOUNT_TYPES.contains(accountType)) {
             throw new BusinessException(
                     ErrorCode.UNSUPPORTED_ACCOUNT_TYPE,
-                    fieldName + " must be one of SPOT, FUTURES, or MARGIN"
+                    fieldName + " must be one of SPOT or FUTURES"
             );
         }
     }

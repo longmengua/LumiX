@@ -183,7 +183,7 @@ class BalanceProjectionRebuildGateTest {
             insertUser(connection, "user-p15-t05-clear-btc", "p15-t05-clear-btc@example.com");
             insertAccount(connection, "acct-spot-usdt", "user-p15-t05-spot-usdt", "SPOT");
             insertAccount(connection, "acct-spot-btc", "user-p15-t05-spot-btc", "SPOT");
-            insertAccount(connection, "acct-clear-usdt", "user-p15-t05-clear-usdt", "MARGIN");
+            insertAccount(connection, "acct-clear-usdt", "user-p15-t05-clear-usdt", "FUTURES");
             insertAccount(connection, "acct-clear-btc", "user-p15-t05-clear-btc", "FUTURES");
             insertAsset(connection, "USDT", "Tether USD");
             insertAsset(connection, "BTC", "Bitcoin");

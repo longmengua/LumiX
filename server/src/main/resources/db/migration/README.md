@@ -11,6 +11,7 @@
 - migration SQL 必須清楚標示 precision、constraint 與 foreign key。
 - 不要在 migration 中放入 runtime 資金移動邏輯。
 - 認證 migration 不得保存明文密碼、session secret 或密碼重設 token；只允許不可逆雜湊。
+- 歷史 schema 與產品範圍不一致時，必須新增前向 corrective migration；例如 `V023__remove_spot_margin_accounts.sql` 只會刪除無任何會計或錢包證據的舊 MARGIN 容器，存在依賴時必須 fail-closed，不能刪改稽核資料。
 
 ## 預期工具
 

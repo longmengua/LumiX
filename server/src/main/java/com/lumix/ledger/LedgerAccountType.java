@@ -8,15 +8,13 @@ import com.lumix.account.AccountType;
  */
 public enum LedgerAccountType {
     SPOT,
-    FUTURES,
-    MARGIN;
+    FUTURES;
 
     public static LedgerAccountType fromAccountType(AccountType accountType) {
         // 只做明確映射，不接受隱性 fallback，避免新增類型時被默默吞掉。
         return switch (accountType) {
             case SPOT -> SPOT;
             case FUTURES -> FUTURES;
-            case MARGIN -> MARGIN;
         };
     }
 }

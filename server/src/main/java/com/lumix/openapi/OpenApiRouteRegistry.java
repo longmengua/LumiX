@@ -122,16 +122,6 @@ public class OpenApiRouteRegistry {
             ),
             new OpenApiRoute(
                     "POST",
-                    "/open-api/v1/margin/borrow",
-                    true,
-                    true,
-                    true,
-                    Set.of(ApiKeyPermission.MARGIN_TRADE),
-                    ApiRateLimitTier.VIP,
-                    "Metadata only. Margin execution stays out of Phase 10."
-            ),
-            new OpenApiRoute(
-                    "POST",
                     "/open-api/v1/api-keys",
                     true,
                     true,

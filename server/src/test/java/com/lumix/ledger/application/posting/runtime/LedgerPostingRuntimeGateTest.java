@@ -295,7 +295,7 @@ class LedgerPostingRuntimeGateTest {
         try (Connection connection = dataSource.getConnection()) {
             insertUser(connection, "user-p15-t04", "p15-t04@example.com");
             insertAccount(connection, "acct-debit", "user-p15-t04", "SPOT");
-            insertAccount(connection, "acct-credit", "user-p15-t04", "MARGIN");
+            insertAccount(connection, "acct-credit", "user-p15-t04", "FUTURES");
             insertAsset(connection, "USDT", "Tether USD");
             insertAccountAsset(connection, "acct-debit", "USDT");
             insertAccountAsset(connection, "acct-credit", "USDT");

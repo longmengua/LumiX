@@ -249,7 +249,7 @@ class LedgerAppendOnlyJdbcAdapterTest {
         try (Connection connection = dataSource.getConnection()) {
             insertUser(connection, "user-p14-t06", "p14-t06@example.com");
             insertAccount(connection, "acct-debit", "user-p14-t06", "SPOT");
-            insertAccount(connection, "acct-credit", "user-p14-t06", "MARGIN");
+            insertAccount(connection, "acct-credit", "user-p14-t06", "FUTURES");
             insertAsset(connection, "USDT", "Tether USD");
             insertAccountAsset(connection, "acct-debit", "USDT");
             insertAccountAsset(connection, "acct-credit", "USDT");
