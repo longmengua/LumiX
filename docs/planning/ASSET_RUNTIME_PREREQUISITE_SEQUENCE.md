@@ -40,7 +40,7 @@ P25 signer / broadcast / confirmation runtime
 | 2 | 餘額投影更新 | 入帳後可重現的重建、數量精度、延遲與新鮮度、對帳差異 | 停止對外宣稱可用餘額 |
 | 3 | 資產保留 | 保留／解除／扣取的擁有者、資產與原子數量一致性及冪等性 | 拒絕劃轉、提款與空投 |
 | 4 | 帳戶所有權檢查／權限審核／稽核紀錄 | 凍結帳戶的對外轉出或轉給他人必須拒絕、具權限操作者、原因、不可變證據 | 拒絕不符合權限的特權資產命令 |
-| 5 | 內部劃轉 | 來源與目的帳戶同一擁有者、單一交易、雙分錄、餘額投影／對帳證據 | 不提供劃轉介面或程式介面 |
+| 5 | 內部劃轉／平台內部轉帳 | 同一擁有者帳戶劃轉必須檢查不同帳戶；平台內部轉帳必須由 session owner 轉出至收款 UUID 的 ACTIVE USER SPOT 帳戶。兩者均須單一交易、雙分錄、餘額投影／對帳、獨立 idempotency 與 immutable audit 證據 | 不提供劃轉介面或程式介面 |
 | 6 | 空投 | 活動資格、資產狀態、每位使用者／活動冪等性、權限審核、不可變稽核證據 | 不提供空投 UI/API |
 | 7 | Deposit | address ownership、provider health/finality、reorg、credit/reversal idempotency | 不顯示入金地址或 credited balance |
 | 8 | Withdrawal | request/hold、risk、approval、keyless signer intent、broadcast/confirmation reconciliation | 不提供提現 UI/API |

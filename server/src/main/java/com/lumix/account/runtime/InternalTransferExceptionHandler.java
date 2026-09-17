@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 /** 劃轉拒絕與資料庫衝突一律回傳去敏錯誤，不將餘額、SQL 或 reservation 識別碼暴露給 browser。 */
-@RestControllerAdvice(assignableTypes = InternalTransferController.class)
+@RestControllerAdvice(assignableTypes = {InternalTransferController.class, PlatformInternalTransferController.class})
 public class InternalTransferExceptionHandler {
     private final ApiExceptionHandler errors = new ApiExceptionHandler();
     @ExceptionHandler(HttpMessageNotReadableException.class)

@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 
 import { Card } from '../../components/base/Card';
 import { ErrorState } from '../../components/base/State';
@@ -6,10 +6,13 @@ import { AdminPageHero } from '../../admin/components/AdminPageHero';
 import { AssetAdjustmentArtwork } from '../../admin/features/assets/AssetAdjustmentHeroArtwork';
 import { AssetAdjustmentHeroIcon } from '../../admin/features/assets/AssetAdjustmentHeroIcon';
 import { AssetSectionNav } from '../../features/assets/AssetSectionNav';
+import { AssetSymbolSelect } from '../../features/assets/AssetSymbolSelect';
+import { tabForAccountType, type AssetAccountType } from '../../features/assets/assetAccountTypes';
+import { useAssetProjectionSnapshot } from '../../features/assets/useAssetProjectionSnapshot';
 import { useI18n } from '../../i18n';
 
-type TransferForm = { sourceAccountType: string; destinationAccountType: string; assetSymbol: string; amount: string; };
-const initialForm: TransferForm = { sourceAccountType: 'SPOT', destinationAccountType: 'FUTURES', assetSymbol: 'USDT', amount: '' };
+type TransferForm = { sourceAccountType: AssetAccountType; destinationAccountType: AssetAccountType; assetSymbol: string; amount: string; };
+const initialForm: TransferForm = { sourceAccountType: 'SPOT', destinationAccountType: 'FUTURES', assetSymbol: '', amount: '' };
 
 /** 真實劃轉表單；成功只由 server journal response 決定，不能用 local state 假裝資產已移動。 */
 export function AssetTransferRuntimePage() {
@@ -19,11 +22,25 @@ export function AssetTransferRuntimePage() {
   const [result, setResult] = useState<{ ledgerJournalId: string; replayed: boolean } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const idempotencyKey = useRef<string | null>(null);
+  const { data, loading: assetsLoading, errorCode: assetLoadError } = useAssetProjectionSnapshot();
+  const assetOptions = useMemo(() => (data?.accounts.find((account) => account.key === tabForAccountType(form.sourceAccountType))?.items ?? [])
+    .filter((asset) => asset.accountStatus === 'ACTIVE' && asset.assetStatus === 'ACTIVE')
+    .filter((asset, index, list) => list.findIndex((candidate) => candidate.assetSymbol === asset.assetSymbol) === index)
+    .map((asset) => ({ value: asset.assetSymbol, label: asset.assetDisplayName })), [data, form.sourceAccountType]);
+  const sourceAsset = data?.accounts.find((account) => account.key === tabForAccountType(form.sourceAccountType))?.items.find((asset) => asset.assetSymbol === form.assetSymbol);
+  const destinationAsset = data?.accounts.find((account) => account.key === tabForAccountType(form.destinationAccountType))?.items.find((asset) => asset.assetSymbol === form.assetSymbol);
+
+  useEffect(() => {
+    if (!assetOptions.some((asset) => asset.value === form.assetSymbol)) {
+      setForm((current) => ({ ...current, assetSymbol: assetOptions[0]?.value ?? '' }));
+    }
+  }, [assetOptions, form.assetSymbol]);
 
   function update<K extends keyof TransferForm>(key: K, value: TransferForm[K]) { idempotencyKey.current = null; setResult(null); setForm((current) => ({ ...current, [key]: value })); }
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (form.sourceAccountType === form.destinationAccountType) { setError(t('assets.transferRuntimeSameAccount')); return; }
+    if (!form.assetSymbol) { setError(t('assets.transferRuntimeAssetsEmpty')); return; }
     idempotencyKey.current ??= crypto.randomUUID();
     setSubmitting(true); setError(null); setResult(null);
     try {
@@ -49,17 +66,16 @@ export function AssetTransferRuntimePage() {
     />
     <AssetSectionNav className="asset-transfer-workspace" />
     <Card className="asset-transfer-card"><header className="asset-transfer-card__header"><span className="asset-transfer-card__icon" aria-hidden="true"><TransferIcon /></span><div><h2>{t('assets.transferFormTitle')}</h2><p>{t('assets.transferFormDescription')}</p></div></header><form className="asset-transfer-form" onSubmit={(event) => void submit(event)}>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeFrom')}<RequiredMark /></span><TransferAccountSelect value={form.sourceAccountType} onChange={(value) => update('sourceAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /></label>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeTo')}<RequiredMark /></span><TransferAccountSelect value={form.destinationAccountType} onChange={(value) => update('destinationAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /></label>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeAsset')}<RequiredMark /></span><input className="input" required maxLength={32} value={form.assetSymbol} onChange={(event) => update('assetSymbol', event.target.value.toUpperCase())} /></label>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeAmount')}<RequiredMark /></span><input className="input" required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" value={form.amount} onChange={(event) => update('amount', event.target.value)} /></label>
-      <div className="asset-transfer-form__actions"><button className="primary-button" disabled={submitting} type="submit"><TransferIcon />{submitting ? t('assets.transferRuntimeSubmitting') : t('assets.transferRuntimeSubmit')}</button></div>
-    </form>{result ? <p className="form-message form-message--success">{t('assets.transferRuntimeSucceeded', undefined, { journalId: result.ledgerJournalId })}</p> : null}{error ? <ErrorState title={t('assets.transferRuntimeFailed')} description={error} /> : null}</Card>
+      <label className="field"><span className="field__label">{t('assets.transferRuntimeFrom')}<RequiredMark /></span><TransferAccountSelect value={form.sourceAccountType} onChange={(value) => update('sourceAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /><AccountAmountHint label={t('assets.transferRuntimeSourceAvailable')} amount={sourceAsset?.available} assetSymbol={form.assetSymbol} loading={assetsLoading} /></label>
+      <label className="field"><span className="field__label">{t('assets.transferRuntimeTo')}<RequiredMark /></span><TransferAccountSelect value={form.destinationAccountType} onChange={(value) => update('destinationAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /><AccountAmountHint label={t('assets.transferRuntimeTargetTotal')} amount={destinationAsset?.total} assetSymbol={form.assetSymbol} loading={assetsLoading} /></label>
+      <label className="field asset-transfer-form__amount"><span className="field__label">{t('assets.transferRuntimeAmount')}<RequiredMark /></span><span className="asset-transfer-form__amount-row"><input className="input" required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" placeholder={t('assets.funding.internalAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><AssetSymbolSelect ariaLabel={t('assets.transferRuntimeAsset')} disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetOptions} value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
+      <div className="asset-transfer-form__actions"><button className="primary-button" disabled={submitting || assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} type="submit"><TransferIcon />{submitting ? t('assets.transferRuntimeSubmitting') : t('assets.transferRuntimeSubmit')}</button></div>
+    </form>{assetLoadError ? <ErrorState title={t('assets.transferRuntimeAssetsFailed')} description={t('assets.transferRuntimeAssetsFailedDescription')} /> : null}{!assetsLoading && !assetLoadError && assetOptions.length === 0 ? <p className="asset-transfer-form__empty">{t('assets.transferRuntimeAssetsEmpty')}</p> : null}{result ? <p className="form-message form-message--success">{t('assets.transferRuntimeSucceeded', undefined, { journalId: result.ledgerJournalId })}</p> : null}{error ? <ErrorState title={t('assets.transferRuntimeFailed')} description={error} /> : null}</Card>
   </div>;
 }
 
 type TransferAccountSelectProps = {
-  value: string;
+  value: AssetAccountType;
   onChange: (value: 'SPOT' | 'FUTURES') => void;
   labels: { spot: string; futures: string };
 };
@@ -81,6 +97,9 @@ function TransferAccountSelect({ value, onChange, labels }: TransferAccountSelec
 }
 
 function RequiredMark() { return <span className="asset-transfer-form__required" aria-hidden="true">*</span>; }
+function AccountAmountHint({ label, amount, assetSymbol, loading }: { label: string; amount?: string; assetSymbol: string; loading: boolean }) {
+  return <span className="asset-transfer-form__balance-hint">{label}<strong>{loading ? '—' : amount && assetSymbol ? `${amount} ${assetSymbol}` : '—'}</strong></span>;
+}
 function ChevronIcon() { return <svg className="admin-form-select__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>; }
 function CheckIcon() { return <svg className="admin-form-select__check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>; }
 function TransferIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h12m-4-4 4 4-4 4M19 17H7m4 4-4-4 4-4" /></svg>; }

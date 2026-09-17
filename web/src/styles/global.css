@@ -705,7 +705,8 @@ p,
 .admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
 
 /* 客戶端劃轉繼承資產調整 Hero 與控制項 token，讓兩個資產操作頁維持同一套資訊層級。 */
-.asset-transfer-page {
+.asset-transfer-page,
+.asset-funding-page {
   --color-bg-surface: #07172f;
   --color-bg-control: rgba(3, 16, 40, .65);
   --color-border-subtle: rgba(100, 153, 242, .25);
@@ -733,26 +734,36 @@ p,
   --space-8: 2rem;
 }
 .asset-transfer-workspace,
-.asset-transfer-card {
+.asset-transfer-card,
+.asset-funding-workspace,
+.asset-funding-card {
   border-color: rgba(88, 139, 242, .22);
   background: radial-gradient(circle at 12% 0%, rgba(46, 101, 222, .1), transparent 44%), linear-gradient(145deg, rgba(7, 23, 51, .94), rgba(3, 14, 33, .97));
   box-shadow: inset 0 1px rgba(211, 229, 255, .04), 0 1.2rem 3rem rgba(0, 0, 0, .18);
 }
 .asset-transfer-workspace { padding: clamp(1.35rem, 2vw, 1.75rem); }
+.asset-funding-workspace { padding: clamp(1.35rem, 2vw, 1.75rem); }
 .asset-transfer-workspace .card__title { margin-bottom: .38rem; color: var(--color-text-primary); font-size: 1.2rem; }
+.asset-funding-workspace .card__title { margin-bottom: .38rem; color: var(--color-text-primary); font-size: 1.2rem; }
 .asset-transfer-workspace .assets-tabs__hint { margin: 0; color: var(--color-text-secondary); font-size: .9rem; }
+.asset-funding-workspace .assets-tabs__hint { margin: 0; color: var(--color-text-secondary); font-size: .9rem; }
 .asset-transfer-workspace .assets-tabs { gap: .65rem; margin-top: 1rem; }
+.asset-funding-workspace .assets-tabs { gap: .65rem; margin-top: 1rem; }
 .asset-transfer-workspace .tab-button { min-block-size: 2.65rem; border-color: rgba(116, 166, 255, .22); background: rgba(3, 16, 40, .32); color: rgba(204, 222, 250, .72); transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease; }
+.asset-funding-workspace .tab-button { min-block-size: 2.65rem; border-color: rgba(116, 166, 255, .22); background: rgba(3, 16, 40, .32); color: rgba(204, 222, 250, .72); transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease; }
 .asset-transfer-workspace .tab-button:hover { border-color: rgba(116, 166, 255, .42); background: rgba(29, 83, 178, .14); color: #e4f0ff; transform: none; }
+.asset-funding-workspace .tab-button:hover { border-color: rgba(116, 166, 255, .42); background: rgba(29, 83, 178, .14); color: #e4f0ff; transform: none; }
 .asset-transfer-workspace .tab-button--active { border-color: rgba(100, 169, 255, .58); background: linear-gradient(135deg, rgba(46, 114, 234, .34), rgba(63, 78, 199, .22)); box-shadow: inset 0 1px rgba(203, 227, 255, .1), 0 0 1rem rgba(47, 111, 232, .12); color: #f0f7ff; }
+.asset-funding-workspace .tab-button--active { border-color: rgba(100, 169, 255, .58); background: linear-gradient(135deg, rgba(46, 114, 234, .34), rgba(63, 78, 199, .22)); box-shadow: inset 0 1px rgba(203, 227, 255, .1), 0 0 1rem rgba(47, 111, 232, .12); color: #f0f7ff; }
 .asset-transfer-card { padding: clamp(1.5rem, 2.4vw, 2rem); }
+.asset-funding-card { padding: clamp(1.5rem, 2.4vw, 2rem); }
 .asset-transfer-card__header { display: flex; align-items: center; gap: .85rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(129, 166, 226, .13); }
 .asset-transfer-card__icon { display: grid; flex: 0 0 auto; inline-size: 2.6rem; block-size: 2.6rem; place-items: center; border: 1px solid rgba(108, 178, 255, .28); border-radius: .82rem; background: linear-gradient(145deg, rgba(57, 126, 243, .23), rgba(89, 77, 210, .16)); color: #90c6ff; }
 .asset-transfer-card__icon svg,
 .asset-transfer-form .primary-button svg { inline-size: 1.3rem; block-size: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
 .asset-transfer-card__header h2 { margin: 0; color: var(--color-text-primary); font-size: clamp(1.25rem, 2vw, 1.45rem); line-height: 1.2; }
 .asset-transfer-card__header p { margin: .35rem 0 0; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.55; }
-.asset-transfer-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.35rem; }
+.asset-transfer-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.1rem; }
 .asset-transfer-form .field { display: flex; min-inline-size: 0; flex-direction: column; gap: .52rem; }
 .asset-transfer-form .field__label { color: rgba(234, 241, 255, .92); font-size: .9rem; font-weight: 600; }
 .asset-transfer-form__required { margin-inline-start: .22rem; color: #fb7185; }
@@ -766,9 +777,73 @@ p,
 .asset-transfer-form .admin-form-select__trigger:focus-visible { border-color: rgba(90, 157, 255, .82); box-shadow: 0 0 0 3px rgba(55, 131, 255, .14); outline: 0; }
 .asset-transfer-form .admin-form-select { inline-size: 100%; }
 .asset-transfer-form .admin-form-select__menu { border-color: rgba(103, 148, 224, .32); background: #061a3a; }
+.asset-transfer-form__balance-hint { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--color-text-secondary); font-size: .8rem; line-height: 1.35; }
+.asset-transfer-form__balance-hint strong { color: rgba(224, 237, 255, .9); font-variant-numeric: tabular-nums; font-weight: 600; }
+.asset-transfer-form__amount-row { display: flex; align-items: stretch; gap: .55rem; min-inline-size: 0; }
+.asset-transfer-form__amount-row > .input { flex: 1 1 auto; min-inline-size: 0; }
+.asset-transfer-form__amount-row .admin-form-select { flex: 0 0 10.5rem; }
+.asset-transfer-form__amount-row .admin-form-select__trigger { min-block-size: 3.2rem; }
+.asset-transfer-form__amount-row .admin-form-select__menu { min-inline-size: 12.5rem; }
 .asset-transfer-form__actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; margin-top: .4rem; padding-top: 1.25rem; border-top: 1px solid rgba(129, 166, 226, .13); }
 .asset-transfer-form .primary-button { min-block-size: 3.15rem; min-inline-size: 10.5rem; border-radius: .72rem; background: linear-gradient(135deg, #3b8fff, #356df2); box-shadow: 0 .55rem 1.25rem rgba(31, 105, 240, .2); font-weight: 650; }
 .asset-transfer-form .primary-button:hover:not(:disabled) { background: linear-gradient(135deg, #55a0ff, #416ff1); }
+
+/* 充值與提幣只顯示可理解的方式入口；選取狀態是資訊切換，不代表已建立資產操作。 */
+.asset-funding-card__header { display: flex; align-items: center; gap: .85rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(129, 166, 226, .13); }
+.asset-funding-card__icon, .asset-funding-method__icon, .asset-funding-method-detail__icon { display: grid; place-items: center; color: #90c6ff; }
+.asset-funding-card__icon { flex: 0 0 auto; inline-size: 2.6rem; block-size: 2.6rem; border: 1px solid rgba(108, 178, 255, .28); border-radius: .82rem; background: linear-gradient(145deg, rgba(57, 126, 243, .23), rgba(89, 77, 210, .16)); }
+.asset-funding-card__icon svg, .asset-funding-method__icon svg, .asset-funding-method-detail__icon svg, .asset-funding-method > svg { inline-size: 1.3rem; block-size: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+.asset-funding-card__header h2, .asset-funding-method-detail h3 { margin: 0; color: var(--color-text-primary); font-size: clamp(1.25rem, 2vw, 1.45rem); line-height: 1.2; }
+.asset-funding-card__header p, .asset-funding-method-detail p { margin: .35rem 0 0; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.55; }
+.asset-funding-methods { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; }
+.asset-funding-method { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .6rem; min-block-size: 4.25rem; padding: .75rem .8rem; border: 1px solid rgba(116, 166, 255, .2); border-radius: .78rem; background: rgba(3, 16, 40, .32); color: rgba(214, 229, 253, .82); font: inherit; font-size: .88rem; font-weight: 600; text-align: start; cursor: pointer; }
+.asset-funding-method:hover, .asset-funding-method:focus-visible { border-color: rgba(116, 166, 255, .46); background: rgba(29, 83, 178, .14); color: #edf6ff; outline: 0; }
+.asset-funding-method--selected { border-color: rgba(100, 169, 255, .62); background: linear-gradient(135deg, rgba(46, 114, 234, .25), rgba(63, 78, 199, .16)); box-shadow: inset 0 1px rgba(203, 227, 255, .09), 0 0 1rem rgba(47, 111, 232, .1); color: #f0f7ff; }
+.asset-funding-method__icon { inline-size: 1.7rem; block-size: 1.7rem; border-radius: .5rem; background: rgba(73, 126, 231, .14); }
+.asset-funding-method > svg { inline-size: 1rem; block-size: 1rem; color: rgba(180, 207, 248, .65); }
+.asset-funding-method-detail { display: flex; align-items: flex-start; gap: .9rem; margin-top: 1.25rem; padding: 1rem 1.1rem; border: 1px solid rgba(103, 148, 224, .16); border-radius: .8rem; background: rgba(12, 35, 75, .38); }
+.asset-funding-method-detail__icon { flex: 0 0 auto; inline-size: 2.2rem; block-size: 2.2rem; border-radius: .65rem; background: rgba(73, 126, 231, .13); }
+.asset-funding-method-detail h3 { font-size: 1rem; }
+.asset-funding-method-detail__status { display: inline-flex; margin-top: .7rem; padding: .28rem .52rem; border: 1px solid rgba(116, 166, 255, .22); border-radius: 999px; color: rgba(196, 218, 251, .84); font-size: .78rem; }
+
+/* 平台內部轉入／轉出使用與資產沖銷相同的深色控制項層級；資產列表只讀取真實現貨 projection，沒有 fallback 幣種。 */
+.asset-funding-internal { margin-top: 1.25rem; padding: clamp(1.1rem, 2vw, 1.45rem); border: 1px solid rgba(103, 148, 224, .16); border-radius: .85rem; background: radial-gradient(circle at 8% 0%, rgba(59, 120, 244, .1), transparent 45%), rgba(7, 24, 54, .48); }
+.asset-funding-internal__copy { display: flex; align-items: flex-start; gap: .85rem; padding-bottom: 1.15rem; border-bottom: 1px solid rgba(129, 166, 226, .13); }
+.asset-funding-internal__copy h3 { margin: 0; color: var(--color-text-primary); font-size: 1.08rem; line-height: 1.25; }
+.asset-funding-internal__copy p { margin: .35rem 0 0; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.55; }
+.asset-funding-internal--deposit { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 1.25rem 2rem; }
+.asset-funding-internal--deposit .asset-funding-internal__copy { grid-column: 1; align-self: stretch; }
+.asset-funding-qr { grid-column: 2; grid-row: 1 / span 2; display: grid; place-items: center; padding: .7rem; border: 1px solid rgba(149, 189, 255, .28); border-radius: .9rem; background: #f4f8ff; box-shadow: 0 .7rem 1.4rem rgba(0, 7, 25, .22), inset 0 0 0 1px rgba(255, 255, 255, .62); }
+.asset-funding-qr svg { display: block; max-inline-size: 100%; block-size: auto; }
+.asset-funding-identifier { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .7rem; min-inline-size: 0; color: var(--color-text-secondary); font-size: .82rem; }
+.asset-funding-identifier strong { overflow-wrap: anywhere; color: var(--color-text-primary); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: .88rem; font-weight: 600; }
+.asset-funding-transfer-form { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.15rem; padding-top: 1.2rem; }
+.asset-funding-transfer-form .field { min-inline-size: 0; gap: .5rem; }
+.asset-funding-transfer-form .field__label { color: rgba(234, 241, 255, .92); font-size: .9rem; font-weight: 600; }
+.asset-funding-transfer-form__label-row { display: flex; align-items: center; justify-content: space-between; gap: .75rem; }
+.asset-funding-transfer-form__scan-button, .asset-funding-scanner__close { display: inline-grid; flex: 0 0 auto; inline-size: 2rem; block-size: 2rem; place-items: center; padding: 0; border: 1px solid rgba(108, 178, 255, .28); border-radius: .55rem; background: rgba(53, 111, 226, .14); color: #9bcaff; cursor: pointer; }
+.asset-funding-transfer-form__scan-button:hover, .asset-funding-transfer-form__scan-button:focus-visible, .asset-funding-scanner__close:hover, .asset-funding-scanner__close:focus-visible { border-color: rgba(116, 181, 255, .6); background: rgba(53, 111, 226, .27); color: #e4f2ff; outline: 0; }
+.asset-funding-transfer-form__scan-button svg, .asset-funding-scanner__close svg { inline-size: 1.1rem; block-size: 1.1rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+.asset-funding-transfer-form .input { min-block-size: 3.1rem; border-color: var(--color-border-subtle); border-radius: var(--radius-control); background: var(--color-bg-control); color: #eff5ff; }
+.asset-funding-transfer-form .input::placeholder { color: rgba(164, 188, 228, .5); }
+.asset-funding-transfer-form .input:hover { border-color: rgba(116, 166, 255, .36); }
+.asset-funding-transfer-form .input:focus { border-color: rgba(90, 157, 255, .82); box-shadow: 0 0 0 3px rgba(55, 131, 255, .14); }
+.asset-funding-transfer-form__amount-row { display: flex; align-items: stretch; gap: .55rem; min-inline-size: 0; }
+.asset-funding-transfer-form__amount-row > .input { flex: 1 1 auto; min-inline-size: 0; }
+.asset-funding-transfer-form__amount-row .admin-form-select { flex: 0 0 10.5rem; }
+.asset-funding-transfer-form__amount-row .admin-form-select__trigger { min-block-size: 3.1rem; border-color: var(--color-border-subtle); border-radius: var(--radius-control); background: var(--color-bg-control); }
+.asset-funding-transfer-form__amount-row .admin-form-select__menu { min-inline-size: 12.5rem; }
+.asset-funding-transfer-form__actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; padding-top: .15rem; }
+.asset-funding-transfer-form__actions .primary-button { min-block-size: 3.1rem; min-inline-size: 10.25rem; border-radius: var(--radius-control); background: linear-gradient(135deg, #3b8fff, #356df2); box-shadow: 0 .55rem 1.25rem rgba(31, 105, 240, .2); }
+.asset-funding-transfer-form__actions .primary-button svg { inline-size: 1.1rem; block-size: 1.1rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+.asset-funding-transfer-form__required { margin-left: .22rem; color: #fb7185; }
+.asset-funding-transfer-form__empty { margin: 1rem 0 0; color: var(--color-text-secondary); font-size: .9rem; }
+.asset-funding-transfer-form__retry { margin-top: 1rem; }
+.asset-funding-scanner { inline-size: min(100% - 2rem, 31rem); }
+.asset-funding-scanner .modal-card__header { align-items: flex-start; }
+.asset-funding-scanner .modal-card__header p { margin: .35rem 0 0; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.5; }
+.asset-funding-scanner__video { overflow: hidden; aspect-ratio: 1 / 1; border: 1px solid rgba(111, 170, 255, .24); border-radius: .85rem; background: #020b1d; }
+.asset-funding-scanner__video video { display: block; inline-size: 100%; block-size: 100%; object-fit: cover; }
 
 @media (max-width: 767px) {
   .admin-airdrop-form { border-radius: 1rem; }
@@ -783,8 +858,20 @@ p,
   .admin-airdrop-form__reset,
   .admin-airdrop-form__submit { inline-size: 100%; }
   .asset-transfer-form { grid-template-columns: minmax(0, 1fr); }
+  .asset-transfer-form__amount-row .admin-form-select { flex-basis: min(10.5rem, 42%); }
   .asset-transfer-form__actions { justify-content: stretch; }
   .asset-transfer-form .primary-button { inline-size: 100%; }
+  .asset-funding-methods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .asset-funding-internal--deposit { grid-template-columns: minmax(0, 1fr); }
+  .asset-funding-internal--deposit .asset-funding-internal__copy { grid-column: auto; }
+  .asset-funding-qr { grid-column: auto; grid-row: auto; justify-self: start; }
+  .asset-funding-transfer-form { grid-template-columns: minmax(0, 1fr); }
+  .asset-funding-transfer-form__actions { grid-column: auto; justify-content: stretch; }
+  .asset-funding-transfer-form__actions .primary-button { inline-size: 100%; }
+}
+
+@media (max-width: 440px) {
+  .asset-funding-methods { grid-template-columns: minmax(0, 1fr); }
 }
 
 /* 錯誤頁保留後台 chrome，僅以低調深藍 surface 建立焦點，不把技術錯誤放大成破壞性的警示畫面。 */

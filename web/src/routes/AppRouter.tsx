@@ -19,6 +19,7 @@ import { AssetsOverviewPage } from '../pages/assets/AssetsOverviewPage';
 import { SpotAssetsPage } from '../pages/assets/SpotAssetsPage';
 import { FuturesAssetsPage } from '../pages/assets/FuturesAssetsPage';
 import { AssetRuntimeUnavailablePage } from '../pages/assets/AssetRuntimeUnavailablePage';
+import { AssetFundingPage } from '../pages/assets/AssetFundingPage';
 import { AssetTransferRuntimePage } from '../pages/assets/AssetTransferRuntimePage';
 import { OrdersPage } from '../pages/OrdersPage';
 import { PositionsPage } from '../pages/PositionsPage';
@@ -121,7 +122,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <AssetRuntimeUnavailablePage />
+            <AssetFundingPage mode="deposit" />
           </AppLayout>
         }
         path="/assets/deposit"
@@ -129,7 +130,7 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <AssetRuntimeUnavailablePage />
+            <AssetFundingPage mode="withdraw" />
           </AppLayout>
         }
         path="/assets/withdraw"

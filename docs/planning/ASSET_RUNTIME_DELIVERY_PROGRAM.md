@@ -23,7 +23,8 @@
 | ASSET-T01 | 真實唯讀資產帳戶／餘額 projection query contract 與 API | Phase 14/15 read model、P29 auth | `COMPLETED_FOR_READ_ONLY_PROJECTION_API` | 僅讀取 authenticated owner 的 projection；沒有餘額 mutation；資料 freshness/source evidence 可見 |
 | ASSET-T02 | 前台資產總覽、現貨／合約頁切換至 ASSET-T01 API | ASSET-T01、P30 trusted UX | `COMPLETED_FOR_READ_ONLY_PROJECTION_PRESENTATION` | 移除正式頁的 asset mock adapter；完整 loading/empty/error/not-found state；無假資料 fallback |
 | ASSET-T03 | 真實資產歷史唯讀 query 與前台歷史呈現 | ASSET-T01、audit/ledger read boundary | `COMPLETED_FOR_READ_ONLY_LEDGER_HISTORY_PRESENTATION` | owner scoped、cursor pagination、immutable event/reference；不暴露其他使用者資料 |
-| 內部劃轉 | 內部劃轉請求與資產保留／帳本入帳交接 | 帳本入帳、資產保留、帳戶所有權檢查、稽核紀錄服務 | `COMPLETED_FOR_GOVERNED_INTERNAL_TRANSFER_RUNTIME` | 冪等性、來源與目的帳戶同一使用者、原子數量、稽核與失敗即拒絕；需要人工審核 |
+| 帳戶間劃轉 | 同一使用者現貨／合約帳戶間的劃轉請求與資產保留／帳本入帳交接 | 帳本入帳、資產保留、帳戶所有權檢查、稽核紀錄服務 | `COMPLETED_FOR_GOVERNED_INTERNAL_TRANSFER_RUNTIME` | 冪等性、來源與目的帳戶同一使用者、原子數量、稽核與失敗即拒絕；需要人工審核 |
+| 平台內部轉帳 | 由轉出者現貨帳戶轉入收款 UUID 對應現貨帳戶 | 帳本入帳、資產保留、來源／收款人帳戶資格檢查、稽核紀錄服務 | `COMPLETED_FOR_GOVERNED_PLATFORM_INTERNAL_TRANSFER_RUNTIME` | session owner、收款 UUID、雙方 ACTIVE 現貨帳戶、獨立冪等 scope、原子雙分錄與失敗即拒絕；需要人工審核 |
 | ASSET-T05 | 入金地址派發與鏈上觀測 runtime | Phase 22 provider-specific task、secret/DB approval | `BLOCKED_BY_PHASE_22_GATE` | 沒有 credit；network/address ownership、provider health、reorg/finality evidence 完整；屬 `HUMAN_REVIEW_REQUIRED` |
 | ASSET-T06 | 入金 eligibility、credit 與 reversal handoff | ASSET-T05、Phase 23 ledger runtime | `BLOCKED_BY_PHASE_23_GATE` | immutable ledger append、idempotency、reorg correction、reconciliation；屬 `HUMAN_REVIEW_REQUIRED` |
 | ASSET-T07 | 提款 request、地址簿、風控與 hold handoff | Phase 24 runtime、risk/ledger/reservation | `BLOCKED_BY_PHASE_24_GATE` | server time restriction、idempotency、fee version、audit、cancel lifecycle；屬 `HUMAN_REVIEW_REQUIRED` |
@@ -68,6 +69,7 @@
 | 2026-09-16 | 空投 | `COMPLETED_FOR_GOVERNED_ADMIN_AIRDROP_RUNTIME` | `POST /api/admin/v1/assets/airdrops` 僅接受 admin session 並由 server-side active super-admin 再次授權。`V021` 建立不可登入的 EXCHANGE 對應帳戶；每次空投以其 DEBIT、目標使用者帳戶 CREDIT 的 immutable `ADJUSTMENT` journal 入帳，絕不直接寫 projection。活動 ID + 用戶 + 帳戶 + 資產形成固定 idempotency key；相同 payload 安全回放、任何不同 payload fail closed。後台 `/assets` 已改為真實表單，沒有 mock 成功或餘額 fallback。 | `AdminAirdropServiceIntegrationTest`、`TransactionalLedgerPostingServiceTest`、後端 compile、前端 typecheck/build 通過；需要人工審核 |
 | 2026-09-16 | 內部劃轉 | `COMPLETED_FOR_GOVERNED_INTERNAL_TRANSFER_RUNTIME` | `POST /api/v1/assets/transfers` 僅由 session principal 決定 owner，來源與目標帳戶均由 server 解析且必須同一使用者、不同類型、ACTIVE。`V022` 新增獨立 transfer idempotency scope；同一 primary transaction 內依序建立來源 HOLD、capture、append source DEBIT／destination CREDIT journal、重建兩端 projection 與追加 audit。餘額不足、帳戶／資產不可用或不同 payload 重送均 fail closed；前台 `/assets/transfer` 不再載入 mock adapter。 | `InternalTransferServiceIntegrationTest`、`TransactionalLedgerPostingServiceIntegrationTest`、前端 typecheck/build 通過；需要人工審核 |
 | 2026-09-17 | 產品範圍收斂 | `COMPLETED_FOR_SPOT_AND_FUTURES_ONLY_ACCOUNT_BOUNDARY` | 移除獨立現貨槓桿帳戶、路由、API permission／route、前端 legacy mock 與相關文案；`V023` 僅在舊 MARGIN 帳戶沒有任何會計或錢包證據時刪除，否則 fail-closed。合約專用的 isolated margin 與槓桿模型維持不變。 | Flyway 23 migrations apply；前端 typecheck 通過；後端 package 通過 |
+| 2026-09-18 | 平台內部轉帳 | `COMPLETED_FOR_GOVERNED_PLATFORM_INTERNAL_TRANSFER_RUNTIME` | `POST /api/v1/assets/internal-transfers` 只從 session principal 取得轉出者；request 只接受收款 UUID、資產與正數十進位數量。server 固定解析雙方的 ACTIVE USER SPOT 帳戶，拒絕自轉、凍結／關閉帳戶、非啟用使用者、非啟用幣種與不存在的收款人。`V024` 增加獨立 `PLATFORM_INTERNAL_TRANSFER` idempotency scope；同一 transaction 依序完成來源 HOLD、capture、來源 DEBIT／收款人 CREDIT journal、兩端 projection rebuild、immutable audit 與完成標記。沒有鏈上地址、provider、私鑰、外部資金通道或 mock 成功。 | `InternalTransferServiceIntegrationTest` 驗證收款、扣款、account asset 建立、audit 與相同 idempotency key 安全回放；後端 compile 與前端 typecheck 通過；需要人工審核 |
 
 ### ASSET-T11 migration 與 rollback
 
@@ -77,4 +79,4 @@
 
 施工授權紀錄：2026-09-15 人類解除內部劃轉與受治理空投所需的帳本入帳／資產保留服務施工禁令。下一步從帳本入帳服務開始，接著完成餘額投影更新／對帳／資產保留；不得用模擬資料、介面假成功或資料庫直寫跳過。
 
-空投 runtime 已完成，屬 `HUMAN_REVIEW_REQUIRED`：它不是前端加餘額，也不是未受控的管理員調帳。帳戶凍結只限制轉出給他人或轉到外部，不阻擋空投轉入。金額上限、頻率、風險評分與雙人覆核仍是後續治理能力，不得宣稱已具備。
+空投與平台內部轉帳 runtime 均屬 `HUMAN_REVIEW_REQUIRED`：它們不是前端加餘額，也不是未受控的帳戶調整。平台內部轉帳只處理兩個 LumiX 現貨帳戶間的帳本異動；帳戶凍結、金額上限、頻率、風險評分與雙人覆核仍是後續治理能力，不得宣稱已具備。

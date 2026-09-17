@@ -7,13 +7,13 @@
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-18 |
-| Repository revision | `d646c82` 之後的工作區：資產沖銷流水唯讀對賬面板，尚未建立新 revision |
+| Repository revision | `7bf47d9` 之後的工作區：資產操作表單、平台內部轉帳與 UUID 掃碼，尚未建立新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
-| Icon system | 沒有第三方 icon package；使用頁面內 inline React SVG |
+| Icon system | 頁面功能 icon 使用 inline React SVG；`qrcode.react` 僅用於真實 UUID 的 SVG QR Code |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.9`（working tree snapshot） |
+| UI Governance Version | `1.13`（working tree snapshot） |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -106,6 +106,8 @@
 | `LoadingState`／`EmptyState`／`ErrorState` | `web/src/components/base/State.tsx` | 真實資料 loading／empty／error 呈現 | `global.css` | Canonical base component |
 | `FormSelect` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 資產調整局部深色 listbox，props 為 `ariaLabel`、`options`、`value`、`onChange`、`compact`、`disabled` | `.admin-form-select*` in `global.css` | Local / not yet extracted |
 | `AssetAdjustmentAuditPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 讀取既有資產沖銷／空投調整的對賬結果；loading、empty 與 error 均重用共享 State 元件 | `.admin-asset-audit*` in `global.css` | Feature-specific readonly panel |
+| `AssetFundingPage` | `web/src/pages/assets/AssetFundingPage.tsx` | `/assets/deposit`、`/assets/withdraw` 共用的方式入口；平台內部轉入顯示 UUID QR、轉出提交真實命令 | `.asset-funding-*` in `global.css` | Feature-specific |
+| `AssetSymbolSelect` | `web/src/features/assets/AssetSymbolSelect.tsx` | 現貨資產下拉；呼叫端提供真實 asset options、value 與 onChange，不可建立 fallback 幣種 | `.admin-form-select*` in `global.css` | Canonical asset control（帳戶劃轉、平台內部轉出） |
 
 目前沒有 shared React `Input`、`Select`、`Textarea`、`Button` 或第三方 icon component。一般 control 是原生元素加 `.input`、`.primary-button`、`.secondary-button` class。使用者 Hero 也不是 `AdminPageHero` consumer。
 
@@ -192,6 +194,19 @@ Supporting: 建構更透明的數位資產治理
 
 手續費收入、營收、虧損與 P&L 彙總尚未建立可用帳務來源。這個頁面不顯示預估、零值、mock 或假成功數字；待真實 fee journal／收益歸屬 runtime 完成後，才可擴充對賬範圍。
 
+### Client Asset Funding
+
+| 項目 | 真實狀態 |
+| --- | --- |
+| Routes | `/assets/deposit`、`/assets/withdraw` |
+| Page | `web/src/pages/assets/AssetFundingPage.tsx` (`AssetFundingPage`) |
+| Shared components used | `AdminPageHero`、`AssetSectionNav`、`Card`、`CopyButton`、`ErrorState`；控制項重用 `.input`、`.admin-form-select*`、`.primary-button` |
+| Platform internal receive | `/assets/deposit` 的「平台內部轉入」以 `fetchAccountProfile()` 讀取登入者 `userId`，用 `QRCodeSVG` 編碼該 UUID，並提供 `CopyButton`；不產生鏈上地址或資產異動 |
+| Platform internal send | `/assets/withdraw` 的「平台內部轉出」以 `useAssetProjectionSnapshot()` 取得 ACTIVE SPOT 幣種，向 `POST /api/v1/assets/internal-transfers` 送出收款 UUID、資產與正數量；收款 UUID 欄位可開啟瀏覽器原生 Camera API + `BarcodeDetector` 掃描真實 UUID QR Code 並自動帶入；不接受 browser account ID |
+| Account transfer | `/assets/transfer` 的帳戶劃轉維持 `POST /api/v1/assets/transfers` payload；表單改為來源帳戶、目標帳戶、數量＋資產三列。資產選項由所選來源帳戶的真實 ACTIVE projection 提供，並在帳戶選單下顯示該幣種的目前可用／目前持有；沒有資料一律顯示 `—`，不補零值 |
+| Other methods | 鏈上、OTC、銀行僅保留受控「即將開放」說明；沒有 provider、地址、外部結算或 fake success |
+| Current status | Platform internal receive/send implemented；外部通道 unavailable |
+
 ### Users
 
 | 項目 | 真實狀態 |
@@ -273,6 +288,21 @@ AdminUsersWorkspacePage
          └─ users toolbar / list / detail / pagination
 ```
 
+客戶端充值／提幣的實際 outline：
+
+```text
+ClientRouter
+└─ RequireAuth
+   └─ AssetFundingPage
+      ├─ AdminPageHero（共享呈現 shell）
+      ├─ AssetSectionNav
+      └─ asset-funding-card
+         ├─ 方法選擇（internal / chain / OTC / bank）
+         └─ internal
+            ├─ deposit: Account Profile → UUID QR Code + CopyButton
+            └─ withdraw: Asset Projection → recipient UUID + amount + asset select → internal transfer API
+```
+
 ## 10. Responsive Implementation
 
 | Area | Desktop | Narrow desktop / tablet | Mobile |
@@ -281,6 +311,9 @@ AdminUsersWorkspacePage
 | Asset workspace | left grid sidebar 11–14rem | same until viewport 767px | viewport ≤767px: single-column workspace; tabs become flex-wrap |
 | Adjustment form | user/type two columns; amount occupies first column | follows available container | viewport ≤767px: field grid becomes one column; footer/actions stack as defined in `global.css` |
 | Users Hero | heading + right decoration | viewport ≤1100px hides decoration | viewport ≤767px: icon 3.8rem, title 1.7rem, reduced padding; workspace controls wrap |
+| Client funding internal receive | copy + QR side-by-side | same surface and wrapping identifier | QR moves below copy; no horizontal overflow |
+| Client funding internal send | recipient / amount-and-asset two-row form；UUID label has QR scan control | same single-column rhythm | same order; submit button becomes full width |
+| Client account transfer | source / target / unified amount-and-asset three-row form | same single-column rhythm | amount and asset retain one control row；asset selector contracts without overflow |
 
 `AdminPageHero` deliberately uses **container queries**, not viewport queries, because the fixed workspace sidebar and localization affect the available content width.
 
@@ -305,6 +338,13 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 - 對賬狀態只可由 server 比對既有 `audit_logs`、journal 與 ledger entries 產生；browser 不得自行把資料標示為完成。
 - `EXCEPTION` 是人工調查訊號，不是前端自動修復、反沖、重送或資產異動授權。
 - 現階段範圍只包含 `ADMIN_ASSET_ADJUSTMENT` 成功證據與 `ADJUSTMENT` journal。手續費收入、營收、虧損與 P&L 沒有真實資料來源前不得加入任何 placeholder 數字。
+
+### Client platform internal transfer protected behavior
+
+- QR Code 只可編碼已認證使用者的 UUID；不可把鏈上地址、私鑰、token 或付款 URL 放入 QR。
+- 收款 UUID、asset symbol 與 amount 必須由 server 驗證；browser 不可傳入 source/destination account ID、帳本識別碼或任何可繞過 ownership 的欄位。
+- 轉出幣種只來自真實 ACTIVE SPOT projection；資料 loading/error/empty 時必須停用送出，不能寫死幣種、餘額或成功狀態。
+- `POST /api/v1/assets/internal-transfers` 是高風險受治理資產命令：idempotency、reservation、immutable ledger、projection rebuild、audit 與 fail-closed server boundary 不可因 UI 任務變更；`HUMAN_REVIEW_REQUIRED`。
 
 ### Users protected behavior
 
@@ -446,6 +486,16 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** 降低借貸、利率、負債與清算風險，同時維持合約交易的必要風控邊界。
 
+### 2026-09-18 — 平台內部轉入／轉出採真實 UUID 與資產命令邊界
+
+**Context:** 充值與提幣方式入口需要支援 LumiX 使用者間的現貨資產移轉，不能以假地址、假 QR 或前端成功狀態代替。
+
+**Decision:** 平台內部轉入顯示登入者真實 UUID 的 decorative QR Code 與複製控制項；平台內部轉出只從真實現貨餘額 projection 取得幣種，提交至受 session、idempotency、reservation、immutable ledger 與 audit 保護的 server command。
+
+**Affected:** `web/src/pages/assets/AssetFundingPage.tsx`、`web/src/features/assets/assetProjectionApi.ts`、`server/src/main/java/com/lumix/account/runtime/PlatformInternalTransferService.java`。
+
+**Reason:** 保持使用者可理解的收款方式，同時不讓 browser 指定 account ID、修改餘額或假裝資產已移動。
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -510,3 +560,25 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 管理員密碼重設頁 `web/src/admin/pages/AdminResetPasswordPage.tsx` 改為直接沿用既有 `.admin-login--portal` shell、卡片、語言切換器、密碼控制項、狀態區與 footer；未新增第二套 auth surface CSS，密碼規則、token 提交與導回登入流程維持不變。
 - 抽出 `web/src/components/base/CopyButton.tsx`，讓管理端使用者識別值與客戶端個人中心 UID 共用同一個可及複製互動、clipboard fallback 與已複製回饋；個人資料 API 與 UUID 資料契約不變。
+
+### v1.10 — 2026-09-18（working tree）
+
+- `web/src/pages/assets/AssetFundingPage.tsx` 成為 `/assets/deposit` 與 `/assets/withdraw` 的共同方式入口；客戶端資產導覽新增充值與提幣。
+- 兩頁提供平台內部、鏈上、OTC 與銀行方式的資訊選擇，但尚未接入 provider、地址派發、銀行結算、OTC 訂單、平台用戶間轉帳或資產異動 command；頁面不得顯示假地址、假餘額、假紀錄或假成功結果。
+- 方式入口固定以平台內部轉入／轉出優先，其後才是鏈上、OTC 與銀行；未規劃的「其他」通道不顯示為不可操作按鈕。
+
+### v1.11 — 2026-09-18（working tree）
+
+- `/assets/deposit` 的平台內部轉入現在以 `qrcode.react` 的 SVG QR Code 顯示登入者真實 UUID，並沿用共用 `CopyButton`；QR 只編碼 UUID，不承載鏈上地址、私鑰或其他資產資料。
+- `/assets/withdraw` 的平台內部轉出新增收款人 UUID、數量與現貨幣種表單；幣種只來自 `/api/v1/assets/balances` 的 ACTIVE SPOT projection，空資料時顯示受控不可送出狀態，不寫死 USDT 或假餘額。
+- 前端命令接至 `POST /api/v1/assets/internal-transfers`。server 以 `PLATFORM_INTERNAL_TRANSFER` 獨立 scope，在單一 transaction 中執行 source HOLD/capture、source DEBIT、recipient CREDIT、投影更新與 immutable audit；此路徑為 `HUMAN_REVIEW_REQUIRED`。
+
+### v1.12 — 2026-09-18（working tree）
+
+- 抽出 `web/src/features/assets/AssetSymbolSelect.tsx`，讓帳戶劃轉與平台內部轉出使用同一個 `.admin-form-select*` 資產下拉；component 不帶固定幣種，所有選項均由呼叫端的真實資料來源提供。
+- `/assets/transfer` 從四個兩欄欄位改為來源帳戶、目標帳戶、數量＋資產的三列；同時在帳戶欄位下以真實 projection 顯示目前可用／目前持有，未知或空資料顯示 `—`，不建立假零值。客戶端所有數量控制項的資產下拉只顯示 `assetDisplayName`，不重複附加 API symbol；既有 API endpoint、payload、validation、idempotency 與帳本流程不變。
+
+### v1.13 — 2026-09-18（working tree）
+
+- 平台內部轉出改為收款人 UUID、數量＋資產兩列，不再在桌面版併列欄位；收款人 label 右側新增具 aria-label 的掃碼按鈕。
+- 掃碼視窗只使用瀏覽器的 `getUserMedia` 與原生 `BarcodeDetector`，辨識到 UUID 格式 QR Code 才自動帶入並立即停止 camera stream。裝置不支援、權限拒絕或非 UUID QR Code 均維持受控訊息，沒有 fake scan 或推測值。
