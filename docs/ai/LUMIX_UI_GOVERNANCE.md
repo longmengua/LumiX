@@ -444,3 +444,4 @@ Do not record an uncommitted implementation as a released revision. If a working
 ### v1.6 — 2026-09-17（working tree）
 
 - 修正資產劃轉頁的導航入口，`AssetSectionNav` 現在明確列出總覽／現貨／合約／劃轉；劃轉仍使用既有 `POST /api/v1/assets/transfers` 與 SPOT／FUTURES contract。
+- 資產總覽收斂為標題、分頁、帳戶切換、資產明細與帳本歷史，移除重複的 metrics／帳戶 inventory 卡片；資料 API 與資產帳戶切換邏輯保持不變。

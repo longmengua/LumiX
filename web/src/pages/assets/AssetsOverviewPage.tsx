@@ -6,7 +6,6 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { useI18n } from '../../i18n';
 import { AssetAccountTable } from '../../features/assets/AssetAccountTable';
 import { AssetLedgerHistoryList } from '../../features/assets/AssetLedgerHistoryList';
-import { AssetOverviewMetrics } from '../../features/assets/AssetOverviewMetrics';
 import { accountLabelKeyByTab, assetTabs, type AssetTabKey } from '../../features/assets/assetAccountTypes';
 import { AssetSectionNav } from '../../features/assets/AssetSectionNav';
 import { useAssetProjectionSnapshot } from '../../features/assets/useAssetProjectionSnapshot';
@@ -30,13 +29,6 @@ export function AssetsOverviewPage() {
 
       {!loading && !errorCode && data ? (
         <>
-          <AssetOverviewMetrics accounts={data.accounts} />
-
-          <Card title={t('assets.accountInventoryTitle')}>
-            <div className="asset-account-inventory">{data.inventory.map((account) => <div key={account.accountId}><strong>{t(accountLabelKeyByTab[account.accountType.toLowerCase() as AssetTabKey])}</strong><span>{account.accountStatus}</span></div>)}</div>
-            {data.inventory.length === 0 ? <EmptyState title={t('assets.noAccountInventoryTitle')} description={t('assets.noAccountInventoryDescription')} /> : null}
-          </Card>
-
           <Card title={t('assets.accountTabs')}>
             <div className="assets-tabs">
               {assetTabs.map((accountKey) => (
