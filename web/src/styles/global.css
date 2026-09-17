@@ -681,7 +681,7 @@ p,
 .admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
 
 /* 客戶端劃轉沿用管理端資產調整的控制項語言，但不共用管理端表單容器或業務樣式。 */
-.admin-assets-transfer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-inline-size: 44rem; gap: 1.1rem 1.35rem; }
+.admin-assets-transfer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); inline-size: min(100%, 42rem); max-inline-size: 100%; gap: 1.2rem 1.35rem; padding-block: 0.15rem 0.25rem; }
 .admin-assets-transfer .field { display: flex; min-inline-size: 0; flex-direction: column; gap: 0.5rem; }
 .admin-assets-transfer .field__label { color: rgba(234, 241, 255, 0.92); font-size: 0.9rem; font-weight: 600; }
 .admin-assets-transfer__required { margin-inline-start: 0.22rem; color: #fb7185; }
@@ -696,7 +696,12 @@ p,
 .admin-assets-transfer .input:hover { border-color: rgba(116, 166, 255, 0.36); }
 .admin-assets-transfer .input:focus { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); outline: 0; }
 .admin-assets-transfer select.input { color-scheme: dark; cursor: pointer; }
-.admin-assets-transfer .primary-button { grid-column: 1 / -1; justify-self: end; min-block-size: 3.1rem; min-inline-size: 10rem; border-radius: 0.72rem; }
+.admin-assets-transfer .admin-form-select { inline-size: 100%; }
+.admin-assets-transfer .admin-form-select__trigger { min-block-size: 3.1rem; border-color: var(--color-border-subtle); border-radius: var(--radius-control); background: var(--color-bg-control); }
+.admin-assets-transfer .admin-form-select__trigger:hover { border-color: rgba(116, 166, 255, 0.36); }
+.admin-assets-transfer .admin-form-select--open .admin-form-select__trigger,
+.admin-assets-transfer .admin-form-select__trigger:focus-visible { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); }
+.admin-assets-transfer .primary-button { grid-column: 1 / -1; justify-self: end; min-block-size: 3.1rem; min-inline-size: 10rem; border-radius: 0.72rem; background: linear-gradient(135deg, #3b8fff, #356df2); box-shadow: 0 0.55rem 1.25rem rgba(31, 105, 240, 0.2); }
 
 @media (max-width: 767px) {
   .admin-airdrop-form { border-radius: 1rem; }
