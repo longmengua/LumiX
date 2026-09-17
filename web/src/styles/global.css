@@ -681,9 +681,10 @@ p,
 .admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
 
 /* 客戶端劃轉沿用管理端資產調整的控制項語言，但不共用管理端表單容器或業務樣式。 */
-.admin-assets-transfer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.35rem; }
+.admin-assets-transfer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); max-inline-size: 44rem; gap: 1.1rem 1.35rem; }
 .admin-assets-transfer .field { display: flex; min-inline-size: 0; flex-direction: column; gap: 0.5rem; }
 .admin-assets-transfer .field__label { color: rgba(234, 241, 255, 0.92); font-size: 0.9rem; font-weight: 600; }
+.admin-assets-transfer__required { margin-inline-start: 0.22rem; color: #fb7185; }
 .admin-assets-transfer .input {
   min-block-size: 3.1rem;
   border-color: var(--color-border-subtle);
