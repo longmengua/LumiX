@@ -680,6 +680,23 @@ p,
 .admin-airdrop-form__feedback--success { background: rgba(16, 185, 129, 0.11); color: #a7f3d0; }
 .admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
 
+/* 客戶端劃轉沿用管理端資產調整的控制項語言，但不共用管理端表單容器或業務樣式。 */
+.admin-assets-transfer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.35rem; }
+.admin-assets-transfer .field { display: flex; min-inline-size: 0; flex-direction: column; gap: 0.5rem; }
+.admin-assets-transfer .field__label { color: rgba(234, 241, 255, 0.92); font-size: 0.9rem; font-weight: 600; }
+.admin-assets-transfer .input {
+  min-block-size: 3.1rem;
+  border-color: var(--color-border-subtle);
+  border-radius: var(--radius-control);
+  background: var(--color-bg-control);
+  color: #eff5ff;
+}
+.admin-assets-transfer .input::placeholder { color: rgba(164, 188, 228, 0.5); }
+.admin-assets-transfer .input:hover { border-color: rgba(116, 166, 255, 0.36); }
+.admin-assets-transfer .input:focus { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); outline: 0; }
+.admin-assets-transfer select.input { color-scheme: dark; cursor: pointer; }
+.admin-assets-transfer .primary-button { grid-column: 1 / -1; justify-self: end; min-block-size: 3.1rem; min-inline-size: 10rem; border-radius: 0.72rem; }
+
 @media (max-width: 767px) {
   .admin-airdrop-form { border-radius: 1rem; }
   .admin-airdrop-form__body { padding: 1.25rem; }
@@ -692,6 +709,8 @@ p,
   .admin-airdrop-form__actions { inline-size: 100%; }
   .admin-airdrop-form__reset,
   .admin-airdrop-form__submit { inline-size: 100%; }
+  .admin-assets-transfer { grid-template-columns: minmax(0, 1fr); }
+  .admin-assets-transfer .primary-button { inline-size: 100%; }
 }
 
 /* 錯誤頁保留後台 chrome，僅以低調深藍 surface 建立焦點，不把技術錯誤放大成破壞性的警示畫面。 */

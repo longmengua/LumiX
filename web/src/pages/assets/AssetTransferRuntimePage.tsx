@@ -32,7 +32,7 @@ export function AssetTransferRuntimePage() {
     finally { setSubmitting(false); }
   }
   return <div className="stack assets-page"><PageHeader title={t('assets.transferTitle')} description={t('assets.transferRuntimeDescription')} /><AssetSectionNav />
-    <Card title={t('assets.transferTitle')}><form className="admin-assets-airdrop" onSubmit={(event) => void submit(event)}>
+    <Card title={t('assets.transferTitle')}><form className="admin-assets-transfer" onSubmit={(event) => void submit(event)}>
       <label className="field"><span className="field__label">{t('assets.transferRuntimeFrom')}</span><select className="input" value={form.sourceAccountType} onChange={(event) => update('sourceAccountType', event.target.value)}><option value="SPOT">{t('account.spotAccount')}</option><option value="FUTURES">{t('account.futuresAccount')}</option></select></label>
       <label className="field"><span className="field__label">{t('assets.transferRuntimeTo')}</span><select className="input" value={form.destinationAccountType} onChange={(event) => update('destinationAccountType', event.target.value)}><option value="SPOT">{t('account.spotAccount')}</option><option value="FUTURES">{t('account.futuresAccount')}</option></select></label>
       <label className="field"><span className="field__label">{t('assets.transferRuntimeAsset')}</span><input className="input" required maxLength={32} value={form.assetSymbol} onChange={(event) => update('assetSymbol', event.target.value.toUpperCase())} /></label>

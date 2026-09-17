@@ -452,3 +452,4 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 資產前台顯示文字改由雙語字典提供；中文介面不再直接呈現 `SPOT`／`FUTURES`、帳本參照類型或開發用英文說明，英文介面維持完整英文顯示。
 - 劃轉表單保留 `SPOT`／`FUTURES` API 值，只將選單顯示名稱本地化；資產歷史的帳戶類型與參照類型同樣只在顯示層轉換，不改動後端資料契約。
 - 客戶端與管理端資產相關文案改用產品語言，移除「唯讀、投影、快照、不可變帳本、adapter、Journal」等不必要的內部術語；資料狀態改以「目前餘額、資料狀態、資產異動紀錄」呈現。
+- 客戶端帳戶劃轉表單新增 `admin-assets-transfer` 控制項樣式，沿用管理端資產調整的輸入框／選單高度、圓角、深色表面與焦點狀態；表單欄位與劃轉 API 不變。
