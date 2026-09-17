@@ -457,3 +457,4 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 劃轉表單進一步直接沿用管理端 `.admin-form-select` 的下拉視覺與既有控制項 token，並收斂為 42rem 內容寬度，避免滿版控制項造成視覺鬆散。
 - `web/src/pages/assets/AssetTransferRuntimePage.tsx` 現在直接重用 `AdminPageHero`、`AssetAdjustmentHeroIcon` 與既有 V2 asset artwork；客戶端以 `.asset-transfer-page` 局部提供相同 semantic token，並將工作區、導航與操作卡收斂到資產調整相同的深藍 surface、border、spacing 與 responsive 節奏。
 - 資產總覽已移除未使用的帳戶容器請求；畫面只以實際呈現的 `/api/v1/assets/balances` 回應決定載入結果，避免非必要的帳戶資料請求失敗而遮蔽餘額總覽。
+- 管理端資產工作區的 audit 區塊正式定位為「對賬審計與損益」：用於核對資產流水完整性與異常，並納入營收／虧損帳務核對；尚未實作的完整審計與損益查詢不得以示意數據呈現。
