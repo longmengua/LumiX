@@ -455,3 +455,4 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 客戶端帳戶劃轉表單新增 `admin-assets-transfer` 控制項樣式，沿用管理端資產調整的輸入框／選單高度、圓角、深色表面與焦點狀態；表單欄位與劃轉 API 不變。
 - 劃轉表單改為兩欄欄位加一列操作按鈕的三列結構，桌面內容寬度控制在 44rem 內，小於 768px 時自動改為單欄並讓按鈕滿寬；必填欄位沿用管理端紅色星號標示。
 - 劃轉表單進一步直接沿用管理端 `.admin-form-select` 的下拉視覺與既有控制項 token，並收斂為 42rem 內容寬度，避免滿版控制項造成視覺鬆散。
+- `web/src/pages/assets/AssetTransferRuntimePage.tsx` 現在直接重用 `AdminPageHero`、`AssetAdjustmentHeroIcon` 與既有 V2 asset artwork；客戶端以 `.asset-transfer-page` 局部提供相同 semantic token，並將工作區、導航與操作卡收斂到資產調整相同的深藍 surface、border、spacing 與 responsive 節奏。

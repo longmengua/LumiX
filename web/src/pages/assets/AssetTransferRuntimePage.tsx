@@ -2,7 +2,9 @@ import { useRef, useState, type FormEvent } from 'react';
 
 import { Card } from '../../components/base/Card';
 import { ErrorState } from '../../components/base/State';
-import { PageHeader } from '../../components/layout/PageHeader';
+import { AdminPageHero } from '../../admin/components/AdminPageHero';
+import { AssetAdjustmentArtwork } from '../../admin/features/assets/AssetAdjustmentHeroArtwork';
+import { AssetAdjustmentHeroIcon } from '../../admin/features/assets/AssetAdjustmentHeroIcon';
 import { AssetSectionNav } from '../../features/assets/AssetSectionNav';
 import { useI18n } from '../../i18n';
 
@@ -31,13 +33,27 @@ export function AssetTransferRuntimePage() {
     } catch (caught) { setError(caught instanceof Error ? caught.message : t('assets.transferRuntimeFailed')); }
     finally { setSubmitting(false); }
   }
-  return <div className="stack assets-page"><PageHeader title={t('assets.transferTitle')} description={t('assets.transferRuntimeDescription')} /><AssetSectionNav />
-    <Card title={t('assets.transferTitle')}><form className="admin-assets-transfer" onSubmit={(event) => void submit(event)}>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeFrom')}<span className="admin-assets-transfer__required" aria-hidden="true">*</span></span><TransferAccountSelect value={form.sourceAccountType} onChange={(value) => update('sourceAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /></label>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeTo')}<span className="admin-assets-transfer__required" aria-hidden="true">*</span></span><TransferAccountSelect value={form.destinationAccountType} onChange={(value) => update('destinationAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /></label>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeAsset')}<span className="admin-assets-transfer__required" aria-hidden="true">*</span></span><input className="input" required maxLength={32} value={form.assetSymbol} onChange={(event) => update('assetSymbol', event.target.value.toUpperCase())} /></label>
-      <label className="field"><span className="field__label">{t('assets.transferRuntimeAmount')}<span className="admin-assets-transfer__required" aria-hidden="true">*</span></span><input className="input" required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" value={form.amount} onChange={(event) => update('amount', event.target.value)} /></label>
-      <button className="primary-button" disabled={submitting} type="submit">{submitting ? t('assets.transferRuntimeSubmitting') : t('assets.transferRuntimeSubmit')}</button>
+  return <div className="stack assets-page asset-transfer-page">
+    <AdminPageHero
+      title={t('assets.transferTitle')}
+      description={t('assets.transferRuntimeDescription')}
+      icon={<AssetAdjustmentHeroIcon />}
+      chips={[
+        { id: 'transfer', label: t('assets.transferChipTransfer'), icon: <TransferIcon /> },
+        { id: 'balance', label: t('assets.transferChipBalance'), icon: <CheckIcon /> },
+        { id: 'safe', label: t('assets.transferChipSafe'), icon: <ShieldIcon /> },
+      ]}
+      illustration={<AssetAdjustmentArtwork className="admin-page-hero__artwork-image" />}
+      slogan={t('assets.transferSlogan')}
+      supportingText={t('assets.transferSloganDescription')}
+    />
+    <AssetSectionNav className="asset-transfer-workspace" />
+    <Card className="asset-transfer-card"><header className="asset-transfer-card__header"><span className="asset-transfer-card__icon" aria-hidden="true"><TransferIcon /></span><div><h2>{t('assets.transferFormTitle')}</h2><p>{t('assets.transferFormDescription')}</p></div></header><form className="asset-transfer-form" onSubmit={(event) => void submit(event)}>
+      <label className="field"><span className="field__label">{t('assets.transferRuntimeFrom')}<RequiredMark /></span><TransferAccountSelect value={form.sourceAccountType} onChange={(value) => update('sourceAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /></label>
+      <label className="field"><span className="field__label">{t('assets.transferRuntimeTo')}<RequiredMark /></span><TransferAccountSelect value={form.destinationAccountType} onChange={(value) => update('destinationAccountType', value)} labels={{ spot: t('account.spotAccount'), futures: t('account.futuresAccount') }} /></label>
+      <label className="field"><span className="field__label">{t('assets.transferRuntimeAsset')}<RequiredMark /></span><input className="input" required maxLength={32} value={form.assetSymbol} onChange={(event) => update('assetSymbol', event.target.value.toUpperCase())} /></label>
+      <label className="field"><span className="field__label">{t('assets.transferRuntimeAmount')}<RequiredMark /></span><input className="input" required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" value={form.amount} onChange={(event) => update('amount', event.target.value)} /></label>
+      <div className="asset-transfer-form__actions"><button className="primary-button" disabled={submitting} type="submit"><TransferIcon />{submitting ? t('assets.transferRuntimeSubmitting') : t('assets.transferRuntimeSubmit')}</button></div>
     </form>{result ? <p className="form-message form-message--success">{t('assets.transferRuntimeSucceeded', undefined, { journalId: result.ledgerJournalId })}</p> : null}{error ? <ErrorState title={t('assets.transferRuntimeFailed')} description={error} /> : null}</Card>
   </div>;
 }
@@ -64,5 +80,8 @@ function TransferAccountSelect({ value, onChange, labels }: TransferAccountSelec
   </span>;
 }
 
+function RequiredMark() { return <span className="asset-transfer-form__required" aria-hidden="true">*</span>; }
 function ChevronIcon() { return <svg className="admin-form-select__chevron" viewBox="0 0 24 24" aria-hidden="true"><path d="m7 9 5 5 5-5" /></svg>; }
 function CheckIcon() { return <svg className="admin-form-select__check" viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 4 4L19 6" /></svg>; }
+function TransferIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h12m-4-4 4 4-4 4M19 17H7m4 4-4-4 4-4" /></svg>; }
+function ShieldIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 5 6v5c0 4.6 2.9 8.5 7 10 4.1-1.5 7-5.4 7-10V6l-7-3Zm-3.2 9.1 2.1 2.1 4.4-4.4" /></svg>; }

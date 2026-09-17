@@ -13,13 +13,14 @@ const sectionLinks = [
 
 type AssetSectionNavProps = {
   active?: AssetTabKey;
+  className?: string;
 };
 
-export function AssetSectionNav({ active }: AssetSectionNavProps) {
+export function AssetSectionNav({ active, className }: AssetSectionNavProps) {
   const { t } = useI18n();
 
   return (
-    <CardShell title={t('assets.walletSectionTitle')} hint={t('assets.walletSectionHint')}>
+    <CardShell className={className} title={t('assets.walletSectionTitle')} hint={t('assets.walletSectionHint')}>
       <div className="assets-tabs">
         {sectionLinks.map((item) => (
           <NavLink
@@ -42,9 +43,9 @@ function activeMatches(active: AssetTabKey | undefined, to: string) {
   return active === 'futures' && to === '/assets/futures';
 }
 
-function CardShell({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {
+function CardShell({ title, hint, children, className }: { title: string; hint: string; children: ReactNode; className?: string }) {
   return (
-    <section className="card">
+    <section className={['card', className].filter(Boolean).join(' ')}>
       <h2 className="card__title">{title}</h2>
       <p className="assets-tabs__hint">{hint}</p>
       {children}

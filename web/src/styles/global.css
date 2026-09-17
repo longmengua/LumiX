@@ -680,28 +680,71 @@ p,
 .admin-airdrop-form__feedback--success { background: rgba(16, 185, 129, 0.11); color: #a7f3d0; }
 .admin-airdrop-form__feedback--error { background: rgba(239, 68, 68, 0.1); color: #fecaca; }
 
-/* 客戶端劃轉沿用管理端資產調整的控制項語言，但不共用管理端表單容器或業務樣式。 */
-.admin-assets-transfer { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); inline-size: min(100%, 42rem); max-inline-size: 100%; gap: 1.2rem 1.35rem; padding-block: 0.15rem 0.25rem; }
-.admin-assets-transfer .field { display: flex; min-inline-size: 0; flex-direction: column; gap: 0.5rem; }
-.admin-assets-transfer .field__label { color: rgba(234, 241, 255, 0.92); font-size: 0.9rem; font-weight: 600; }
-.admin-assets-transfer__required { margin-inline-start: 0.22rem; color: #fb7185; }
-.admin-assets-transfer .input {
-  min-block-size: 3.1rem;
-  border-color: var(--color-border-subtle);
-  border-radius: var(--radius-control);
-  background: var(--color-bg-control);
-  color: #eff5ff;
+/* 客戶端劃轉繼承資產調整 Hero 與控制項 token，讓兩個資產操作頁維持同一套資訊層級。 */
+.asset-transfer-page {
+  --color-bg-surface: #07172f;
+  --color-bg-control: rgba(3, 16, 40, .65);
+  --color-border-subtle: rgba(100, 153, 242, .25);
+  --color-border-focus: rgba(87, 155, 255, .6);
+  --color-text-primary: #edf5ff;
+  --color-text-secondary: #adbedc;
+  --color-text-muted: #8fa5c8;
+  --color-accent-primary: #73b1ff;
+  --color-accent-secondary: #8579f4;
+  --gradient-hero: radial-gradient(circle at 20% 0%, rgba(55, 105, 220, .18), transparent 43%), radial-gradient(circle at 67% 80%, rgba(74, 89, 235, .13), transparent 48%), linear-gradient(145deg, rgba(8, 26, 56, .98), rgba(4, 15, 34, .99));
+  --shadow-hero: 0 1.5rem 3.5rem rgba(0, 6, 22, .22), 0 0 .85rem rgba(50, 117, 246, .09);
+  --color-hero-rim: rgba(103, 165, 255, .34);
+  --color-hero-highlight: rgba(207, 229, 255, .12);
+  --color-hero-value: #d8e9ff;
+  --radius-card: 1.25rem;
+  --radius-control: .7rem;
+  --radius-pill: 999px;
+  --font-size-hero-title: clamp(2.25rem, 3.2vw, 2.5rem);
+  --font-size-body: .9375rem;
+  --font-size-helper: .8125rem;
+  --space-2: .5rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
 }
-.admin-assets-transfer .input::placeholder { color: rgba(164, 188, 228, 0.5); }
-.admin-assets-transfer .input:hover { border-color: rgba(116, 166, 255, 0.36); }
-.admin-assets-transfer .input:focus { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); outline: 0; }
-.admin-assets-transfer select.input { color-scheme: dark; cursor: pointer; }
-.admin-assets-transfer .admin-form-select { inline-size: 100%; }
-.admin-assets-transfer .admin-form-select__trigger { min-block-size: 3.1rem; border-color: var(--color-border-subtle); border-radius: var(--radius-control); background: var(--color-bg-control); }
-.admin-assets-transfer .admin-form-select__trigger:hover { border-color: rgba(116, 166, 255, 0.36); }
-.admin-assets-transfer .admin-form-select--open .admin-form-select__trigger,
-.admin-assets-transfer .admin-form-select__trigger:focus-visible { border-color: rgba(90, 157, 255, 0.82); box-shadow: 0 0 0 3px rgba(55, 131, 255, 0.14); }
-.admin-assets-transfer .primary-button { grid-column: 1 / -1; justify-self: end; min-block-size: 3.1rem; min-inline-size: 10rem; border-radius: 0.72rem; background: linear-gradient(135deg, #3b8fff, #356df2); box-shadow: 0 0.55rem 1.25rem rgba(31, 105, 240, 0.2); }
+.asset-transfer-workspace,
+.asset-transfer-card {
+  border-color: rgba(88, 139, 242, .22);
+  background: radial-gradient(circle at 12% 0%, rgba(46, 101, 222, .1), transparent 44%), linear-gradient(145deg, rgba(7, 23, 51, .94), rgba(3, 14, 33, .97));
+  box-shadow: inset 0 1px rgba(211, 229, 255, .04), 0 1.2rem 3rem rgba(0, 0, 0, .18);
+}
+.asset-transfer-workspace { padding: clamp(1.35rem, 2vw, 1.75rem); }
+.asset-transfer-workspace .card__title { margin-bottom: .38rem; color: var(--color-text-primary); font-size: 1.2rem; }
+.asset-transfer-workspace .assets-tabs__hint { margin: 0; color: var(--color-text-secondary); font-size: .9rem; }
+.asset-transfer-workspace .assets-tabs { gap: .65rem; margin-top: 1rem; }
+.asset-transfer-workspace .tab-button { min-block-size: 2.65rem; border-color: rgba(116, 166, 255, .22); background: rgba(3, 16, 40, .32); color: rgba(204, 222, 250, .72); transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease; }
+.asset-transfer-workspace .tab-button:hover { border-color: rgba(116, 166, 255, .42); background: rgba(29, 83, 178, .14); color: #e4f0ff; transform: none; }
+.asset-transfer-workspace .tab-button--active { border-color: rgba(100, 169, 255, .58); background: linear-gradient(135deg, rgba(46, 114, 234, .34), rgba(63, 78, 199, .22)); box-shadow: inset 0 1px rgba(203, 227, 255, .1), 0 0 1rem rgba(47, 111, 232, .12); color: #f0f7ff; }
+.asset-transfer-card { padding: clamp(1.5rem, 2.4vw, 2rem); }
+.asset-transfer-card__header { display: flex; align-items: center; gap: .85rem; margin-bottom: 1.5rem; padding-bottom: 1.25rem; border-bottom: 1px solid rgba(129, 166, 226, .13); }
+.asset-transfer-card__icon { display: grid; flex: 0 0 auto; inline-size: 2.6rem; block-size: 2.6rem; place-items: center; border: 1px solid rgba(108, 178, 255, .28); border-radius: .82rem; background: linear-gradient(145deg, rgba(57, 126, 243, .23), rgba(89, 77, 210, .16)); color: #90c6ff; }
+.asset-transfer-card__icon svg,
+.asset-transfer-form .primary-button svg { inline-size: 1.3rem; block-size: 1.3rem; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.9; }
+.asset-transfer-card__header h2 { margin: 0; color: var(--color-text-primary); font-size: clamp(1.25rem, 2vw, 1.45rem); line-height: 1.2; }
+.asset-transfer-card__header p { margin: .35rem 0 0; color: var(--color-text-secondary); font-size: .9rem; line-height: 1.55; }
+.asset-transfer-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.1rem 1.35rem; }
+.asset-transfer-form .field { display: flex; min-inline-size: 0; flex-direction: column; gap: .52rem; }
+.asset-transfer-form .field__label { color: rgba(234, 241, 255, .92); font-size: .9rem; font-weight: 600; }
+.asset-transfer-form__required { margin-inline-start: .22rem; color: #fb7185; }
+.asset-transfer-form .input,
+.asset-transfer-form .admin-form-select__trigger { min-block-size: 3.2rem; border-color: var(--color-border-subtle); border-radius: var(--radius-control); background: var(--color-bg-control); color: #eff5ff; }
+.asset-transfer-form .input::placeholder { color: rgba(164, 188, 228, .5); }
+.asset-transfer-form .input:hover,
+.asset-transfer-form .admin-form-select__trigger:hover { border-color: rgba(116, 166, 255, .36); }
+.asset-transfer-form .input:focus,
+.asset-transfer-form .admin-form-select--open .admin-form-select__trigger,
+.asset-transfer-form .admin-form-select__trigger:focus-visible { border-color: rgba(90, 157, 255, .82); box-shadow: 0 0 0 3px rgba(55, 131, 255, .14); outline: 0; }
+.asset-transfer-form .admin-form-select { inline-size: 100%; }
+.asset-transfer-form .admin-form-select__menu { border-color: rgba(103, 148, 224, .32); background: #061a3a; }
+.asset-transfer-form__actions { display: flex; grid-column: 1 / -1; justify-content: flex-end; margin-top: .4rem; padding-top: 1.25rem; border-top: 1px solid rgba(129, 166, 226, .13); }
+.asset-transfer-form .primary-button { min-block-size: 3.15rem; min-inline-size: 10.5rem; border-radius: .72rem; background: linear-gradient(135deg, #3b8fff, #356df2); box-shadow: 0 .55rem 1.25rem rgba(31, 105, 240, .2); font-weight: 650; }
+.asset-transfer-form .primary-button:hover:not(:disabled) { background: linear-gradient(135deg, #55a0ff, #416ff1); }
 
 @media (max-width: 767px) {
   .admin-airdrop-form { border-radius: 1rem; }
@@ -715,8 +758,9 @@ p,
   .admin-airdrop-form__actions { inline-size: 100%; }
   .admin-airdrop-form__reset,
   .admin-airdrop-form__submit { inline-size: 100%; }
-  .admin-assets-transfer { grid-template-columns: minmax(0, 1fr); }
-  .admin-assets-transfer .primary-button { inline-size: 100%; }
+  .asset-transfer-form { grid-template-columns: minmax(0, 1fr); }
+  .asset-transfer-form__actions { justify-content: stretch; }
+  .asset-transfer-form .primary-button { inline-size: 100%; }
 }
 
 /* 錯誤頁保留後台 chrome，僅以低調深藍 surface 建立焦點，不把技術錯誤放大成破壞性的警示畫面。 */
