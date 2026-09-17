@@ -1,46 +1,24 @@
-/* 依實際容器切換裝飾密度，側欄與長語系不會把主資訊壓到插圖下方。 */
-.admin-page-hero {
-  container-type: inline-size;
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  border-radius: var(--radius-card);
-  border: 1px solid var(--color-hero-rim);
-  background: var(--gradient-hero);
-  box-shadow: var(--shadow-hero), inset 0 1px var(--color-hero-highlight), inset 0 -1px rgba(1, 9, 34, .32);
-  color: var(--color-text-primary);
-}
+/* Handoff 的四區 geometry 映射既有 DOM，避免改變 AdminPageHero 的 public API。 */
+.admin-page-hero { container-type: inline-size; position: relative; isolation: isolate; overflow: hidden; border: 1px solid var(--color-hero-rim); border-radius: var(--radius-card); background: var(--gradient-hero); box-shadow: var(--shadow-hero), inset 0 1px var(--color-hero-highlight), inset 0 -1px rgba(1, 9, 34, .32); color: var(--color-text-primary); }
 .admin-page-hero::before { position: absolute; z-index: 0; inline-size: 78%; block-size: 248%; inset: -190% auto auto 19%; border: 1px solid rgba(114, 174, 255, .24); border-radius: 50%; background: linear-gradient(180deg, transparent 63%, rgba(46, 110, 240, .12)); box-shadow: 0 0 2.5rem rgba(46, 110, 240, .08); content: ''; pointer-events: none; }
-.admin-page-hero::after { position: absolute; z-index: 0; inset: 0 0 0 auto; inline-size: 26%; background-image: radial-gradient(circle, rgba(144, 193, 255, .44) .7px, transparent .9px); background-position: 0 0; background-size: 7px 7px; mask-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, .75) 44%, rgba(0, 0, 0, .2)); opacity: .22; content: ''; pointer-events: none; }
-.admin-page-hero__layout { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); min-height: 196px; padding: 1.25rem 2.25rem; }
-.admin-page-hero__identity { display: flex; align-items: center; gap: var(--space-6); min-width: 0; flex: 1; }
-.admin-page-hero__icon { flex: 0 0 84px; width: 84px; }
-.admin-page-hero__copy { min-width: 0; }
+.admin-page-hero::after { position: absolute; z-index: 0; inset: 0 0 0 auto; inline-size: 26%; background-image: radial-gradient(circle, rgba(144, 193, 255, .44) .7px, transparent .9px); background-size: 7px 7px; mask-image: linear-gradient(90deg, transparent, rgba(0, 0, 0, .75) 44%, rgba(0, 0, 0, .2)); opacity: .22; content: ''; pointer-events: none; }
+.admin-page-hero__layout { position: relative; z-index: 1; display: grid; grid-template-columns: 88px minmax(360px, 1fr) minmax(360px, 400px) minmax(180px, 210px); align-items: center; column-gap: var(--space-6); min-height: 220px; padding: 0 var(--space-8); }
+.admin-page-hero__identity, .admin-page-hero__visual { display: contents; }
+.admin-page-hero__icon { grid-column: 1; display: grid; inline-size: 84px; block-size: 84px; place-items: center; border: 1px solid rgba(175, 198, 255, .5); border-radius: 22px; background: linear-gradient(145deg, rgba(139, 151, 255, .95), rgba(82, 103, 239, .96) 44%, rgba(48, 71, 185, .98)); box-shadow: inset 0 1px rgba(255, 255, 255, .28), inset 0 -10px 24px rgba(26, 47, 139, .28), 0 10px 26px rgba(28, 68, 196, .22), 0 0 24px rgba(68, 108, 255, .16); }
+.admin-page-hero__copy { grid-column: 2; min-inline-size: 0; }
 .admin-page-hero__copy h2 { margin: 0; font-size: var(--font-size-hero-title); font-weight: 740; letter-spacing: -.025em; line-height: 1.16; text-shadow: 0 1px rgba(4, 17, 47, .48); }
 .admin-page-hero__copy > p { max-inline-size: 34rem; margin: .65rem 0 0; color: var(--color-text-secondary); font-size: var(--font-size-body); line-height: 1.6; }
 .admin-page-hero__chips { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: 0; margin: var(--space-4) 0 0; list-style: none; }
 .admin-page-hero__chips li { display: flex; align-items: center; gap: var(--space-2); padding: .45rem .78rem; border: 1px solid rgba(113, 168, 255, .28); border-radius: var(--radius-pill); background: linear-gradient(135deg, rgba(5, 30, 72, .66), rgba(13, 54, 126, .3)); box-shadow: inset 0 1px rgba(183, 217, 255, .07); color: rgba(208, 226, 255, .82); font-size: var(--font-size-helper); }
-.admin-page-hero__chips span { display: inline-flex; color: #8cc3ff; }
-.admin-page-hero__chips svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
-.admin-page-hero__visual { display: flex; align-items: center; gap: 1.75rem; flex: 0 0 470px; min-width: 0; }
-.admin-page-hero__illustration { flex: 0 0 260px; width: 260px; filter: drop-shadow(0 .75rem 1.25rem rgba(1, 13, 54, .24)); }
-.admin-page-hero__illustration > svg { display: block; width: 100%; height: auto; overflow: visible; }
-.admin-page-hero__slogan { position: relative; min-width: 0; flex: 1; padding-top: .75rem; }
-.admin-page-hero__slogan::before { position: absolute; inset: 0 auto auto 0; inline-size: 2.8rem; block-size: 2px; border-radius: var(--radius-pill); background: linear-gradient(90deg, #65b6ff, #697cff); box-shadow: 0 0 .8rem rgba(78, 149, 255, .45); content: ''; }
-.admin-page-hero__slogan strong { color: var(--color-hero-value); font-size: 1.12rem; font-weight: 680; line-height: 1.5; letter-spacing: .02em; white-space: nowrap; }
-.admin-page-hero__slogan p { color: var(--color-text-secondary); font-size: var(--font-size-helper); line-height: 1.6; margin: var(--space-2) 0 0; }
-@container (max-width: 1050px) {
-  .admin-page-hero__visual { flex-basis: 360px; gap: var(--space-6); }
-  .admin-page-hero__illustration { flex-basis: 190px; width: 190px; }
-  .admin-page-hero__layout { gap: var(--space-6); padding: var(--space-6); }
-}
-@container (max-width: 800px) {
-  .admin-page-hero__visual { display: none; }
-}
-@container (max-width: 480px) {
-  .admin-page-hero__identity { align-items: flex-start; gap: var(--space-4); }
-  .admin-page-hero__icon { flex-basis: 64px; width: 64px; }
-  .admin-page-hero__copy h2 { font-size: 1.75rem; }
-  .admin-page-hero__layout { min-height: 0; padding: var(--space-4); }
-  .admin-page-hero__chips { gap: var(--space-2); }
-}
+.admin-page-hero__chips span { display: inline-flex; color: #8cc3ff; }.admin-page-hero__chips svg { inline-size: 16px; block-size: 16px; fill: none; stroke: currentColor; stroke-linecap: round; stroke-linejoin: round; stroke-width: 1.8; }
+.admin-page-hero__illustration { position: relative; grid-column: 3; display: flex; align-items: center; justify-content: center; inline-size: 390px; min-inline-size: 360px; block-size: 220px; pointer-events: none; user-select: none; }
+.admin-page-hero__illustration::before { position: absolute; z-index: -1; inline-size: 74%; block-size: 54%; inset: 54% auto auto 50%; background: radial-gradient(ellipse at center, rgba(61, 101, 255, .2), rgba(49, 86, 221, .08) 46%, rgba(32, 62, 160, 0) 74%); content: ''; filter: blur(12px); transform: translate(-50%, -50%); }
+.admin-page-hero__artwork-image { display: block; inline-size: 390px; block-size: 220px; }
+.admin-page-hero__artwork-image img { display: block; inline-size: 100%; block-size: 100%; object-fit: contain; }
+.admin-page-hero__slogan { position: relative; grid-column: 4; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; min-inline-size: 0; }
+.admin-page-hero__slogan strong { margin: 0; color: var(--color-hero-value); font-size: 19px; font-weight: 700; letter-spacing: .02em; line-height: 1.35; white-space: nowrap; }
+.admin-page-hero__slogan p { margin: 8px 0 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.6; }
+.admin-page-hero__slogan::after { inline-size: 38px; block-size: 2px; margin-top: 14px; border-radius: var(--radius-pill); background: linear-gradient(90deg, #63a4ff, #5571f5 65%, rgba(85, 113, 245, 0)); box-shadow: 0 0 12px rgba(74, 130, 255, .28); content: ''; }
+@container (max-width: 1180px) { .admin-page-hero__layout { grid-template-columns: 80px minmax(320px, 1fr) minmax(260px, 300px) minmax(160px, 190px); column-gap: var(--space-5); padding-inline: 1.75rem; }.admin-page-hero__illustration, .admin-page-hero__artwork-image { inline-size: 300px; min-inline-size: 260px; block-size: 169px; } }
+@container (max-width: 1024px) { .admin-page-hero__layout { grid-template-columns: 76px minmax(0, 1fr) 230px; min-height: 176px; padding: 1.375rem 1.625rem; }.admin-page-hero__icon { inline-size: 76px; block-size: 76px; border-radius: 20px; }.admin-page-hero__illustration, .admin-page-hero__artwork-image { grid-column: 3; inline-size: 230px; min-inline-size: 200px; block-size: 129px; }.admin-page-hero__slogan { display: none; } }
+@container (max-width: 760px) { .admin-page-hero__layout { grid-template-columns: 64px minmax(0, 1fr); min-height: 0; padding: var(--space-5); }.admin-page-hero__icon { inline-size: 64px; block-size: 64px; border-radius: 18px; }.admin-page-hero__copy h2 { font-size: 1.75rem; }.admin-page-hero__illustration { display: none; } }

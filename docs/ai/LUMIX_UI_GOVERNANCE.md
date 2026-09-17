@@ -7,13 +7,13 @@
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-17 |
-| Repository revision | `c171e0f`（建立初版治理文件）；本輪資產調整 Hero refinement 尚在工作區，未對應新 revision |
+| Repository revision | `e461dbe`（上一輪資產調整 Hero refinement）；Asset Adjustment Hero V2 raster handoff 尚在工作區，未對應新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system | 沒有第三方 icon package；使用頁面內 inline React SVG |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.1`（working tree snapshot） |
+| UI Governance Version | `1.3`（working tree snapshot） |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -48,8 +48,8 @@
 | Cross-surface shared components | `web/src/components/base/`、`web/src/components/layout/` |
 | Global styles and root variables | `web/src/styles/global.css` |
 | i18n dictionary | `web/src/i18n/dictionaries/zh-TW.ts`、`en-US.ts` |
-| Feature artwork | 目前為各 feature 的 inline SVG；資產調整位於 `web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` |
-| Static asset root | `web/public/`；本治理頁列出的兩個 Hero 均未使用 raster asset |
+| Feature artwork | 資產調整 Hero raster artwork 位於 `web/src/assets/hero/`；feature component 位於 `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` |
+| Static asset root | `web/public/`；可由 Vite import 的 Hero raster assets 位於 `web/src/assets/hero/` |
 
 後台服務入口以 `/admin` 為 basename；`AdminRouter` 內的 `assets/*` 與 `users/*` 因此分別對應瀏覽器路徑 `/admin/assets/...` 與 `/admin/users/...`。
 
@@ -67,6 +67,7 @@
 | Focus border | `--color-border-focus` | `rgba(87, 155, 255, .6)` |
 | Primary text | `--color-text-primary` | `#edf5ff` |
 | Secondary text | `--color-text-secondary` | `#adbedc` |
+| Muted text | `--color-text-muted` | `#8fa5c8`，Hero value supporting text |
 | Primary accent | `--color-accent-primary` | `#73b1ff` |
 | Secondary accent | `--color-accent-secondary` | `#8579f4` |
 | Hero surface | `--gradient-hero` | radial blue glow + navy linear gradient |
@@ -81,7 +82,7 @@
 | Hero title | `--font-size-hero-title` | `2.5rem`（40px） |
 | Body | `--font-size-body` | `.9375rem`（15px） |
 | Helper | `--font-size-helper` | `.8125rem`（13px） |
-| Spacing | `--space-2/3/4/6/8` | `.5/.75/1/1.5/2rem`（8/12/16/24/32px） |
+| Spacing | `--space-2/3/4/5/6/8` | `.5/.75/1/1.25/1.5/2rem`（8/12/16/20/24/32px） |
 
 ### Root layout variables
 
@@ -89,15 +90,15 @@
 
 ### 尚未成為 canonical token 的語意色
 
-目前沒有 `--color-text-muted`、`--color-state-success`、`--color-state-warning`、`--color-state-danger`、`--font-size-page-title`、`--font-size-section-title`、`--font-size-metadata`、`--glow-accent` 或一般性 `--radius-small`。成功／警告／危險色仍散落在 component CSS（例如 `Badge`、表單錯誤與使用者狀態）。新增前先在既有 token 中搜尋；不要在單頁私建同義 token。
+目前沒有 `--color-state-success`、`--color-state-warning`、`--color-state-danger`、`--font-size-page-title`、`--font-size-section-title`、`--font-size-metadata`、`--glow-accent` 或一般性 `--radius-small`。成功／警告／危險色仍散落在 component CSS（例如 `Badge`、表單錯誤與使用者狀態）。新增前先在既有 token 中搜尋；不要在單頁私建同義 token。
 
 ## 5. Canonical Components
 
 | Component | Path | Purpose / important props | Styling | Status |
 | --- | --- | --- | --- | --- |
 | `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 管理頁 Hero；`icon`、`title`、`description`、`chips`、`illustration`、`slogan`、`supportingText`；只組合呈現，不含 mutation 或資料請求 | `web/src/admin/components/AdminPageHero.css` | Canonical（目前資產調整唯一 consumer；尚未由 barrel export） |
-| `AssetAdjustmentHeroIcon` | `web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` | 84×84 內嵌 SVG 紫藍 icon tile | feature SVG + `global.css` 的 `--asset-adjustment-icon-*` aliases | Feature-specific |
-| `AssetAdjustmentIllustration` | 同上 | inline SVG：layered spotlight、orbit、four-disc coin stack、tilted adjustment card、spheres、platform/reflection | inline SVG gradients + CSS 控制寬度 | Feature-specific |
+| `AssetAdjustmentHeroIcon` | `web/src/admin/features/assets/AssetAdjustmentHeroIcon.tsx` | 84×84 內嵌 SVG 紫藍 icon tile | feature SVG + `global.css` 的 `--asset-adjustment-icon-*` aliases | Feature-specific |
+| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | supplied V2 raster Hero artwork；`picture` 依 source variant 載入透明 WebP | `AdminPageHero.css` control box；assets 位於 `web/src/assets/hero/` | Feature-specific |
 | `PageHeader` | `web/src/components/layout/PageHeader.tsx` | 外層頁名、description、actions；不是 dashboard Hero | `global.css` | Canonical base component |
 | `Card` | `web/src/components/base/Card.tsx` | 通用 card，`title`、`children`、`className` | `global.css` | Canonical base component |
 | `Badge` | `web/src/components/base/Badge.tsx` | neutral／success／warning／danger 狀態標籤 | `global.css` | Canonical base component |
@@ -118,32 +119,32 @@
 
 | 項目 | 實際設定 |
 | --- | --- |
-| Layout | Flexbox，`justify-content: space-between` |
-| Minimum height | `196px`；desktop visual validation result 約 206px（content-driven） |
-| Padding | desktop `20px 36px`；容器 ≤1050px 時 `--space-6`（24px） |
+| Layout | CSS Grid；以既有 `identity`／`visual` wrapper 的 `display: contents` 映射 icon、copy、artwork、value 四欄 |
+| Minimum height | desktop 190px；desktop visual validation result 約 224px（content-driven） |
+| Padding | desktop `24px 32px`；container ≤1024px 時 `22px 26px` |
 | Radius | `--radius-card`（20px） |
 | Icon box | `84×84px`；容器 ≤480px 改為 `64×64px` |
 | Icon-to-copy gap | `--space-6`（24px） |
 | Title | 40px / weight 740 / line-height 1.16；≤480px 為 28px |
 | Description | 15px / line-height 1.6 |
 | Chips | 13px；padding 8px 12px；gap 8px；pill radius |
-| Visual region | desktop `flex-basis: 470px`，含 illustration 與 slogan；gap 28px；≤1050px 時 360px / 24px gap |
-| Illustration box | desktop 260px；Hero 容器 ≤1050px 時 190px |
+| Visual region | desktop artwork column `minmax(360px, 400px)` + value `minmax(180px, 210px)`；column gap 24px |
+| Illustration box | desktop `390px × 220px`；container ≤1180px 時 `300px × 169px`，≤1024px 時 `230px × 129px` |
 
 此 pattern 是呈現規範，不授權自行為任何頁面加入 chips、改文案或新增 Hero；需有明確任務範圍與真實產品語意。
 
 ## 7. Illustration Governance
 
-Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL、base64 與不必要 dependency。可用 coins、users、shields、wallet、documents、data blocks、adjustment arrows、orbit lines 與少量 floating spheres，但必須與頁面功能語意相關。
+Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL、base64 與不必要 dependency；已有批准的 raster handoff 時，可由 Vite import 的透明 WebP 取代 SVG。可用 coins、users、shields、wallet、documents、data blocks、adjustment arrows、orbit lines 與少量 floating spheres，但必須與頁面功能語意相關。
 
 - 裝飾插圖必須 `aria-hidden`，不承載必要 business information，不可攔截操作。
 - 使用 filled shapes、gradient、受控 shadow、有限 spotlight 建立 pseudo-3D；避免 outline-only、過度 blur 或 neon。
 - 可重複掛載 SVG 的 `<defs>` 使用 `useId()` 產生唯一 ID，避免 gradient/filter collision。
-- Raster assets 只有在有明確理由及生命週期管理時才可使用；本文件登錄的 Hero 未使用 PNG/WebP。
+- Raster assets 必須具明確 handoff、透明背景、`alt=""`／`aria-hidden` 與 responsive source 策略；不得使用外部 URL 或 base64。
 
 | Illustration | Path | Implementation | Status |
 | --- | --- | --- | --- |
-| `AssetAdjustmentIllustration` | `web/src/admin/features/assets/AssetAdjustmentArtwork.tsx` | Inline React SVG：layered spotlight、orbit arc、三層 platform/reflection、四層 coins、larger tilted card、雙向箭頭、三顆 spheres | Implemented / refined in working tree |
+| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | `<picture>`：desktop `asset-adjustment-hero-illustration.webp`、viewport ≤1440px 的 narrow/tablet `asset-adjustment-hero-illustration-md.webp`、≤760px small fallback `asset-adjustment-hero-illustration-sm.webp`，均在 `web/src/assets/hero/` | Integrated in working tree |
 | 使用者 Hero decoration | `web/src/admin/features/users/AdminUsersPage.tsx` + `.admin-users-hero__orbs*` in `global.css` | CSS gradients + pseudo elements + spans；不是獨立 component | Legacy page-specific |
 
 沒有名為 `UserHeroIllustration` 的 component；外部協作者不得假設其存在。
@@ -159,9 +160,9 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 | Page | `web/src/admin/features/assets/AdminAssetsPage.tsx` (`AdminAssetsPage`) |
 | Adjustment panel | `GovernedAirdropForm` in `web/src/admin/features/assets/GovernedAirdropForm.tsx` |
 | Hero | `AdminPageHero` |
-| Illustration | `AssetAdjustmentHeroIcon`、`AssetAdjustmentIllustration` |
+| Illustration | `AssetAdjustmentHeroIcon`、`AssetAdjustmentArtwork`（透明 WebP raster artwork） |
 | Shared components used | `PageHeader`、`Card`、`AdminPageHero`；native controls with global classes |
-| Current status | Implemented; institutional material-depth refinement in current uncommitted worktree |
+| Current status | Implemented; supplied artwork/CSS handoff integrated in current uncommitted worktree |
 | Business behavior | Preserved: user ID / activity / signed amount / configured asset / required note validation, reset, loading / double-submit guard, server API and result/error feedback |
 
 Hero content is i18n-driven (`zh-TW.ts`) and currently resolves to:
@@ -217,12 +218,12 @@ AdminRouter
                      ├─ AdminPageHero
                      │  ├─ AssetAdjustmentHeroIcon
                      │  ├─ title / description / chips
-                     │  ├─ AssetAdjustmentIllustration
+                     │  ├─ AssetAdjustmentArtwork (`picture` / transparent WebP)
                      │  └─ slogan / supporting text
                      └─ adjustment form
 ```
 
-資產工作台以 CSS Grid（`minmax(11rem, 14rem) minmax(0, 1fr)`）放置左側 tabs 與內容。Hero 使用 Flexbox；表單主要欄位使用 two-column CSS Grid；其餘 form behavior 留在 `GovernedAirdropForm`。Hero 位於 `admin-airdrop-form` 的同一 outer surface 上，Hero 之後才是 form body。
+資產工作台以 CSS Grid（`minmax(11rem, 14rem) minmax(0, 1fr)`）放置左側 tabs 與內容。Hero 使用 CSS Grid；表單主要欄位使用 two-column CSS Grid；其餘 form behavior 留在 `GovernedAirdropForm`。Hero 位於 `admin-airdrop-form` 的同一 outer surface 上，Hero 之後才是 form body。
 
 使用者頁實際 DOM/component outline：
 
@@ -244,7 +245,7 @@ AdminUsersWorkspacePage
 
 | Area | Desktop | Narrow desktop / tablet | Mobile |
 | --- | --- | --- | --- |
-| `AdminPageHero` | identity + visual in one flex row; illustration 260px | container ≤1050px: padding 24px, illustration 190px, visual basis 360px | container ≤800px: entire visual region hidden; ≤480px icon 64px, title 28px, padding 16px |
+| `AdminPageHero` | four-column Grid: icon / copy / 390px artwork / value；desktop source 為主 WebP | container ≤1024px: icon / copy / 230px artwork; value hidden；picture 以 md source 降低 raster 成本 | container ≤760px: icon / copy only；artwork and value hidden；small source 僅作仍需渲染時的 fallback |
 | Asset workspace | left grid sidebar 11–14rem | same until viewport 767px | viewport ≤767px: single-column workspace; tabs become flex-wrap |
 | Adjustment form | user/type two columns; amount occupies first column | follows available container | viewport ≤767px: field grid becomes one column; footer/actions stack as defined in `global.css` |
 | Users Hero | heading + right decoration | viewport ≤1100px hides decoration | viewport ≤767px: icon 3.8rem, title 1.7rem, reduced padding; workspace controls wrap |
@@ -274,12 +275,12 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 
 ## 12. Known Visual Gaps
 
-### Asset Adjustment Hero material depth — Resolved in working tree
+### Asset Adjustment Hero V2 raster handoff — Integrated in working tree
 
 | Field | Current | Target | Resolution |
 | --- | --- | --- | --- |
-| Area | Hero uses layered navy / blue / indigo surface lighting, inner edge highlight, curved arc, far-right dot texture, 40px title, semantic chips and an accent-led value block | Approved institutional pseudo-3D reference | Desktop screenshot at 1600px validates a compact four-part Hero at about 206px high; refinement remains uncommitted until its owning UI change is reviewed and committed |
-| Area | Illustration has a larger tilted card, four coin discs, platform/reflection, orbit arc, spotlight and controlled shadow | Larger premium vector illustration with material separation | CSS box is 260px desktop / 190px at narrow desktop; 1024px and 390px screenshot checks showed no horizontal overflow |
+| Area | Existing `AdminPageHero` now maps the handoff's four-zone grid, artwork box and value styling without changing its props | Supplied Asset Adjustment Hero handoff | Desktop screenshot at 1600px validates the full four-zone Hero; 1024px hides only value and 390px hides artwork/value without horizontal overflow |
+| Area | Supplied transparent WebP artwork replaces the previous SVG and uses 390px desktop render width | `lumix_asset_hero_v2.zip` raster handoff | `picture` loads desktop/md/small variants from `web/src/assets/hero/`; CSS preserves aspect ratio with `object-fit: contain` and container-query hide behavior |
 
 ### Cross-page Hero consistency
 
@@ -319,7 +320,7 @@ First locate an existing shared component and token. Extend a semantic prop API 
 2. Reuse canonical components and tokens before creating alternatives.
 3. Apply LumiX Institutional Blue with the UX priority order above.
 4. Do not add invented statistics, CTAs, mock data or page-private duplicate CSS.
-5. Keep SVG decorative, scalable and `aria-hidden`; keep functional controls accessible.
+5. 保持 SVG 或已批准的 raster artwork 為純裝飾性、可縮放／可替換並具 `aria-hidden` 或空 `alt`；功能 control 必須維持可及性。
 
 ### After
 
@@ -366,6 +367,26 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** The refinement strengthens the canonical Hero pattern while avoiding a second visual system or a page-level copy of shared CSS.
 
+### 2026-09-17 — Integrate supplied Asset Adjustment Hero handoff through existing selectors
+
+**Context:** The handoff supplies a complete asset artwork and a four-zone Hero layout, while the repository already has `AdminPageHero` wrappers and feature-level icon ownership.
+
+**Decision:** Preserve the `AdminPageHero` API; map the handoff grid to existing selectors with `display: contents`, move the supplied SVG into the assets feature, and retain the existing feature icon component.
+
+**Affected:** `web/src/admin/components/AdminPageHero.css`, `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx`, `web/src/admin/features/assets/AssetAdjustmentHeroIcon.tsx`.
+
+**Reason:** Integrates the supplied visual source without duplicating Hero markup, CSS hierarchies or business form behavior.
+
+### 2026-09-17 — Use approved V2 raster artwork through the existing Hero slot
+
+**Context:** `lumix_asset_hero_v2.zip` supplies transparent WebP desktop, medium and small artwork variants with a materially larger approved composition.
+
+**Decision:** Keep `AdminPageHero` and its container-query layout intact; replace only `AssetAdjustmentArtwork` internals with a decorative `picture`, using Vite-imported variants from `web/src/assets/hero/`.
+
+**Affected:** `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx`, `web/src/admin/components/AdminPageHero.css`, `web/src/assets/hero/`.
+
+**Reason:** Preserves the supplied raster artwork without reinterpreting it, while retaining the shared Hero API and responsive layout behavior.
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -378,3 +399,13 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 強化資產調整 Hero 的 layered surface、semantic Hero tokens、icon material depth、SVG illustration 與 value accent line。
 - 以 1600px、1024px 與 390px 截圖確認 Hero geometry 與無 horizontal overflow。
+
+### v1.2 — 2026-09-17（working tree）
+
+- 整合 supplied `AssetAdjustmentArtwork` handoff 與四欄 Hero CSS geometry。
+- 新增 `--color-text-muted`、`--space-5`，並以 1600px、1024px、390px 確認 no horizontal overflow。
+
+### v1.3 — 2026-09-17（working tree）
+
+- 以 approved V2 transparent WebP artwork 取代資產調整 Hero SVG；新增 desktop／medium／small responsive variants 至 `web/src/assets/hero/`。
+- 將 desktop artwork render box 擴至 `390px × 220px`，保留既有 container-query 降階與 mobile 隱藏策略。

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 
 import { useI18n } from '../../../i18n';
-import { AssetAdjustmentHeroIcon, AssetAdjustmentIllustration } from './AssetAdjustmentArtwork';
+import { AssetAdjustmentHeroIcon } from './AssetAdjustmentHeroIcon';
+import { AssetAdjustmentArtwork } from './AssetAdjustmentHeroArtwork';
 import { AdminPageHero } from '../../components/AdminPageHero';
 import { createAdminAirdrop, fetchAdminAirdropAssetOptions, type AdminAirdropAssetOption, type AdminAirdropRequest, type AdminAirdropResult } from '../../api/adminAssetsApi';
 
@@ -109,7 +110,7 @@ export function GovernedAirdropForm() {
           { id: 'correction', label: t('admin.assetsAdjustmentChipCorrection'), icon: <NoteIcon /> },
           { id: 'audit', label: t('admin.assetsAdjustmentChipAudit'), icon: <CheckIcon /> },
         ]}
-        illustration={<AssetAdjustmentIllustration />}
+        illustration={<AssetAdjustmentArtwork className="admin-page-hero__artwork-image" />}
         slogan={t('admin.assetsAdjustmentSlogan')}
         supportingText={t('admin.assetsAdjustmentSloganDescription')}
       />

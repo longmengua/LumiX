@@ -6,6 +6,7 @@
   --color-border-focus: rgba(87, 155, 255, .6);
   --color-text-primary: #edf5ff;
   --color-text-secondary: #adbedc;
+  --color-text-muted: #8fa5c8;
   --color-accent-primary: #73b1ff;
   --color-accent-secondary: #8579f4;
   --gradient-hero: radial-gradient(ellipse at 18% 4%, rgba(59, 126, 255, .28), transparent 38%), radial-gradient(ellipse at 62% -18%, rgba(111, 93, 255, .18), transparent 42%), radial-gradient(ellipse at 92% 78%, rgba(25, 105, 234, .13), transparent 37%), linear-gradient(116deg, #0b2856 0%, #081b3e 52%, #09173a 100%);
@@ -23,6 +24,7 @@
   --space-2: .5rem;
   --space-3: .75rem;
   --space-4: 1rem;
+  --space-5: 1.25rem;
   --space-6: 1.5rem;
   --space-8: 2rem;
 }
