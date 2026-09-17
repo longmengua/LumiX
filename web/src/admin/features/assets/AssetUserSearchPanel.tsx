@@ -4,7 +4,8 @@ import { EmptyState, ErrorState, LoadingState } from '../../../components/base/S
 import { CopyButton } from '../../../components/base/CopyButton';
 import { useI18n } from '../../../i18n';
 import { formatDecimalString } from '../../../utils/format';
-import { findAdminUsers, getAdminUserAssets, type AdminUser, type AdminUserAssetSnapshot } from '../../api/adminUsersApi';
+import type { AdminUser, AdminUserAssetSnapshot } from '../../api/adminUsersApi';
+import { getAssetUserProjection, searchAssetUsers } from './adminUserAssetSearch';
 
 /** 使用既有管理使用者與餘額 projection API，從資產維度查找使用者，不自行彙總不同帳戶語意的餘額。 */
 export function AssetUserSearchPanel() {
@@ -18,17 +19,18 @@ export function AssetUserSearchPanel() {
 
   function search() {
     setUsers(null); setError(false);
-    void findAdminUsers({ displayNamePrefix: query.trim() || undefined }).then((page) => setUsers(page.items)).catch(() => setError(true));
+    void searchAssetUsers(query).then(setUsers).catch(() => setError(true));
   }
   useEffect(() => { search(); }, []);
   function open(user: AdminUser) {
     setSelected(user); setAssets(null); setAssetError(false);
-    void getAdminUserAssets(user.userId).then(setAssets).catch(() => setAssetError(true));
+    void getAssetUserProjection(user.userId).then(setAssets).catch(() => setAssetError(true));
   }
 
   return <section className="admin-asset-users" aria-label={t('admin.assetsUsersTitle')}>
     <header><h2>{t('admin.assetsUsersTitle')}</h2><p>{t('admin.assetsUsersDescription')}</p></header>
     <form className="admin-asset-users__search" onSubmit={(event) => { event.preventDefault(); search(); }}><input className="input" value={query} maxLength={128} placeholder={t('admin.assetsUsersSearchPlaceholder')} onChange={(event) => setQuery(event.target.value)} /><button className="primary-button" type="submit">{t('admin.usersSearch')}</button></form>
+    <p className="admin-asset-users__search-hint">{t('admin.assetsUsersSearchCapability')}</p>
     {error ? <ErrorState title={t('admin.assetsUsersLoadErrorTitle')} description={t('admin.assetsUsersLoadErrorDescription')} action={<button className="secondary-button" type="button" onClick={search}>{t('common.retry')}</button>} /> : null}
     {users === null && !error ? <LoadingState title={t('admin.assetsUsersLoadingTitle')} description={t('admin.assetsUsersLoadingDescription')} /> : null}
     {users?.length === 0 ? <EmptyState title={t('admin.assetsUsersEmptyTitle')} description={t('admin.assetsUsersEmptyDescription')} /> : null}

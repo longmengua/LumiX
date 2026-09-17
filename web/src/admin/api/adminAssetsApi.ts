@@ -6,7 +6,7 @@ export type AdminAirdropResult = { ledgerJournalId: string; replayed: boolean; }
 export type AdminAirdropAssetOption = { assetSymbol: string; internalName: string; precisionScale: number; };
 export type AdminSpotAssetConfiguration = AdminAirdropAssetOption & { status: 'ACTIVE' | 'HALTED' | 'DELISTED'; updatedAt: string; };
 export type CreateAdminSpotAssetConfigurationRequest = { assetSymbol: string; internalName: string; precisionScale: number; };
-export type AdminAssetAdjustmentAuditItem = {
+export type AdminAssetReconciliationItem = {
   auditLogId: string;
   ledgerJournalId: string;
   actorId: string;
@@ -21,6 +21,11 @@ export type AdminAssetAdjustmentAuditItem = {
   reconciliationStatus: 'VERIFIED' | 'EXCEPTION';
   postedAt: string;
 };
+/**
+ * 歷史 API 命名相容別名；新 UI 以 reconciliation 語意使用此資料。
+ * @deprecated 新程式請使用 AdminAssetReconciliationItem；待外部 consumer 清理後移除。
+ */
+export type AdminAssetAdjustmentAuditItem = AdminAssetReconciliationItem;
 
 /** 空投金額維持 decimal 字串，且只有 HTTP 成功回應才能顯示成功 journal。 */
 export async function createAdminAirdrop(request: AdminAirdropRequest): Promise<AdminAirdropResult> {
@@ -51,16 +56,22 @@ export async function fetchAdminAirdropAssetOptions(): Promise<AdminAirdropAsset
  * 對賬畫面只讀既有管理操作、journal 與雙分錄的交叉檢查結果。
  * 不在 browser 推算帳務狀態，也不以假資料填補尚未導入的手續費與損益來源。
  */
-export async function fetchAdminAssetAdjustmentAudit(): Promise<AdminAssetAdjustmentAuditItem[]> {
+export async function fetchAssetAdjustmentReconciliation(): Promise<AdminAssetReconciliationItem[]> {
   const response = await fetch(`${ADMIN_API_BASE_PATH}/assets/audit/adjustments`, { credentials: 'same-origin' });
   if (!response.ok) {
     const error = await createAdminApiError(response);
     if (error.kind === 'unauthorized') notifyAdminUnauthorized();
     throw error;
   }
-  const payload = await response.json() as { items?: AdminAssetAdjustmentAuditItem[] };
+  const payload = await response.json() as { items?: AdminAssetReconciliationItem[] };
   return Array.isArray(payload.items) ? payload.items : [];
 }
+
+/**
+ * 舊 service 名稱相容別名；endpoint 本身仍保留歷史 audit 路徑。
+ * @deprecated 新程式請使用 fetchAssetAdjustmentReconciliation；待外部 consumer 清理後移除。
+ */
+export const fetchAdminAssetAdjustmentAudit = fetchAssetAdjustmentReconciliation;
 
 /** 現貨幣種設定讀取與空投選項分開，讓設定頁能呈現 HALTED 資產而空投只取得 ACTIVE 資產。 */
 export async function fetchAdminSpotAssetConfigurations(): Promise<AdminSpotAssetConfiguration[]> {

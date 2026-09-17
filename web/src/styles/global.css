@@ -517,6 +517,7 @@ p,
 .admin-asset-analysis__tabs button:hover, .admin-asset-analysis__tabs .is-active { border-color: rgba(96,158,255,.56); background: rgba(43,102,211,.2); color: #eff6ff; }
 .admin-asset-users__search { display: flex; gap: .7rem; max-inline-size: 42rem; }
 .admin-asset-users__search .input { min-block-size: 2.85rem; }
+.admin-asset-users__search-hint { margin: -.45rem 0 0; color: var(--color-text-muted); font-size: .78rem; line-height: 1.45; }
 .admin-asset-users__table-wrap { overflow-x: auto; border: 1px solid rgba(103,148,224,.14); border-radius: .75rem; }
 .admin-asset-users__table-wrap table { inline-size: 100%; min-inline-size: 38rem; border-collapse: collapse; color: rgba(231,241,255,.9); }
 .admin-asset-users__table-wrap th, .admin-asset-users__table-wrap td { padding: .82rem .9rem; border-top: 1px solid rgba(103,148,224,.11); text-align: left; }

@@ -1,19 +1,19 @@
 # LumiX UI 長期治理與實作同步文件
 
-> 此文件是 LumiX 管理後台 UI 的 living document。它記錄已落地的真實程式結構、治理決策、可重用元件、視覺缺口與同步責任；供 Codex、其他 AI、設計師與工程師共同使用。視覺政策以 [LumiX Institutional Blue](../governance/lumix-institutional-blue.md) 為準；本文不以理想規格覆蓋程式現況。
+> 此文件是 LumiX 管理後台 UI 的穩定治理 source of truth，記錄設計語言、UX 優先序、語意邊界、token 原則、可重用模式與同步責任；供 Codex、其他 AI、設計師與工程師共同使用。會變動的 route、API 與程式快照另見 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md)。視覺政策以 [LumiX Institutional Blue](../governance/lumix-institutional-blue.md) 為準。
 
 ## 文件中繼資料
 
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-18 |
-| Repository revision | `7bf47d9` 之後的工作區：資產操作表單、平台內部轉帳與 UUID 掃碼，尚未建立新 revision |
+| Repository revision | `c5ab559`（文件同步以工作區最新程式碼為準） |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system | 頁面功能 icon 使用 inline React SVG；`qrcode.react` 僅用於真實 UUID 的 SVG QR Code |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.13`（working tree snapshot） |
+| UI Governance Version | `1.16` |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -36,7 +36,20 @@
 
 任何 gradient、glow、插圖或動態都不得遮蔽操作、降低對比、破壞鍵盤操作或改變業務行為。
 
+## 2.1 領域語意與能力真實性
+
+- 「資產調整」是管理端的頁面與產品概念，不代表後端已提供通用的人工調帳引擎。
+- 目前可執行的受控命令仍以既有 server-side 資產命令邊界為準；前端不得把未存在的扣回、補償、佣金沖回或錯帳修正塞入既有命令。
+- `GovernedAirdropForm` 保留其命令身分，應由資產調整頁層包裝；新增其他調整命令時必須有獨立、已授權的 backend capability。
+- 若既有命令名稱（例如 `REVERSAL`）的實際效果比名稱寬，UI 必須採中性且準確的產品文案；在建立原始事件關聯與限制前，不得宣稱為嚴格撤銷流程。
+- 顯示文字、欄位名稱與 empty state 必須反映真實 API 能力，不可用 disabled 假選項、假統計或 mock ledger 暗示功能已可用。
+- `Audit Log`（管理操作）、`Ledger`（帳本異動）、`Reconciliation`（業務事件／帳本／餘額核對）與 `Asset Adjustment`（管理命令）是不同概念，UI component 與 TypeScript type 不應混用。
+- Spot 與 Futures 的餘額、權益、可用額與凍結額不可在前端任意相加；只有 backend 明確提供 authoritative total 時才能顯示總額。
+- 使用者搜尋應重用既有 admin user search service／adapter；若 backend 不支援 Email 或 UID，正式 UI 必須誠實反映，不得自行拼接查詢。
+
 ## 3. Repository UI Architecture
+
+路徑與頁面狀態等會快速變動的實作快照移至 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md)；本節只保留穩定的架構入口與元件責任，不以治理規範取代程式碼。
 
 | 領域 | 真實路徑／實作 |
 | --- | --- |
@@ -105,7 +118,7 @@
 | `CopyButton` | `web/src/components/base/CopyButton.tsx` | 複製 UUID、email 等識別值；`value`、`label`、`copiedLabel`；含 Clipboard API 與受限環境 fallback | `.copy-button` in `global.css` | Canonical base component（管理端使用者列表、客戶端個人中心） |
 | `LoadingState`／`EmptyState`／`ErrorState` | `web/src/components/base/State.tsx` | 真實資料 loading／empty／error 呈現 | `global.css` | Canonical base component |
 | `FormSelect` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 資產調整局部深色 listbox，props 為 `ariaLabel`、`options`、`value`、`onChange`、`compact`、`disabled` | `.admin-form-select*` in `global.css` | Local / not yet extracted |
-| `AssetAdjustmentAuditPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 讀取既有資產沖銷／空投調整的對賬結果；loading、empty 與 error 均重用共享 State 元件 | `.admin-asset-audit*` in `global.css` | Feature-specific readonly panel |
+| `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 讀取既有資產調整的對帳核驗結果；loading、empty 與 error 均重用共享 State 元件；保留舊名稱相容別名 | `.admin-asset-audit*` in `global.css` | Feature-specific readonly panel |
 | `AssetFundingPage` | `web/src/pages/assets/AssetFundingPage.tsx` | `/assets/deposit`、`/assets/withdraw` 共用的方式入口；平台內部轉入顯示 UUID QR、轉出提交真實命令 | `.asset-funding-*` in `global.css` | Feature-specific |
 | `AssetSymbolSelect` | `web/src/features/assets/AssetSymbolSelect.tsx` | 現貨資產下拉；呼叫端提供真實 asset options、value 與 onChange，不可建立 fallback 幣種 | `.admin-form-select*` in `global.css` | Canonical asset control（帳戶劃轉、平台內部轉出） |
 
@@ -153,186 +166,25 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 
 沒有名為 `UserHeroIllustration` 的 component；外部協作者不得假設其存在。
 
-## 8. Page Registry
+## 8. Page and capability principles
 
-### Asset Management / Adjustment
+頁面實作的 route、component、API、資料狀態與 snapshot 不屬於穩定治理；請見 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md)。本節只保留所有管理頁都必須遵守的語意原則：
 
-| 項目 | 真實狀態 |
-| --- | --- |
-| Route | `/admin/assets/adjustments` |
-| Route entry | `web/src/admin/routes/AdminRouter.tsx` → `assets/*` |
-| Page | `web/src/admin/features/assets/AdminAssetsPage.tsx` (`AdminAssetsPage`) |
-| Adjustment panel | `GovernedAirdropForm` in `web/src/admin/features/assets/GovernedAirdropForm.tsx` |
-| Hero | `AdminPageHero` |
-| Illustration | `AssetAdjustmentHeroIcon`、`AssetAdjustmentArtwork`（透明 WebP raster artwork） |
-| Shared components used | `PageHeader`、`Card`、`AdminPageHero`；native controls with global classes |
-| Current status | Implemented；supplied artwork/CSS handoff 已於 `974f4a5` 整合 |
-| Business behavior | Preserved: user ID / activity / signed amount / configured asset / required note validation, reset, loading / double-submit guard, server API and result/error feedback |
+- Asset Adjustment、Asset Analysis、User Assets 與 Users Management 的頁面命名應反映真實使用者任務，不以歷史 endpoint 名稱主導 IA。
+- 資產調整、對帳核驗、帳本查詢與管理操作紀錄必須有清楚責任邊界；不同會計語意不可在 UI 中混成單一欄位或統計。
+- 沒有真實資料來源的維度使用正式產品 empty state；不得放入 mock、零值、假成功或 developer wording。
+- 高風險資產命令需保留權限確認、結果回饋與可追溯操作；視覺調整不能繞過既有 API、冪等、帳本或稽核邊界。
+- 使用者查詢、資產明細與限制操作應重用既有查詢服務及 adapter，不因不同頁面複製另一套 backend 能力。
 
-### Asset Management IA
+## 9. Responsive governance
 
-| 項目 | 真實狀態 |
-| --- | --- |
-| 左側工作台 | 用戶資產、資產分析、資產調整；不再以「資產沖銷」或「對帳審計與損益」作為上層名稱 |
-| 用戶資產 | `AssetUserSearchPanel` 使用既有 `findAdminUsers` 與 `getAdminUserAssets`；只呈現每一帳戶／資產的 available、locked、total，不跨帳戶自行加總 |
-| 資產分析 | `AssetAnalysisPanel` 以 URL query `tab` 保存 overview、ledger、reconciliation、revenue-share、organization；僅 reconciliation 有真實 API 與 `AssetAdjustmentAuditPanel` |
-| 舊 URL 相容 | `/admin/assets/audit` 會 redirect 至 `/admin/assets/analysis?tab=reconciliation` |
-| 調整確認 | `GovernedAirdropForm` 送出前使用 `ConfirmDialog` 顯示使用者、資產、數量、類型及備註；既有 API payload 不變 |
-
-尚未有真實後端資料的資產概覽、資產流水、分潤分析、組織分析僅顯示正式 empty state，禁止填入 PnL、佣金、關係或餘額 mock。
-
-Hero content is i18n-driven (`zh-TW.ts`) and currently resolves to:
-
-```text
-Title: 資產調整
-Description: 執行資產沖銷、補正與治理調整，完整保留審核與服務軌跡。
-Chips: 沖銷作業 / 補正處理 / 審核留痕
-Value: 精準・可溯・合規
-Supporting: 建構更透明的數位資產治理
-```
-
-### Asset Management / Reconciliation & P&L
-
-| 項目 | 真實狀態 |
-| --- | --- |
-| Route | `/admin/assets/audit` |
-| Page host | `web/src/admin/features/assets/AdminAssetsPage.tsx` (`AdminAssetsPage`) |
-| Panel | `AssetAdjustmentAuditPanel` in `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` |
-| Read API | `GET /api/admin/v1/assets/audit/adjustments` |
-| Server boundary | `server/src/main/java/com/lumix/admin/asset/AdminAssetAdjustmentAuditController.java` → `AdminAssetAdjustmentAuditService` → `JdbcAdminAssetAdjustmentAuditQueryRepository` |
-| Current status | Implemented：只讀資產沖銷／空投調整的證據交叉核對 |
-| Data source | `audit_logs`、`ledger_journals`、`ledger_entries`、目標帳戶與使用者；不使用 projection 或 browser 推算作為對賬真相 |
-| Business behavior | Server-side super-admin gate；固定最多 100 筆；雙分錄筆數、方向、同資產、借貸平衡與目標帳戶分錄不符合時回傳 `EXCEPTION`，只能人工處理 |
-
-手續費收入、營收、虧損與 P&L 彙總尚未建立可用帳務來源。這個頁面不顯示預估、零值、mock 或假成功數字；待真實 fee journal／收益歸屬 runtime 完成後，才可擴充對賬範圍。
-
-### Client Asset Funding
-
-| 項目 | 真實狀態 |
-| --- | --- |
-| Routes | `/assets/deposit`、`/assets/withdraw` |
-| Page | `web/src/pages/assets/AssetFundingPage.tsx` (`AssetFundingPage`) |
-| Shared components used | `AdminPageHero`、`AssetSectionNav`、`Card`、`CopyButton`、`ErrorState`；控制項重用 `.input`、`.admin-form-select*`、`.primary-button` |
-| Platform internal receive | `/assets/deposit` 的「平台內部轉入」以 `fetchAccountProfile()` 讀取登入者 `userId`，用 `QRCodeSVG` 編碼該 UUID，並提供 `CopyButton`；不產生鏈上地址或資產異動 |
-| Platform internal send | `/assets/withdraw` 的「平台內部轉出」以 `useAssetProjectionSnapshot()` 取得 ACTIVE SPOT 幣種，向 `POST /api/v1/assets/internal-transfers` 送出收款 UUID、資產與正數量；收款 UUID 欄位可開啟瀏覽器原生 Camera API + `BarcodeDetector` 掃描真實 UUID QR Code 並自動帶入；不接受 browser account ID |
-| Account transfer | `/assets/transfer` 的帳戶劃轉維持 `POST /api/v1/assets/transfers` payload；表單改為來源帳戶、目標帳戶、數量＋資產三列。資產選項由所選來源帳戶的真實 ACTIVE projection 提供，並在帳戶選單下顯示該幣種的目前可用／目前持有；沒有資料一律顯示 `—`，不補零值 |
-| Other methods | 鏈上、OTC、銀行僅保留受控「即將開放」說明；沒有 provider、地址、外部結算或 fake success |
-| Current status | Platform internal receive/send implemented；外部通道 unavailable |
-
-### Users
-
-| 項目 | 真實狀態 |
-| --- | --- |
-| Route | `/admin/users/list` |
-| Route entry | `web/src/admin/routes/AdminRouter.tsx` → `users/*` → `AdminUsersWorkspacePage` |
-| Workspace | `web/src/admin/pages/AdminNavWorkspaces.tsx` |
-| Primary page | `web/src/admin/features/users/AdminUsersPage.tsx` (`AdminUsersPage`) |
-| Hero | `AdminPageHero` |
-| Illustration | `UsersHeroArtwork` local CSS orb decoration，透過 shared Hero illustration slot 掛載 |
-| Shared components used | `AdminPageHero`、`EmptyState`、`InlineErrorState`、`ConfirmDialog`；原生 form controls；workspace uses `PageHeader` / `Card` |
-| Current status | Implemented / canonical Hero consumer |
-| Business behavior | Preserved: query, date filters, pagination, account / asset / history reads, loading and error states；列表不再 inline detail，改由右側管理抽屜呈現。登入／提幣凍結仍只經最高管理員保護的目標狀態命令，完成後依 server response 更新命中列 |
-
-目前頁內 Hero content：
-
-```text
-Title: 使用者
-Description: 管理平台帳號與登入活動
-Value: 安全・透明・高效
-Supporting: 建構更安全的數位資產未來
-Chips: 未實作（不得因文件範例自行補上）
-```
-
-## 9. Implementation Snapshot
-
-資產調整實際 DOM/component outline：
-
-```text
-AdminRouter
-└─ AdminRequireAuth
-   └─ AdminLayout
-      ├─ AdminHeader
-      └─ AdminAssetsPage
-         ├─ PageHeader
-         └─ admin-assets-workspace
-            ├─ asset workspace sidebar tabs（用戶資產／資產沖銷／對賬審計與損益）
-            └─ AdjustmentWorkspace
-               └─ GovernedAirdropForm
-                  └─ admin-airdrop-form
-                     ├─ AdminPageHero
-                     │  ├─ AssetAdjustmentHeroIcon
-                     │  ├─ title / description / chips
-                     │  ├─ AssetAdjustmentArtwork (`picture` / transparent WebP)
-                     │  └─ slogan / supporting text
-                     └─ adjustment form
-```
-
-資產工作台以 CSS Grid（`minmax(11rem, 14rem) minmax(0, 1fr)`）放置左側 tabs 與內容。Hero 使用 CSS Grid；表單主要欄位使用 two-column CSS Grid；其餘 form behavior 留在 `GovernedAirdropForm`。Hero 位於 `admin-airdrop-form` 的同一 outer surface 上，Hero 之後才是 form body。
-
-資產對賬頁在相同 workspace sidebar 下改為：
-
-```text
-AdminAssetsPage
-└─ admin-assets-workspace
-   └─ AssetAdjustmentAuditPanel
-      ├─ scope notice
-      └─ immutable adjustment reconciliation table
-         ├─ loading / empty / error state
-         └─ verified or exception rows
-```
-
-這個面板不共用資產調整 Hero，也不提供修正 CTA；它是為既有流水提供核對可見性，而非第二個資產操作入口。
-
-使用者頁實際 DOM/component outline：
-
-```text
-AdminUsersWorkspacePage
-└─ AdminNavWorkspace
-   ├─ PageHeader
-   ├─ workspace sidebar tab
-   └─ AdminUsersPage
-      └─ admin-users-page
-         ├─ AdminPageHero
-         │  ├─ UsersIcon tile
-         │  ├─ title / description
-         │  ├─ UsersHeroArtwork (CSS orbs)
-         │  └─ value text
-         └─ users toolbar / scan-oriented list / pagination
-      └─ UserManagementDrawer (portal-like fixed overlay)
-         ├─ Overview / Assets / Security and restrictions / Records tabs
-         └─ restriction ConfirmDialog
-```
-
-客戶端充值／提幣的實際 outline：
-
-```text
-ClientRouter
-└─ RequireAuth
-   └─ AssetFundingPage
-      ├─ AdminPageHero（共享呈現 shell）
-      ├─ AssetSectionNav
-      └─ asset-funding-card
-         ├─ 方法選擇（internal / chain / OTC / bank）
-         └─ internal
-            ├─ deposit: Account Profile → UUID QR Code + CopyButton
-            └─ withdraw: Asset Projection → recipient UUID + amount + asset select → internal transfer API
-```
+管理頁 Hero、工作區與表單應優先採 container-aware layout；固定側欄與多語系會改變可用寬度，因此不要只依 viewport 猜測狀態。桌面維持清楚層級，平板縮減非必要裝飾，手機改為單欄且不得出現 horizontal overflow。具體 breakpoint、元件 selector 與目前頁面 snapshot 請見 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md)。
 
 ## 10. Responsive Implementation
 
-| Area | Desktop | Narrow desktop / tablet | Mobile |
-| --- | --- | --- | --- |
-| `AdminPageHero` | four-column Grid: icon / copy / feature artwork / value；asset uses 390px raster artwork, users uses CSS orb artwork | container ≤1024px: icon / copy / reduced artwork; value hidden | container ≤760px: icon / copy only; artwork and value hidden |
-| Asset workspace | left grid sidebar 11–14rem | same until viewport 767px | viewport ≤767px: single-column workspace; tabs become flex-wrap |
-| Adjustment form | user/type two columns; amount occupies first column | follows available container | viewport ≤767px: field grid becomes one column; footer/actions stack as defined in `global.css` |
-| Users Hero | heading + right decoration | viewport ≤1100px hides decoration | viewport ≤767px: icon 3.8rem, title 1.7rem, reduced padding; workspace controls wrap |
-| Client funding internal receive | copy + QR side-by-side | same surface and wrapping identifier | QR moves below copy; no horizontal overflow |
-| Client funding internal send | recipient / amount-and-asset two-row form；UUID label has QR scan control | same single-column rhythm | same order; submit button becomes full width |
-| Client account transfer | source / target / unified amount-and-asset three-row form | same single-column rhythm | amount and asset retain one control row；asset selector contracts without overflow |
+實作應維持既有 container query strategy：固定側欄、多語系與內容容器會共同決定可用寬度。桌面可呈現完整 Hero 與多欄表單；窄桌面／平板先收斂插圖與非核心資訊；手機改為單欄、可捲動導覽或滿寬操作。不得以裁切、負 margin 或隱藏 overflow 掩蓋內容重疊。各頁目前的 breakpoint 與 selector 只記錄於 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md)。
 
-`AdminPageHero` deliberately uses **container queries**, not viewport queries, because the fixed workspace sidebar and localization affect the available content width.
-
-## 11. Critical Implementation Details and Protected Behavior
+## 11. Protected Behavior
 
 ### Protected layout boundaries
 
@@ -340,16 +192,16 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 
 ### Asset Adjustment protected behavior
 
-- API functions are `createAdminAirdrop(form)` and `fetchAdminAirdropAssetOptions()` from `web/src/admin/api/adminAssetsApi.ts`; UI work must not change their endpoint, HTTP method, payload, enum values or result handling.
-- Activity values are true request values: `REVERSAL` and `AIRDROP`; they are rendered from local options and must not be replaced by visual-only values.
-- Asset options come from the admin API. The UI defaults to the first returned asset, does not use a fake fallback, and disables submission when assets are unavailable.
-- Amount accepts the existing signed decimal pattern; no UI task may replace the existing controlled amount handling with JavaScript floating-point conversion.
-- User ID, asset, amount and reason validations; 256-character note limit; reset default; loading / disabled submit; duplicate-submit guard; server result/error feedback are protected.
-- The form is a privileged asset action: permission, immutable ledger, audit, idempotency and server-side decision remain outside the browser component.
+- 受控資產命令的 endpoint、HTTP method、payload、enum 與結果處理屬於 backend contract；UI work 不得自行改寫。
+- Activity values 必須來自真實 server capability；不可用視覺名稱取代 request value，也不可為未存在的 command 加入假選項。
+- Asset options 必須由受保護的後端設定提供；沒有資料時停用提交，不使用固定幣種或假 fallback。
+- Amount 維持既有受控 decimal 字串與正負號語意，不得使用 JavaScript floating-point 取代。
+- User ID、asset、amount、reason 驗證、備註長度、reset、loading／disabled、duplicate-submit guard 與 server result/error feedback 均受保護。
+- 權限、immutable ledger、audit、idempotency 與 server-side decision 不得由 browser component 取代或繞過。
 
 ### Asset adjustment reconciliation protected behavior
 
-- `GET /api/admin/v1/assets/audit/adjustments` 是唯讀最高管理員 API；不得擴充為補帳、重放、修改餘額或修改 audit evidence 的 command。
+- 對帳核驗 read model 是唯讀管理能力；不得擴充為補帳、重放、修改餘額或修改 audit evidence 的 command。
 - 對賬狀態只可由 server 比對既有 `audit_logs`、journal 與 ledger entries 產生；browser 不得自行把資料標示為完成。
 - `EXCEPTION` 是人工調查訊號，不是前端自動修復、反沖、重送或資產異動授權。
 - 現階段範圍只包含 `ADMIN_ASSET_ADJUSTMENT` 成功證據與 `ADJUSTMENT` journal。手續費收入、營收、虧損與 P&L 沒有真實資料來源前不得加入任何 placeholder 數字。
@@ -359,41 +211,21 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 - QR Code 只可編碼已認證使用者的 UUID；不可把鏈上地址、私鑰、token 或付款 URL 放入 QR。
 - 收款 UUID、asset symbol 與 amount 必須由 server 驗證；browser 不可傳入 source/destination account ID、帳本識別碼或任何可繞過 ownership 的欄位。
 - 轉出幣種只來自真實 ACTIVE SPOT projection；資料 loading/error/empty 時必須停用送出，不能寫死幣種、餘額或成功狀態。
-- `POST /api/v1/assets/internal-transfers` 是高風險受治理資產命令：idempotency、reservation、immutable ledger、projection rebuild、audit 與 fail-closed server boundary 不可因 UI 任務變更；`HUMAN_REVIEW_REQUIRED`。
+- 平台內部轉帳是高風險受治理資產命令：idempotency、reservation、immutable ledger、projection rebuild、audit 與 fail-closed server boundary 不可因 UI 任務變更；`HUMAN_REVIEW_REQUIRED`。
 
 ### Users protected behavior
 
-- Preserve name search, created / last-login date filters, reset, cursor pagination, expanded detail rows and independent reads for detail, accounts, assets and history.
+- Preserve name search, created / last-login date filters, reset, cursor pagination, management-drawer detail access and independent reads for detail, accounts, assets and history.
 - Preserve loading/error state semantics and existing authorization/API boundaries.
-- `PUT /api/admin/v1/users/{userId}/restrictions/login` 與 `/withdrawal` 是最高管理員專用的受治理目標狀態命令；browser 只能傳送 `frozen`，不可指定 session、帳戶、餘額或稽核資料。
+- 登入凍結與提幣凍結是最高管理員專用的受治理目標狀態命令；browser 只能傳送目標狀態，不可指定 session、帳戶、餘額或稽核資料。
 - 登入凍結必須撤銷既有 session；提幣凍結必須由平台內部對他人轉出 runtime fail closed。UI 不可用本地 optimistic state 取代後端回讀。
 - 使用者清單只呈現帳戶狀態、限制摘要與「管理」入口。詳細資料、帳戶、資產、紀錄與高風險限制都只能在 `UserManagementDrawer` 內處理；未有後端 API 的轉帳／現貨／合約限制僅以 disabled capability row 呈現。
 - `system:` 前綴是既有 system principal 規則。系統帳戶要顯示 SYSTEM／不適用，且不應提供限制操作；server-side command 也必須拒絕它。
 - Do not turn Hero decoration, status color or table rows into invented operational data or unrelated CTAs.
 
-## 12. Known Visual Gaps
+## 12. Visual-gap governance
 
-### Asset Adjustment Hero V2 raster handoff — Integrated in working tree
-
-| Field | Current | Target | Resolution |
-| --- | --- | --- | --- |
-| Area | Existing `AdminPageHero` now maps the handoff's four-zone grid, artwork box and value styling without changing its props | Supplied Asset Adjustment Hero handoff | Desktop screenshot at 1600px validates the full four-zone Hero; 1024px hides only value and 390px hides artwork/value without horizontal overflow |
-| Area | Supplied transparent WebP artwork replaces the previous SVG and uses 390px desktop render width | `lumix_asset_hero_v2.zip` raster handoff | `picture` loads desktop/md/small variants from `web/src/assets/hero/`; CSS preserves aspect ratio with `object-fit: contain` and container-query hide behavior |
-
-### Cross-page Hero consistency
-
-| Field | Current | Target | Gap | Priority |
-| --- | --- | --- | --- | --- |
-| Area | Asset adjustment and users consume `AdminPageHero` | Shared LumiX visual language with semantics preserved | Resolved: both pages share Hero geometry, icon tile, typography hierarchy and container-query downgrade; feature artwork remains semantic and page-local | Resolved |
-| Area | Some user and form styles still use local literals | Semantic token-led shared surfaces | First token set only covers new admin Hero/assets consumers; color/state/typography token migration is incomplete | Medium |
-
-### Control system
-
-| Field | Current | Target | Gap | Priority |
-| --- | --- | --- | --- | --- |
-| Area | Asset `FormSelect` is local to the form | Shared accessible select only after verified behavior | It is not a canonical shared component; Arrow Up roving focus and broader consumer testing are not yet established | Medium |
-
-When a task closes one of these gaps, update or remove the row in the same change. This section is evidence of known state, not an unconditional backlog.
+視覺缺口屬於短期 implementation state，不應在穩定治理文件維護逐頁清單；請放在 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md) 或對應的 handoff／驗收紀錄。每次修正仍必須以本文件的設計語言、token 與 UX 優先序為判定基準，並移除已解決的快照項目。
 
 ## 13. Reuse Policy
 
@@ -423,13 +255,13 @@ First locate an existing shared component and token. Extend a semantic prop API 
 ### After
 
 1. Verify the affected UI behavior and responsive states in proportion to the change.
-2. Update the relevant Page Registry, Implementation Snapshot, Canonical Components/Tokens, Responsive Implementation and Known Visual Gaps.
+2. Update the relevant stable governance sections only when policy changes; update the volatile route/component/API snapshot in [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md).
 3. Add a Decision Log entry only for material architectural or visual decisions.
 4. Update Last Updated, Repository revision (when known), version and Change History.
 
 ## 15. Documentation Sync Rule
 
-The following changes **must** update this file in the same change set: component path/API, Hero structure, design token, illustration, responsive behavior, canonical styling, page status, approved visual target or a known visual gap. A UI change without this synchronization is incomplete.
+The following changes **must** update [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md) in the same change set: component path/API, Hero structure, illustration, responsive behavior, page status or data capability. Changes to stable visual policy, UX priority, semantic boundaries or token governance must update this governance document; if the code snapshot also changes, update the implementation snapshot as well. A UI change without the appropriate documentation synchronization is incomplete.
 
 Do not record an uncommitted implementation as a released revision. If a working-tree snapshot is intentionally documented, mark it as uncommitted exactly as this initial entry does.
 
@@ -525,6 +357,16 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** 保留可追溯、可回讀的高風險操作邊界，並避免管理端顯示與實際執行結果脫節。
 
+### 2026-09-18 — 分離資產調整頁與受控命令實作
+
+**Context:** 資產調整是頁面層的延展概念，而目前後端命令仍沿用 `/airdrops` 歷史邊界，只支援現有受控類型與現貨目標帳戶。
+
+**Decision:** 以 `AssetAdjustmentPanel` 包裝 `GovernedAirdropForm`，保留 API 與 enum；把短期 route、endpoint、資料缺口與 component 快照移至 `LUMIX_UI_IMPLEMENTATION.md`。
+
+**Affected:** 資產管理前端命名、搜尋 adapter、對帳核驗 component 邊界與 AI 文件同步流程。
+
+**Reason:** 讓產品 IA 可以延展，但不讓 UI 或外部 AI 誤判目前已有通用 adjustment engine、Email 搜尋或跨帳戶總額能力。
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -560,7 +402,7 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 ### v1.6 — 2026-09-17（working tree）
 
-- 修正資產劃轉頁的導航入口，`AssetSectionNav` 現在明確列出總覽／現貨／合約／劃轉；劃轉仍使用既有 `POST /api/v1/assets/transfers` 與 SPOT／FUTURES contract。
+- 修正資產劃轉頁的導航入口，明確列出總覽／現貨／合約／劃轉；既有資產轉移 contract 與帳戶語意保持不變。
 - 資產總覽收斂為標題、分頁、帳戶切換、資產明細與帳本歷史，移除重複的 metrics／帳戶 inventory 卡片；資料 API 與資產帳戶切換邏輯保持不變。
 - 資產總覽移除第二層帳戶 tab，改由單一資產分頁導航搭配現貨／合約明細卡片呈現，避免總覽內重複導航。
 
@@ -600,7 +442,7 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - `/assets/deposit` 的平台內部轉入現在以 `qrcode.react` 的 SVG QR Code 顯示登入者真實 UUID，並沿用共用 `CopyButton`；QR 只編碼 UUID，不承載鏈上地址、私鑰或其他資產資料。
 - `/assets/withdraw` 的平台內部轉出新增收款人 UUID、數量與現貨幣種表單；幣種只來自 `/api/v1/assets/balances` 的 ACTIVE SPOT projection，空資料時顯示受控不可送出狀態，不寫死 USDT 或假餘額。
-- 前端命令接至 `POST /api/v1/assets/internal-transfers`。server 以 `PLATFORM_INTERNAL_TRANSFER` 獨立 scope，在單一 transaction 中執行 source HOLD/capture、source DEBIT、recipient CREDIT、投影更新與 immutable audit；此路徑為 `HUMAN_REVIEW_REQUIRED`。
+- 平台內部轉出維持獨立受治理 scope，在單一 transaction 中執行保留、扣款、收款、投影更新與 immutable audit；此路徑為 `HUMAN_REVIEW_REQUIRED`。
 
 ### v1.12 — 2026-09-18（working tree）
 
@@ -624,3 +466,9 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 資產管理工作台重新定位為用戶資產、資產分析與資產調整；舊 `/assets/audit` 保持 redirect 相容，並在資產分析中對應真實的對帳核驗 tab。
 - 用戶資產改讀既有使用者搜尋與資產 projection，採右側 drawer 顯示明細；資產分析其他維度不建立 fake accounting data。
 - 資產調整送出前補上確認摘要，保留既有 server payload、validation、permission、ledger、audit 與 idempotency 行為。
+
+### v1.16 — 2026-09-18
+
+- 將資產管理的穩定語意規則補入治理文件：受控命令不得冒充通用資產調整引擎，會計語意不得跨帳戶任意加總，正式 UI 不得暗示不存在的 backend capability。
+- 新增 `docs/ai/LUMIX_UI_IMPLEMENTATION.md` 承載 route、component、endpoint、資料缺口等短期實作快照，避免治理規範與程式碼版本耦合。
+- `AssetAdjustmentPanel` 明確包裝 `GovernedAirdropForm`；資產搜尋 adapter 重用管理端使用者查詢並支援既有 UUID detail 查詢，Email 搜尋仍誠實標示不可用。

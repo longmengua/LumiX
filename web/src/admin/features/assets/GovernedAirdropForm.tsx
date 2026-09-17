@@ -101,14 +101,14 @@ export function GovernedAirdropForm() {
     try {
       setResult(await createAdminAirdrop(form));
     } catch (caught) {
-      setSubmissionError(caught instanceof Error ? caught.message : t('admin.assetsAirdropFailed'));
+      setSubmissionError(caught instanceof Error ? caught.message : t('admin.assetsAdjustmentFailed'));
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <section className="admin-airdrop-form" aria-label={t('admin.assetsAirdropType')}>
+    <section className="admin-airdrop-form" aria-label={t('admin.assetsAdjustmentTitle')}>
       <AdminPageHero
         icon={<AssetAdjustmentHeroIcon />}
         title={t('admin.assetsAdjustmentTitle')}
@@ -132,7 +132,7 @@ export function GovernedAirdropForm() {
               <label className="field"><span className="field__label">{t('admin.assetsAirdropActivity')}<RequiredMark /></span><FormSelect ariaLabel={t('admin.assetsAirdropActivity')} options={activityOptions} placeholder={t('admin.assetsAirdropRequired')} value={form.activityId} onChange={(value) => update('activityId', value)} /></label>
             </FieldError>
             <FieldError className="admin-airdrop-form__field--amount" error={errors.amount ?? errors.assetSymbol ?? assetLoadError ?? undefined}>
-              <label className="field"><span className="field__label">{t('admin.assetsAirdropAmount')}<RequiredMark /></span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
+              <label className="field"><span className="field__label">{t(form.activityId === 'AIRDROP' ? 'admin.assetsAirdropAmountLabel' : 'admin.assetsAdjustmentAmountLabel')}<RequiredMark /></span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="-?[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
             </FieldError>
           </div>
         </section>

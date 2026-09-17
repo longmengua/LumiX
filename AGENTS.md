@@ -110,7 +110,8 @@ security bypass
 
 ## UI 設計治理
 
-- 管理後台採用 **LumiX Institutional Blue**；視覺政策權威為 [UI Design Governance](docs/governance/lumix-institutional-blue.md)，目前實作與同步台帳權威為 [LumiX UI 長期治理與實作同步文件](docs/ai/LUMIX_UI_GOVERNANCE.md)。所有 UI 工作開始前必讀後者，並依其連結檢查現有元件及 token。
+- 管理後台採用 **LumiX Institutional Blue**；視覺政策權威為 [UI Design Governance](docs/governance/lumix-institutional-blue.md)，長期 UI 規範與同步責任見 [LumiX UI 長期治理與實作同步文件](docs/ai/LUMIX_UI_GOVERNANCE.md)，目前路徑、元件與資料能力快照見 [LumiX UI 實作快照](docs/ai/LUMIX_UI_IMPLEMENTATION.md)。所有 UI 工作開始前必讀兩份文件，並依其連結檢查現有元件及 token。
+- 路徑、component、API、資料能力與頁面狀態等短期實作快照記錄於 [LumiX UI 實作快照](docs/ai/LUMIX_UI_IMPLEMENTATION.md)；涉及 UI 的工作開始前一併閱讀，完成後同步更新。
 - 「美化、優化 UI、統一設計、增加科技感、改得更高級」預設只改善呈現，保留產品結構與業務功能；不授權改 API、資料模型、流程、權限、導航或新增虛構資料及 CTA。
 - 修改前檢查共用元件、theme／CSS variables、字級／間距／圓角、既有 Hero、icon 與 responsive 實作；遵循 reuse > extend > create，不逐頁複製樣式。
 - 以可用性、資訊層級、一致性、可及性、視覺品質、裝飾效果依序決策；窄畫面不得以裁切或隱藏 overflow 掩蓋內容重疊。

@@ -2,16 +2,16 @@ import { useEffect, useState } from 'react';
 
 import { EmptyState, ErrorState, LoadingState } from '../../../components/base/State';
 import { useI18n } from '../../../i18n';
-import { fetchAdminAssetAdjustmentAudit, type AdminAssetAdjustmentAuditItem } from '../../api/adminAssetsApi';
+import { fetchAssetAdjustmentReconciliation, type AdminAssetReconciliationItem } from '../../api/adminAssetsApi';
 
 /**
- * 資產沖銷流水的唯讀對賬面板。
+ * 資產調整的唯讀對帳核驗面板。
  *
  * 此處只呈現 server 已核對的 immutable 證據；例外狀態只提示人工處理，不能從前端發動補帳。
  */
-export function AssetAdjustmentAuditPanel() {
+export function AssetReconciliationPanel() {
   const { locale, t } = useI18n();
-  const [items, setItems] = useState<AdminAssetAdjustmentAuditItem[] | null>(null);
+  const [items, setItems] = useState<AdminAssetReconciliationItem[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -19,7 +19,7 @@ export function AssetAdjustmentAuditPanel() {
     let cancelled = false;
     setItems(null);
     setLoadError(null);
-    void fetchAdminAssetAdjustmentAudit()
+    void fetchAssetAdjustmentReconciliation()
       .then((next) => { if (!cancelled) setItems(next); })
       .catch(() => { if (!cancelled) setLoadError(t('admin.assetsAuditLoadFailed')); });
     return () => { cancelled = true; };
@@ -62,7 +62,13 @@ export function AssetAdjustmentAuditPanel() {
   );
 }
 
-function AuditRow({ item, locale, t }: { item: AdminAssetAdjustmentAuditItem; locale: string; t: (key: string, fallback?: string, values?: Record<string, string | number>) => string }) {
+/**
+ * 舊 import 相容別名；新 UI 以 reconciliation 語意命名。
+ * @deprecated 新程式請使用 AssetReconciliationPanel；待外部 consumer 清理後移除。
+ */
+export const AssetAdjustmentAuditPanel = AssetReconciliationPanel;
+
+function AuditRow({ item, locale, t }: { item: AdminAssetReconciliationItem; locale: string; t: (key: string, fallback?: string, values?: Record<string, string | number>) => string }) {
   const signedAmount = item.amount === null ? '-' : `${item.direction === 'DEBIT' ? '-' : '+'}${item.amount}`;
   const type = item.activityType === 'REVERSAL' ? t('admin.assetsAdjustmentReversal') : item.activityType === 'AIRDROP' ? t('admin.assetsAirdropType') : t('admin.assetsAuditUnknownType');
   const verified = item.reconciliationStatus === 'VERIFIED';

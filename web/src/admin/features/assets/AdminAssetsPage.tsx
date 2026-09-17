@@ -2,7 +2,7 @@ import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { useI18n } from '../../../i18n';
-import { GovernedAirdropForm } from './GovernedAirdropForm';
+import { AssetAdjustmentPanel } from './AssetAdjustmentPanel';
 import { AssetAnalysisPanel } from './AssetAnalysisPanel';
 import { AssetUserSearchPanel } from './AssetUserSearchPanel';
 
@@ -15,9 +15,9 @@ const SECTION_PATHS: Record<AssetSection, string> = {
 };
 
 /**
- * 真實管理端資產操作頁。
+ * 真實管理端資產工作台。
  *
- * 空投只送到 server-side super-admin boundary；browser 不計算餘額、不產生假成功，也不保存敏感資產狀態。
+ * 受控資產命令只送到 server-side super-admin boundary；browser 不計算餘額、不產生假成功，也不保存敏感資產狀態。
  */
 export function AdminAssetsPage() {
   const { t } = useI18n();
@@ -38,7 +38,7 @@ export function AdminAssetsPage() {
   if (normalizedPath.startsWith('/assets/risk')) return <Navigate replace to="/risk/assets" />;
   // 補償已不再提供於此工作台；既有連結導回唯一預設的帳務異常沖銷頁。
   if (normalizedPath.endsWith('/compensation')) return <Navigate replace to={SECTION_PATHS.adjustments} />;
-  // 類型是表單欄位，不再以路徑拆成多個頁面；舊書籤統一導回單一資產沖銷工作台。
+  // 類型是表單欄位，不再以路徑拆成多個頁面；舊書籤統一導回單一資產調整工作台。
   if (normalizedPath.startsWith('/assets/adjustments/')) return <Navigate replace to={SECTION_PATHS.adjustments} />;
 
   return (
@@ -53,17 +53,12 @@ export function AdminAssetsPage() {
         <div className="admin-assets-workspace__content">
           {section === 'users' ? <AssetUserSearchPanel /> : null}
           {section === 'analysis' ? <AssetAnalysisPanel /> : null}
-          {section === 'adjustments' ? <AdjustmentWorkspace /> : null}
+          {section === 'adjustments' ? <AssetAdjustmentPanel /> : null}
         </div>
       </div>
     </div>
   );
 }
-
-function AdjustmentWorkspace() {
-  return <div className="stack"><GovernedAirdropForm /></div>;
-}
-
 
 function sectionFromPath(pathname: string): AssetSection {
   if (pathname.startsWith('/assets/analysis')) return 'analysis';
