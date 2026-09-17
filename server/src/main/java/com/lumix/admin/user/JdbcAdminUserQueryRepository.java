@@ -23,9 +23,9 @@ import org.springframework.stereotype.Repository;
 class JdbcAdminUserQueryRepository implements AdminUserQueryRepository {
 
     private static final String USER_PROJECTION = "SELECT u.user_id, u.email, u.display_name, u.status, u.created_at, "
-        + "u.fund_transfer_restricted_until, "
+        + "u.fund_transfer_restricted_until, u.withdrawal_frozen_at, "
         // 只聚合現有 schema 可證實的限制來源；新增充值等限制時必須在這裡擴充，避免前端自行猜測。
-        + "(u.status = 'SUSPENDED' OR u.fund_transfer_restricted_until > CURRENT_TIMESTAMP "
+        + "(u.status = 'SUSPENDED' OR u.withdrawal_frozen_at IS NOT NULL OR u.fund_transfer_restricted_until > CURRENT_TIMESTAMP "
         + "OR EXISTS (SELECT 1 FROM accounts a WHERE a.user_id = u.user_id AND a.status = 'FROZEN')) "
         + "AS has_active_restriction, login_history.last_login_at FROM users u "
         + "LEFT JOIN LATERAL (SELECT s.created_at AS last_login_at FROM user_sessions s WHERE s.user_id = u.user_id "
@@ -138,6 +138,7 @@ class JdbcAdminUserQueryRepository implements AdminUserQueryRepository {
             resultSet.getTimestamp("created_at").toInstant(),
             toInstant(resultSet.getTimestamp("last_login_at")),
             toInstant(resultSet.getTimestamp("fund_transfer_restricted_until")),
+            toInstant(resultSet.getTimestamp("withdrawal_frozen_at")),
             resultSet.getBoolean("has_active_restriction")
         );
     }

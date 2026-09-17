@@ -217,9 +217,9 @@ Supporting: 建構更透明的數位資產治理
 | Primary page | `web/src/admin/features/users/AdminUsersPage.tsx` (`AdminUsersPage`) |
 | Hero | `AdminPageHero` |
 | Illustration | `UsersHeroArtwork` local CSS orb decoration，透過 shared Hero illustration slot 掛載 |
-| Shared components used | `AdminPageHero`、`EmptyState`、`InlineErrorState`；原生 form controls；workspace uses `PageHeader` / `Card` |
+| Shared components used | `AdminPageHero`、`EmptyState`、`InlineErrorState`、`ConfirmDialog`；原生 form controls；workspace uses `PageHeader` / `Card` |
 | Current status | Implemented / canonical Hero consumer |
-| Business behavior | Preserved: query, date filters, pagination, detail expansion, account / asset / history reads, loading and error states |
+| Business behavior | Preserved: query, date filters, pagination, account / asset / history reads, loading and error states；列表不再 inline detail，改由右側管理抽屜呈現。登入／提幣凍結仍只經最高管理員保護的目標狀態命令，完成後依 server response 更新命中列 |
 
 目前頁內 Hero content：
 
@@ -285,7 +285,10 @@ AdminUsersWorkspacePage
          │  ├─ title / description
          │  ├─ UsersHeroArtwork (CSS orbs)
          │  └─ value text
-         └─ users toolbar / list / detail / pagination
+         └─ users toolbar / scan-oriented list / pagination
+      └─ UserManagementDrawer (portal-like fixed overlay)
+         ├─ Overview / Assets / Security and restrictions / Records tabs
+         └─ restriction ConfirmDialog
 ```
 
 客戶端充值／提幣的實際 outline：
@@ -350,7 +353,11 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 
 - Preserve name search, created / last-login date filters, reset, cursor pagination, expanded detail rows and independent reads for detail, accounts, assets and history.
 - Preserve loading/error state semantics and existing authorization/API boundaries.
-- Do not turn Hero decoration, status color or table rows into invented operational data or CTAs.
+- `PUT /api/admin/v1/users/{userId}/restrictions/login` 與 `/withdrawal` 是最高管理員專用的受治理目標狀態命令；browser 只能傳送 `frozen`，不可指定 session、帳戶、餘額或稽核資料。
+- 登入凍結必須撤銷既有 session；提幣凍結必須由平台內部對他人轉出 runtime fail closed。UI 不可用本地 optimistic state 取代後端回讀。
+- 使用者清單只呈現帳戶狀態、限制摘要與「管理」入口。詳細資料、帳戶、資產、紀錄與高風險限制都只能在 `UserManagementDrawer` 內處理；未有後端 API 的轉帳／現貨／合約限制僅以 disabled capability row 呈現。
+- `system:` 前綴是既有 system principal 規則。系統帳戶要顯示 SYSTEM／不適用，且不應提供限制操作；server-side command 也必須拒絕它。
+- Do not turn Hero decoration, status color or table rows into invented operational data or unrelated CTAs.
 
 ## 12. Known Visual Gaps
 
@@ -496,6 +503,16 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** 保持使用者可理解的收款方式，同時不讓 browser 指定 account ID、修改餘額或假裝資產已移動。
 
+### 2026-09-18 — 使用者管理新增受治理的登入與提幣限制入口
+
+**Context:** 管理人員需能在使用者清單中凍結登入或提幣，但 UI 不能成為單純前端狀態開關。
+
+**Decision:** `AdminUsersPage` 以確認視窗呼叫受 server-side super-admin gate 保護的目標狀態 API；清單與詳情在命令完成後重新讀取後端狀態。登入凍結會撤銷 session；提幣凍結會阻擋平台內部對他人轉出。按鈕與限制摘要使用使用者可理解的「凍結／解除凍結」詞彙。
+
+**Affected:** `web/src/admin/features/users/AdminUsersPage.tsx`、`web/src/admin/api/adminUsersApi.ts`、管理端使用者清單樣式與雙語字典。
+
+**Reason:** 保留可追溯、可回讀的高風險操作邊界，並避免管理端顯示與實際執行結果脫節。
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -582,3 +599,10 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 平台內部轉出改為收款人 UUID、數量＋資產兩列，不再在桌面版併列欄位；收款人 label 右側新增具 aria-label 的掃碼按鈕。
 - 掃碼視窗只使用瀏覽器的 `getUserMedia` 與原生 `BarcodeDetector`，辨識到 UUID 格式 QR Code 才自動帶入並立即停止 camera stream。裝置不支援、權限拒絕或非 UUID QR Code 均維持受控訊息，沒有 fake scan 或推測值。
+
+### v1.14 — 2026-09-18（working tree）
+
+- 使用者管理清單新增凍結登入／凍結提幣與解除操作；所有操作都經確認視窗、後端回讀與既有管理員 cookie session，不在 browser 保存限制狀態。
+- 此 UI 對應的 runtime 會留下 immutable audit；登入凍結立即撤銷有效 session，提幣凍結會讓平台內部對他人轉出 fail closed。資產帳本、表單與其他使用者管理查詢不因這個 UI 新增而改變。
+- 詳情展開／收合改為保有 `aria-label` 與 `aria-expanded` 的圖示按鈕，避免在高密度使用者列表重複占用文字寬度；凍結登入、凍結提幣與詳情控制項統一為 40px 高度與相同 surface treatment，窄螢幕才允許限制按鈕換行。
+- 使用者列表收斂為狀態、限制摘要與單一「管理」入口；詳情改由 `UserManagementDrawer` 的概覽／資產／安全與限制／紀錄 tabs 提供。只有登入與提幣是已接後端的限制能力；平台內轉帳、現貨及合約交易以 disabled capability rows 明示尚未啟用。

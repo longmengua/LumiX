@@ -1,13 +1,13 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '../../../components/base/State';
+import { ConfirmDialog } from '../../../components/base/ConfirmDialog';
 import { InlineErrorState } from '../../components/AdminErrorPage';
 import { AdminPageHero } from '../../components/AdminPageHero';
 import { normalizeAdminError } from '../../api/adminError';
 import { useI18n } from '../../../i18n';
 import { getInputDateRangePreset, type DateRangePreset } from '../../../utils/dateRange';
-import { formatDateTimeParts, formatTime } from '../../../utils/format';
-import { formatDecimalString } from '../../../utils/format';
+import { formatDateTimeParts } from '../../../utils/format';
 import {
   findAdminUsers,
   getAdminUser,
@@ -21,7 +21,10 @@ import {
   getAdminUserAssets,
   getAdminUserAssetHistory,
   getAdminUserAccounts,
+  setAdminUserRestriction,
 } from '../../api/adminUsersApi';
+import { UserManagementDrawer } from './UserManagementDrawer';
+import { activeRestrictionCount, isFundTransferRestricted, isSystemUser, mapUserRestrictions } from './userRestrictions';
 
 type UserDateFilter = 'created' | 'last-login';
 type UserDateFilterValues = {
@@ -31,9 +34,10 @@ type UserDateFilterValues = {
   lastLoginToDate: string;
 };
 type VisualStatus = 'active' | 'inactive' | 'frozen';
+type RestrictionAction = { user: AdminUser; kind: 'login' | 'withdrawal'; frozen: boolean };
 
 /**
- * 使用者管理頁只處理唯讀檢視、查詢與詳情展開；登入、權限與任何帳戶限制的變更仍由既有後端邊界負責。
+ * 使用者管理頁只經由受保護後端命令處理限制；前端不保存或自行推導任何權限狀態。
  */
 export function AdminUsersPage() {
   const { t } = useI18n();
@@ -50,7 +54,7 @@ export function AdminUsersPage() {
   const [total, setTotal] = useState(0);
   const [pageSize, setPageSize] = useState(25);
   const [appliedSearch, setAppliedSearch] = useState<AdminUserSearch>({});
-  const [expandedUserIds, setExpandedUserIds] = useState<Set<string>>(() => new Set());
+  const [managedUserId, setManagedUserId] = useState<string | null>(null);
   const [detailsByUserId, setDetailsByUserId] = useState<Record<string, AdminUserDetail>>({});
   const [assetsByUserId, setAssetsByUserId] = useState<Record<string, AdminUserAssetSnapshot>>({});
   const [historyByUserId, setHistoryByUserId] = useState<Record<string, AdminUserLedgerHistoryItem[]>>({});
@@ -58,6 +62,8 @@ export function AdminUsersPage() {
   const [detailLoadingUserIds, setDetailLoadingUserIds] = useState<Set<string>>(() => new Set());
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [restrictionAction, setRestrictionAction] = useState<RestrictionAction | null>(null);
+  const [restrictionSubmitting, setRestrictionSubmitting] = useState(false);
   const requestSequence = useRef(0);
 
   function load(search: AdminUserSearch, cursor: AdminUserSearchCursor | null, targetPage: number, clearSnapshot: boolean) {
@@ -70,7 +76,6 @@ export function AdminUsersPage() {
       setItems([]);
       setNextCursor(null);
       setTotal(0);
-      setExpandedUserIds(new Set());
       setDetailsByUserId({});
       setAssetsByUserId({});
       setHistoryByUserId({});
@@ -192,17 +197,8 @@ export function AdminUsersPage() {
     load(search, null, 1, true);
   }
 
-  function toggleDetail(userId: string) {
-    if (expandedUserIds.has(userId)) {
-      setExpandedUserIds((current) => {
-        const next = new Set(current);
-        next.delete(userId);
-        return next;
-      });
-      return;
-    }
-
-    setExpandedUserIds((current) => new Set(current).add(userId));
+  function openManagement(userId: string) {
+    setManagedUserId(userId);
     if (detailsByUserId[userId] || detailLoadingUserIds.has(userId)) return;
 
     setDetailLoadingUserIds((current) => new Set(current).add(userId));
@@ -218,6 +214,25 @@ export function AdminUsersPage() {
           return next;
         });
       });
+  }
+
+  function confirmRestriction() {
+    if (!restrictionAction || restrictionSubmitting) return;
+    setRestrictionSubmitting(true);
+    const { user, kind, frozen } = restrictionAction;
+    void setAdminUserRestriction(user.userId, kind, frozen)
+      // 回應是後端已提交狀態；只更新命中的使用者，避免管理操作重置列表篩選、頁碼或捲動位置。
+      .then((result) => {
+        const update = (current: AdminUser) => current.userId !== user.userId ? current : {
+          ...current, status: result.loginFrozen ? 'SUSPENDED' : 'ACTIVE', withdrawalFrozenAt: result.withdrawalFrozenAt,
+          hasActiveRestriction: result.loginFrozen || result.withdrawalFrozenAt !== null || isFundTransferRestricted(current),
+        };
+        setItems((current) => current.map(update));
+        setDetailsByUserId((current) => current[user.userId] ? { ...current, [user.userId]: { ...current[user.userId], user: update(current[user.userId].user) } } : current);
+        setRestrictionAction(null);
+      })
+      .catch(() => setError(t('admin.usersRestrictionUpdateError')))
+      .finally(() => setRestrictionSubmitting(false));
   }
 
   return (
@@ -287,13 +302,7 @@ export function AdminUsersPage() {
         {items.length > 0 ? (
           <UserList
             items={items}
-            detailsByUserId={detailsByUserId}
-            assetsByUserId={assetsByUserId}
-            historyByUserId={historyByUserId}
-            accountsByUserId={accountsByUserId}
-            detailLoadingUserIds={detailLoadingUserIds}
-            expandedUserIds={expandedUserIds}
-            onToggleDetail={toggleDetail}
+            onManage={openManagement}
           />
         ) : null}
 
@@ -308,6 +317,27 @@ export function AdminUsersPage() {
           </footer>
         ) : null}
       </section>
+      <UserManagementDrawer
+        user={items.find((user) => user.userId === managedUserId) ?? null}
+        detail={managedUserId ? detailsByUserId[managedUserId] : undefined}
+        accounts={managedUserId ? accountsByUserId[managedUserId] : undefined}
+        assets={managedUserId ? assetsByUserId[managedUserId] : undefined}
+        history={managedUserId ? historyByUserId[managedUserId] : undefined}
+        loading={managedUserId ? detailLoadingUserIds.has(managedUserId) : false}
+        onClose={() => setManagedUserId(null)}
+        onRestrictionAction={setRestrictionAction}
+      />
+      <ConfirmDialog
+        open={restrictionAction !== null}
+        title={restrictionAction ? t(restrictionAction.frozen ? 'admin.usersRestrictionFreezeTitle' : 'admin.usersRestrictionUnfreezeTitle') : ''}
+        description={restrictionAction ? t('admin.usersRestrictionConfirmDescription', undefined, { name: restrictionAction.user.displayName }) : ''}
+        confirmLabel={restrictionAction ? t(restrictionAction.frozen ? 'admin.usersRestrictionFreeze' : 'admin.usersRestrictionUnfreeze') : ''}
+        cancelLabel={t('common.cancel')}
+        onCancel={() => { if (!restrictionSubmitting) setRestrictionAction(null); }}
+        onConfirm={confirmRestriction}
+      >
+        {restrictionAction ? <p className="modal-card__note">{t(restrictionAction.kind === 'login' ? 'admin.usersLoginRestrictionNotice' : 'admin.usersWithdrawalRestrictionNotice')}</p> : null}
+      </ConfirmDialog>
     </section>
   );
 }
@@ -317,82 +347,45 @@ function UsersHeroArtwork() {
   return <div className="admin-users-hero-artwork"><div className="admin-users-hero__orbs"><span /><span /><span /></div></div>;
 }
 
-function UserList({
-  items, detailsByUserId, assetsByUserId, historyByUserId, accountsByUserId, detailLoadingUserIds, expandedUserIds, onToggleDetail,
-}: {
-  items: AdminUser[];
-  detailsByUserId: Record<string, AdminUserDetail>;
-  assetsByUserId: Record<string, AdminUserAssetSnapshot>;
-  historyByUserId: Record<string, AdminUserLedgerHistoryItem[]>;
-  accountsByUserId: Record<string, AdminUserAccountInventoryItem[]>;
-  detailLoadingUserIds: Set<string>;
-  expandedUserIds: Set<string>;
-  onToggleDetail: (userId: string) => void;
-}) {
+function UserList({ items, onManage }: { items: AdminUser[]; onManage: (userId: string) => void }) {
   const { t } = useI18n();
   return (
     <div className="admin-users-list" role="table" aria-label={t('admin.usersTitle')}>
       <div className="admin-users-list__head" role="row">
         <span role="columnheader">{t('admin.column.user')}</span>
+        <span role="columnheader">{t('admin.usersTableStatus')}</span>
+        <span role="columnheader">{t('admin.usersTableRestrictions')}</span>
         <span role="columnheader">{t('admin.column.registeredAt')}</span>
         <span role="columnheader">{t('admin.column.lastLogin')}</span>
         <span role="columnheader">{t('admin.column.actions')}</span>
       </div>
       {items.map((user) => {
         const visualStatus = getVisualStatus(user);
-        const expanded = expandedUserIds.has(user.userId);
-        const detailId = `admin-user-detail-${user.userId}`;
-        const detail = detailsByUserId[user.userId];
-        const detailLoading = detailLoadingUserIds.has(user.userId);
+        const systemUser = isSystemUser(user);
+        const restrictionCount = activeRestrictionCount(user);
         return (
-          <Fragment key={user.userId}>
-            <div className="admin-users-list__row" role="row">
+            <div className="admin-users-list__row" role="row" key={user.userId}>
               <div className="admin-users-list__identity" role="cell">
                 <UserAvatar displayName={user.displayName} status={visualStatus} />
                 <div>
-                  <strong>{user.displayName} <span>({user.email})</span><CopyButton value={user.email} label={t('admin.usersCopyEmail')} /></strong>
-                  <p><span>{user.userId}</span><CopyButton value={user.userId} label={t('admin.usersCopyUserId')} /></p>
+                  <strong>{user.displayName} {systemUser ? <em className="admin-users-system-badge">SYSTEM</em> : null}<span>({user.email})</span></strong>
+                  <p><span>{user.userId}</span></p>
                 </div>
               </div>
+              <div className="admin-users-list__status" role="cell" data-label={t('admin.usersTableStatus')}><StatusDot status={visualStatus} />{systemUser ? t('admin.usersSystemAccount') : getStatusLabel(visualStatus, t)}</div>
+              <div className="admin-users-list__restriction-summary" role="cell" data-label={t('admin.usersTableRestrictions')}>{systemUser ? t('admin.usersSystemRestriction') : getRestrictionSummary(user, restrictionCount, t)}</div>
               <DateTimeCell label={t('admin.column.registeredAt')} value={user.createdAt} />
-              <DateTimeCell label={t('admin.column.lastLogin')} value={user.lastLoginAt} />
+              <DateTimeCell label={t('admin.column.lastLogin')} value={systemUser ? null : user.lastLoginAt} />
               <div className="admin-users-list__action" role="cell" data-label={t('admin.column.actions')}>
-                <button className="secondary-button" type="button" aria-expanded={expanded} aria-controls={detailId} onClick={() => onToggleDetail(user.userId)}>
-                  {expanded ? t('admin.usersHideDetails') : t('admin.usersShowDetails')}<ChevronRightIcon />
-                </button>
+                <button className="secondary-button admin-users-list__manage" type="button" onClick={() => onManage(user.userId)}>{t('admin.usersManage')}<ChevronRightIcon /></button>
               </div>
             </div>
-            {expanded ? <UserDetail user={user} detail={detail} accounts={accountsByUserId[user.userId]} assets={assetsByUserId[user.userId]} history={historyByUserId[user.userId]} loading={detailLoading} id={detailId} /> : null}
-          </Fragment>
         );
       })}
     </div>
   );
 }
 
-function UserDetail({ user, detail, accounts, assets, history, loading, id }: { user: AdminUser; detail?: AdminUserDetail; accounts?: AdminUserAccountInventoryItem[]; assets?: AdminUserAssetSnapshot; history?: AdminUserLedgerHistoryItem[]; loading: boolean; id: string }) {
-  const { t } = useI18n();
-  const visualStatus = getVisualStatus(user);
-  const restrictions = getRestrictionMessages(user, t);
-  return (
-    <section className="admin-users-list__detail" id={id} aria-label={t('admin.usersDetailsFor', undefined, { name: user.displayName })}>
-      {loading ? <p>{t('admin.usersDetailsLoading')}</p> : null}
-      {!loading && detail ? (
-        <dl>
-          <div><dt>{t('admin.usersDetailStatus')}</dt><dd><StatusDot status={visualStatus} />{getStatusLabel(visualStatus, t)}</dd></div>
-          <div className={`admin-users-list__restrictions${user.hasActiveRestriction ? '' : ' admin-users-list__restrictions--clear'}`}><dt>{t('admin.usersDetailRestrictions')}</dt><dd>{restrictions.map((message) => <span key={message}>{message}</span>)}</dd></div>
-          <div><dt>{t('admin.usersDetailRegistered')}</dt><dd>{formatTime(detail.user.createdAt)}</dd></div>
-          <div><dt>{t('admin.usersDetailLastLogin')}</dt><dd>{detail.user.lastLoginAt ? formatTime(detail.user.lastLoginAt) : '—'}</dd></div>
-          <div className="admin-users-list__devices"><dt>{t('admin.usersDetailDevices')}</dt><dd>{detail.devices.map((device) => `${device.platform}／${device.label}`).join('、') || t('admin.usersDetailNoDevices')}</dd></div>
-          <div className="admin-users-list__assets admin-users-list__assets--full"><dt>{t('admin.usersAccounts')}</dt><dd>{accounts?.length ? <div className="admin-user-assets">{accounts.map((account) => <div className="admin-user-assets__item" key={account.accountId}><strong>{account.accountType}</strong><span>{t('admin.usersAccountStatus')} {account.accountStatus}</span><small>{t('admin.usersAccountCreated')} {formatTime(account.createdAt)}</small></div>)}</div> : t('admin.usersNoAccounts')}</dd></div>
-          <div className="admin-users-list__assets admin-users-list__assets--full"><dt>{t('admin.usersAssets')}</dt><dd>{assets?.items.length ? <div className="admin-user-assets">{assets.items.map((asset) => <div className="admin-user-assets__item" key={`${asset.accountType}-${asset.assetSymbol}`}><strong>{asset.accountType} · {asset.assetSymbol}</strong><span>{t('admin.usersAssetAvailable')} {formatDecimalString(asset.available)}</span><span>{t('admin.usersAssetLocked')} {formatDecimalString(asset.locked)}</span><b>{t('admin.usersAssetTotal')} {formatDecimalString(asset.total)}</b><small>{asset.reconciledAt ? t('admin.usersAssetReconciled') : t('admin.usersAssetUnreconciled')} · {formatTime(asset.projectedAt)}</small></div>)}</div> : t('admin.usersNoAssets')}</dd></div>
-          <div className="admin-users-list__assets admin-users-list__assets--full"><dt>{t('admin.usersAssetHistory')}</dt><dd>{history?.length ? <div className="admin-user-assets">{history.map((item) => <div className="admin-user-assets__item" key={item.entryId}><strong>{item.direction === 'CREDIT' ? '+' : '-'}{formatDecimalString(item.amount)} {item.assetSymbol}</strong><span>{item.accountType} · {item.referenceType} #{item.referenceId}</span><small>{formatTime(item.postedAt)}</small></div>)}</div> : t('admin.usersNoAssetHistory')}</dd></div>
-        </dl>
-      ) : null}
-      {!loading && !detail ? <p className="form-message form-message--error">{t('admin.usersQueryError')}</p> : null}
-    </section>
-  );
-}
 
 /**
  * 兩個日期條件共用同一個 anchored popover；草稿只存在此元件內，關閉或點外部時絕不改動已套用的 API 條件。
@@ -533,49 +526,15 @@ function UserAvatar({ displayName, status }: { displayName: string; status: Visu
 
 function StatusDot({ status }: { status: VisualStatus }) { return <span className={`admin-users-status admin-users-status--${status}`} aria-hidden="true" />; }
 
-function CopyButton({ value, label }: { value: string; label: string }) {
-  const { t } = useI18n();
-  const [copied, setCopied] = useState(false);
-  const resetTimer = useRef<number | null>(null);
-  useEffect(() => () => { if (resetTimer.current !== null) window.clearTimeout(resetTimer.current); }, []);
-
-  async function copy() {
-    if (!await copyText(value)) return;
-    setCopied(true);
-    if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
-    resetTimer.current = window.setTimeout(() => setCopied(false), 1600);
-  }
-
-  return <button className="admin-users-copy" type="button" onClick={() => void copy()} aria-label={copied ? t('admin.usersCopied') : label} title={copied ? t('admin.usersCopied') : label}>{copied ? <CheckIcon /> : <CopyIcon />}<span className="sr-only" aria-live="polite">{copied ? t('admin.usersCopied') : ''}</span></button>;
-}
-
-/** Clipboard API 是主要路徑；fallback 只服務受限環境，避免支援人員因瀏覽器權限差異無法複製識別資料。 */
-async function copyText(value: string) {
-  try {
-    if (navigator.clipboard) { await navigator.clipboard.writeText(value); return true; }
-  } catch { /* 權限拒絕後繼續嘗試相容 fallback。 */ }
-  const element = document.createElement('textarea');
-  element.value = value;
-  element.setAttribute('readonly', '');
-  element.style.position = 'fixed';
-  element.style.opacity = '0';
-  document.body.append(element);
-  element.select();
-  const copied = document.execCommand('copy');
-  element.remove();
-  return copied;
-}
-
 function getVisualStatus(user: AdminUser): VisualStatus { return user.hasActiveRestriction ? 'frozen' : user.status === 'ACTIVE' ? 'active' : 'inactive'; }
 function getStatusLabel(status: VisualStatus, t: ReturnType<typeof useI18n>['t']) { return status === 'active' ? t('admin.usersStatusActive') : status === 'frozen' ? t('admin.usersStatusFrozen') : t('admin.usersStatusInactive'); }
-function getRestrictionMessages(user: AdminUser, t: ReturnType<typeof useI18n>['t']) {
-  const messages: string[] = [];
-  if (user.status === 'SUSPENDED') messages.push(t('admin.usersRestrictionSuspended'));
-  if (isFundTransferRestricted(user)) messages.push(t('admin.usersRestrictionFundTransfer', undefined, { until: formatTime(user.fundTransferRestrictedUntil!) }));
-  if (user.hasActiveRestriction && messages.length === 0) messages.push(t('admin.usersRestrictionFrozenAccount'));
-  return messages.length > 0 ? messages : [t('admin.usersNoRestrictions')];
+function getRestrictionSummary(user: AdminUser, count: number, t: ReturnType<typeof useI18n>['t']) {
+  if (count === 0) return t('admin.usersNoRestrictions');
+  if (count > 2) return t('admin.usersRestrictionCount', undefined, { count });
+  const keys = mapUserRestrictions(user).filter((item) => item.active).map((item) => item.key);
+  if (keys.length === 2) return t('admin.usersRestrictionLoginAndWithdrawal');
+  return t(keys[0] === 'login' ? 'admin.usersRestrictionLoginSummary' : keys[0] === 'withdrawal' ? 'admin.usersRestrictionWithdrawalSummary' : 'admin.usersRestrictionTransferSummary');
 }
-function isFundTransferRestricted(user: AdminUser) { return user.fundTransferRestrictedUntil !== null && Date.parse(user.fundTransferRestrictedUntil) > Date.now(); }
 function initials(name: string) { return name.trim().split(/\s+/).slice(0, 2).map((part) => part.slice(0, 1)).join('').toUpperCase() || '?'; }
 function toUtcDayStart(date: string) { return `${date}T00:00:00.000Z`; }
 function toUtcDayAfter(date: string) { const value = new Date(`${date}T00:00:00.000Z`); value.setUTCDate(value.getUTCDate() + 1); return value.toISOString(); }
@@ -591,6 +550,4 @@ function ChevronDownIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true">
 function ChevronRightIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7" /></svg>; }
 function ChevronLeftIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7" /></svg>; }
 function CloseIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.5 7.5 9 9M16.5 7.5l-9 9" /></svg>; }
-function CopyIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="8" width="9" height="10" rx="1.5" /><path d="M15 8V6.5A1.5 1.5 0 0 0 13.5 5h-8A1.5 1.5 0 0 0 4 6.5v8A1.5 1.5 0 0 0 5.5 16H9" /></svg>; }
-function CheckIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5.5 12.5 4 4 9-9" /></svg>; }
 function UserAvatarIcon() { return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.2" /><path d="M5.7 20a6.3 6.3 0 0 1 12.6 0" /></svg>; }

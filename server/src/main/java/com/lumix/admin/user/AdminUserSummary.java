@@ -11,5 +11,6 @@ public record AdminUserSummary(
     Instant createdAt,
     Instant lastLoginAt,
     Instant fundTransferRestrictedUntil,
+    Instant withdrawalFrozenAt,
     boolean hasActiveRestriction
 ) { }

@@ -9,6 +9,7 @@ export type AdminUser = {
   createdAt: string;
   lastLoginAt: string | null;
   fundTransferRestrictedUntil: string | null;
+  withdrawalFrozenAt: string | null;
   hasActiveRestriction: boolean;
 };
 
@@ -68,6 +69,10 @@ export function findAdminUsers(search: AdminUserSearch): Promise<AdminUserSearch
 export function getAdminUser(id: string): Promise<AdminUserDetail> {
   return read<AdminUserDetail>(`/users/${encodeURIComponent(id)}`);
 }
+/** 管理員以目標狀態更新限制；PUT 可安全重送，實際授權與稽核均在後端完成。 */
+export function setAdminUserRestriction(id: string, kind: 'login' | 'withdrawal', frozen: boolean): Promise<{ changed: boolean; loginFrozen: boolean; withdrawalFrozenAt: string | null }> {
+  return write(`/users/${encodeURIComponent(id)}/restrictions/${kind}`, { frozen });
+}
 /** 管理端資產只讀取現有 projection；不提供餘額調整、空投或任何資金寫入 action。 */
 export function getAdminUserAssets(id: string): Promise<AdminUserAssetSnapshot> { return read<AdminUserAssetSnapshot>(`/users/${encodeURIComponent(id)}/assets`); }
 export function getAdminUserAssetHistory(id: string): Promise<AdminUserLedgerHistoryItem[]> { return read<AdminUserLedgerHistoryItem[]>(`/users/${encodeURIComponent(id)}/assets/history`); }
@@ -75,6 +80,18 @@ export function getAdminUserAccounts(id: string): Promise<AdminUserAccountInvent
 
 async function read<T>(path: string): Promise<T> {
   const response = await fetch(`${ADMIN_API_BASE_PATH}${path}`, { credentials: 'same-origin' });
+  if (!response.ok) {
+    const error = await createAdminApiError(response);
+    if (error.kind === 'unauthorized') notifyAdminUnauthorized();
+    throw error;
+  }
+  return response.json() as Promise<T>;
+}
+
+async function write<T>(path: string, body: unknown): Promise<T> {
+  const response = await fetch(`${ADMIN_API_BASE_PATH}${path}`, {
+    method: 'PUT', credentials: 'same-origin', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+  });
   if (!response.ok) {
     const error = await createAdminApiError(response);
     if (error.kind === 'unauthorized') notifyAdminUnauthorized();

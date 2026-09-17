@@ -99,15 +99,21 @@ public class PlatformInternalTransferService {
         }
         String asset = required(assetSymbol, "asset symbol").toUpperCase(Locale.ROOT);
         String key = required(idempotencyKey, "idempotency key");
-        String source = userSpotAccountId(actor.userId());
-        String destination = userSpotAccountId(recipient);
+        String source = userSpotAccountId(actor.userId(), true);
+        String destination = userSpotAccountId(recipient, false);
         String transferId = "platform-transfer:" + digest(actor.userId() + "|" + recipient + "|" + asset + "|" + key).substring(0, 40);
         String requestId = "platform-transfer-" + digest(transferId).substring(0, 36);
         return new Command(transferId, source, destination, asset, amount, requestId, key, actor.userId(), recipient);
     }
 
-    private String userSpotAccountId(String userId) {
-        List<String> accounts = jdbcTemplate.query("SELECT account.account_id FROM accounts account JOIN users user_row ON user_row.user_id = account.user_id WHERE account.user_id = ? AND account.account_type = ? AND account.status = 'ACTIVE' AND account.account_category = 'USER' AND user_row.status = 'ACTIVE'",
+    private String userSpotAccountId(String userId, boolean outbound) {
+        String outboundRestriction = outbound
+                ? " AND user_row.withdrawal_frozen_at IS NULL AND (user_row.fund_transfer_restricted_until IS NULL OR user_row.fund_transfer_restricted_until <= CURRENT_TIMESTAMP)"
+                : "";
+        String outboundLock = outbound ? " FOR SHARE OF user_row" : "";
+        // 管理端凍結只禁止向其他使用者轉出；收款與同一使用者帳戶間的資產調度不應被誤傷。
+        // 來源使用者列在同一交易內加共享鎖，避免限制剛被管理端寫入時，已通過檢查的轉出仍繼續完成。
+        List<String> accounts = jdbcTemplate.query("SELECT account.account_id FROM accounts account JOIN users user_row ON user_row.user_id = account.user_id WHERE account.user_id = ? AND account.account_type = ? AND account.status = 'ACTIVE' AND account.account_category = 'USER' AND user_row.status = 'ACTIVE'" + outboundRestriction + outboundLock,
                 (row, number) -> row.getString(1), userId, SPOT);
         if (accounts.size() != 1) {
             throw new IllegalArgumentException("eligible spot account is required");

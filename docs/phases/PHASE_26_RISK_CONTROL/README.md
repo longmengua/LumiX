@@ -21,3 +21,9 @@ COMPLETED_FOR_RISK_CONTROL_POLICY_FOUNDATION
 ## 風險門檻
 
 `HUMAN_REVIEW_REQUIRED: yes`。任何 policy、override、freeze/unfreeze、limit consumption 或與 order/withdrawal 交互的 runtime 必須逐卡審核；不完整行情、資料衝突或無 audit 一律不可允許資金或交易動作。
+
+## 2026-09-18 受治理使用者限制 runtime
+
+> `HUMAN_REVIEW_REQUIRED: yes`
+
+依人類明確授權，新增最高管理員可執行的登入凍結與提幣凍結：登入凍結採既有 `SUSPENDED` 並撤銷有效 session；提幣凍結保存 `withdrawal_frozen_at`，平台內部對他人轉出必須 fail closed。同一使用者自己名下的現貨／合約劃轉不受提幣凍結影響。每次有效限制變更都在同一 transaction 寫入 immutable audit；此 runtime 不含外部提幣、錢包、私鑰、簽章、provider 或鏈上廣播。

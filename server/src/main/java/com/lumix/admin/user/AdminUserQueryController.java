@@ -84,12 +84,13 @@ public class AdminUserQueryController {
         Instant createdAt,
         Instant lastLoginAt,
         Instant fundTransferRestrictedUntil,
+        Instant withdrawalFrozenAt,
         boolean hasActiveRestriction
     ) {
         static UserResponse from(AdminUserSummary user) {
             return new UserResponse(
                 user.userId(), user.email(), user.displayName(), user.status(), user.createdAt(), user.lastLoginAt(),
-                user.fundTransferRestrictedUntil(), user.hasActiveRestriction()
+                user.fundTransferRestrictedUntil(), user.withdrawalFrozenAt(), user.hasActiveRestriction()
             );
         }
     }
