@@ -2,6 +2,7 @@ package com.lumix.admin.asset;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doNothing;
@@ -72,6 +73,24 @@ class AdminAirdropServiceIntegrationTest {
         assertThrows(IllegalArgumentException.class, () -> transaction.execute(status -> service.grant(actor,
                 new AdminAirdropCommand("target-user", "USDT", new BigDecimal("-20.000001"), "REVERSAL", "餘額不足測試"))));
         assertEquals(2L, count(jdbcTemplate, "ledger_journals"));
+
+        // 對賬必須以既有 audit、journal 與雙分錄交叉檢查，不能從 balance projection 或前端推測結果。
+        List<AdminAssetAdjustmentAuditItem> auditItems = new JdbcAdminAssetAdjustmentAuditQueryRepository(jdbcTemplate).findLatest(10);
+        assertEquals(2, auditItems.size());
+        assertEquals("REVERSAL", auditItems.getFirst().activityType());
+        assertEquals("DEBIT", auditItems.getFirst().direction());
+        assertEquals("VERIFIED", auditItems.getFirst().reconciliationStatus());
+        assertEquals(0, new BigDecimal("5.125000").compareTo(new BigDecimal(auditItems.getFirst().amount())));
+        assertEquals("AIRDROP", auditItems.get(1).activityType());
+        assertEquals("CREDIT", auditItems.get(1).direction());
+        assertEquals("VERIFIED", auditItems.get(1).reconciliationStatus());
+
+        // 以測試資料模擬遭破壞的歷史分錄，確認唯讀對賬會揭露缺口而不是將它濾掉或製造補帳。
+        jdbcTemplate.update("DELETE FROM ledger_entries WHERE ledger_journal_id = ?", reversal.ledgerJournalId());
+        List<AdminAssetAdjustmentAuditItem> damagedAuditItems = new JdbcAdminAssetAdjustmentAuditQueryRepository(jdbcTemplate).findLatest(10);
+        assertEquals("EXCEPTION", damagedAuditItems.getFirst().reconciliationStatus());
+        assertNull(damagedAuditItems.getFirst().assetSymbol());
+        assertNull(damagedAuditItems.getFirst().amount());
 
         AdminAirdropAssetConfigurationService configuration = new AdminAirdropAssetConfigurationService(access, jdbcTemplate);
         assertEquals(List.of("USDT"), configuration.listActiveSpotAssets(actor).stream()

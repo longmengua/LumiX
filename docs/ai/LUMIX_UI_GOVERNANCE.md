@@ -6,14 +6,14 @@
 
 | 項目 | 值 |
 | --- | --- |
-| 最後更新 | 2026-09-17 |
-| Repository revision | 工作區同步資產頁雙語顯示規則，尚未對應新 revision |
+| 最後更新 | 2026-09-18 |
+| Repository revision | `d646c82` 之後的工作區：資產沖銷流水唯讀對賬面板，尚未建立新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system | 沒有第三方 icon package；使用頁面內 inline React SVG |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.7`（working tree snapshot） |
+| UI Governance Version | `1.9`（working tree snapshot） |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -102,8 +102,10 @@
 | `PageHeader` | `web/src/components/layout/PageHeader.tsx` | 外層頁名、description、actions；不是 dashboard Hero | `global.css` | Canonical base component |
 | `Card` | `web/src/components/base/Card.tsx` | 通用 card，`title`、`children`、`className` | `global.css` | Canonical base component |
 | `Badge` | `web/src/components/base/Badge.tsx` | neutral／success／warning／danger 狀態標籤 | `global.css` | Canonical base component |
+| `CopyButton` | `web/src/components/base/CopyButton.tsx` | 複製 UUID、email 等識別值；`value`、`label`、`copiedLabel`；含 Clipboard API 與受限環境 fallback | `.copy-button` in `global.css` | Canonical base component（管理端使用者列表、客戶端個人中心） |
 | `LoadingState`／`EmptyState`／`ErrorState` | `web/src/components/base/State.tsx` | 真實資料 loading／empty／error 呈現 | `global.css` | Canonical base component |
 | `FormSelect` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 資產調整局部深色 listbox，props 為 `ariaLabel`、`options`、`value`、`onChange`、`compact`、`disabled` | `.admin-form-select*` in `global.css` | Local / not yet extracted |
+| `AssetAdjustmentAuditPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 讀取既有資產沖銷／空投調整的對賬結果；loading、empty 與 error 均重用共享 State 元件 | `.admin-asset-audit*` in `global.css` | Feature-specific readonly panel |
 
 目前沒有 shared React `Input`、`Select`、`Textarea`、`Button` 或第三方 icon component。一般 control 是原生元素加 `.input`、`.primary-button`、`.secondary-button` class。使用者 Hero 也不是 `AdminPageHero` consumer。
 
@@ -175,6 +177,21 @@ Value: 精準・可溯・合規
 Supporting: 建構更透明的數位資產治理
 ```
 
+### Asset Management / Reconciliation & P&L
+
+| 項目 | 真實狀態 |
+| --- | --- |
+| Route | `/admin/assets/audit` |
+| Page host | `web/src/admin/features/assets/AdminAssetsPage.tsx` (`AdminAssetsPage`) |
+| Panel | `AssetAdjustmentAuditPanel` in `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` |
+| Read API | `GET /api/admin/v1/assets/audit/adjustments` |
+| Server boundary | `server/src/main/java/com/lumix/admin/asset/AdminAssetAdjustmentAuditController.java` → `AdminAssetAdjustmentAuditService` → `JdbcAdminAssetAdjustmentAuditQueryRepository` |
+| Current status | Implemented：只讀資產沖銷／空投調整的證據交叉核對 |
+| Data source | `audit_logs`、`ledger_journals`、`ledger_entries`、目標帳戶與使用者；不使用 projection 或 browser 推算作為對賬真相 |
+| Business behavior | Server-side super-admin gate；固定最多 100 筆；雙分錄筆數、方向、同資產、借貸平衡與目標帳戶分錄不符合時回傳 `EXCEPTION`，只能人工處理 |
+
+手續費收入、營收、虧損與 P&L 彙總尚未建立可用帳務來源。這個頁面不顯示預估、零值、mock 或假成功數字；待真實 fee journal／收益歸屬 runtime 完成後，才可擴充對賬範圍。
+
 ### Users
 
 | 項目 | 真實狀態 |
@@ -211,7 +228,7 @@ AdminRouter
       └─ AdminAssetsPage
          ├─ PageHeader
          └─ admin-assets-workspace
-            ├─ asset workspace sidebar tabs（總覽／現貨／合約／劃轉）
+            ├─ asset workspace sidebar tabs（用戶資產／資產沖銷／對賬審計與損益）
             └─ AdjustmentWorkspace
                └─ GovernedAirdropForm
                   └─ admin-airdrop-form
@@ -224,6 +241,20 @@ AdminRouter
 ```
 
 資產工作台以 CSS Grid（`minmax(11rem, 14rem) minmax(0, 1fr)`）放置左側 tabs 與內容。Hero 使用 CSS Grid；表單主要欄位使用 two-column CSS Grid；其餘 form behavior 留在 `GovernedAirdropForm`。Hero 位於 `admin-airdrop-form` 的同一 outer surface 上，Hero 之後才是 form body。
+
+資產對賬頁在相同 workspace sidebar 下改為：
+
+```text
+AdminAssetsPage
+└─ admin-assets-workspace
+   └─ AssetAdjustmentAuditPanel
+      ├─ scope notice
+      └─ immutable adjustment reconciliation table
+         ├─ loading / empty / error state
+         └─ verified or exception rows
+```
+
+這個面板不共用資產調整 Hero，也不提供修正 CTA；它是為既有流水提供核對可見性，而非第二個資產操作入口。
 
 使用者頁實際 DOM/component outline：
 
@@ -267,6 +298,13 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 - Amount accepts the existing signed decimal pattern; no UI task may replace the existing controlled amount handling with JavaScript floating-point conversion.
 - User ID, asset, amount and reason validations; 256-character note limit; reset default; loading / disabled submit; duplicate-submit guard; server result/error feedback are protected.
 - The form is a privileged asset action: permission, immutable ledger, audit, idempotency and server-side decision remain outside the browser component.
+
+### Asset adjustment reconciliation protected behavior
+
+- `GET /api/admin/v1/assets/audit/adjustments` 是唯讀最高管理員 API；不得擴充為補帳、重放、修改餘額或修改 audit evidence 的 command。
+- 對賬狀態只可由 server 比對既有 `audit_logs`、journal 與 ledger entries 產生；browser 不得自行把資料標示為完成。
+- `EXCEPTION` 是人工調查訊號，不是前端自動修復、反沖、重送或資產異動授權。
+- 現階段範圍只包含 `ADMIN_ASSET_ADJUSTMENT` 成功證據與 `ADJUSTMENT` journal。手續費收入、營收、虧損與 P&L 沒有真實資料來源前不得加入任何 placeholder 數字。
 
 ### Users protected behavior
 
@@ -448,7 +486,6 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 資產總覽移除第二層帳戶 tab，改由單一資產分頁導航搭配現貨／合約明細卡片呈現，避免總覽內重複導航。
 
 ### v1.7 — 2026-09-17（working tree）
-
 - 資產前台顯示文字改由雙語字典提供；中文介面不再直接呈現 `SPOT`／`FUTURES`、帳本參照類型或開發用英文說明，英文介面維持完整英文顯示。
 - 劃轉表單保留 `SPOT`／`FUTURES` API 值，只將選單顯示名稱本地化；資產歷史的帳戶類型與參照類型同樣只在顯示層轉換，不改動後端資料契約。
 - 客戶端與管理端資產相關文案改用產品語言，移除「唯讀、投影、快照、不可變帳本、adapter、Journal」等不必要的內部術語；資料狀態改以「目前餘額、資料狀態、資產異動紀錄」呈現。
@@ -458,3 +495,18 @@ Do not record an uncommitted implementation as a released revision. If a working
 - `web/src/pages/assets/AssetTransferRuntimePage.tsx` 現在直接重用 `AdminPageHero`、`AssetAdjustmentHeroIcon` 與既有 V2 asset artwork；客戶端以 `.asset-transfer-page` 局部提供相同 semantic token，並將工作區、導航與操作卡收斂到資產調整相同的深藍 surface、border、spacing 與 responsive 節奏。
 - 資產總覽已移除未使用的帳戶容器請求；畫面只以實際呈現的 `/api/v1/assets/balances` 回應決定載入結果，避免非必要的帳戶資料請求失敗而遮蔽餘額總覽。
 - 管理端資產工作區的 audit 區塊正式定位為「對賬審計與損益」：用於核對資產流水完整性與異常，並納入營收／虧損帳務核對；尚未實作的完整審計與損益查詢不得以示意數據呈現。
+
+### v1.8 — 2026-09-18（working tree）
+
+- 新增 `/admin/assets/audit` 的 `AssetAdjustmentAuditPanel`，只顯示既有沖銷／空投調整之管理操作、immutable journal 與雙分錄交叉核對結果。
+- 新增受 server-side super-admin gate 保護的 bounded read API；缺少雙分錄、借貸不平、資產不一致或目標帳戶分錄時標示 `EXCEPTION`，不執行任何修正。
+- 明確登錄手續費收入、營收、虧損與 P&L 尚無可用帳務來源，因此不顯示 mock、零值或預估資料。
+- 客戶端資產頁移除「資料狀態」、最後更新與對賬等內部資料品質呈現；使用者只看與操作直接相關的資產、可用、凍結與總額。資料新鮮度仍留在 server／營運監控邊界。
+- 資產顯示語彙以「凍結」對應不可用中的資產數量；英文介面對應 `Frozen`。資料欄位與既有 `locked` API contract 保持不變。
+- 顯示給使用者與管理人員的時間一律使用 24 小時制（`hourCycle: 'h23'`）；不得以「上午／下午／晚上」或 AM／PM 表示時間。
+- 管理端獨立 Vite surface 的 browser title 固定為「LumiX管理後台」；前台仍為「LumiX」，以避免瀏覽器分頁混淆兩個獨立服務。
+
+### v1.9 — 2026-09-18（working tree）
+
+- 管理員密碼重設頁 `web/src/admin/pages/AdminResetPasswordPage.tsx` 改為直接沿用既有 `.admin-login--portal` shell、卡片、語言切換器、密碼控制項、狀態區與 footer；未新增第二套 auth surface CSS，密碼規則、token 提交與導回登入流程維持不變。
+- 抽出 `web/src/components/base/CopyButton.tsx`，讓管理端使用者識別值與客戶端個人中心 UID 共用同一個可及複製互動、clipboard fallback 與已複製回饋；個人資料 API 與 UUID 資料契約不變。

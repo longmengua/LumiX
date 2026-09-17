@@ -13,7 +13,11 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 
 /** 管理端資產寫入失敗一律去敏，不能將 SQL、帳本帳戶或內部 idempotency 細節回傳瀏覽器。 */
-@RestControllerAdvice(assignableTypes = {AdminAirdropController.class, AdminUserAssetQueryController.class})
+@RestControllerAdvice(assignableTypes = {
+        AdminAirdropController.class,
+        AdminAssetAdjustmentAuditController.class,
+        AdminUserAssetQueryController.class
+})
 public class AdminAssetExceptionHandler {
     private final ApiExceptionHandler errorHandler = new ApiExceptionHandler();
 

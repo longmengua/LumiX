@@ -17,6 +17,7 @@ HUMAN_REVIEW_REQUIRED: yes
 - SMTP 啟用時，HTTPS URL 一律可用；HTTP 只有在開關為 `true` 且 host 精確為 `localhost`、`127.0.0.1` 或 `::1` 時可用。
 - 拒絕含 user-info、query 或 fragment 的 base URL，避免組裝 reset URL 時產生模糊目的地。
 - 本機 `.env` 的 Gmail App Password 只供 Docker Compose 注入，已由 Git 忽略；不得寫入範例、文件或提交。
+- 最高管理員首次啟用信與既有管理員復原信都導向後台專用重設頁；API 僅接受既有 `PENDING_ACTIVATION` 或 `ACTIVE` 的最高管理員 principal，成功後於同一 transaction 更新密碼、撤銷 session、消耗 token，並只在需要時啟用 pending principal。一般使用者 token 仍會拒絕。
 
 ## 安全邊界
 
@@ -50,6 +51,8 @@ PASS  /actuator/health -> UP（SMTP health 已啟用）
 PASS  註冊 Gmail 測試別名後呼叫 POST /api/v1/auth/password/forgot -> 202
 PASS  delivery adapter 以同步 SMTP send 執行；寄送失敗會 rollback transaction，202 代表 Gmail SMTP 已接受信件
 PENDING HUMAN  在同一台 Mac 的 Gmail 信箱開啟實際信件並點擊 reset link，完成一次 UI reset；token 不會寫入終端、log 或測試紀錄
+2026-09-18
+PASS  發現並修正首次啟用信原本會被僅限 `ACTIVE` principal 的後台 reset gate 拒絕；待啟用管理員已由窄範圍 service test 覆蓋，且一般使用者 token 仍被拒絕
 ```
 
 ## 人工審核重點

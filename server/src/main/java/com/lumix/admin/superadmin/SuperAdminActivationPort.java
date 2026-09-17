@@ -17,4 +17,12 @@ public interface SuperAdminActivationPort {
     default boolean isActiveSuperAdmin(String userId) {
         return false;
     }
+
+    /**
+     * 後台重設頁同時承接首次啟用與既有管理員復原，因此只接受已存在的待啟用或已啟用最高管理員。
+     * 預設仍拒絕，避免沒有 principal 狀態查驗能力的替代 adapter 意外放寬後台 token 的使用範圍。
+     */
+    default boolean isPasswordResetEligibleSuperAdmin(String userId) {
+        return false;
+    }
 }

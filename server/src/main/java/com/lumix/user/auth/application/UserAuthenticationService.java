@@ -576,8 +576,8 @@ public class UserAuthenticationService {
     /**
      * 消耗後台復原 token 並更新密碼。
      *
-     * <p>即使 token digest 有效，也必須在同一 transaction 再驗證該帳戶仍是 ACTIVE admin principal；這讓
-     * 一般客戶端 token 無法透過後台重設 endpoint 使用。</p>
+     * <p>即使 token digest 有效，也必須在同一 transaction 再驗證該帳戶仍是待啟用或已啟用的最高管理員
+     * principal；這讓一般客戶端 token 無法透過後台重設 endpoint 使用，同時允許首次啟用信完成設定。</p>
      */
     @Transactional
     public void resetSuperAdminPassword(String token, String newPassword) {
@@ -588,16 +588,14 @@ public class UserAuthenticationService {
         validatePassword(newPassword);
         ResettableCredential resettableCredential = repository.lockActivePasswordReset(digestSecret(token))
             .orElseThrow(() -> new ApiException(ApiErrorCode.AUTHENTICATION_ERROR));
-        if (requiresActiveSuperAdmin && !superAdminActivation.isActiveSuperAdmin(resettableCredential.user().userId())) {
+        if (requiresActiveSuperAdmin && !superAdminActivation.isPasswordResetEligibleSuperAdmin(resettableCredential.user().userId())) {
             throw new ApiException(ApiErrorCode.AUTHENTICATION_ERROR);
         }
         repository.updatePasswordHash(resettableCredential.user().userId(), passwordEncoder.encode(newPassword));
         repository.revokeAllSessions(resettableCredential.user().userId());
         repository.consumePasswordReset(resettableCredential.requestId());
-        // 同一 transaction 內才可啟用待啟用最高管理員，避免已獲後台權限卻尚未完成密碼更新或 token 消耗。
-        if (!requiresActiveSuperAdmin) {
-            superAdminActivation.activateIfPending(resettableCredential.user().userId());
-        }
+        // 同一 transaction 內才可啟用待啟用最高管理員，避免首次啟用信完成後仍保有未知 placeholder 密碼。
+        superAdminActivation.activateIfPending(resettableCredential.user().userId());
     }
 
     private SessionSecret createSession(String userId, LoginRequestMetadata metadata, UUID deviceId) {

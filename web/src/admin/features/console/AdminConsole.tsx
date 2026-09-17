@@ -4,6 +4,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { Badge } from '../../../components/base/Badge';
 import { Card } from '../../../components/base/Card';
 import { ConfirmDialog } from '../../../components/base/ConfirmDialog';
+import { CopyButton } from '../../../components/base/CopyButton';
 import { HelpTooltip } from '../../../components/base/HelpTooltip';
 import { ErrorState, LoadingState } from '../../../components/base/State';
 import { PageHeader } from '../../../components/layout/PageHeader';
@@ -422,10 +423,10 @@ export function AdminUsersPage() {
                   <div>
                     <strong>
                       {user.displayName} <span className="admin-user-identity__email">({user.email})</span>
-                      <CopyButton value={user.email} label={t('admin.usersCopyEmail')} />
+                      <CopyButton value={user.email} label={t('admin.usersCopyEmail')} copiedLabel={t('admin.usersCopied')} />
                     </strong>
                     <p className="assets-metric__hint">
-                      {user.userId}<CopyButton value={user.userId} label={t('admin.usersCopyUserId')} />
+                      {user.userId}<CopyButton value={user.userId} label={t('admin.usersCopyUserId')} copiedLabel={t('admin.usersCopied')} />
                     </p>
                   </div>
                 </div>
@@ -464,11 +465,11 @@ export function AdminUsersPage() {
                         </div>
                         <div>
                           <dt>{t('admin.column.id')}</dt>
-                          <dd>{detail.user.userId}<CopyButton value={detail.user.userId} label={t('admin.usersCopyUserId')} /></dd>
+                          <dd>{detail.user.userId}<CopyButton value={detail.user.userId} label={t('admin.usersCopyUserId')} copiedLabel={t('admin.usersCopied')} /></dd>
                         </div>
                         <div>
                           <dt>{t('admin.account.email')}</dt>
-                          <dd>{detail.user.email}<CopyButton value={detail.user.email} label={t('admin.usersCopyEmail')} /></dd>
+                          <dd>{detail.user.email}<CopyButton value={detail.user.email} label={t('admin.usersCopyEmail')} copiedLabel={t('admin.usersCopied')} /></dd>
                         </div>
                         <div>
                           <dt>{t('admin.usersDetailRegistered')}</dt>
@@ -974,6 +975,7 @@ function formatTime(value: string) {
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    hourCycle: 'h23',
     timeZone: 'UTC',
   }).format(new Date(value));
 }
@@ -1007,77 +1009,6 @@ function CloseIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
       <path d="m7.5 7.5 9 9M16.5 7.5l-9 9" />
-    </svg>
-  );
-}
-
-/**
- * 電子郵件與使用者 ID 常需貼到支援或稽核工具；集中處理複製與回饋可避免每個欄位各自實作不一致的行為。
- */
-function CopyButton({ value, label }: { value: string; label: string }) {
-  const { t } = useI18n();
-  const [copied, setCopied] = useState(false);
-  const resetTimer = useRef<number | null>(null);
-
-  async function copy() {
-    const copiedSuccessfully = await copyToClipboard(value);
-    if (!copiedSuccessfully) return;
-
-    setCopied(true);
-    if (resetTimer.current !== null) window.clearTimeout(resetTimer.current);
-    resetTimer.current = window.setTimeout(() => setCopied(false), 1600);
-  }
-
-  return (
-    <button
-      className="admin-user-copy-button"
-      type="button"
-      aria-label={copied ? t('admin.usersCopied') : label}
-      title={copied ? t('admin.usersCopied') : label}
-      onClick={() => void copy()}
-    >
-      {copied ? <CheckIcon /> : <CopyIcon />}
-      <span className="sr-only" aria-live="polite">{copied ? t('admin.usersCopied') : ''}</span>
-    </button>
-  );
-}
-
-/** Clipboard API 在 HTTPS / localhost 可用；舊瀏覽器才退回到同步選取方式，讓管理操作不因環境差異失效。 */
-async function copyToClipboard(value: string) {
-  try {
-    if (navigator.clipboard) {
-      await navigator.clipboard.writeText(value);
-      return true;
-    }
-  } catch {
-    // Clipboard 權限遭拒時仍嘗試相容 fallback，不將例外暴露成使用者看不懂的 console error。
-  }
-
-  const textArea = document.createElement('textarea');
-  textArea.value = value;
-  textArea.setAttribute('readonly', '');
-  textArea.style.position = 'fixed';
-  textArea.style.opacity = '0';
-  document.body.append(textArea);
-  textArea.select();
-  const copied = document.execCommand('copy');
-  textArea.remove();
-  return copied;
-}
-
-function CopyIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <rect x="9" y="8" width="9" height="10" rx="1.5" />
-      <path d="M15 8V6.5A1.5 1.5 0 0 0 13.5 5h-8A1.5 1.5 0 0 0 4 6.5v8A1.5 1.5 0 0 0 5.5 16H9" />
-    </svg>
-  );
-}
-
-function CheckIcon() {
-  return (
-    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-      <path d="m5.5 12.5 4 4 9-9" />
     </svg>
   );
 }

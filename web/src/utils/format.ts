@@ -45,17 +45,18 @@ export function formatTime(value: string | Date) {
   return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
+    hourCycle: 'h23',
   }).format(typeof value === 'string' ? new Date(value) : value);
 }
 
 /**
- * 密集清單將日期與時間分行，讓欄位可維持窄且整齊；沿用既有的 en-US 顯示慣例，不改變時間來源或時區換算。
+ * 密集清單將日期與時間分行，讓欄位可維持窄且整齊；統一使用 24 小時制，不改變時間來源或時區換算。
  */
 export function formatDateTimeParts(value: string | Date) {
   const date = typeof value === 'string' ? new Date(value) : value;
   return {
     date: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium' }).format(date),
-    time: new Intl.DateTimeFormat('en-US', { timeStyle: 'short' }).format(date),
+    time: new Intl.DateTimeFormat('en-US', { timeStyle: 'short', hourCycle: 'h23' }).format(date),
   };
 }
 

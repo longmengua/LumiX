@@ -21,6 +21,8 @@ interface SuperAdminRepository {
 
     boolean isActiveSuperAdmin(String userId);
 
+    boolean isPasswordResetEligibleSuperAdmin(String userId);
+
     void invalidateActivePasswordResets(String userId);
 
     void createPasswordReset(java.util.UUID requestId, String userId, String tokenDigest, Instant expiresAt);

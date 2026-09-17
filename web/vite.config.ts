@@ -11,6 +11,13 @@ export default defineConfig(() => {
     plugins: [
       react(),
       {
+        // 前後台是獨立 bundle；在建置期設定 title，避免管理端 Chrome 分頁沿用前台的 LumiX 標題。
+        name: 'lumix-surface-document-title',
+        transformIndexHtml(html) {
+          return html.replace('<title>LumiX</title>', `<title>${surface === 'admin' ? 'LumiX管理後台' : 'LumiX'}</title>`);
+        },
+      },
+      {
         name: 'lumix-surface-boundary',
         configureServer(server) {
           server.middlewares.use((request, response, next) => {

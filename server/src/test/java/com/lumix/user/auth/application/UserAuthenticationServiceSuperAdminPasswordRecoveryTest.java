@@ -1,6 +1,7 @@
 package com.lumix.user.auth.application;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -67,7 +68,7 @@ class UserAuthenticationServiceSuperAdminPasswordRecoveryTest {
         SuperAdminActivationPort superAdmin = mock(SuperAdminActivationPort.class);
         AuthenticatedUser user = new AuthenticatedUser("user-1", "user@lumix.example", "一般使用者");
         when(repository.lockActivePasswordReset(anyString())).thenReturn(Optional.of(new ResettableCredential(UUID.randomUUID(), user)));
-        when(superAdmin.isActiveSuperAdmin(user.userId())).thenReturn(false);
+        when(superAdmin.isPasswordResetEligibleSuperAdmin(user.userId())).thenReturn(false);
         UserAuthenticationService service = service(repository, delivery, superAdmin);
 
         assertThrows(ApiException.class, () -> service.resetSuperAdminPassword("valid-reset-token", "new-password-123"));
@@ -76,6 +77,25 @@ class UserAuthenticationServiceSuperAdminPasswordRecoveryTest {
         verify(repository, never()).updatePasswordHash(anyString(), anyString());
         verify(repository, never()).revokeAllSessions(anyString());
         verify(repository, never()).consumePasswordReset(any());
+    }
+
+    @Test
+    void pendingSuperAdminActivationTokenCanSetPasswordAndActivateTheExistingPrincipal() {
+        UserAuthenticationRepository repository = mock(UserAuthenticationRepository.class);
+        PasswordResetDeliveryPort delivery = mock(PasswordResetDeliveryPort.class);
+        SuperAdminActivationPort superAdmin = mock(SuperAdminActivationPort.class);
+        AuthenticatedUser user = new AuthenticatedUser("admin-1", "admin@lumix.example", "最高管理員");
+        when(repository.lockActivePasswordReset(anyString())).thenReturn(Optional.of(new ResettableCredential(UUID.randomUUID(), user)));
+        when(superAdmin.isPasswordResetEligibleSuperAdmin(user.userId())).thenReturn(true);
+        UserAuthenticationService service = service(repository, delivery, superAdmin);
+
+        assertDoesNotThrow(() -> service.resetSuperAdminPassword("activation-reset-token", "new-password-123"));
+
+        // 啟用連結與既有復原連結共用後台頁面，但只能在消耗有效 token 後原子地更新密碼、撤銷 session 並啟用 principal。
+        verify(repository).updatePasswordHash(anyString(), any());
+        verify(repository).revokeAllSessions(user.userId());
+        verify(repository).consumePasswordReset(any());
+        verify(superAdmin).activateIfPending(user.userId());
     }
 
     private static UserAuthenticationService service(

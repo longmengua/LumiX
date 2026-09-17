@@ -1,4 +1,3 @@
-import { Badge } from '../../components/base/Badge';
 import { useI18n } from '../../i18n';
 import { formatDecimalString } from '../../utils/format';
 import type { AssetProjectionAccount } from './assetProjectionApi';
@@ -13,7 +12,7 @@ export function AssetAccountTable({ account }: AssetAccountTableProps) {
   return (
     <div className="asset-overview-table">
       <div className="asset-overview-table__head">
-        {['assets.columnAsset', 'assets.columnAvailable', 'assets.columnLocked', 'assets.columnTotal', 'assets.columnFreshness'].map((label) => (
+        {['assets.columnAsset', 'assets.columnAvailable', 'assets.columnLocked', 'assets.columnTotal'].map((label) => (
           <span key={label}>{t(label)}</span>
         ))}
       </div>
@@ -27,11 +26,6 @@ export function AssetAccountTable({ account }: AssetAccountTableProps) {
             <span>{formatDecimalString(asset.available)}</span>
             <span>{formatDecimalString(asset.locked)}</span>
             <span>{formatDecimalString(asset.total)}</span>
-            <span>
-              <Badge tone={asset.freshness === 'RECONCILED' ? 'success' : 'warning'}>
-                {t(asset.freshness === 'RECONCILED' ? 'assets.freshnessReconciled' : 'assets.freshnessUnreconciled')}
-              </Badge>
-            </span>
           </div>
         ))}
       </div>

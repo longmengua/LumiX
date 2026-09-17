@@ -4,7 +4,6 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { useI18n } from '../../i18n';
 import { accountLabelKeyByTab, type AssetTabKey } from './assetAccountTypes';
 import { AssetAccountTable } from './AssetAccountTable';
-import { AssetProjectionEvidence } from './AssetProjectionEvidence';
 import { AssetSectionNav } from './AssetSectionNav';
 import { useAssetProjectionSnapshot } from './useAssetProjectionSnapshot';
 
@@ -29,8 +28,6 @@ export function AssetAccountPage({ accountKey, title, description }: AssetAccoun
 
       {!loading && !errorCode && data ? (
         <>
-          {account ? <AssetProjectionEvidence account={account} /> : null}
-
           <Card title={t(accountLabelKeyByTab[accountKey])}>
             {account && account.items.length > 0
               ? <AssetAccountTable account={account} />

@@ -4,6 +4,7 @@ import { Card } from '../../../components/base/Card';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { useI18n } from '../../../i18n';
 import { GovernedAirdropForm } from './GovernedAirdropForm';
+import { AssetAdjustmentAuditPanel } from './AssetAdjustmentAuditPanel';
 
 type AssetSection = 'users' | 'adjustments' | 'audit';
 
@@ -49,7 +50,7 @@ export function AdminAssetsPage() {
         </aside>
         <div className="admin-assets-workspace__content">
           {section === 'users' ? <Card title={t('admin.assetsUsersTitle')}><p className="assets-metric__hint">{t('admin.assetsUsersDescription')}</p><Link className="secondary-button" to="/users">{t('admin.assetsUsersAction')}</Link></Card> : null}
-          {section === 'audit' ? <Card title={t('admin.assetsAuditTitle')}><p className="assets-metric__hint">{t('admin.assetsAuditDescription')}</p><Link className="secondary-button" to="/users">{t('admin.assetsAuditAction')}</Link></Card> : null}
+          {section === 'audit' ? <AssetAdjustmentAuditPanel /> : null}
           {section === 'adjustments' ? <AdjustmentWorkspace /> : null}
         </div>
       </div>

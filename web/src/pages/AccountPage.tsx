@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { NavLink, Route, Routes, useNavigate } from 'react-router-dom';
 
 import { Card } from '../components/base/Card';
+import { CopyButton } from '../components/base/CopyButton';
 import { EmptyState, ErrorState, LoadingState } from '../components/base/State';
 import { PageHeader } from '../components/layout/PageHeader';
 import { Sidebar } from '../components/layout/Sidebar';
@@ -185,7 +186,17 @@ function AccountOverviewPage({
           </label>
           <StatList
             items={[
-              [t('account.profileUserId'), profile.userId],
+              [
+                t('account.profileUserId'),
+                <span className="account-profile__user-id">
+                  {profile.userId}
+                  <CopyButton
+                    value={profile.userId}
+                    label={t('account.profileCopyUserId')}
+                    copiedLabel={t('account.profileCopied')}
+                  />
+                </span>,
+              ],
               [t('account.profileEmail'), profile.email],
               [t('account.profileCreatedAt'), formatTime(profile.createdAt)],
             ]}

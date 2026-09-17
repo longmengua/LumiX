@@ -105,6 +105,18 @@ class JdbcSuperAdminRepository implements SuperAdminRepository {
     }
 
     @Override
+    public boolean isPasswordResetEligibleSuperAdmin(String userId) {
+        Boolean eligible = jdbcTemplate.queryForObject(
+            "SELECT EXISTS (SELECT 1 FROM admin_principals a JOIN users u ON u.user_id = a.user_id "
+                + "WHERE a.user_id = ? AND a.role = 'SUPER_ADMIN' "
+                + "AND a.status IN ('PENDING_ACTIVATION', 'ACTIVE') AND u.status = 'ACTIVE')",
+            Boolean.class,
+            userId
+        );
+        return Boolean.TRUE.equals(eligible);
+    }
+
+    @Override
     public void invalidateActivePasswordResets(String userId) {
         // 啟動重送啟用信時舊連結必須立即失效，避免遺失信件長時間保有平行的一次性入口。
         jdbcTemplate.update(
