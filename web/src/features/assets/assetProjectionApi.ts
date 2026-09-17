@@ -27,7 +27,6 @@ export type AssetProjectionAccount = {
 export type AssetProjectionSnapshot = {
   source: 'BALANCE_PROJECTION';
   accounts: AssetProjectionAccount[];
-  inventory: Array<{ accountId: string; accountType: AssetAccountType; accountStatus: 'ACTIVE' | 'FROZEN' | 'CLOSED'; createdAt: string }>;
 };
 
 type ApiError = { code?: unknown };
@@ -38,11 +37,11 @@ type ApiError = { code?: unknown };
  * <p>amount 全程保留後端的十進位字串，不能轉成 JavaScript number，否則大額／18 位小數會失去精度。</p>
  */
 export async function fetchAssetProjectionSnapshot(signal?: AbortSignal): Promise<AssetProjectionSnapshot> {
-  const [response, inventoryResponse] = await Promise.all([fetch('/api/v1/assets/balances', {
+  const response = await fetch('/api/v1/assets/balances', {
     credentials: 'same-origin',
     cache: 'no-store',
     signal,
-  }), fetch('/api/v1/assets/accounts', { credentials: 'same-origin', cache: 'no-store', signal })]);
+  });
   if (!response.ok) {
     const body = await response.json().catch(() => null) as ApiError | null;
     throw new Error(typeof body?.code === 'string' ? body.code : 'ASSET_PROJECTION_REQUEST_FAILED');
@@ -52,21 +51,12 @@ export async function fetchAssetProjectionSnapshot(signal?: AbortSignal): Promis
   if (!isProjectionResponse(value)) {
     throw new Error('ASSET_PROJECTION_CONTRACT_ERROR');
   }
-  if (!inventoryResponse.ok) throw new Error('ASSET_ACCOUNT_INVENTORY_REQUEST_FAILED');
-  const inventoryValue: unknown = await inventoryResponse.json();
-  if (!isInventoryResponse(inventoryValue)) throw new Error('ASSET_ACCOUNT_INVENTORY_CONTRACT_ERROR');
-
   const accounts = assetTabs.map((key) => ({ key, items: [] as AssetProjectionItem[] }));
   const accountByKey = new Map(accounts.map((account) => [account.key, account]));
   for (const item of value.items) {
     accountByKey.get(tabForAccountType(item.accountType))?.items.push(item);
   }
-  return { source: 'BALANCE_PROJECTION', accounts, inventory: inventoryValue.items };
-}
-
-function isInventoryResponse(value: unknown): value is { source: 'ACCOUNT_INVENTORY'; items: AssetProjectionSnapshot['inventory'] } {
-  return isRecord(value) && value.source === 'ACCOUNT_INVENTORY' && Array.isArray(value.items) && value.items.every((item) => isRecord(item)
-    && typeof item.accountId === 'string' && isAccountType(item.accountType) && isOneOf(item.accountStatus, ['ACTIVE', 'FROZEN', 'CLOSED']) && isInstantString(item.createdAt));
+  return { source: 'BALANCE_PROJECTION', accounts };
 }
 
 function isProjectionResponse(value: unknown): value is { source: 'BALANCE_PROJECTION'; items: AssetProjectionItem[] } {
