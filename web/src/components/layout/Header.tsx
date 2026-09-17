@@ -8,7 +8,6 @@ const links = [
   ['/markets', 'nav.markets'],
   ['/spot/BTC-USDT', 'nav.spot'],
   ['/futures/BTC-USDT', 'nav.futures'],
-  ['/margin/BTC-USDT', 'nav.margin'],
   ['/assets', 'nav.assets'],
   ['/orders', 'nav.orders'],
   ['/positions', 'nav.positions'],

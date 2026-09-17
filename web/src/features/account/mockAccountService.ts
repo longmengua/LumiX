@@ -14,7 +14,6 @@ export type AccountProfile = {
   totalEquity: number;
   spotValue: number;
   futuresValue: number;
-  marginValue: number;
   riskWarnings: string[];
 };
 
@@ -25,14 +24,12 @@ export type SecurityItem = {
 };
 
 export type AssetAccountSummary = {
-  accountType: 'Spot Account' | 'Futures Account' | 'Margin Account';
+  accountType: 'Spot Account' | 'Futures Account';
   assets: Array<{
     asset: string;
     available: number;
     frozen: number;
     marginUsed: number;
-    debt: number;
-    interest: number;
     equity: number;
     estimatedValue: number;
   }>;
@@ -82,7 +79,6 @@ const accountData: AccountDashboardData = {
     totalEquity: 384250.37,
     spotValue: 182400.84,
     futuresValue: 124880.53,
-    marginValue: 76968.99,
     riskWarnings: ['Withdrawal whitelist enabled', '2FA active', 'API withdraw permission disabled'],
   },
   securityItems: [
@@ -98,20 +94,14 @@ const accountData: AccountDashboardData = {
     {
       accountType: 'Spot Account',
       assets: [
-        { asset: 'USDT', available: 12480.28, frozen: 180.4, marginUsed: 0, debt: 0, interest: 0, equity: 12660.68, estimatedValue: 12660.68 },
-        { asset: 'BTC', available: 1.84, frozen: 0.12, marginUsed: 0, debt: 0, interest: 0, equity: 1.96, estimatedValue: 133920.44 },
+        { asset: 'USDT', available: 12480.28, frozen: 180.4, marginUsed: 0, equity: 12660.68, estimatedValue: 12660.68 },
+        { asset: 'BTC', available: 1.84, frozen: 0.12, marginUsed: 0, equity: 1.96, estimatedValue: 133920.44 },
       ],
     },
     {
       accountType: 'Futures Account',
       assets: [
-        { asset: 'USDT', available: 32450.73, frozen: 860.52, marginUsed: 22040.11, debt: 0, interest: 0, equity: 33311.25, estimatedValue: 33311.25 },
-      ],
-    },
-    {
-      accountType: 'Margin Account',
-      assets: [
-        { asset: 'USDT', available: 8450.1, frozen: 0, marginUsed: 21120.45, debt: 6800.05, interest: 37.12, equity: 21120.5, estimatedValue: 21120.5 },
+        { asset: 'USDT', available: 32450.73, frozen: 860.52, marginUsed: 22040.11, equity: 33311.25, estimatedValue: 33311.25 },
       ],
     },
   ],

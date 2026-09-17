@@ -45,7 +45,6 @@ export function AdminRouter() {
                 <Route path="wallet/*" element={<AdminWalletWorkspacePage />} />
                 <Route path="spot/*" element={<AdminSpotWorkspacePage />} />
                 <Route path="futures/*" element={<AdminFuturesWorkspacePage />} />
-                <Route path="margin" element={<AdminConsole />} />
                 <Route path="risk/*" element={<AdminRiskWorkspacePage />} />
                 <Route path="market-makers/*" element={<AdminMarketMakersWorkspacePage />} />
                 <Route path="insurance-fund" element={<AdminConsole />} />

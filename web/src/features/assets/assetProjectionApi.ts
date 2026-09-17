@@ -93,7 +93,7 @@ function isProjectionItem(value: unknown): value is AssetProjectionItem {
 }
 
 function isAccountType(value: unknown): value is AssetAccountType {
-  return isOneOf(value, ['SPOT', 'FUTURES', 'MARGIN']);
+  return isOneOf(value, ['SPOT', 'FUTURES']);
 }
 
 function isOneOf<T extends string>(value: unknown, values: readonly T[]): value is T {

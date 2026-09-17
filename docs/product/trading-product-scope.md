@@ -1,6 +1,6 @@
 # 交易產品範圍
 
-## Initial product
+## 已核定產品範圍
 
 ```text
 Spot trading
@@ -10,18 +10,21 @@ Spot trading
   - order history
   - trade history
   - balances
+
+Futures trading
+  - USDT 永續合約的受控交易能力
+  - 合約專用的 isolated margin、槓桿、資金費率與風控模型
+  - 上述機制只服務合約商品，不構成現貨借貸產品
 ```
 
 ## Not initial product
 
 ```text
-margin
-futures
-perpetual swaps
+獨立現貨槓桿
 lending
 staking
 auto-borrow
 cross-collateral
 ```
 
-這些產品都會放大風險，不能在現貨帳本與風控穩定前加入。
+獨立現貨槓桿／借貸會引入利率、負債、清算與匯率風險，因此不在 LumiX 產品範圍內。合約所需的保證金與槓桿模型不受此限制。

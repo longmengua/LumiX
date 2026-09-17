@@ -5,7 +5,7 @@ export type OrderStatus = 'Open' | 'Partially Filled' | 'Filled' | 'Canceled' | 
 export type OrderRecord = {
   id: string;
   symbol: string;
-  venue: 'Spot' | 'Futures' | 'Margin';
+  venue: 'Spot' | 'Futures';
   side: 'Buy' | 'Sell';
   type: 'Limit' | 'Market' | 'Stop' | 'TWAP';
   status: OrderStatus;
@@ -81,7 +81,7 @@ export type PositionCenterSnapshot = {
   fundingRecords: FundingRecord[];
 };
 
-export type ApiPermission = 'read' | 'spot trade' | 'futures trade' | 'margin trade' | 'withdraw';
+export type ApiPermission = 'read' | 'spot trade' | 'futures trade' | 'withdraw';
 
 export type ManagedApiKey = {
   name: string;
@@ -144,7 +144,7 @@ const orderCenterData: OrderCenterSnapshot = {
     {
       id: 'ord-2049',
       symbol: 'ETH-USDT',
-      venue: 'Margin',
+      venue: 'Spot',
       side: 'Sell',
       type: 'Stop',
       status: 'Open',
@@ -206,7 +206,7 @@ const orderCenterData: OrderCenterSnapshot = {
     {
       id: 'ord-2033',
       symbol: 'SOL-USDT',
-      venue: 'Margin',
+      venue: 'Spot',
       side: 'Buy',
       type: 'Limit',
       status: 'Rejected',
@@ -370,7 +370,7 @@ const apiKeySnapshot: ApiKeySnapshot = {
       secretMasked: 'LXAK...19AA',
     },
   ],
-  permissionDefaults: ['read', 'spot trade', 'futures trade', 'margin trade'],
+  permissionDefaults: ['read', 'spot trade', 'futures trade'],
   secretPolicy: 'Secrets are displayed once at creation only and are not persisted in this development adapter.',
 };
 

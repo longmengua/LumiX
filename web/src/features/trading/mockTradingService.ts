@@ -1,11 +1,11 @@
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export type TradingKind = 'spot' | 'futures' | 'margin';
+/** 現貨與合約是目前正式保留的兩種交易工作區；不提供獨立現貨槓桿入口。 */
+export type TradingKind = 'spot' | 'futures';
 
 export type TradingRouteMap = {
   spot: string;
   futures: string;
-  margin: string;
 };
 
 export type TradingCopy = {
@@ -110,8 +110,8 @@ export type TradingWorkspaceData = {
   openOrders: TradingOpenOrder[];
   positions: TradingPosition[];
   riskRatio: number;
-  fundingOrBorrowKey: string;
-  fundingOrBorrowValues?: Record<string, string | number>;
+  fundingStatusKey: string;
+  fundingStatusValues?: Record<string, string | number>;
   lastUpdated: string;
   actionLabelKey: string;
   orderHintCopies: TradingCopy[];
@@ -127,7 +127,6 @@ const assetProfiles: Record<
     spotVolume24h: number;
     futuresBasis: number;
     futuresFunding: number;
-    marginBorrowRate: number;
   }
 > = {
   BTC: {
@@ -138,7 +137,6 @@ const assetProfiles: Record<
     spotVolume24h: 18250.44,
     futuresBasis: 11.14,
     futuresFunding: 0.018,
-    marginBorrowRate: 0.012,
   },
   ETH: {
     spotPrice: 3621.17,
@@ -148,7 +146,6 @@ const assetProfiles: Record<
     spotVolume24h: 14620.28,
     futuresBasis: 3.75,
     futuresFunding: 0.011,
-    marginBorrowRate: 0.009,
   },
   SOL: {
     spotPrice: 167.45,
@@ -158,7 +155,6 @@ const assetProfiles: Record<
     spotVolume24h: 9341.12,
     futuresBasis: 0.17,
     futuresFunding: -0.006,
-    marginBorrowRate: 0.014,
   },
 };
 
@@ -168,7 +164,6 @@ export function getTradingRoutes(baseAsset: string): TradingRouteMap {
   return {
     spot: `/spot/${normalizedBaseAsset}-USDT`,
     futures: `/futures/${normalizedBaseAsset}USDT-PERP`,
-    margin: `/margin/${normalizedBaseAsset}-USDT`,
   };
 }
 
@@ -237,13 +232,9 @@ function buildTrades(lastPrice: number, kind: TradingKind): TradingFill[] {
         ? index % 2 === 0
           ? 'trading.tradeFeed.source.aggressiveTaker'
           : 'trading.tradeFeed.source.liquidityMaker'
-        : kind === 'futures'
-          ? index % 2 === 0
-            ? 'trading.tradeFeed.source.perpTaker'
-            : 'trading.tradeFeed.source.fundingSweep'
-          : index % 2 === 0
-            ? 'trading.tradeFeed.source.marginFill'
-            : 'trading.tradeFeed.source.borrowRebalance',
+        : index % 2 === 0
+          ? 'trading.tradeFeed.source.perpTaker'
+          : 'trading.tradeFeed.source.fundingSweep',
   }));
 }
 
@@ -412,16 +403,9 @@ function buildBalances(kind: TradingKind, baseAsset: string): TradingBalance[] {
     ];
   }
 
-  if (kind === 'futures') {
-    return [
-      { asset: 'USDT', available: 32450.73, frozen: 860.52, total: 33311.25, noteKey: 'trading.balance.note.walletBalance' },
-      { asset: baseAsset, available: 0.48, frozen: 0.05, total: 0.53, noteKey: 'trading.balance.note.referenceCollateral' },
-    ];
-  }
-
   return [
-    { asset: 'USDT', available: 8450.1, frozen: 0, total: 8450.1, noteKey: 'trading.balance.note.collateral' },
-    { asset: baseAsset, available: 0.92, frozen: 0, total: 0.92, noteKey: 'trading.balance.note.borrowableReference' },
+    { asset: 'USDT', available: 32450.73, frozen: 860.52, total: 33311.25, noteKey: 'trading.balance.note.walletBalance' },
+    { asset: baseAsset, available: 0.48, frozen: 0.05, total: 0.53, noteKey: 'trading.balance.note.referenceCollateral' },
   ];
 }
 
@@ -435,20 +419,11 @@ function buildMetrics(kind: TradingKind, profile: ReturnType<typeof getAssetProf
     ];
   }
 
-  if (kind === 'futures') {
-    return [
-      { labelKey: 'trading.metric.markPrice', value: `$${lastPrice.toFixed(2)}`, hintKey: 'trading.metric.markPriceHint' },
-      { labelKey: 'trading.metric.basis', value: `${profile.futuresBasis.toFixed(2)} USDT`, hintKey: 'trading.metric.mockPerpBasisHint' },
-      { labelKey: 'trading.metric.funding', value: `${profile.futuresFunding.toFixed(3)}%`, hintKey: 'trading.metric.fundingDisplayedOnlyHint' },
-      { labelKey: 'trading.metric.change24h', value: `${(profile.spotChange24h + 0.28).toFixed(2)}%`, hintKey: 'trading.metric.syntheticFuturesMoveHint' },
-    ];
-  }
-
   return [
-    { labelKey: 'trading.metric.referencePrice', value: `$${lastPrice.toFixed(2)}`, hintKey: 'trading.metric.spotReferenceHint' },
-    { labelKey: 'trading.metric.borrowRate', value: `${profile.marginBorrowRate.toFixed(3)}%`, hintKey: 'trading.metric.borrowEstimateHint' },
-    { labelKey: 'trading.metric.riskRatio', value: '62.4%', hintKey: 'trading.metric.liveLiquidationHint' },
-    { labelKey: 'trading.metric.collateral', value: '$8,450.10', hintKey: 'trading.metric.isolatedMarginHint' },
+    { labelKey: 'trading.metric.markPrice', value: `$${lastPrice.toFixed(2)}`, hintKey: 'trading.metric.markPriceHint' },
+    { labelKey: 'trading.metric.basis', value: `${profile.futuresBasis.toFixed(2)} USDT`, hintKey: 'trading.metric.mockPerpBasisHint' },
+    { labelKey: 'trading.metric.funding', value: `${profile.futuresFunding.toFixed(3)}%`, hintKey: 'trading.metric.fundingDisplayedOnlyHint' },
+    { labelKey: 'trading.metric.change24h', value: `${(profile.spotChange24h + 0.28).toFixed(2)}%`, hintKey: 'trading.metric.syntheticFuturesMoveHint' },
   ];
 }
 
@@ -457,23 +432,15 @@ function buildHeroCopy(kind: TradingKind, baseAsset: string) {
     return { key: 'trading.instrument.spotSubtitle', values: { symbol: `${baseAsset}/USDT` } };
   }
 
-  if (kind === 'futures') {
-    return { key: 'trading.instrument.futuresSubtitle', values: { symbol: `${baseAsset}USDT-PERP` } };
-  }
-
-  return { key: 'trading.instrument.marginSubtitle', values: { symbol: `${baseAsset}/USDT` } };
+  return { key: 'trading.instrument.futuresSubtitle', values: { symbol: `${baseAsset}USDT-PERP` } };
 }
 
-function buildFundingOrBorrow(kind: TradingKind, profile: ReturnType<typeof getAssetProfile>) {
+function buildFundingStatus(kind: TradingKind, profile: ReturnType<typeof getAssetProfile>) {
   if (kind === 'spot') {
-    return { key: 'trading.instrument.noFundingOrBorrow' };
+    return { key: 'trading.instrument.noFunding' };
   }
 
-  if (kind === 'futures') {
-    return { key: 'trading.instrument.fundingPreview', values: { rate: profile.futuresFunding.toFixed(3) } };
-  }
-
-  return { key: 'trading.instrument.borrowPreview', values: { rate: profile.marginBorrowRate.toFixed(3) } };
+  return { key: 'trading.instrument.fundingPreview', values: { rate: profile.futuresFunding.toFixed(3) } };
 }
 
 export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: string): Promise<TradingWorkspaceData> {
@@ -482,15 +449,10 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
   const baseAsset = extractBaseAsset(symbol, kind);
   const profile = getAssetProfile(baseAsset);
   const heroCopy = buildHeroCopy(kind, baseAsset);
-  const fundingOrBorrow = buildFundingOrBorrow(kind, profile);
+  const fundingStatus = buildFundingStatus(kind, profile);
   const spotPrice = profile.spotPrice;
   const change24h = profile.spotChange24h;
-  const lastPrice =
-    kind === 'spot'
-      ? spotPrice
-      : kind === 'futures'
-        ? spotPrice + profile.futuresBasis
-        : spotPrice * 0.9984;
+  const lastPrice = kind === 'futures' ? spotPrice + profile.futuresBasis : spotPrice;
 
   const orderBook = buildOrderBookLevels(lastPrice);
   const routes = getTradingRoutes(baseAsset);
@@ -503,15 +465,13 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
     displayNameKey:
       kind === 'spot'
         ? 'trading.instrument.spotTitle'
-        : kind === 'futures'
-          ? 'trading.instrument.futuresTitle'
-          : 'trading.instrument.marginTitle',
+        : 'trading.instrument.futuresTitle',
     displayNameValues: { symbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}/USDT` },
     adapterNoticeKey: 'trading.developmentNotice.description',
     heroCopyKey: heroCopy.key,
     heroCopyValues: heroCopy.values ?? {},
     midPrice: lastPrice,
-    change24h: kind === 'futures' ? change24h + 0.28 : kind === 'margin' ? -0.2 : change24h,
+    change24h: kind === 'futures' ? change24h + 0.28 : change24h,
     marketStats: {
       markPrice: lastPrice * 0.9998,
       high24h: profile.spotHigh24h + (kind === 'futures' ? profile.futuresBasis : 0),
@@ -528,33 +488,23 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
     trades: buildTrades(lastPrice, kind),
     openOrders: buildOpenOrders(lastPrice),
     positions: kind === 'futures' ? buildPositions(baseAsset, lastPrice) : [],
-    riskRatio: kind === 'margin' ? 62.4 : kind === 'futures' ? 31.2 : 0,
-    fundingOrBorrowKey: fundingOrBorrow.key,
-    fundingOrBorrowValues: fundingOrBorrow.values,
+    riskRatio: kind === 'futures' ? 31.2 : 0,
+    fundingStatusKey: fundingStatus.key,
+    fundingStatusValues: fundingStatus.values,
     lastUpdated: new Date().toISOString(),
     actionLabelKey:
       kind === 'spot'
         ? 'trading.orderEntry.previewSpotOrder'
-        : kind === 'futures'
-          ? 'trading.orderEntry.previewPerpOrder'
-          : 'trading.orderEntry.previewMarginOrder',
+        : 'trading.orderEntry.previewPerpOrder',
     orderHintCopies:
       kind === 'spot'
         ? [
             { key: 'trading.orderHint.routeToFutures', values: { route: routes.futures } },
-            { key: 'trading.orderHint.routeToMargin', values: { route: routes.margin } },
             { key: 'trading.orderHint.viewOnly' },
           ]
-        : kind === 'futures'
-          ? [
-              { key: 'trading.orderHint.routeToSpot', values: { route: routes.spot } },
-              { key: 'trading.orderHint.routeToMargin', values: { route: routes.margin } },
-              { key: 'trading.orderHint.localSnapshotsOnly' },
-            ]
         : [
             { key: 'trading.orderHint.routeToSpot', values: { route: routes.spot } },
-            { key: 'trading.orderHint.routeToFutures', values: { route: routes.futures } },
-            { key: 'trading.orderHint.fixedAdapterValues' },
+            { key: 'trading.orderHint.localSnapshotsOnly' },
           ],
   });
 }

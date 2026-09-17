@@ -1,6 +1,6 @@
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export type MarketCategory = 'spot' | 'futures' | 'margin';
+export type MarketCategory = 'spot' | 'futures';
 
 export type MarketSnapshot = {
   symbol: string;
@@ -93,30 +93,6 @@ const marketSnapshots: MarketSnapshot[] = [
     volume24h: 10230.41,
     tradePath: '/futures/SOLUSDT-PERP',
     description: 'Momentum driven futures market.',
-  },
-  {
-    symbol: 'BTC-USDT-MARGIN',
-    displayName: 'BTC/USDT Margin',
-    category: 'margin',
-    lastPrice: 68440.21,
-    change24h: 3.19,
-    high24h: 68934.12,
-    low24h: 66202.51,
-    volume24h: 7021.77,
-    tradePath: '/margin/BTC-USDT',
-    description: 'Leverage-enabled spot margin pair.',
-  },
-  {
-    symbol: 'ETH-USDT-MARGIN',
-    displayName: 'ETH/USDT Margin',
-    category: 'margin',
-    lastPrice: 3618.41,
-    change24h: 2.01,
-    high24h: 3668.03,
-    low24h: 3508.26,
-    volume24h: 6288.33,
-    tradePath: '/margin/ETH-USDT',
-    description: 'Margin pair for higher beta flows.',
   },
 ];
 

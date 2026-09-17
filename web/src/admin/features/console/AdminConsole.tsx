@@ -118,7 +118,6 @@ export function AdminConsole() {
             <Route path="wallet" element={<AdminWalletPage wallets={data.wallets} onPrompt={openConfirm} />} />
             <Route path="spot" element={<AdminSpotPage markets={data.spotMarkets} onPrompt={openConfirm} />} />
             <Route path="futures" element={<AdminFuturesPage markets={data.futuresMarkets} onPrompt={openConfirm} />} />
-            <Route path="margin" element={<AdminMarginPage marginAccounts={data.marginAccounts} />} />
             <Route path="risk" element={<AdminRiskPage rules={data.riskRules} settings={data.settings} onPrompt={openConfirm} />} />
             <Route path="market-makers" element={<AdminMarketMakersPage makers={data.marketMakers} onPrompt={openConfirm} />} />
             <Route path="insurance-fund" element={<AdminInsuranceFundPage fund={data.insuranceFund} />} />
@@ -512,13 +511,12 @@ function AdminAssetsPage({ assets }: { assets: AdminConsoleSnapshot['assets'] })
   const { t } = useI18n();
   return (
     <Card title={t('admin.assetsTitle')}>
-      <AdminTable columns={[t('admin.column.asset'), t('admin.column.spot'), t('admin.column.futures'), t('admin.column.margin'), t('admin.column.frozen'), t('admin.column.ledgerDelta')]}>
+      <AdminTable columns={[t('admin.column.asset'), t('admin.column.spot'), t('admin.column.futures'), t('admin.column.frozen'), t('admin.column.ledgerDelta')]}>
         {assets.map((asset) => (
           <AdminTableRow key={asset.asset}>
             <strong>{asset.asset}</strong>
             <span>{asset.spotBalance}</span>
             <span>{asset.futuresBalance}</span>
-            <span>{asset.marginBalance}</span>
             <span>{asset.frozenBalance}</span>
             <span>{asset.ledgerDelta}</span>
           </AdminTableRow>
@@ -655,25 +653,6 @@ function AdminFuturesPage({ markets, onPrompt }: { markets: AdminConsoleSnapshot
             <button className="secondary-button" type="button" onClick={() => promptToggle(symbol)}>
               Toggle mode
             </button>
-          </AdminTableRow>
-        ))}
-      </AdminTable>
-    </Card>
-  );
-}
-
-function AdminMarginPage({ marginAccounts }: { marginAccounts: AdminConsoleSnapshot['marginAccounts'] }) {
-  const { t } = useI18n();
-  return (
-    <Card title={t('admin.marginTitle')}>
-      <AdminTable columns={[t('admin.column.user'), t('admin.column.debt'), t('admin.column.interest'), t('admin.column.borrowStatus'), t('admin.column.riskRatio')]}>
-        {marginAccounts.map((account) => (
-          <AdminTableRow key={account.user}>
-            <strong>{account.user}</strong>
-            <span>{account.debt}</span>
-            <span>{account.interest}</span>
-            <Badge tone={account.borrowStatus === 'Active' ? 'success' : 'warning'}>{account.borrowStatus}</Badge>
-            <span>{account.riskRatio}</span>
           </AdminTableRow>
         ))}
       </AdminTable>

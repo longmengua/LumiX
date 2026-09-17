@@ -11,7 +11,6 @@ const permissionOptions: Array<{ value: ApiPermission; label: string; descriptio
   { value: 'read', label: 'Read', description: 'Default access for market and account lookups.' },
   { value: 'spot trade', label: 'Spot trade', description: 'Simulated spot order preview only.' },
   { value: 'futures trade', label: 'Futures trade', description: 'Simulated futures order preview only.' },
-  { value: 'margin trade', label: 'Margin trade', description: 'Simulated margin order preview only.' },
   { value: 'withdraw', label: 'Withdraw', description: 'Default off. OL must stay disabled until the real security review.' },
 ];
 

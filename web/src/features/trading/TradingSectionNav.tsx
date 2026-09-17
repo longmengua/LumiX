@@ -11,7 +11,6 @@ type TradingSectionNavProps = {
 const labels: Record<TradingKind, string> = {
   spot: 'nav.spot',
   futures: 'nav.futures',
-  margin: 'nav.margin',
 };
 
 export function TradingSectionNav({ kind, baseAsset }: TradingSectionNavProps) {
@@ -25,7 +24,7 @@ export function TradingSectionNav({ kind, baseAsset }: TradingSectionNavProps) {
         <p className="trading-section-nav__hint">{t('trading.sectionsHint')}</p>
       </div>
       <nav className="tab-list" aria-label="Trading sections">
-        {(['spot', 'futures', 'margin'] as const).map((item) => (
+        {(['spot', 'futures'] as const).map((item) => (
           <NavLink
             key={item}
             className={({ isActive }) => `tab-button${isActive || item === kind ? ' tab-button--active' : ''}`}

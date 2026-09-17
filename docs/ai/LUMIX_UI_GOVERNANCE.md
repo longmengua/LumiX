@@ -7,7 +7,7 @@
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-17 |
-| Repository revision | `a1114e2`（已移除過期 reference image）；使用者／資產 Hero consistency update 尚在工作區，未對應新 revision |
+| Repository revision | `d8e01bd`（Users／Assets Hero consistency）；本次產品範圍收斂尚在工作區，未對應新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
@@ -398,6 +398,16 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** Gives Users and Assets the same Hero surface, scale and downgrade behavior without coupling user read models to asset form behavior.
 
+### 2026-09-17 — Product account surfaces are limited to spot and futures
+
+**Context:** LumiX 已確定不提供獨立現貨槓桿／借貸產品；現貨與合約是唯一使用者帳戶類型。
+
+**Decision:** 移除前端獨立槓桿 route、tab、legacy mock 與 copy；資產 API contract 僅接受 `SPOT`／`FUTURES`。合約商品所需的保證金、槓桿與風控語意仍保留，不能誤當成已移除的現貨借貸。
+
+**Affected:** 資產帳戶 navigation、前台交易 route／mock types、i18n copy、資產 projection/history contract。
+
+**Reason:** 降低借貸、利率、負債與清算風險，同時維持合約交易的必要風控邊界。
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -425,3 +435,8 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 使用者頁改為 `AdminPageHero` consumer，與資產調整共用 Hero geometry、icon tile、typography 與 container-query responsive strategy。
 - 保留使用者既有 orb artwork 與全部資料查詢、篩選、列表及權限行為。
+
+### v1.5 — 2026-09-17（working tree）
+
+- 登錄產品帳戶範圍收斂為現貨與合約；獨立現貨槓桿 UI／route 不再是可用頁面。
+- 明確區分「已移除的現貨借貸」與「合約交易必要的保證金／槓桿」兩個不同領域，避免後續 UI 任務誤刪合約風控資訊。

@@ -5,7 +5,6 @@ export const adminNavItems = [
   { to: '/admin/wallet', labelKey: 'nav.admin.wallet' },
   { to: '/admin/spot', labelKey: 'nav.admin.spot' },
   { to: '/admin/futures', labelKey: 'nav.admin.futures' },
-  { to: '/admin/margin', labelKey: 'nav.admin.margin' },
   { to: '/admin/risk', labelKey: 'nav.admin.risk' },
   { to: '/admin/market-makers', labelKey: 'nav.admin.marketMakers' },
   { to: '/admin/insurance-fund', labelKey: 'nav.admin.insuranceFund' },

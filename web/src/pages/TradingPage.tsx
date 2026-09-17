@@ -10,7 +10,6 @@ type TradingPageProps = {
 const defaultSymbols: Record<TradingKind, string> = {
   spot: 'BTC-USDT',
   futures: 'BTCUSDT-PERP',
-  margin: 'BTC-USDT',
 };
 
 export function TradingPage({ kind }: TradingPageProps) {
@@ -26,9 +25,5 @@ export function SpotTradingPage() {
 
 export function FuturesTradingPage() {
   return <TradingPage kind="futures" />;
-}
-
-export function MarginTradingPage() {
-  return <TradingPage kind="margin" />;
 }
 

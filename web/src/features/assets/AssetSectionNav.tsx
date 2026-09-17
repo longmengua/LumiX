@@ -8,7 +8,6 @@ const sectionLinks = [
   { to: '/assets', labelKey: 'nav.assets.overview' },
   { to: '/assets/spot', labelKey: 'nav.assets.spot' },
   { to: '/assets/futures', labelKey: 'nav.assets.futures' },
-  { to: '/assets/margin', labelKey: 'nav.assets.margin' },
 ] as const;
 
 type AssetSectionNavProps = {
@@ -39,8 +38,7 @@ export function AssetSectionNav({ active }: AssetSectionNavProps) {
 function activeMatches(active: AssetTabKey | undefined, to: string) {
   if (!active) return false;
   if (active === 'spot') return to === '/assets/spot';
-  if (active === 'futures') return to === '/assets/futures';
-  return to === '/assets/margin';
+  return active === 'futures' && to === '/assets/futures';
 }
 
 function CardShell({ title, hint, children }: { title: string; hint: string; children: ReactNode }) {

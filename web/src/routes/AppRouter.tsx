@@ -14,11 +14,10 @@ import { LoginVerificationPage } from '../pages/LoginVerificationPage';
 import { TwoFactorPage } from '../pages/TwoFactorPage';
 import { HomePage } from '../pages/HomePage';
 import { MarketsPage } from '../pages/MarketsPage';
-import { FuturesTradingPage, MarginTradingPage, SpotTradingPage } from '../pages/TradingPage';
+import { FuturesTradingPage, SpotTradingPage } from '../pages/TradingPage';
 import { AssetsOverviewPage } from '../pages/assets/AssetsOverviewPage';
 import { SpotAssetsPage } from '../pages/assets/SpotAssetsPage';
 import { FuturesAssetsPage } from '../pages/assets/FuturesAssetsPage';
-import { MarginAssetsPage } from '../pages/assets/MarginAssetsPage';
 import { AssetRuntimeUnavailablePage } from '../pages/assets/AssetRuntimeUnavailablePage';
 import { AssetTransferRuntimePage } from '../pages/assets/AssetTransferRuntimePage';
 import { OrdersPage } from '../pages/OrdersPage';
@@ -90,14 +89,6 @@ export function AppRouter() {
       <Route
         element={
           <AppLayout header={<Header />}>
-            <MarginTradingPage />
-          </AppLayout>
-        }
-        path="/margin/:symbol"
-      />
-      <Route
-        element={
-          <AppLayout header={<Header />}>
             <AssetsOverviewPage />
           </AppLayout>
         }
@@ -118,14 +109,6 @@ export function AppRouter() {
           </AppLayout>
         }
         path="/assets/futures"
-      />
-      <Route
-        element={
-          <AppLayout header={<Header />}>
-            <MarginAssetsPage />
-          </AppLayout>
-        }
-        path="/assets/margin"
       />
       <Route
         element={

@@ -6,7 +6,6 @@ const links = [
   { to: '/assets', labelKey: 'nav.assets.overview' },
   { to: '/assets/spot', labelKey: 'nav.assets.spot' },
   { to: '/assets/futures', labelKey: 'nav.assets.futures' },
-  { to: '/assets/margin', labelKey: 'nav.assets.margin' },
   { to: '/assets/transfer', labelKey: 'nav.assets.transfer' },
   { to: '/assets/deposit', labelKey: 'nav.assets.deposit' },
   { to: '/assets/withdraw', labelKey: 'nav.assets.withdraw' },

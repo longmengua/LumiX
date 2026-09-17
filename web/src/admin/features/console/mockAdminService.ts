@@ -10,7 +10,6 @@ export type AdminAssetRecord = {
   asset: string;
   spotBalance: string;
   futuresBalance: string;
-  marginBalance: string;
   frozenBalance: string;
   ledgerDelta: string;
 };
@@ -43,14 +42,6 @@ export type AdminFuturesRecord = {
   fundingRate: string;
   liquidationCount: string;
   markPrice: string;
-};
-
-export type AdminMarginRecord = {
-  user: string;
-  debt: string;
-  interest: string;
-  borrowStatus: 'Active' | 'Paused';
-  riskRatio: string;
 };
 
 export type AdminRiskRule = {
@@ -111,7 +102,6 @@ export type AdminConsoleSnapshot = {
   wallets: AdminWalletRecord[];
   spotMarkets: AdminSpotRecord[];
   futuresMarkets: AdminFuturesRecord[];
-  marginAccounts: AdminMarginRecord[];
   riskRules: AdminRiskRule[];
   marketMakers: AdminMarketMakerRecord[];
   insuranceFund: AdminInsuranceFundRecord[];
@@ -135,9 +125,9 @@ const snapshot: AdminConsoleSnapshot = {
     { label: 'System Status', value: 'Degraded', hint: 'Maint. window pending on two admin switches.' },
   ],
   assets: [
-    { asset: 'USDT', spotBalance: '842,221,440.00', futuresBalance: '211,996,300.00', marginBalance: '88,122,000.00', frozenBalance: '12,050,000.00', ledgerDelta: '+18,240.00' },
-    { asset: 'BTC', spotBalance: '21,428.1050', futuresBalance: '8,904.8800', marginBalance: '1,022.4480', frozenBalance: '74.1200', ledgerDelta: '-2.3140' },
-    { asset: 'ETH', spotBalance: '154,903.1200', futuresBalance: '62,410.4200', marginBalance: '14,221.0000', frozenBalance: '1,992.0000', ledgerDelta: '+41.2200' },
+    { asset: 'USDT', spotBalance: '842,221,440.00', futuresBalance: '211,996,300.00', frozenBalance: '12,050,000.00', ledgerDelta: '+18,240.00' },
+    { asset: 'BTC', spotBalance: '21,428.1050', futuresBalance: '8,904.8800', frozenBalance: '74.1200', ledgerDelta: '-2.3140' },
+    { asset: 'ETH', spotBalance: '154,903.1200', futuresBalance: '62,410.4200', frozenBalance: '1,992.0000', ledgerDelta: '+41.2200' },
   ],
   wallets: [
     {
@@ -184,15 +174,9 @@ const snapshot: AdminConsoleSnapshot = {
     { symbol: 'ETH-PERP', status: 'Reduce only', openInterest: '$1.1B', fundingRate: '-0.006%', liquidationCount: '19', markPrice: '$3,438' },
     { symbol: 'SOL-PERP', status: 'Paused', openInterest: '$482M', fundingRate: '0.011%', liquidationCount: '7', markPrice: '$155.22' },
   ],
-  marginAccounts: [
-    { user: 'Maya Chen', debt: '$38,100', interest: '$42.10', borrowStatus: 'Active', riskRatio: '1.92x' },
-    { user: 'Jared Ng', debt: '$12,000', interest: '$18.40', borrowStatus: 'Paused', riskRatio: '2.84x' },
-    { user: 'TradeDesk Bot', debt: '$2,200', interest: '$3.11', borrowStatus: 'Active', riskRatio: '1.34x' },
-  ],
   riskRules: [
     { name: 'Large withdrawal', scope: 'Wallet', threshold: '> $50,000', status: 'Enabled' },
     { name: 'Cross-market imbalance', scope: 'Market', threshold: '> 18%', status: 'Enabled' },
-    { name: 'Margin concentration', scope: 'Risk', threshold: '> 42%', status: 'Disabled' },
   ],
   marketMakers: [
     { name: 'Atlas Liquidity', apiKey: 'mm_atlas_01', status: 'Active', dailyVolume: '$144M', pnl: '+$8,140', lastHeartbeat: '2026-07-05T01:10:00Z' },

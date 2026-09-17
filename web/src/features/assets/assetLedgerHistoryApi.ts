@@ -49,7 +49,7 @@ function isHistoryPage(value: unknown): value is AssetLedgerHistoryPage {
 
 function isHistoryItem(value: unknown): value is AssetLedgerHistoryItem {
   return isRecord(value) && isPositiveIntegerString(value.entryId) && isPositiveIntegerString(value.journalId)
-    && isOneOf(value.accountType, ['SPOT', 'FUTURES', 'MARGIN']) && typeof value.assetSymbol === 'string'
+    && isOneOf(value.accountType, ['SPOT', 'FUTURES']) && typeof value.assetSymbol === 'string'
     && isOneOf(value.direction, ['DEBIT', 'CREDIT']) && isDecimal(value.amount)
     && typeof value.referenceType === 'string' && typeof value.referenceId === 'string'
     && isInstant(value.postedAt) && isInstant(value.recordedAt);

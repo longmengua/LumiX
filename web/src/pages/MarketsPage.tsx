@@ -14,7 +14,6 @@ type TabKey = MarketCategory | 'favorites';
 const tabs: Array<{ key: TabKey; label: string }> = [
   { key: 'spot', label: 'Spot' },
   { key: 'futures', label: 'Futures' },
-  { key: 'margin', label: 'Margin' },
   { key: 'favorites', label: 'Favorites' },
 ];
 

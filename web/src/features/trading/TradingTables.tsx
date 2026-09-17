@@ -110,10 +110,10 @@ export function TradingPositionsTable({ positions }: TradingPositionsTableProps)
 
 type TradingRiskSnapshotProps = {
   riskRatio: number;
-  fundingOrBorrow: string;
+  fundingStatus: string;
 };
 
-export function TradingRiskSnapshot({ riskRatio, fundingOrBorrow }: TradingRiskSnapshotProps) {
+export function TradingRiskSnapshot({ riskRatio, fundingStatus }: TradingRiskSnapshotProps) {
   const { t } = useI18n();
 
   return (
@@ -124,8 +124,8 @@ export function TradingRiskSnapshot({ riskRatio, fundingOrBorrow }: TradingRiskS
           <strong>{formatPercent(riskRatio)}</strong>
         </div>
         <div className="stat-card">
-          <span className="stat-card__label">{t('trading.risk.fundingOrBorrow')}</span>
-          <strong>{fundingOrBorrow}</strong>
+          <span className="stat-card__label">{t('trading.risk.funding')}</span>
+          <strong>{fundingStatus}</strong>
         </div>
       </div>
       <RiskRatioBar ratio={riskRatio} />
