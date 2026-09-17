@@ -2,6 +2,7 @@ import { Fragment, useEffect, useRef, useState } from 'react';
 
 import { EmptyState } from '../../../components/base/State';
 import { InlineErrorState } from '../../components/AdminErrorPage';
+import { AdminPageHero } from '../../components/AdminPageHero';
 import { normalizeAdminError } from '../../api/adminError';
 import { useI18n } from '../../../i18n';
 import { getInputDateRangePreset, type DateRangePreset } from '../../../utils/dateRange';
@@ -221,22 +222,14 @@ export function AdminUsersPage() {
 
   return (
     <section className="admin-users-page">
-      <header className="admin-users-hero">
-        <div className="admin-users-hero__heading">
-          <div className="admin-users-hero__icon" aria-hidden="true"><UsersIcon /></div>
-          <div>
-            <h1>{t('admin.usersTitle')}</h1>
-            <p>{t('admin.usersHeroDescription')}</p>
-          </div>
-        </div>
-        <div className="admin-users-hero__decoration" aria-hidden="true">
-          <div className="admin-users-hero__orbs"><span /><span /><span /></div>
-          <div>
-            <strong>{t('admin.usersHeroTrust')}</strong>
-            <p>{t('admin.usersHeroTrustDescription')}</p>
-          </div>
-        </div>
-      </header>
+      <AdminPageHero
+        icon={<span className="admin-users-hero-icon"><UsersIcon /></span>}
+        title={t('admin.usersTitle')}
+        description={t('admin.usersHeroDescription')}
+        illustration={<UsersHeroArtwork />}
+        slogan={t('admin.usersHeroTrust')}
+        supportingText={t('admin.usersHeroTrustDescription')}
+      />
 
       <section className="admin-users-workspace" aria-label={t('admin.usersTitle')}>
         <form className="admin-users-toolbar" onSubmit={(event) => { event.preventDefault(); submitSearch(); }}>
@@ -317,6 +310,11 @@ export function AdminUsersPage() {
       </section>
     </section>
   );
+}
+
+/** 使用者頁保留既有 orb 視覺，僅放入共用 Hero 插槽以統一各工作台的幾何與降階規則。 */
+function UsersHeroArtwork() {
+  return <div className="admin-users-hero-artwork"><div className="admin-users-hero__orbs"><span /><span /><span /></div></div>;
 }
 
 function UserList({

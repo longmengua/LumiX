@@ -7,13 +7,13 @@
 | 項目 | 值 |
 | --- | --- |
 | 最後更新 | 2026-09-17 |
-| Repository revision | `e461dbe`（上一輪資產調整 Hero refinement）；Asset Adjustment Hero V2 raster handoff 尚在工作區，未對應新 revision |
+| Repository revision | `a1114e2`（已移除過期 reference image）；使用者／資產 Hero consistency update 尚在工作區，未對應新 revision |
 | 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
 | Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
 | Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system | 沒有第三方 icon package；使用頁面內 inline React SVG |
 | 前端根目錄 | `web/` |
-| UI Governance Version | `1.3`（working tree snapshot） |
+| UI Governance Version | `1.4`（working tree snapshot） |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -96,7 +96,7 @@
 
 | Component | Path | Purpose / important props | Styling | Status |
 | --- | --- | --- | --- | --- |
-| `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 管理頁 Hero；`icon`、`title`、`description`、`chips`、`illustration`、`slogan`、`supportingText`；只組合呈現，不含 mutation 或資料請求 | `web/src/admin/components/AdminPageHero.css` | Canonical（目前資產調整唯一 consumer；尚未由 barrel export） |
+| `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 管理頁 Hero；`icon`、`title`、`description`、`chips`、`illustration`、`slogan`、`supportingText`；只組合呈現，不含 mutation 或資料請求 | `web/src/admin/components/AdminPageHero.css` | Canonical（資產調整、使用者） |
 | `AssetAdjustmentHeroIcon` | `web/src/admin/features/assets/AssetAdjustmentHeroIcon.tsx` | 84×84 內嵌 SVG 紫藍 icon tile | feature SVG + `global.css` 的 `--asset-adjustment-icon-*` aliases | Feature-specific |
 | `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | supplied V2 raster Hero artwork；`picture` 依 source variant 載入透明 WebP | `AdminPageHero.css` control box；assets 位於 `web/src/assets/hero/` | Feature-specific |
 | `PageHeader` | `web/src/components/layout/PageHeader.tsx` | 外層頁名、description、actions；不是 dashboard Hero | `global.css` | Canonical base component |
@@ -120,8 +120,8 @@
 | 項目 | 實際設定 |
 | --- | --- |
 | Layout | CSS Grid；以既有 `identity`／`visual` wrapper 的 `display: contents` 映射 icon、copy、artwork、value 四欄 |
-| Minimum height | desktop 190px；desktop visual validation result 約 224px（content-driven） |
-| Padding | desktop `24px 32px`；container ≤1024px 時 `22px 26px` |
+| Minimum height | desktop 220px；desktop visual validation result 約 222px |
+| Padding | desktop horizontal `32px`；container ≤1024px 時 `22px 26px` |
 | Radius | `--radius-card`（20px） |
 | Icon box | `84×84px`；容器 ≤480px 改為 `64×64px` |
 | Icon-to-copy gap | `--space-6`（24px） |
@@ -144,7 +144,7 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 
 | Illustration | Path | Implementation | Status |
 | --- | --- | --- | --- |
-| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | `<picture>`：desktop `asset-adjustment-hero-illustration.webp`、viewport ≤1440px 的 narrow/tablet `asset-adjustment-hero-illustration-md.webp`、≤760px small fallback `asset-adjustment-hero-illustration-sm.webp`，均在 `web/src/assets/hero/` | Integrated in working tree |
+| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | `<picture>`：desktop `asset-adjustment-hero-illustration.webp`、viewport ≤1440px 的 narrow/tablet `asset-adjustment-hero-illustration-md.webp`、≤760px small fallback `asset-adjustment-hero-illustration-sm.webp`，均在 `web/src/assets/hero/` | Integrated |
 | 使用者 Hero decoration | `web/src/admin/features/users/AdminUsersPage.tsx` + `.admin-users-hero__orbs*` in `global.css` | CSS gradients + pseudo elements + spans；不是獨立 component | Legacy page-specific |
 
 沒有名為 `UserHeroIllustration` 的 component；外部協作者不得假設其存在。
@@ -162,7 +162,7 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 | Hero | `AdminPageHero` |
 | Illustration | `AssetAdjustmentHeroIcon`、`AssetAdjustmentArtwork`（透明 WebP raster artwork） |
 | Shared components used | `PageHeader`、`Card`、`AdminPageHero`；native controls with global classes |
-| Current status | Implemented; supplied artwork/CSS handoff integrated in current uncommitted worktree |
+| Current status | Implemented；supplied artwork/CSS handoff 已於 `974f4a5` 整合 |
 | Business behavior | Preserved: user ID / activity / signed amount / configured asset / required note validation, reset, loading / double-submit guard, server API and result/error feedback |
 
 Hero content is i18n-driven (`zh-TW.ts`) and currently resolves to:
@@ -183,10 +183,10 @@ Supporting: 建構更透明的數位資產治理
 | Route entry | `web/src/admin/routes/AdminRouter.tsx` → `users/*` → `AdminUsersWorkspacePage` |
 | Workspace | `web/src/admin/pages/AdminNavWorkspaces.tsx` |
 | Primary page | `web/src/admin/features/users/AdminUsersPage.tsx` (`AdminUsersPage`) |
-| Hero | Inline `admin-users-hero` markup inside `AdminUsersPage` |
-| Illustration | CSS `.admin-users-hero__orbs` decoration; no component |
-| Shared components used | `EmptyState`、`InlineErrorState`；原生 form controls；workspace uses `PageHeader` / `Card` |
-| Current status | Implemented / legacy page-specific Hero |
+| Hero | `AdminPageHero` |
+| Illustration | `UsersHeroArtwork` local CSS orb decoration，透過 shared Hero illustration slot 掛載 |
+| Shared components used | `AdminPageHero`、`EmptyState`、`InlineErrorState`；原生 form controls；workspace uses `PageHeader` / `Card` |
+| Current status | Implemented / canonical Hero consumer |
 | Business behavior | Preserved: query, date filters, pagination, detail expansion, account / asset / history reads, loading and error states |
 
 目前頁內 Hero content：
@@ -234,10 +234,11 @@ AdminUsersWorkspacePage
    ├─ workspace sidebar tab
    └─ AdminUsersPage
       └─ admin-users-page
-         ├─ inline admin-users-hero
+         ├─ AdminPageHero
          │  ├─ UsersIcon tile
          │  ├─ title / description
-         │  └─ CSS orbs / value text
+         │  ├─ UsersHeroArtwork (CSS orbs)
+         │  └─ value text
          └─ users toolbar / list / detail / pagination
 ```
 
@@ -245,7 +246,7 @@ AdminUsersWorkspacePage
 
 | Area | Desktop | Narrow desktop / tablet | Mobile |
 | --- | --- | --- | --- |
-| `AdminPageHero` | four-column Grid: icon / copy / 390px artwork / value；desktop source 為主 WebP | container ≤1024px: icon / copy / 230px artwork; value hidden；picture 以 md source 降低 raster 成本 | container ≤760px: icon / copy only；artwork and value hidden；small source 僅作仍需渲染時的 fallback |
+| `AdminPageHero` | four-column Grid: icon / copy / feature artwork / value；asset uses 390px raster artwork, users uses CSS orb artwork | container ≤1024px: icon / copy / reduced artwork; value hidden | container ≤760px: icon / copy only; artwork and value hidden |
 | Asset workspace | left grid sidebar 11–14rem | same until viewport 767px | viewport ≤767px: single-column workspace; tabs become flex-wrap |
 | Adjustment form | user/type two columns; amount occupies first column | follows available container | viewport ≤767px: field grid becomes one column; footer/actions stack as defined in `global.css` |
 | Users Hero | heading + right decoration | viewport ≤1100px hides decoration | viewport ≤767px: icon 3.8rem, title 1.7rem, reduced padding; workspace controls wrap |
@@ -286,7 +287,7 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 
 | Field | Current | Target | Gap | Priority |
 | --- | --- | --- | --- | --- |
-| Area | Asset adjustment uses `AdminPageHero`; users uses independent markup/CSS | Shared LumiX visual language with semantics preserved | User Hero does not consume the canonical component and has no chips; this is a known architecture consistency gap, not authorization to refactor the users page | Medium |
+| Area | Asset adjustment and users consume `AdminPageHero` | Shared LumiX visual language with semantics preserved | Resolved: both pages share Hero geometry, icon tile, typography hierarchy and container-query downgrade; feature artwork remains semantic and page-local | Resolved |
 | Area | Some user and form styles still use local literals | Semantic token-led shared surfaces | First token set only covers new admin Hero/assets consumers; color/state/typography token migration is incomplete | Medium |
 
 ### Control system
@@ -387,6 +388,16 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 **Reason:** Preserves the supplied raster artwork without reinterpreting it, while retaining the shared Hero API and responsive layout behavior.
 
+### 2026-09-17 — Converge Users and Assets on the canonical Hero shell
+
+**Context:** The users workspace retained a page-local Hero with different height, grid geometry and responsive rules, creating a visible shift when switching between Users and Assets.
+
+**Decision:** Replace only the users Hero wrapper with `AdminPageHero`; retain users title, description, value copy and local orb artwork as semantic slots.
+
+**Affected:** `web/src/admin/features/users/AdminUsersPage.tsx`, `web/src/styles/global.css`, `AdminPageHero` consumers.
+
+**Reason:** Gives Users and Assets the same Hero surface, scale and downgrade behavior without coupling user read models to asset form behavior.
+
 ## 17. Change History
 
 ### v1.0 — 2026-09-17
@@ -409,3 +420,8 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 以 approved V2 transparent WebP artwork 取代資產調整 Hero SVG；新增 desktop／medium／small responsive variants 至 `web/src/assets/hero/`。
 - 將 desktop artwork render box 擴至 `390px × 220px`，保留既有 container-query 降階與 mobile 隱藏策略。
+
+### v1.4 — 2026-09-17（working tree）
+
+- 使用者頁改為 `AdminPageHero` consumer，與資產調整共用 Hero geometry、icon tile、typography 與 container-query responsive strategy。
+- 保留使用者既有 orb artwork 與全部資料查詢、篩選、列表及權限行為。
