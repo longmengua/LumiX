@@ -169,6 +169,18 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 | Current status | Implemented；supplied artwork/CSS handoff 已於 `974f4a5` 整合 |
 | Business behavior | Preserved: user ID / activity / signed amount / configured asset / required note validation, reset, loading / double-submit guard, server API and result/error feedback |
 
+### Asset Management IA
+
+| 項目 | 真實狀態 |
+| --- | --- |
+| 左側工作台 | 用戶資產、資產分析、資產調整；不再以「資產沖銷」或「對帳審計與損益」作為上層名稱 |
+| 用戶資產 | `AssetUserSearchPanel` 使用既有 `findAdminUsers` 與 `getAdminUserAssets`；只呈現每一帳戶／資產的 available、locked、total，不跨帳戶自行加總 |
+| 資產分析 | `AssetAnalysisPanel` 以 URL query `tab` 保存 overview、ledger、reconciliation、revenue-share、organization；僅 reconciliation 有真實 API 與 `AssetAdjustmentAuditPanel` |
+| 舊 URL 相容 | `/admin/assets/audit` 會 redirect 至 `/admin/assets/analysis?tab=reconciliation` |
+| 調整確認 | `GovernedAirdropForm` 送出前使用 `ConfirmDialog` 顯示使用者、資產、數量、類型及備註；既有 API payload 不變 |
+
+尚未有真實後端資料的資產概覽、資產流水、分潤分析、組織分析僅顯示正式 empty state，禁止填入 PnL、佣金、關係或餘額 mock。
+
 Hero content is i18n-driven (`zh-TW.ts`) and currently resolves to:
 
 ```text
@@ -606,3 +618,9 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 此 UI 對應的 runtime 會留下 immutable audit；登入凍結立即撤銷有效 session，提幣凍結會讓平台內部對他人轉出 fail closed。資產帳本、表單與其他使用者管理查詢不因這個 UI 新增而改變。
 - 詳情展開／收合改為保有 `aria-label` 與 `aria-expanded` 的圖示按鈕，避免在高密度使用者列表重複占用文字寬度；凍結登入、凍結提幣與詳情控制項統一為 40px 高度與相同 surface treatment，窄螢幕才允許限制按鈕換行。
 - 使用者列表收斂為狀態、限制摘要與單一「管理」入口；詳情改由 `UserManagementDrawer` 的概覽／資產／安全與限制／紀錄 tabs 提供。只有登入與提幣是已接後端的限制能力；平台內轉帳、現貨及合約交易以 disabled capability rows 明示尚未啟用。
+
+### v1.15 — 2026-09-18（working tree）
+
+- 資產管理工作台重新定位為用戶資產、資產分析與資產調整；舊 `/assets/audit` 保持 redirect 相容，並在資產分析中對應真實的對帳核驗 tab。
+- 用戶資產改讀既有使用者搜尋與資產 projection，採右側 drawer 顯示明細；資產分析其他維度不建立 fake accounting data。
+- 資產調整送出前補上確認摘要，保留既有 server payload、validation、permission、ledger、audit 與 idempotency 行為。

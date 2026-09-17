@@ -1,17 +1,17 @@
-import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
-import { Card } from '../../../components/base/Card';
 import { PageHeader } from '../../../components/layout/PageHeader';
 import { useI18n } from '../../../i18n';
 import { GovernedAirdropForm } from './GovernedAirdropForm';
-import { AssetAdjustmentAuditPanel } from './AssetAdjustmentAuditPanel';
+import { AssetAnalysisPanel } from './AssetAnalysisPanel';
+import { AssetUserSearchPanel } from './AssetUserSearchPanel';
 
-type AssetSection = 'users' | 'adjustments' | 'audit';
+type AssetSection = 'users' | 'analysis' | 'adjustments';
 
 const SECTION_PATHS: Record<AssetSection, string> = {
   users: '/assets/users',
   adjustments: '/assets/adjustments',
-  audit: '/assets/audit',
+  analysis: '/assets/analysis',
 };
 
 /**
@@ -27,7 +27,9 @@ export function AdminAssetsPage() {
   const section = sectionFromPath(normalizedPath);
 
   // 舊的 /assets 入口導向可分享的預設子頁，避免重整後只依賴 component 的暫存 state。
-  if (normalizedPath === '/assets') return <Navigate replace to={SECTION_PATHS.adjustments} />;
+  if (normalizedPath === '/assets') return <Navigate replace to={SECTION_PATHS.users} />;
+  // 原對帳頁改由分析中的可分享 tab 承接，保留既有書籤與內部連結。
+  if (normalizedPath.startsWith('/assets/audit')) return <Navigate replace to="/assets/analysis?tab=reconciliation" />;
   // 現貨幣種設定已歸屬現貨模組；保留轉址可讓既有書籤安全遷移。
   if (normalizedPath.startsWith('/assets/spot-assets')) return <Navigate replace to="/spot/assets" />;
   // 充提幣相關設定已歸屬錢包模組；既有書籤仍導向新的可分享頁籤網址。
@@ -45,12 +47,12 @@ export function AdminAssetsPage() {
       <div className="admin-assets-workspace">
         <aside className="admin-assets-workspace__sidebar" aria-label={t('admin.assetsSections')}>
           <button className={`admin-assets-workspace__tab${section === 'users' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.users)}>{t('admin.assetsUsersTab')}</button>
+          <button className={`admin-assets-workspace__tab${section === 'analysis' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.analysis)}>{t('admin.assetsAnalysisTab')}</button>
           <button className={`admin-assets-workspace__tab${section === 'adjustments' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.adjustments)}>{t('admin.assetsAdjustmentsTab')}</button>
-          <button className={`admin-assets-workspace__tab${section === 'audit' ? ' admin-assets-workspace__tab--active' : ''}`} type="button" onClick={() => navigate(SECTION_PATHS.audit)}>{t('admin.assetsAuditTab')}</button>
         </aside>
         <div className="admin-assets-workspace__content">
-          {section === 'users' ? <Card title={t('admin.assetsUsersTitle')}><p className="assets-metric__hint">{t('admin.assetsUsersDescription')}</p><Link className="secondary-button" to="/users">{t('admin.assetsUsersAction')}</Link></Card> : null}
-          {section === 'audit' ? <AssetAdjustmentAuditPanel /> : null}
+          {section === 'users' ? <AssetUserSearchPanel /> : null}
+          {section === 'analysis' ? <AssetAnalysisPanel /> : null}
           {section === 'adjustments' ? <AdjustmentWorkspace /> : null}
         </div>
       </div>
@@ -64,7 +66,7 @@ function AdjustmentWorkspace() {
 
 
 function sectionFromPath(pathname: string): AssetSection {
-  if (pathname.startsWith('/assets/audit')) return 'audit';
+  if (pathname.startsWith('/assets/analysis')) return 'analysis';
   if (pathname.startsWith('/assets/users')) return 'users';
   return 'adjustments';
 }

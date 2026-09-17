@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from 'react';
 
 import { useI18n } from '../../../i18n';
+import { ConfirmDialog } from '../../../components/base/ConfirmDialog';
 import { AssetAdjustmentHeroIcon } from './AssetAdjustmentHeroIcon';
 import { AssetAdjustmentArtwork } from './AssetAdjustmentHeroArtwork';
 import { AdminPageHero } from '../../components/AdminPageHero';
@@ -26,6 +27,7 @@ export function GovernedAirdropForm() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<AdminAirdropResult | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
   const activityOptions: SelectOption[] = [
     { value: 'REVERSAL', label: t('admin.assetsAdjustmentReversal'), icon: 'activity' },
     { value: 'AIRDROP', label: t('admin.assetsAirdropType'), icon: 'airdrop' },
@@ -75,7 +77,7 @@ export function GovernedAirdropForm() {
     setSubmissionError(null);
   }
 
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (submitting) return;
     if (assetsLoading || assetLoadError || assetOptions.length === 0) {
@@ -87,6 +89,12 @@ export function GovernedAirdropForm() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
+    setConfirmationOpen(true);
+  }
+
+  async function confirmSubmit() {
+    if (submitting) return;
+    setConfirmationOpen(false);
     setSubmitting(true);
     setSubmissionError(null);
     setResult(null);
@@ -148,6 +156,9 @@ export function GovernedAirdropForm() {
         {result ? <p className="admin-airdrop-form__feedback admin-airdrop-form__feedback--success" role="status">{t('admin.assetsAdjustmentSucceeded', undefined, { journalId: result.ledgerJournalId, replay: result.replayed ? t('admin.assetsAirdropReplay') : t('admin.assetsAirdropNew') })}</p> : null}
         {submissionError ? <p className="admin-airdrop-form__feedback admin-airdrop-form__feedback--error" role="alert">{submissionError}</p> : null}
       </form>
+      <ConfirmDialog open={confirmationOpen} title={t('admin.assetsAdjustmentConfirmTitle')} description={t('admin.assetsAdjustmentConfirmDescription')} confirmLabel={t('admin.assetsAdjustmentConfirmSubmit')} cancelLabel={t('common.cancel')} onCancel={() => setConfirmationOpen(false)} onConfirm={() => void confirmSubmit()}>
+        <dl className="admin-airdrop-form__confirmation"><div><dt>{t('admin.assetsAirdropUserId')}</dt><dd>{form.targetUserId}</dd></div><div><dt>{t('admin.assetsAirdropAsset')}</dt><dd>{assetOptions.find((asset) => asset.assetSymbol === form.assetSymbol)?.internalName ?? form.assetSymbol}</dd></div><div><dt>{t('admin.assetsAirdropAmount')}</dt><dd>{form.amount}</dd></div><div><dt>{t('admin.assetsAdjustmentType')}</dt><dd>{activityOptions.find((option) => option.value === form.activityId)?.label}</dd></div><div><dt>{t('admin.assetsAirdropReason')}</dt><dd>{form.reason}</dd></div></dl>
+      </ConfirmDialog>
     </section>
   );
 }
