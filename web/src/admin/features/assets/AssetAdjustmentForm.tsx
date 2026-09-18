@@ -172,7 +172,9 @@ export function AssetAdjustmentForm() {
       <form className="admin-airdrop-form__body" onSubmit={submit} noValidate>
         <section className="admin-airdrop-form__section">
           <label className="field">
-            <span className="field__label">調整類型 *</span>
+            <span className="field__label">
+              調整類型 <span className="admin-airdrop-form__required">*</span>
+            </span>
             <AdminFormSelect
               ariaLabel="調整類型"
               value={type}
@@ -188,7 +190,10 @@ export function AssetAdjustmentForm() {
         {type === "BUSINESS_REVERSAL" ? (
           <section className="admin-airdrop-form__section">
             <label className="field">
-              <span className="field__label">原始帳本紀錄 ID *</span>
+              <span className="field__label">
+                原始帳本紀錄 ID{" "}
+                <span className="admin-airdrop-form__required">*</span>
+              </span>
               <input
                 className="input"
                 value={sourceId}
@@ -208,7 +213,9 @@ export function AssetAdjustmentForm() {
           <section className="admin-airdrop-form__section">
             <div className="admin-airdrop-form__grid">
               <label className="field">
-                <span className="field__label">方向 *</span>
+                <span className="field__label">
+                  方向 <span className="admin-airdrop-form__required">*</span>
+                </span>
                 <AdminFormSelect
                   ariaLabel="方向"
                   value={form.direction ?? ""}
@@ -222,7 +229,9 @@ export function AssetAdjustmentForm() {
                 />
               </label>
               <label className="field">
-                <span className="field__label">使用者 *</span>
+                <span className="field__label">
+                  使用者 <span className="admin-airdrop-form__required">*</span>
+                </span>
                 <input
                   className="input"
                   value={form.userId}
@@ -230,11 +239,15 @@ export function AssetAdjustmentForm() {
                 />
               </label>
               <label className="field">
-                <span className="field__label">帳戶 *</span>
+                <span className="field__label">
+                  帳戶 <span className="admin-airdrop-form__required">*</span>
+                </span>
                 <input className="input" value="SPOT" readOnly />
               </label>
               <label className="field">
-                <span className="field__label">資產 *</span>
+                <span className="field__label">
+                  資產 <span className="admin-airdrop-form__required">*</span>
+                </span>
                 <AdminFormSelect
                   ariaLabel="資產"
                   value={form.assetSymbol ?? ""}
@@ -251,7 +264,9 @@ export function AssetAdjustmentForm() {
         <section className="admin-airdrop-form__section">
           <div className="admin-airdrop-form__grid">
             <label className="field">
-              <span className="field__label">數量 *</span>
+              <span className="field__label">
+                數量 <span className="admin-airdrop-form__required">*</span>
+              </span>
               <input
                 className="input"
                 inputMode="decimal"
@@ -291,7 +306,9 @@ export function AssetAdjustmentForm() {
             </label>
           </div>
           <label className="field">
-            <span className="field__label">原因 *</span>
+            <span className="field__label">
+              原因 <span className="admin-airdrop-form__required">*</span>
+            </span>
             <textarea
               className="input"
               maxLength={256}
@@ -303,7 +320,7 @@ export function AssetAdjustmentForm() {
         <div className="admin-airdrop-form__footer admin-airdrop-form__footer--actions-only">
           <div className="admin-airdrop-form__actions">
             <button
-              className="primary-button primary-button--danger admin-airdrop-form__submit"
+              className="primary-button admin-airdrop-form__submit"
               disabled={submitting}
               type="submit"
             >
@@ -338,7 +355,6 @@ export function AssetAdjustmentForm() {
         description="提交後將以 append-only ledger 建立新的 compensating entries。"
         confirmLabel={type === "BUSINESS_REVERSAL" ? "確認沖銷" : "確認調整"}
         cancelLabel="取消"
-        confirmTone="danger"
         onCancel={() => setConfirming(false)}
         onConfirm={() => void confirm()}
       >

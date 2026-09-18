@@ -6,7 +6,6 @@ type AdminFormSelectProps = {
   ariaLabel: string;
   options: Option[];
   value: string;
-  destructive?: boolean;
   onChange(value: string): void;
 };
 
@@ -15,7 +14,6 @@ export function AdminFormSelect({
   ariaLabel,
   options,
   value,
-  destructive = false,
   onChange,
 }: AdminFormSelectProps) {
   const [open, setOpen] = useState(false);
@@ -34,7 +32,7 @@ export function AdminFormSelect({
   }
   return (
     <span
-      className={`admin-form-select${open ? " admin-form-select--open" : ""}${destructive ? " admin-form-select--destructive" : ""}`}
+      className={`admin-form-select${open ? " admin-form-select--open" : ""}`}
     >
       <button
         ref={trigger}
