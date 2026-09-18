@@ -2,6 +2,7 @@ package com.lumix.user.auth.application;
 
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import com.lumix.user.auth.domain.PasswordResetSecret;
+import java.util.Locale;
 
 /**
  * 密碼重設通知的輸出邊界。
@@ -21,7 +22,7 @@ public interface PasswordResetDeliveryPort {
      * <p>保留 default 實作讓非 SMTP adapter 仍維持既有 fail-closed 行為；不得為了 bootstrap 把 token
      * 改由 log、管理 API 或設定檔送出。</p>
      */
-    default void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret) {
+    default void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret, Locale locale) {
         deliver(user, secret);
     }
 

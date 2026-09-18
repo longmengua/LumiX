@@ -23,6 +23,8 @@ HUMAN_REVIEW_REQUIRED: yes
 
 ```text
 Gmail SMTP + STARTTLS
+
+最高管理員 bootstrap 可透過 `LUMIX_ADMIN_SUPER_ADMIN_LOCALE` 指定首次啟用信語系；留白時為 `en-US`，目前只接受已有受控文案的 `en-US` 與 `zh-TW`。未知值會 fail-closed，避免高權限啟用信以猜測語言寄送；此設定不保存或偽造管理員的前端語言偏好。
         |
         v
 email contains reset token link

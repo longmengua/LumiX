@@ -428,7 +428,7 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 客戶端資產頁移除「資料狀態」、最後更新與對賬等內部資料品質呈現；使用者只看與操作直接相關的資產、可用、凍結與總額。資料新鮮度仍留在 server／營運監控邊界。
 - 資產顯示語彙以「凍結」對應不可用中的資產數量；英文介面對應 `Frozen`。資料欄位與既有 `locked` API contract 保持不變。
 - 顯示給使用者與管理人員的時間一律使用 24 小時制（`hourCycle: 'h23'`）；不得以「上午／下午／晚上」或 AM／PM 表示時間。
-- 管理端獨立 Vite surface 的 browser title 固定為「LumiX管理後台」；前台仍為「LumiX」，以避免瀏覽器分頁混淆兩個獨立服務。
+- 管理端獨立 Vite surface 的 browser title 固定為「LumiX Admin」；前台仍為「LumiX」，以避免瀏覽器分頁混淆兩個獨立服務，且 Chrome 分頁不使用中文名稱。
 
 ### v1.9 — 2026-09-18（working tree）
 

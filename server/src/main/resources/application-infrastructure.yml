@@ -88,3 +88,5 @@ lumix:
     super-admin:
       # 只在尚無 principal 時指定啟用信收件人；啟用後與資料庫信箱不符會 fail closed，絕不是授權白名單。
       email: ${LUMIX_ADMIN_SUPER_ADMIN_EMAIL:}
+      # bootstrap 啟用信只接受已有翻譯文案的語系；留白時預設英文，未知值必須 fail closed。
+      locale: ${LUMIX_ADMIN_SUPER_ADMIN_LOCALE:en-US}

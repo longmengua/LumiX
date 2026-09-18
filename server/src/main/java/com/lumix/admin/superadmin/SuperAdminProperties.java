@@ -1,5 +1,6 @@
 package com.lumix.admin.superadmin;
 
+import java.util.Locale;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -12,6 +13,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SuperAdminProperties {
 
     private String email = "";
+    private String locale = "en-US";
 
     public String getEmail() {
         return email;
@@ -19,5 +21,21 @@ public class SuperAdminProperties {
 
     public void setEmail(String email) {
         this.email = email == null ? "" : email;
+    }
+
+    /**
+     * bootstrap 信只提供已有受控文案的語系；未知值不可靜默猜測或回退，以免高權限啟用信使用錯誤語言。
+     */
+    public Locale getLocale() {
+        String normalized = locale == null || locale.isBlank() ? "en-US" : locale.trim();
+        return switch (normalized) {
+            case "en-US" -> Locale.US;
+            case "zh-TW" -> Locale.TAIWAN;
+            default -> throw new IllegalStateException("LUMIX_ADMIN_SUPER_ADMIN_LOCALE 僅支援 en-US 或 zh-TW");
+        };
+    }
+
+    public void setLocale(String locale) {
+        this.locale = locale;
     }
 }

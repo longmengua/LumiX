@@ -11,10 +11,10 @@ export default defineConfig(() => {
     plugins: [
       react(),
       {
-        // 前後台是獨立 bundle；在建置期設定 title，避免管理端 Chrome 分頁沿用前台的 LumiX 標題。
+        // 前後台是獨立 bundle；在建置期設定英文管理端 title，避免 Chrome 分頁沿用前台的 LumiX 標題或混用中文名稱。
         name: 'lumix-surface-document-title',
         transformIndexHtml(html) {
-          return html.replace('<title>LumiX</title>', `<title>${surface === 'admin' ? 'LumiX管理後台' : 'LumiX'}</title>`);
+          return html.replace('<title>LumiX</title>', `<title>${surface === 'admin' ? 'LumiX Admin' : 'LumiX'}</title>`);
         },
       },
       {

@@ -63,8 +63,13 @@ public class SmtpPasswordResetDelivery implements PasswordResetDeliveryPort {
 
     /** 最高管理員啟用不應偽裝成一般忘記密碼信，讓收件人能辨識高權限帳戶的設定動作。 */
     @Override
-    public void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret) {
-        send(user, secret, "LumiX 最高管理員帳號啟用", "此信箱被設定為 LumiX 最高管理員。請於有效時間內設定密碼以完成啟用：", adminPublicBaseUrl, "/admin/reset-password");
+    public void deliverSuperAdminActivation(AuthenticatedUser user, PasswordResetSecret secret, Locale locale) {
+        // bootstrap locale 由部署者指定且已在 properties fail-closed 驗證，不能採收件人 header 或 browser 猜測。
+        if (Locale.TAIWAN.equals(locale)) {
+            send(user, secret, "LumiX 最高管理員帳號啟用", "此信箱被設定為 LumiX 最高管理員。請於有效時間內設定密碼以完成啟用：", adminPublicBaseUrl, "/admin/reset-password");
+            return;
+        }
+        send(user, secret, "LumiX Super Administrator Account Activation", "This email address has been designated as a LumiX super administrator. Set your password before the link expires to complete activation:", adminPublicBaseUrl, "/admin/reset-password");
     }
 
     /** 管理員重設連結需固定前往後台路由，避免在客戶端重設頁混用高權限帳號流程。 */

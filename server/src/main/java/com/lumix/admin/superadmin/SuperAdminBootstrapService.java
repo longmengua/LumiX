@@ -134,7 +134,7 @@ public class SuperAdminBootstrapService implements SuperAdminActivationPort {
         );
         repository.markActivationRequested(user.userId());
         // 寄送失敗會使 transaction rollback，確保資料庫不會留下使用者收不到的最新 token。
-        passwordResetDelivery.deliverSuperAdminActivation(user, secret);
+        passwordResetDelivery.deliverSuperAdminActivation(user, secret, properties.getLocale());
     }
 
     private static String normalizeConfiguredEmail(String email) {

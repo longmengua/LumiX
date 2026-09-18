@@ -14,6 +14,7 @@ import com.lumix.user.auth.domain.AuthenticatedUser;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.Locale;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -51,7 +52,7 @@ class SuperAdminBootstrapServiceTest {
         verify(repository).createPendingSuperAdmin(anyString());
         verify(repository).invalidateActivePasswordResets(anyString());
         verify(repository).createPasswordReset(any(), anyString(), anyString(), any());
-        verify(delivery).deliverSuperAdminActivation(any(AuthenticatedUser.class), any());
+        verify(delivery).deliverSuperAdminActivation(any(AuthenticatedUser.class), any(), org.mockito.ArgumentMatchers.eq(Locale.US));
     }
 
     @Test
@@ -68,7 +69,7 @@ class SuperAdminBootstrapServiceTest {
         // 已建立的最高管理員不可藉由改 .env 悄悄轉移給其他信箱。
         assertThrows(IllegalStateException.class, service::bootstrap);
         verify(repository, never()).createPendingSuperAdmin(anyString());
-        verify(delivery, never()).deliverSuperAdminActivation(any(), any());
+        verify(delivery, never()).deliverSuperAdminActivation(any(), any(), any());
     }
 
     @Test

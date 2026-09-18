@@ -3,6 +3,7 @@ package com.lumix.user.auth.application;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -20,6 +21,8 @@ public class RegistrationEmailBloomFilter {
     private static final String KEY = "lumix:auth:registration-email-bloom:v1";
     private static final long BIT_SIZE = 16_777_216L;
     private static final int HASH_COUNT = 6;
+    // Bloom 僅是資料庫 unique constraint 前的效能最佳化；保留一日即可避免永久累積與過時命中。
+    private static final Duration TTL = Duration.ofDays(1);
     private final RedisTemplate<String, String> redisTemplate;
 
     public RegistrationEmailBloomFilter(RedisTemplate<String, String> redisTemplate) {
@@ -42,6 +45,8 @@ public class RegistrationEmailBloomFilter {
     public void add(String normalizedEmail) {
         try {
             for (long offset : offsets(normalizedEmail)) redisTemplate.opsForValue().setBit(KEY, offset, true);
+            // 每次成功註冊後延展一日，確保持續使用的 filter 仍有明確上限，而不會變成永久 Redis 資料。
+            redisTemplate.expire(KEY, TTL);
         } catch (RuntimeException ignored) {
             // Bloom 是效能最佳化；不可讓 cache 故障破壞 PostgreSQL 的正確性。
         }
