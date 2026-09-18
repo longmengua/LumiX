@@ -481,5 +481,5 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 - 資產調整頁移除舊 `GovernedAirdropForm`，只保留具完整 command 能力的通用調整表單，並沿用 Institutional Blue Hero、surface 與確認摘要；不變更 server API、帳本或權限邊界。
 - 通用調整的調整類型、方向與資產改用共用 `AdminFormSelect`；展開選單、hover／focus、鍵盤開啟與 Escape 關閉皆遵循同一套 Institutional Blue 控制項規範。
-- 扣回與業務沖銷屬不可逆的風險操作：只將已選擇的扣回方向、提交按鈕與確認動作標記為紅色 danger tone；一般補入與其他輸入維持 Institutional Blue。
+- 資產調整頁的主送出與確認動作固定使用紅色 danger tone，凸顯該頁每種調整皆會建立不可變帳務紀錄；所有輸入控制項維持 Institutional Blue。
 - 共用 `ConfirmDialog` 的標頭改為可及的關閉 icon，底部只保留一個具名「取消」操作；標題、說明與操作列使用一致的深色 surface、分隔與 focus 樣式。

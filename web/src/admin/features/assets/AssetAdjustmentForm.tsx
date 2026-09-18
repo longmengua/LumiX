@@ -45,8 +45,6 @@ export function AssetAdjustmentForm() {
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
-  const destructive =
-    type === "BUSINESS_REVERSAL" || form.direction === "DEBIT";
   useEffect(() => {
     void fetchAdminAirdropAssetOptions()
       .then((next) => {
@@ -213,7 +211,6 @@ export function AssetAdjustmentForm() {
                 <span className="field__label">方向 *</span>
                 <AdminFormSelect
                   ariaLabel="方向"
-                  destructive={form.direction === "DEBIT"}
                   value={form.direction ?? ""}
                   onChange={(value) =>
                     change("direction", value as "CREDIT" | "DEBIT")
@@ -306,7 +303,7 @@ export function AssetAdjustmentForm() {
         <div className="admin-airdrop-form__footer admin-airdrop-form__footer--actions-only">
           <div className="admin-airdrop-form__actions">
             <button
-              className={`primary-button admin-airdrop-form__submit${destructive ? " primary-button--danger" : ""}`}
+              className="primary-button primary-button--danger admin-airdrop-form__submit"
               disabled={submitting}
               type="submit"
             >
@@ -341,7 +338,7 @@ export function AssetAdjustmentForm() {
         description="提交後將以 append-only ledger 建立新的 compensating entries。"
         confirmLabel={type === "BUSINESS_REVERSAL" ? "確認沖銷" : "確認調整"}
         cancelLabel="取消"
-        confirmTone={destructive ? "danger" : "default"}
+        confirmTone="danger"
         onCancel={() => setConfirming(false)}
         onConfirm={() => void confirm()}
       >

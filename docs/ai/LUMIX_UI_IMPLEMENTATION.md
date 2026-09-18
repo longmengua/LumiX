@@ -13,15 +13,15 @@
 
 ## 共同實作
 
-| 元件                       | 路徑                                                           | 責任                                                                                                  |
-| -------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `AdminPageHero`            | `web/src/admin/components/AdminPageHero.tsx`                   | 只負責呈現 icon、標題、描述、chips、插圖與價值主張 slot；不含資料請求或 mutation                      |
-| `AssetAdjustmentArtwork`   | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | 透明 WebP `picture`，依 viewport 載入 desktop／medium／small 資產                                     |
-| `AssetAdjustmentPanel`     | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx`       | 資產調整頁層；只掛載唯一的通用資產沖銷／調整表單                                                      |
-| `AssetAdjustmentForm`      | `web/src/admin/features/assets/AssetAdjustmentForm.tsx`        | MANUAL_CORRECTION、COMPENSATION、BUSINESS_REVERSAL；套用 Institutional Blue Hero 與 form surface      |
-| `AdminFormSelect`          | `web/src/admin/components/AdminFormSelect.tsx`                 | 共用受控下拉；提供深色 menu、選取狀態、鍵盤開啟與 Escape 關閉／焦點返回；可標記扣回為紅色 danger tone |
-| `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx`  | 唯讀對帳核驗；保留 `AssetAdjustmentAuditPanel` 舊名稱別名以相容既有 import                            |
-| `adminUserAssetSearch`     | `web/src/admin/features/assets/adminUserAssetSearch.ts`        | 以 adapter 統一名稱前綴查詢、精確 UUID detail 查詢與資產 projection                                   |
+| 元件                       | 路徑                                                           | 責任                                                                                             |
+| -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `AdminPageHero`            | `web/src/admin/components/AdminPageHero.tsx`                   | 只負責呈現 icon、標題、描述、chips、插圖與價值主張 slot；不含資料請求或 mutation                 |
+| `AssetAdjustmentArtwork`   | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | 透明 WebP `picture`，依 viewport 載入 desktop／medium／small 資產                                |
+| `AssetAdjustmentPanel`     | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx`       | 資產調整頁層；只掛載唯一的通用資產沖銷／調整表單                                                 |
+| `AssetAdjustmentForm`      | `web/src/admin/features/assets/AssetAdjustmentForm.tsx`        | MANUAL_CORRECTION、COMPENSATION、BUSINESS_REVERSAL；套用 Institutional Blue Hero 與 form surface |
+| `AdminFormSelect`          | `web/src/admin/components/AdminFormSelect.tsx`                 | 共用受控下拉；提供深色 menu、選取狀態、鍵盤開啟與 Escape 關閉／焦點返回                          |
+| `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx`  | 唯讀對帳核驗；保留 `AssetAdjustmentAuditPanel` 舊名稱別名以相容既有 import                       |
+| `adminUserAssetSearch`     | `web/src/admin/features/assets/adminUserAssetSearch.ts`        | 以 adapter 統一名稱前綴查詢、精確 UUID detail 查詢與資產 projection                              |
 
 ## 資產管理頁面
 
