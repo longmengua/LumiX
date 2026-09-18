@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class P12T09SchemaVerificationTest {
 
     @Test
-    void allPhaseTwelveMigrationsApplyAndMoneyColumnsRemainExact() throws Exception {
+    void baselineCreatesFinalSchemaAndMoneyColumnsRemainExact() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:postgresql:test:p12_t09");
         dataSource.setUser("sa");
@@ -41,6 +41,7 @@ class P12T09SchemaVerificationTest {
                     "status",
                     "new_device_login_email_notification_enabled",
                     "fund_transfer_restricted_until",
+                    "withdrawal_frozen_at",
                     "created_at",
                     "updated_at");
             assertTableColumns(connection, "accounts",
@@ -48,6 +49,8 @@ class P12T09SchemaVerificationTest {
                     "user_id",
                     "account_type",
                     "status",
+                    "account_category",
+                    "account_purpose",
                     "created_at",
                     "updated_at");
             assertTableColumns(connection, "assets",
@@ -243,6 +246,12 @@ class P12T09SchemaVerificationTest {
                     "before_state",
                     "after_state",
                     "created_at");
+            assertTableColumns(connection, "admin_asset_adjustments",
+                    "adjustment_id", "adjustment_type", "direction", "user_id", "account_id", "account_type",
+                    "asset_symbol", "amount", "source_business_type", "source_business_id", "source_journal_id",
+                    "source_ledger_entry_id", "incident_reference", "ledger_journal_id", "actor_id", "reason", "status", "created_at");
+            assertSystemAccountPurpose(connection, "system:airdrop:spot", "AIRDROP_FUNDING");
+            assertSystemAccountPurpose(connection, "system:asset-adjustment:spot", "ASSET_ADJUSTMENT_COUNTERPARTY");
 
             // 這裡只驗證金額 / 價格 / 數量欄位都維持 exact numeric，不接受 FLOAT / DOUBLE / REAL。
             assertExactNumeric(connection, "balance_projections", "total_amount");
@@ -320,6 +329,16 @@ class P12T09SchemaVerificationTest {
                 if (typeName != null && forbiddenTypes.contains(typeName.toUpperCase())) {
                     throw new AssertionError("Forbidden floating type found at " + tableName + "." + columnName + " = " + typeName);
                 }
+            }
+        }
+    }
+
+    private static void assertSystemAccountPurpose(Connection connection, String accountId, String purpose) throws SQLException {
+        try (var statement = connection.prepareStatement("SELECT account_purpose FROM accounts WHERE account_id = ?")) {
+            statement.setString(1, accountId);
+            try (ResultSet result = statement.executeQuery()) {
+                assertTrue(result.next(), "Required system account is missing: " + accountId);
+                assertEquals(purpose, result.getString(1));
             }
         }
     }

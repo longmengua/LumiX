@@ -21,8 +21,7 @@ class JdbcAdminAssetAdjustmentAuditQueryRepositoryTest {
 
         ArgumentCaptor<String> sql = ArgumentCaptor.forClass(String.class);
         verify(jdbcTemplate).query(sql.capture(), org.mockito.ArgumentMatchers.<RowMapper<AdminAssetAdjustmentAuditItem>>any(), org.mockito.ArgumentMatchers.eq(100));
-        assertTrue(sql.getValue().contains("FROM audit_logs audit"));
-        assertTrue(sql.getValue().contains("JOIN ledger_journals journal"));
+        assertTrue(sql.getValue().contains("FROM admin_asset_adjustments adjustment"));
         assertTrue(sql.getValue().contains("LEFT JOIN ledger_entries entry"));
         assertTrue(sql.getValue().contains("reconciliation_status"));
         assertFalse(sql.getValue().matches("(?s).*\\b(INSERT|UPDATE|DELETE)\\b.*"));

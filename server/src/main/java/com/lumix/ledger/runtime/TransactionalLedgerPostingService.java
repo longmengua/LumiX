@@ -139,6 +139,7 @@ public class TransactionalLedgerPostingService {
         }
     }
 
+
     private long appendJournal(LedgerPostingCommand command) {
         LedgerJournalDraft journal = command.journalDraft();
         Long journalId = jdbcTemplate.queryForObject(

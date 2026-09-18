@@ -26,7 +26,8 @@ public record AdminAirdropCommand(
             throw new IllegalArgumentException("amount must not be zero");
         }
         AdminAssetAdjustmentType type = AdminAssetAdjustmentType.fromActivityId(activityId);
-        if (type == AdminAssetAdjustmentType.AIRDROP && amount.signum() < 0) {
+        if (type != AdminAssetAdjustmentType.AIRDROP) throw new IllegalArgumentException("unsupported airdrop activity");
+        if (amount.signum() <= 0) {
             throw new IllegalArgumentException("airdrop amount must be positive");
         }
     }

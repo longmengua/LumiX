@@ -15,6 +15,7 @@ import org.springframework.web.context.request.WebRequest;
 /** 管理端資產寫入失敗一律去敏，不能將 SQL、帳本帳戶或內部 idempotency 細節回傳瀏覽器。 */
 @RestControllerAdvice(assignableTypes = {
         AdminAirdropController.class,
+        AssetAdjustmentController.class,
         AdminAssetAdjustmentAuditController.class,
         AdminUserAssetQueryController.class
 })

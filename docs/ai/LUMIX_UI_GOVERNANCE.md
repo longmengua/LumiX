@@ -42,6 +42,9 @@
 - 目前可執行的受控命令仍以既有 server-side 資產命令邊界為準；前端不得把未存在的扣回、補償、佣金沖回或錯帳修正塞入既有命令。
 - `GovernedAirdropForm` 保留其命令身分，應由資產調整頁層包裝；新增其他調整命令時必須有獨立、已授權的 backend capability。
 - 若既有命令名稱（例如 `REVERSAL`）的實際效果比名稱寬，UI 必須採中性且準確的產品文案；在建立原始事件關聯與限制前，不得宣稱為嚴格撤銷流程。
+- Asset Adjustment 的 Business Reference、Ledger Reference 與 Incident Reference 必須分開；人工修正與補償不得因沒有 Business ID 被 UI 阻擋。
+- Business Reversal 必須引用 authoritative original asset effect；UI 不得以 signed amount 或自行輸入的 user／asset 替換原始事件語意。
+- 金融金額永遠以正數加上獨立 CREDIT／DEBIT direction 表達；更正一律 append-only，system accounting privilege 必須是明確 purpose 加 command context。
 - 顯示文字、欄位名稱與 empty state 必須反映真實 API 能力，不可用 disabled 假選項、假統計或 mock ledger 暗示功能已可用。
 - `Audit Log`（管理操作）、`Ledger`（帳本異動）、`Reconciliation`（業務事件／帳本／餘額核對）與 `Asset Adjustment`（管理命令）是不同概念，UI component 與 TypeScript type 不應混用。
 - Spot 與 Futures 的餘額、權益、可用額與凍結額不可在前端任意相加；只有 backend 明確提供 authoritative total 時才能顯示總額。

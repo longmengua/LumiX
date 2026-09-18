@@ -8,7 +8,7 @@ import { AdminPageHero } from '../../components/AdminPageHero';
 import { createAdminAirdrop, fetchAdminAirdropAssetOptions, type AdminAirdropAssetOption, type AdminAirdropRequest, type AdminAirdropResult } from '../../api/adminAssetsApi';
 
 const INITIAL_FORM: AdminAirdropRequest = {
-  targetUserId: '', assetSymbol: '', amount: '', activityId: 'REVERSAL', reason: '',
+  targetUserId: '', assetSymbol: '', amount: '', activityId: 'AIRDROP', reason: '',
 };
 
 type FormErrors = Partial<Record<keyof AdminAirdropRequest, string>>;
@@ -28,10 +28,6 @@ export function GovernedAirdropForm() {
   const [result, setResult] = useState<AdminAirdropResult | null>(null);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const activityOptions: SelectOption[] = [
-    { value: 'REVERSAL', label: t('admin.assetsAdjustmentReversal'), icon: 'activity' },
-    { value: 'AIRDROP', label: t('admin.assetsAirdropType'), icon: 'airdrop' },
-  ];
   const assetSelectOptions: SelectOption[] = assetOptions.map((asset) => ({ value: asset.assetSymbol, label: asset.internalName, icon: 'asset' }));
 
   useEffect(() => {
@@ -63,7 +59,7 @@ export function GovernedAirdropForm() {
     if (!form.assetSymbol.trim()) next.assetSymbol = t('admin.assetsAirdropRequired');
     if (!form.amount.trim()) {
       next.amount = t('admin.assetsAirdropRequired');
-    } else if (!/^-?\d+(?:\.\d+)?$/.test(form.amount)) {
+    } else if (!/^(?=.*[1-9])\d+(?:\.\d+)?$/.test(form.amount)) {
       next.amount = t('admin.assetsAirdropAmountInvalid');
     }
     if (!form.reason.trim()) next.reason = t('admin.assetsAirdropRequired');
@@ -128,11 +124,8 @@ export function GovernedAirdropForm() {
             <FieldError error={errors.targetUserId}>
               <label className="field"><span className="field__label">{t('admin.assetsAirdropUserId')}<RequiredMark /></span><input className="input" aria-invalid={Boolean(errors.targetUserId)} required maxLength={64} placeholder={t('admin.assetsAirdropUserIdPlaceholder')} value={form.targetUserId} onChange={(event) => update('targetUserId', event.target.value)} /></label>
             </FieldError>
-            <FieldError error={errors.activityId}>
-              <label className="field"><span className="field__label">{t('admin.assetsAirdropActivity')}<RequiredMark /></span><FormSelect ariaLabel={t('admin.assetsAirdropActivity')} options={activityOptions} placeholder={t('admin.assetsAirdropRequired')} value={form.activityId} onChange={(value) => update('activityId', value)} /></label>
-            </FieldError>
             <FieldError className="admin-airdrop-form__field--amount" error={errors.amount ?? errors.assetSymbol ?? assetLoadError ?? undefined}>
-              <label className="field"><span className="field__label">{t(form.activityId === 'AIRDROP' ? 'admin.assetsAirdropAmountLabel' : 'admin.assetsAdjustmentAmountLabel')}<RequiredMark /></span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="-?[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
+              <label className="field"><span className="field__label">{t('admin.assetsAirdropAmountLabel')}<RequiredMark /></span><span className="admin-airdrop-form__amount-row"><input className="input" aria-invalid={Boolean(errors.amount)} required inputMode="decimal" pattern="[0-9]+([.][0-9]+)?" placeholder={t('admin.assetsAirdropAmountPlaceholder')} value={form.amount} onChange={(event) => update('amount', event.target.value)} /><FormSelect ariaLabel={t('admin.assetsAirdropAsset')} compact disabled={assetsLoading || Boolean(assetLoadError) || assetOptions.length === 0} options={assetSelectOptions} placeholder="-" value={form.assetSymbol} onChange={(value) => update('assetSymbol', value)} /></span></label>
             </FieldError>
           </div>
         </section>
@@ -157,7 +150,7 @@ export function GovernedAirdropForm() {
         {submissionError ? <p className="admin-airdrop-form__feedback admin-airdrop-form__feedback--error" role="alert">{submissionError}</p> : null}
       </form>
       <ConfirmDialog open={confirmationOpen} title={t('admin.assetsAdjustmentConfirmTitle')} description={t('admin.assetsAdjustmentConfirmDescription')} confirmLabel={t('admin.assetsAdjustmentConfirmSubmit')} cancelLabel={t('common.cancel')} onCancel={() => setConfirmationOpen(false)} onConfirm={() => void confirmSubmit()}>
-        <dl className="admin-airdrop-form__confirmation"><div><dt>{t('admin.assetsAirdropUserId')}</dt><dd>{form.targetUserId}</dd></div><div><dt>{t('admin.assetsAirdropAsset')}</dt><dd>{assetOptions.find((asset) => asset.assetSymbol === form.assetSymbol)?.internalName ?? form.assetSymbol}</dd></div><div><dt>{t('admin.assetsAirdropAmount')}</dt><dd>{form.amount}</dd></div><div><dt>{t('admin.assetsAdjustmentType')}</dt><dd>{activityOptions.find((option) => option.value === form.activityId)?.label}</dd></div><div><dt>{t('admin.assetsAirdropReason')}</dt><dd>{form.reason}</dd></div></dl>
+        <dl className="admin-airdrop-form__confirmation"><div><dt>{t('admin.assetsAirdropUserId')}</dt><dd>{form.targetUserId}</dd></div><div><dt>{t('admin.assetsAirdropAsset')}</dt><dd>{assetOptions.find((asset) => asset.assetSymbol === form.assetSymbol)?.internalName ?? form.assetSymbol}</dd></div><div><dt>{t('admin.assetsAirdropAmount')}</dt><dd>{form.amount}</dd></div><div><dt>{t('admin.assetsAirdropReason')}</dt><dd>{form.reason}</dd></div></dl>
       </ConfirmDialog>
     </section>
   );

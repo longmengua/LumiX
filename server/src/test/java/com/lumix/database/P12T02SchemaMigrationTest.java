@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class P12T02SchemaMigrationTest {
 
     @Test
-    void migrationCreatesIdentityUserAccountAssetFoundationSchema() throws Exception {
+    void baselineCreatesIdentityUserAccountAssetFinalSchema() throws Exception {
         JdbcDataSource dataSource = new JdbcDataSource();
         dataSource.setURL("jdbc:postgresql:test:p12_t02");
         dataSource.setUser("sa");
@@ -41,6 +41,9 @@ class P12T02SchemaMigrationTest {
                     "email",
                     "display_name",
                     "status",
+                    "new_device_login_email_notification_enabled",
+                    "fund_transfer_restricted_until",
+                    "withdrawal_frozen_at",
                     "created_at",
                     "updated_at");
             assertTableColumns(connection, "accounts",
@@ -48,6 +51,8 @@ class P12T02SchemaMigrationTest {
                     "user_id",
                     "account_type",
                     "status",
+                    "account_category",
+                    "account_purpose",
                     "created_at",
                     "updated_at");
             assertTableColumns(connection, "assets",

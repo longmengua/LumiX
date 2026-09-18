@@ -1,8 +1,13 @@
 import { ADMIN_API_BASE_PATH } from './adminApi';
 import { createAdminApiError, notifyAdminUnauthorized } from './adminError';
 
-export type AdminAirdropRequest = { targetUserId: string; assetSymbol: string; amount: string; activityId: string; reason: string; };
+export type AdminAirdropRequest = { targetUserId: string; assetSymbol: string; amount: string; activityId: 'AIRDROP'; reason: string; };
 export type AdminAirdropResult = { ledgerJournalId: string; replayed: boolean; };
+export type AssetAdjustmentType = 'MANUAL_CORRECTION' | 'COMPENSATION' | 'BUSINESS_REVERSAL';
+export type AssetAdjustmentDirection = 'CREDIT' | 'DEBIT';
+export type AdminAssetAdjustmentRequest = { adjustmentType: AssetAdjustmentType; userId?: string; accountType?: 'SPOT'; assetSymbol?: string; direction?: AssetAdjustmentDirection; amount: string; sourceBusinessType?: string; sourceBusinessId?: string; sourceLedgerEntryId?: string; incidentReference?: string; reason: string; };
+export type AdminAssetAdjustmentResult = { adjustmentId: string; ledgerJournalId: string; replayed: boolean; };
+export type AdminReversalSource = { ledgerEntryId: string; journalId: string | null; userId: string | null; userEmail: string | null; accountType: string | null; assetSymbol: string | null; originalDirection: AssetAdjustmentDirection | null; originalAmount: string | null; alreadyReversed: string | null; remainingReversible: string | null; sourceBusinessType: string | null; sourceBusinessId: string | null; eligible: boolean; ineligibleReason: string | null; };
 export type AdminAirdropAssetOption = { assetSymbol: string; internalName: string; precisionScale: number; };
 export type AdminSpotAssetConfiguration = AdminAirdropAssetOption & { status: 'ACTIVE' | 'HALTED' | 'DELISTED'; updatedAt: string; };
 export type CreateAdminSpotAssetConfigurationRequest = { assetSymbol: string; internalName: string; precisionScale: number; };
@@ -16,16 +21,11 @@ export type AdminAssetReconciliationItem = {
   assetSymbol: string | null;
   direction: 'CREDIT' | 'DEBIT' | null;
   amount: string | null;
-  activityType: 'AIRDROP' | 'REVERSAL' | 'UNKNOWN';
+  activityType: AssetAdjustmentType | 'AIRDROP';
   note: string;
   reconciliationStatus: 'VERIFIED' | 'EXCEPTION';
   postedAt: string;
 };
-/**
- * 歷史 API 命名相容別名；新 UI 以 reconciliation 語意使用此資料。
- * @deprecated 新程式請使用 AdminAssetReconciliationItem；待外部 consumer 清理後移除。
- */
-export type AdminAssetAdjustmentAuditItem = AdminAssetReconciliationItem;
 
 /** 空投金額維持 decimal 字串，且只有 HTTP 成功回應才能顯示成功 journal。 */
 export async function createAdminAirdrop(request: AdminAirdropRequest): Promise<AdminAirdropResult> {
@@ -38,6 +38,20 @@ export async function createAdminAirdrop(request: AdminAirdropRequest): Promise<
     throw error;
   }
   return response.json() as Promise<AdminAirdropResult>;
+}
+
+/** 通用調整一律以 caller-level key 防止 browser 重送造成第二次 immutable ledger effect。 */
+export async function createAdminAssetAdjustment(request: AdminAssetAdjustmentRequest, idempotencyKey: string): Promise<AdminAssetAdjustmentResult> {
+  const response = await fetch(`${ADMIN_API_BASE_PATH}/assets/adjustments`, { method: 'POST', credentials: 'same-origin', headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey }, body: JSON.stringify(request) });
+  if (!response.ok) throw await adminAssetsError(response);
+  return response.json() as Promise<AdminAssetAdjustmentResult>;
+}
+
+/** Business Reversal 的 source 資訊只能由後端 ledger lookup 提供，禁止 browser 自行推導方向或餘額。 */
+export async function fetchAdminAssetAdjustmentReversalSource(ledgerEntryId: string): Promise<AdminReversalSource> {
+  const response = await fetch(`${ADMIN_API_BASE_PATH}/assets/adjustments/reversal-sources/${encodeURIComponent(ledgerEntryId)}`, { credentials: 'same-origin' });
+  if (!response.ok) throw await adminAssetsError(response);
+  return response.json() as Promise<AdminReversalSource>;
 }
 
 /** 可空投幣別由後端現貨主檔提供；前端不能以常數或 mock 擴張可入帳資產範圍。 */
@@ -67,11 +81,6 @@ export async function fetchAssetAdjustmentReconciliation(): Promise<AdminAssetRe
   return Array.isArray(payload.items) ? payload.items : [];
 }
 
-/**
- * 舊 service 名稱相容別名；endpoint 本身仍保留歷史 audit 路徑。
- * @deprecated 新程式請使用 fetchAssetAdjustmentReconciliation；待外部 consumer 清理後移除。
- */
-export const fetchAdminAssetAdjustmentAudit = fetchAssetAdjustmentReconciliation;
 
 /** 現貨幣種設定讀取與空投選項分開，讓設定頁能呈現 HALTED 資產而空投只取得 ACTIVE 資產。 */
 export async function fetchAdminSpotAssetConfigurations(): Promise<AdminSpotAssetConfiguration[]> {

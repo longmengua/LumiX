@@ -62,15 +62,9 @@ export function AssetReconciliationPanel() {
   );
 }
 
-/**
- * 舊 import 相容別名；新 UI 以 reconciliation 語意命名。
- * @deprecated 新程式請使用 AssetReconciliationPanel；待外部 consumer 清理後移除。
- */
-export const AssetAdjustmentAuditPanel = AssetReconciliationPanel;
-
 function AuditRow({ item, locale, t }: { item: AdminAssetReconciliationItem; locale: string; t: (key: string, fallback?: string, values?: Record<string, string | number>) => string }) {
-  const signedAmount = item.amount === null ? '-' : `${item.direction === 'DEBIT' ? '-' : '+'}${item.amount}`;
-  const type = item.activityType === 'REVERSAL' ? t('admin.assetsAdjustmentReversal') : item.activityType === 'AIRDROP' ? t('admin.assetsAirdropType') : t('admin.assetsAuditUnknownType');
+  const signedAmount = item.amount === null ? '-' : `${item.direction === 'DEBIT' ? '扣回 ' : '補入 '}${item.amount}`;
+  const type = item.activityType === 'MANUAL_CORRECTION' ? '人工修正' : item.activityType === 'COMPENSATION' ? '系統補償' : item.activityType === 'BUSINESS_REVERSAL' ? '業務沖銷' : t('admin.assetsAirdropType');
   const verified = item.reconciliationStatus === 'VERIFIED';
   return <tr>
     <td><time dateTime={item.postedAt}>{new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short', hourCycle: 'h23' }).format(new Date(item.postedAt))}</time></td>

@@ -90,7 +90,7 @@ class AdminUserQueryServiceTest {
 
     private static AdminUserSummary user(String userId, String createdAt) {
         return new AdminUserSummary(
-            userId, userId + "@example.com", "Lin", "ACTIVE", Instant.parse(createdAt), null, null, false
+            userId, userId + "@example.com", "Lin", "ACTIVE", Instant.parse(createdAt), null, null, null, false
         );
     }
 }

@@ -7,11 +7,14 @@ import java.util.List;
 import java.util.Objects;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -52,10 +55,23 @@ public class AdminAirdropController {
                 .body(new Response(Long.toString(result.ledgerJournalId()), result.replayed()));
     }
 
+
     /** 金額一律用 decimal 字串傳輸，禁止 browser number 造成 binary floating-point 金額誤差。 */
     public record Request(String targetUserId, String assetSymbol, BigDecimal amount,
                           String activityId, String reason) { }
     public record Response(String ledgerJournalId, boolean replayed) { }
     public record ConfigurationResponse(List<AssetOption> assets) { }
     public record AssetOption(String assetSymbol, String internalName, int precisionScale) { }
+    public record ErrorResponse(String code, String message) { }
+
+    /** 將空投輸入拒絕以穩定 domain code 傳回管理端，避免前端只能看到籠統 400。 */
+    @org.springframework.web.bind.annotation.ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleDomainValidation(IllegalArgumentException exception) {
+        String message = exception.getMessage() == null ? "asset adjustment validation failed" : exception.getMessage();
+        String code = switch (message) {
+            case "amount must not be zero", "airdrop amount must be positive" -> "AIRDROP_AMOUNT_INVALID";
+            default -> "ASSET_ADJUSTMENT_INVALID";
+        };
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new ErrorResponse(code, message));
+    }
 }

@@ -9,8 +9,7 @@ import java.util.Locale;
  * server 邊界把可執行類型收斂為明確集合，未知類型必須 fail closed。</p>
  */
 enum AdminAssetAdjustmentType {
-    AIRDROP,
-    REVERSAL;
+    AIRDROP;
 
     static AdminAssetAdjustmentType fromActivityId(String activityId) {
         try {

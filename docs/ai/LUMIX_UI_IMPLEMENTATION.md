@@ -17,8 +17,9 @@
 | --- | --- | --- |
 | `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 只負責呈現 icon、標題、描述、chips、插圖與價值主張 slot；不含資料請求或 mutation |
 | `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | 透明 WebP `picture`，依 viewport 載入 desktop／medium／small 資產 |
-| `AssetAdjustmentPanel` | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx` | 資產調整頁層；目前掛載唯一可執行的 `GovernedAirdropForm` |
-| `GovernedAirdropForm` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 現有受控資產命令表單；保留 API、驗證、確認、loading 與回饋 |
+| `AssetAdjustmentPanel` | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx` | 資產調整頁層；分別掛載獨立的發放與資產沖銷／調整表單 |
+| `GovernedAirdropForm` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 只建立正數 AIRDROP；不再選擇或提交 signed REVERSAL |
+| `AssetAdjustmentForm` | `web/src/admin/features/assets/AssetAdjustmentForm.tsx` | MANUAL_CORRECTION、COMPENSATION、BUSINESS_REVERSAL；後者只由 authoritative Ledger Entry lookup 推導 |
 | `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 唯讀對帳核驗；保留 `AssetAdjustmentAuditPanel` 舊名稱別名以相容既有 import |
 | `adminUserAssetSearch` | `web/src/admin/features/assets/adminUserAssetSearch.ts` | 以 adapter 統一名稱前綴查詢、精確 UUID detail 查詢與資產 projection |
 
@@ -42,12 +43,14 @@
 
 ### `/admin/assets/adjustments`
 
-- 頁面：`AdminAssetsPage` → `AssetAdjustmentPanel` → `GovernedAirdropForm`。
+- 頁面：`AdminAssetsPage` → `AssetAdjustmentPanel` → `GovernedAirdropForm`（資產發放）與 `AssetAdjustmentForm`（資產沖銷／調整）。
 - 資產選項：`GET /api/admin/v1/assets/airdrops/configuration`，只列後端 ACTIVE 現貨資產。
-- 提交：`POST /api/admin/v1/assets/airdrops`，payload 為 `targetUserId`、`assetSymbol`、`amount`、`activityId`、`reason`。
-- `activityId` 真實可執行值為 `AIRDROP` 與 `REVERSAL`。AIRDROP 只接受正數；REVERSAL 支援正負數，負數由 server 檢查目標現貨可用餘額。
-- `REVERSAL` 目前沒有原始 journal/reference 欄位：正數會產生與 AIRDROP 正數相同的使用者入帳效果，負數才會扣減使用者現貨並回到 system account；因此前端顯示「帳務異常調整」，不得宣稱它已限定為既有發放的撤銷。
+- 發放提交：`POST /api/admin/v1/assets/airdrops`，payload 為 `targetUserId`、`assetSymbol`、正數 `amount`、固定 `activityId=AIRDROP`、`reason`。
+- 通用調整：`POST /api/admin/v1/assets/adjustments`，以 `Idempotency-Key` 保護。支援 `MANUAL_CORRECTION`、`COMPENSATION`、`BUSINESS_REVERSAL`，所有 amount 為正 decimal string。
+- 來源查詢：`GET /api/admin/v1/assets/adjustments/reversal-sources/{ledgerEntryId}` 只回傳窄範圍 authoritative source、已沖回與剩餘額；不建立全域 ledger browser。
+- 舊 `POST /api/admin/v1/assets/airdrops` 的 `activityId=REVERSAL` 已拒絕；歷史 ambiguous REVERSAL 保留 immutable evidence，不會 backfill 或猜測來源關係。
 - 服務固定以 `system:airdrop:spot` 作為對手帳戶，目標帳戶固定為使用者 `SPOT`；這是受控現有命令，不是通用 adjustment engine。
+- Generic Adjustment 使用 `system:asset-adjustment:spot` 的 `ASSET_ADJUSTMENT_COUNTERPARTY` purpose；目前 UI 與 command capability 只支援 SPOT。
 - 所有入帳、冪等、權限、ledger 與 audit 行為均在 server；前端只保留欄位驗證、確認摘要與請求狀態。
 
 ## 使用者頁面

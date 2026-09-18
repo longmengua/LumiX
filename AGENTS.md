@@ -95,6 +95,7 @@ security bypass
 
 ## Engineering rules
 
+- 未經使用者明確同意，不得主動增加 backward compatibility（舊 DB/schema 升級、歷史資料 adapter、deprecated API、dual-read／dual-write 或舊行為相容層）。若任務看似需要這類相容性，必須先詢問使用者。同樣地，baseline squash 不得順便刪除用途未確認但仍存在於 current final schema 的物件。
 - Java 後端遵守 Java 21 + Spring Boot 3 的專案方向。
 - 前端遵守 React + TypeScript + Vite 的專案方向。
 - 金額、數量、價格、費用不得使用 binary floating point。

@@ -39,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminAirdropService {
 
     private static final String EXCHANGE_AIRDROP_ACCOUNT_ID = "system:airdrop:spot";
+    private static final String EXCHANGE_AIRDROP_USER_ID = "system:airdrop";
     private static final String AIRDROP_DESTINATION_ACCOUNT_TYPE = "SPOT";
     private final SuperAdminAccessService access;
     private final JdbcTemplate jdbcTemplate;
@@ -79,18 +80,16 @@ public class AdminAirdropService {
 
         String targetAccountId = resolveTargetAccount(command);
         ensureActiveAccountAsset(targetAccountId, command.assetSymbol());
+        ensureDesignatedAirdropFundingAccount();
         ensureActiveAccountAsset(EXCHANGE_AIRDROP_ACCOUNT_ID, command.assetSymbol());
-        AdminAssetAdjustmentType type = AdminAssetAdjustmentType.fromActivityId(command.activityId());
-        if (type == AdminAssetAdjustmentType.REVERSAL && command.amount().signum() < 0) {
-            ensureSufficientAvailableBalance(targetAccountId, command);
-        }
-
         String businessReferenceId = adjustmentReference(command);
         String idempotencyKey = "asset-adjustment:" + digest(businessReferenceId);
-        java.math.BigDecimal amount = command.amount().abs();
-        List<LedgerEntryDraft> entries = command.amount().signum() > 0
-                ? List.of(new LedgerEntryDraft(new AccountId(EXCHANGE_AIRDROP_ACCOUNT_ID), new AssetSymbol(command.assetSymbol()), LedgerDirection.DEBIT, amount, 1L), new LedgerEntryDraft(new AccountId(targetAccountId), new AssetSymbol(command.assetSymbol()), LedgerDirection.CREDIT, amount, 2L))
-                : List.of(new LedgerEntryDraft(new AccountId(targetAccountId), new AssetSymbol(command.assetSymbol()), LedgerDirection.DEBIT, amount, 1L), new LedgerEntryDraft(new AccountId(EXCHANGE_AIRDROP_ACCOUNT_ID), new AssetSymbol(command.assetSymbol()), LedgerDirection.CREDIT, amount, 2L));
+        // AIRDROP 已不再共用 signed adjustment；方向是固定的 funding debit -> user credit。
+        java.math.BigDecimal amount = command.amount();
+        List<LedgerEntryDraft> entries = List.of(
+                new LedgerEntryDraft(new AccountId(EXCHANGE_AIRDROP_ACCOUNT_ID), new AssetSymbol(command.assetSymbol()), LedgerDirection.DEBIT, amount, 1L),
+                new LedgerEntryDraft(new AccountId(targetAccountId), new AssetSymbol(command.assetSymbol()), LedgerDirection.CREDIT, amount, 2L)
+        );
         LedgerJournalDraft journal = new LedgerJournalDraft(
                 LedgerBusinessReferenceType.ADJUSTMENT,
                 businessReferenceId,
@@ -108,7 +107,7 @@ public class AdminAirdropService {
                     "INSERT INTO audit_logs (actor_type, actor_id, action_type, target_type, target_id, request_id, outcome, reason) "
                             + "VALUES ('ADMIN', ?, 'ADMIN_ASSET_ADJUSTMENT', 'USER_ACCOUNT', ?, ?, 'SUCCESS', ?)",
                     actor.userId(), targetAccountId, "asset-adjustment-" + digest(businessReferenceId).substring(0, 40),
-                    "type=" + type.name() + ";asset=" + command.assetSymbol() + ";amount="
+                    "type=AIRDROP;asset=" + command.assetSymbol() + ";amount="
                             + command.amount().toPlainString() + ";reason=" + command.reason()
             );
         }
@@ -124,6 +123,21 @@ public class AdminAirdropService {
             throw new IllegalArgumentException("target user does not have an eligible account");
         }
         return accountIds.getFirst();
+    }
+
+    /** 只有明確標記的空投 funding account 可以承擔 issuance debit，不把 EXCHANGE 類型泛化成 overdraft 權限。 */
+    private void ensureDesignatedAirdropFundingAccount() {
+        List<Map<String, Object>> rows = jdbcTemplate.queryForList(
+                "SELECT user_id, account_type, account_category, account_purpose, status FROM accounts WHERE account_id = ?",
+                EXCHANGE_AIRDROP_ACCOUNT_ID
+        );
+        if (rows.size() != 1 || !EXCHANGE_AIRDROP_USER_ID.equals(rows.getFirst().get("user_id"))
+                || !"SPOT".equals(rows.getFirst().get("account_type"))
+                || !"EXCHANGE".equals(rows.getFirst().get("account_category"))
+                || !"AIRDROP_FUNDING".equals(rows.getFirst().get("account_purpose"))
+                || !"ACTIVE".equals(rows.getFirst().get("status"))) {
+            throw new IllegalStateException("designated airdrop funding account policy is unavailable");
+        }
     }
 
     private void ensureActiveAccountAsset(String accountId, String assetSymbol) {
@@ -145,17 +159,6 @@ public class AdminAirdropService {
         );
         if (active == null || active != 1) {
             throw new IllegalArgumentException("account asset is not active for adjustment");
-        }
-    }
-
-    private void ensureSufficientAvailableBalance(String accountId, AdminAirdropCommand command) {
-        List<java.math.BigDecimal> availableAmounts = jdbcTemplate.query(
-                "SELECT available_amount FROM balance_projections WHERE account_id = ? AND asset_symbol = ? FOR UPDATE",
-                (resultSet, rowNumber) -> resultSet.getBigDecimal(1), accountId, command.assetSymbol()
-        );
-        // 負向沖銷一定先鎖定並檢查 read model 的可用餘額，避免 immutable journal 將帳戶推入負餘額。
-        if (availableAmounts.size() != 1 || availableAmounts.getFirst().compareTo(command.amount().abs()) < 0) {
-            throw new IllegalArgumentException("insufficient available balance for negative adjustment");
         }
     }
 
