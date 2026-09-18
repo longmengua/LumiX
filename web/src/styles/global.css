@@ -696,6 +696,9 @@ p,
 .admin-form-select__menu { position: absolute; z-index: 12; top: calc(100% + 0.45rem); right: 0; left: 0; display: grid; gap: 0.2rem; padding: 0.35rem; border: 1px solid rgba(103, 148, 224, 0.3); border-radius: 0.7rem; background: #061a3a; box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.38); }
 .admin-form-select__option { display: flex; align-items: center; gap: 0.62rem; inline-size: 100%; min-block-size: 2.65rem; padding: 0 0.6rem; border: 0; border-radius: 0.5rem; background: transparent; color: #e5efff; font: inherit; text-align: left; cursor: pointer; }
 .admin-form-select__option span { flex: 1 1 auto; }.admin-form-select__option:hover, .admin-form-select__option:focus-visible { outline: 0; background: rgba(59, 130, 246, 0.18); }.admin-form-select__option--selected { background: rgba(38, 111, 231, 0.32); }.admin-form-select__check { color: #8ac2ff; }
+.admin-form-select--destructive .admin-form-select__trigger { border-color: rgba(248, 113, 113, 0.62); background: rgba(91, 20, 35, 0.34); color: #ffe4e6; }
+.admin-form-select--destructive .admin-form-select__trigger:hover { border-color: rgba(252, 165, 165, 0.82); }
+.admin-form-select--destructive.admin-form-select--open .admin-form-select__trigger, .admin-form-select--destructive .admin-form-select__trigger:focus-visible { border-color: #fb7185; box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.17); }
 .admin-form-select--compact { flex: 0 0 9rem; }.admin-form-select--compact .admin-form-select__trigger { min-block-size: 3.1rem; padding-inline: 0.7rem; border: 1px solid rgba(103, 148, 224, 0.23); border-radius: 0.7rem; background: transparent; }.admin-form-select--compact .admin-form-select__menu { left: auto; min-inline-size: 10rem; }
 
 .admin-airdrop-form__remarks { padding-top: 1.45rem; border-top: 1px solid rgba(129, 166, 226, 0.13); }
@@ -1730,6 +1733,15 @@ p,
 .primary-button {
   background: linear-gradient(135deg, #60a5fa, #818cf8);
   color: #eff6ff;
+}
+
+.primary-button--danger {
+  background: linear-gradient(135deg, #e11d48, #be123c);
+  box-shadow: 0 0.55rem 1.25rem rgba(190, 24, 93, 0.24);
+}
+
+.primary-button--danger:hover:not(:disabled) {
+  background: linear-gradient(135deg, #f43f5e, #e11d48);
 }
 
 .secondary-button {
@@ -4583,12 +4595,55 @@ p,
 
 .modal-card__header {
   display: flex;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
 }
 
 .modal-card__header h2 {
-  margin: 6px 0 0;
+  margin: 0;
+  color: #f3f8ff;
+  font-size: 1.28rem;
+  letter-spacing: -0.01em;
+}
+
+.modal-card__header p {
+  max-inline-size: 31rem;
+  margin: 0.55rem 0 0;
+  color: rgba(191, 219, 254, 0.74);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.modal-card__dismiss {
+  display: inline-grid;
+  flex: 0 0 auto;
+  place-items: center;
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+  padding: 0;
+  border: 1px solid rgba(115, 162, 239, 0.2);
+  border-radius: 0.65rem;
+  background: rgba(13, 35, 73, 0.48);
+  color: rgba(205, 226, 255, 0.82);
+  cursor: pointer;
+}
+
+.modal-card__dismiss:hover,
+.modal-card__dismiss:focus-visible {
+  border-color: rgba(112, 173, 255, 0.6);
+  background: rgba(44, 103, 208, 0.18);
+  color: #f2f8ff;
+  outline: 0;
+}
+
+.modal-card__dismiss svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 2;
 }
 
 .modal-card__body {
@@ -4602,6 +4657,8 @@ p,
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(108, 151, 223, 0.14);
 }
 
 .sr-only {

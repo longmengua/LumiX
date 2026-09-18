@@ -4,8 +4,8 @@
 
 ## 快照資訊
 
-- 最後更新：2026-09-18
-- 基準 revision：`c5ab559`
+- 最後更新：2026-09-19
+- 基準 revision：`2b95ebb`
 - 工作區狀態：未提交；本快照以目前 working tree 為準
 - 前端：React 19.1、TypeScript 5.8、Vite 6.3、React Router DOM 7.6
 - 樣式：`web/src/styles/global.css` 與 `web/src/admin/components/AdminPageHero.css`
@@ -13,15 +13,15 @@
 
 ## 共同實作
 
-| 元件 | 路徑 | 責任 |
-| --- | --- | --- |
-| `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 只負責呈現 icon、標題、描述、chips、插圖與價值主張 slot；不含資料請求或 mutation |
-| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | 透明 WebP `picture`，依 viewport 載入 desktop／medium／small 資產 |
-| `AssetAdjustmentPanel` | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx` | 資產調整頁層；分別掛載獨立的發放與資產沖銷／調整表單 |
-| `GovernedAirdropForm` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 只建立正數 AIRDROP；不再選擇或提交 signed REVERSAL |
-| `AssetAdjustmentForm` | `web/src/admin/features/assets/AssetAdjustmentForm.tsx` | MANUAL_CORRECTION、COMPENSATION、BUSINESS_REVERSAL；後者只由 authoritative Ledger Entry lookup 推導 |
-| `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 唯讀對帳核驗；保留 `AssetAdjustmentAuditPanel` 舊名稱別名以相容既有 import |
-| `adminUserAssetSearch` | `web/src/admin/features/assets/adminUserAssetSearch.ts` | 以 adapter 統一名稱前綴查詢、精確 UUID detail 查詢與資產 projection |
+| 元件                       | 路徑                                                           | 責任                                                                                                  |
+| -------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `AdminPageHero`            | `web/src/admin/components/AdminPageHero.tsx`                   | 只負責呈現 icon、標題、描述、chips、插圖與價值主張 slot；不含資料請求或 mutation                      |
+| `AssetAdjustmentArtwork`   | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | 透明 WebP `picture`，依 viewport 載入 desktop／medium／small 資產                                     |
+| `AssetAdjustmentPanel`     | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx`       | 資產調整頁層；只掛載唯一的通用資產沖銷／調整表單                                                      |
+| `AssetAdjustmentForm`      | `web/src/admin/features/assets/AssetAdjustmentForm.tsx`        | MANUAL_CORRECTION、COMPENSATION、BUSINESS_REVERSAL；套用 Institutional Blue Hero 與 form surface      |
+| `AdminFormSelect`          | `web/src/admin/components/AdminFormSelect.tsx`                 | 共用受控下拉；提供深色 menu、選取狀態、鍵盤開啟與 Escape 關閉／焦點返回；可標記扣回為紅色 danger tone |
+| `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx`  | 唯讀對帳核驗；保留 `AssetAdjustmentAuditPanel` 舊名稱別名以相容既有 import                            |
+| `adminUserAssetSearch`     | `web/src/admin/features/assets/adminUserAssetSearch.ts`        | 以 adapter 統一名稱前綴查詢、精確 UUID detail 查詢與資產 projection                                   |
 
 ## 資產管理頁面
 
@@ -43,7 +43,7 @@
 
 ### `/admin/assets/adjustments`
 
-- 頁面：`AdminAssetsPage` → `AssetAdjustmentPanel` → `GovernedAirdropForm`（資產發放）與 `AssetAdjustmentForm`（資產沖銷／調整）。
+- 頁面：`AdminAssetsPage` → `AssetAdjustmentPanel` → `AssetAdjustmentForm`。舊 `GovernedAirdropForm` 已移除，通用調整表單保留完整 command 能力並沿用 Institutional Blue 設計；調整類型、方向與資產使用共用 `AdminFormSelect`。
 - 資產選項：`GET /api/admin/v1/assets/airdrops/configuration`，只列後端 ACTIVE 現貨資產。
 - 發放提交：`POST /api/admin/v1/assets/airdrops`，payload 為 `targetUserId`、`assetSymbol`、正數 `amount`、固定 `activityId=AIRDROP`、`reason`。
 - 通用調整：`POST /api/admin/v1/assets/adjustments`，以 `Idempotency-Key` 保護。支援 `MANUAL_CORRECTION`、`COMPENSATION`、`BUSINESS_REVERSAL`，所有 amount 為正 decimal string。

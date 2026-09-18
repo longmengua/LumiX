@@ -4,16 +4,16 @@
 
 ## 文件中繼資料
 
-| 項目 | 值 |
-| --- | --- |
-| 最後更新 | 2026-09-18 |
-| Repository revision | `c5ab559`（文件同步以工作區最新程式碼為準） |
-| 前端框架 | React 19.1 + TypeScript 5.8 + Vite 6.3 |
-| Router | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"` |
-| Styling | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
-| Icon system | 頁面功能 icon 使用 inline React SVG；`qrcode.react` 僅用於真實 UUID 的 SVG QR Code |
-| 前端根目錄 | `web/` |
-| UI Governance Version | `1.16` |
+| 項目                  | 值                                                                                                                                     |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 最後更新              | 2026-09-19                                                                                                                             |
+| Repository revision   | `2b95ebb`（文件同步以工作區最新程式碼為準）                                                                                            |
+| 前端框架              | React 19.1 + TypeScript 5.8 + Vite 6.3                                                                                                 |
+| Router                | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"`                                                                           |
+| Styling               | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
+| Icon system           | 頁面功能 icon 使用 inline React SVG；`qrcode.react` 僅用於真實 UUID 的 SVG QR Code                                                     |
+| 前端根目錄            | `web/`                                                                                                                                 |
+| UI Governance Version | `1.16`                                                                                                                                 |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -54,18 +54,18 @@
 
 路徑與頁面狀態等會快速變動的實作快照移至 [`LUMIX_UI_IMPLEMENTATION.md`](./LUMIX_UI_IMPLEMENTATION.md)；本節只保留穩定的架構入口與元件責任，不以治理規範取代程式碼。
 
-| 領域 | 真實路徑／實作 |
-| --- | --- |
-| Admin app entry | `web/src/admin.tsx` → `web/src/admin/AdminApp.tsx` |
-| Admin routes | `web/src/admin/routes/AdminRouter.tsx` |
-| Admin shell | `web/src/admin/layout/AdminLayout.tsx`、`AdminHeader.tsx`、`AdminTopNav.tsx` |
-| Feature pages | `web/src/admin/features/` |
-| Admin-only shared components | `web/src/admin/components/` |
-| Cross-surface shared components | `web/src/components/base/`、`web/src/components/layout/` |
-| Global styles and root variables | `web/src/styles/global.css` |
-| i18n dictionary | `web/src/i18n/dictionaries/zh-TW.ts`、`en-US.ts` |
-| Feature artwork | 資產調整 Hero raster artwork 位於 `web/src/assets/hero/`；feature component 位於 `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` |
-| Static asset root | `web/public/`；可由 Vite import 的 Hero raster assets 位於 `web/src/assets/hero/` |
+| 領域                             | 真實路徑／實作                                                                                                                                  |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| Admin app entry                  | `web/src/admin.tsx` → `web/src/admin/AdminApp.tsx`                                                                                              |
+| Admin routes                     | `web/src/admin/routes/AdminRouter.tsx`                                                                                                          |
+| Admin shell                      | `web/src/admin/layout/AdminLayout.tsx`、`AdminHeader.tsx`、`AdminTopNav.tsx`                                                                    |
+| Feature pages                    | `web/src/admin/features/`                                                                                                                       |
+| Admin-only shared components     | `web/src/admin/components/`                                                                                                                     |
+| Cross-surface shared components  | `web/src/components/base/`、`web/src/components/layout/`                                                                                        |
+| Global styles and root variables | `web/src/styles/global.css`                                                                                                                     |
+| i18n dictionary                  | `web/src/i18n/dictionaries/zh-TW.ts`、`en-US.ts`                                                                                                |
+| Feature artwork                  | 資產調整 Hero raster artwork 位於 `web/src/assets/hero/`；feature component 位於 `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` |
+| Static asset root                | `web/public/`；可由 Vite import 的 Hero raster assets 位於 `web/src/assets/hero/`                                                               |
 
 後台服務入口以 `/admin` 為 basename；`AdminRouter` 內的 `assets/*` 與 `users/*` 因此分別對應瀏覽器路徑 `/admin/assets/...` 與 `/admin/users/...`。
 
@@ -75,30 +75,30 @@
 
 來源：`web/src/styles/global.css` 的 `.admin-layout`。這些不是 `:root` 全站 token；前台不應假設可用。
 
-| 分類 | 真實 token | 現值／用途 |
-| --- | --- | --- |
-| Surface | `--color-bg-surface` | `#07172f`，深色 surface |
-| Control surface | `--color-bg-control` | `rgba(3, 16, 40, .65)`，input／chip 底色 |
-| Subtle border | `--color-border-subtle` | `rgba(100, 153, 242, .25)` |
-| Focus border | `--color-border-focus` | `rgba(87, 155, 255, .6)` |
-| Primary text | `--color-text-primary` | `#edf5ff` |
-| Secondary text | `--color-text-secondary` | `#adbedc` |
-| Muted text | `--color-text-muted` | `#8fa5c8`，Hero value supporting text |
-| Primary accent | `--color-accent-primary` | `#73b1ff` |
-| Secondary accent | `--color-accent-secondary` | `#8579f4` |
-| Hero surface | `--gradient-hero` | radial blue glow + navy linear gradient |
-| Surface shadow | `--shadow-surface` | `0 14px 36px rgba(0, 6, 22, .18)` |
-| Hero shadow / glow | `--shadow-hero` | deep surface shadow + restrained blue outer glow |
-| Hero rim | `--color-hero-rim` | `rgba(103, 165, 255, .52)`，Hero thin cool-blue border |
-| Hero inner highlight | `--color-hero-highlight` | `rgba(207, 229, 255, .16)`，頂部 edge lighting |
-| Hero value text | `--color-hero-value` | `#d8e9ff`，右側 value proposition |
-| Card / hero radius | `--radius-card` | `1.25rem`（20px） |
-| Control radius | `--radius-control` | `.7rem`（約 11px） |
-| Pill radius | `--radius-pill` | `999px` |
-| Hero title | `--font-size-hero-title` | `2.5rem`（40px） |
-| Body | `--font-size-body` | `.9375rem`（15px） |
-| Helper | `--font-size-helper` | `.8125rem`（13px） |
-| Spacing | `--space-2/3/4/5/6/8` | `.5/.75/1/1.25/1.5/2rem`（8/12/16/20/24/32px） |
+| 分類                 | 真實 token                 | 現值／用途                                             |
+| -------------------- | -------------------------- | ------------------------------------------------------ |
+| Surface              | `--color-bg-surface`       | `#07172f`，深色 surface                                |
+| Control surface      | `--color-bg-control`       | `rgba(3, 16, 40, .65)`，input／chip 底色               |
+| Subtle border        | `--color-border-subtle`    | `rgba(100, 153, 242, .25)`                             |
+| Focus border         | `--color-border-focus`     | `rgba(87, 155, 255, .6)`                               |
+| Primary text         | `--color-text-primary`     | `#edf5ff`                                              |
+| Secondary text       | `--color-text-secondary`   | `#adbedc`                                              |
+| Muted text           | `--color-text-muted`       | `#8fa5c8`，Hero value supporting text                  |
+| Primary accent       | `--color-accent-primary`   | `#73b1ff`                                              |
+| Secondary accent     | `--color-accent-secondary` | `#8579f4`                                              |
+| Hero surface         | `--gradient-hero`          | radial blue glow + navy linear gradient                |
+| Surface shadow       | `--shadow-surface`         | `0 14px 36px rgba(0, 6, 22, .18)`                      |
+| Hero shadow / glow   | `--shadow-hero`            | deep surface shadow + restrained blue outer glow       |
+| Hero rim             | `--color-hero-rim`         | `rgba(103, 165, 255, .52)`，Hero thin cool-blue border |
+| Hero inner highlight | `--color-hero-highlight`   | `rgba(207, 229, 255, .16)`，頂部 edge lighting         |
+| Hero value text      | `--color-hero-value`       | `#d8e9ff`，右側 value proposition                      |
+| Card / hero radius   | `--radius-card`            | `1.25rem`（20px）                                      |
+| Control radius       | `--radius-control`         | `.7rem`（約 11px）                                     |
+| Pill radius          | `--radius-pill`            | `999px`                                                |
+| Hero title           | `--font-size-hero-title`   | `2.5rem`（40px）                                       |
+| Body                 | `--font-size-body`         | `.9375rem`（15px）                                     |
+| Helper               | `--font-size-helper`       | `.8125rem`（13px）                                     |
+| Spacing              | `--space-2/3/4/5/6/8`      | `.5/.75/1/1.25/1.5/2rem`（8/12/16/20/24/32px）         |
 
 ### Root layout variables
 
@@ -110,20 +110,20 @@
 
 ## 5. Canonical Components
 
-| Component | Path | Purpose / important props | Styling | Status |
-| --- | --- | --- | --- | --- |
-| `AdminPageHero` | `web/src/admin/components/AdminPageHero.tsx` | 管理頁 Hero；`icon`、`title`、`description`、`chips`、`illustration`、`slogan`、`supportingText`；只組合呈現，不含 mutation 或資料請求 | `web/src/admin/components/AdminPageHero.css` | Canonical（資產調整、使用者） |
-| `AssetAdjustmentHeroIcon` | `web/src/admin/features/assets/AssetAdjustmentHeroIcon.tsx` | 84×84 內嵌 SVG 紫藍 icon tile | feature SVG + `global.css` 的 `--asset-adjustment-icon-*` aliases | Feature-specific |
-| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | supplied V2 raster Hero artwork；`picture` 依 source variant 載入透明 WebP | `AdminPageHero.css` control box；assets 位於 `web/src/assets/hero/` | Feature-specific |
-| `PageHeader` | `web/src/components/layout/PageHeader.tsx` | 外層頁名、description、actions；不是 dashboard Hero | `global.css` | Canonical base component |
-| `Card` | `web/src/components/base/Card.tsx` | 通用 card，`title`、`children`、`className` | `global.css` | Canonical base component |
-| `Badge` | `web/src/components/base/Badge.tsx` | neutral／success／warning／danger 狀態標籤 | `global.css` | Canonical base component |
-| `CopyButton` | `web/src/components/base/CopyButton.tsx` | 複製 UUID、email 等識別值；`value`、`label`、`copiedLabel`；含 Clipboard API 與受限環境 fallback | `.copy-button` in `global.css` | Canonical base component（管理端使用者列表、客戶端個人中心） |
-| `LoadingState`／`EmptyState`／`ErrorState` | `web/src/components/base/State.tsx` | 真實資料 loading／empty／error 呈現 | `global.css` | Canonical base component |
-| `FormSelect` | `web/src/admin/features/assets/GovernedAirdropForm.tsx` | 資產調整局部深色 listbox，props 為 `ariaLabel`、`options`、`value`、`onChange`、`compact`、`disabled` | `.admin-form-select*` in `global.css` | Local / not yet extracted |
-| `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx` | 讀取既有資產調整的對帳核驗結果；loading、empty 與 error 均重用共享 State 元件；保留舊名稱相容別名 | `.admin-asset-audit*` in `global.css` | Feature-specific readonly panel |
-| `AssetFundingPage` | `web/src/pages/assets/AssetFundingPage.tsx` | `/assets/deposit`、`/assets/withdraw` 共用的方式入口；平台內部轉入顯示 UUID QR、轉出提交真實命令 | `.asset-funding-*` in `global.css` | Feature-specific |
-| `AssetSymbolSelect` | `web/src/features/assets/AssetSymbolSelect.tsx` | 現貨資產下拉；呼叫端提供真實 asset options、value 與 onChange，不可建立 fallback 幣種 | `.admin-form-select*` in `global.css` | Canonical asset control（帳戶劃轉、平台內部轉出） |
+| Component                                  | Path                                                           | Purpose / important props                                                                                                              | Styling                                                             | Status                                                       |
+| ------------------------------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `AdminPageHero`                            | `web/src/admin/components/AdminPageHero.tsx`                   | 管理頁 Hero；`icon`、`title`、`description`、`chips`、`illustration`、`slogan`、`supportingText`；只組合呈現，不含 mutation 或資料請求 | `web/src/admin/components/AdminPageHero.css`                        | Canonical（資產調整、使用者）                                |
+| `AssetAdjustmentHeroIcon`                  | `web/src/admin/features/assets/AssetAdjustmentHeroIcon.tsx`    | 84×84 內嵌 SVG 紫藍 icon tile                                                                                                          | feature SVG + `global.css` 的 `--asset-adjustment-icon-*` aliases   | Feature-specific                                             |
+| `AssetAdjustmentArtwork`                   | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | supplied V2 raster Hero artwork；`picture` 依 source variant 載入透明 WebP                                                             | `AdminPageHero.css` control box；assets 位於 `web/src/assets/hero/` | Feature-specific                                             |
+| `PageHeader`                               | `web/src/components/layout/PageHeader.tsx`                     | 外層頁名、description、actions；不是 dashboard Hero                                                                                    | `global.css`                                                        | Canonical base component                                     |
+| `Card`                                     | `web/src/components/base/Card.tsx`                             | 通用 card，`title`、`children`、`className`                                                                                            | `global.css`                                                        | Canonical base component                                     |
+| `Badge`                                    | `web/src/components/base/Badge.tsx`                            | neutral／success／warning／danger 狀態標籤                                                                                             | `global.css`                                                        | Canonical base component                                     |
+| `CopyButton`                               | `web/src/components/base/CopyButton.tsx`                       | 複製 UUID、email 等識別值；`value`、`label`、`copiedLabel`；含 Clipboard API 與受限環境 fallback                                       | `.copy-button` in `global.css`                                      | Canonical base component（管理端使用者列表、客戶端個人中心） |
+| `LoadingState`／`EmptyState`／`ErrorState` | `web/src/components/base/State.tsx`                            | 真實資料 loading／empty／error 呈現                                                                                                    | `global.css`                                                        | Canonical base component                                     |
+| `FormSelect`                               | `web/src/admin/features/assets/GovernedAirdropForm.tsx`        | 資產調整局部深色 listbox，props 為 `ariaLabel`、`options`、`value`、`onChange`、`compact`、`disabled`                                  | `.admin-form-select*` in `global.css`                               | Local / not yet extracted                                    |
+| `AssetReconciliationPanel`                 | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx`  | 讀取既有資產調整的對帳核驗結果；loading、empty 與 error 均重用共享 State 元件；保留舊名稱相容別名                                      | `.admin-asset-audit*` in `global.css`                               | Feature-specific readonly panel                              |
+| `AssetFundingPage`                         | `web/src/pages/assets/AssetFundingPage.tsx`                    | `/assets/deposit`、`/assets/withdraw` 共用的方式入口；平台內部轉入顯示 UUID QR、轉出提交真實命令                                       | `.asset-funding-*` in `global.css`                                  | Feature-specific                                             |
+| `AssetSymbolSelect`                        | `web/src/features/assets/AssetSymbolSelect.tsx`                | 現貨資產下拉；呼叫端提供真實 asset options、value 與 onChange，不可建立 fallback 幣種                                                  | `.admin-form-select*` in `global.css`                               | Canonical asset control（帳戶劃轉、平台內部轉出）            |
 
 目前沒有 shared React `Input`、`Select`、`Textarea`、`Button` 或第三方 icon component。一般 control 是原生元素加 `.input`、`.primary-button`、`.secondary-button` class。使用者 Hero 也不是 `AdminPageHero` consumer。
 
@@ -137,19 +137,19 @@
 
 目前 `AdminPageHero` geometry（`AdminPageHero.css`）：
 
-| 項目 | 實際設定 |
-| --- | --- |
-| Layout | CSS Grid；以既有 `identity`／`visual` wrapper 的 `display: contents` 映射 icon、copy、artwork、value 四欄 |
-| Minimum height | desktop 220px；desktop visual validation result 約 222px |
-| Padding | desktop horizontal `32px`；container ≤1024px 時 `22px 26px` |
-| Radius | `--radius-card`（20px） |
-| Icon box | `84×84px`；容器 ≤480px 改為 `64×64px` |
-| Icon-to-copy gap | `--space-6`（24px） |
-| Title | 40px / weight 740 / line-height 1.16；≤480px 為 28px |
-| Description | 15px / line-height 1.6 |
-| Chips | 13px；padding 8px 12px；gap 8px；pill radius |
-| Visual region | desktop artwork column `minmax(360px, 400px)` + value `minmax(180px, 210px)`；column gap 24px |
-| Illustration box | desktop `390px × 220px`；container ≤1180px 時 `300px × 169px`，≤1024px 時 `230px × 129px` |
+| 項目             | 實際設定                                                                                                  |
+| ---------------- | --------------------------------------------------------------------------------------------------------- |
+| Layout           | CSS Grid；以既有 `identity`／`visual` wrapper 的 `display: contents` 映射 icon、copy、artwork、value 四欄 |
+| Minimum height   | desktop 220px；desktop visual validation result 約 222px                                                  |
+| Padding          | desktop horizontal `32px`；container ≤1024px 時 `22px 26px`                                               |
+| Radius           | `--radius-card`（20px）                                                                                   |
+| Icon box         | `84×84px`；容器 ≤480px 改為 `64×64px`                                                                     |
+| Icon-to-copy gap | `--space-6`（24px）                                                                                       |
+| Title            | 40px / weight 740 / line-height 1.16；≤480px 為 28px                                                      |
+| Description      | 15px / line-height 1.6                                                                                    |
+| Chips            | 13px；padding 8px 12px；gap 8px；pill radius                                                              |
+| Visual region    | desktop artwork column `minmax(360px, 400px)` + value `minmax(180px, 210px)`；column gap 24px             |
+| Illustration box | desktop `390px × 220px`；container ≤1180px 時 `300px × 169px`，≤1024px 時 `230px × 129px`                 |
 
 此 pattern 是呈現規範，不授權自行為任何頁面加入 chips、改文案或新增 Hero；需有明確任務範圍與真實產品語意。
 
@@ -162,10 +162,10 @@ Hero 插圖優先採用 inline SVG + CSS/SVG gradients，避免外部圖片 URL�
 - 可重複掛載 SVG 的 `<defs>` 使用 `useId()` 產生唯一 ID，避免 gradient/filter collision。
 - Raster assets 必須具明確 handoff、透明背景、`alt=""`／`aria-hidden` 與 responsive source 策略；不得使用外部 URL 或 base64。
 
-| Illustration | Path | Implementation | Status |
-| --- | --- | --- | --- |
-| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | `<picture>`：desktop `asset-adjustment-hero-illustration.webp`、viewport ≤1440px 的 narrow/tablet `asset-adjustment-hero-illustration-md.webp`、≤760px small fallback `asset-adjustment-hero-illustration-sm.webp`，均在 `web/src/assets/hero/` | Integrated |
-| 使用者 Hero decoration | `web/src/admin/features/users/AdminUsersPage.tsx` + `.admin-users-hero__orbs*` in `global.css` | CSS gradients + pseudo elements + spans；不是獨立 component | Legacy page-specific |
+| Illustration             | Path                                                                                           | Implementation                                                                                                                                                                                                                                  | Status               |
+| ------------------------ | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------- |
+| `AssetAdjustmentArtwork` | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx`                                 | `<picture>`：desktop `asset-adjustment-hero-illustration.webp`、viewport ≤1440px 的 narrow/tablet `asset-adjustment-hero-illustration-md.webp`、≤760px small fallback `asset-adjustment-hero-illustration-sm.webp`，均在 `web/src/assets/hero/` | Integrated           |
+| 使用者 Hero decoration   | `web/src/admin/features/users/AdminUsersPage.tsx` + `.admin-users-hero__orbs*` in `global.css` | CSS gradients + pseudo elements + spans；不是獨立 component                                                                                                                                                                                     | Legacy page-specific |
 
 沒有名為 `UserHeroIllustration` 的 component；外部協作者不得假設其存在。
 
@@ -410,6 +410,7 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 資產總覽移除第二層帳戶 tab，改由單一資產分頁導航搭配現貨／合約明細卡片呈現，避免總覽內重複導航。
 
 ### v1.7 — 2026-09-17（working tree）
+
 - 資產前台顯示文字改由雙語字典提供；中文介面不再直接呈現 `SPOT`／`FUTURES`、帳本參照類型或開發用英文說明，英文介面維持完整英文顯示。
 - 劃轉表單保留 `SPOT`／`FUTURES` API 值，只將選單顯示名稱本地化；資產歷史的帳戶類型與參照類型同樣只在顯示層轉換，不改動後端資料契約。
 - 客戶端與管理端資產相關文案改用產品語言，移除「唯讀、投影、快照、不可變帳本、adapter、Journal」等不必要的內部術語；資料狀態改以「目前餘額、資料狀態、資產異動紀錄」呈現。
@@ -475,3 +476,10 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 將資產管理的穩定語意規則補入治理文件：受控命令不得冒充通用資產調整引擎，會計語意不得跨帳戶任意加總，正式 UI 不得暗示不存在的 backend capability。
 - 新增 `docs/ai/LUMIX_UI_IMPLEMENTATION.md` 承載 route、component、endpoint、資料缺口等短期實作快照，避免治理規範與程式碼版本耦合。
 - `AssetAdjustmentPanel` 明確包裝 `GovernedAirdropForm`；資產搜尋 adapter 重用管理端使用者查詢並支援既有 UUID detail 查詢，Email 搜尋仍誠實標示不可用。
+
+### v1.17 — 2026-09-19（working tree）
+
+- 資產調整頁移除舊 `GovernedAirdropForm`，只保留具完整 command 能力的通用調整表單，並沿用 Institutional Blue Hero、surface 與確認摘要；不變更 server API、帳本或權限邊界。
+- 通用調整的調整類型、方向與資產改用共用 `AdminFormSelect`；展開選單、hover／focus、鍵盤開啟與 Escape 關閉皆遵循同一套 Institutional Blue 控制項規範。
+- 扣回與業務沖銷屬不可逆的風險操作：只將已選擇的扣回方向、提交按鈕與確認動作標記為紅色 danger tone；一般補入與其他輸入維持 Institutional Blue。
+- 共用 `ConfirmDialog` 的標頭改為可及的關閉 icon，底部只保留一個具名「取消」操作；標題、說明與操作列使用一致的深色 surface、分隔與 focus 樣式。

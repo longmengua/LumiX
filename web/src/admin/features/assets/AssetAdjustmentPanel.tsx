@@ -1,7 +1,6 @@
-import { GovernedAirdropForm } from './GovernedAirdropForm';
 import { AssetAdjustmentForm } from './AssetAdjustmentForm';
 
-/** 資產調整頁層與目前唯一可執行 command 分離，避免把歷史 /airdrops endpoint 誤當通用 adjustment engine。 */
+/** 資產調整頁只保留具完整 command 能力的受控表單。 */
 export function AssetAdjustmentPanel() {
-  return <><GovernedAirdropForm /><AssetAdjustmentForm /></>;
+  return <AssetAdjustmentForm />;
 }

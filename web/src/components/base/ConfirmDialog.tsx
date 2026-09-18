@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { ReactNode } from "react";
 
 type ConfirmDialogProps = {
   open: boolean;
@@ -6,6 +6,7 @@ type ConfirmDialogProps = {
   description: string;
   confirmLabel: string;
   cancelLabel: string;
+  confirmTone?: "default" | "danger";
   note?: string;
   onCancel: () => void;
   onConfirm: () => void;
@@ -18,6 +19,7 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   cancelLabel,
+  confirmTone = "default",
   note,
   onCancel,
   onConfirm,
@@ -38,26 +40,48 @@ export function ConfirmDialog({
       >
         <div className="modal-card__header">
           <div>
-            <p className="eyebrow">Confirmation</p>
             <h2 id="confirm-dialog-title">{title}</h2>
             <p>{description}</p>
           </div>
-          <button className="ghost-button" type="button" onClick={onCancel}>
-            {cancelLabel}
+          {/* 標頭只保留無障礙關閉 icon；底部的取消按鈕才是唯一具名的取消操作，避免重複文案。 */}
+          <button
+            className="modal-card__dismiss"
+            type="button"
+            onClick={onCancel}
+            aria-label={cancelLabel}
+          >
+            <CloseIcon />
           </button>
         </div>
 
-        {children || note ? <div className="modal-card__body">{children}{note ? <p className="modal-card__note">{note}</p> : null}</div> : null}
+        {children || note ? (
+          <div className="modal-card__body">
+            {children}
+            {note ? <p className="modal-card__note">{note}</p> : null}
+          </div>
+        ) : null}
 
         <div className="modal-card__actions">
           <button className="secondary-button" type="button" onClick={onCancel}>
             {cancelLabel}
           </button>
-          <button className="primary-button" type="button" onClick={onConfirm}>
+          <button
+            className={`primary-button${confirmTone === "danger" ? " primary-button--danger" : ""}`}
+            type="button"
+            onClick={onConfirm}
+          >
             {confirmLabel}
           </button>
         </div>
       </section>
     </div>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg viewBox="0 0 24 24" aria-hidden="true">
+      <path d="m6 6 12 12M18 6 6 18" />
+    </svg>
   );
 }
