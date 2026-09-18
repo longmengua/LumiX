@@ -103,6 +103,7 @@ security bypass
 - 交易所核心資料必須可追蹤、可重放、可審計。
 - 帳本必須 immutable append-only；修正只能追加 reversal / adjustment entry。
 - API 需要 idempotency 設計，尤其是下單、取消、提款、入金確認。
+- 不得自行大量新增 test case。新增測試前，必須先向使用者說明新增目的、覆蓋的風險／不變量、是否與既有測試重複，以及未來是否可能因規格或實作演進而衝突、失效或需要反覆修改；取得使用者確認後才能新增。既有測試回歸失敗時所需的最小修正不受此限，但仍須說明原因。
 - 不允許用 TODO / placeholder 偽裝完成。
 - 不得使用 mock、fake adapter、固定餘額、假地址、假 txid 或假成功狀態作為任何開發路徑的替代實作；測試 fixture 僅可存在於測試 source set，且不得被 application runtime 載入。
 - 真實 wallet deposit／withdrawal、私鑰、HSM/MPC、鏈上 provider 與廣播可依 phase 相依開始施工，但每一條路徑都必須有具名 provider、secret isolation、權限審核、immutable audit、idempotency、reconciliation、失敗即拒絕與對應 runtime test；未滿足任一條件不得啟用。

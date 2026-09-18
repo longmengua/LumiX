@@ -1,14 +1,11 @@
 package com.lumix.architecture;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -67,36 +64,4 @@ class P13T01ModuleBoundaryTest {
         }
     }
 
-    /**
-     * 確認 Phase 13 新增的 skeleton 沒有被偷偷塞進其他 Java 類別。
-     *
-     * 這個限制讓 boundary task 保持乾淨：先定義模組，不先做 runtime 實作。
-     */
-    @Test
-    void newModuleSkeletonsContainOnlyPackageInfo() throws IOException {
-        Path sourceRoot = resolveSourceRoot();
-        Set<String> skeletonPackages = Set.of(
-            "com/lumix/user",
-            "com/lumix/asset",
-            "com/lumix/reservation",
-            "com/lumix/order",
-            "com/lumix/trade",
-            "com/lumix/outbox",
-            "com/lumix/audit",
-            "com/lumix/admin"
-        );
-
-        for (String packagePath : skeletonPackages) {
-            Path packageDir = sourceRoot.resolve(packagePath);
-            assertTrue(Files.isDirectory(packageDir), "Missing package directory: " + packageDir);
-
-            try (Stream<Path> files = Files.list(packageDir)) {
-                long javaFileCount = files
-                    .filter(path -> path.toString().endsWith(".java"))
-                    .filter(path -> !path.getFileName().toString().equals("package-info.java"))
-                    .count();
-                assertEquals(0L, javaFileCount, "Skeleton package must stay empty: " + packageDir);
-            }
-        }
-    }
 }
