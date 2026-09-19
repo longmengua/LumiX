@@ -44,12 +44,10 @@
 ### `/admin/assets/adjustments`
 
 - 頁面：`AdminAssetsPage` → `AssetAdjustmentPanel` → `AssetAdjustmentForm`。舊 `GovernedAirdropForm` 已移除，通用調整表單保留完整 command 能力並沿用 Institutional Blue 設計；調整類型、方向與資產使用共用 `AdminFormSelect`。
-- 資產選項：`GET /api/admin/v1/assets/airdrops/configuration`，只列後端 ACTIVE 現貨資產。
-- 發放提交：`POST /api/admin/v1/assets/airdrops`，payload 為 `targetUserId`、`assetSymbol`、正數 `amount`、固定 `activityId=AIRDROP`、`reason`。
+- 資產選項：`GET /api/admin/v1/assets/adjustments/configuration`，只列後端 ACTIVE 現貨資產。
 - 通用調整：`POST /api/admin/v1/assets/adjustments`，以 `Idempotency-Key` 保護。支援 `MANUAL_CORRECTION`、`COMPENSATION`、`BUSINESS_REVERSAL`，所有 amount 為正 decimal string。
 - 來源查詢：`GET /api/admin/v1/assets/adjustments/reversal-sources/{ledgerEntryId}` 只回傳窄範圍 authoritative source、已沖回與剩餘額；不建立全域 ledger browser。
-- 舊 `POST /api/admin/v1/assets/airdrops` 的 `activityId=REVERSAL` 已拒絕；歷史 ambiguous REVERSAL 保留 immutable evidence，不會 backfill 或猜測來源關係。
-- 服務固定以 `system:airdrop:spot` 作為對手帳戶，目標帳戶固定為使用者 `SPOT`；這是受控現有命令，不是通用 adjustment engine。
+- 舊 `/api/admin/v1/assets/airdrops` 寫入與設定端點已移除；歷史資料仍保留 immutable evidence，不會 backfill 或猜測來源關係。
 - Generic Adjustment 使用 `system:asset-adjustment:spot` 的 `ASSET_ADJUSTMENT_COUNTERPARTY` purpose；目前 UI 與 command capability 只支援 SPOT。
 - 所有入帳、冪等、權限、ledger 與 audit 行為均在 server；前端只保留欄位驗證、確認摘要與請求狀態。
 

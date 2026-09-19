@@ -5,9 +5,9 @@ import { AdminFormSelect } from "../../components/AdminFormSelect";
 import { AdminPageHero } from "../../components/AdminPageHero";
 import {
   createAdminAssetAdjustment,
-  fetchAdminAirdropAssetOptions,
+  fetchAdminAssetAdjustmentOptions,
   fetchAdminAssetAdjustmentReversalSource,
-  type AdminAirdropAssetOption,
+  type AdminAssetAdjustmentOption,
   type AdminAssetAdjustmentRequest,
   type AdminReversalSource,
   type AssetAdjustmentType,
@@ -35,7 +35,7 @@ const initial = (
 /** 通用調整保留既有 command 與驗證，只重用 Institutional Blue 的 Hero 與表單 surface。 */
 export function AssetAdjustmentForm() {
   const [type, setType] = useState<AssetAdjustmentType>("MANUAL_CORRECTION");
-  const [assets, setAssets] = useState<AdminAirdropAssetOption[]>([]);
+  const [assets, setAssets] = useState<AdminAssetAdjustmentOption[]>([]);
   const [form, setForm] = useState<AdminAssetAdjustmentRequest>(
     initial("MANUAL_CORRECTION"),
   );
@@ -46,7 +46,7 @@ export function AssetAdjustmentForm() {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   useEffect(() => {
-    void fetchAdminAirdropAssetOptions()
+    void fetchAdminAssetAdjustmentOptions()
       .then((next) => {
         setAssets(next);
         setForm((current) => ({

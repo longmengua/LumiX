@@ -85,15 +85,6 @@ class AdminAssetAdjustmentServiceIntegrationTest {
   assertEquals("CREDIT",f.jdbc.queryForObject("SELECT direction FROM ledger_entries WHERE ledger_journal_id=? AND account_id='user:spot'",String.class,result.ledgerJournalId()));
   assertEquals(0,new BigDecimal("30").compareTo(new BigDecimal(f.balance())));
  }
- @Test void airdropUsesFinalPurposeSeedOnCandidateSchema() throws Exception {
-  Fixture f=new Fixture(); f.seed(new BigDecimal("100"));
-  SuperAdminAccessService access=mock(SuperAdminAccessService.class); doNothing().when(access).requireActiveSuperAdmin(f.actor);
-  AdminAirdropService airdrop=new AdminAirdropService(access,f.jdbc,new TransactionalLedgerPostingService(f.jdbc,new LedgerInvariantPolicy(),new LedgerBalanceProjectionUpdater(f.jdbc)));
-  AdminAirdropResult result=f.tx.execute(x->airdrop.grant(f.actor,new AdminAirdropCommand("user","USDT",new BigDecimal("25"),"AIRDROP","candidate baseline")));
-  assertFalse(result.replayed()); assertEquals(0,new BigDecimal("125").compareTo(new BigDecimal(f.balance())));
-  assertEquals("DEBIT",f.jdbc.queryForObject("SELECT direction FROM ledger_entries WHERE ledger_journal_id=? AND account_id='system:airdrop:spot'",String.class,result.ledgerJournalId()));
-  assertEquals("AIRDROP_FUNDING",f.jdbc.queryForObject("SELECT account_purpose FROM accounts WHERE account_id='system:airdrop:spot'",String.class));
- }
  @Test void businessReversalRejectsUnknownSystemAndAdjustmentSources() throws Exception {
   Fixture f=new Fixture(); f.seed(new BigDecimal("100")); long journals=f.count("ledger_journals");
   assertCode(ApiErrorCode.SOURCE_LEDGER_ENTRY_NOT_FOUND,()->f.run(new AssetAdjustmentCommand(AssetAdjustmentType.BUSINESS_REVERSAL,null,null,null,null,BigDecimal.ONE,null,null,null,999L,null,"missing","missing")));
@@ -130,11 +121,7 @@ class AdminAssetAdjustmentServiceIntegrationTest {
   Fixture f=new Fixture(); f.seed(new BigDecimal("100"));
   f.jdbc.update("UPDATE accounts SET account_purpose=NULL WHERE account_id='system:airdrop:spot'"); f.jdbc.update("UPDATE accounts SET account_purpose='AIRDROP_FUNDING' WHERE account_id='system:asset-adjustment:spot'");
   assertCode(ApiErrorCode.INVALID_ACCOUNT_PURPOSE,()->f.run(new AssetAdjustmentCommand(AssetAdjustmentType.MANUAL_CORRECTION,"user","SPOT","USDT",AssetAdjustmentDirection.CREDIT,BigDecimal.ONE,null,null,null,null,null,"wrong purpose","purpose-adjustment")));
-  f.jdbc.update("UPDATE accounts SET account_purpose=NULL WHERE account_id='system:asset-adjustment:spot'"); f.jdbc.update("UPDATE accounts SET account_purpose='ASSET_ADJUSTMENT_COUNTERPARTY' WHERE account_id='system:airdrop:spot'");
-  SuperAdminAccessService access=mock(SuperAdminAccessService.class); doNothing().when(access).requireActiveSuperAdmin(f.actor);
-  AdminAirdropService airdrop=new AdminAirdropService(access,f.jdbc,new TransactionalLedgerPostingService(f.jdbc,new LedgerInvariantPolicy(),new LedgerBalanceProjectionUpdater(f.jdbc)));
-  assertThrows(IllegalStateException.class,()->f.tx.execute(x->airdrop.grant(f.actor,new AdminAirdropCommand("user","USDT",BigDecimal.ONE,"AIRDROP","wrong purpose"))));
- }
+}
  private static Object concurrent(Fixture f,CountDownLatch ready,CountDownLatch start,String key) { ready.countDown(); try { start.await(); return f.run(new AssetAdjustmentCommand(AssetAdjustmentType.BUSINESS_REVERSAL,null,null,null,null,new BigDecimal("70"),null,null,null,1L,null,"parallel",key)); } catch (Exception e) { return e; } }
  private static void assertCode(ApiErrorCode expected, org.junit.jupiter.api.function.Executable action) { assertEquals(expected,assertThrows(AssetAdjustmentException.class,action).getErrorCode()); }
  private static final class Fixture { final JdbcDataSource ds=new JdbcDataSource(); final JdbcTemplate jdbc; final TransactionTemplate tx; final AssetAdjustmentService service; final AuthenticatedUser actor=new AuthenticatedUser("admin","a@x","a");

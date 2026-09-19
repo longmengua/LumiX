@@ -479,7 +479,7 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 ### v1.17 — 2026-09-19（working tree）
 
-- 資產調整頁移除舊 `GovernedAirdropForm`，只保留具完整 command 能力的通用調整表單，並沿用 Institutional Blue Hero、surface 與確認摘要；不變更 server API、帳本或權限邊界。
+- 資產調整頁移除舊 `GovernedAirdropForm` 與 `/assets/airdrops` API，通用表單改由 `/assets/adjustments` 的 command、設定與來源查詢端點完整承接；不變更帳本或權限邊界。
 - 通用調整的調整類型、方向與資產改用共用 `AdminFormSelect`；展開選單、hover／focus、鍵盤開啟與 Escape 關閉皆遵循同一套 Institutional Blue 控制項規範。
 - 資產調整表單的必填米字號必須使用紅色，讓欄位要求可被快速辨識；主送出與確認動作維持 Institutional Blue。
 - 共用 `ConfirmDialog` 的標頭改為可及的關閉 icon，底部只保留一個具名「取消」操作；標題、說明與操作列使用一致的深色 surface、分隔與 focus 樣式。
