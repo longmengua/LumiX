@@ -20,4 +20,5 @@ if [[ -n "${PIDS}" ]]; then
   sleep 1
 fi
 
-exec ./mvnw spring-boot:run
+# 不繼承使用者層的私有 mirror；此開發入口只允許公開 Maven Central，避免本機 Nexus 可用性阻斷 API 啟動。
+exec ./mvnw --settings .mvn/settings-public.xml --update-snapshots spring-boot:run
