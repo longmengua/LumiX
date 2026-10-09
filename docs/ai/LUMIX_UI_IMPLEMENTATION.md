@@ -17,9 +17,10 @@
 | -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `AdminPageHero`            | `web/src/admin/components/AdminPageHero.tsx`                   | 只負責呈現 icon、標題、描述、chips、插圖與價值主張 slot；不含資料請求或 mutation                 |
 | `AssetAdjustmentArtwork`   | `web/src/admin/features/assets/AssetAdjustmentHeroArtwork.tsx` | 透明 WebP `picture`，依 viewport 載入 desktop／medium／small 資產                                |
-| `AssetAdjustmentPanel`     | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx`       | 資產調整頁層；只掛載唯一的通用資產沖銷／調整表單                                                 |
+| `AssetAdjustmentPanel`     | `web/src/admin/features/assets/AssetAdjustmentPanel.tsx`       | 資產沖銷頁層；只掛載唯一的通用資產沖銷表單                                                       |
 | `AssetAdjustmentForm`      | `web/src/admin/features/assets/AssetAdjustmentForm.tsx`        | MANUAL_CORRECTION、COMPENSATION、BUSINESS_REVERSAL；套用 Institutional Blue Hero 與 form surface |
 | `AdminFormSelect`          | `web/src/admin/components/AdminFormSelect.tsx`                 | 共用受控下拉；提供深色 menu、選取狀態、鍵盤開啟與 Escape 關閉／焦點返回                          |
+| `admin-text-input`         | `web/src/styles/global.css`                                    | 管理端文字輸入共用 class；以使用者列表搜尋欄為色彩與 focus UX 基準                                  |
 | `AssetReconciliationPanel` | `web/src/admin/features/assets/AssetAdjustmentAuditPanel.tsx`  | 唯讀對帳核驗；保留 `AssetAdjustmentAuditPanel` 舊名稱別名以相容既有 import                       |
 | `adminUserAssetSearch`     | `web/src/admin/features/assets/adminUserAssetSearch.ts`        | 以 adapter 統一名稱前綴查詢、精確 UUID detail 查詢與資產 projection                              |
 
@@ -45,7 +46,7 @@
 
 - 頁面：`AdminAssetsPage` → `AssetAdjustmentPanel` → `AssetAdjustmentForm`。舊 `GovernedAirdropForm` 已移除，通用調整表單保留完整 command 能力並沿用 Institutional Blue 設計；調整類型、方向與資產使用共用 `AdminFormSelect`。
 - 資產選項：`GET /api/admin/v1/assets/adjustments/configuration`，只列後端 ACTIVE 現貨資產。
-- 通用調整：`POST /api/admin/v1/assets/adjustments`，以 `Idempotency-Key` 保護。支援 `MANUAL_CORRECTION`、`COMPENSATION`、`BUSINESS_REVERSAL`，所有 amount 為正 decimal string。
+- 通用調整：`POST /api/admin/v1/assets/adjustments`，以 `Idempotency-Key` 保護。支援 `MANUAL_CORRECTION`、`COMPENSATION`、`BUSINESS_REVERSAL`，所有 amount 為正 decimal string；表單只接受當次命令需要的欄位，選填備註不作為提交前置條件。
 - 來源查詢：`GET /api/admin/v1/assets/adjustments/reversal-sources/{ledgerEntryId}` 只回傳窄範圍 authoritative source、已沖回與剩餘額；不建立全域 ledger browser。
 - 舊 `/api/admin/v1/assets/airdrops` 寫入與設定端點已移除；歷史資料仍保留 immutable evidence，不會 backfill 或猜測來源關係。
 - Generic Adjustment 使用 `system:asset-adjustment:spot` 的 `ASSET_ADJUSTMENT_COUNTERPARTY` purpose；目前 UI 與 command capability 只支援 SPOT。
@@ -69,7 +70,7 @@
 
 ## Current visual gaps
 
-- 資產調整表單的 `FormSelect` 仍是 feature-local listbox；尚未抽成跨頁共用的可及選單元件。
+- 資產沖銷表單的 `FormSelect` 仍是 feature-local listbox；尚未抽成跨頁共用的可及選單元件。
 - 部分舊頁面仍有局部色值與狀態色，尚未全面遷移至語意 token；此次未擴大 CSS refactor。
 
 此快照只描述目前可驗證的實作；新增或移除 endpoint、component、token、tab 或 responsive 行為時，請同步更新本文件，並在視覺政策或 UX 原則變動時更新治理文件。

@@ -7,5 +7,5 @@ import java.math.BigDecimal;
  */
 public record AssetAdjustmentCommand(
         AssetAdjustmentType adjustmentType, String userId, String accountType, String assetSymbol,
-        AssetAdjustmentDirection direction, BigDecimal amount, String sourceBusinessType, String sourceBusinessId,
-        Long sourceJournalId, Long sourceLedgerEntryId, String incidentReference, String reason, String idempotencyKey) { }
+        AssetAdjustmentDirection direction, BigDecimal amount, Long sourceLedgerEntryId, String reason,
+        String idempotencyKey) { }

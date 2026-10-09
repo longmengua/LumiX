@@ -27,9 +27,6 @@ const initial = (
   direction: "CREDIT",
   amount: "",
   reason: "",
-  sourceBusinessType: "",
-  sourceBusinessId: "",
-  incidentReference: "",
 });
 
 /** 通用調整保留既有 command 與驗證，只重用 Institutional Blue 的 Hero 與表單 surface。 */
@@ -87,8 +84,8 @@ export function AssetAdjustmentForm() {
   }
   function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!positive(form.amount) || !form.reason.trim()) {
-      setError("請輸入正數數量及原因。");
+    if (!positive(form.amount)) {
+      setError("請輸入正數數量。");
       return;
     }
     if (
@@ -107,13 +104,6 @@ export function AssetAdjustmentForm() {
       setError("請完整填寫使用者、帳戶、資產與方向。");
       return;
     }
-    if (
-      Boolean(form.sourceBusinessType?.trim()) !==
-      Boolean(form.sourceBusinessId?.trim())
-    ) {
-      setError("關聯業務必須同時填寫類型與 ID。");
-      return;
-    }
     setError(null);
     setConfirming(true);
   }
@@ -128,16 +118,10 @@ export function AssetAdjustmentForm() {
               sourceLedgerEntryId: source?.ledgerEntryId,
               amount: form.amount,
               reason: form.reason,
-              incidentReference: form.incidentReference || undefined,
-              sourceBusinessType: form.sourceBusinessType || undefined,
-              sourceBusinessId: form.sourceBusinessId || undefined,
             }
           : {
               ...form,
               adjustmentType: type,
-              incidentReference: form.incidentReference || undefined,
-              sourceBusinessType: form.sourceBusinessType || undefined,
-              sourceBusinessId: form.sourceBusinessId || undefined,
             };
       const response = await createAdminAssetAdjustment(
         request,
@@ -147,7 +131,7 @@ export function AssetAdjustmentForm() {
         `調整已完成，Journal #${response.ledgerJournalId}${response.replayed ? "（安全重送）" : ""}`,
       );
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "資產調整未完成。");
+      setError(caught instanceof Error ? caught.message : "資產沖銷未完成。");
     } finally {
       setSubmitting(false);
     }
@@ -156,7 +140,7 @@ export function AssetAdjustmentForm() {
     <section className="admin-airdrop-form" aria-label="資產沖銷與調整">
       <AdminPageHero
         icon={<AssetAdjustmentHeroIcon />}
-        title="資產調整"
+        title="資產沖銷"
         description="以受控命令處理人工修正、系統補償與業務沖銷，並由後端留下完整帳務與稽核紀錄。"
         chips={[
           { id: "correction", label: "人工修正" },
@@ -195,7 +179,7 @@ export function AssetAdjustmentForm() {
                 <span className="admin-airdrop-form__required">*</span>
               </span>
               <input
-                className="input"
+                className="input admin-text-input"
                 value={sourceId}
                 onChange={(event) => setSourceId(event.target.value)}
               />
@@ -214,7 +198,7 @@ export function AssetAdjustmentForm() {
             <div className="admin-airdrop-form__grid">
               <label className="field">
                 <span className="field__label">
-                  方向 <span className="admin-airdrop-form__required">*</span>
+                  操作 <span className="admin-airdrop-form__required">*</span>
                 </span>
                 <AdminFormSelect
                   ariaLabel="方向"
@@ -230,10 +214,10 @@ export function AssetAdjustmentForm() {
               </label>
               <label className="field">
                 <span className="field__label">
-                  使用者 <span className="admin-airdrop-form__required">*</span>
+                  用戶 ID <span className="admin-airdrop-form__required">*</span>
                 </span>
                 <input
-                  className="input"
+                  className="input admin-text-input"
                   value={form.userId}
                   onChange={(event) => change("userId", event.target.value)}
                 />
@@ -242,7 +226,7 @@ export function AssetAdjustmentForm() {
                 <span className="field__label">
                   帳戶 <span className="admin-airdrop-form__required">*</span>
                 </span>
-                <input className="input" value="SPOT" readOnly />
+                <input className="input admin-text-input" value="SPOT" readOnly />
               </label>
               <label className="field">
                 <span className="field__label">
@@ -268,49 +252,19 @@ export function AssetAdjustmentForm() {
                 數量 <span className="admin-airdrop-form__required">*</span>
               </span>
               <input
-                className="input"
+                className="input admin-text-input"
                 inputMode="decimal"
                 value={form.amount}
                 onChange={(event) => change("amount", event.target.value)}
               />
             </label>
-            <label className="field">
-              <span className="field__label">事件／工單編號（選填）</span>
-              <input
-                className="input"
-                value={form.incidentReference ?? ""}
-                onChange={(event) =>
-                  change("incidentReference", event.target.value)
-                }
-              />
-            </label>
-            <label className="field">
-              <span className="field__label">來源業務類型（選填）</span>
-              <input
-                className="input"
-                value={form.sourceBusinessType ?? ""}
-                onChange={(event) =>
-                  change("sourceBusinessType", event.target.value)
-                }
-              />
-            </label>
-            <label className="field">
-              <span className="field__label">來源業務 ID（選填）</span>
-              <input
-                className="input"
-                value={form.sourceBusinessId ?? ""}
-                onChange={(event) =>
-                  change("sourceBusinessId", event.target.value)
-                }
-              />
-            </label>
           </div>
           <label className="field">
             <span className="field__label">
-              原因 <span className="admin-airdrop-form__required">*</span>
+              備註（選填）
             </span>
             <textarea
-              className="input"
+              className="input admin-text-input"
               maxLength={256}
               value={form.reason}
               onChange={(event) => change("reason", event.target.value)}
@@ -351,7 +305,7 @@ export function AssetAdjustmentForm() {
       </form>
       <ConfirmDialog
         open={confirming}
-        title={type === "BUSINESS_REVERSAL" ? "確認業務沖銷" : "確認資產調整"}
+        title={type === "BUSINESS_REVERSAL" ? "確認業務沖銷" : "確認資產沖銷"}
         description="提交後將以 append-only ledger 建立新的 compensating entries。"
         confirmLabel={type === "BUSINESS_REVERSAL" ? "確認沖銷" : "確認調整"}
         cancelLabel="取消"

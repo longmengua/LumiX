@@ -7,13 +7,13 @@
 | 項目                  | 值                                                                                                                                     |
 | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
 | 最後更新              | 2026-09-19                                                                                                                             |
-| Repository revision   | `2b95ebb`（文件同步以工作區最新程式碼為準）                                                                                            |
+| Repository revision   | `449dd71`（文件同步以工作區最新程式碼為準）                                                                                            |
 | 前端框架              | React 19.1 + TypeScript 5.8 + Vite 6.3                                                                                                 |
 | Router                | React Router DOM 7.6，後台 `BrowserRouter basename="/admin"`                                                                           |
 | Styling               | 集中式 CSS：`web/src/styles/global.css`；共用 Hero 額外使用 `AdminPageHero.css`；沒有 Tailwind、CSS Modules、SCSS 或 styled-components |
 | Icon system           | 頁面功能 icon 使用 inline React SVG；`qrcode.react` 僅用於真實 UUID 的 SVG QR Code                                                     |
 | 前端根目錄            | `web/`                                                                                                                                 |
-| UI Governance Version | `1.16`                                                                                                                                 |
+| UI Governance Version | `1.17`                                                                                                                                 |
 
 ## 1. 設計語言：LumiX Institutional Blue
 
@@ -199,7 +199,7 @@ Unless explicitly authorized, do not alter `AdminHeader` / top nav, `AdminLayout
 - Activity values 必須來自真實 server capability；不可用視覺名稱取代 request value，也不可為未存在的 command 加入假選項。
 - Asset options 必須由受保護的後端設定提供；沒有資料時停用提交，不使用固定幣種或假 fallback。
 - Amount 維持既有受控 decimal 字串與正負號語意，不得使用 JavaScript floating-point 取代。
-- User ID、asset、amount、reason 驗證、備註長度、reset、loading／disabled、duplicate-submit guard 與 server result/error feedback 均受保護。
+- 用戶 ID、asset、amount、選填備註長度、reset、loading／disabled、duplicate-submit guard 與 server result/error feedback 均受保護。
 - 權限、immutable ledger、audit、idempotency 與 server-side decision 不得由 browser component 取代或繞過。
 
 ### Asset adjustment reconciliation protected behavior
@@ -467,9 +467,10 @@ Do not record an uncommitted implementation as a released revision. If a working
 
 ### v1.15 — 2026-09-18（working tree）
 
-- 資產管理工作台重新定位為用戶資產、資產分析與資產調整；舊 `/assets/audit` 保持 redirect 相容，並在資產分析中對應真實的對帳核驗 tab。
-- 用戶資產改讀既有使用者搜尋與資產 projection，採右側 drawer 顯示明細；資產分析其他維度不建立 fake accounting data。
-- 資產調整送出前補上確認摘要，保留既有 server payload、validation、permission、ledger、audit 與 idempotency 行為。
+- 資產管理工作台重新定位為用戶資產、資產審計與資產沖銷；舊 `/assets/audit` 保持 redirect 相容，並在資產審計中對應真實的對帳核驗 tab。
+- 用戶資產改讀既有使用者搜尋與資產 projection，採右側 drawer 顯示明細；資產審計其他維度不建立 fake accounting data。
+- 資產沖銷送出前補上確認摘要，保留既有 server payload、validation、permission、ledger、audit 與 idempotency 行為。
+- 管理端對外名稱統一使用「資產沖銷」；內部 component、route、API 與 command identifier 維持既有 `AssetAdjustment`／`adjustments`，不得因文字調整改變帳本與權限邊界。
 
 ### v1.16 — 2026-09-18
 
@@ -482,4 +483,5 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 資產調整頁移除舊 `GovernedAirdropForm` 與 `/assets/airdrops` API，通用表單改由 `/assets/adjustments` 的 command、設定與來源查詢端點完整承接；不變更帳本或權限邊界。
 - 通用調整的調整類型、方向與資產改用共用 `AdminFormSelect`；展開選單、hover／focus、鍵盤開啟與 Escape 關閉皆遵循同一套 Institutional Blue 控制項規範。
 - 資產調整表單的必填米字號必須使用紅色，讓欄位要求可被快速辨識；主送出與確認動作維持 Institutional Blue。
+- 使用者列表搜尋欄確立為管理端文字輸入基準；後續 text input 與 textarea 必須重用 `.admin-text-input` 的色彩、hover 與 focus 行為。資產調整表單的背景與文字輸入已對齊此基準；dropdown 維持 `.admin-form-select*` 規範。
 - 共用 `ConfirmDialog` 的標頭改為可及的關閉 icon，底部只保留一個具名「取消」操作；標題、說明與操作列使用一致的深色 surface、分隔與 focus 樣式。

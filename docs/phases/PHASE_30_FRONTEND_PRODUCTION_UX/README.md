@@ -42,6 +42,8 @@ empty 與 error；沒有 ledger entry 時不顯示 mock history。這不是 ledg
 
 ## Gate
 
+2026-09-22 資產沖銷欄位收斂：移除事件／工單編號、來源業務類型與來源業務 ID，並同步刪除後端 command／HTTP contract、唯讀回應與 baseline schema 的預留欄位；備註改為選填。沖銷來源仍僅由原始 Ledger Entry ID 的 server-side 查詢推導，保留 immutable ledger、idempotency、權限與 audit 邊界。已通過後端 schema／資產沖銷整合測試與前端 TypeScript 型別檢查。`HUMAN_REVIEW_REQUIRED: yes`，因本變更觸及 admin 資產命令與 ledger evidence；不代表 production-ready。
+
 2026-09-17 資產調整 Hero 呈現更新：已接入共用 `AdminPageHero`、第一批後台 semantic tokens、中英 chips 與獨立 SVG artwork；移除旧 Hero layout CSS。窄螢幕保留導覽項目並改為上方排列。表單與 API 邏輯未改；驗證採 TypeScript、後台 build 與隔離瀏覽器 fixture，不代表真實資金 runtime 驗收。
 
 `HUMAN_REVIEW_REQUIRED: yes`；P29 contract、P26 risk、P27 admin policy 與 P28 audit evidence 未通過前，不得啟用 production-affecting UI flow。

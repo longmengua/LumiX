@@ -3,9 +3,9 @@ import { createAdminApiError, notifyAdminUnauthorized } from './adminError';
 
 export type AssetAdjustmentType = 'MANUAL_CORRECTION' | 'COMPENSATION' | 'BUSINESS_REVERSAL';
 export type AssetAdjustmentDirection = 'CREDIT' | 'DEBIT';
-export type AdminAssetAdjustmentRequest = { adjustmentType: AssetAdjustmentType; userId?: string; accountType?: 'SPOT'; assetSymbol?: string; direction?: AssetAdjustmentDirection; amount: string; sourceBusinessType?: string; sourceBusinessId?: string; sourceLedgerEntryId?: string; incidentReference?: string; reason: string; };
+export type AdminAssetAdjustmentRequest = { adjustmentType: AssetAdjustmentType; userId?: string; accountType?: 'SPOT'; assetSymbol?: string; direction?: AssetAdjustmentDirection; amount: string; sourceLedgerEntryId?: string; reason: string; };
 export type AdminAssetAdjustmentResult = { adjustmentId: string; ledgerJournalId: string; replayed: boolean; };
-export type AdminReversalSource = { ledgerEntryId: string; journalId: string | null; userId: string | null; userEmail: string | null; accountType: string | null; assetSymbol: string | null; originalDirection: AssetAdjustmentDirection | null; originalAmount: string | null; alreadyReversed: string | null; remainingReversible: string | null; sourceBusinessType: string | null; sourceBusinessId: string | null; eligible: boolean; ineligibleReason: string | null; };
+export type AdminReversalSource = { ledgerEntryId: string; journalId: string | null; userId: string | null; userEmail: string | null; accountType: string | null; assetSymbol: string | null; originalDirection: AssetAdjustmentDirection | null; originalAmount: string | null; alreadyReversed: string | null; remainingReversible: string | null; eligible: boolean; ineligibleReason: string | null; };
 export type AdminAssetAdjustmentOption = { assetSymbol: string; internalName: string; precisionScale: number; };
 export type AdminSpotAssetConfiguration = AdminAssetAdjustmentOption & { status: 'ACTIVE' | 'HALTED' | 'DELISTED'; updatedAt: string; };
 export type CreateAdminSpotAssetConfigurationRequest = { assetSymbol: string; internalName: string; precisionScale: number; };

@@ -248,8 +248,8 @@ class P12T09SchemaVerificationTest {
                     "created_at");
             assertTableColumns(connection, "admin_asset_adjustments",
                     "adjustment_id", "adjustment_type", "direction", "user_id", "account_id", "account_type",
-                    "asset_symbol", "amount", "source_business_type", "source_business_id", "source_journal_id",
-                    "source_ledger_entry_id", "incident_reference", "ledger_journal_id", "actor_id", "reason", "status", "created_at");
+                    "asset_symbol", "amount", "source_journal_id", "source_ledger_entry_id", "ledger_journal_id",
+                    "actor_id", "reason", "status", "created_at");
             assertSystemAccountPurpose(connection, "system:airdrop:spot", "AIRDROP_FUNDING");
             assertSystemAccountPurpose(connection, "system:asset-adjustment:spot", "ASSET_ADJUSTMENT_COUNTERPARTY");
 

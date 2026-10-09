@@ -8,7 +8,7 @@ COMPLETED_FOR_INFRASTRUCTURE_FOUNDATION
 HUMAN_REVIEW_REQUIRED: yes
 ```
 
-本文件與 root `docker-compose.yml` 建立可重複的 runtime foundation：React 前端、Spring Boot 後端、PostgreSQL primary 與 Redis。它讓後續 API / user runtime 可以接到實際服務，而不是前端 mock；它不是 production launch、帳號認證完成或資金服務啟用的證明。
+本文件與 root `docker-compose.yml` 建立本機依賴 runtime foundation：PostgreSQL primary、Redis 與單節點 Kafka。`server`、`web`、`admin-web` 均在主機以各自開發程序啟動，不可放入 Compose；這讓前後端變更可即時更新，同時保留三個獨立 service 與 port。它不是 production launch、帳號認證完成或資金服務啟用的證明。
 
 ## 本機／預備環境啟動
 
@@ -16,12 +16,19 @@ HUMAN_REVIEW_REQUIRED: yes
 cp .env.example .env
 # 在 .env 置換 POSTGRES_PASSWORD；不得提交 .env
 docker compose config
-docker compose up --build -d
+docker compose up -d postgres redis kafka
 docker compose ps
-curl http://127.0.0.1:8080/actuator/health
 ```
 
-前台入口預設為 `http://127.0.0.1:8088`，管理端入口預設為 `http://127.0.0.1:8089/admin/login`。Compose 將兩個入口各自的 `/api/*` 同源反向代理至 server，避免把 backend host 寫進 browser bundle 或以 CORS 放寬安全邊界。兩者分別使用 `web` 與 `admin-web` service、獨立 build target 與 Nginx route boundary；不可再合併成單一 SPA service。
+另開三個主機終端機，分別啟動 Spring Boot、前台 Vite 與後台 Vite。server 必須連到 loopback 的依賴容器；前後台仍透過 Vite proxy 各自同源連到 `server:8080`，不可跨接對方 API：
+
+```text
+server:    ./mvnw spring-boot:run                    -> http://127.0.0.1:8080
+web:       npm run dev:client                        -> http://127.0.0.1:8088
+admin-web: npm run dev:admin                         -> http://127.0.0.1:8089/admin/login
+```
+
+啟動 server 前，依本機 `.env` 將資料庫連線指向 `127.0.0.1:${LUMIX_POSTGRES_PORT}`，Redis 指向 `127.0.0.1:${LUMIX_REDIS_PORT}`；不得使用 Compose 內部 hostname `postgres` 或 `redis`。Compose 只管理依賴容器，不提供 application image、Nginx 或 browser bundle。
 
 停止服務但保留測試資料：
 

@@ -53,7 +53,7 @@ Surface 使用深色半透明底、克制漸層、薄藍框、柔和內光及低
 
 ## Forms、dropdown、buttons、tables
 
-- Input／Select／Textarea 採 dark surface、薄 blue-gray 邊框、明確 focus、適中圓角和最小 glow。同列 control 高度一致，label 不以 placeholder 取代，required／錯誤需有文字與欄位關聯。
+- Text Input／Textarea 的權威色彩與互動基準為管理端使用者列表搜尋欄，實作使用 `.admin-text-input`：`3.35rem` 高、`0.85rem` 圓角、`rgba(3, 15, 36, .68)` surface、冷藍細邊；hover 只微幅加強邊框，focus 使用亮藍邊與低強度 3px ring。後續文字輸入須重用此 class，不得逐頁另訂配色。Input／Select／Textarea 同列 control 高度一致，label 不以 placeholder 取代，required／錯誤需有文字與欄位關聯。
 - Dropdown 沿用 `.admin-form-select*` 的深色視覺：選取高亮、check、低對比 hover、明確展開狀態。這是統一外觀方向，不表示既有局部 `FormSelect` 的可及性已全面驗證；共享前須檢查 Arrow Up／Down、Enter／Space、Escape、Tab、focus 返回、ARIA 與 disabled。不要只複製選單 CSS。
 - Primary button 採 institutional blue 或克制藍漸層；secondary 採深色半透明與薄框。保留 loading、disabled、防重送及既有 confirmation，不藉視覺修改添加資產操作流程。
 - Tables 先確保辨識、對齊、列分隔、數值精度與操作可達，避免巢狀 card。管理資料表／展開列仍依前端 README 使用 Flexbox；必要表格橫向捲動不等於允許整頁溢出。

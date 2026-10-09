@@ -11,7 +11,7 @@ export function AssetLedgerHistoryList() {
   if (errorCode && items.length === 0) return <ErrorState title={t('assets.historyErrorTitle')} description={t('assets.historyErrorDescription')} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} />;
   return (
     <section className="card asset-ledger-history" aria-labelledby="asset-ledger-history-title">
-      <div className="asset-ledger-history__header"><div><h2 className="card__title" id="asset-ledger-history-title">{t('assets.historyTitle')}</h2><p>{t('assets.historyHint')}</p></div><span>{t('assets.historySourceValue')}</span></div>
+      <div className="asset-ledger-history__header"><div><h2 className="card__title" id="asset-ledger-history-title">{t('assets.historyTitle')}</h2><p>{t('assets.historyHint')}</p></div></div>
       {items.length === 0 ? <EmptyState title={t('assets.historyEmptyTitle')} description={t('assets.historyEmptyDescription')} /> : (
         <div className="asset-ledger-history__list">
           {items.map((item) => { const occurred = formatDateTimeParts(item.postedAt); return <article className="asset-ledger-history__item" key={item.entryId}>

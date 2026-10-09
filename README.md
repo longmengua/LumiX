@@ -20,3 +20,7 @@ LumiX 的目標是建立一套可正式營運的線上交易所系統，涵蓋�
 - `web/`：React + TypeScript + Vite 前端
 - `server/`：Java 21 + Spring Boot 3 後端
 - `docs/`：治理、規劃、架構、產品、phase 與 AI 協作文件
+
+## 本機開發執行方式
+
+Docker Compose 僅啟動有狀態依賴：PostgreSQL、Redis、Kafka。Spring Boot API、前台 Vite 與後台 Vite 必須以本機程序各自啟動，分別使用 `8080`、`8088`、`8089`；後台 Vite 的 HMR 會直接反映原始碼變更。完整的環境變數與啟動順序見 `docs/operations/compose-runtime-foundation.md`。

@@ -1897,23 +1897,19 @@ CREATE TABLE admin_asset_adjustments (
     account_type VARCHAR(16) NOT NULL,
     asset_symbol VARCHAR(32) NOT NULL REFERENCES assets(asset_symbol),
     amount NUMERIC(36,18) NOT NULL,
-    source_business_type VARCHAR(32), source_business_id VARCHAR(128),
     source_journal_id BIGINT REFERENCES ledger_journals(ledger_journal_id),
     source_ledger_entry_id BIGINT REFERENCES ledger_entries(ledger_entry_id),
-    incident_reference VARCHAR(128),
     ledger_journal_id BIGINT NOT NULL UNIQUE REFERENCES ledger_journals(ledger_journal_id),
     actor_id VARCHAR(64) NOT NULL REFERENCES users(user_id),
-    reason VARCHAR(256) NOT NULL, status VARCHAR(16) NOT NULL DEFAULT 'COMPLETED',
+    reason VARCHAR(256), status VARCHAR(16) NOT NULL DEFAULT 'COMPLETED',
     created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT ck_admin_asset_adjustments_type CHECK (adjustment_type IN ('MANUAL_CORRECTION','COMPENSATION','BUSINESS_REVERSAL')),
     CONSTRAINT ck_admin_asset_adjustments_direction CHECK (direction IN ('CREDIT','DEBIT')),
     CONSTRAINT ck_admin_asset_adjustments_amount CHECK (amount > 0),
     CONSTRAINT ck_admin_asset_adjustments_status CHECK (status = 'COMPLETED'),
-    CONSTRAINT ck_admin_asset_adjustments_business_reference CHECK ((source_business_type IS NULL) = (source_business_id IS NULL)),
     CONSTRAINT ck_admin_asset_adjustments_reversal_source CHECK (adjustment_type <> 'BUSINESS_REVERSAL' OR source_ledger_entry_id IS NOT NULL)
 );
 CREATE INDEX idx_admin_asset_adjustments_user_created ON admin_asset_adjustments (user_id, created_at DESC);
 CREATE INDEX idx_admin_asset_adjustments_source_entry ON admin_asset_adjustments (source_ledger_entry_id);
-CREATE INDEX idx_admin_asset_adjustments_business ON admin_asset_adjustments (source_business_type, source_business_id);
 CREATE INDEX idx_admin_asset_adjustments_journal ON admin_asset_adjustments (ledger_journal_id);
 COMMENT ON TABLE admin_asset_adjustments IS '受權 admin 的 completed asset adjustment command；資金效果只能在 immutable ledger entries 中取得。';
