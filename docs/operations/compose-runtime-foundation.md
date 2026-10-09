@@ -23,10 +23,12 @@ docker compose ps
 另開三個主機終端機，分別啟動 Spring Boot、前台 Vite 與後台 Vite。server 必須連到 loopback 的依賴容器；前後台仍透過 Vite proxy 各自同源連到 `server:8080`，不可跨接對方 API：
 
 ```text
-server:    ./mvnw spring-boot:run                    -> http://127.0.0.1:8080
+server:    ./scripts/start-dev-server.sh             -> http://127.0.0.1:8080
 web:       npm run dev:client                        -> http://127.0.0.1:8088
 admin-web: npm run dev:admin                         -> http://127.0.0.1:8089/admin/login
 ```
+
+上述三個本機開發啟動入口會在啟動前釋放自己的固定 port（分別為 8080、8088、8089），並拒絕在 `production` 環境執行。這是為了防止 Vite 或 Spring Boot 因 port 被占用而漂移到其他埠；正式環境不得使用這些 launcher。
 
 啟動 server 前，依本機 `.env` 將資料庫連線指向 `127.0.0.1:${LUMIX_POSTGRES_PORT}`，Redis 指向 `127.0.0.1:${LUMIX_REDIS_PORT}`；不得使用 Compose 內部 hostname `postgres` 或 `redis`。Compose 只管理依賴容器，不提供 application image、Nginx 或 browser bundle。
 
