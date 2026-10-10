@@ -69,6 +69,12 @@
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
+        <dependency>
+            <!-- 僅用於 Ethereum JSON-RPC 的唯讀觀測；本專案不引入 Credentials 或任何私鑰簽章路徑。 -->
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>4.12.3</version>
+        </dependency>
     </dependencies>
 
     <build>

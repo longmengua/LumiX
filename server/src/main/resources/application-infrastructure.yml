@@ -84,6 +84,16 @@ lumix:
   security:
     # 本機 Compose HTTP 驗證維持 false；公開 deployment 必須由 TLS ingress 覆蓋為 true。
     require-https: ${LUMIX_SECURITY_REQUIRE_HTTPS:false}
+  ethereum:
+    # 預設關閉，避免缺少受控 RPC secret 時 scanner 意外嘗試連 Ethereum Mainnet。
+    observation-enabled: ${LUMIX_ETHEREUM_OBSERVATION_ENABLED:false}
+    rpc-url: ${LUMIX_ETHEREUM_RPC_URL:}
+    chain-id: ${LUMIX_ETHEREUM_CHAIN_ID:1}
+    connect-timeout: ${LUMIX_ETHEREUM_CONNECT_TIMEOUT:PT5S}
+    read-timeout: ${LUMIX_ETHEREUM_READ_TIMEOUT:PT15S}
+  withdrawal:
+    # 未接入經審核的 custody/MPC/HSM provider 前永遠維持 false；application 不持有 private key。
+    enabled: ${LUMIX_WITHDRAWAL_ENABLED:false}
   admin:
     super-admin:
       # 只在尚無 principal 時指定啟用信收件人；啟用後與資料庫信箱不符會 fail closed，絕不是授權白名單。

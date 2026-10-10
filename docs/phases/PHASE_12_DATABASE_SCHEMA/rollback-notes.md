@@ -4,16 +4,14 @@ Schema rollback in production is risky. Prefer forward fixes after data exists.
 
 ## Phase 12 rollback policy
 
-- Never edit applied migrations V001-V008.
-- Use a new corrective migration if a schema gap is found after the migration has been shared.
-- Keep `V005__create_wallet_lifecycle_schema.sql`, `V006__create_reservation_schema.sql`, `V007__normalize_wallet_lifecycle_schema.sql`, and `V008__create_outbox_audit_idempotency_tables.sql` intact once published.
-- If P12-T09 review finds a missing index or constraint, add a new migration instead of rewriting the earlier file.
-- P12-T10 is a review gate only; it does not add schema and does not change rollback semantics.
+- 目前只有 `V001__baseline.sql`，用於尚未上線且可清空的本機開發資料庫。
+- 在此期間 schema 變更可直接整併進 V001，但每次都必須刪除本機資料庫與 Flyway history 後重新初始化。
+- 一旦 schema 已共享、已有需保存資料或進入任何上線環境，禁止再改寫 V001；任何缺口都必須以新的 corrective migration 修正。
 
 ## 在正式資料之前
 
-- Drop and recreate database is acceptable in local/dev only.
-- Migration can be rewritten only before shared application.
+- 只限本機／開發環境：停止 application 後，drop and recreate LumiX database，再由 Flyway 重跑 V001。
+- 不得以 Flyway repair 掩蓋 baseline 變更；清空資料庫是唯一允許的初始化方式。
 
 ## 在共享環境上線後
 

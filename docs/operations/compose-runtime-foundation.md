@@ -29,7 +29,7 @@ admin-web: npm run dev:admin                         -> http://127.0.0.1:8089/ad
 ```
 
 上述三個本機開發啟動入口會在啟動前釋放自己的固定 port（分別為 8080、8088、8089），並拒絕在 `production` 環境執行。這是為了防止 Vite 或 Spring Boot 因 port 被占用而漂移到其他埠；正式環境不得使用這些 launcher。
-API launcher 只會透過 `server/.mvn/settings-public.xml` 的 Maven Central 設定下載公開相依，不會使用使用者層設定中的私有 Nexus mirror。
+API launcher 會載入 root `.env`、啟用本機 `infrastructure` profile，並由 Compose 的 PostgreSQL／Redis 變數推導 loopback application topology；缺少資料庫名稱、帳號或密碼時會拒絕啟動。它只會透過 `server/.mvn/settings-public.xml` 的 Maven Central 設定下載公開相依，不會使用使用者層設定中的私有 Nexus mirror。
 
 啟動 server 前，依本機 `.env` 將資料庫連線指向 `127.0.0.1:${LUMIX_POSTGRES_PORT}`，Redis 指向 `127.0.0.1:${LUMIX_REDIS_PORT}`；不得使用 Compose 內部 hostname `postgres` 或 `redis`。Compose 只管理依賴容器，不提供 application image、Nginx 或 browser bundle。
 

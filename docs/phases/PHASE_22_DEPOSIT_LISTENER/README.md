@@ -8,6 +8,8 @@ COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION
 
 P22-T01 到 P22-T04 已完成 immutable address ownership、chain observation、finality/health 與 reconciliation/handoff contract；runtime、chain connection、secret、schema 與 credit 尚未開始。逐卡 approve 機制依人類指示暫停。
 
+`P22-R01 Ethereum Mainnet observation runtime` 已依使用者指定的 ETH／官方 ERC-20 USDT scope 開始施工；目前只建立 secret-safe RPC／資產白名單／finality 與 schema 增量，尚未啟用 RPC、地址派發、掃描、credit 或任何提款功能。詳見 `p22-r01-ethereum-mainnet-observation-runtime.md`。
+
 ## 目標與依賴
 
 建立 provider/chain-neutral 的入金地址所有權與鏈上觀測 foundation。施工必須先完成並通過 P21 review，並沿用 P13 identity/asset、P14 immutable ledger 的既有邊界；本 phase 不會 credit 資產。
