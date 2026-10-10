@@ -28,6 +28,7 @@ AI_MODEL_GATE.md         不同 agent 的能力邊界
 AI_CONTINUE_PROMPT_V3.md 接續施工提示詞
 CODEX_PHASE_PROMPTS.md   phase 實作 / review 提示詞片段
 AI_DOCUMENT_SPLIT_PLAN.md 為什麼這樣拆文件與 token 策略
+codex-task-rules.md       Codex 歷史 task 規則與限制
 ```
 
 ## 閱讀建議

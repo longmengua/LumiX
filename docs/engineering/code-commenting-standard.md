@@ -79,3 +79,7 @@
 - AI 在完成任何任務時，review summary 必須說明 comments 是否完成。
 - 若新增或修改程式碼，必須檢查是否有足夠註解支撐後續維護。
 - 若是高風險變更，註解與文件要一起被視為交付的一部分。
+
+## 文件位置
+
+正式文件位置受 [文件位置規範](../governance/documentation-location-policy.md) 約束：文件只能放在 repository root 的 `docs/`，不得在服務或 source 目錄另建 `docs/` 或 README 規格副本。

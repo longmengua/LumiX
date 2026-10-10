@@ -146,6 +146,7 @@ security bypass
 - 架構、產品、後端、前端、營運、exchange-core 文件各自留在對應主題資料夾。
 - Phase 任務、task status、implementation notes 只放 `docs/phases/`。
 - 若新增文件不屬於上述分類，必須先更新對應 `README.md` 的路由說明，再新增檔案。
+- 正式文件只可置於 repository root 的 `docs/` 與其子目錄；禁止在 `server/`、前端服務目錄、`src/`、`resources/` 或 migration 目錄新增或保留文件。
 
 允許：
 

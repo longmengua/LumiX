@@ -31,7 +31,7 @@ AGENTS.md
 AI_AGENT.md
 AI_PROGRESS.md
 docs/ai/AI_CONTEXT_ROUTING.md
-server/docs/backend-module-boundary.md
+docs/backend/backend-module-boundary.md
 ```
 
 ## 建議模組邊界

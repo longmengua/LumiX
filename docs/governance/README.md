@@ -8,6 +8,7 @@
 OPERATING_EXCHANGE_MASTER_PLAN.md   專案總綱與 phase ladder
 PHASE_REVIEW_WORKFLOW.md            每個 phase 的審核流程與必要欄位
 PRODUCTION_READINESS_GATES.md       宣稱正式上線前必須通過的門檻
+documentation-location-policy.md    全 repo 文件位置與例外規範
 ```
 
 ## 什麼時候先讀這裡

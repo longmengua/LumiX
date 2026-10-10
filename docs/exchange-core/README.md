@@ -11,4 +11,5 @@ settlement-contract.md            trade settlement
 wallet-boundary.md                deposit/withdrawal boundary
 risk-control.md                   risk checks
 reconciliation.md                 verification and repair
+wallet-architecture-assessment.md current wallet and withdrawal architecture assessment
 ```
