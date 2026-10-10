@@ -6,7 +6,7 @@
 
 本規範將 LumiX 管理後台定位為 Premium Enterprise SaaS、Institutional Fintech 與 Digital Asset Infrastructure：安全、精準、透明、受治理、可追溯、高效率且專業，帶有克制的未來感。
 
-實作入口為 [元件盤點](../frontend/ui-components.md) 與 [token 契約](../frontend/ui-tokens.md)。[前端布局規範](../frontend/README.md)、[狀態管理](../frontend/state-management.md)、[UX safety](../frontend/ux-safety.md) 保持原有責任；[AGENTS.md](../../AGENTS.md) 與 [AI_AGENT.md](../../AI_AGENT.md) 的資料真實性、服務隔離及資金安全規則不由本文重新定義。
+實作入口為 [元件盤點](../../web/docs/ui-components.md) 與 [token 契約](../../web/docs/ui-tokens.md)。[前端布局規範](../../web/docs/README.md)、[狀態管理](../../web/docs/state-management.md)、[UX safety](../../web/docs/ux-safety.md) 保持原有責任；[AGENTS.md](../../AGENTS.md) 與 [AI_AGENT.md](../../AI_AGENT.md) 的資料真實性、服務隔離及資金安全規則不由本文重新定義。
 
 衝突處理：先遵守本次明確範圍及既有業務／安全限制，再依本規範收斂範圍內的實作。未明確要求例外時，修正偏離規範的實作，不透過新增頁面私有風格來合理化差異。範圍外差異記錄為後續項目，不以治理為由擴大改動。Golden Reference 是範圍內視覺依據，不是業務功能、API 或權限的來源。
 

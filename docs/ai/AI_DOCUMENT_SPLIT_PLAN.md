@@ -43,7 +43,7 @@ Small task card
 ```text
 Need product decision?       -> docs/product/
 Need system shape?           -> docs/architecture/
-Need Java backend boundary?  -> docs/backend/
+Need Java backend boundary?  -> server/docs/
 Need ledger / wallet safety? -> docs/exchange-core/
 Need deployment / incident?  -> docs/operations/
 Need coding task?            -> docs/phases/<PHASE>/tasks/<TASK>.md

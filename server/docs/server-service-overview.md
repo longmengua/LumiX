@@ -6,8 +6,8 @@
 
 ## 先看哪些文件
 
-- `../docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `../docs/governance/PHASE_REVIEW_WORKFLOW.md`
-- `../docs/architecture/ARCHITECTURE_TEXT_MAP.md`
-- `../docs/backend/README.md`
-- `../docs/phases/PHASE_17_ORDER_INTAKE/README.md`
+- `../../docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md`
+- `../../docs/governance/PHASE_REVIEW_WORKFLOW.md`
+- `../../docs/architecture/ARCHITECTURE_TEXT_MAP.md`
+- `README.md`
+- `../../docs/phases/PHASE_17_ORDER_INTAKE/README.md`

@@ -1,6 +1,6 @@
 # 管理後台 UI 元件與樣式盤點
 
-2026-09-17 盤點；設計政策以 [LumiX Institutional Blue](../governance/lumix-institutional-blue.md) 為準。此文件只提供實作路由，不建立第二套視覺規範。檔案可能隨任務改動，施工前需重新搜尋確認。
+2026-09-17 盤點；設計政策以 [LumiX Institutional Blue](../../docs/governance/lumix-institutional-blue.md) 為準。此文件只提供實作路由，不建立第二套視覺規範。檔案可能隨任務改動，施工前需重新搜尋確認。
 
 ## 現況
 

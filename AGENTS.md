@@ -143,10 +143,10 @@ security bypass
 - 路線圖、phase 相依與規劃性文件只放 `docs/planning/`。
 - 專案總覽、詞彙表與低風險背景參考只放 `docs/reference/`。
 - AI workflow、prompt、routing 與 agent 協作文件只放 `docs/ai/`。
-- 架構、產品、後端、前端、營運、exchange-core 文件各自留在對應主題資料夾。
+- 架構、產品、營運、exchange-core 與跨服務工程規範留在 root `docs/` 的對應主題資料夾；後端實作文件留在 `server/docs/`，前端實作文件留在 `web/docs/`。
 - Phase 任務、task status、implementation notes 只放 `docs/phases/`。
 - 若新增文件不屬於上述分類，必須先更新對應 `README.md` 的路由說明，再新增檔案。
-- 正式文件只可置於 repository root 的 `docs/` 與其子目錄；禁止在 `server/`、前端服務目錄、`src/`、`resources/` 或 migration 目錄新增或保留文件。
+- 跨服務架構、治理、規劃與共用規範只可置於 repository root 的 `docs/`；後端實作文件只可置於 `server/docs/`，前端實作文件只可置於 `web/docs/`。禁止在 `src/`、`resources/` 或 migration 目錄存放文件。
 
 允許：
 

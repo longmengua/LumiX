@@ -6,7 +6,7 @@
 
 ## 建議閱讀路徑
 
-管理後台 UI 任務：[LumiX Institutional Blue](governance/lumix-institutional-blue.md) → [元件盤點](frontend/ui-components.md) → [token 契約](frontend/ui-tokens.md)。權威規則留在 governance，前端實作說明留在 frontend。
+管理後台 UI 任務：[LumiX Institutional Blue](governance/lumix-institutional-blue.md) → [元件盤點](../web/docs/ui-components.md) → [token 契約](../web/docs/ui-tokens.md)。權威規則留在 governance，前端實作說明留在 `web/docs/`。
 
 ```text
 第一次看專案
@@ -26,7 +26,7 @@ Architect
   |
   +-- docs/architecture/README.md
   +-- docs/exchange-core/README.md
-  +-- docs/backend/README.md
+  +-- server/docs/README.md
   +-- docs/operations/README.md
   +-- docs/engineering/code-commenting-standard.md
 
@@ -52,9 +52,6 @@ docs/
   ai/              AI agent 規則、提示詞、context routing
   architecture/    系統架構、整體文字圖、容器、元件、部署、流程圖
   product/         商業模型、使用者流程、費率與營運產品範圍
-  frontend/        前端頁面與狀態管理規格
-  backend/         Java 後端模組、交易邊界、API 與錯誤政策
-  database/        Flyway migration 與資料庫慣例
   exchange-core/   帳本、凍結、撮合、結算、錢包、風控、對帳
   engineering/     程式碼註解與工程規範
   operations/      部署、監控、事故、資安與上線檢查
@@ -71,7 +68,7 @@ docs/
 - 權威規則放 `docs/governance/`，規劃放 `docs/planning/`，背景參考放 `docs/reference/`。
 - Phase 任務與 implementation notes 只放 `docs/phases/`，避免規則散落在其他目錄。
 - 新增文件時，先判斷應落在哪個主題資料夾；不要因為方便就回填到 `docs/` root。
-- 所有專案文件只可置於 repository root 的 `docs/` 及其主題子目錄；不得在 `server/docs/`、`web/docs/` 或 source/resource 目錄新增文件。服務目錄可保留建置所需的非文件設定與程式碼，但文件須從 root `docs/` 連結或引用。
+- root `docs/` 只承載跨服務架構、治理、規劃與共用規範；後端實作文件位於 `server/docs/`，前端實作文件位於 `web/docs/`。不得在 source/resource 目錄新增文件。
 
 ## 圖表規則
 

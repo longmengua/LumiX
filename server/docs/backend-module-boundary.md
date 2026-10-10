@@ -99,7 +99,7 @@ common -> all modules
 錯誤回應與 exception handling 的固定 contract 另見：
 
 ```text
-docs/backend/error-response-boundary.md
+server/docs/error-response-boundary.md
 ```
 
 ## DTO boundary
@@ -107,8 +107,8 @@ docs/backend/error-response-boundary.md
 API request / response DTO 的命名與驗證規則另見：
 
 ```text
-docs/backend/dto-conventions.md
-docs/backend/validation-conventions.md
+server/docs/dto-conventions.md
+server/docs/validation-conventions.md
 ```
 
 ## Persistence boundary
@@ -116,7 +116,7 @@ docs/backend/validation-conventions.md
 repository / persistence 存取規則另見：
 
 ```text
-docs/backend/persistence-boundary.md
+server/docs/persistence-boundary.md
 ```
 
 ## Transaction boundary
@@ -124,7 +124,7 @@ docs/backend/persistence-boundary.md
 application service transaction 規範另見：
 
 ```text
-docs/backend/transaction-boundary-policy.md
+server/docs/transaction-boundary-policy.md
 ```
 
 ## API versioning and OpenAPI boundary
@@ -132,7 +132,7 @@ docs/backend/transaction-boundary-policy.md
 API versioning 與 OpenAPI 文件規範另見：
 
 ```text
-docs/backend/api-versioning-openapi-boundary.md
+server/docs/api-versioning-openapi-boundary.md
 ```
 
 ## Security boundary
@@ -140,7 +140,7 @@ docs/backend/api-versioning-openapi-boundary.md
 security boundary 與 principal / high-risk operation 模型另見：
 
 ```text
-docs/backend/security-boundary.md
+server/docs/security-boundary.md
 ```
 
 ## Test boundary
@@ -156,5 +156,5 @@ docs/engineering/test-strategy.md
 module dependency guardrails 另見：
 
 ```text
-docs/backend/module-dependency-guardrails.md
+server/docs/module-dependency-guardrails.md
 ```

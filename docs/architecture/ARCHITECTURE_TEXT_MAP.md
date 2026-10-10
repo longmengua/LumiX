@@ -1,6 +1,6 @@
 # 架構文字圖
 
-本文件只放整體地圖。細節請跳到 `docs/architecture/`、`docs/backend/`、`docs/exchange-core/`。
+本文件只放整體地圖。細節請跳到 `docs/architecture/`、`server/docs/`、`docs/exchange-core/`。
 
 ## 系統情境
 
@@ -65,7 +65,7 @@ Reconciliation -> docs/exchange-core/reconciliation.md
 ## Domain boundary index
 
 ```text
-Account / identity       -> docs/backend/module-map.md
+Account / identity       -> server/docs/module-map.md
 Ledger invariants        -> docs/exchange-core/ledger-invariants.md
 Reservation state        -> docs/exchange-core/reservation-state-machine.md
 Order lifecycle          -> docs/exchange-core/order-lifecycle.md

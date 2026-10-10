@@ -82,4 +82,4 @@
 
 ## 文件位置
 
-正式文件位置受 [文件位置規範](../governance/documentation-location-policy.md) 約束：文件只能放在 repository root 的 `docs/`，不得在服務或 source 目錄另建 `docs/` 或 README 規格副本。
+正式文件位置受 [文件位置規範](../governance/documentation-location-policy.md) 約束：跨服務文件放在 root `docs/`，後端與前端實作文件分別放在 `server/docs/`、`web/docs/`；不得在 source 目錄另建文件。

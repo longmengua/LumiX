@@ -13,10 +13,10 @@ Ledger table design               docs/exchange-core/ledger-invariants.md
 Reservation table design          docs/exchange-core/reservation-state-machine.md
 Order table design                docs/exchange-core/order-lifecycle.md
 Wallet table design               docs/exchange-core/wallet-boundary.md
-Backend transaction boundary      docs/backend/transaction-boundary.md
-API contract                      docs/backend/api-contract-guidelines.md
-Frontend page work                docs/frontend/page-map.md
-Admin UI / visual refinement      docs/ai/LUMIX_UI_GOVERNANCE.md -> docs/governance/lumix-institutional-blue.md -> docs/frontend/ui-components.md, docs/frontend/ui-tokens.md
+Backend transaction boundary      server/docs/transaction-boundary.md
+API contract                      server/docs/api-contract-guidelines.md
+Frontend page work                web/docs/page-map.md
+Admin UI / visual refinement      docs/ai/LUMIX_UI_GOVERNANCE.md -> docs/governance/lumix-institutional-blue.md -> web/docs/ui-components.md, web/docs/ui-tokens.md
 Operations / deployment           docs/operations/deployment-runbook.md
 Readiness review                  docs/governance/PRODUCTION_READINESS_GATES.md
 Market Data Pipeline              docs/phases/PHASE_21_MARKET_DATA/README.md, currently relevant task card

@@ -27,7 +27,7 @@ withdrawal signing / broadcast
 AGENTS.md
 AI_AGENT.md
 docs/ai/AI_CONTEXT_ROUTING.md
-docs/backend/transaction-boundary.md
+server/docs/transaction-boundary.md
 docs/exchange-core/ledger-invariants.md
 docs/exchange-core/reservation-state-machine.md
 ```

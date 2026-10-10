@@ -32,7 +32,7 @@ AI_AGENT.md
 AI_PROGRESS.md
 docs/ai/AI_CONTEXT_ROUTING.md
 docs/exchange-core/ledger-invariants.md
-docs/backend/transaction-boundary.md
+server/docs/transaction-boundary.md
 docs/phases/PHASE_13_IDENTITY_ACCOUNT/README.md
 docs/phases/PHASE_14_LEDGER_ENGINE/runtime-prerequisites.md
 ```

@@ -118,7 +118,7 @@ secret management change
 - `server:8080` 只可提供 `/api/**` 與 health；它不得提供任何 HTML route。
 - `web:8088` 不得提供 `/admin`、`/admin/**` 或 proxy `/api/admin/**`；`admin-web:8089` 不得提供前台 HTML route 或 proxy `/api/v1/**`。
 - Vite 開發必須分別使用 `npm run dev:client` 與 `npm run dev:admin`，並保持相同 route/API 拒絕邊界。
-- 修改 Compose、Nginx、Vite entry、router、authentication cookie 或 API proxy 前，必須先閱讀 `docs/reference/routes.md` 與 `docs/frontend/page-map.md`，並驗證三個 port 的 route 回應。
+- 修改 Compose、Nginx、Vite entry、router、authentication cookie 或 API proxy 前，必須先閱讀 `docs/reference/routes.md` 與 `web/docs/page-map.md`，並驗證三個 port 的 route 回應。
 - 不得以共同 ingress、path rewrite 或 reverse proxy 為理由重新合併服務；需要降低故障域時，正式部署還必須採取獨立 runtime、資源限制、health check 與擴縮策略。
 
 ### Port redirect 校驗

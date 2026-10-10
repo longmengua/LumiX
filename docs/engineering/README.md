@@ -4,5 +4,6 @@
 
 ```text
 code-commenting-standard.md  程式碼註解與高風險說明規範
-test-strategy.md             後端測試分層與驗證策略
 ```
+
+後端測試分層與驗證策略位於 `server/docs/test-strategy.md`。
