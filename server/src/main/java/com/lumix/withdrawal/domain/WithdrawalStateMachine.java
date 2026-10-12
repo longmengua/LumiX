@@ -21,7 +21,8 @@ public final class WithdrawalStateMachine {
         allow(WithdrawalStatus.SIGN_PENDING, WithdrawalStatus.SIGNING, WithdrawalStatus.RISK_HOLD, WithdrawalStatus.CANCELLED);
         allow(WithdrawalStatus.SIGNING, WithdrawalStatus.SIGNED, WithdrawalStatus.RISK_HOLD, WithdrawalStatus.FAILED);
         allow(WithdrawalStatus.SIGNED, WithdrawalStatus.BROADCASTING, WithdrawalStatus.FAILED);
-        allow(WithdrawalStatus.BROADCASTING, WithdrawalStatus.BROADCASTED, WithdrawalStatus.FAILED);
+        allow(WithdrawalStatus.BROADCASTING, WithdrawalStatus.BROADCAST_UNKNOWN, WithdrawalStatus.BROADCASTED, WithdrawalStatus.FAILED);
+        allow(WithdrawalStatus.BROADCAST_UNKNOWN, WithdrawalStatus.BROADCASTED, WithdrawalStatus.CONFIRMING, WithdrawalStatus.FAILED);
         allow(WithdrawalStatus.BROADCASTED, WithdrawalStatus.CONFIRMING, WithdrawalStatus.FAILED);
         allow(WithdrawalStatus.CONFIRMING, WithdrawalStatus.COMPLETED, WithdrawalStatus.FAILED);
         allow(WithdrawalStatus.RISK_HOLD, WithdrawalStatus.MANUAL_REVIEW, WithdrawalStatus.REJECTED, WithdrawalStatus.CANCELLED);

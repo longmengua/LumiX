@@ -1,8 +1,8 @@
-# Withdrawal Implementation Report
+# Withdrawal Runtime E2E Implementation Report
 
 ## Executive Summary
 
-已在 `lumix-server` 實作以既有金融核心為基礎的提款 runtime 與獨立 Sepolia signer boundary。本報告只描述目前程式與測試證據；不宣稱系統 production ready。
+狀態：`PARTIAL`。已在 `lumix-server` 建立可執行的提款 runtime 與獨立 Sepolia signer boundary；但 live Sepolia ETH E2E 尚未執行，P25 approval policy 尚未能直接消費 runtime DB evidence，故不得宣稱 Goal COMPLETE 或 production ready。
 
 ## Implemented Components
 
@@ -21,7 +21,7 @@
 
 ## Database Migrations
 
-V002 擴充既有 `withdrawals`，新增 address、risk、review、signing、chain transaction 與 nonce evidence tables。所有提款附屬資料以 foreign key 指向既有提款主表。
+V002 擴充既有 `withdrawals`，新增 address、risk、review、signing、chain transaction 與 nonce evidence tables。V003 再擴充同一 runtime：`BROADCAST_UNKNOWN`、nonce allocation lifecycle/txHash 以及 gas 收據證據。所有提款附屬資料以 foreign key 指向既有提款主表。
 
 ## Withdrawal State Machine
 
@@ -29,7 +29,7 @@ V002 擴充既有 `withdrawals`，新增 address、risk、review、signing、cha
 REQUESTED -> FUNDS_HELD -> RISK_PENDING
   -> MANUAL_REVIEW / APPROVED / RISK_HOLD / REJECTED
 APPROVED -> FINAL_RISK_CHECK -> SIGN_PENDING -> SIGNING -> SIGNED
-  -> BROADCASTING -> BROADCASTED -> CONFIRMING -> COMPLETED
+  -> BROADCASTING -> BROADCAST_UNKNOWN / BROADCASTED -> CONFIRMING -> COMPLETED
 ```
 
 非法倒退 transition 會被集中 state machine 拒絕。
@@ -88,11 +88,11 @@ build unsigned EIP-1559 draft -> signer -> persisted signed raw tx/hash -> RPC b
 
 ## Broadcast Retry Strategy
 
-broadcast timeout 不會重簽。既有 raw transaction 與 derived transaction hash 會先進行 receipt/reconciliation；signer 同 withdrawal/hash replay 只回傳原結果。
+broadcast timeout、connection reset 或 response lost 都不會重簽。V003 先持久化 txHash、raw transaction 對應 evidence 與 nonce state，再進入 `BROADCAST_UNKNOWN`；worker 只可查鏈或重送相同 raw transaction，principal hold 不得釋放。
 
 ## Chain Reconciliation
 
-receipt 未出現為 CONFIRMING；failed receipt 為 FAILED，並保留 gas 已可能消耗的 evidence；只有 canonical block 且 finalized checkpoint 已越過 receipt block 才結算。
+`BROADCAST_UNKNOWN` 無 receipt 時維持 unknown 交由廣播 worker 對帳／重送，避免提前離開廣播集合；已廣播交易的 receipt 未出現為 CONFIRMING。failed receipt 會保存 gasUsed/effectiveGasPrice，才以 idempotent release 釋放 principal hold 並標為 FAILED；gas 的帳本歸屬仍未實作。只有 canonical block 且 finalized checkpoint 已越過 receipt block 才結算。
 
 ## Ledger Settlement
 
@@ -110,14 +110,39 @@ create 接受 body `idempotencyKey` 或既有 header，但同時存在且不同�
 
 unknown risk/velocity/approval/finality 狀態不會 ALLOW。提款 session 僅在 filter 內解析，controller 只接收其 UUID reference，不會記錄或回傳 secret。RPC URL/secret 不會由 application log 輸出；evidence 不保存 session secret 或 key material。
 
+## Runtime Status Matrix
+
+| 項目 | 狀態 | 實作／驗證 |
+| --- | --- | --- |
+| Approval runtime / RBAC | PARTIAL | `WithdrawalReviewService` 使用 server-side `SuperAdminAccessService`；尚未直接接入 P25 `WithdrawalApprovalPolicy` 的 role evidence model。 |
+| Final risk | IMPLEMENTED | `FinalWithdrawalRiskService.advance`。 |
+| ETH / USDT builder | IMPLEMENTED | `EthereumTransactionBuilder`、`EthereumTransactionBuilderTest`。 |
+| Nonce manager | IMPLEMENTED | `EthereumNonceManager.allocate` 以 Postgres row lock 分配；20-concurrent 專屬測試尚未新增。 |
+| Signer gateway / signer idempotency | IMPLEMENTED | `HttpSignerGateway`、`signer/SignerService`、`SignerServiceTest`。 |
+| Mainnet signing | DISABLED | `SignerStartupGuard` / disabled production provider。 |
+| Broadcast / unknown reconciliation | IMPLEMENTED | `WithdrawalBroadcastService.broadcast`、V003 `BROADCAST_UNKNOWN`。 |
+| Receipt / finality | IMPLEMENTED | `WithdrawalChainReconciliationService.reconcile`。 |
+| Reservation / ledger settlement | IMPLEMENTED | `ReservationCaptureService`、`TransactionalLedgerPostingService`。 |
+| Live Sepolia ETH E2E | NOT RUN | 無受控 RPC、測試 keystore 與 funded wallet。 |
+| Live Sepolia USDT E2E | NOT RUN | 無受控 Sepolia token / funded wallet。 |
+
 ## Known Limitations
 
 - Mainnet execution、HSM/PKCS#11、mTLS production signer、外部 custody provider 尚未接入，並刻意保持 disabled。
-- 目前新增的 runtime tests 覆蓋 state machine、transaction building、startup guard 與 signer idempotency/daily limit；完整 Docker/Sepolia E2E 未執行。
+- 目前新增的 runtime tests 覆蓋 state machine、transaction building、startup guard 與 signer idempotency/daily limit；20-concurrent nonce、完整 crash recovery 與 end-to-end database worker 測試仍缺。
+- 使用者指定的 `docs/wallet-architecture-assessment.md` 在 repository 不存在，無法作為 runtime assessment input。
 
 ## Remaining TODO
 
 - 在具有正式 mTLS 與 HSM/MPC provider 的受控 phase 中完成 Mainnet custody integration。
+- 將 P25 `WithdrawalApprovalPolicy` 的 immutable role evidence 實際映射到 server-side RBAC，並完成其 runtime/integration test。
+- 加入鎖定資料庫的 nonce concurrency、broadcast ambiguity、receipt failure release 與 settlement crash-recovery 測試。
+
+## Test Results
+
+- `server`: `./mvnw -q test` — 452 tests，0 failures，0 errors，2 skipped；Flyway 已驗證 V001 至 V003。
+- `server/signer`: `mvn -q test` — 3 tests，0 failures，0 errors。
+- Live Sepolia ETH / USDT E2E：`NOT RUN`；CI 未使用 public RPC。
 - 補齊受控整合環境中的 concurrency、broadcast ambiguity、receipt/finality E2E tests 與 metrics dashboard evidence。
 
 ## Test Results

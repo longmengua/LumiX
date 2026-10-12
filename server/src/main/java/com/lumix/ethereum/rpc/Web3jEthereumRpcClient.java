@@ -18,6 +18,7 @@ import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.http.HttpService;
+import org.web3j.utils.Numeric;
 
 /**
  * 以 Web3j 存取 Ethereum JSON-RPC 的唯讀 adapter。
@@ -66,7 +67,11 @@ public final class Web3jEthereumRpcClient implements EthereumRpcClient, AutoClos
     @Override public java.util.Optional<EthereumTransactionReceipt> transactionReceipt(String transactionHash) throws IOException {
         EthGetTransactionReceipt response=web3j.ethGetTransactionReceipt(transactionHash).send();
         if(response.hasError()) throw new IOException("Ethereum receipt lookup failed");
-        return response.getTransactionReceipt().map(receipt->new EthereumTransactionReceipt(receipt.getTransactionHash(),receipt.getBlockNumber(),receipt.getBlockHash(),"0x1".equals(receipt.getStatus())));
+        return response.getTransactionReceipt().map(receipt -> new EthereumTransactionReceipt(
+            receipt.getTransactionHash(), receipt.getBlockNumber(), receipt.getBlockHash(),
+            "0x1".equals(receipt.getStatus()), receipt.getGasUsed(),
+            receipt.getEffectiveGasPrice() == null ? null : Numeric.decodeQuantity(receipt.getEffectiveGasPrice())
+        ));
     }
 
     private static EthereumBlock toDomain(EthBlock response) throws IOException {

@@ -20,6 +20,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.web3j.crypto.Hash;
 
 /** 將 persisted intent 補齊 nonce/EIP-1559 policy 後送到隔離 signer；主 server 仍不持有 key。 */
 @Service
@@ -46,6 +47,9 @@ public class WithdrawalSigningExecutionService {
             if(result==null) throw exception;
         }
         if(!hash.equals(request.intentHash())||result.transactionHash()==null||result.signedRawTransaction()==null) { hold(row,"ambiguous signing result"); return; }
+        // txHash 必須由主服務對 signer 回傳的 raw transaction 本地推導；不得把 signer 自報 hash 當唯一廣播對帳證據。
+        String derivedTransactionHash=Hash.sha3(result.signedRawTransaction());
+        if(!derivedTransactionHash.equalsIgnoreCase(result.transactionHash())) { hold(row,"signer transaction hash does not match signed raw transaction"); return; }
         jdbc.update("UPDATE withdrawal_signing_requests SET intent_hash=?,payload_json=CAST(? AS jsonb),status='SIGNED',signed_raw_transaction=?,signed_transaction_hash=? WHERE withdrawal_id=? AND status='PENDING'",hash,payload(draft,expires),result.signedRawTransaction(),result.transactionHash(),withdrawalId);
         states.requireTransition(WithdrawalStatus.SIGNING,WithdrawalStatus.SIGNED); if(jdbc.update("UPDATE withdrawals SET status='SIGNED',updated_at=CURRENT_TIMESTAMP WHERE withdrawal_id=? AND status='SIGNING'",withdrawalId)!=1) throw new IllegalStateException("signing state race");
         jdbc.update("INSERT INTO audit_logs(actor_type,actor_id,action_type,target_type,target_id,request_id,outcome,after_state) VALUES ('SYSTEM','signer-gateway','WITHDRAWAL_SIGNED','WITHDRAWAL',? ,?,'SUCCESS','SIGNED')",withdrawalId,row.get("request_id")); metrics.signed();

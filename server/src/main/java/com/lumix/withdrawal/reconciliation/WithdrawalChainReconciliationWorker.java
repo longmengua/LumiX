@@ -14,5 +14,5 @@ public class WithdrawalChainReconciliationWorker {
     private final JdbcTemplate jdbc; private final WithdrawalChainReconciliationService service;
     public WithdrawalChainReconciliationWorker(JdbcTemplate jdbc,WithdrawalChainReconciliationService service){this.jdbc=Objects.requireNonNull(jdbc);this.service=Objects.requireNonNull(service);}
     @Scheduled(fixedDelayString="${LUMIX_WITHDRAWAL_RECONCILIATION_POLL_DELAY:PT10S}") public void process(){claim().forEach(service::reconcile);}
-    @Transactional List<String> claim(){return jdbc.query("SELECT withdrawal_id FROM withdrawals WHERE status IN ('BROADCASTED','CONFIRMING') ORDER BY updated_at FOR UPDATE SKIP LOCKED LIMIT 20",(rs,n)->rs.getString(1));}
+    @Transactional List<String> claim(){return jdbc.query("SELECT withdrawal_id FROM withdrawals WHERE status IN ('BROADCAST_UNKNOWN','BROADCASTED','CONFIRMING') ORDER BY updated_at FOR UPDATE SKIP LOCKED LIMIT 20",(rs,n)->rs.getString(1));}
 }
