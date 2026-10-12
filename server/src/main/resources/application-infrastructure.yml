@@ -94,6 +94,24 @@ lumix:
   withdrawal:
     # 未接入經審核的 custody/MPC/HSM provider 前永遠維持 false；application 不持有 private key。
     enabled: ${LUMIX_WITHDRAWAL_ENABLED:false}
+    platform:
+      # 新地址必須冷卻；讀取／提款驗證會懶惰啟用，不需要不可靠的單機 scheduler。
+      address-cooldown: ${LUMIX_WITHDRAWAL_ADDRESS_COOLDOWN:PT24H}
+      password-change-cooldown: ${LUMIX_WITHDRAWAL_PASSWORD_CHANGE_COOLDOWN:PT24H}
+      maximum-session-age: ${LUMIX_WITHDRAWAL_MAXIMUM_SESSION_AGE:PT8H}
+      # 高額提款必須由兩名不同管理員核准；0 代表所有人工審核均採雙人覆核。
+      dual-review-amount: ${LUMIX_WITHDRAWAL_DUAL_REVIEW_AMOUNT:10000}
+      manual-review-amount: ${LUMIX_WITHDRAWAL_MANUAL_REVIEW_AMOUNT:1000}
+      # 主 application 只保存可公開的 Sepolia source address；private key 僅可存在 signer 的加密 keystore。
+      sepolia-source-address: ${LUMIX_WITHDRAWAL_SEPOLIA_SOURCE_ADDRESS:}
+      signer-url: ${LUMIX_WITHDRAWAL_SIGNER_URL:}
+      signing-intent-ttl: ${LUMIX_WITHDRAWAL_SIGNING_INTENT_TTL:PT5M}
+      # 任何 Sepolia USDT 必須是獨立部署的測試合約；空值表示 USDT 出金不可用。
+      sepolia-usdt-contract: ${LUMIX_WITHDRAWAL_SEPOLIA_USDT_CONTRACT:}
+      eth-gas-limit: ${LUMIX_WITHDRAWAL_ETH_GAS_LIMIT:21000}
+      erc20-gas-limit: ${LUMIX_WITHDRAWAL_ERC20_GAS_LIMIT:65000}
+      max-fee-per-gas: ${LUMIX_WITHDRAWAL_MAX_FEE_PER_GAS:2000000000}
+      max-priority-fee-per-gas: ${LUMIX_WITHDRAWAL_MAX_PRIORITY_FEE_PER_GAS:1000000000}
   admin:
     super-admin:
       # 只在尚無 principal 時指定啟用信收件人；啟用後與資料庫信箱不符會 fail closed，絕不是授權白名單。

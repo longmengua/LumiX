@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    # signer 使用獨立 local durable store；絕不可指向 lumix-server PostgreSQL。
+    url: ${LUMIX_SIGNER_JDBC_URL:jdbc:h2:file:./data/lumix-signer;MODE=PostgreSQL;AUTO_SERVER=TRUE}
+    username: ${LUMIX_SIGNER_DB_USER:lumix_signer}
+    password: ${LUMIX_SIGNER_DB_PASSWORD:}
+  sql.init.mode: never
+server:
+  port: ${LUMIX_SIGNER_PORT:8091}
+lumix:
+  signer:
+    chain-id: ${LUMIX_SIGNER_CHAIN_ID:11155111}
+    network: ${LUMIX_SIGNER_NETWORK:SEPOLIA}
+    source-address: ${LUMIX_SIGNER_SOURCE_ADDRESS:}
+    allowed-assets: ${LUMIX_SIGNER_ALLOWED_ASSETS:ETH,USDT}
+    sepolia-usdt-contract: ${LUMIX_SIGNER_SEPOLIA_USDT_CONTRACT:}
+    single-signing-limit: ${LUMIX_SIGNER_SINGLE_SIGNING_LIMIT:0}
+    daily-signing-limit: ${LUMIX_SIGNER_DAILY_SIGNING_LIMIT:0}
+    keystore-path: ${LUMIX_SIGNER_KEYSTORE_PATH:}
+    keystore-password: ${LUMIX_SIGNER_KEYSTORE_PASSWORD:}

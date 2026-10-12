@@ -6,6 +6,10 @@
 COMPLETED_FOR_WITHDRAWAL_SIGNING_BOUNDARY_FOUNDATION
 ```
 
+後續 runtime 實作的當前證據與已知限制見
+`withdrawal-runtime-implementation-report.md`。該文件不改變本 phase foundation 的歷史完成狀態，
+更不代表 Mainnet 或 production ready；production signer 仍為 fail-closed。
+
 ## Phase charter
 
 以權限分離、最小授權與可對帳為前提，將 approved withdrawal 從 approval decision 安全地交給 signer 與 broadcaster。P25 已完成 immutable boundary foundation；所有 signer runtime、secret、HSM/MPC、鏈上連線與 broadcast 均未施工。

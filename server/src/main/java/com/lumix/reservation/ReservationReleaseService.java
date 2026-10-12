@@ -21,14 +21,15 @@ public class ReservationReleaseService {
      */
     @Transactional
     public void release(String reservationId, String requestId, String idempotencyKey, String actorId) {
-        Map<String, Object> reservation = lockReservation(reservationId);
-        if (!"ACTIVE".equals(reservation.get("status")) && !"PARTIALLY_CONSUMED".equals(reservation.get("status"))) throw new IllegalStateException("reservation cannot be released from current state");
-        BigDecimal remaining = (BigDecimal) reservation.get("remaining_amount");
-        if (remaining.signum() <= 0) throw new IllegalStateException("reservation has no releasable amount");
+        // 先取得 durable claim 才讀取 reservation；重送時已是 RELEASED 也能安全回放，不會被狀態檢查誤判。
         if (jdbcTemplate.update("INSERT INTO idempotency_keys (scope, idempotency_key, request_id, status) VALUES ('RESERVATION_RELEASE', ?, ?, 'IN_PROGRESS') ON CONFLICT (scope, idempotency_key) DO NOTHING", idempotencyKey, requestId) == 0) {
             verifyReplay(reservationId, requestId, idempotencyKey);
             return;
         }
+        Map<String, Object> reservation = lockReservation(reservationId);
+        if (!"ACTIVE".equals(reservation.get("status")) && !"PARTIALLY_CONSUMED".equals(reservation.get("status"))) throw new IllegalStateException("reservation cannot be released from current state");
+        BigDecimal remaining = (BigDecimal) reservation.get("remaining_amount");
+        if (remaining.signum() <= 0) throw new IllegalStateException("reservation has no releasable amount");
         jdbcTemplate.queryForList("SELECT available_amount FROM balance_projections WHERE account_id = ? AND asset_symbol = ? FOR UPDATE", reservation.get("account_id"), reservation.get("asset_symbol"));
         jdbcTemplate.update("UPDATE reservations SET remaining_amount = 0, released_amount = released_amount + ?, status = 'RELEASED', updated_at = CURRENT_TIMESTAMP WHERE reservation_id = ?", remaining, reservationId);
         jdbcTemplate.update("UPDATE balance_projections SET available_amount = available_amount + ?, locked_amount = locked_amount - ?, projection_version = projection_version + 1, projected_at = CURRENT_TIMESTAMP, reconciled_at = NULL WHERE account_id = ? AND asset_symbol = ?", remaining, remaining, reservation.get("account_id"), reservation.get("asset_symbol"));

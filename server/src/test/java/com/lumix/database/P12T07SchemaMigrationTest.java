@@ -90,7 +90,19 @@ class P12T07SchemaMigrationTest {
                     "chain_transaction_id",
                     "status",
                     "created_at",
-                    "updated_at");
+                    "updated_at",
+                    "user_id",
+                    "network",
+                    "destination_address_id",
+                    "normalized_address",
+                    "chain_id",
+                    "token_contract",
+                    "reservation_id",
+                    "approval_payload_hash",
+                    "created_ip",
+                    "created_device_id",
+                    "request_fingerprint",
+                    "completed_at");
 
             assertPrimaryKeyColumns(connection, "deposit_addresses", "deposit_address_id");
             assertPrimaryKeyColumns(connection, "chain_transactions", "chain_transaction_id");
@@ -175,7 +187,7 @@ class P12T07SchemaMigrationTest {
                     "充值狀態。只描述入金流程狀態，不代表 ledger 已寫入。");
 
             assertTableComment(connection, "WITHDRAWALS",
-                    "提現紀錄。這只保存提款流程的查詢結果，不代表已核准、已簽章或已廣播。");
+                    "提款唯一主表。保存不可變請求快照與受控 runtime 狀態，不得另建第二套提款主檔。");
             assertColumnComment(connection, "WITHDRAWALS", "REQUEST_ID",
                     "請求識別碼。這裡只做查詢與重送辨識的輔助欄位，不把它當成完整 idempotency 保證。");
             assertColumnComment(connection, "WITHDRAWALS", "ADDRESS",

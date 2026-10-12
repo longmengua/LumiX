@@ -18,5 +18,10 @@ transaction-boundary-policy.md application transaction policy
 api-versioning-openapi-boundary.md API version and OpenAPI boundary
 security-boundary.md       security and principal boundary
 module-dependency-guardrails.md package dependency guardrails
+sepolia-withdrawal-e2e.md    Sepolia 提款受控手動 E2E 操作手冊
+withdrawal-architecture.md   提款 runtime 架構與資金安全邊界
+withdrawal-risk-engine.md    提款風控規則與 Redis velocity 設計
+physical-signer.md           獨立 signer trust boundary 與安全限制
+wallet-architecture-after-withdrawal.md 提款 runtime 後的後端錢包架構快照
 server-service-overview.md  server service scope and document entry points
 ```

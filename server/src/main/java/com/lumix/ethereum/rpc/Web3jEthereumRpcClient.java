@@ -14,6 +14,9 @@ import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.response.EthBlock;
+import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
+import org.web3j.protocol.core.methods.response.EthGetTransactionReceipt;
+import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.http.HttpService;
 
 /**
@@ -46,6 +49,24 @@ public final class Web3jEthereumRpcClient implements EthereumRpcClient, AutoClos
     @Override
     public EthereumBlock blockByNumber(BigInteger number) throws IOException {
         return toDomain(web3j.ethGetBlockByNumber(DefaultBlockParameter.valueOf(number), false).send());
+    }
+
+    @Override public BigInteger pendingTransactionCount(String address) throws IOException {
+        EthGetTransactionCount response=web3j.ethGetTransactionCount(address,DefaultBlockParameterName.PENDING).send();
+        if(response.hasError()||response.getTransactionCount()==null) throw new IOException("Ethereum pending nonce lookup failed");
+        return response.getTransactionCount();
+    }
+
+    @Override public String sendRawTransaction(String signedRawTransaction) throws IOException {
+        EthSendTransaction response=web3j.ethSendRawTransaction(signedRawTransaction).send();
+        if(response.hasError()||response.getTransactionHash()==null) throw new IOException("Ethereum transaction broadcast failed");
+        return response.getTransactionHash();
+    }
+
+    @Override public java.util.Optional<EthereumTransactionReceipt> transactionReceipt(String transactionHash) throws IOException {
+        EthGetTransactionReceipt response=web3j.ethGetTransactionReceipt(transactionHash).send();
+        if(response.hasError()) throw new IOException("Ethereum receipt lookup failed");
+        return response.getTransactionReceipt().map(receipt->new EthereumTransactionReceipt(receipt.getTransactionHash(),receipt.getBlockNumber(),receipt.getBlockHash(),"0x1".equals(receipt.getStatus())));
     }
 
     private static EthereumBlock toDomain(EthBlock response) throws IOException {

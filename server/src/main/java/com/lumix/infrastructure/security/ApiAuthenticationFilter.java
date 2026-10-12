@@ -35,6 +35,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class ApiAuthenticationFilter extends OncePerRequestFilter {
 
     public static final String AUTHENTICATED_USER_ATTRIBUTE = "lumix.authenticatedUser";
+    /** 只在同一受驗證 request 內使用；不可回傳、序列化或記錄 session secret。 */
+    public static final String AUTHENTICATED_SESSION_ID_ATTRIBUTE = "lumix.authenticatedSessionId";
     private static final Set<String> ANONYMOUS_POST_PATHS = Set.of(
         "/api/v1/auth/captcha/challenge/verify",
         "/api/v1/auth/register",
@@ -88,6 +90,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
             SessionSecret session = readSessionCookie(request);
             AuthenticatedUser user = authenticationService.authenticate(session);
             request.setAttribute(AUTHENTICATED_USER_ATTRIBUTE, user);
+            request.setAttribute(AUTHENTICATED_SESSION_ID_ATTRIBUTE, session.sessionId());
             filterChain.doFilter(request, response);
         } catch (ApiException exception) {
             writeError(response, exception.getErrorCode());

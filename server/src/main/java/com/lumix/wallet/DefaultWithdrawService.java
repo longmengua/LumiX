@@ -13,6 +13,7 @@ import java.util.Objects;
  * Phase 10 的提現 stub。
  * 只做 request validation 與流程占位，不做真實風控、凍結、鏈上廣播或持久化。
  */
+@Deprecated(since = "withdrawal-platform-runtime", forRemoval = false)
 public class DefaultWithdrawService implements WithdrawService {
 
     private final LedgerService ledgerService;
