@@ -57,7 +57,7 @@ class P18T03FuturesSandboxPositionUpdateScopeGateTest {
      */
     @Test
     void phase18ReadmeRecordsT03SandboxBoundary() throws IOException {
-        String readme = Files.readString(resolveDocsRoot().resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(resolveDocsRoot().resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T03 position update - completed"));
         assertTrue(readme.contains("one-way、open-only"));

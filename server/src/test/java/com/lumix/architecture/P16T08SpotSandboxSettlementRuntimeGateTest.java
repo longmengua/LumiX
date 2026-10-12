@@ -111,7 +111,7 @@ class P16T08SpotSandboxSettlementRuntimeGateTest {
     @Test
     void phase16READMEAndTaskIndexIncludeT08() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T08 sandbox settlement runtime gate"));
         assertTrue(readme.contains("P16-T08 completed as sandbox settlement runtime gate only"));

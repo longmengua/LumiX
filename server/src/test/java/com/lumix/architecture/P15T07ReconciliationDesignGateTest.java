@@ -105,7 +105,7 @@ class P15T07ReconciliationDesignGateTest {
     @Test
     void phase15READMEAndTaskIndexIncludeT07() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T07 reconciliation design gate"));
         assertTrue(Files.isRegularFile(docsRoot.resolve("reconciliation-design.md")));

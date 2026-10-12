@@ -21,7 +21,7 @@ class P14T10Phase14FinalReviewGateTest {
     @Test
     void finalReviewDocumentsStatePhase14Clearly() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
         String finalReview = Files.readString(docsRoot.resolve("final-review.md"), StandardCharsets.UTF_8);
         String noGo = Files.readString(docsRoot.resolve("runtime-integration-no-go.md"), StandardCharsets.UTF_8);
 
@@ -44,7 +44,7 @@ class P14T10Phase14FinalReviewGateTest {
     @Test
     void phase14READMEListsAllTasksThroughT10() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("P14-T01 scope gate and runtime prerequisites"));
         assertTrue(readme.contains("P14-T02 ledger journal draft and invariant contract"));

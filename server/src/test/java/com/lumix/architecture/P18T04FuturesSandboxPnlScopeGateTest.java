@@ -54,7 +54,7 @@ class P18T04FuturesSandboxPnlScopeGateTest {
      */
     @Test
     void phase18ReadmeRecordsT04PurePnlBoundary() throws IOException {
-        String readme = Files.readString(resolveDocsRoot().resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(resolveDocsRoot().resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T04 realized / unrealized PnL - completed"));
         assertTrue(readme.contains("realized PnL 只提供不改變 position 的 close preview"));

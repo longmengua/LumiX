@@ -23,8 +23,8 @@ class P15T09Phase15FinalReviewGateTest {
     void phase15StatusDocumentsRemainNotProductionReady() throws IOException {
         Path docsRoot = resolveDocsRoot();
         Path repoRoot = docsRoot.getParent().getParent().getParent();
-        String phaseReadme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
-        String phaseIndex = Files.readString(repoRoot.resolve("docs/phases/README.md"), StandardCharsets.UTF_8);
+        String phaseReadme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
+        String phaseIndex = Files.readString(repoRoot.resolve("docs/phases/database.md"), StandardCharsets.UTF_8);
         String masterPlan = Files.readString(repoRoot.resolve("docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md"), StandardCharsets.UTF_8);
         String progress = Files.readString(repoRoot.resolve("AI_PROGRESS.md"), StandardCharsets.UTF_8);
         String finalReview = Files.readString(docsRoot.resolve("phase-15-final-review.md"), StandardCharsets.UTF_8);

@@ -75,7 +75,7 @@ class P15T05BalanceProjectionRebuildRuntimeGateBoundaryTest {
     @Test
     void phase15READMEAndTaskIndexIncludeT05() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T05 balance projection rebuild runtime gate"));
         assertTrue(Files.isRegularFile(docsRoot.resolve("balance-projection-rebuild-gate.md")));

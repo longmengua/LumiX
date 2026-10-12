@@ -51,7 +51,7 @@ class P18T05FuturesSandboxMarkPriceFundingScopeGateTest {
      */
     @Test
     void phase18ReadmeRecordsT05MockPriceAndFundingPreviewBoundary() throws IOException {
-        String readme = Files.readString(resolveDocsRoot().resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(resolveDocsRoot().resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T05 mock mark price and funding - completed"));
         assertTrue(readme.contains("manual snapshot and pure funding preview only"));

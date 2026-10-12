@@ -20,7 +20,7 @@ class P18FuturesSandboxFinalReviewGateTest {
     @Test
     void phase18FinalReviewRemainsSandboxOnlyAfterHumanApproval() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
         String finalReview = Files.readString(docsRoot.resolve("phase-18-final-review.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("completed — Futures Trading Sandbox foundation; HUMAN_REVIEW_REQUIRED approved"));

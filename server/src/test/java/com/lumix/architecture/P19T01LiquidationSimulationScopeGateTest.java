@@ -32,7 +32,7 @@ class P19T01LiquidationSimulationScopeGateTest {
 
     @Test
     void phase19ReadmeRecordsSimulationOnlyBoundary() throws IOException {
-        String readme = Files.readString(resolveDocsRoot().resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(resolveDocsRoot().resolve("database.md"), StandardCharsets.UTF_8);
         assertTrue(readme.contains("T01 liquidation simulation - completed"));
         assertTrue(readme.contains("不產生強平單、不關閉 position、不更新 balance、ledger 或 settlement"));
     }

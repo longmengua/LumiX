@@ -56,7 +56,7 @@ class P18T06RestrictedFuturesSandboxContractScopeGateTest {
      */
     @Test
     void phase18ReadmeRecordsT06RestrictedInspectionBoundary() throws IOException {
-        String readme = Files.readString(resolveDocsRoot().resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(resolveDocsRoot().resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T06 restricted contract sandbox gate - completed"));
         assertTrue(readme.contains("inspection eligibility"));

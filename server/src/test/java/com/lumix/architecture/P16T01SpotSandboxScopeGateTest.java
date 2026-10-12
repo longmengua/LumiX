@@ -104,7 +104,7 @@ class P16T01SpotSandboxScopeGateTest {
     @Test
     void phase16READMEAndTaskIndexIncludeT01() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T01 spot sandbox scope gate and runtime boundaries"));
         assertTrue(readme.contains("sandbox only"));

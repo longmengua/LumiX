@@ -110,7 +110,7 @@ class P16T09SpotSandboxLedgerIntegrationDesignGateTest {
     @Test
     void phase16READMEAndTaskIndexIncludeT09() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T09 sandbox ledger posting integration design gate"));
         assertTrue(readme.contains("P16-T09 completed as sandbox settlement / ledger integration design gate only"));

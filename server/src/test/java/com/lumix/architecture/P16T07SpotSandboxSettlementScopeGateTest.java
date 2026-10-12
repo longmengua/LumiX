@@ -109,7 +109,7 @@ class P16T07SpotSandboxSettlementScopeGateTest {
     @Test
     void phase16READMEAndTaskIndexIncludeT07() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T07 sandbox settlement boundary"));
         assertTrue(readme.contains("P16-T07 completed as sandbox settlement design gate only"));

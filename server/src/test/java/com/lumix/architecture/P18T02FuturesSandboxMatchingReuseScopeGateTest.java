@@ -62,7 +62,7 @@ class P18T02FuturesSandboxMatchingReuseScopeGateTest {
      */
     @Test
     void phase18ReadmeRecordsT02AsCandidateReuseOnly() throws IOException {
-        String readme = Files.readString(resolveDocsRoot().resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(resolveDocsRoot().resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T02 matching reuse - completed"));
         assertTrue(readme.contains("不建立 order book、不產生 trade / fill、不更新 position"));

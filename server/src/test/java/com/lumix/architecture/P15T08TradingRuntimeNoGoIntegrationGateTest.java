@@ -14,7 +14,7 @@ class P15T08TradingRuntimeNoGoIntegrationGateTest {
     @Test
     void phase15READMEAndTaskIndexIncludeT08() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
         assertTrue(readme.contains("T08 trading runtime no-go integration gate"));
         assertTrue(Files.isRegularFile(docsRoot.resolve("trading-runtime-no-go-integration.md")));
         assertTrue(Files.isRegularFile(docsRoot.resolve("tasks/P15-T08.md")));

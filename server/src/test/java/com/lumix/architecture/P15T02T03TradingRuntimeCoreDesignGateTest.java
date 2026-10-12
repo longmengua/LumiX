@@ -101,7 +101,7 @@ class P15T02T03TradingRuntimeCoreDesignGateTest {
     @Test
     void phase15READMEAndTasksIncludeT02AndT03() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T02 ledger posting integration design gate"));
         assertTrue(readme.contains("T03 balance projection runtime design gate"));

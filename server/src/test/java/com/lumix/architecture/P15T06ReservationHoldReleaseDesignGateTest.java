@@ -83,7 +83,7 @@ class P15T06ReservationHoldReleaseDesignGateTest {
     @Test
     void phase15READMEAndTaskIndexIncludeT06() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
 
         assertTrue(readme.contains("T06 reservation hold/release design gate"));
         assertTrue(Files.isRegularFile(docsRoot.resolve("reservation-hold-release-design.md")));

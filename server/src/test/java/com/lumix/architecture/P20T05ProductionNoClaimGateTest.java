@@ -21,7 +21,7 @@ class P20T05ProductionNoClaimGateTest {
     @Test
     void phase20DocumentationRecordsSandboxScopeAndProductionNoClaimBoundary() throws IOException {
         Path docsRoot = resolveDocsRoot();
-        String readme = Files.readString(docsRoot.resolve("README.md"), StandardCharsets.UTF_8);
+        String readme = Files.readString(docsRoot.resolve("database.md"), StandardCharsets.UTF_8);
         String noClaimReview = Files.readString(docsRoot.resolve("phase-20-no-claim-review.md"), StandardCharsets.UTF_8);
         String finalReview = Files.readString(docsRoot.resolve("phase-20-final-review.md"), StandardCharsets.UTF_8);
 
