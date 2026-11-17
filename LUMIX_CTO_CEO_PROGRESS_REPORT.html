@@ -39,13 +39,15 @@
         <article class="area"><span class="badge partial">部分功能已實作</span><h3>帳戶與資產管理</h3><p>已有登入、帳戶、餘額與歷史查詢，以及受權限控管的內部資產操作；尚未通過正式營運審核。</p><a class="jump" href="#catalog-detail">看功能目錄 →</a></article>
         <article class="area"><span class="badge blocked">尚未就緒</span><h3>正式上線</h3><p>缺少真實交易鏈、正式資金託管、安全與營運驗證，以及人類上線簽核。</p><a class="jump" href="#next-detail">看缺口與下一步 →</a></article>
       </div>
-      <h2 class="section">建議優先推進</h2>
-      <div class="action-list">
-        <article class="area"><strong>01｜驗證提款</strong><p>安排受控測試網環境，驗證提款從申請到鏈上確認與帳本結算的完整流程。</p></article>
-        <article class="area"><strong>02｜完成交易鏈</strong><p>依相依順序補齊真實行情、下單、風控、撮合與結算，再驗證現貨與合約。</p></article>
-        <article class="area"><strong>03｜確認營運方案</strong><p>選擇正式資金託管與安全方案，完成安全、復原、監控與上線審核。</p></article>
+      <h2 class="section">後續開發里程碑</h2>
+      <p class="lead">已確定產品開發順序：先行情，再現貨，接著合約。點擊各項查看完成條件與依賴。</p>
+      <div class="executive-grid">
+        <article class="area"><span class="badge partial">下一步</span><h3>01｜真實行情</h3><p>選定並授權行情來源，建立可靠的價格、成交與委託簿資料。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
+        <article class="area"><span class="badge planned">行情之後</span><h3>02｜現貨交易</h3><p>完成下單、風控、資產保留、撮合與結算，驗證完整交易流程。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
+        <article class="area"><span class="badge planned">現貨之後</span><h3>03｜合約交易</h3><p>在交易與資產基礎上完成保證金、部位、損益及合約風控。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
+        <article class="area"><span class="badge blocked">營運前必要條件</span><h3>04｜正式營運審核</h3><p>完成資金託管、入提款、安全、營運與復原驗證，取得明確上線簽核。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
       </div>
-      <p class="note">以上為建議工作方向，優先順序與資源配置仍待管理層確認。現有資料不足以可靠估算上線日期或完成百分比。</p>
+      <p class="note">此處為開發順序，不是已承諾時程；日期、工期、資源及各階段交付範圍尚待評估。提款測試與營運準備可依相依條件另行安排，不代表必須等合約完成才開始。</p>
     </section>
 
     <section id="cto-page" aria-labelledby="cto-tab" hidden>
@@ -79,6 +81,15 @@
     </section>
 
     <h2 class="section">可展開細節</h2>
+    <details id="milestones-detail">
+      <summary>後續里程碑：順序、完成條件與依賴</summary>
+      <div class="detail"><div class="table-wrap"><table><thead><tr><th>順序</th><th>目標與完成條件</th><th>主要依賴／目前狀態</th></tr></thead><tbody>
+        <tr><td>01 行情</td><td>取得經授權的真實資料；完成接入、資料品質與斷線恢復驗證，並讓使用者辨識資料狀態。</td><td>先由人類選定並授權供應商、資料範圍與使用權利；目前僅有內部行情基礎與模擬畫面。</td></tr>
+        <tr><td>02 現貨</td><td>完成受控下單、風控、資產保留、撮合、成交、結算與對帳，並通過完整驗證。</td><td>依行情及帳本、餘額、保留和權限等安全依賴推進；目前交易畫面僅供預覽。</td></tr>
+        <tr><td>03 合約</td><td>完成合約下單、撮合、保證金、部位、損益、清算及資金費率等所需能力與驗證。</td><td>依現貨交易、資產與風控基礎及合約專屬安全條件推進；目前僅有畫面與沙盒基礎。</td></tr>
+        <tr><td>04 營運審核</td><td>完成正式託管、入提款、監控、復原、安全與營運證據，通過各項上線門檻並取得人類明確簽核。</td><td>跨階段工作可在相依條件具備後安排；目前尚未具備正式上線條件。</td></tr>
+      </tbody></table></div><p>尚未核准日期、工期與資源配置；各里程碑完成不自動授權正式資金操作或上線。</p></div>
+    </details>
     <details id="trading-detail">
       <summary>現貨與合約：目前能操作到哪裡？</summary>
       <div class="detail">
