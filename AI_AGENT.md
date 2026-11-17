@@ -113,6 +113,7 @@ secret management change
 
 ## 前後台服務入口隔離規則
 
+- 所有第三方服務及資料來源均由後端接入；瀏覽器前端只可連 LumiX 內部 API／推播，不得直連第三方 HTTP／WebSocket 或持有第三方憑證。此規則適用所有後續整合，不表示歷史程式已完成盤點。
 - LumiX 必須維持三個獨立 service 與 port：`server:8080`（API）、`web:8088`（前台）、`admin-web:8089`（後台）。
 - 不得將三者合併為單一 SPA、單一 bundle、單一 service，或以 browser path 決定掛載前台／後台 App。
 - `server:8080` 只可提供 `/api/**` 與 health；它不得提供任何 HTML route。

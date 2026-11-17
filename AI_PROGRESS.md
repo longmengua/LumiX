@@ -86,8 +86,7 @@ NOT position, balance or ledger updated
 NOT settlement completed
 Phase 21: COMPLETED_FOR_MARKET_DATA_FOUNDATION
 P21-T01 through P21-T08 completed as immutable market-data domain, admission policy, order-book projection, trade/ticker/candle aggregation, deterministic replay/resync and internal-only query/backpressure foundation
-Phase 21 Market Data pipeline runtime, external provider and public transport not started; all P21 work remains pure, in-memory and read-only
-P21-R01 provider runtime admission task card documented; no provider has been selected or authorized, so no adapter, secret handling, network connection, persistence or public transport may start
+P21-R02 IN_PROGRESS / HUMAN_REVIEW_REQUIRED: user selected Binance public BTC/USDT and ETH/USDT, stated contractual arrangements exist, and requested backend-only integration plus WSS via Nginx. Default-disabled read-only depth and one-minute K-line receivers, authenticated WebSocket and spot reference UI are implemented; live upstream and focused tests passed, but authenticated Nginx/browser E2E, operations/security review and complete market data remain outstanding. See server/docs/binance-market-data-boundary.md.
 NOT official market data service
 NOT public market-data API or WebSocket
 NOT real-time SLA
@@ -142,7 +141,7 @@ Phase 36: COMPLETED_FOR_READINESS_DOCUMENTATION_NOT_PRODUCTION_READY
 P36 launch-gate evidence foundation and P36-T01 through P36-T05 documentation are complete: evidence baseline, blocker register, current no-go decision, future controlled-launch/rollback requirements and post-launch gates. These documents do not prove any gate passed and do not provide runtime.
 Full readiness evidence and explicit human sign-off are missing, so production-ready/launch claim is prohibited
 Phase 21-36 foundation: COMPLETED_AND_PUSHED_PER_PHASE
-Phase 21-36 production runtime: NOT_STARTED
+Phase 21-36 production runtime: NOT_COMPLETE; selected runtime components are in progress and none imply production readiness
 Next work: implement the missing runtime by the phase dependencies, then collect and independently verify P36 readiness evidence, resolve blockers and obtain explicit human production sign-off; launch remains prohibited
 Next implementation phase: Phase 36 - readiness evidence gap closure, after the required runtime dependencies are implemented
 
@@ -180,8 +179,8 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_36_LAUNCH_GATE/README.md
-current_task: P21-R01 provider runtime admission documentation completed; provider selection and authorization are pending, while P36-T01 through P36-T05 readiness documentation remains complete
-next_implementation_phase: P21-R02 may begin only after a human selects and authorizes a market-data provider; all missing runtime then proceeds in dependency order before P36 evidence gap closure
+current_task: P21-R02 Binance read-only depth, one-minute K-line and authenticated push IN_PROGRESS; Nginx/auth/browser E2E, fault testing and security review remain
+next_implementation_phase: complete market-data verification and missing functionality, then spot and spot market making in dependency order
 completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately; P36-T01 through P36-T05 complete the post-foundation readiness documentation only; P21-R01 is a post-foundation admission task card, not runtime
 approval_status: P-task approval mode temporarily disabled by human; this does not replace P36 human production sign-off or authorize runtime/prod launch
 phase_21_36_planning_program: docs/planning/PHASE_21_36_PLANNING_PROGRAM.md

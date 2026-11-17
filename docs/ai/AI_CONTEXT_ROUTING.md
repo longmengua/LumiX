@@ -56,7 +56,7 @@ phase_readme: docs/phases/PHASE_21_MARKET_DATA/README.md
 task_card_review: docs/phases/PHASE_21_MARKET_DATA/phase-21-task-card-review.md
 proposed_first_task: docs/phases/PHASE_21_MARKET_DATA/p21-t01-inventory-boundary-invariants.md
 approval_status: P-task approval mode temporarily disabled by human; Phase 21 complete as foundation
-runtime_status: Market Data pipeline runtime, external provider and public transport not started; P21 only establishes immutable domain, policy, projection, aggregation, replay and internal query foundations; production claim prohibited
+runtime_status: Binance BTC/USDT and ETH/USDT depth and one-minute K-line receivers, authenticated push and spot reference UI are in progress and default disabled; full market data, secure deployment verification and independent review remain incomplete; production claim prohibited; see server/docs/binance-market-data-boundary.md
 completed_task_note: docs/phases/PHASE_21_MARKET_DATA/phase-21-final-review.md
 ```
 

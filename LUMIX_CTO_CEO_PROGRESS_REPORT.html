@@ -23,7 +23,7 @@
       <div class="eyebrow">高階管理進度回報 · 內部使用</div>
       <h1>LumiX 平台進度回報</h1>
       <p>平台現況、營運限制與下一步。請選擇適合您角色的頁面。</p>
-      <div class="stamp">資料盤點日期：2026-11-18 · 程式基準：c5da3474 · 本報告為靜態快照</div>
+      <div class="stamp">資料盤點日期：2026-11-18 · 依本次行情交付的程式與驗證結果整理 · 本報告為靜態快照</div>
     </section>
 
     <nav class="tabs" aria-label="選擇報告頁面">
@@ -34,17 +34,18 @@
       <div class="verdict"><h2>目前不能正式開放交易或處理真實資金</h2><p>已有帳戶、資產帳本與部分管理能力；現貨及合約仍是預覽，入金與提款也尚未完成正式營運驗證。</p></div>
       <h2 class="section">產品現在能做什麼？</h2>
       <div class="executive-grid">
-        <article class="area"><span class="badge partial">只能預覽</span><h3>現貨與合約交易</h3><p>可以看交易畫面、輸入買賣與槓桿；按下送出不會產生真實訂單或成交。</p><a class="jump" href="#trading-detail">看交易細節 →</a></article>
+        <article class="area"><span class="badge partial">交易尚未開放</span><h3>現貨與合約交易</h3><p>現貨頁已接入參考行情；合約頁仍為開發預覽。兩者均不能進行真實下單或成交。</p><a class="jump" href="#trading-detail">看交易細節 →</a></article>
+        <article class="area"><span class="badge partial">已實作，預設關閉</span><h3>即時參考行情</h3><p>已接入比特幣與以太幣現貨買賣盤及一分鐘 K 線；正式入口尚未驗證，尚不能視為已開放服務。</p><a class="jump" href="#market-detail">看行情細節 →</a></article>
         <article class="area"><span class="badge blocked">尚未開放</span><h3>真實入金與提款</h3><p>入金尚未完成從鏈上到帳的完整流程；提款已有測試網程式，但尚未完成實際測試網驗證。</p><a class="jump" href="#withdrawal-detail">看提款細節 →</a></article>
         <article class="area"><span class="badge partial">部分功能已實作</span><h3>帳戶與資產管理</h3><p>已有登入、帳戶、餘額與歷史查詢，以及受權限控管的內部資產操作；尚未通過正式營運審核。</p><a class="jump" href="#catalog-detail">看功能目錄 →</a></article>
         <article class="area"><span class="badge blocked">尚未就緒</span><h3>正式上線</h3><p>缺少真實交易鏈、正式資金託管、安全與營運驗證，以及人類上線簽核。</p><a class="jump" href="#next-detail">看缺口與下一步 →</a></article>
       </div>
       <h2 class="section">後續開發里程碑</h2>
-      <p class="lead">已確定產品開發順序：先行情，再現貨，接著合約。點擊各項查看完成條件與依賴。</p>
+      <p class="lead">目前優先順序：先行情，再現貨交易，接著現貨做市商。點擊各項查看完成條件與依賴。</p>
       <div class="executive-grid">
-        <article class="area"><span class="badge partial">下一步</span><h3>01｜真實行情</h3><p>選定並授權行情來源，建立可靠的價格、成交與委託簿資料。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
+        <article class="area"><span class="badge partial">進行中</span><h3>01｜真實行情</h3><p>已實作參考買賣盤與一分鐘 K 線；仍需完整部署、安全與故障驗證。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
         <article class="area"><span class="badge planned">行情之後</span><h3>02｜現貨交易</h3><p>完成下單、風控、資產保留、撮合與結算，驗證完整交易流程。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
-        <article class="area"><span class="badge planned">現貨之後</span><h3>03｜合約交易</h3><p>在交易與資產基礎上完成保證金、部位、損益及合約風控。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
+        <article class="area"><span class="badge planned">現貨之後</span><h3>03｜現貨做市商</h3><p>在現貨交易完成後，建立受風控及庫存限制的雙邊報價能力。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
         <article class="area"><span class="badge blocked">營運前必要條件</span><h3>04｜正式營運審核</h3><p>完成資金託管、入提款、安全、營運與復原驗證，取得明確上線簽核。</p><a class="jump" href="#milestones-detail">查看里程碑 →</a></article>
       </div>
       <p class="note">此處為開發順序，不是已承諾時程；日期、工期、資源及各階段交付範圍尚待評估。提款測試與營運準備可依相依條件另行安排，不代表必須等合約完成才開始。</p>
@@ -67,9 +68,9 @@
     <h2 class="section">功能面向總覽</h2>
     <p class="lead">先查看各功能狀態，再點擊下方細節區塊查看架構、資料邊界與操作步驟。</p>
     <section class="grid">
-      <article class="area"><span class="badge partial">畫面預覽／沙盒基礎</span><h3>現貨交易</h3><p>已有交易畫面與後端沙盒基礎；畫面使用開發資料，送出僅產生本地提示，沒有真實下單、撮合或結算。</p></article>
+      <article class="area"><span class="badge partial">交易尚未開放</span><h3>現貨交易</h3><p>現貨頁改為唯讀參考行情；沒有真實下單、撮合或結算。</p></article>
       <article class="area"><span class="badge partial">畫面預覽／沙盒基礎</span><h3>合約交易</h3><p>已有合約畫面、期貨模型與風控沙盒；槓桿與下單為畫面預覽，不可用真實資金交易。</p></article>
-      <article class="area"><span class="badge partial">基礎完成</span><h3>行情資料</h3><p>已有內部行情模型與投影基礎；交易畫面使用模擬行情，正式外部來源及公開即時行情尚未完成。</p></article>
+      <article class="area"><span class="badge partial">部分實作</span><h3>行情資料</h3><p>後端接入 Binance BTC／ETH 參考深度與一分鐘 K 線，再經內部推播至前端；預設關閉，正式部署與審核未完成。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>不可變帳本與餘額</h3><p>複式簿記日誌（double-entry journal）、冪等性（idempotency）、稽核／事件寄件匣（audit/outbox），以及受影響帳戶資產的投影重建。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>資產保留（Reservation）</h3><p>保留／釋放／扣轉（hold / release / capture）以資料庫交易、鎖定與可重送證據保護可用餘額。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>Ethereum 觀測基礎</h3><p>資產註冊、遠端程序呼叫（RPC，Remote Procedure Call）抽象層、最終性判斷，以及 ETH（Ether，以太幣）／USDT（Tether USD）掃描模型；不等於入金信用入帳已啟用。</p></article>
@@ -81,12 +82,23 @@
     </section>
 
     <h2 class="section">可展開細節</h2>
+    <details id="market-detail">
+      <summary>行情進度：資料來源、架構與驗證</summary>
+      <div class="detail">
+        <div class="flow">Binance 真實現貨資料 → LumiX 後端接收與品質檢查 → LumiX 內部加密推播 → 前台參考行情
+
+已支援：BTC/USDT、ETH/USDT；買賣盤前 20 檔；最多 120 根一分鐘 K 線。</div>
+        <p>前端不直接連線第三方。來源行情、來源時間與健康狀態由後端管理；來源中斷、序號缺口或資料過期時，不顯示過時行情。此資料屬 Binance 參考市場，不代表 LumiX 自身的訂單或成交。</p>
+        <h3>驗證與未完成事項</h3>
+        <ul><li>兩個交易對的真實上游行情與 K 線同步、行情核心聚焦測試、內部推播握手與前端建置已通過。</li><li>功能預設關閉；正式 Nginx、登入與瀏覽器的完整鏈路，以及安全與故障處理審核仍待完成。</li><li>其他 K 線週期、成交明細和完整行情服務尚未完成；不得宣稱可正式營運。</li><li>完整後端回歸仍有 22 項既有文件測試因引用已刪除的階段文件而出錯，需另行處理。</li></ul>
+      </div>
+    </details>
     <details id="milestones-detail">
       <summary>後續里程碑：順序、完成條件與依賴</summary>
       <div class="detail"><div class="table-wrap"><table><thead><tr><th>順序</th><th>目標與完成條件</th><th>主要依賴／目前狀態</th></tr></thead><tbody>
-        <tr><td>01 行情</td><td>取得經授權的真實資料；完成接入、資料品質與斷線恢復驗證，並讓使用者辨識資料狀態。</td><td>先由人類選定並授權供應商、資料範圍與使用權利；目前僅有內部行情基礎與模擬畫面。</td></tr>
-        <tr><td>02 現貨</td><td>完成受控下單、風控、資產保留、撮合、成交、結算與對帳，並通過完整驗證。</td><td>依行情及帳本、餘額、保留和權限等安全依賴推進；目前交易畫面僅供預覽。</td></tr>
-        <tr><td>03 合約</td><td>完成合約下單、撮合、保證金、部位、損益、清算及資金費率等所需能力與驗證。</td><td>依現貨交易、資產與風控基礎及合約專屬安全條件推進；目前僅有畫面與沙盒基礎。</td></tr>
+        <tr><td>01 行情</td><td>取得真實資料；完成接入、資料品質與斷線恢復驗證，並讓使用者辨識資料狀態。</td><td>已選定 Binance，使用者表示已有合約；BTC／ETH 參考深度與一分鐘 K 線已實作並進行上游測試，仍需正式入口驗證與安全審核。</td></tr>
+        <tr><td>02 現貨</td><td>完成受控下單、風控、資產保留、撮合、成交、結算與對帳，並通過完整驗證。</td><td>依行情及帳本、餘額、保留和權限等安全依賴推進；目前現貨頁只提供參考行情。</td></tr>
+        <tr><td>03 現貨做市商</td><td>建立雙邊報價、庫存控管、風險限額與異常停報，完成驗證後再評估受控啟用。</td><td>依賴可信行情、已驗證的現貨下單與撮合、帳本與風控；目前尚未開始執行服務。</td></tr>
         <tr><td>04 營運審核</td><td>完成正式託管、入提款、監控、復原、安全與營運證據，通過各項上線門檻並取得人類明確簽核。</td><td>跨階段工作可在相依條件具備後安排；目前尚未具備正式上線條件。</td></tr>
       </tbody></table></div><p>尚未核准日期、工期與資源配置；各里程碑完成不自動授權正式資金操作或上線。</p></div>
     </details>
@@ -94,15 +106,15 @@
       <summary>現貨與合約：目前能操作到哪裡？</summary>
       <div class="detail">
         <div class="table-wrap"><table><thead><tr><th>面向</th><th>已具備</th><th>使用者目前的操作與限制</th><th>距離正式交易仍缺</th></tr></thead><tbody>
-          <tr><td>現貨</td><td>交易工作台、訂單輸入預覽，以及訂單、委託簿與撮合的沙盒基礎。</td><td>可在畫面選買賣、限價／市價並輸入價格與數量；送出只顯示本地提示，沒有送出真實訂單。畫面行情與餘額為開發模擬資料。</td><td>正式訂單接入、真實行情、資產保留、撮合成交、帳本結算與營運驗證。</td></tr>
+          <tr><td>現貨</td><td>唯讀參考行情頁，以及訂單、委託簿與撮合的基礎模型。</td><td>頁面接收 Binance 參考深度與一分鐘 K 線；功能預設關閉，尚不能下單或成交。</td><td>正式入口驗證、訂單接入、資產保留、撮合成交、帳本結算與營運驗證。</td></tr>
           <tr><td>合約</td><td>交易工作台、期貨帳戶與部位模型、損益計算及受限交易／風控沙盒基礎。</td><td>可預覽買賣、價格、數量與槓桿選項；提交同樣只是本地提示，沒有真實開倉或成交。畫面包含開發模擬資料與固定風險數值。</td><td>正式合約下單、撮合與成交、保證金與帳本整合、結算、強制平倉、資金費率及完整風控。</td></tr>
-          <tr><td>行情</td><td>內部行情事件、委託簿投影、成交／價格聚合及重播基礎。</td><td>目前交易頁的行情資料不代表真實市場或即時報價。</td><td>具名資料供應商、正式資料管線、公開傳輸與可用性驗證。</td></tr>
+          <tr><td>行情</td><td>後端 Binance 參考深度與一分鐘 K 線、已認證內部推播及前端頁面。</td><td>BTC/USDT 與 ETH/USDT 的真實上游同步已測試；行情非 LumiX 自身成交，且目前預設關閉。</td><td>Nginx／登入／瀏覽器完整驗證、安全審核、其他週期與成交資訊。</td></tr>
         </tbody></table></div>
         <h3>預期完整流程與目前斷點</h3>
         <div class="flow">真實行情 → 使用者下單 → 驗證與風控 → 保留資產／保證金
   → 撮合與成交 → 結算及不可變帳本 → 餘額／部位更新 → 對帳
 
-目前：畫面僅供預覽；後端有沙盒與領域基礎，上述正式交易鏈尚未打通。</div>
+目前：外部參考深度與一分鐘 K 線已實作但預設關閉；上述正式交易鏈尚未打通。</div>
         <p>合約與現貨都不能視為可供真實資金使用的交易服務；沙盒基礎完成不代表完整模擬交易流程已接到畫面。</p>
       </div>
     </details>
@@ -112,7 +124,7 @@
         <tr><td>註冊、登入與個人資料</td><td>持久化帳號／工作階段、登入紀錄、個人資料及新裝置驗證等基礎已實作。</td><td>正式上線仍需傳輸安全、防濫用與安全審查等證據。</td></tr>
         <tr><td>帳戶與資產查詢</td><td>可依使用者身分讀取既有帳戶容器、餘額投影與不可變帳本歷史。</td><td>空帳戶與沒有餘額投影不等同於已驗證的零餘額；估值與損益不可視為完整。</td></tr>
         <tr><td>內部劃轉與管理資產調整</td><td>已有受治理的內部劃轉及管理資產調整實作與稽核入口。</td><td>屬高風險資產異動，需要權限、冪等性、稽核與人工審核；不代表可正式營運。</td></tr>
-        <tr><td>現貨／合約交易及行情</td><td>交易畫面與沙盒基礎可供開發預覽。</td><td>沒有正式真實下單、撮合、結算與公開即時行情；詳見上方展開區塊。</td></tr>
+        <tr><td>現貨／合約交易及行情</td><td>現貨參考深度與一分鐘 K 線已實作；合約畫面仍為開發預覽。</td><td>沒有正式真實下單、撮合與結算；行情預設關閉，正式入口與安全驗證未完成。</td></tr>
         <tr><td>入金</td><td>Ethereum 資產、掃描與最終性判斷基礎。</td><td>完整地址派發、觀測到信用入帳與正式供應商治理仍未完成。</td></tr>
         <tr><td>提款</td><td>受控 Sepolia 流程部分實作，從申請、保留、覆核至簽章與鏈上對帳。</td><td>實際測試網端到端驗證未執行；主網簽章與正式託管未開放。</td></tr>
         <tr><td>後台與營運</td><td>管理員驗證、使用者限制、資產查詢及受治理操作的部分能力。</td><td>不代表所有營運、監控、復原、安全與合規門檻已通過。</td></tr>

@@ -18,6 +18,7 @@ transaction-boundary-policy.md application transaction policy
 api-versioning-openapi-boundary.md API version and OpenAPI boundary
 security-boundary.md       security and principal boundary
 module-dependency-guardrails.md package dependency guardrails
+binance-market-data-boundary.md Binance 現貨行情接入、序號與加密推播邊界
 sepolia-withdrawal-e2e.md    Sepolia 提款受控手動 E2E 操作手冊
 withdrawal-architecture.md   提款 runtime 架構與資金安全邊界
 withdrawal-risk-engine.md    提款風控規則與 Redis velocity 設計

@@ -18,7 +18,7 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 18 階段：completed — Futures Trading Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
 - 第 19 階段：completed — Risk Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
 - 第 20 階段：completed — Contract Trading Integration Gate foundation；HUMAN_REVIEW_REQUIRED 已批准。
-- 第 21 階段：`COMPLETED_FOR_MARKET_DATA_FOUNDATION`；僅完成 immutable domain、projection、aggregation、replay、internal-only query foundation。Market Data pipeline runtime、外部 provider、公開 transport 尚未開始。
+- 第 21 階段：`COMPLETED_FOR_MARKET_DATA_FOUNDATION`；另有進行中的 Binance 現貨深度與一分鐘 K 線 runtime、已認證唯讀推播及參考行情頁，預設關閉。完整行情、正式部署、安全審核與 production readiness 均未完成；詳見 `server/docs/binance-market-data-boundary.md`。
 - 第 22 階段：`COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION`；僅完成 address ownership、chain observation、finality/health、read-only reconciliation 與 P23 handoff contract。地址派發、RPC/provider、secret、持久化與 credit 尚未開始。
 - 第 23 階段：`COMPLETED_FOR_DEPOSIT_CREDIT_DECISION_FOUNDATION`；僅完成 eligibility、idempotency、future ledger handoff、reorg correction 與 read-only reconciliation contract。ledger append、balance mutation、credit/reversal runtime 均未開始。
 - 第 24 階段：`COMPLETED_FOR_WITHDRAWAL_REQUEST_FOUNDATION`；僅完成 immutable request、eligibility、lifecycle、reconciliation 與 keyless P25 input contract。沒有 hold 寫入、approval bypass、簽章、廣播、鏈上確認或資金移動 runtime。
@@ -95,6 +95,7 @@ security bypass
 
 ## Engineering rules
 
+- 所有第三方服務與資料來源皆由後端接入；前端只可連線 LumiX 內部 API 或內部推播，不得直接呼叫第三方 HTTP／WebSocket，也不得持有第三方憑證。第三方資料須由後端執行來源辨識、存取控制與失敗處理後，再透過內部介面提供前端。
 - 本機開發時 Docker Compose 只可執行 PostgreSQL、Redis 與 Kafka；`server:8080`、`web:8088`、`admin-web:8089` 必須分別以主機程序啟動，讓前後端變更可透過各自的 dev runtime 即時更新。這不改變三者獨立 service、port 與 route/API 隔離要求。
 - 未經使用者明確同意，不得主動增加 backward compatibility（舊 DB/schema 升級、歷史資料 adapter、deprecated API、dual-read／dual-write 或舊行為相容層）。若任務看似需要這類相容性，必須先詢問使用者。同樣地，baseline squash 不得順便刪除用途未確認但仍存在於 current final schema 的物件。
 - Java 後端遵守 Java 21 + Spring Boot 3 的專案方向。

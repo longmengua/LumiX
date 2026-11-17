@@ -84,6 +84,11 @@ lumix:
   security:
     # 本機 Compose HTTP 驗證維持 false；公開 deployment 必須由 TLS ingress 覆蓋為 true。
     require-https: ${LUMIX_SECURITY_REQUIRE_HTTPS:false}
+  market-feed:
+    binance:
+      # 預設關閉；啟用時須指定唯一 HTTPS origin，並由受信任的 Nginx 終結 TLS。
+      enabled: ${LUMIX_BINANCE_MARKET_FEED_ENABLED:false}
+      allowed-origin: ${LUMIX_BINANCE_MARKET_FEED_ALLOWED_ORIGIN:}
   ethereum:
     # 預設關閉，避免缺少受控 RPC secret 時 scanner 意外嘗試連 Ethereum Mainnet。
     observation-enabled: ${LUMIX_ETHEREUM_OBSERVATION_ENABLED:false}
