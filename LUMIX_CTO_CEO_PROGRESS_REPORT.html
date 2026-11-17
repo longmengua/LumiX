@@ -12,6 +12,8 @@
     .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}.kpi{background:var(--card);border:1px solid var(--line);padding:17px;border-radius:14px}.kpi strong{display:block;font-size:26px;line-height:1.1}.kpi span{font-size:13px;color:var(--muted)}
     h2.section{font-size:21px;margin:40px 0 12px} .lead{margin:0 0 16px;color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.area{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px}.area h3{font-size:16px;margin:0 0 8px}.area p{margin:0;color:var(--muted);font-size:14px}.badge{display:inline-block;border-radius:999px;padding:3px 9px;font-size:12px;font-weight:700;margin-bottom:10px}.done{background:var(--green-bg);color:var(--green)}.partial{background:var(--amber-bg);color:var(--amber)}.blocked{background:var(--red-bg);color:var(--red)}.planned{background:var(--blue-2);color:var(--blue)}
     details{background:var(--card);border:1px solid var(--line);border-radius:14px;margin:11px 0;overflow:hidden}summary{cursor:pointer;padding:17px 20px;font-weight:650;list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px}summary::-webkit-details-marker{display:none}summary:after{content:"＋";font-size:22px;color:var(--blue);font-weight:400}details[open] summary{border-bottom:1px solid var(--line);background:#fbfdff}details[open] summary:after{content:"−"}.detail{padding:20px 22px}.detail h3{margin:18px 0 7px;font-size:16px}.detail h3:first-child{margin-top:0}.detail p,.detail li{font-size:14px;color:var(--slate)}.detail ul{padding-left:20px;margin:7px 0}.flow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;background:#f7faff;border:1px solid #dce8fa;border-radius:10px;padding:16px;white-space:pre-wrap;color:#183b69;line-height:1.7}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:13px}th{text-align:left;color:var(--muted);font-weight:650;background:#f8fafc}th,td{padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top}.risk{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.risk div{padding:16px;border-radius:12px;background:var(--card);border:1px solid var(--line)}.risk h3{font-size:15px;margin:0 0 6px}.risk p{margin:0;color:var(--muted);font-size:13px}.footer{font-size:12px;color:var(--muted);margin-top:36px;border-top:1px solid var(--line);padding-top:16px}
+    .tabs{display:flex;gap:8px;margin:22px 0}.tabs button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:12px 20px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}.tabs button[aria-pressed="true"]{background:var(--blue);color:#fff;border-color:var(--blue)}.tabs button:focus-visible{outline:3px solid #74a7ec;outline-offset:2px}.verdict{background:var(--red-bg);border:1px solid #f3c1bb;border-radius:16px;padding:24px;margin-bottom:22px}.verdict h2{color:var(--red);font-size:25px;margin:0 0 6px}.verdict p{margin:0;color:#652b26}.executive-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}.executive-grid .area h3{font-size:18px}.executive-grid .area p{font-size:15px}.action-list{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.action-list .area strong{display:block;color:var(--blue);margin-bottom:7px}.note{color:var(--muted);font-size:13px}.jump{display:inline-block;margin-top:10px;color:var(--blue);font-weight:700} [hidden]{display:none!important}
+    @media(max-width:820px){.executive-grid,.action-list{grid-template-columns:1fr}}
     @media(max-width:820px){.decision,.risk{grid-template-columns:1fr}.kpis{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}.hero{padding:26px 22px}.shell{padding:18px 14px 48px}}@media(max-width:420px){.kpis{grid-template-columns:1fr}.hero h1{font-size:26px}}
   </style>
 </head>
@@ -20,37 +22,95 @@
     <section class="hero">
       <div class="eyebrow">高階管理進度回報 · 內部使用</div>
       <h1>LumiX 平台進度回報</h1>
-      <p>面向技術長（CTO，Chief Technology Officer）與執行長（CEO，Chief Executive Officer）：目前已建立可審計的資產與受控 Sepolia 測試網提款執行能力，但尚未具備正式營運或 Ethereum Mainnet（以太坊主網）資金處理資格。</p>
-      <div class="stamp">報告基準：main / origin/main · 最新提交 79253b27 · 2026-10-12 · 工作目錄乾淨</div>
+      <p>平台現況、營運限制與下一步。請選擇適合您角色的頁面。</p>
+      <div class="stamp">資料盤點日期：2026-11-18 · 程式基準：c5da3474 · 本報告為靜態快照</div>
     </section>
 
+    <nav class="tabs" aria-label="選擇報告頁面">
+      <button type="button" id="ceo-tab" aria-pressed="true" aria-controls="ceo-page">執行長頁面</button>
+      <button type="button" id="cto-tab" aria-pressed="false" aria-controls="cto-page">技術長頁面</button>
+    </nav>
+    <section id="ceo-page" aria-labelledby="ceo-tab">
+      <div class="verdict"><h2>目前不能正式開放交易或處理真實資金</h2><p>已有帳戶、資產帳本與部分管理能力；現貨及合約仍是預覽，入金與提款也尚未完成正式營運驗證。</p></div>
+      <h2 class="section">產品現在能做什麼？</h2>
+      <div class="executive-grid">
+        <article class="area"><span class="badge partial">只能預覽</span><h3>現貨與合約交易</h3><p>可以看交易畫面、輸入買賣與槓桿；按下送出不會產生真實訂單或成交。</p><a class="jump" href="#trading-detail">看交易細節 →</a></article>
+        <article class="area"><span class="badge blocked">尚未開放</span><h3>真實入金與提款</h3><p>入金尚未完成從鏈上到帳的完整流程；提款已有測試網程式，但尚未完成實際測試網驗證。</p><a class="jump" href="#withdrawal-detail">看提款細節 →</a></article>
+        <article class="area"><span class="badge partial">部分功能已實作</span><h3>帳戶與資產管理</h3><p>已有登入、帳戶、餘額與歷史查詢，以及受權限控管的內部資產操作；尚未通過正式營運審核。</p><a class="jump" href="#catalog-detail">看功能目錄 →</a></article>
+        <article class="area"><span class="badge blocked">尚未就緒</span><h3>正式上線</h3><p>缺少真實交易鏈、正式資金託管、安全與營運驗證，以及人類上線簽核。</p><a class="jump" href="#next-detail">看缺口與下一步 →</a></article>
+      </div>
+      <h2 class="section">建議優先推進</h2>
+      <div class="action-list">
+        <article class="area"><strong>01｜驗證提款</strong><p>安排受控測試網環境，驗證提款從申請到鏈上確認與帳本結算的完整流程。</p></article>
+        <article class="area"><strong>02｜完成交易鏈</strong><p>依相依順序補齊真實行情、下單、風控、撮合與結算，再驗證現貨與合約。</p></article>
+        <article class="area"><strong>03｜確認營運方案</strong><p>選擇正式資金託管與安全方案，完成安全、復原、監控與上線審核。</p></article>
+      </div>
+      <p class="note">以上為建議工作方向，優先順序與資源配置仍待管理層確認。現有資料不足以可靠估算上線日期或完成百分比。</p>
+    </section>
+
+    <section id="cto-page" aria-labelledby="cto-tab" hidden>
+
     <section class="decision">
-      <div class="callout no-go"><h2>管理決策：禁止上線（NO-GO）</h2><p>缺少受控的 Sepolia 端到端驗證（E2E，End-to-End）、Mainnet 託管（custody）、硬體安全模組（HSM，Hardware Security Module）、雙向傳輸層安全（mTLS，mutual Transport Layer Security）、完整正式環境證據與人類明確簽核。不得對外宣稱已具備正式上線條件，亦不得處理正式資金。</p></div>
+      <div class="callout no-go"><h2>目前判定：不具備上線條件</h2><p>受控測試網端到端驗證（E2E，End-to-End）尚未執行；正式資金託管與簽章方案、安全和營運證據，以及人類明確簽核仍未完成。不得對外宣稱已具備正式上線條件。</p></div>
       <div class="callout next"><h2>近期主線</h2><p>先完成受控測試網端到端驗證，再依相依順序補足正式託管、監控、復原與上線就緒證據（readiness evidence）。</p></div>
     </section>
 
     <section class="kpis" aria-label="關鍵狀態">
       <div class="kpi"><strong>部分完成</strong><span>提款執行能力狀態</span></div>
-      <div class="kpi"><strong>Sepolia</strong><span>唯一允許的可執行鏈</span></div>
+      <div class="kpi"><strong>測試網</strong><span>目前提款簽章實作範圍：Sepolia</span></div>
       <div class="kpi"><strong>已禁用</strong><span>主網本機簽章</span></div>
-      <div class="kpi"><strong>0</strong><span>目前開放的正式資金路徑</span></div>
+      <div class="kpi"><strong>未執行</strong><span>提款測試網端到端驗證</span></div>
     </section>
 
     <h2 class="section">功能面向總覽</h2>
-    <p class="lead">點擊下方或後續細節區塊，查看範圍、架構、資料邊界與操作步驟。</p>
+    <p class="lead">先查看各功能狀態，再點擊下方細節區塊查看架構、資料邊界與操作步驟。</p>
     <section class="grid">
+      <article class="area"><span class="badge partial">畫面預覽／沙盒基礎</span><h3>現貨交易</h3><p>已有交易畫面與後端沙盒基礎；畫面使用開發資料，送出僅產生本地提示，沒有真實下單、撮合或結算。</p></article>
+      <article class="area"><span class="badge partial">畫面預覽／沙盒基礎</span><h3>合約交易</h3><p>已有合約畫面、期貨模型與風控沙盒；槓桿與下單為畫面預覽，不可用真實資金交易。</p></article>
+      <article class="area"><span class="badge partial">基礎完成</span><h3>行情資料</h3><p>已有內部行情模型與投影基礎；交易畫面使用模擬行情，正式外部來源及公開即時行情尚未完成。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>不可變帳本與餘額</h3><p>複式簿記日誌（double-entry journal）、冪等性（idempotency）、稽核／事件寄件匣（audit/outbox），以及受影響帳戶資產的投影重建。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>資產保留（Reservation）</h3><p>保留／釋放／扣轉（hold / release / capture）以資料庫交易、鎖定與可重送證據保護可用餘額。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>Ethereum 觀測基礎</h3><p>資產註冊、遠端程序呼叫（RPC，Remote Procedure Call）抽象層、最終性判斷，以及 ETH（Ether，以太幣）／USDT（Tether USD）掃描模型；不等於入金信用入帳已啟用。</p></article>
-      <article class="area"><span class="badge partial">部分完成</span><h3>Sepolia 提款執行能力</h3><p>申請、風控、覆核、簽章、廣播與交易收據最終性對帳已接通；受控端到端驗證尚未執行。</p></article>
+      <article class="area"><span class="badge partial">部分實作</span><h3>Sepolia 提款執行能力</h3><p>已實作申請、風控、覆核、簽章、廣播與鏈上對帳元件；完整流程尚未經受控端到端驗證。</p></article>
       <article class="area"><span class="badge done">已實作</span><h3>身分與受控操作</h3><p>工作階段驗證（session authentication）、超級管理員權限閘、地址簿、申請人／覆核人分離與不可變稽核證據。</p></article>
+      <article class="area"><span class="badge partial">部分實作</span><h3>帳戶、資產與管理後台</h3><p>已有帳戶、餘額與歷史查詢，以及受治理的內部劃轉與管理調整；各功能仍須權限、稽核與正式環境審核。</p></article>
+      <article class="area"><span class="badge partial">觀測基礎</span><h3>入金</h3><p>已有鏈上觀測與最終性判斷基礎；地址派發、完整鏈上入金到帳與正式營運流程不能視為完成。</p></article>
       <article class="area"><span class="badge blocked">未開放</span><h3>正式營運能力</h3><p>Mainnet 託管、HSM／多方安全運算（MPC，Multi-Party Computation）、mTLS 簽章服務、公開行情資料、入金信用入帳與完整就緒證據均未完成。</p></article>
     </section>
 
     <h2 class="section">可展開細節</h2>
-    <details open>
+    <details id="trading-detail">
+      <summary>現貨與合約：目前能操作到哪裡？</summary>
+      <div class="detail">
+        <div class="table-wrap"><table><thead><tr><th>面向</th><th>已具備</th><th>使用者目前的操作與限制</th><th>距離正式交易仍缺</th></tr></thead><tbody>
+          <tr><td>現貨</td><td>交易工作台、訂單輸入預覽，以及訂單、委託簿與撮合的沙盒基礎。</td><td>可在畫面選買賣、限價／市價並輸入價格與數量；送出只顯示本地提示，沒有送出真實訂單。畫面行情與餘額為開發模擬資料。</td><td>正式訂單接入、真實行情、資產保留、撮合成交、帳本結算與營運驗證。</td></tr>
+          <tr><td>合約</td><td>交易工作台、期貨帳戶與部位模型、損益計算及受限交易／風控沙盒基礎。</td><td>可預覽買賣、價格、數量與槓桿選項；提交同樣只是本地提示，沒有真實開倉或成交。畫面包含開發模擬資料與固定風險數值。</td><td>正式合約下單、撮合與成交、保證金與帳本整合、結算、強制平倉、資金費率及完整風控。</td></tr>
+          <tr><td>行情</td><td>內部行情事件、委託簿投影、成交／價格聚合及重播基礎。</td><td>目前交易頁的行情資料不代表真實市場或即時報價。</td><td>具名資料供應商、正式資料管線、公開傳輸與可用性驗證。</td></tr>
+        </tbody></table></div>
+        <h3>預期完整流程與目前斷點</h3>
+        <div class="flow">真實行情 → 使用者下單 → 驗證與風控 → 保留資產／保證金
+  → 撮合與成交 → 結算及不可變帳本 → 餘額／部位更新 → 對帳
+
+目前：畫面僅供預覽；後端有沙盒與領域基礎，上述正式交易鏈尚未打通。</div>
+        <p>合約與現貨都不能視為可供真實資金使用的交易服務；沙盒基礎完成不代表完整模擬交易流程已接到畫面。</p>
+      </div>
+    </details>
+    <details id="catalog-detail">
+      <summary>產品功能目錄：帳戶、資產、交易與營運</summary>
+      <div class="detail"><div class="table-wrap"><table><thead><tr><th>功能</th><th>目前狀態</th><th>主要限制</th></tr></thead><tbody>
+        <tr><td>註冊、登入與個人資料</td><td>持久化帳號／工作階段、登入紀錄、個人資料及新裝置驗證等基礎已實作。</td><td>正式上線仍需傳輸安全、防濫用與安全審查等證據。</td></tr>
+        <tr><td>帳戶與資產查詢</td><td>可依使用者身分讀取既有帳戶容器、餘額投影與不可變帳本歷史。</td><td>空帳戶與沒有餘額投影不等同於已驗證的零餘額；估值與損益不可視為完整。</td></tr>
+        <tr><td>內部劃轉與管理資產調整</td><td>已有受治理的內部劃轉及管理資產調整實作與稽核入口。</td><td>屬高風險資產異動，需要權限、冪等性、稽核與人工審核；不代表可正式營運。</td></tr>
+        <tr><td>現貨／合約交易及行情</td><td>交易畫面與沙盒基礎可供開發預覽。</td><td>沒有正式真實下單、撮合、結算與公開即時行情；詳見上方展開區塊。</td></tr>
+        <tr><td>入金</td><td>Ethereum 資產、掃描與最終性判斷基礎。</td><td>完整地址派發、觀測到信用入帳與正式供應商治理仍未完成。</td></tr>
+        <tr><td>提款</td><td>受控 Sepolia 流程部分實作，從申請、保留、覆核至簽章與鏈上對帳。</td><td>實際測試網端到端驗證未執行；主網簽章與正式託管未開放。</td></tr>
+        <tr><td>後台與營運</td><td>管理員驗證、使用者限制、資產查詢及受治理操作的部分能力。</td><td>不代表所有營運、監控、復原、安全與合規門檻已通過。</td></tr>
+      </tbody></table></div></div>
+    </details>
+    <details>
       <summary>1. 核心架構：資產與提款的安全分層</summary>
       <div class="detail">
+        <p>下圖描述已實作的測試網流程設計；完整流程尚未以實際測試網端到端驗證。</p>
         <div class="flow">已認證使用者
   → 應用程式介面（API，Application Programming Interface）/ WithdrawalOrchestrator
   → 資產保留 → 風控／人工覆核 → 最終風控閘
@@ -61,7 +121,7 @@
         <ul><li>主應用程式不持有原始私鑰（raw private key）、助記詞（mnemonic）或種子片語（seed phrase）。</li><li><code>withdrawals</code> 是唯一提款主表；地址、風控、覆核、簽章與鏈上交易表僅保存其外鍵證據。</li><li>只有交易收據成功且最終性證據成立，才能進帳本結算；廣播不確定時維持 <code>BROADCAST_UNKNOWN</code>（廣播結果未知），不重簽、不解鎖本金（principal）。</li><li>所有資產異動（mutation）均經帳本邊界（ledger boundary）；修正必須新增沖銷／調整（reversal / adjustment），不能覆寫歷史。</li></ul>
       </div>
     </details>
-    <details>
+    <details id="withdrawal-detail">
       <summary>2. 提款功能：目前可做什麼、不能做什麼</summary>
       <div class="detail">
         <div class="table-wrap"><table><thead><tr><th>能力</th><th>狀態</th><th>說明</th></tr></thead><tbody>
@@ -81,7 +141,7 @@
 已核准（APPROVED）→ 最終風控檢查 → 等待簽章 → 簽章中 → 已簽章
   → 廣播中 → 廣播結果未知／已廣播
   → 等待確認 → 已完成（COMPLETED）</div>
-        <h3>營運人員操作要點</h3>
+        <h3>系統處理與控制要點</h3>
         <ol><li>使用者建立提款時，必須提供一致的請求本文（body）或請求標頭（header）冪等性金鑰（idempotency key）。</li><li>系統先驗證可用餘額並建立 <code>WITHDRAWAL_HOLD</code>（提款保留）；不直接扣帳。</li><li>風控拒絕或需人工處理時，不可繞過覆核；申請人（request owner）不能自行覆核。</li><li>簽章前重新驗證核准資料雜湊（approval payload hash）與最終風控；風控、核准或最終性有任何未知狀態，一律不放行。</li><li>鏈上交易收據最終確認後才扣轉保留並寫入不可變帳本日誌；收據失敗會保留燃料費（gas）證據並釋放本金保留。</li></ol>
       </div>
     </details>
@@ -98,13 +158,13 @@
         </tbody></table></div>
       </div>
     </details>
-    <details>
-      <summary>5. CTO / CEO 待決策與下一步</summary>
+    <details id="next-detail">
+      <summary>5. 建議工作與主要缺口</summary>
       <div class="detail">
         <div class="risk">
-          <div><h3>立即：受控 Sepolia 驗證</h3><p>配置可審核 RPC、測試金鑰庫、有測試資金的來源錢包與測試 USDT，執行 ETH／USDT 手動 E2E；全程不得使用 Mainnet 金鑰或資金。</p></div>
+          <div><h3>受控 Sepolia 驗證</h3><p>準備可審核的測試環境，執行 ETH／USDT 手動 E2E，確認鏈上結果與帳本一致。</p></div>
           <div><h3>工程：補強高風險測試</h3><p>優先驗證交易序號（nonce）併發、廣播歧義、收據失敗釋放、結算當機復原，以及核准證據到角色型存取控制（RBAC，Role-Based Access Control）的實際映射。</p></div>
-          <div><h3>治理：正式託管路線</h3><p>選擇並審核 HSM／MPC 或外部託管、mTLS 簽章服務、機密隔離、監控、復原與獨立就緒證據；完成前維持禁止上線（NO-GO）。</p></div>
+          <div><h3>治理：正式託管路線</h3><p>評估並審核硬體安全模組（HSM，Hardware Security Module）、多方安全運算（MPC，Multi-Party Computation）或外部託管等方案，以及雙向傳輸層安全（mTLS，mutual Transport Layer Security）、機密隔離與復原能力。</p></div>
         </div>
         <h3>尚未開放的產品功能</h3>
         <ul><li>正式 Mainnet 入金／提款與資產信用入帳。</li><li>公開行情資料管線／傳輸（market-data pipeline / transport）、撮合執行（matching execution）、正式結算與費用收取執行能力。</li><li>完整正式環境遙測（telemetry）、告警（alerting）、備份還原／災難復原（DR，Disaster Recovery）演練、負載／混沌測試與人類正式上線簽核。</li></ul>
@@ -116,7 +176,29 @@
         <tr><td>CTO / CEO</td><td>技術長（Chief Technology Officer）／執行長（Chief Executive Officer）。</td></tr><tr><td>E2E</td><td>端到端驗證（End-to-End）：從使用者申請直到鏈上確認與帳本結算的完整受控驗證。</td></tr><tr><td>RPC</td><td>遠端程序呼叫（Remote Procedure Call）：服務與 Ethereum 節點溝通的介面。</td></tr><tr><td>HSM / MPC</td><td>硬體安全模組（Hardware Security Module）／多方安全運算（Multi-Party Computation）：正式金鑰託管的候選安全機制。</td></tr><tr><td>mTLS</td><td>雙向傳輸層安全（mutual Transport Layer Security）：客戶端與服務端互相驗證的傳輸保護。</td></tr><tr><td>API / DB / RBAC</td><td>應用程式介面（Application Programming Interface）／資料庫（Database）／角色型存取控制（Role-Based Access Control）。</td></tr><tr><td>ETH / USDT</td><td>Ether（以太幣）／Tether USD（美元穩定幣）。</td></tr><tr><td>Redis / nonce / finality</td><td>Redis 為記憶體資料儲存系統；nonce 為鏈上交易序號；finality 為交易已跨過可接受回復風險門檻的最終確認。</td></tr>
       </tbody></table></div></div>
     </details>
-    <p class="footer">資料來源：目前 <code>main</code> 的實作與 server 內架構／操作文件。此頁為管理摘要，不取代安全審核、變更管制、正式操作手冊（runbook）或正式上線就緒閘（production readiness gate）。</p>
+    </section>
+    <p class="footer">資料依據：2026-11-18 盤點的程式碼、進度紀錄與提款架構文件。測試網實際驗證狀態採既有交付紀錄；本次未重新執行測試。此報告為內部管理快照，應隨實作及驗證結果更新。</p>
   </main>
+  <script>
+    // 分頁只切換本地內容，讓離線開啟時也能在管理摘要與技術細節之間切換。
+    const ceoTab = document.getElementById('ceo-tab');
+    const ctoTab = document.getElementById('cto-tab');
+    const ceoPage = document.getElementById('ceo-page');
+    const ctoPage = document.getElementById('cto-page');
+    function showPage(page) {
+      const isCeo = page === 'ceo';
+      ceoPage.hidden = !isCeo;
+      ctoPage.hidden = isCeo;
+      ceoTab.setAttribute('aria-pressed', String(isCeo));
+      ctoTab.setAttribute('aria-pressed', String(!isCeo));
+    }
+    ceoTab.addEventListener('click', () => showPage('ceo'));
+    ctoTab.addEventListener('click', () => showPage('cto'));
+    document.querySelectorAll('.jump').forEach(link => link.addEventListener('click', () => {
+      showPage('cto');
+      const target = document.getElementById(link.getAttribute('href').slice(1));
+      if (target) target.open = true;
+    }));
+  </script>
 </body>
 </html>
