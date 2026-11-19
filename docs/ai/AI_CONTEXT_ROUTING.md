@@ -56,7 +56,7 @@ phase_readme: docs/phases/PHASE_21_MARKET_DATA/README.md
 task_card_review: docs/phases/PHASE_21_MARKET_DATA/phase-21-task-card-review.md
 proposed_first_task: docs/phases/PHASE_21_MARKET_DATA/p21-t01-inventory-boundary-invariants.md
 approval_status: P-task approval mode temporarily disabled by human; Phase 21 complete as foundation
-runtime_status: Binance BTC/USDT and ETH/USDT depth and one-minute K-line receivers, anonymous read-only push and spot reference UI passed local HTTPS browser visual verification; default disabled except explicit local preview launcher; full market data, production Nginx deployment verification and independent review remain incomplete; production claim prohibited; see server/docs/binance-market-data-boundary.md
+runtime_status: Binance BTC/USDT and ETH/USDT depth and seven approved K-line interval receivers, anonymous read-only push and spot reference UI passed local HTTPS browser visual verification; default disabled except explicit local preview launcher; full market data, production Nginx deployment verification and independent review remain incomplete; production claim prohibited; see server/docs/binance-market-data-boundary.md
 completed_task_note: docs/phases/PHASE_21_MARKET_DATA/phase-21-final-review.md
 ```
 

@@ -15,7 +15,7 @@ class BinanceKlineSeriesTest {
 
     @Test void snapshotRequiresLiveEventAndPreservesExactValues() {
         // 只有真實來源更新接續歷史後，才可向圖表標示為健康。
-        var series = new BinanceKlineSeries();
+        var series = new BinanceKlineSeries(BinanceKlineInterval.MINUTE_1);
         series.snapshot(List.of(candle(T - 60_000, "101", "100", "1", 1, true), candle(T, "101", "100", "1", 1, false)));
         assertFalse(series.view(NOW).healthy());
         series.update(candle(T, "102", "101", "2", 2, false), NOW, NOW);
@@ -26,7 +26,7 @@ class BinanceKlineSeriesTest {
 
     @Test void rejectsGapAndRegressedCandle() {
         // 漏收收線或 OHLC 倒退時必須重取歷史，不能延用舊圖。
-        var series = new BinanceKlineSeries();
+        var series = new BinanceKlineSeries(BinanceKlineInterval.MINUTE_1);
         series.snapshot(List.of(candle(T - 60_000, "101", "100", "1", 1, true), candle(T, "101", "100", "1", 1, false)));
         assertThrows(IllegalArgumentException.class, () -> series.update(candle(T + 60_000, "101", "100", "1", 1, false), NOW, NOW));
         assertFalse(series.view(NOW).healthy());
@@ -37,7 +37,7 @@ class BinanceKlineSeriesTest {
 
     @Test void olderBufferedUpdateDoesNotOverrideSnapshot() {
         // 快照可能比緩衝訊息更新；較少成交筆數的事件不可覆寫它。
-        var series = new BinanceKlineSeries();
+        var series = new BinanceKlineSeries(BinanceKlineInterval.MINUTE_1);
         series.snapshot(List.of(candle(T - 60_000, "101", "100", "1", 1, true), candle(T, "102", "101", "2", 2, false)));
         series.update(candle(T, "101", "100", "1", 1, false), NOW, NOW);
         assertFalse(series.view(NOW).healthy());

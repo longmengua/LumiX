@@ -5,6 +5,7 @@ import jakarta.annotation.PreDestroy;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Map;
+import java.util.EnumMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -59,6 +60,20 @@ public class BinanceDepthWebSocket implements WebSocketConfigurer {
                 response.setStatusCode(HttpStatus.FORBIDDEN);
                 return false;
             }
+            // 訂閱者只能選取單一白名單週期，不能擴充來源交易對、URL 或任意指令。
+            var parameters = servlet.getServletRequest().getParameterMap();
+            if (parameters.keySet().stream().anyMatch(key -> !"interval".equals(key))
+                    || (parameters.containsKey("interval") && parameters.get("interval").length != 1)) {
+                response.setStatusCode(HttpStatus.BAD_REQUEST);
+                return false;
+            }
+            try {
+                String selected = servlet.getServletRequest().getParameter("interval");
+                attributes.put("marketInterval", BinanceKlineInterval.parse(selected == null ? "1m" : selected));
+            } catch (IllegalArgumentException exception) {
+                response.setStatusCode(HttpStatus.BAD_REQUEST);
+                return false;
+            }
             return true;
         }
         @Override public void afterHandshake(ServerHttpRequest request, ServerHttpResponse response, WebSocketHandler handler, Exception exception) { }
@@ -81,7 +96,7 @@ public class BinanceDepthWebSocket implements WebSocketConfigurer {
         @Override public synchronized void afterConnectionEstablished(WebSocketSession session) throws Exception {
             if (sessions.size() >= 100) { session.close(CloseStatus.POLICY_VIOLATION); return; }
             session.setTextMessageSizeLimit(1024);
-            sessions.put(session.getId(), new ConcurrentWebSocketSessionDecorator(session, 2000, 65536));
+            sessions.put(session.getId(), new ConcurrentWebSocketSessionDecorator(session, 2000, 262144));
         }
         @Override protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
             // 此端點固定推播兩個交易對，不接受客戶端任意訂閱或指令。
@@ -94,13 +109,23 @@ public class BinanceDepthWebSocket implements WebSocketConfigurer {
         }
         private void publish() {
             try {
-                String payload = mapper.writeValueAsString(Map.of("source", "BINANCE_SPOT", "publishedAt", Instant.now().toString(),
-                        "BTCUSDT", feed.view("BTCUSDT"), "ETHUSDT", feed.view("ETHUSDT"),
-                        "candles", Map.of("BTCUSDT", klines.view("BTCUSDT"), "ETHUSDT", klines.view("ETHUSDT"))));
+                // 同一次推播依週期共用序列化結果；每條連線只送所選週期，不把七份歷史一起放大負載。
+                Map<BinanceKlineInterval, String> payloads = new EnumMap<>(BinanceKlineInterval.class);
                 // 公開唯讀行情不依賴 session 到期；保留健康連線，避免每分鐘清空圖表。
                 // 數量、發送時間與緩衝上限仍限制資源，傳輸錯誤時立即移除連線。
                 for (WebSocketSession session : sessions.values()) {
-                    try { session.sendMessage(new TextMessage(payload)); }
+                    try {
+                        BinanceKlineInterval interval = (BinanceKlineInterval) session.getAttributes().get("marketInterval");
+                        String payload = payloads.get(interval);
+                        if (payload == null) {
+                            payload = mapper.writeValueAsString(Map.of("source", "BINANCE_SPOT", "publishedAt", Instant.now().toString(),
+                                    "BTCUSDT", feed.view("BTCUSDT"), "ETHUSDT", feed.view("ETHUSDT"),
+                                    "candles", Map.of("BTCUSDT", klines.view("BTCUSDT", interval), "ETHUSDT", klines.view("ETHUSDT", interval))));
+                            if (payload.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 262144) throw new IllegalStateException("market payload exceeds limit");
+                            payloads.put(interval, payload);
+                        }
+                        session.sendMessage(new TextMessage(payload));
+                    }
                     catch (IOException | RuntimeException exception) { sessions.remove(session.getId()); try { session.close(CloseStatus.SERVER_ERROR); } catch (IOException ignored) { } }
                 }
             } catch (Exception exception) {

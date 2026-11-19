@@ -5418,7 +5418,7 @@ p,
 .spot-reference .trading-form input:disabled,
 .spot-reference .trading-form select:disabled { cursor: not-allowed; opacity: .65; }
 .spot-reference .balance-panel__tab,
-.spot-reference .market-chart__timeframe { cursor: default; }
+.spot-reference .market-chart__timeframe { cursor: pointer; }
 .spot-candles { min-width: 0; }
 .spot-candles__summary { margin: 0; padding: 8px 14px; color: #94a3b8; font-size: .7rem; overflow-wrap: anywhere; }
 .spot-reference__chart-status { display: flex; align-items: center; justify-content: center; min-height: clamp(260px, 34vh, 360px); }
@@ -5665,6 +5665,43 @@ p,
   color: #38bdf8;
   box-shadow: inset 0 -1px #38bdf8;
 }
+
+/* 股票式週期控制共用既有交易面板色彩；設定區展開於圖表上方，不以浮層遮住行情。 */
+.market-chart__controls .market-chart__timeframes { align-items: center; gap: 6px; }
+.market-chart__controls .market-chart__timeframe { min-height: 34px; padding: 5px 12px; border-radius: 6px; }
+.market-chart__minute-select,
+.market-chart__settings-toggle {
+  min-height: 34px;
+  padding: 5px 10px;
+  border: 1px solid rgba(148, 163, 184, .2);
+  border-radius: 6px;
+  background: rgba(8, 18, 33, .76);
+  color: #cbd5e1;
+  font: inherit;
+  font-size: .75rem;
+  cursor: pointer;
+}
+.market-chart__minute-select--active { color: #38bdf8; border-color: #38bdf8; }
+.market-chart__settings-toggle { margin-left: auto; }
+.market-chart__controls button:focus-visible,
+.market-chart__controls select:focus-visible { outline: 2px solid #38bdf8; outline-offset: 2px; }
+.market-chart__settings-panel { padding: 14px; border-bottom: 1px solid rgba(148, 163, 184, .12); background: rgba(8, 18, 33, .76); }
+.market-chart__settings-panel > p { margin: 0 0 12px; color: #94a3b8; font-size: .78rem; }
+.market-chart__average-fields { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+.market-chart__average-field { display: grid; gap: 8px; min-width: 0; }
+.market-chart__average-field label { display: flex; align-items: center; gap: 8px; font-size: .78rem; }
+.market-chart__average-field label > span { flex-shrink: 0; white-space: nowrap; }
+.market-chart__average-field .input { min-width: 0; width: 100%; padding: 8px; }
+.market-chart__average-field input[type="checkbox"] { accent-color: #38bdf8; }
+.market-chart__settings-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+.market-chart__settings-actions button { padding: 8px 14px; font-size: .78rem; }
+@media (max-width: 767px) {
+  .market-chart__average-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .market-chart__settings-toggle { margin-left: 0; }
+}
+
+.market-chart__plot { position: relative; }
+.market-chart__volume-caption { position: absolute; top: 70%; left: 0; color: #94a3b8; font-size: .72rem; pointer-events: none; }
 
 .market-chart__svg {
   display: block;

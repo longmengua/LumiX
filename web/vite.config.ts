@@ -85,7 +85,7 @@ export default defineConfig(() => {
         : {
             // 前台可使用一般 API；上方 middleware 已先拒絕所有 admin API。
             // 僅固定行情端點可升級 WebSocket；其餘 API 沿用 HTTP 代理與原有認證。
-            '^/api/v1/market-data/stream$': apiProxy(true),
+            '^/api/v1/market-data/stream(?:[?].*)?$': apiProxy(true),
             '/api': apiProxy(),
           },
     },

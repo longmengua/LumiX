@@ -6,10 +6,13 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
-/** 一分鐘來源 K 線的有限唯讀序列；不參與下單、風控或資產計算。 */
+/** 具名週期來源 K 線的有限唯讀序列；不參與下單、風控或資產計算。 */
 public final class BinanceKlineSeries {
-    private static final long INTERVAL_MILLIS = 60_000;
-    private static final int LIMIT = 120;
+    private static final int LIMIT = 320;
+    private final BinanceKlineInterval interval;
+
+    /** 每條序列必須綁定唯一來源週期，避免跨週期誤套用快照或事件。 */
+    public BinanceKlineSeries(BinanceKlineInterval interval) { this.interval = java.util.Objects.requireNonNull(interval); }
     private List<Candle> candles = List.of();
     private Instant sourceAt;
     private Instant receivedAt;
@@ -38,7 +41,7 @@ public final class BinanceKlineSeries {
         for (int i = 0; i < history.size(); i++) {
             Candle value = history.get(i);
             validate(value);
-            if (previous >= 0 && value.openTime() - previous != INTERVAL_MILLIS) throw new IllegalArgumentException("candle history gap");
+            if (previous >= 0 && value.openTime() != interval.nextOpen(previous)) throw new IllegalArgumentException("candle history gap");
             if (i < history.size() - 1 && !value.closed()) throw new IllegalArgumentException("historical candle must be closed");
             result.add(value);
             previous = value.openTime();
@@ -46,13 +49,13 @@ public final class BinanceKlineSeries {
         candles = List.copyOf(result);
     }
 
-    /** 只接受同一分鐘的非倒退更新或已收線後的連續下一分鐘。 */
+    /** 只接受同一週期的非倒退更新或已收線後的連續下一週期。 */
     public synchronized void update(Candle candle, Instant eventTime, Instant arrivalTime) {
         try {
             validate(candle);
             if (candles.isEmpty() || eventTime == null || arrivalTime == null || eventTime.isBefore(arrivalTime.minusSeconds(10))
                     || eventTime.isAfter(arrivalTime.plusSeconds(5)) || (sourceAt != null && eventTime.isBefore(sourceAt))
-                    || eventTime.toEpochMilli() < candle.openTime() || eventTime.toEpochMilli() - candle.openTime() > 90_000) {
+                    || eventTime.toEpochMilli() < candle.openTime() || eventTime.toEpochMilli() > Math.addExact(interval.nextOpen(candle.openTime()), 30_000)) {
                 throw new IllegalArgumentException("invalid candle event time or missing snapshot");
             }
             Candle previous = candles.getLast();
@@ -71,7 +74,7 @@ public final class BinanceKlineSeries {
                 }
                 result.set(result.size() - 1, candle);
             } else {
-                if (candle.openTime() - previous.openTime() != INTERVAL_MILLIS || !previous.closed()) throw new IllegalArgumentException("candle continuity gap");
+                if (candle.openTime() != interval.nextOpen(previous.openTime()) || !previous.closed()) throw new IllegalArgumentException("candle continuity gap");
                 result.add(candle);
                 if (result.size() > LIMIT) result.removeFirst();
             }
@@ -91,11 +94,11 @@ public final class BinanceKlineSeries {
         boolean healthy = live && sourceAt != null && receivedAt != null && !now.isBefore(receivedAt)
                 && Duration.between(receivedAt, now).compareTo(Duration.ofSeconds(8)) < 0
                 && !sourceAt.isBefore(now.minusSeconds(10));
-        return new View(healthy, "1m", sourceAt, receivedAt, healthy ? candles : List.of());
+        return new View(healthy, interval.value(), sourceAt, receivedAt, healthy ? candles : List.of());
     }
 
-    private static void validate(Candle value) {
-        if (value == null || value.openTime() < 0 || value.openTime() % INTERVAL_MILLIS != 0 || value.tradeCount() < 0) throw new IllegalArgumentException("invalid candle metadata");
+    private void validate(Candle value) {
+        if (value == null || !interval.aligned(value.openTime()) || value.tradeCount() < 0) throw new IllegalArgumentException("invalid candle metadata");
         BigDecimal open = decimal(value.open()), high = decimal(value.high()), low = decimal(value.low());
         BigDecimal close = decimal(value.close()), volume = decimal(value.volume());
         if (open.signum() <= 0 || low.signum() <= 0 || close.signum() <= 0 || volume.signum() < 0

@@ -48,7 +48,7 @@ class BinanceDepthWebSocketIntegrationTest {
         }
         @Bean BinanceKlineFeed klines() {
             BinanceKlineFeed feed = mock(BinanceKlineFeed.class);
-            when(feed.view(anyString())).thenReturn(new BinanceKlineSeries.View(true, "1m", null, null,
+            when(feed.view(anyString(), any(BinanceKlineInterval.class))).thenReturn(new BinanceKlineSeries.View(true, "1m", null, null,
                     List.of(new BinanceKlineSeries.Candle(0, "100.00000001", "102", "99", "101", "1", 1, false))));
             return feed;
         }

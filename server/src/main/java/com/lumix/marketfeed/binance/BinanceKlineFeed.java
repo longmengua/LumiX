@@ -27,7 +27,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-/** Binance 一分鐘 K 線接收器；僅由後端建立受 TLS 驗證的外部連線。 */
+/** Binance 七種具名週期 K 線接收器；僅由後端建立受 TLS 驗證的外部連線。 */
 @Component
 @Profile("infrastructure")
 @ConditionalOnProperty(prefix = "lumix.market-feed.binance", name = "enabled", havingValue = "true")
@@ -44,16 +44,19 @@ public class BinanceKlineFeed {
     public BinanceKlineFeed(ObjectMapper mapper) {
         this.mapper = mapper;
         for (String symbol : List.of("BTCUSDT", "ETHUSDT")) {
-            Stream stream = new Stream(symbol);
-            streams.put(symbol, stream);
-            scheduler.execute(stream::connect);
-            scheduler.scheduleWithFixedDelay(stream::checkLiveness, 5, 5, TimeUnit.SECONDS);
+            // 兩個固定交易對乘七個週期，來源連線數固定為十四，不受訂閱者輸入擴增。
+            for (BinanceKlineInterval interval : BinanceKlineInterval.values()) {
+                Stream stream = new Stream(symbol, interval);
+                streams.put(symbol + "|" + interval.value(), stream);
+                scheduler.execute(stream::connect);
+                scheduler.scheduleWithFixedDelay(stream::checkLiveness, 5, 5, TimeUnit.SECONDS);
+            }
         }
     }
 
     /** 只回傳已同步且未過期的來源 K 線。 */
-    public BinanceKlineSeries.View view(String symbol) {
-        Stream stream = streams.get(symbol);
+    public BinanceKlineSeries.View view(String symbol, BinanceKlineInterval interval) {
+        Stream stream = streams.get(symbol + "|" + interval.value());
         if (stream == null) throw new IllegalArgumentException("unsupported symbol");
         return stream.series.view(Instant.now());
     }
@@ -69,7 +72,8 @@ public class BinanceKlineFeed {
 
     private final class Stream {
         private final String symbol;
-        private final BinanceKlineSeries series = new BinanceKlineSeries();
+        private final BinanceKlineInterval interval;
+        private final BinanceKlineSeries series;
         private final ArrayDeque<Update> pending = new ArrayDeque<>();
         private final StringBuilder fragments = new StringBuilder();
         private WebSocket socket;
@@ -77,13 +81,13 @@ public class BinanceKlineFeed {
         private long generation;
         private long lastMessageNanos;
 
-        private Stream(String symbol) { this.symbol = symbol; }
+        private Stream(String symbol, BinanceKlineInterval interval) { this.symbol = symbol; this.interval = interval; this.series = new BinanceKlineSeries(interval); }
 
         private synchronized void connect() {
             if (closed || socket != null || awaitingSnapshot) return;
             awaitingSnapshot = true;
             long current = ++generation;
-            URI uri = URI.create("wss://stream.binance.com:9443/ws/" + symbol.toLowerCase(Locale.ROOT) + "@kline_1m");
+            URI uri = URI.create("wss://stream.binance.com:9443/ws/" + symbol.toLowerCase(Locale.ROOT) + "@kline_" + interval.value());
             WebSocket.Listener listener = new WebSocket.Listener() {
                 @Override public void onOpen(WebSocket ws) { Stream.this.onOpen(current, ws); }
                 @Override public CompletionStage<?> onText(WebSocket ws, CharSequence text, boolean last) { return Stream.this.onText(ws, text, last); }
@@ -100,7 +104,7 @@ public class BinanceKlineFeed {
             lastMessageNanos = System.nanoTime();
             webSocket.request(1);
             Instant requestedAt = Instant.now();
-            HttpRequest request = HttpRequest.newBuilder(URI.create("https://data-api.binance.vision/api/v3/klines?symbol=" + symbol + "&interval=1m&limit=120"))
+            HttpRequest request = HttpRequest.newBuilder(URI.create("https://data-api.binance.vision/api/v3/klines?symbol=" + symbol + "&interval=" + interval.value() + "&limit=320"))
                     .timeout(Duration.ofSeconds(10)).GET().build();
             client.sendAsync(request, HttpResponse.BodyHandlers.ofInputStream()).whenComplete((response, failure) -> {
                 if (failure != null) { warn("history", failure); fail(current); return; }
@@ -124,8 +128,9 @@ public class BinanceKlineFeed {
                     fragments.setLength(0);
                     JsonNode kline = node.path("k");
                     if (!"kline".equals(node.path("e").asText()) || !symbol.equals(node.path("s").asText())
-                            || !symbol.equals(kline.path("s").asText()) || !"1m".equals(kline.path("i").asText())
+                            || !symbol.equals(kline.path("s").asText()) || !interval.value().equals(kline.path("i").asText())
                             || !kline.path("x").isBoolean()) throw new IllegalArgumentException("unexpected kline stream");
+                    if (number(kline, "T") != interval.nextOpen(number(kline, "t")) - 1) throw new IllegalArgumentException("invalid event close time");
                     Instant arrival = Instant.now();
                     Update update = new Update(new BinanceKlineSeries.Candle(number(kline, "t"), text(kline, "o"), text(kline, "h"), text(kline, "l"),
                             text(kline, "c"), text(kline, "v"), number(kline, "n"), kline.path("x").booleanValue()),
@@ -144,13 +149,13 @@ public class BinanceKlineFeed {
             if (closed || current != generation || socket == null) return;
             try {
                 JsonNode data = mapper.readTree(body);
-                if (!data.isArray() || data.size() < 2 || data.size() > 120) throw new IllegalArgumentException("invalid history");
+                if (!data.isArray() || data.size() < 2 || data.size() > 320) throw new IllegalArgumentException("invalid history");
                 List<BinanceKlineSeries.Candle> history = new ArrayList<>();
                 for (JsonNode row : data) {
                     if (!row.isArray() || row.size() < 9) throw new IllegalArgumentException("invalid history row");
                     long openTime = number(row, 0);
                     long closeTime = number(row, 6);
-                    if (closeTime != openTime + 59_999) throw new IllegalArgumentException("invalid close time");
+                    if (closeTime != interval.nextOpen(openTime) - 1) throw new IllegalArgumentException("invalid close time");
                     history.add(new BinanceKlineSeries.Candle(openTime, text(row, 1), text(row, 2), text(row, 3), text(row, 4),
                             text(row, 5), number(row, 8), closeTime < requestedAt.toEpochMilli()));
                 }
@@ -168,7 +173,7 @@ public class BinanceKlineFeed {
         private synchronized void checkLiveness() { if (socket != null && System.nanoTime() - lastMessageNanos > TimeUnit.SECONDS.toNanos(15)) fail(generation); }
         private void warn(String stage, Throwable failure) {
             Throwable cause = failure.getCause() == null ? failure : failure.getCause();
-            LOG.warn("Binance kline unavailable: symbol={}, stage={}, errorType={}", symbol, stage, cause.getClass().getSimpleName());
+            LOG.warn("Binance kline unavailable: symbol={}, interval={}, stage={}, errorType={}", symbol, interval.value(), stage, cause.getClass().getSimpleName());
         }
         private synchronized void fail(long current) {
             if (current != generation || closed) return;

@@ -20,13 +20,13 @@ class BinanceDepthFeedLiveTest {
             Instant deadline = Instant.now().plus(Duration.ofSeconds(25));
             while (Instant.now().isBefore(deadline)) {
                 if (feed.view("BTCUSDT").healthy() && feed.view("ETHUSDT").healthy()
-                        && klines.view("BTCUSDT").healthy() && klines.view("ETHUSDT").healthy()) return;
+                        && klines.view("BTCUSDT", BinanceKlineInterval.MINUTE_1).healthy() && klines.view("ETHUSDT", BinanceKlineInterval.MINUTE_1).healthy()) return;
                 Thread.sleep(250);
             }
             assertTrue(feed.view("BTCUSDT").healthy(), "BTCUSDT feed did not become healthy");
             assertTrue(feed.view("ETHUSDT").healthy(), "ETHUSDT feed did not become healthy");
-            assertTrue(klines.view("BTCUSDT").healthy(), "BTCUSDT klines did not become healthy");
-            assertTrue(klines.view("ETHUSDT").healthy(), "ETHUSDT klines did not become healthy");
+            assertTrue(klines.view("BTCUSDT", BinanceKlineInterval.MINUTE_1).healthy(), "BTCUSDT klines did not become healthy");
+            assertTrue(klines.view("ETHUSDT", BinanceKlineInterval.MINUTE_1).healthy(), "ETHUSDT klines did not become healthy");
         } finally {
             feed.close();
             klines.close();

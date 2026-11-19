@@ -4,7 +4,7 @@ import { ErrorState, LoadingState } from '../../components/base/State';
 import { useI18n } from '../../i18n';
 import { TradingWorkspaceLayout } from './TradingWorkspaceLayout';
 import { TradingBalancePanel } from './TradingBalancePanel';
-import { TradingMarketChart } from './TradingMarketChart';
+import { FuturesMarketChart } from './FuturesMarketChart';
 import { TradingMarketHeader } from './TradingMarketHeader';
 import { TradingOrderBook } from './TradingOrderBook';
 import { TradingOrderForm } from './TradingOrderForm';
@@ -34,7 +34,7 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
     <TradingWorkspaceLayout
       header={<TradingMarketHeader workspace={data} />}
       notice={t('trading.market.adapterNotice')}
-      chart={<TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />}
+      chart={<FuturesMarketChart symbol={data.symbol} lastPrice={data.midPrice} />}
       book={<TradingOrderBook
         asks={data.orderBook.asks}
         baseAsset={data.baseAsset}

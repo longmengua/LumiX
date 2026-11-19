@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 
 import { Badge } from '../../components/base/Badge';
 import { useI18n } from '../../i18n';
-import { readCandles, SpotCandleChart, type MarketCandle } from './SpotCandleChart';
+import { readMarketCandles, binanceInterval, type MarketCandle } from './marketCandles';
+import { TradingMarketChart } from './TradingMarketChart';
+import { useTradingChartPreferences } from './ChartPreferences';
+import type { StockChartTimeframe } from './TradingChartControls';
 
 import { TradingWorkspaceLayout } from './TradingWorkspaceLayout';
 import { SpotReferenceOrderBook, type ReferenceLevel as Level, type ReferenceBook as Book } from './SpotReferenceOrderBook';
@@ -12,11 +15,15 @@ type State = { status: 'connecting' | 'unavailable' | 'healthy'; book: Book | nu
 
 /** Binance 的參考行情與未來 LumiX 自身的成交及委託簿必須分開呈現。 */
 export function SpotReferenceMarket({ symbol }: { symbol: string }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
+  const { timeframe } = useTradingChartPreferences();
   const normalized = symbol.toUpperCase().replace('-', '');
   const supported = normalized === 'BTCUSDT' || normalized === 'ETHUSDT';
   const [state, setState] = useState<State>({ status: 'connecting', book: null });
-  const [candles, setCandles] = useState<MarketCandle[] | null>(null);
+  const [candleData, setCandleData] = useState<{ timeframe: StockChartTimeframe; values: MarketCandle[] } | null>(null);
+  // 回應附週期標記，切換當下清空圖表，舊 socket 的晚到事件不能覆寫新週期。
+  const candles = candleData?.timeframe === timeframe ? candleData.values : null;
+  const setCandles = (values: MarketCandle[] | null) => setCandleData(values ? {timeframe, values} : null);
   const english = locale === 'en-US';
 
   useEffect(() => {
@@ -37,8 +44,9 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
       setCandles(null);
       lastMessage = Date.now();
       // 公開參考行情只連同源 WSS；不將任何帳戶憑證放入 URL。
-      socket = new WebSocket(`wss://${window.location.host}/api/v1/market-data/stream`);
+      socket = new WebSocket(`wss://${window.location.host}/api/v1/market-data/stream?interval=${binanceInterval(timeframe)}`);
       socket.onmessage = (event) => {
+        if (stopped) return;
         try {
           const payload: unknown = JSON.parse(String(event.data));
           if (!payload || typeof payload !== 'object') throw new Error('invalid feed');
@@ -54,7 +62,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
           setState(value.healthy ? { status: 'healthy', book: { healthy: true, bids: value.bids, asks: value.asks } }
             : { status: 'unavailable', book: null });
           const candleGroup = (payload as Record<string, unknown>).candles;
-          setCandles(candleGroup && typeof candleGroup === 'object' ? readCandles((candleGroup as Record<string, unknown>)[normalized]) : null);
+          setCandles(candleGroup && typeof candleGroup === 'object' ? readMarketCandles((candleGroup as Record<string, unknown>)[normalized], timeframe) : null);
         } catch {
           // 訊息格式錯誤時移除舊價位，避免使用者誤認其仍為即時行情。
           setState({ status: 'unavailable', book: null });
@@ -62,7 +70,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
           socket?.close();
         }
       };
-      socket.onerror = () => { setState({ status: 'unavailable', book: null }); setCandles(null); };
+      socket.onerror = () => { if (stopped) return; setState({ status: 'unavailable', book: null }); setCandles(null); };
       socket.onclose = () => {
         if (!stopped) {
           setState({ status: 'unavailable', book: null });
@@ -86,7 +94,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
       if (watchdog !== undefined) window.clearInterval(watchdog);
       socket?.close();
     };
-  }, [normalized, supported]);
+  }, [normalized, supported, timeframe]);
 
   const baseAsset = normalized.endsWith('USDT') ? normalized.slice(0, -4) : normalized;
   const last = candles ? candles[candles.length - 1] : undefined;
@@ -95,14 +103,15 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
     : (english ? 'Reference market unavailable. Reconnecting…' : '參考行情目前無法取得，正在重新連線…');
   const status = state.status === 'healthy' ? (english ? 'Live' : '即時')
     : state.status === 'connecting' && supported && window.location.protocol === 'https:' ? (english ? 'Connecting…' : '行情連線中…') : unavailable;
-  // 摘要只呈現本次真實資料；一分鐘高低價及成交量不可冒充 24 小時統計。
+  // 摘要與所選週期一致，不把月線或分線高低價冒充 24 小時統計。
+  const period = timeframe === '1d' || timeframe === '1w' || timeframe === '1mo' ? t(`trading.chart.timeframe.${timeframe}`) : ({'1m':'1min','5m':'5min','15m':'15min','1h':'60min'}[timeframe]);
   const metrics = [
     {label: english ? 'Best bid' : '最佳買價', value: state.book?.bids[0]?.price},
     {label: english ? 'Best ask' : '最佳賣價', value: state.book?.asks[0]?.price},
-    {label: english ? '1m high' : '1 分最高', value: last?.high},
-    {label: english ? '1m low' : '1 分最低', value: last?.low},
-    {label: english ? `1m volume (${baseAsset})` : `1 分成交量（${baseAsset}）`, value: last?.volume},
-    {label: english ? '1m open' : '1 分開盤', value: last?.open},
+    {label: english ? `${period} high` : `${period}最高`, value: last?.high},
+    {label: english ? `${period} low` : `${period}最低`, value: last?.low},
+    {label: english ? `${period} volume (${baseAsset})` : `${period}成交量（${baseAsset}）`, value: last?.volume},
+    {label: english ? `${period} open` : `${period}開盤`, value: last?.open},
   ];
   const header = <header className="market-header">
     <div className="market-header__identity"><span className="market-header__brand">LumiX</span><div>
@@ -112,7 +121,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
     <div className="market-header__price"><span>{english ? 'Latest reference price' : '最新參考價格'}</span><strong>{last ? formatMarketDecimal(last.close) : '—'}</strong><em role="status" className={state.status === 'healthy' ? 'pnl--positive' : ''}>{status}</em></div>
     <div className="market-header__metrics">
       {metrics.map(item => <div className="market-header__metric" key={item.label}><span>{item.label}</span><strong>{item.value ? formatMarketDecimal(item.value) : '—'}</strong></div>)}
-      <div className="market-header__metric market-header__metric--compact"><span>{english ? 'Candle time (UTC)' : 'K 線時間（UTC）'}</span><strong>{last ? new Date(last.openTime).toISOString().slice(11, 16) : '—'}</strong></div>
+      <div className="market-header__metric market-header__metric--compact"><span>{english ? 'Candle time (UTC)' : 'K 線時間（UTC）'}</span><strong>{last ? new Date(last.openTime).toISOString().slice(0, 16).replace('T', ' ') : '—'}</strong></div>
     </div>
   </header>;
   return (
@@ -120,7 +129,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
       className="spot-reference"
       header={header}
       notice={english ? 'Source: Binance Spot. External reference data; LumiX spot order execution is not available yet.' : '來源：Binance 現貨。此為外部參考行情；LumiX 現貨下單尚未開放。'}
-      chart={<SpotCandleChart candles={candles} english={english} />}
+      chart={<TradingMarketChart candles={candles} sourceLabel="Binance · UTC" />}
       book={<SpotReferenceOrderBook book={state.book} lastPrice={last?.close ?? null} baseAsset={baseAsset} english={english} status={status} />}
       orderPanel={<SpotUnavailableOrderPanel baseAsset={baseAsset} english={english} />}
       accountPanel={<SpotUnavailableAccountPanel english={english} />}

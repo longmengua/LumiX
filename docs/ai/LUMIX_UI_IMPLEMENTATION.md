@@ -13,11 +13,13 @@
 
 ## 共同實作
 
+- 現貨與合約使用唯一 `TradingMarketChart.tsx` 圖表模板，搭配 `TradingChartControls.tsx` 與 `ChartPreferences.ts`。控制列為日線／週線／月線／分線，下拉提供 1min／5min／15min／60min；均線可改週期與開關、取消草稿、恢復預設。預設 MA5／20／60／120，localStorage 只保存視覺偏好，同源頁面與分頁同步。
+- `FuturesMarketChart.tsx` 僅包裝合約頁原有開發資料，明示來源；現貨經 `marketCandles.ts` 驗證所選週期、UTC 連續性與精確價量後傳入同一模板。舊 `SpotCandleChart.tsx` 已移除，不保留第二份繪圖。
 - 合約工作區交易對統一呈現 `BTCUSDT`／`ETHUSDT` 格式，不加 `-PERP`；解析時須先辨識報價幣與分隔符，避免重複拼接 USDT。
 - `/spot/:symbol` 使用可匿名訂閱的唯讀 Binance 參考行情推播；目前僅 BTC/USDT、ETH/USDT，需同源 HTTPS／WSS，斷線或不可用時不顯示舊價位。該頁不代表 LumiX 的正式委託簿、成交或下單功能已開放；合約頁仍為既有開發資料。
-- 前台參考 K 線以一分鐘 UTC 為週期，由後端讀取歷史並接收增量，再經相同內部推播；未同步或資料過期時不顯示舊圖。
+- 現貨提供真實 UTC 日／週／月與 1／5／15／60 分 K 線；後端固定十四條 K 線來源連線，單一訂閱只推播所選週期，最多 320 根歷史，畫面顯示最近 160 根。月線依曆月、週線依 UTC 星期一；來源歷史不足時不補造。切換期間不顯示上一週期資料，過期或斷線清除舊圖。
 - 依使用者指定的 `/futures/BTC-USDT` 排版，現貨與合約共用 `TradingWorkspaceLayout.tsx`，沿用 `market-header`、`market-chart`、`trading-workspace-grid`、`trading-book`、`trading-form`、`balance-panel`：摘要／全寬圖表／左訂單簿右下單面板／底部帳戶區。767px 以下沿用共用垂直排列，現貨 1023px 以下買賣盤單欄，精確數值可換行。訂單簿使用約十列高的可捲動視窗保留完整二十檔，賣盤預設追蹤最佳賣價，手動捲動時保留位置。
-- `SpotCandleChart` 以真實一分鐘 K 線繪製成交量與 MA5／20／60／120，僅提供已接通的一分鐘週期；`SpotReferenceOrderBook` 以固定精度整數計算累計量與可見深度比例。現貨下單面板停用且無送單 handler，帳戶區明示尚未提供，沒有假餘額、訂單或成交比例；合約原有資料與互動不變。
+- 共用圖表以固定精度整數計算均線與畫面縮放；成交量文字使用獨立可讀字級，不隨 SVG 壓縮。`SpotReferenceOrderBook` 保留精確累計及可見深度比例。現貨下單面板停用且無送單 handler，帳戶區明示尚未提供；合約下單與帳戶仍屬既有開發資料。
 - 本機執行 `server/scripts/start-market-preview.sh` 後以 `https://localhost:8088/spot/BTC-USDT` 或 `/spot/ETH-USDT` 驗收；Vite 使用明確憑證啟用 HTTPS，僅轉送固定行情 WebSocket 並覆寫 forwarded headers。一般開發仍預設 HTTP；行情不提供明文降級。
 - 2026-11-19 已完成真實來源及瀏覽器本機視覺驗證：買賣各 20 檔、120 根一分鐘 K 線，連續 70 秒數值更新，390px 畫面、離線清除與恢復訂閱通過。正式 Nginx 部署與安全審核尚未完成；詳細證據見 `server/docs/binance-market-data-boundary.md`。
 

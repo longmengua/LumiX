@@ -18,7 +18,7 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 18 階段：completed — Futures Trading Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
 - 第 19 階段：completed — Risk Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
 - 第 20 階段：completed — Contract Trading Integration Gate foundation；HUMAN_REVIEW_REQUIRED 已批准。
-- 第 21 階段：`COMPLETED_FOR_MARKET_DATA_FOUNDATION`；另有進行中的 Binance 現貨深度與一分鐘 K 線 runtime、匿名唯讀推播及參考行情頁，本機 K 線／訂單簿視覺驗收已串通，一般設定預設關閉。完整行情、正式部署、安全審核與 production readiness 均未完成；詳見 `server/docs/binance-market-data-boundary.md`。
+- 第 21 階段：`COMPLETED_FOR_MARKET_DATA_FOUNDATION`；另有進行中的 Binance 現貨深度與日／週／月及 1／5／15／60 分 K 線 runtime、匿名唯讀推播及參考行情頁，本機 K 線／訂單簿視覺驗收已串通，一般設定預設關閉。完整行情、正式部署、安全審核與 production readiness 均未完成；詳見 `server/docs/binance-market-data-boundary.md`。
 - 第 22 階段：`COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION`；僅完成 address ownership、chain observation、finality/health、read-only reconciliation 與 P23 handoff contract。地址派發、RPC/provider、secret、持久化與 credit 尚未開始。
 - 第 23 階段：`COMPLETED_FOR_DEPOSIT_CREDIT_DECISION_FOUNDATION`；僅完成 eligibility、idempotency、future ledger handoff、reorg correction 與 read-only reconciliation contract。ledger append、balance mutation、credit/reversal runtime 均未開始。
 - 第 24 階段：`COMPLETED_FOR_WITHDRAWAL_REQUEST_FOUNDATION`；僅完成 immutable request、eligibility、lifecycle、reconciliation 與 keyless P25 input contract。沒有 hold 寫入、approval bypass、簽章、廣播、鏈上確認或資金移動 runtime。
