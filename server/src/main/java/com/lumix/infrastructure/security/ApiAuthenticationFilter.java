@@ -26,7 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 /**
  * `/api` 的全域 authentication gate。
  *
- * <p>只有明列的帳號建立／登入／密碼重設入口可以匿名；其餘 API 在進 controller 前必須驗證 HttpOnly
+ * <p>只有明列的帳號建立／登入／密碼重設與唯讀行情入口可以匿名；其餘 API 在進 controller 前必須驗證 HttpOnly
  * session，並把去敏後的 principal 放進 request attribute。這避免未來新增 endpoint 時遺漏個別鑒權。</p>
  */
 @Component
@@ -69,6 +69,10 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         if (!request.getRequestURI().startsWith("/api/")) {
+            return true;
+        }
+        // 公開行情只有唯讀推播；必須精確比對方法與路徑，不能連帶開放帳戶或交易 API。
+        if ("GET".equals(request.getMethod()) && "/api/v1/market-data/stream".equals(request.getRequestURI())) {
             return true;
         }
         if ("GET".equals(request.getMethod()) && isAnonymousCaptchaChallenge(request.getRequestURI())) {

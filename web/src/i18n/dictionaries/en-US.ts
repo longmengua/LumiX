@@ -468,7 +468,7 @@ export const enUS = {
   'trading.badge.mockTape': 'Mock tape',
   'trading.badge.mockBalances': 'Mock balances',
   'trading.instrument.spotTitle': '{symbol} Spot',
-  'trading.instrument.futuresTitle': '{symbol} USDT Perpetual',
+  'trading.instrument.futuresTitle': '{symbol} Perpetual',
   'trading.instrument.spotSubtitle': '{symbol} spot trading workspace. This page shows development data only and is not connected to live matching or settlement.',
   'trading.instrument.futuresSubtitle': '{symbol} futures trading workspace. This page shows development data only and is not connected to live matching or settlement.',
   'trading.instrument.updatedAt': 'Updated at',

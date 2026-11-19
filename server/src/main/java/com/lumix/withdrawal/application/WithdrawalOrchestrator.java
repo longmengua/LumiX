@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -39,6 +40,8 @@ import org.springframework.transaction.annotation.Transactional;
 public class WithdrawalOrchestrator {
     private final JdbcTemplate jdbc; private final WithdrawalAddressBookService addresses; private final ReservationHoldService holds; private final ReservationReleaseService releases; private final WithdrawalMetrics metrics;
     private final WithdrawalRiskEngine risk; private final WithdrawalFeePolicy fees; private final WithdrawalPlatformProperties properties; private final ObjectProvider<WithdrawalVelocityService> velocity; private final WithdrawalStateMachine states=new WithdrawalStateMachine(); private final Clock clock;
+    /** 明確選定正式依賴注入入口，保留可控 Clock 建構子供隔離測試使用。 */
+    @Autowired
     public WithdrawalOrchestrator(JdbcTemplate jdbc,WithdrawalAddressBookService addresses,ReservationHoldService holds,ReservationReleaseService releases,WithdrawalRiskEngine risk,WithdrawalFeePolicy fees,WithdrawalPlatformProperties properties,ObjectProvider<WithdrawalVelocityService> velocity,WithdrawalMetrics metrics) { this(jdbc,addresses,holds,releases,risk,fees,properties,velocity,metrics,Clock.systemUTC()); }
     WithdrawalOrchestrator(JdbcTemplate jdbc,WithdrawalAddressBookService addresses,ReservationHoldService holds,ReservationReleaseService releases,WithdrawalRiskEngine risk,WithdrawalFeePolicy fees,WithdrawalPlatformProperties properties,ObjectProvider<WithdrawalVelocityService> velocity,WithdrawalMetrics metrics,Clock clock) { this.jdbc=Objects.requireNonNull(jdbc);this.addresses=Objects.requireNonNull(addresses);this.holds=Objects.requireNonNull(holds);this.releases=Objects.requireNonNull(releases);this.risk=Objects.requireNonNull(risk);this.fees=Objects.requireNonNull(fees);this.properties=Objects.requireNonNull(properties);this.velocity=Objects.requireNonNull(velocity);this.metrics=Objects.requireNonNull(metrics);this.clock=Objects.requireNonNull(clock); }
     @Transactional

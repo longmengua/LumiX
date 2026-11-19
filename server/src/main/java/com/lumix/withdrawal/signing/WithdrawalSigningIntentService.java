@@ -17,6 +17,7 @@ import java.util.Objects;
 import java.util.UUID;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -28,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class WithdrawalSigningIntentService {
     private final JdbcTemplate jdbc; private final WithdrawalPlatformProperties properties; private final WithdrawalStateMachine states=new WithdrawalStateMachine(); private final Clock clock;
+    /** 明確指定 runtime 注入入口；可控 Clock 建構子只留給隔離測試使用。 */
+    @Autowired
     public WithdrawalSigningIntentService(JdbcTemplate jdbc,WithdrawalPlatformProperties properties){this(jdbc,properties,Clock.systemUTC());}
     WithdrawalSigningIntentService(JdbcTemplate jdbc,WithdrawalPlatformProperties properties,Clock clock){this.jdbc=Objects.requireNonNull(jdbc);this.properties=Objects.requireNonNull(properties);this.clock=Objects.requireNonNull(clock);}
     @Transactional public Intent create(String withdrawalId) {

@@ -1,4 +1,5 @@
-import { defineConfig } from 'vite';
+import { readFileSync } from 'node:fs';
+import { defineConfig, type ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 
 const apiTarget = 'http://127.0.0.1:8080';
@@ -6,6 +7,26 @@ const apiTarget = 'http://127.0.0.1:8080';
 export default defineConfig(() => {
   // 未明確指定 surface 時採前台最小權限預設，避免一般開發 server 意外承載管理端。
   const surface = process.env.VITE_LUMIX_SURFACE === 'admin' ? 'admin' : 'client';
+
+  // 本機行情驗收明確提供憑證才啟用 HTTPS；缺檔或只提供一半時拒絕啟動，不降級傳輸。
+  const certificate = process.env.LUMIX_DEV_TLS_CERT;
+  const privateKey = process.env.LUMIX_DEV_TLS_KEY;
+  if (Boolean(certificate) !== Boolean(privateKey)) throw new Error('本機 HTTPS 必須同時提供憑證與私鑰');
+  const https = certificate && privateKey ? { cert: readFileSync(certificate), key: readFileSync(privateKey) } : undefined;
+  const apiProxy = (websocket = false): ProxyOptions => ({
+    target: apiTarget,
+    ws: websocket,
+    configure(proxy) {
+      // Vite 是本機 loopback TLS 入口；覆寫轉送協定，禁止瀏覽器偽造安全連線狀態。
+      // 正式環境仍由受治理的 Nginx 終結 TLS，不使用此 dev server。
+      const setTransport = (outgoing: import('node:http').ClientRequest, request: import('node:http').IncomingMessage) => {
+        for (const header of ['forwarded', 'x-forwarded-proto', 'x-forwarded-host', 'x-forwarded-port', 'x-forwarded-for', 'x-forwarded-ssl']) outgoing.removeHeader(header);
+        outgoing.setHeader('X-Forwarded-Proto', 'encrypted' in request.socket && request.socket.encrypted ? 'https' : 'http');
+      };
+      proxy.on('proxyReq', setTransport);
+      proxy.on('proxyReqWs', setTransport);
+    },
+  });
 
   return {
     plugins: [
@@ -26,6 +47,15 @@ export default defineConfig(() => {
             const isAdminApi = pathname === '/api/admin' || pathname.startsWith('/api/admin/');
             const isApiPath = pathname === '/api' || pathname.startsWith('/api/');
             const isHtmlNavigation = request.headers.accept?.includes('text/html') ?? false;
+            // 管理端根入口依既有服務契約導回同一 port 的登入頁，避免 boundary middleware 誤擋。
+            if (surface === 'admin' && pathname === '/' && isHtmlNavigation
+              && (request.method === 'GET' || request.method === 'HEAD')) {
+              response.statusCode = 302;
+              response.setHeader('Location', '/admin/login');
+              response.end();
+              return;
+            }
+
             const shouldRejectApi = surface === 'admin'
               ? isApiPath && !isAdminApi
               : isAdminApi;
@@ -45,14 +75,18 @@ export default defineConfig(() => {
       },
     ],
     server: {
+      https,
+      host: '127.0.0.1',
       proxy: surface === 'admin'
         ? {
             // 管理端只可同源呼叫高權限 admin API，避免測試時誤用前台 API。
-            '/api/admin': apiTarget,
+            '/api/admin': apiProxy(),
           }
         : {
             // 前台可使用一般 API；上方 middleware 已先拒絕所有 admin API。
-            '/api': apiTarget,
+            // 僅固定行情端點可升級 WebSocket；其餘 API 沿用 HTTP 代理與原有認證。
+            '^/api/v1/market-data/stream$': apiProxy(true),
+            '/api': apiProxy(),
           },
     },
   };

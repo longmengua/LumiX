@@ -5398,35 +5398,31 @@ p,
   background: rgba(8, 18, 33, 0.76);
 }
 
-/* 參考行情的長十進位數值必須可換行；小螢幕以單欄呈現而非裁切價位。 */
-.spot-reference .workspace-panel {
-  width: 100%;
-  min-width: 0;
-  padding: 16px;
+/* 現貨沿用合約工作區；只補真實精確數值的換行及不可用狀態，不另建版型。 */
+.spot-reference .market-header__identity,
+.spot-reference .market-header__instrument-row { flex-wrap: wrap; }
+.spot-reference .market-header__metric strong,
+.spot-reference .market-header__price strong,
+.spot-reference .trading-book__cell,
+.spot-reference .trading-book__table-head > * {
+  overflow: visible;
+  white-space: normal;
   overflow-wrap: anywhere;
 }
-.spot-reference h1 {
-  font-size: clamp(1.2rem, 4vw, 1.8rem);
-  line-height: 1.35;
-}
-.spot-reference .trading-book__table-head,
-.spot-reference .trading-book__row {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-.spot-reference .trading-book__row > span {
-  min-width: 0;
-  text-align: right;
-  overflow-wrap: anywhere;
-}
-.spot-candles { min-width: 0; overflow-wrap: anywhere; }
-.spot-candles > p { padding: 0 14px; }
-.spot-candles__summary { font-size: 0.78rem; color: #cbd5e1; }
-.spot-candles__plot { display: block; width: 100%; height: 240px; }
-.spot-candles__plot line { stroke: currentColor; stroke-width: 1; }
-.spot-candles__plot rect { fill: currentColor; }
-.spot-candles__up { color: #34d399; }
-.spot-candles__down { color: #fb7185; }
-@media (max-width: 640px) {
+/* 維持合約約十列的視窗高度；完整二十檔仍可捲動與鍵盤存取，不裁切價量。 */
+.spot-reference .trading-book__rows { max-height: calc(11.4rem + 60px); overflow-y: auto; scrollbar-gutter: stable; overflow-anchor: none; }
+.spot-reference .trading-book__row { flex-shrink: 0; }
+.spot-reference .trading-book__row,
+.spot-reference .trading-book__mid { cursor: default; }
+.spot-reference .trading-form button:disabled,
+.spot-reference .trading-form input:disabled,
+.spot-reference .trading-form select:disabled { cursor: not-allowed; opacity: .65; }
+.spot-reference .balance-panel__tab,
+.spot-reference .market-chart__timeframe { cursor: default; }
+.spot-candles { min-width: 0; }
+.spot-candles__summary { margin: 0; padding: 8px 14px; color: #94a3b8; font-size: .7rem; overflow-wrap: anywhere; }
+.spot-reference__chart-status { display: flex; align-items: center; justify-content: center; min-height: clamp(260px, 34vh, 360px); }
+@media (max-width: 1023px) {
   .spot-reference .trading-book__sides { grid-template-columns: minmax(0, 1fr); }
   .spot-reference .trading-book__side + .trading-book__side { border-left: 0; }
 }

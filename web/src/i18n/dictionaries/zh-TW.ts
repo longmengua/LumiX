@@ -468,7 +468,7 @@ export const zhTW = {
   'trading.badge.mockTape': '模擬成交流',
   'trading.badge.mockBalances': '模擬餘額',
   'trading.instrument.spotTitle': '{symbol} 現貨',
-  'trading.instrument.futuresTitle': '{symbol} USDT 永續合約',
+  'trading.instrument.futuresTitle': '{symbol} 永續合約',
   'trading.instrument.spotSubtitle': '{symbol} 的現貨交易工作台。此頁僅展示開發期資料，尚未接入真實撮合或結算。',
   'trading.instrument.futuresSubtitle': '{symbol} 的合約交易工作台。此頁僅展示開發期資料，尚未接入真實撮合或結算。',
   'trading.instrument.updatedAt': '更新時間',

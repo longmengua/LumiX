@@ -12,7 +12,6 @@ import com.lumix.user.auth.domain.AuthenticatedUser;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.WebSocket;
-import java.net.http.WebSocketHandshakeException;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -63,12 +62,11 @@ class BinanceDepthWebSocketIntegrationTest {
 
     @Test
     void pushesUnavailableStateOverForwardedSecureHandshake() throws Exception {
-        // 實際註冊認證 filter；測試 cookie 經 mock 認證服務後才能通過握手。
+        // 實際註冊認證 filter；行情須可匿名通過安全握手，帳戶 API 仍受到保護。
         CompletableFuture<String> received = new CompletableFuture<>();
         WebSocket socket = HttpClient.newHttpClient().newWebSocketBuilder()
                 .header("Origin", "https://localhost")
                 .header("X-Forwarded-Proto", "https")
-                .header("Cookie", "LUMIX_SESSION=00000000-0000-0000-0000-000000000001.test-secret")
                 .connectTimeout(Duration.ofSeconds(5))
                 .buildAsync(URI.create("ws://127.0.0.1:" + port + "/api/v1/market-data/stream"), new WebSocket.Listener() {
                     @Override public void onOpen(WebSocket ws) { ws.request(1); }
@@ -90,14 +88,11 @@ class BinanceDepthWebSocketIntegrationTest {
     }
 
     @Test
-    void missingSessionCannotOpenStream() {
-        // 缺少 session 的連線不得繞過 API filter 取得行情推播。
-        var exception = assertThrows(java.util.concurrent.ExecutionException.class, () -> HttpClient.newHttpClient()
-                .newWebSocketBuilder().header("Origin", "https://localhost").header("X-Forwarded-Proto", "https")
-                .connectTimeout(Duration.ofSeconds(5))
-                .buildAsync(URI.create("ws://127.0.0.1:" + port + "/api/v1/market-data/stream"), new WebSocket.Listener() { })
-                .get(5, TimeUnit.SECONDS));
-        assertInstanceOf(WebSocketHandshakeException.class, exception.getCause());
-        assertEquals(401, ((WebSocketHandshakeException) exception.getCause()).getResponse().statusCode());
+    void accountApiStillRequiresSession() throws Exception {
+        // 匿名行情的例外不能開放帳戶資訊。
+        var response = HttpClient.newHttpClient().send(java.net.http.HttpRequest.newBuilder(
+                URI.create("http://127.0.0.1:" + port + "/api/v1/auth/me")).GET().build(),
+                java.net.http.HttpResponse.BodyHandlers.discarding());
+        assertEquals(401, response.statusCode());
     }
 }

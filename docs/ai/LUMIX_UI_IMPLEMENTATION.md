@@ -4,7 +4,7 @@
 
 ## 快照資訊
 
-- 最後更新：2026-09-19
+- 最後更新：2026-11-19
 - 基準 revision：`2b95ebb`
 - 工作區狀態：未提交；本快照以目前 working tree 為準
 - 前端：React 19.1、TypeScript 5.8、Vite 6.3、React Router DOM 7.6
@@ -13,9 +13,13 @@
 
 ## 共同實作
 
-- `/spot/:symbol` 使用唯讀 Binance 參考行情推播；目前僅 BTC/USDT、ETH/USDT，需登入及同源 HTTPS／WSS，斷線或不可用時不顯示舊價位。該頁不代表 LumiX 的正式委託簿、成交或下單功能已開放；合約頁仍為既有開發資料。
+- 合約工作區交易對統一呈現 `BTCUSDT`／`ETHUSDT` 格式，不加 `-PERP`；解析時須先辨識報價幣與分隔符，避免重複拼接 USDT。
+- `/spot/:symbol` 使用可匿名訂閱的唯讀 Binance 參考行情推播；目前僅 BTC/USDT、ETH/USDT，需同源 HTTPS／WSS，斷線或不可用時不顯示舊價位。該頁不代表 LumiX 的正式委託簿、成交或下單功能已開放；合約頁仍為既有開發資料。
 - 前台參考 K 線以一分鐘 UTC 為週期，由後端讀取歷史並接收增量，再經相同內部推播；未同步或資料過期時不顯示舊圖。
-- 現貨參考行情窄螢幕採單欄買賣盤與可換行數值，避免長金額被裁切。
+- 依使用者指定的 `/futures/BTC-USDT` 排版，現貨與合約共用 `TradingWorkspaceLayout.tsx`，沿用 `market-header`、`market-chart`、`trading-workspace-grid`、`trading-book`、`trading-form`、`balance-panel`：摘要／全寬圖表／左訂單簿右下單面板／底部帳戶區。767px 以下沿用共用垂直排列，現貨 1023px 以下買賣盤單欄，精確數值可換行。訂單簿使用約十列高的可捲動視窗保留完整二十檔，賣盤預設追蹤最佳賣價，手動捲動時保留位置。
+- `SpotCandleChart` 以真實一分鐘 K 線繪製成交量與 MA5／20／60／120，僅提供已接通的一分鐘週期；`SpotReferenceOrderBook` 以固定精度整數計算累計量與可見深度比例。現貨下單面板停用且無送單 handler，帳戶區明示尚未提供，沒有假餘額、訂單或成交比例；合約原有資料與互動不變。
+- 本機執行 `server/scripts/start-market-preview.sh` 後以 `https://localhost:8088/spot/BTC-USDT` 或 `/spot/ETH-USDT` 驗收；Vite 使用明確憑證啟用 HTTPS，僅轉送固定行情 WebSocket 並覆寫 forwarded headers。一般開發仍預設 HTTP；行情不提供明文降級。
+- 2026-11-19 已完成真實來源及瀏覽器本機視覺驗證：買賣各 20 檔、120 根一分鐘 K 線，連續 70 秒數值更新，390px 畫面、離線清除與恢復訂閱通過。正式 Nginx 部署與安全審核尚未完成；詳細證據見 `server/docs/binance-market-data-boundary.md`。
 
 | 元件                       | 路徑                                                           | 責任                                                                                             |
 | -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |

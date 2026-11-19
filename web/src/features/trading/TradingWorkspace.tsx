@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { ErrorState, LoadingState } from '../../components/base/State';
 import { useI18n } from '../../i18n';
+import { TradingWorkspaceLayout } from './TradingWorkspaceLayout';
 import { TradingBalancePanel } from './TradingBalancePanel';
 import { TradingMarketChart } from './TradingMarketChart';
 import { TradingMarketHeader } from './TradingMarketHeader';
@@ -28,31 +29,23 @@ export function TradingWorkspace({ kind, symbol }: TradingWorkspaceProps) {
     return <ErrorState title={t('trading.errorTitle')} description={error ?? t('trading.errorTitle')} action={<button className="secondary-button" type="button" onClick={reload}>{t('common.retry')}</button>} />;
   }
 
+  // 合約與現貨只共用呈現骨架；此呼叫端的既有資料與互動保持原樣。
   return (
-    <main className="trading-page trading-page--workspace">
-      {/* 所有數據皆為本地 mock；縮小提示面積，但不隱藏尚未接入真實交易系統的事實。 */}
-      <TradingMarketHeader workspace={data} />
-      <p className="trading-page__adapter-note">{t('trading.market.adapterNotice')}</p>
-
-      <div className="trading-workspace-grid">
-        <TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />
-
-        <TradingOrderBook
-          asks={data.orderBook.asks}
-          baseAsset={data.baseAsset}
-          bids={data.orderBook.bids}
-          lastPrice={data.midPrice}
-          markPrice={data.marketStats.markPrice}
-          trades={data.trades}
-          onSelectPrice={setSelectedBookPrice}
-        />
-
-        <aside className="trading-workspace-grid__order-stack">
-          <TradingOrderForm kind={kind} workspace={data} selectedBookPrice={selectedBookPrice} />
-        </aside>
-
-        <TradingBalancePanel balances={data.balances} positions={data.positions} openOrders={data.openOrders} riskRatio={data.riskRatio} />
-      </div>
-    </main>
+    <TradingWorkspaceLayout
+      header={<TradingMarketHeader workspace={data} />}
+      notice={t('trading.market.adapterNotice')}
+      chart={<TradingMarketChart symbol={data.symbol} lastPrice={data.midPrice} />}
+      book={<TradingOrderBook
+        asks={data.orderBook.asks}
+        baseAsset={data.baseAsset}
+        bids={data.orderBook.bids}
+        lastPrice={data.midPrice}
+        markPrice={data.marketStats.markPrice}
+        trades={data.trades}
+        onSelectPrice={setSelectedBookPrice}
+      />}
+      orderPanel={<TradingOrderForm kind={kind} workspace={data} selectedBookPrice={selectedBookPrice} />}
+      accountPanel={<TradingBalancePanel balances={data.balances} positions={data.positions} openOrders={data.openOrders} riskRatio={data.riskRatio} />}
+    />
   );
 }

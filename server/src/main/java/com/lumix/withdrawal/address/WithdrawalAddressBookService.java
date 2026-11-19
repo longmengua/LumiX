@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class WithdrawalAddressBookService {
     private final JdbcTemplate jdbc; private final WithdrawalPlatformProperties properties; private final Clock clock;
+    /** 明確指定 runtime 注入入口，避免測試用 Clock 建構子讓 Spring 無法選定建構子。 */
+    @Autowired
     public WithdrawalAddressBookService(JdbcTemplate jdbc, WithdrawalPlatformProperties properties) { this(jdbc, properties, Clock.systemUTC()); }
     WithdrawalAddressBookService(JdbcTemplate jdbc, WithdrawalPlatformProperties properties, Clock clock) { this.jdbc=Objects.requireNonNull(jdbc); this.properties=Objects.requireNonNull(properties); this.clock=Objects.requireNonNull(clock); }
     @Transactional

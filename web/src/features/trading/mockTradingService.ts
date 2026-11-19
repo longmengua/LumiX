@@ -163,7 +163,7 @@ export function getTradingRoutes(baseAsset: string): TradingRouteMap {
   const normalizedBaseAsset = baseAsset.toUpperCase();
   return {
     spot: `/spot/${normalizedBaseAsset}-USDT`,
-    futures: `/futures/${normalizedBaseAsset}USDT-PERP`,
+    futures: `/futures/${normalizedBaseAsset}USDT`,
   };
 }
 
@@ -172,7 +172,8 @@ export function extractBaseAsset(symbol: string, kind: TradingKind) {
   const normalized = symbol.toUpperCase();
 
   if (kind === 'futures') {
-    return normalized.replace(/USDT-PERP$/, '').replace(/[^A-Z0-9]/g, '') || 'BTC';
+    // 先移除完整報價幣尾綴再處理分隔符，避免 BTC-USDT 被誤當成基礎資產 BTCUSDT。
+    return normalized.replace(/-?USDT(?:-PERP)?$/, '').replace(/[^A-Z0-9]/g, '') || 'BTC';
   }
 
   if (normalized.includes('-')) {
@@ -369,7 +370,7 @@ function buildPositions(baseAsset: string, lastPrice: number): TradingPosition[]
   // 部位資料偏重風險與 UI 呈現，不代表真實持倉計算已完成。
   return [
     {
-      symbol: `${baseAsset}USDT-PERP`,
+      symbol: `${baseAsset}USDT`,
       side: 'Long',
       size: 3.5,
       entryPrice: lastPrice * 0.9918,
@@ -381,7 +382,7 @@ function buildPositions(baseAsset: string, lastPrice: number): TradingPosition[]
       liqPrice: lastPrice * 0.865,
     },
     {
-      symbol: `${baseAsset}USDT-PERP`,
+      symbol: `${baseAsset}USDT`,
       side: 'Short',
       size: 1.2,
       entryPrice: lastPrice * 1.0075,
@@ -432,7 +433,7 @@ function buildHeroCopy(kind: TradingKind, baseAsset: string) {
     return { key: 'trading.instrument.spotSubtitle', values: { symbol: `${baseAsset}/USDT` } };
   }
 
-  return { key: 'trading.instrument.futuresSubtitle', values: { symbol: `${baseAsset}USDT-PERP` } };
+  return { key: 'trading.instrument.futuresSubtitle', values: { symbol: `${baseAsset}USDT` } };
 }
 
 function buildFundingStatus(kind: TradingKind, profile: ReturnType<typeof getAssetProfile>) {
@@ -459,14 +460,14 @@ export async function fetchTradingWorkspaceMock(kind: TradingKind, symbol: strin
 
   return structuredClone({
     kind,
-    symbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}-USDT`,
+    symbol: kind === 'futures' ? `${baseAsset}USDT` : `${baseAsset}-USDT`,
     baseAsset,
-    displaySymbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}/USDT`,
+    displaySymbol: kind === 'futures' ? `${baseAsset}USDT` : `${baseAsset}/USDT`,
     displayNameKey:
       kind === 'spot'
         ? 'trading.instrument.spotTitle'
         : 'trading.instrument.futuresTitle',
-    displayNameValues: { symbol: kind === 'futures' ? `${baseAsset}USDT-PERP` : `${baseAsset}/USDT` },
+    displayNameValues: { symbol: kind === 'futures' ? `${baseAsset}USDT` : `${baseAsset}/USDT` },
     adapterNoticeKey: 'trading.developmentNotice.description',
     heroCopyKey: heroCopy.key,
     heroCopyValues: heroCopy.values ?? {},

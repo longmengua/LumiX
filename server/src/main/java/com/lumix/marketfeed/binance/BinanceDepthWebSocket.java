@@ -28,7 +28,7 @@ import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorato
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
-/** 已認證使用者的唯讀行情推播；對外 TLS 由受信任 Nginx 終結。 */
+/** 可匿名讀取的唯讀行情推播；對外 TLS 由受信任 Nginx 終結，帳戶 API 維持認證。 */
 @Configuration
 @EnableWebSocket
 @Profile("infrastructure")
@@ -65,11 +65,10 @@ public class BinanceDepthWebSocket implements WebSocketConfigurer {
     }
 
     private static final class Handler extends TextWebSocketHandler {
-        private record Connection(WebSocketSession session, long openedAtNanos) { }
         private final BinanceDepthFeed feed;
         private final BinanceKlineFeed klines;
         private final ObjectMapper mapper;
-        private final Map<String, Connection> sessions = new ConcurrentHashMap<>();
+        private final Map<String, WebSocketSession> sessions = new ConcurrentHashMap<>();
         private final ScheduledExecutorService publisher = Executors.newSingleThreadScheduledExecutor();
 
         private Handler(BinanceDepthFeed feed, BinanceKlineFeed klines, ObjectMapper mapper) {
@@ -82,7 +81,7 @@ public class BinanceDepthWebSocket implements WebSocketConfigurer {
         @Override public synchronized void afterConnectionEstablished(WebSocketSession session) throws Exception {
             if (sessions.size() >= 100) { session.close(CloseStatus.POLICY_VIOLATION); return; }
             session.setTextMessageSizeLimit(1024);
-            sessions.put(session.getId(), new Connection(new ConcurrentWebSocketSessionDecorator(session, 2000, 65536), System.nanoTime()));
+            sessions.put(session.getId(), new ConcurrentWebSocketSessionDecorator(session, 2000, 65536));
         }
         @Override protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
             // 此端點固定推播兩個交易對，不接受客戶端任意訂閱或指令。
@@ -98,23 +97,18 @@ public class BinanceDepthWebSocket implements WebSocketConfigurer {
                 String payload = mapper.writeValueAsString(Map.of("source", "BINANCE_SPOT", "publishedAt", Instant.now().toString(),
                         "BTCUSDT", feed.view("BTCUSDT"), "ETHUSDT", feed.view("ETHUSDT"),
                         "candles", Map.of("BTCUSDT", klines.view("BTCUSDT"), "ETHUSDT", klines.view("ETHUSDT"))));
-                for (Connection connection : sessions.values()) {
-                    WebSocketSession session = connection.session();
-                    // 長連線固定重新握手，讓登出或過期的 session 不能無限期保留資料通道。
-                    if (System.nanoTime() - connection.openedAtNanos() >= TimeUnit.MINUTES.toNanos(1)) {
-                        sessions.remove(session.getId());
-                        try { session.close(CloseStatus.NORMAL); } catch (IOException ignored) { }
-                        continue;
-                    }
+                // 公開唯讀行情不依賴 session 到期；保留健康連線，避免每分鐘清空圖表。
+                // 數量、發送時間與緩衝上限仍限制資源，傳輸錯誤時立即移除連線。
+                for (WebSocketSession session : sessions.values()) {
                     try { session.sendMessage(new TextMessage(payload)); }
                     catch (IOException | RuntimeException exception) { sessions.remove(session.getId()); try { session.close(CloseStatus.SERVER_ERROR); } catch (IOException ignored) { } }
                 }
             } catch (Exception exception) {
                 // 無法產生完整快照時關閉連線，不得持續呈現最後一筆舊行情。
-                sessions.values().forEach(connection -> { try { connection.session().close(CloseStatus.SERVER_ERROR); } catch (IOException ignored) { } });
+                sessions.values().forEach(session -> { try { session.close(CloseStatus.SERVER_ERROR); } catch (IOException ignored) { } });
                 sessions.clear();
             }
         }
-        private void close() { publisher.shutdownNow(); sessions.values().forEach(connection -> { try { connection.session().close(CloseStatus.GOING_AWAY); } catch (IOException ignored) { } }); sessions.clear(); }
+        private void close() { publisher.shutdownNow(); sessions.values().forEach(session -> { try { session.close(CloseStatus.GOING_AWAY); } catch (IOException ignored) { } }); sessions.clear(); }
     }
 }

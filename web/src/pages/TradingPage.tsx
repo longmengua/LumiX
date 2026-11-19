@@ -10,7 +10,7 @@ type TradingPageProps = {
 
 const defaultSymbols: Record<TradingKind, string> = {
   spot: 'BTC-USDT',
-  futures: 'BTCUSDT-PERP',
+  futures: 'BTCUSDT',
 };
 
 export function TradingPage({ kind }: TradingPageProps) {

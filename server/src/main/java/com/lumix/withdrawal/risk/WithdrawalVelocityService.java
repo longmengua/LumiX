@@ -16,7 +16,8 @@ import org.springframework.stereotype.Service;
 public class WithdrawalVelocityService {
     private final RedisTemplate<String,String> redis;
     private static final DefaultRedisScript<String> AMOUNT_INCREMENT = new DefaultRedisScript<>("local v=redis.call('INCRBYFLOAT',KEYS[1],ARGV[1]); if redis.call('TTL',KEYS[1]) < 0 then redis.call('EXPIRE',KEYS[1],ARGV[2]) end; return v",String.class);
-    public WithdrawalVelocityService(RedisTemplate<String,String> redis){this.redis=Objects.requireNonNull(redis);}
+    /** 計數及風控證據使用字串序列化，明確選定 template 以避免多個 Redis bean 造成啟動歧義。 */
+    public WithdrawalVelocityService(@org.springframework.beans.factory.annotation.Qualifier("stringRedisTemplate") RedisTemplate<String,String> redis){this.redis=Objects.requireNonNull(redis);}
     /** 讀取失敗一律拋出，caller 必須導向 MANUAL_REVIEW 而不可假設 0。 */
     public Snapshot snapshot(String userId,String deviceId,String ip){try{return new Snapshot(count(user(userId,"10m:count")),count(user(userId,"1h:count")),count(user(userId,"24h:count")),amount(user(userId,"24h:amount")),count(device(deviceId,"1h:count")),count(ip(ip,"1h:count")));}catch(RuntimeException e){throw new VelocityUnavailableException(e);}}
     /** 在 request 已持久化後記錄；操作失敗不回寫 financial truth，僅讓後續風控採 fail-safe。 */
