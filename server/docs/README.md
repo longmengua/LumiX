@@ -25,4 +25,6 @@ withdrawal-risk-engine.md    提款風控規則與 Redis velocity 設計
 physical-signer.md           獨立 signer trust boundary 與安全限制
 wallet-architecture-after-withdrawal.md 提款 runtime 後的後端錢包架構快照
 server-service-overview.md  server service scope and document entry points
+security/upload-security-audit.md C 端上傳安全盤點、證據與待查事項
+security/upload-remediation-plan.md 上傳安全最小修補提案與驗收條件（尚未實作）
 ```
