@@ -14,6 +14,8 @@
 
 另有未接入管理命令的 `FuturesRiskPolicy` 驗證完整商品、保證金、行情、funding、保險基金及兌付池欄位，並拒絕維持保證金高於或等於初始保證金的配置；其兩項單元測試通過。Binance USDⓈ-M 公開行情為已選上游，正式使用條款由使用者核對。Docker Desktop 已安裝，但 Windows WSL 前置條件尚未完成，故無法啟動 Compose；不以此局部政策模型宣稱合約可下單。
 
+已加入預設關閉的 Binance USDⓈ-M `premiumIndex` 後端接收器，固定 BTCUSDT、ETHUSDT，分別保存 mark／index、來源及接收時間。來源失敗即清除快照，讀取時依政策時效拒絕過期資料；兩項解析／失效測試通過。兩個具名公開 HTTP 端點已在本機實際回應，但接收器尚未接到合約風險決策或完成長時間穩定性驗證。官方介面：https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data 。
+
 ## 現有可重用能力與缺口
 
 | 範圍 | 已有程式證據 | 必須補齊的能力 |
