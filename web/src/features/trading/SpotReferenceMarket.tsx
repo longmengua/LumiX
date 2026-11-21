@@ -9,12 +9,12 @@ import type { StockChartTimeframe } from './TradingChartControls';
 
 import { TradingWorkspaceLayout } from './TradingWorkspaceLayout';
 import { SpotReferenceOrderBook, type ReferenceLevel as Level, type ReferenceBook as Book } from './SpotReferenceOrderBook';
-import { SpotUnavailableOrderPanel, SpotUnavailableAccountPanel } from './SpotTradingUnavailablePanels';
+import { useLiveTradingPanels } from './TradingLivePanels';
 import { formatMarketDecimal, isMarketDecimal } from './marketDecimal';
 type State = { status: 'connecting' | 'unavailable' | 'healthy'; book: Book | null };
 
 /** Binance 的參考行情與未來 LumiX 自身的成交及委託簿必須分開呈現。 */
-export function SpotReferenceMarket({ symbol }: { symbol: string }) {
+export function SpotReferenceMarket({ symbol, kind = 'spot' }: { symbol: string; kind?: 'spot' | 'futures' }) {
   const { locale, t } = useI18n();
   const { timeframe } = useTradingChartPreferences();
   const normalized = symbol.toUpperCase().replace('-', '');
@@ -97,6 +97,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
   }, [normalized, supported, timeframe]);
 
   const baseAsset = normalized.endsWith('USDT') ? normalized.slice(0, -4) : normalized;
+  const live = useLiveTradingPanels(kind, `${baseAsset}-USDT`, baseAsset, english);
   const last = candles ? candles[candles.length - 1] : undefined;
   const unavailable = !supported
     ? (english ? 'This market is not supported yet.' : '此交易對目前尚未提供。')
@@ -116,7 +117,7 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
   const header = <header className="market-header">
     <div className="market-header__identity"><span className="market-header__brand">LumiX</span><div>
       <div className="market-header__instrument-row"><h1>{baseAsset}/USDT</h1><Badge tone="warning">{english ? 'Reference market' : '參考行情'}</Badge></div>
-      <p>Binance · {english ? 'Spot' : '現貨'}</p>
+      <p>{kind === 'spot' ? (english ? 'Spot' : '現貨') : (english ? 'Perpetual' : '永續合約')} · Binance {english ? 'spot reference' : '現貨參考行情'}</p>
     </div></div>
     <div className="market-header__price"><span>{english ? 'Latest reference price' : '最新參考價格'}</span><strong>{last ? formatMarketDecimal(last.close) : '—'}</strong><em role="status" className={state.status === 'healthy' ? 'pnl--positive' : ''}>{status}</em></div>
     <div className="market-header__metrics">
@@ -128,11 +129,11 @@ export function SpotReferenceMarket({ symbol }: { symbol: string }) {
     <TradingWorkspaceLayout
       className="spot-reference"
       header={header}
-      notice={english ? 'Source: Binance Spot. External reference data; LumiX spot order execution is not available yet.' : '來源：Binance 現貨。此為外部參考行情；LumiX 現貨下單尚未開放。'}
+      notice={english ? 'Source: Binance Spot, for reference only. LumiX orders match the separate LumiX order book. This chart is not a perpetual mark price.' : '來源：Binance 現貨，僅供參考。LumiX 下單只與獨立的 LumiX 委託簿成交；此圖不是永續標記價格。'}
       chart={<TradingMarketChart candles={candles} sourceLabel="Binance · UTC" />}
       book={<SpotReferenceOrderBook book={state.book} lastPrice={last?.close ?? null} baseAsset={baseAsset} english={english} status={status} />}
-      orderPanel={<SpotUnavailableOrderPanel baseAsset={baseAsset} english={english} />}
-      accountPanel={<SpotUnavailableAccountPanel english={english} />}
+      orderPanel={live.orderPanel}
+      accountPanel={live.accountPanel}
     />
   );
 }

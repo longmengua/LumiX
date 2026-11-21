@@ -29,9 +29,8 @@ public class LedgerBalanceProjectionUpdater {
     /**
      * 重算本 journal 影響的 projection rows。
      *
-     * <p>呼叫端必須在同一個 transaction 內先 append ledger entries。本輪尚未有 reservation runtime，
-     * 所以 available 等於 total、locked 固定零；未來 reservation 必須取代這個 available 推導規則，
-     * 不能直接覆蓋 total。</p>
+     * <p>呼叫端必須在同一個 transaction 內先 append ledger entries。先鎖所有受影響的投影，再由
+     * ledger 重算 total 並保留有效 locked，避免兩個交易在等鎖前各自計算舊總額而發生最後寫入覆蓋。</p>
      */
     public void refreshAffectedBalances(List<LedgerEntryDraft> entries) {
         Objects.requireNonNull(entries, "entries must not be null");
@@ -39,11 +38,20 @@ public class LedgerBalanceProjectionUpdater {
         for (LedgerEntryDraft entry : entries) {
             affected.add(new AccountAssetKey(entry.accountId().value(), entry.assetSymbol().value()));
         }
-        for (AccountAssetKey key : affected) {
-            if (!isUserAccount(key.accountId())) {
-                // 交易所對應帳戶維持在 ledger source of truth；絕不投影成某個使用者可見的資產。
-                continue;
-            }
+        List<AccountAssetKey> ordered = affected.stream().sorted(java.util.Comparator.comparing(AccountAssetKey::accountId)
+                .thenComparing(AccountAssetKey::assetSymbol)).filter(key -> isUserAccount(key.accountId())).toList();
+        for (AccountAssetKey key : ordered) {
+            // 新收款資產需先有 transaction 局部鎖 row；零值不會作為對外餘額，提交前必由 immutable ledger 重算。
+            // 缺投影卻存在 reservation 是資料缺口，不能把保留額初始化為零而放寬可用額。
+            Integer missingHold = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM reservations r WHERE r.account_id=? AND r.asset_symbol=? "
+                    + "AND r.remaining_amount>0 AND NOT EXISTS (SELECT 1 FROM balance_projections p WHERE p.account_id=r.account_id AND p.asset_symbol=r.asset_symbol)",
+                    Integer.class, key.accountId(), key.assetSymbol());
+            if (missingHold != null && missingHold > 0) throw new IllegalStateException("reservation projection is missing");
+            jdbcTemplate.update("INSERT INTO balance_projections(account_id,asset_symbol,total_amount,available_amount,locked_amount,projection_version,projected_at) "
+                    + "VALUES (?,?,0,0,0,0,CURRENT_TIMESTAMP) ON CONFLICT(account_id,asset_symbol) DO NOTHING", key.accountId(),key.assetSymbol());
+            jdbcTemplate.queryForObject("SELECT projection_version FROM balance_projections WHERE account_id=? AND asset_symbol=? FOR UPDATE",Long.class,key.accountId(),key.assetSymbol());
+        }
+        for (AccountAssetKey key : ordered) {
             BigDecimal total = deriveTotalFromLedger(key);
             if (total.compareTo(BigDecimal.ZERO) < 0) {
                 // projection schema 不接受負數；這表示上游 debit 沒有 balance / reservation 證據，必須整筆回滾。

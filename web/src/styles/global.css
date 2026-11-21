@@ -6330,3 +6330,12 @@ p,
     justify-content: center;
   }
 }
+
+/* 真實帳戶表格以可鍵盤捲動容器保留完整欄位；不能靠 balance-panel 的裁切掩蓋手機資料。 */
+.trading-live-panel { width: 100%; max-width: 100%; min-width: 0; padding: 14px; overflow-wrap: anywhere; }
+.trading-live-panel fieldset { min-width: 0; margin: 0; padding: 0; border: 0; }
+.trading-account-table { width: 100%; min-width: 0; overflow-x: auto; overscroll-behavior-x: contain; }
+.trading-account-table table { width: 100%; min-width: 36rem; border-collapse: collapse; }
+.trading-account-table th, .trading-account-table td { padding: 10px; text-align: start; border-bottom: 1px solid rgba(148, 163, 184, .15); }
+.trading-account-table td { font-variant-numeric: tabular-nums; }
+.trading-account-table:focus-visible { outline: 2px solid #38bdf8; outline-offset: -2px; }

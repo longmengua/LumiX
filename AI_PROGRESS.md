@@ -190,7 +190,7 @@ context_router: docs/ai/AI_CONTEXT_ROUTING.md
 phase_governance: docs/governance/PHASE_REVIEW_WORKFLOW.md
 phase_20_review_status: docs/phases/PHASE_20_FEE_ENGINE/phase-20-final-review.md
 current_phase_task_list: docs/phases/PHASE_36_LAUNCH_GATE/README.md
-current_task: P21-R02 七週期真實行情與現貨／合約共用圖表模板已可視覺驗收；正式 Nginx 部署、完整故障演練及安全審核待完成
+current_task: 現貨真實撮合／結算／撤單及現貨合約共用真實 API 面板已實作，31 項相關測試與前端邊界驗證通過；實際政策及雙帳戶端到端待驗收，永續完整風險／交易 runtime 未完成；詳 server/docs/trading-execution-boundary.md
 next_implementation_phase: complete market-data verification and missing functionality, then spot and spot market making in dependency order
 completed_task: Phase 21 through Phase 36 foundation and final-review evidence committed/pushed separately; P36-T01 through P36-T05 complete the post-foundation readiness documentation only; P21-R01 is a post-foundation admission task card, not runtime
 approval_status: P-task approval mode temporarily disabled by human; this does not replace P36 human production sign-off or authorize runtime/prod launch

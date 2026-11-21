@@ -2,18 +2,18 @@
 
 日期：2026-11-21。`HUMAN_REVIEW_REQUIRED`。
 
-使用者已要求完成現貨與合約客戶下單；本文件將該需求拆成真實交易 runtime 的施工相依，不將表單可點選或 sandbox 通過視為可交易。現階段完成程式盤點與施工設計，尚未修改交易 runtime、schema 或前端下單行為。交易對手／風險參數待確認；必要測試依本次任務已授權的 AI 施工流程豁免直接新增，不再等待人工批准。其他新任務是否適用豁免，依 AGENTS.md 的任務限定規則判斷。
+使用者已要求完成現貨與合約客戶下單；本文件將該需求拆成真實交易 runtime 的施工相依，不將表單可點選或 sandbox 通過視為可交易。已完成現貨 runtime 的本機整合實作與共用前端接線；現貨雙帳戶端到端驗收、實際政策啟用與完整永續 runtime 尚未完成。交易對手／風險參數待確認；必要測試依本次任務已授權的 AI 施工流程豁免直接新增，不再等待人工批准。其他新任務是否適用豁免，依 AGENTS.md 的任務限定規則判斷。
 
 ## 現有可重用能力與缺口
 
 | 範圍 | 已有程式證據 | 必須補齊的能力 |
 | --- | --- | --- |
-| 現貨頁 | `web/src/features/trading/SpotReferenceMarket.tsx`、`SpotTradingUnavailablePanels.tsx` | 表單仍停用；來源是 Binance 參考行情，不是 LumiX 可成交簿 |
-| 合約頁 | `TradingWorkspace.tsx` 使用 `useTradingWorkspaceMock`；`TradingOrderForm.tsx` 只回報 savedLocally | 移除交易路徑的 mock 餘額、委託、持倉與假成功，改接真實 API |
-| 訂單／成交 schema | `server/src/main/resources/db/migration/V001__baseline.sql` 的 orders、trades | 無實際下單／撤單 Controller 與交易寫入 service，亦無持倉／資金費率 runtime schema |
-| 市場 schema | markets 的 base／quote 唯一，只有價格／數量 scale | 缺現貨與永續商品識別、交易規格、步進／最小名義額、版本化 fee／risk policy，不能以相同 underlying symbol 混合撮合 |
+| 現貨頁 | `web/src/features/trading/SpotReferenceMarket.tsx`、`TradingLivePanels.tsx` | 已接真實 API；仍待核定現貨政策及兩帳戶端到端驗收。Binance 參考簿與 LumiX 自有簿分開呈現 |
+| 合約頁 | `TradingWorkspace.tsx` 重用共用真實 API 面板 | 已移除交易路由的 mock 資金／假送單；永續風險閉環未完成，不開倉 |
+| 訂單／成交 schema | `server/src/main/resources/db/migration/V001__baseline.sql` 的 orders、trades | 現貨下單／撤單 Controller 與交易寫入 service 已實作；仍無永續持倉／資金費率 runtime schema |
+| 市場 schema | markets 的 base／quote 唯一，只有價格／數量 scale | V004 新增獨立商品與不可變現貨執行政策，不能以相同 underlying symbol 混合撮合；永續風險政策待實作 |
 | 帳本 | `TransactionalLedgerPostingService`、`LedgerBalanceProjectionUpdater` | 重用 append-only journal 與 projection；驗證跨帳戶鎖定順序、重放及與 reservation 的原子性 |
-| 資產保留 | `ReservationHoldService`、`ReservationCaptureService`、`ReservationReleaseService` | capture 目前消耗全部 remaining；實際部分成交必須按成交額扣用，並正確保留未成交及價格改善釋放額 |
+| 資產保留 | `ReservationHoldService`、`ReservationCaptureService`、`ReservationReleaseService` | 新增 OrderReservationChangeService 按成交額 partial capture/release，保留未成交及釋放價格改善額；原有其他業務 reservation 入口不變 |
 | 現貨核心 | `trading/core/spot` 的 orderintake／orderbook／matching／settlement | 現有 sandbox 不可直接暴露作客戶資金 runtime，需要持久化順序、撮合、結算與復原 |
 | 合約核心 | `trading/core/futures` 的 order／margin／position 等 pure gate | 缺持久化訂單、持倉、開平倉、PnL 入帳、資金費率、風險監控與強平／穿倉處理 |
 
@@ -91,7 +91,7 @@
 
 ## Schema、測試與回滾原則
 
-目前未建立 migration。後續先對 current final schema 設計新增變更，不變更已套用 baseline。不得以此次需求推定需要支援歷史 schema 升級或刪除現有物件。migration 順序為商品／版本化政策與執行關聯，再持倉／資金費率／清算 evidence，最後才開通相關命令；實際順序須依最終核定模型重新審查。
+已建立 V004__trading_execution.sql，依序套於 V001–V003 後；已在隔離 PostgreSQL 測試庫驗證，尚未對開發／正式資料庫套用。不變更已套用 baseline。不得以此次需求推定需要支援歷史 schema 升級或刪除現有物件。migration 順序為商品／版本化政策與執行關聯，再持倉／資金費率／清算 evidence，最後才開通相關命令；實際順序須依最終核定模型重新審查。
 
 回滾先停止接新單、保留查詢／安全撤單與對帳；已有持倉時不得直接停掉風險監控。資料保留，ledger 僅能追加修正，不 DROP 訂單／成交／持倉或刪除使用者資金。新 schema 尚無業務資料時才可依核定 rollback 順序退回。
 
@@ -105,4 +105,33 @@
 ./mvnw --offline '-Dtest=SpotSandboxOrderIntakePolicyTest,SpotSandboxMatchingPolicyTest,SpotSandboxSettlementPolicyTest,FuturesOrderPlacementGateTest,FuturesSandboxMatchingGateTest,IsolatedMarginCheckGateTest' test
 ```
 
-實際執行 32 項，0 failures／errors／skipped。僅證明既有 pure sandbox 規則基線，沒有驗證新 runtime、PostgreSQL 並行資金安全或客戶端到端下單。尚未新增測試，也未修改使用者資料。
+歷史基線實際執行 32 項，0 failures／errors／skipped；僅證明既有 pure sandbox 規則。以下另記本次新增 runtime 證據；未修改使用者開發資料。
+
+## 2026-11-21 實作與實際驗證紀錄
+
+狀態：`SPOT_RUNTIME_AND_SHARED_UI_IMPLEMENTED_PENDING_POLICY_AND_END_TO_END`。`HUMAN_REVIEW_REQUIRED`。
+
+- D1 已實作：獨立 instrument、不可變政策版本、canonical decimal／冪等、持久化委託序號、partial reservation、owner 查詢與命令來源 gate。現貨採政策明確指定的 CLIENT_TO_CLIENT；不預設實際費率、不預設啟用商品。交易先取全域 transaction advisory lock，再鎖受影響帳戶及 projection；ledger updater 先鎖 projection 才重算，避免等鎖前的舊 SUM 覆蓋新入帳。
+- D2 後端已實作：LIMIT GTC／IOC／FOK、具明確 slippage 保護的 MARKET IOC／FOK、maker 價與價格／持久化序號優先、拒絕自成交、真實 base／quote／fee 守恆、找零釋放、owner 撤單。單命令最多 100 個對手單，超出預算的 GTC 全回滾；沒有外部參考簿成交。
+- D3 未實作：永續 margin、position、PnL、funding、mark／index provider、liquidation／insurance／recovery。交易對手責任及具體政策待明確；目前 API 明示 FUTURES_RISK_RUNTIME_UNAVAILABLE，無開倉入口。
+- D4 已接線但未完整驗收：兩種頁面重用 API 面板，顯示真實餘額／委託／成交／自有簿；前端沒有 mock balance 或本地假成功。外部圖表明示 Binance 現貨參考，不能當作永續 mark。仍待真實兩帳號、核定政策與資產的端到端驗收。
+
+API：
+
+- `GET /api/v1/trading/{kind}/orders`、`GET /{orderId}`：owner-only 委託分頁／明細。
+- `GET /api/v1/trading/{kind}/workspace?market=BTC-USDT`：primary 一致快照的餘額、最近本人成交與 LumiX 聚合簿。無 projection 時回 null，不能假定有資金。
+- `GET /api/v1/trading/{kind}/configuration?market=BTC-USDT`：後端能力及 decimal string 商品規格／費率。沒有完整政策時禁止新單。
+- `POST /api/v1/trading/spot/orders`：最多 4096 bytes JSON，金額必須 JSON string，未知欄位拒絕，必須 `Idempotency-Key`、精確 Origin 與 `X-LumiX-Intent: trading-command`。
+- `DELETE /api/v1/trading/spot/orders/{orderId}`：相同來源與冪等 gate；停止新單不阻擋安全撤單。
+- `POST /api/admin/v1/trading/spot/policies`：最高管理員且精確 admin Origin／`X-LumiX-Intent: trading-policy`，最多 16384 bytes。完整政策逐版本追加，同版異內容拒絕，有 OPEN 單時不能換規格；同交易寫 ADMIN audit/outbox。必要時只建立空的具名收費帳戶，不產生資金。
+
+啟用設定：`lumix.trading.spot-enabled` 預設 false；`lumix.trading.allowed-origin` 與 `lumix.trading.admin-allowed-origin` 預設空，缺值拒絕命令。政策發佈還需 existing ACTIVE market／assets、明確 CLIENT_TO_CLIENT、費率／取整／slippage／數量限制及收費帳戶。尚未核定產品政策，未啟用實際下單。
+
+驗證：
+
+- PostgreSQL 真實整合及 HTTP／數值單元測試共 31 個不同案例通過：現貨 7、partial reservation 10、query HTTP 3、command HTTP 4、decimal admission 4、ledger 1、internal transfer 2。最後整組 30 項通過後，新增的價格／時間優先案例與全部 7 項現貨測試再跑通過。fixture 僅在 test source set，不被 application 載入。
+- `npm run typecheck`、`npm run build` 通過；既有 bundle size warning 仍在。
+- `web/tests/trading-command-boundary.cjs` 使用僅存在測試 source 的 route fixture，驗證非確定送單同鍵重試、decimal string、1440／768／390px、手機完整表格捲動、合約 gate，零 page errors。這不是兩個真實帳戶的端到端成交證據。
+- 暫時啟動前台做瀏覽器驗證，驗證後已停止；未啟動 API／admin，未啟用交易政策或存入開發資產。
+
+回退：先關閉 spot-enabled；保留 owner 查詢與來源設定下的安全撤單。已有委託／成交的 V004 不可 DROP；ledger 修正只能 append。policy／trade execution evidence 禁止 UPDATE／DELETE。永續風險尚未啟用，沒有持倉可停止監控的暗示。
