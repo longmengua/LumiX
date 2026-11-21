@@ -32,6 +32,7 @@ class FuturesRiskPolicyAdministrationIntegrationTest {
             jdbc.update("INSERT INTO markets(market_symbol,base_asset_symbol,quote_asset_symbol,price_scale,quantity_scale,status) "
                     + "VALUES ('BTC-USDT','BTC','USDT',2,4,'ACTIVE') ON CONFLICT DO NOTHING");
             account(jdbc, "futures-fees", "TRADING_FEE_REVENUE");
+            account(jdbc, "futures-margin", "PERPETUAL_MARGIN_POOL");
             account(jdbc, "futures-insurance", "PERPETUAL_INSURANCE");
             account(jdbc, "futures-pool", "PERPETUAL_CONVERSION_POOL");
             var support = new TradingExecutionSupport(jdbc, new ObjectMapper().findAndRegisterModules(),
@@ -82,6 +83,6 @@ class FuturesRiskPolicyAdministrationIntegrationTest {
                 new BigDecimal("0.05"), new BigDecimal(positionLimit),
                 "BINANCE_USDSM_PREMIUM_INDEX", "BINANCE_USDSM_PREMIUM_INDEX", Duration.ofSeconds(10),
                 Duration.ofHours(8), new BigDecimal("0.01"), new BigDecimal("100000"),
-                insurance, "futures-pool");
+                "futures-margin", insurance, "futures-pool");
     }
 }

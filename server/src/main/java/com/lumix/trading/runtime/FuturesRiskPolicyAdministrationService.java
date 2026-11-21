@@ -59,9 +59,10 @@ public class FuturesRiskPolicyAdministrationService {
                 || rules.quoteScale() != ((Number) market.get("quote_scale")).intValue())
             throw new IllegalArgumentException("futures market identity or precision mismatch");
         requireAsset(policy.collateralAsset());
-        requireSystemAccount(policy.execution().feeAccountId(), "TRADING_FEE_REVENUE");
-        requireSystemAccount(policy.insuranceAccountId(), "PERPETUAL_INSURANCE");
-        requireSystemAccount(policy.conversionPoolAccountId(), "PERPETUAL_CONVERSION_POOL");
+        requireSystemAccount(policy.execution().feeAccountId(), "TRADING_FEE_REVENUE", "USDT");
+        requireSystemAccount(policy.marginPoolAccountId(), "PERPETUAL_MARGIN_POOL", policy.collateralAsset());
+        requireSystemAccount(policy.insuranceAccountId(), "PERPETUAL_INSURANCE", "USDT");
+        requireSystemAccount(policy.conversionPoolAccountId(), "PERPETUAL_CONVERSION_POOL", "USDT");
 
         jdbc.update("INSERT INTO trading_instruments(instrument_id,instrument_kind,market_symbol,status) "
                         + "VALUES (?,'PERPETUAL',?,'HALTED') ON CONFLICT(instrument_id) DO NOTHING",
@@ -113,11 +114,11 @@ public class FuturesRiskPolicyAdministrationService {
     }
 
     /** 政策只引用已存在的專用帳戶；此處不建立資金或假餘額。 */
-    private void requireSystemAccount(String account, String purpose) {
+    private void requireSystemAccount(String account, String purpose, String asset) {
         Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM accounts a JOIN account_assets aa "
                         + "ON aa.account_id=a.account_id WHERE a.account_id=? AND a.account_category='EXCHANGE' "
-                        + "AND a.account_purpose=? AND a.status='ACTIVE' AND aa.asset_symbol='USDT' "
-                        + "AND aa.status='ACTIVE'", Integer.class, account, purpose);
-        if (count == null || count != 1) throw new IllegalArgumentException("governed USDT system account is required");
+                        + "AND a.account_purpose=? AND a.status='ACTIVE' AND aa.asset_symbol=? "
+                        + "AND aa.status='ACTIVE'", Integer.class, account, purpose, asset);
+        if (count == null || count != 1) throw new IllegalArgumentException("governed system account asset is required");
     }
 }

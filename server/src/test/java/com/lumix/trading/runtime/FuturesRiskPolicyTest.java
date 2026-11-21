@@ -28,12 +28,12 @@ class FuturesRiskPolicyTest {
                 decimal("0.2"), decimal("5"), decimal("0.2"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
                 Duration.ofHours(8), decimal("0.01"), decimal("100000"),
-                "insurance-usdt", "conversion-usdt"));
+                "margin-usdt", "insurance-usdt", "conversion-usdt"));
         assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
                 decimal("0.2"), decimal("5"), decimal("0.05"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
                 Duration.ofHours(8), decimal("0.01"), BigDecimal.ZERO,
-                "insurance-usdt", "conversion-usdt"));
+                "margin-usdt", "insurance-usdt", "conversion-usdt"));
     }
 
     private static FuturesRiskPolicy policy(String collateral, String insurance, String conversion) {
@@ -47,7 +47,7 @@ class FuturesRiskPolicyTest {
         return new FuturesRiskPolicy(execution, collateral, decimal("0.2"), decimal("5"),
                 decimal("0.05"), decimal("1000000"), "named-futures-mark", "named-futures-index",
                 Duration.ofSeconds(10), Duration.ofHours(8), decimal("0.01"), decimal("100000"),
-                insurance, conversion);
+                "margin-usdt", insurance, conversion);
     }
 
     private static BigDecimal decimal(String value) { return new BigDecimal(value); }

@@ -21,6 +21,7 @@ public record FuturesRiskPolicy(
         Duration fundingInterval,
         BigDecimal maximumAbsoluteFundingRate,
         BigDecimal maximumConversionExposureUsdt,
+        String marginPoolAccountId,
         String insuranceAccountId,
         String conversionPoolAccountId
 ) {
@@ -31,12 +32,14 @@ public record FuturesRiskPolicy(
                 || execution.counterpartyModel() != TradingExecutionPolicy.CounterpartyModel.CLIENT_TO_CLIENT)
             throw new IllegalArgumentException("USDT client-to-client perpetual policy is required");
         collateralAsset = symbol(collateralAsset, "collateral asset");
+        marginPoolAccountId = symbol(marginPoolAccountId, "margin pool account");
         insuranceAccountId = symbol(insuranceAccountId, "insurance account");
         conversionPoolAccountId = symbol(conversionPoolAccountId, "conversion pool account");
         markPriceSource = source(markPriceSource, "mark price source");
         indexPriceSource = source(indexPriceSource, "index price source");
-        if (insuranceAccountId.equals(conversionPoolAccountId))
-            throw new IllegalArgumentException("insurance and conversion pool accounts must be separate");
+        if (marginPoolAccountId.equals(insuranceAccountId) || marginPoolAccountId.equals(conversionPoolAccountId)
+                || insuranceAccountId.equals(conversionPoolAccountId))
+            throw new IllegalArgumentException("margin, insurance and conversion pool accounts must be separate");
         collateralHaircut = rate(collateralHaircut, "collateral haircut", false);
         maximumLeverage = positive(maximumLeverage, "maximum leverage");
         if (maximumLeverage.compareTo(BigDecimal.ONE) < 0)

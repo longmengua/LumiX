@@ -14,6 +14,8 @@
 
 `FuturesRiskPolicy` 驗證完整商品、保證金、行情、funding、保險基金及有額度的兌付池欄位，並拒絕維持保證金高於或等於初始保證金的配置。最高管理員合約政策 API 可逐版追加政策與稽核／outbox，同版重送只接受相同內容，核對專用 USDT 系統帳戶；發佈後商品保持 HALTED，不提供開倉入口。Binance USDⓈ-M 公開行情為已選上游，正式使用條款由使用者核對。
 
+接單前風控新增 `FuturesOrderRiskGate`：以具名 mark／index 的來源及時效、委託價和標記價較高者、明確槓桿、持倉名義額上限、手續費與隔離保證金核算；非 USDT 抵押另檢查後端匯率時效、政策折算率、兌付池額度及真實可用餘額。此為純決策，尚未與下單、預留及持倉交易接線，不表示合約可開倉。逐倉政策現亦指定獨立保證金池帳戶，與保險／兌付池分離。
+
 已加入預設關閉的 Binance USDⓈ-M `premiumIndex` 後端接收器，固定 BTCUSDT、ETHUSDT，分別保存 mark／index、來源及接收時間。來源失敗即清除快照，讀取時依政策時效拒絕過期資料；兩項解析／失效測試通過。兩個具名公開 HTTP 端點已在本機實際回應，但接收器尚未接到合約風險決策或完成長時間穩定性驗證。官方介面：https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data 。
 
 ## 現有可重用能力與缺口
