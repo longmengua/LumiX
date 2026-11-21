@@ -7,14 +7,14 @@ const { chromium } = require('playwright');
   try {
     const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
     const keys = [], errors = [];
-    let requests = 0, futuresEnabled = false, futuresCommand = null;
+    let requests = 0, futuresEnabled = false, futuresReduceOnly = false, futuresCommand = null;
     page.on('pageerror', error => errors.push(error.message));
     const order = { orderId: 'test-order-1-long-identifier-000000000000000', marketSymbol: 'BTC-USDT', side: 'BUY', price: '100', quantity: '0.1', filledQuantity: '0', remainingQuantity: '0.1', status: 'OPEN' };
     await page.route('**/api/**', async route => {
       const request = route.request(), path = new URL(request.url()).pathname;
       let value, status = 200;
       if (path.endsWith('/workspace')) value = { balances: [{ asset: 'USDT', total: '100', available: '100', locked: '0' }], fills: [], bids: [], asks: [], positions: [] };
-      else if (path.endsWith('/configuration')) value = { ordersEnabled: !path.includes('/futures/') || futuresEnabled, reason: path.includes('/futures/') && !futuresEnabled ? 'FUTURES_RISK_RUNTIME_UNAVAILABLE' : 'AVAILABLE', makerFeeRate: '0.001', takerFeeRate: '0.002' };
+      else if (path.endsWith('/configuration')) value = { ordersEnabled: !path.includes('/futures/') || futuresEnabled, reason: path.includes('/futures/') && !futuresEnabled ? 'FUTURES_RISK_RUNTIME_UNAVAILABLE' : futuresReduceOnly && path.includes('/futures/') ? 'REDUCE_ONLY' : 'AVAILABLE', makerFeeRate: '0.001', takerFeeRate: '0.002' };
       else if (path.endsWith('/reference')) value = { source: 'BINANCE_USDSM_PREMIUM_INDEX', markPrice: '100', indexPrice: '100', sourceAt: new Date().toISOString() };
       else if (path.endsWith('/orders') && request.method() === 'POST') {
         keys.push(request.headers()['idempotency-key']); requests++;
@@ -64,6 +64,12 @@ const { chromium } = require('playwright');
     assert.equal(futuresCommand.reduceOnly, false);
     assert.equal(futuresCommand.leverage, '5');
     assert.equal(errors.length, 0);
-    console.log(JSON.stringify({ retryPreservedIdempotencyKey: true, decimalStringCommand: true, viewports: [1440, 768, 390], futuresFailClosed: true, futuresCommand: true, pageErrors: errors }));
+    futuresReduceOnly = true;
+    await page.reload();
+    await futuresForm.getByText(/風險處置中|Risk halt/).waitFor();
+    assert.equal(await futuresForm.locator('button[type=submit]').isDisabled(), true);
+    await futuresForm.locator('select').nth(0).selectOption('CLOSE');
+    assert.equal(await futuresForm.locator('button[type=submit]').isEnabled(), true);
+    console.log(JSON.stringify({ retryPreservedIdempotencyKey: true, decimalStringCommand: true, viewports: [1440, 768, 390], futuresFailClosed: true, futuresCommand: true, futuresReduceOnly: true, pageErrors: errors }));
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exitCode = 1; });

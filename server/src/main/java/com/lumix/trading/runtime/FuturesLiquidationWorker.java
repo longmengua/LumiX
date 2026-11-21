@@ -17,9 +17,11 @@ public class FuturesLiquidationWorker {
     private static final Logger log=LoggerFactory.getLogger(FuturesLiquidationWorker.class);
     private final JdbcTemplate jdbc;
     private final FuturesTradingExecutionService trading;
+    private final FuturesInstrumentStatusService statuses;
 
-    public FuturesLiquidationWorker(JdbcTemplate jdbc,FuturesTradingExecutionService trading){
-        this.jdbc=jdbc;this.trading=trading;
+    public FuturesLiquidationWorker(JdbcTemplate jdbc,FuturesTradingExecutionService trading,
+            FuturesInstrumentStatusService statuses){
+        this.jdbc=jdbc;this.trading=trading;this.statuses=statuses;
     }
 
     private record Candidate(String owner,String market,String side,String position){}
@@ -30,7 +32,8 @@ public class FuturesLiquidationWorker {
                 + "p.account_id FROM futures_hedge_positions p "
                 + "JOIN accounts a ON a.account_id=p.account_id "
                 + "JOIN trading_instruments i ON i.instrument_id=p.instrument_id "
-                + "WHERE p.quantity>0 AND i.status='ACTIVE' AND i.instrument_kind='PERPETUAL' "
+                + "WHERE p.quantity>0 AND i.status IN ('ACTIVE','REDUCE_ONLY') "
+                + "AND i.instrument_kind='PERPETUAL' "
                 + "ORDER BY p.account_id,i.instrument_id,p.position_side",
                 (r,n)->new Candidate(r.getString(1),r.getString(2),r.getString(3),r.getString(4)));
         for(var position:positions){
@@ -39,7 +42,17 @@ public class FuturesLiquidationWorker {
                     +position.market()+":"+position.side()+":"+bucket);
             try {trading.liquidate(position.owner(),position.market(),position.side(),key);}
             catch(TradingOrderRejectedException expected){
-                if (!"position is above maintenance margin".equals(expected.getMessage()))
+                String reason=switch(java.util.Objects.toString(expected.getMessage(),"")){
+                    case "market order needs real futures liquidity" -> "NO_LIQUIDITY";
+                    case "insurance fund lacks settled USDT backing" -> "INSURANCE_SHORTFALL";
+                    case "margin pool lacks settled USDT backing" -> "MARGIN_POOL_SHORTFALL";
+                    default -> null;
+                };
+                if(reason!=null) {
+                    try {statuses.riskHalt(position.market(),reason);}
+                    catch(RuntimeException failure){log.error("Futures risk halt failed for {}",position.market(),failure);}
+                }
+                else if (!"position is above maintenance margin".equals(expected.getMessage()))
                     log.warn("Futures liquidation delayed for {} {}: {}",position.market(),
                             position.position(),expected.getMessage());
             }

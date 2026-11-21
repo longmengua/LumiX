@@ -87,7 +87,9 @@
 
 ## 2026-11-21 真實交易接線施工狀態
 
-2026-11-22：`/futures/:symbol` 已改用 `SpotReferenceMarket` 的真實交易面板，不載入 mock 合約工作區。合約表單明確送出 LONG／SHORT、開倉或只減倉、槓桿與委託參數；帳戶區顯示逐倉持倉、真實餘額、委託、成交及 LumiX 自有簿。標記／指數價來自獨立後端永續參考 API，失效時停止新增風險；圖表與左側外部委託簿仍明確標示 Binance 現貨參考，不能當作永續標記價或 LumiX 可成交簿。商品及全域設定預設停用，非 USDT 保證金尚不能啟用。前端已通過 typecheck 與 build；真實雙帳號瀏覽器驗收仍待執行。
+2026-11-22：`/futures/:symbol` 已改用 `SpotReferenceMarket` 的真實交易面板，不載入 mock 合約工作區。合約表單明確送出 LONG／SHORT、開倉或只減倉、槓桿與委託參數；帳戶區顯示逐倉持倉、真實餘額、委託、成交及 LumiX 自有簿。標記／指數價來自獨立後端永續參考 API，失效或商品 REDUCE_ONLY 時停止新增風險，減倉仍可操作；圖表與左側外部委託簿仍明確標示 Binance 現貨參考，不能當作永續標記價或 LumiX 可成交簿。商品及全域設定預設停用，非 USDT 保證金尚不能啟用。前端已通過 typecheck 與 build。
+
+同日驗收更新：隔離 `lumix_e2e` 資料庫的兩個真實 session 於 Google Chrome 前台完成現貨互撮與 USDT 合約開平倉；BTC、USDT ledger 各自守恆，最後無未平合約持倉。後台 `/admin/spot/policies` 與 `/admin/futures/configuration` 已接入具權限的目前政策查詢、完整 JSON 政策提交；政策原文保留為 string 往返，避免 JavaScript Number 改變金融精度。合約後台另有啟用／恢復／暫停命令。管理頁 Chrome 驗收可讀到實際政策及商品狀態。測試政策僅在隔離資料庫，不是正式費率或風險政策。
 
 - 現貨與合約共用 `SpotReferenceMarket` 與 `TradingLivePanels`；交易路由不再載入 mock wallet、mock 委託或本地假送單。共用 API 面板顯示 session owner 的餘額、委託、成交與獨立 LumiX 彙總簿。
 - Binance 現貨圖表／外部深度保留來源標示；合約頁明示這不是永續標記價格。沒有把外部參考深度當作 LumiX 可成交流動性。

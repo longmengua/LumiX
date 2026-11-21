@@ -27,9 +27,9 @@ public class TradingConfigurationController {
         Configuration value;
         if("futures".equals(kind)) {
             try {
-                var p=futures.active(market);var r=p.execution().rules();
+                var live=futures.tradable(market);var p=live.policy();var r=p.execution().rules();
                 boolean available=futuresEnabled && "USDT".equals(p.collateralAsset());
-                value=new Configuration(available,available?"AVAILABLE":"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
+                value=new Configuration(available,available?("ACTIVE".equals(live.status())?"AVAILABLE":"REDUCE_ONLY"):"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
             }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null);}
         }
         else {

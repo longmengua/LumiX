@@ -33,6 +33,23 @@ public class FuturesRiskPolicyRepository {
         return verified(rows.getFirst());
     }
 
+    public record Tradable(FuturesRiskPolicy policy, String status) { }
+
+    /** 只減倉狀態保留既有持倉的結算入口。 */
+    public Tradable tradable(String market) {
+        List<Map<String, Object>> rows = jdbc.queryForList(
+                "SELECT r.policy::text AS risk_policy,p.policy::text AS execution_policy,"
+                        + "i.instrument_id,i.policy_version,i.market_symbol,i.status "
+                        + "FROM trading_instruments i JOIN futures_risk_policies r "
+                        + "ON r.instrument_id=i.instrument_id AND r.policy_version=i.policy_version "
+                        + "JOIN trading_execution_policies p ON p.instrument_id=i.instrument_id "
+                        + "AND p.policy_version=i.policy_version JOIN markets m ON m.market_symbol=i.market_symbol "
+                        + "WHERE i.instrument_kind='PERPETUAL' AND i.market_symbol=? "
+                        + "AND i.status IN ('ACTIVE','REDUCE_ONLY') AND m.status='ACTIVE'", market);
+        if (rows.size()!=1) throw new NoSuchElementException("tradable futures risk policy is unavailable");
+        return new Tradable(verified(rows.getFirst()), rows.getFirst().get("status").toString());
+    }
+
     public FuturesRiskPolicy version(String instrument, long version) {
         List<Map<String, Object>> rows = jdbc.queryForList(
                 "SELECT r.policy::text AS risk_policy,p.policy::text AS execution_policy,"

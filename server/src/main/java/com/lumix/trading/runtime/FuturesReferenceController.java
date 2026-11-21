@@ -29,7 +29,7 @@ public class FuturesReferenceController {
     public ResponseEntity<Reference> current(@RequestParam String market){
         if (market==null || !market.matches("[A-Z0-9][A-Z0-9_-]{0,31}"))
             throw new IllegalArgumentException("invalid futures market");
-        var policy=policies.active(market);
+        var policy=policies.tradable(market).policy();
         var rules=policy.execution().rules();
         var feed=references.getIfAvailable();
         var snapshot=feed==null?null:feed.current(rules.baseAsset()+rules.quoteAsset(),

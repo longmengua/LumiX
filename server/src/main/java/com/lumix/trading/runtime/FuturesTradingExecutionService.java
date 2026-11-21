@@ -83,7 +83,7 @@ public class FuturesTradingExecutionService {
                 throw new IllegalArgumentException("idempotency key conflicts with another liquidation");
             return queries.detail(owner, "futures", saved.get("resource_id").toString());
         }
-        FuturesRiskPolicy policy = policies.active(marketSymbol);
+        FuturesRiskPolicy policy = policies.tradable(marketSymbol).policy();
         var rules = policy.execution().rules();
         String account = support.activeAccount(owner, "futures");
         var rows = jdbc.queryForList("SELECT quantity,entry_notional_usdt,isolated_collateral "
@@ -153,7 +153,10 @@ public class FuturesTradingExecutionService {
         String scope = liquidation ? "FUTURES_LIQUIDATION" : "FUTURES_ORDER_CREATE";
         String replay = support.claim(scope, owner, key, fingerprint, request);
         if (replay != null) return queries.detail(owner, "futures", replay);
-        FuturesRiskPolicy policy = policies.active(command.marketSymbol());
+        var tradable = policies.tradable(command.marketSymbol());
+        FuturesRiskPolicy policy = tradable.policy();
+        if (opening && !"ACTIVE".equals(tradable.status()))
+            throw new TradingOrderRejectedException("futures instrument is reduce-only");
         if (!"USDT".equals(policy.collateralAsset()))
             throw new TradingOrderRejectedException("non-USDT collateral runtime is unavailable");
         var rules = policy.execution().rules();
@@ -473,9 +476,11 @@ public class FuturesTradingExecutionService {
     private List<Map<String, Object>> makers(String instrument, String side, BigDecimal price) {
         String comparison = "BUY".equals(side) ? "<=" : ">=";
         String priority = "BUY".equals(side) ? "ASC" : "DESC";
-        return jdbc.queryForList(SELECT + "JOIN accounts a ON a.account_id=o.account_id "
+        return jdbc.queryForList(SELECT + "JOIN trading_instruments i ON i.instrument_id=x.instrument_id "
+                + "JOIN accounts a ON a.account_id=o.account_id "
                 + "JOIN users u ON u.user_id=o.user_id WHERE a.status='ACTIVE' AND u.status='ACTIVE' "
                 + "AND x.instrument_id=? AND o.side=? AND o.status IN ('OPEN','PARTIALLY_FILLED') "
+                + "AND (i.status='ACTIVE' OR x.reduce_only=true) "
                 + "AND o.price " + comparison + " ? ORDER BY o.price " + priority
                 + ",x.order_sequence ASC LIMIT " + MAXIMUM_MATCHES,
                 instrument, "BUY".equals(side) ? "SELL" : "BUY", price);
@@ -484,9 +489,11 @@ public class FuturesTradingExecutionService {
     private BigDecimal protectedPrice(FuturesRiskPolicy policy, String side) {
         String priority = "BUY".equals(side) ? "ASC" : "DESC";
         List<BigDecimal> best = jdbc.query("SELECT o.price FROM orders o JOIN trading_order_executions x "
-                        + "ON x.order_id=o.order_id JOIN accounts a ON a.account_id=o.account_id "
+                        + "ON x.order_id=o.order_id JOIN trading_instruments i ON i.instrument_id=x.instrument_id "
+                        + "JOIN accounts a ON a.account_id=o.account_id "
                         + "JOIN users u ON u.user_id=o.user_id WHERE x.instrument_id=? "
                         + "AND o.side=? AND o.status IN ('OPEN','PARTIALLY_FILLED') "
+                        + "AND (i.status='ACTIVE' OR x.reduce_only=true) "
                         + "AND a.status='ACTIVE' AND u.status='ACTIVE' ORDER BY o.price " + priority
                         + ",x.order_sequence LIMIT 1", (row, index) -> row.getBigDecimal(1),
                 policy.execution().rules().instrumentId(), "BUY".equals(side) ? "SELL" : "BUY");

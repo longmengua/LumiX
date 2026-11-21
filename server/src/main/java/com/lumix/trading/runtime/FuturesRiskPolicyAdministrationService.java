@@ -60,9 +60,12 @@ public class FuturesRiskPolicyAdministrationService {
             throw new IllegalArgumentException("futures market identity or precision mismatch");
         requireAsset(policy.collateralAsset());
         requireSystemAccount(policy.execution().feeAccountId(), "TRADING_FEE_REVENUE", "USDT");
-        requireSystemAccount(policy.marginPoolAccountId(), "PERPETUAL_MARGIN_POOL", policy.collateralAsset());
+        requireSystemAccount(policy.marginPoolAccountId(), "PERPETUAL_MARGIN_POOL", "USDT");
         requireSystemAccount(policy.insuranceAccountId(), "PERPETUAL_INSURANCE", "USDT");
         requireSystemAccount(policy.conversionPoolAccountId(), "PERPETUAL_CONVERSION_POOL", "USDT");
+        if (!"USDT".equals(policy.collateralAsset()))
+            requireSystemAccount(policy.conversionPoolAccountId(), "PERPETUAL_CONVERSION_POOL",
+                    policy.collateralAsset());
 
         jdbc.update("INSERT INTO trading_instruments(instrument_id,instrument_kind,market_symbol,status) "
                         + "VALUES (?,'PERPETUAL',?,'HALTED') ON CONFLICT(instrument_id) DO NOTHING",

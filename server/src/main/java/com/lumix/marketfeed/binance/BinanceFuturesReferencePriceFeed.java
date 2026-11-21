@@ -71,12 +71,26 @@ public class BinanceFuturesReferencePriceFeed {
             HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
             if (response.statusCode() != 200 || response.body().length > 4096)
                 throw new IllegalStateException("reference price response is unavailable");
-            Snapshot value = parse(json.readTree(response.body()), symbol, Instant.now());
+            JsonNode payload = json.readTree(response.body());
+            Instant receivedAt = Instant.now();
+            JsonNode sourceTime = payload.path("time");
+            if (sourceTime.isIntegralNumber()) {
+                Instant sourceAt = Instant.ofEpochMilli(sourceTime.asLong());
+                Duration ahead = Duration.between(receivedAt, sourceAt);
+                // 上游時鐘可領先本機數百毫秒；只等待有界偏差，不將未到的來源時間視為新鮮。
+                if (!ahead.isNegative() && !ahead.isZero()) {
+                    if (ahead.compareTo(Duration.ofSeconds(2)) > 0)
+                        throw new IllegalArgumentException("reference source clock is too far ahead");
+                    Thread.sleep(ahead.toMillis() + 1);
+                }
+            }
+            Snapshot value = parse(payload, symbol, Instant.now());
             snapshots.compute(symbol, (ignored, previous) -> previous == null
                     || value.sourceAt().isAfter(previous.sourceAt()) ? value : previous);
         } catch (Exception failure) {
             snapshots.remove(symbol);
-            LOG.warn("Futures reference price unavailable for {}: {}", symbol, failure.getClass().getSimpleName());
+            LOG.warn("Futures reference price unavailable for {}: {} ({})", symbol,
+                    failure.getClass().getSimpleName(), failure.getMessage());
             if (failure instanceof InterruptedException) Thread.currentThread().interrupt();
         }
     }

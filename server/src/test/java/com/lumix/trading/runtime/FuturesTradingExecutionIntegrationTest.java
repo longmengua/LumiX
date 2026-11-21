@@ -78,16 +78,16 @@ class FuturesTradingExecutionIntegrationTest {
             @SuppressWarnings("unchecked")
             ObjectProvider<BinanceFuturesReferencePriceFeed> provider = mock(ObjectProvider.class);
             when(provider.getIfAvailable()).thenReturn(feed);
-            var statusService = new FuturesInstrumentStatusService(jdbc,
-                    new FuturesRiskPolicyRepository(jdbc, json), support, provider,
-                    mock(SuperAdminAccessService.class));
-            assertEquals("ACTIVE", transaction.execute(status -> statusService.change(
-                    new AuthenticatedUser("alice", "alice@example.test", "Alice"),
-                    "BTC-USDT", "ACTIVE")).status());
             var engine = new FuturesTradingExecutionService(jdbc,
                     new FuturesRiskPolicyRepository(jdbc, json), support,
                     new ReservationHoldService(jdbc), new OrderReservationChangeService(jdbc, json),
                     new TradingOrderQueryService(jdbc), provider, json);
+            var statusService = new FuturesInstrumentStatusService(jdbc,
+                    new FuturesRiskPolicyRepository(jdbc, json), support, provider,
+                    mock(SuperAdminAccessService.class), engine);
+            assertEquals("ACTIVE", transaction.execute(status -> statusService.change(
+                    new AuthenticatedUser("alice", "alice@example.test", "Alice"),
+                    "BTC-USDT", "ACTIVE")).status());
 
             var shortOrder = place(transaction, engine, "bob", "SELL", "SHORT", false, "100", "short-open");
             assertEquals("OPEN", shortOrder.status());
@@ -184,6 +184,15 @@ class FuturesTradingExecutionIntegrationTest {
             assertEquals(0, jdbc.queryForObject("SELECT COALESCE(SUM(CASE WHEN direction='CREDIT' "
                     + "THEN amount ELSE -amount END),0) FROM ledger_entries WHERE asset_symbol='USDT'",
                     BigDecimal.class).signum());
+            var pendingRisk = place(transaction, engine, "alice", "BUY", "LONG", false, "30", "pending-risk");
+            assertEquals("OPEN", pendingRisk.status());
+            transaction.executeWithoutResult(status -> statusService.riskHalt("BTC-USDT", "NO_LIQUIDITY"));
+            assertEquals("REDUCE_ONLY", jdbc.queryForObject("SELECT status FROM trading_instruments "
+                    + "WHERE instrument_id='PERPETUAL:BTCUSDT'", String.class));
+            assertEquals("CANCELED", new TradingOrderQueryService(jdbc)
+                    .detail("alice", "futures", pendingRisk.orderId()).status());
+            assertThrows(TradingOrderRejectedException.class, () -> place(transaction, engine, "alice",
+                    "BUY", "LONG", false, "30", "halted-open"));
         }
     }
 

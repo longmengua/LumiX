@@ -158,8 +158,10 @@ API：
 
 ## 2026-11-22 合約 runtime 進度
 
-V005–V010 已加入雙向逐倉持倉、版本化風險政策、成交事件、funding、強平事件與獨立保險基金分錄。USDT 保證金的雙帳戶開平倉、funding、穿倉強平與帳本守恆已在隔離 PostgreSQL 測試通過。強平從新鮮 Binance USDⓈ-M 標記價判斷權益，僅送出 LumiX 自有簿 reduce-only 市價 IOC；沒有可成交流動性時不宣稱平倉成功。強平以真實保險基金餘額承擔缺口，餘額不足則拒絕結算。啟用商品前檢查完整 USDT 政策、即時行情與已注資保險帳戶，停用時不可遺留未平持倉或開單。
+V005–V011 已加入雙向逐倉持倉、版本化風險政策、成交事件、funding、強平事件與獨立保險基金分錄。USDT 保證金的雙帳戶開平倉、funding、穿倉強平與帳本守恆已在隔離 PostgreSQL 測試通過。強平從新鮮 Binance USDⓈ-M 標記價判斷權益，僅送出 LumiX 自有簿 reduce-only 市價 IOC；沒有可成交流動性時不宣稱平倉成功。強平以真實保險基金餘額承擔缺口，餘額不足則拒絕結算。無對手盤或資金不足時，商品轉為 REDUCE_ONLY、取消既有開倉委託並保留減倉與風險巡檢。啟用商品前檢查完整 USDT 政策、即時行情與已注資保險帳戶，停用時不可遺留未平持倉或開單。
 
 `lumix.trading.futures-enabled` 預設 false；啟用後每五秒巡檢 ACTIVE 商品的逐倉持倉。管理端可使用 `POST /api/admin/v1/trading/futures/instruments/status` 切換商品狀態，並以 `POST /api/admin/v1/trading/futures/liquidations` 觸發重新評估的強平。客戶端可查 `GET /api/v1/trading/futures/reference`、共同 workspace 的持倉資料與共用委託 API。所有行情失效時新增風險都停止；既有只減倉仍需 LumiX 實際對手單。
 
-目前未完成非 USDT 保證金的兌付池結算與折算率管理，該類政策只能保存為 HALTED，無法啟用。funding 費率仍由最高管理員按政策時鐘逐期核定，尚無自動費率計算來源。也尚未以兩個真實瀏覽器帳戶完成端到端驗收，不能視為正式上線就緒。上述邊界須於擴大啟用前完成並重新測試。
+目前未完成非 USDT 保證金的兌付池結算與折算率管理，該類政策只能保存為 HALTED，無法啟用。funding 費率仍由最高管理員按政策時鐘逐期核定，尚無自動費率計算來源。正式費率／風險政策與部署驗收尚未核定，不能視為正式上線就緒。
+
+2026-11-22 隔離瀏覽器驗收：專用 `lumix_e2e` PostgreSQL 資料庫以 test source fixture 建立真實雙帳戶資金與 session，API 8080、前台 8088、後台 8089 分別啟動。Google Chrome 前台經真實 HTTP 完成現貨一筆互撮及合約開／平兩筆互撮；後台經具權限政策查詢顯示同版政策。實際 ledger 對帳 BTC、USDT 淨額均為 0，合約未平持倉數為 0。Binance USDⓈ-M 公開標記／指數來源在本機接通；有界來源時鐘偏差處置後驗收通過。此驗收不替代非 USDT 兌付、正式政策核定或正式部署驗收。

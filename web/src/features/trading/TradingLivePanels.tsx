@@ -94,7 +94,7 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (commandRunning.current || (!pending && (!snapshot?.configuration.ordersEnabled || Date.now() - snapshot.received > 5000
-      || (kind === 'futures' && !reduceOnly && !snapshot.reference)))) return;
+      || (kind === 'futures' && !reduceOnly && (!snapshot.reference || snapshot.configuration.reason === 'REDUCE_ONLY'))))) return;
     const tradeSide = kind === 'spot' ? side : positionSide === 'LONG' ? (reduceOnly ? 'SELL' : 'BUY') : (reduceOnly ? 'BUY' : 'SELL');
     const command = pending ?? { body: { marketSymbol: market, side: tradeSide, orderType, timeInForce: orderType === 'MARKET' ? 'IOC' : 'GTC', price: orderType === 'LIMIT' ? price : null, quantity,
       ...(kind === 'futures' ? { positionSide, reduceOnly, leverage } : {}) }, key: crypto.randomUUID() };
@@ -130,6 +130,7 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
     : text('尚未設定完整交易政策或暫停接新單。', 'Complete trading policy is missing or new orders are paused.');
   const sourceAsset = kind === 'futures' || side === 'BUY' ? 'USDT' : baseAsset;
   const available = snapshot?.workspace.balances.find(balance => balance.asset === sourceAsset)?.available ?? null;
+  const openingBlocked = kind === 'futures' && !reduceOnly && (!snapshot?.reference || snapshot.configuration.reason === 'REDUCE_ONLY');
   const orderPanel = <form className="trading-form workspace-panel trading-live-panel" onSubmit={submit}>
     <h2>{text(kind === 'spot' ? '現貨下單' : '合約下單', kind === 'spot' ? 'Spot order' : 'Futures order')}</h2>
     <div className="trading-form__toolbar">{(kind === 'futures' ? ['LONG', 'SHORT'] : ['BUY', 'SELL']).map(value => <button className={`tab-button ${(kind === 'futures' ? positionSide : side) === value ? 'tab-button--active' : ''}`} type="button" key={value} disabled={busy || !!pending || !!cancelPending} onClick={() => kind === 'futures' ? setPositionSide(value) : setSide(value)}>{kind === 'futures' ? value : value === 'BUY' ? text('買入', 'Buy') : text('賣出', 'Sell')}</button>)}</div>
@@ -140,9 +141,9 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
       {orderType === 'LIMIT' && <label className="field"><span>{text('價格', 'Price')} (USDT)</span><input className="input" inputMode="decimal" value={price} onChange={event => setPrice(event.target.value)} required pattern="[0-9]+([.][0-9]+)?" /></label>}
       <label className="field"><span>{text('數量', 'Quantity')} ({baseAsset})</span><input className="input" inputMode="decimal" value={quantity} onChange={event => setQuantity(event.target.value)} required pattern="[0-9]+([.][0-9]+)?" /></label>
     </fieldset>
-    {snapshot?.configuration.ordersEnabled ? <><p>{text('費率', 'Fee rates')} maker {amount(snapshot.configuration.makerFeeRate)} / taker {amount(snapshot.configuration.takerFeeRate)} · {text('實收費用以成交結果為準', 'Actual fees follow settlement')}</p>{kind === 'futures' && <p>{snapshot.reference ? `${text('永續標記價', 'Perpetual mark')} ${amount(snapshot.reference.markPrice)} / ${text('指數價', 'Index')} ${amount(snapshot.reference.indexPrice)} USDT · ${snapshot.reference.source}` : text('永續標記價暫時無法取得；暫停開倉。', 'Perpetual mark is unavailable; opening is paused.')}</p>}</> : <p>{unavailable}</p>}
+    {snapshot?.configuration.ordersEnabled ? <><p>{text('費率', 'Fee rates')} maker {amount(snapshot.configuration.makerFeeRate)} / taker {amount(snapshot.configuration.takerFeeRate)} · {text('實收費用以成交結果為準', 'Actual fees follow settlement')}</p>{kind === 'futures' && <p>{snapshot.configuration.reason === 'REDUCE_ONLY' ? text('風險處置中：只接受減倉。', 'Risk halt: reduce only.') : snapshot.reference ? `${text('永續標記價', 'Perpetual mark')} ${amount(snapshot.reference.markPrice)} / ${text('指數價', 'Index')} ${amount(snapshot.reference.indexPrice)} USDT · ${snapshot.reference.source}` : text('永續標記價暫時無法取得；暫停開倉。', 'Perpetual mark is unavailable; opening is paused.')}</p>}</> : <p>{unavailable}</p>}
     <p className="trading-form__hint">{text('僅與 LumiX 真實委託成交；Binance 行情不保證可成交。', 'Matches real LumiX orders only. Binance reference liquidity is not executable.')}</p>
-    <button className="primary-button trading-form__submit" type="submit" disabled={busy || !!cancelPending || (!pending && (!snapshot?.configuration.ordersEnabled || (kind === 'futures' && !reduceOnly && !snapshot.reference)))}>{busy ? text('處理中…', 'Processing…') : pending ? text('重試確認原委託', 'Retry original order') : text('送出委託', 'Place order')}</button>
+    <button className="primary-button trading-form__submit" type="submit" disabled={busy || !!cancelPending || (!pending && (!snapshot?.configuration.ordersEnabled || openingBlocked))}>{busy ? text('處理中…', 'Processing…') : pending ? text('重試確認原委託', 'Retry original order') : text('送出委託', 'Place order')}</button>
     <p role="status" aria-live="polite">{message}</p>
   </form>;
   const accountPanel = <section className="workspace-panel balance-panel trading-live-panel">
