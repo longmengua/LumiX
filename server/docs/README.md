@@ -27,4 +27,5 @@ wallet-architecture-after-withdrawal.md 提款 runtime 後的後端錢包架構�
 server-service-overview.md  server service scope and document entry points
 security/upload-security-audit.md C 端上傳安全盤點、證據與待查事項
 security/upload-remediation-plan.md 上傳安全最小修補提案與驗收條件（尚未實作）
+trading-execution-boundary.md 現貨／合約客戶下單的現況、施工相依與資金安全驗收
 ```
