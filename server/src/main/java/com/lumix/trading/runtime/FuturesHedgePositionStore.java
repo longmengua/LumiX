@@ -35,7 +35,7 @@ final class FuturesHedgePositionStore {
         List<Map<String, Object>> fills = jdbc.queryForList(
                 "SELECT t.trade_id,t.price,t.quantity,t.maker_order_id,t.maker_fee_amount,t.taker_fee_amount,"
                         + "o.account_id,o.side,x.instrument_id,x.position_side,"
-                        + "x.reduce_only,x.policy_version,e.ledger_journal_id,a.account_type,a.account_category "
+                        + "x.reduce_only,x.liquidation,x.policy_version,e.ledger_journal_id,a.account_type,a.account_category "
                         + "FROM trades t JOIN trading_trade_executions e ON e.trade_id=t.trade_id "
                         + "JOIN orders o ON o.order_id IN (t.maker_order_id,t.taker_order_id) "
                         + "JOIN trading_order_executions x ON x.order_id=o.order_id "
@@ -117,16 +117,25 @@ final class FuturesHedgePositionStore {
                     || poolCredits.compareTo(collateralChange) < 0)
                 throw new IllegalStateException("opening margin is not backed by the trade ledger");
         } else {
-            BigDecimal payout = collateralChange.add(transition.realizedPnl()).subtract(fee);
-            if (payout.signum() < 0)
+            BigDecimal rawPayout = collateralChange.add(transition.realizedPnl()).subtract(fee);
+            boolean liquidation = Boolean.TRUE.equals(fill.get("liquidation"));
+            if (rawPayout.signum() < 0 && !liquidation)
                 throw new TradingOrderRejectedException("bankrupt close requires liquidation settlement");
+            BigDecimal payout = rawPayout.max(BigDecimal.ZERO);
+            BigDecimal deficit = rawPayout.negate().max(BigDecimal.ZERO);
+            BigDecimal insuranceDebits = gross(journalId, policy.insuranceAccountId(), "USDT", "DEBIT");
+            BigDecimal expectedPoolDebit = payout.add(fee).subtract(deficit).max(BigDecimal.ZERO);
+            BigDecimal expectedPoolCredit = deficit.subtract(payout.add(fee)).max(BigDecimal.ZERO);
             if (userNetDebit.compareTo(payout.negate()) != 0
-                    || poolDebits.compareTo(payout.add(fee)) < 0)
+                    || poolDebits.compareTo(expectedPoolDebit) < 0
+                    || poolCredits.compareTo(expectedPoolCredit) < 0
+                    || insuranceDebits.compareTo(deficit) < 0)
                 throw new IllegalStateException("closing PnL is not backed by the trade ledger");
         }
         long previousVersion = ((Number) before.get("position_version")).longValue();
         long nextVersion = Math.addExact(previousVersion, 1);
         String eventType = opening ? (previousQuantity.signum() == 0 ? "OPEN" : "INCREASE")
+                : Boolean.TRUE.equals(fill.get("liquidation")) ? "LIQUIDATE"
                 : (transition.position().quantity().signum() == 0 ? "CLOSE" : "DECREASE");
         if (jdbc.update("UPDATE futures_hedge_positions SET quantity=?,entry_notional_usdt=?,"
                         + "isolated_collateral=?,position_version=?,updated_at=CURRENT_TIMESTAMP "

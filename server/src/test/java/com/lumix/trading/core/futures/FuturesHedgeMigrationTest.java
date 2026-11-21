@@ -16,7 +16,7 @@ class FuturesHedgeMigrationTest {
             var applied = Flyway.configure().dataSource(dataSource)
                     .locations("classpath:db/migration").load().migrate();
             var jdbc = new JdbcTemplate(dataSource);
-            assertEquals(9, applied.migrationsExecuted);
+            assertEquals(10, applied.migrationsExecuted);
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_hedge_positions'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_hedge_position_events'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_position_events'", Integer.class));
@@ -24,6 +24,8 @@ class FuturesHedgeMigrationTest {
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_risk_policies'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='trading_order_position_boundary'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_funding_cycles'", Integer.class));
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='futures_liquidation_order_boundary'", Integer.class));
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_liquidation_attempts'", Integer.class));
         }
     }
 }

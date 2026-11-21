@@ -33,7 +33,16 @@ public class TradingWorkspaceQueryService {
                 +"JOIN orders m ON m.order_id=t.maker_order_id JOIN orders k ON k.order_id=t.taker_order_id "
                 +"WHERE (t.maker_account_id=? OR t.taker_account_id=?) AND i.instrument_kind=? AND t.market_symbol=? ORDER BY t.created_at DESC,t.trade_id DESC LIMIT 100",
                 (r,n)->new Fill(r.getString("trade_id"),r.getString("side"),decimal(r.getBigDecimal("price")),decimal(r.getBigDecimal("quantity")),decimal(r.getBigDecimal("quote_quantity")),decimal(r.getBigDecimal("fee")),r.getString("fee_asset_symbol"),r.getTimestamp("created_at").toInstant()),account,account,account,account,type,market);
-        return new Workspace(Instant.now(),balances,depth(type,market,"BUY"),depth(type,market,"SELL"),fills);
+        List<Position> positions="futures".equals(kind) ? jdbc.query(
+                "SELECT p.position_side,p.quantity,p.entry_notional_usdt,p.collateral_asset_symbol,"
+                + "p.isolated_collateral FROM futures_hedge_positions p "
+                + "JOIN trading_instruments i ON i.instrument_id=p.instrument_id "
+                + "WHERE p.account_id=? AND i.market_symbol=? AND p.quantity>0 "
+                + "ORDER BY p.position_side",(r,n)->new Position(r.getString("position_side"),
+                decimal(r.getBigDecimal("quantity")),decimal(r.getBigDecimal("entry_notional_usdt")),
+                r.getString("collateral_asset_symbol"),decimal(r.getBigDecimal("isolated_collateral"))),
+                account,market) : List.of();
+        return new Workspace(Instant.now(),balances,depth(type,market,"BUY"),depth(type,market,"SELL"),fills,positions);
     }
 
     private List<Level> depth(String kind,String market,String side) {
@@ -51,5 +60,8 @@ public class TradingWorkspaceQueryService {
     /** 只回本人成交方向與本人費用，不揭露對手方帳戶。 */
     public record Fill(String tradeId,String side,String price,String quantity,String notional,String fee,String feeAsset,Instant createdAt){}
     /** 所有金額使用 decimal string；前端必須以 receivedAt 管理過期及斷線呈現。 */
-    public record Workspace(Instant receivedAt,List<Balance> balances,List<Level> bids,List<Level> asks,List<Fill> fills){}
+    public record Position(String positionSide,String quantity,String entryNotionalUsdt,
+                           String collateralAsset,String isolatedCollateral){}
+    public record Workspace(Instant receivedAt,List<Balance> balances,List<Level> bids,List<Level> asks,
+                            List<Fill> fills,List<Position> positions){}
 }

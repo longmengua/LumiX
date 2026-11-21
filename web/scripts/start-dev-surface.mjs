@@ -1,4 +1,5 @@
 import { execFileSync, spawn } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
 const [surface, port] = process.argv.slice(2);
 
@@ -13,11 +14,14 @@ if (['NODE_ENV', 'LUMIX_ENV'].some((key) => process.env[key] === 'production')) 
 
 let pids = [];
 try {
-  const output = execFileSync('lsof', ['-tiTCP:' + port, '-sTCP:LISTEN'], { encoding: 'utf8' });
+  const output = process.platform === 'win32'
+    ? execFileSync('powershell.exe', ['-NoProfile', '-Command',
+      `(Get-NetTCPConnection -LocalPort ${port} -State Listen -ErrorAction SilentlyContinue).OwningProcess`], { encoding: 'utf8' })
+    : execFileSync('lsof', ['-tiTCP:' + port, '-sTCP:LISTEN'], { encoding: 'utf8' });
   pids = output.split(/\s+/).filter(Boolean);
 } catch (error) {
   // lsof 在找不到監聽程序時以非零狀態結束，這是可預期的空閒埠情況。
-  if (error.status !== 1) {
+  if (error.status !== 1 || process.platform === 'win32') {
     throw error;
   }
 }
@@ -33,8 +37,8 @@ if (pids.length > 0) {
   await new Promise((resolve) => setTimeout(resolve, 250));
 }
 
-const vite = process.platform === 'win32' ? 'vite.cmd' : 'vite';
-const child = spawn(vite, ['--port', port, '--strictPort'], {
+const vite = fileURLToPath(new URL('../node_modules/vite/bin/vite.js', import.meta.url));
+const child = spawn(process.execPath, [vite, '--port', port, '--strictPort'], {
   env: { ...process.env, VITE_LUMIX_SURFACE: surface },
   stdio: 'inherit',
 });

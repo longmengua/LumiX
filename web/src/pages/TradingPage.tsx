@@ -1,6 +1,5 @@
 import { useParams } from 'react-router-dom';
 
-import { TradingWorkspace } from '../features/trading/TradingWorkspace';
 import { SpotReferenceMarket } from '../features/trading/SpotReferenceMarket';
 import type { TradingKind } from '../features/trading/mockTradingService';
 
@@ -17,8 +16,8 @@ export function TradingPage({ kind }: TradingPageProps) {
   const params = useParams<{ symbol: string }>();
   const symbol = params.symbol ?? defaultSymbols[kind];
 
-  // 現貨只顯示真實來源的參考行情，避免開發期資料被誤認為正式委託簿。
-  return kind === 'spot' ? <SpotReferenceMarket key={symbol} symbol={symbol} /> : <TradingWorkspace kind={kind} symbol={symbol} />;
+  // 兩種交易頁使用同一個真實帳戶與委託面板；圖表明示現貨參考來源。
+  return <SpotReferenceMarket key={`${kind}:${symbol}`} kind={kind} symbol={symbol} />;
 }
 
 export function SpotTradingPage() {

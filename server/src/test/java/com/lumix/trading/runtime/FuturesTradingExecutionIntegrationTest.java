@@ -64,11 +64,10 @@ class FuturesTradingExecutionIntegrationTest {
             var riskPolicy = policy();
             transaction.execute(status -> admin.publish(
                     new AuthenticatedUser("alice", "alice@example.test", "Alice"), riskPolicy));
-            // 測試 fixture 模擬後續完整 runtime gate 的啟用；正式管理命令目前不開放啟用。
-            jdbc.update("UPDATE trading_instruments SET status='ACTIVE' WHERE instrument_id='PERPETUAL:BTCUSDT'");
             transaction.executeWithoutResult(status -> {
                 seed(ledger, "alice");
                 seed(ledger, "bob");
+                seed(ledger, "insurance");
             });
             var feed = mock(BinanceFuturesReferencePriceFeed.class);
             when(feed.current(anyString(), any(), any())).thenAnswer(invocation -> {
@@ -79,6 +78,12 @@ class FuturesTradingExecutionIntegrationTest {
             @SuppressWarnings("unchecked")
             ObjectProvider<BinanceFuturesReferencePriceFeed> provider = mock(ObjectProvider.class);
             when(provider.getIfAvailable()).thenReturn(feed);
+            var statusService = new FuturesInstrumentStatusService(jdbc,
+                    new FuturesRiskPolicyRepository(jdbc, json), support, provider,
+                    mock(SuperAdminAccessService.class));
+            assertEquals("ACTIVE", transaction.execute(status -> statusService.change(
+                    new AuthenticatedUser("alice", "alice@example.test", "Alice"),
+                    "BTC-USDT", "ACTIVE")).status());
             var engine = new FuturesTradingExecutionService(jdbc,
                     new FuturesRiskPolicyRepository(jdbc, json), support,
                     new ReservationHoldService(jdbc), new OrderReservationChangeService(jdbc, json),
@@ -151,6 +156,34 @@ class FuturesTradingExecutionIntegrationTest {
             when(feed.current(anyString(), any(), any())).thenReturn(Optional.empty());
             assertThrows(TradingOrderRejectedException.class, () -> place(transaction, engine, "alice",
                     "BUY", "LONG", false, "100", "stale-mark"));
+
+            when(feed.current(anyString(), any(), any())).thenAnswer(invocation -> {
+                Instant observed = Instant.now().minusMillis(100);
+                return Optional.of(new BinanceFuturesReferencePriceFeed.Snapshot(SOURCE, "BTCUSDT",
+                        new BigDecimal("100"), new BigDecimal("100"), observed, observed));
+            });
+            place(transaction, engine, "bob", "SELL", "SHORT", false, "100", "short-reopen");
+            place(transaction, engine, "alice", "BUY", "LONG", false, "100", "long-reopen");
+            when(feed.current(anyString(), any(), any())).thenAnswer(invocation -> {
+                Instant observed = Instant.now().minusMillis(100);
+                return Optional.of(new BinanceFuturesReferencePriceFeed.Snapshot(SOURCE, "BTCUSDT",
+                        BigDecimal.TEN, BigDecimal.TEN, observed, observed));
+            });
+            assertThrows(TradingOrderRejectedException.class, () -> transaction.execute(status ->
+                    engine.liquidate("bob", "BTC-USDT", "SHORT", "healthy-short")));
+            place(transaction, engine, "bob", "BUY", "LONG", false, "20", "liquidation-maker");
+            var liquidation = transaction.execute(status -> engine.liquidate(
+                    "alice", "BTC-USDT", "LONG", "liquidation-alice"));
+            assertEquals("FILLED", liquidation.status());
+            assertEquals(liquidation.orderId(), transaction.execute(status -> engine.liquidate(
+                    "alice", "BTC-USDT", "LONG", "liquidation-alice")).orderId());
+            assertEquals(1, count(jdbc, "futures_liquidation_attempts"));
+            assertEquals("LIQUIDATE", jdbc.queryForObject("SELECT event_type FROM futures_hedge_position_events "
+                    + "WHERE account_id='alice' ORDER BY next_version DESC LIMIT 1", String.class));
+            balance(jdbc, "insurance", "4");
+            assertEquals(0, jdbc.queryForObject("SELECT COALESCE(SUM(CASE WHEN direction='CREDIT' "
+                    + "THEN amount ELSE -amount END),0) FROM ledger_entries WHERE asset_symbol='USDT'",
+                    BigDecimal.class).signum());
         }
     }
 

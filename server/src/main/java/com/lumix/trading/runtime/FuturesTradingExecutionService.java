@@ -33,7 +33,7 @@ public class FuturesTradingExecutionService {
     private static final int MAXIMUM_MATCHES = 100;
     private static final String SELECT = "SELECT o.*,x.instrument_id,x.policy_version,x.order_sequence,"
             + "x.reservation_id,x.filled_notional,x.fee_accrued,x.fee_charged,x.position_side,"
-            + "x.reduce_only,x.leverage FROM orders o JOIN trading_order_executions x ON x.order_id=o.order_id ";
+            + "x.reduce_only,x.leverage,x.liquidation FROM orders o JOIN trading_order_executions x ON x.order_id=o.order_id ";
     private final JdbcTemplate jdbc;
     private final FuturesRiskPolicyRepository policies;
     private final TradingExecutionSupport support;
@@ -61,8 +61,70 @@ public class FuturesTradingExecutionService {
                           String orderType, String timeInForce, String price, String quantity,
                           String leverage) { }
 
+    /** 管理命令在具名標記價顯示權益低於維持保證金時才可送出強制減倉。 */
+    @Transactional
+    public TradingOrderQueryService.OrderView liquidate(String owner, String marketSymbol,
+                                                          String positionSide, String key) {
+        if (positionSide == null || !Set.of("LONG", "SHORT").contains(positionSide))
+            throw new IllegalArgumentException("unsupported position side");
+        support.lockExecution();
+        if (key == null || key.isBlank() || key.length() > 128 || key.chars().anyMatch(Character::isISOControl))
+            throw new IllegalArgumentException("idempotency key is required");
+        String durable = "trading:" + TradingExecutionSupport.hash(support.encode(List.of(owner, key)));
+        var prior = jdbc.queryForList("SELECT k.status,k.resource_id,o.market_symbol,x.position_side "
+                + "FROM idempotency_keys k JOIN orders o ON o.order_id=k.resource_id "
+                + "JOIN trading_order_executions x ON x.order_id=o.order_id "
+                + "WHERE k.scope='FUTURES_LIQUIDATION' AND k.idempotency_key=? AND x.liquidation=true",
+                durable);
+        if (!prior.isEmpty()) {
+            var saved = prior.getFirst();
+            if (!"COMPLETED".equals(saved.get("status")) || !marketSymbol.equals(saved.get("market_symbol"))
+                    || !positionSide.equals(saved.get("position_side")))
+                throw new IllegalArgumentException("idempotency key conflicts with another liquidation");
+            return queries.detail(owner, "futures", saved.get("resource_id").toString());
+        }
+        FuturesRiskPolicy policy = policies.active(marketSymbol);
+        var rules = policy.execution().rules();
+        String account = support.activeAccount(owner, "futures");
+        var rows = jdbc.queryForList("SELECT quantity,entry_notional_usdt,isolated_collateral "
+                + "FROM futures_hedge_positions WHERE account_id=? AND instrument_id=? "
+                + "AND position_side=? FOR UPDATE", account, rules.instrumentId(), positionSide);
+        if (rows.size() != 1 || ((BigDecimal) rows.getFirst().get("quantity")).signum() <= 0)
+            throw new TradingOrderRejectedException("liquidation requires an open position");
+        var feed = references.getIfAvailable();
+        var snapshot = feed == null ? null : feed.current(rules.baseAsset() + rules.quoteAsset(),
+                policy.maximumPriceAge(), Instant.now()).orElse(null);
+        if (snapshot == null || !policy.markPriceSource().equals(snapshot.source()))
+            throw new TradingOrderRejectedException("fresh governed mark price is required");
+        var row = rows.getFirst();
+        BigDecimal quantity = (BigDecimal) row.get("quantity");
+        BigDecimal marked = quantity.multiply(snapshot.markPrice());
+        BigDecimal pnl = "LONG".equals(positionSide)
+                ? marked.subtract((BigDecimal) row.get("entry_notional_usdt"))
+                : ((BigDecimal) row.get("entry_notional_usdt")).subtract(marked);
+        BigDecimal equity = ((BigDecimal) row.get("isolated_collateral")).add(pnl);
+        BigDecimal maintenance = marked.multiply(policy.maintenanceMarginRate());
+        if (equity.compareTo(maintenance) >= 0)
+            throw new TradingOrderRejectedException("position is above maintenance margin");
+        var command = new Command(marketSymbol, "LONG".equals(positionSide) ? "SELL" : "BUY",
+                positionSide, true, "MARKET", "IOC", null, quantity.toPlainString(), "1");
+        var result = placeInternal(owner, command, key, true);
+        jdbc.update("INSERT INTO futures_liquidation_attempts(liquidation_id,account_id,instrument_id,"
+                        + "position_side,mark_price_usdt,mark_source,mark_source_at,equity_usdt,"
+                        + "maintenance_usdt,order_id,policy_version) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                "liq_" + UUID.randomUUID(), account, rules.instrumentId(), positionSide,
+                snapshot.markPrice(), snapshot.source(), java.sql.Timestamp.from(snapshot.sourceAt()), equity, maintenance,
+                result.orderId(), rules.policyVersion());
+        return result;
+    }
+
     @Transactional
     public TradingOrderQueryService.OrderView place(String owner, Command command, String key) {
+        return placeInternal(owner, command, key, false);
+    }
+
+    private TradingOrderQueryService.OrderView placeInternal(String owner, Command command, String key,
+                                                               boolean liquidation) {
         Objects.requireNonNull(command, "futures order is required");
         if (command.marketSymbol() == null || !command.marketSymbol().matches("[A-Z0-9][A-Z0-9_-]{0,31}")
                 || !Set.of("BUY", "SELL").contains(command.side())
@@ -88,7 +150,8 @@ public class FuturesTradingExecutionService {
                 requestedPrice, quantity, leverage)));
         String request = "fut-" + UUID.randomUUID();
         support.lockExecution();
-        String replay = support.claim("FUTURES_ORDER_CREATE", owner, key, fingerprint, request);
+        String scope = liquidation ? "FUTURES_LIQUIDATION" : "FUTURES_ORDER_CREATE";
+        String replay = support.claim(scope, owner, key, fingerprint, request);
         if (replay != null) return queries.detail(owner, "futures", replay);
         FuturesRiskPolicy policy = policies.active(command.marketSymbol());
         if (!"USDT".equals(policy.collateralAsset()))
@@ -101,6 +164,7 @@ public class FuturesTradingExecutionService {
         TreeSet<String> accounts = new TreeSet<>();
         accounts.add(account);
         accounts.add(policy.marginPoolAccountId());
+        accounts.add(policy.insuranceAccountId());
         accounts.add(policy.execution().feeAccountId());
         for (var maker : makers) accounts.add(maker.get("account_id").toString());
         lockAccounts(accounts);
@@ -116,8 +180,15 @@ public class FuturesTradingExecutionService {
             BigDecimal existing = jdbc.queryForObject("SELECT COALESCE(SUM(quantity * ?),0) FROM "
                     + "futures_hedge_positions WHERE account_id=? AND instrument_id=? AND position_side=?",
                     BigDecimal.class, snapshot.markPrice(), account, rules.instrumentId(), command.positionSide());
+            BigDecimal pendingNotional = jdbc.queryForObject("SELECT COALESCE(SUM(o.remaining_quantity * "
+                    + "GREATEST(o.price,?)),0) FROM orders o JOIN trading_order_executions x "
+                    + "ON x.order_id=o.order_id WHERE o.account_id=? AND x.instrument_id=? "
+                    + "AND x.position_side=? AND x.reduce_only=false "
+                    + "AND o.status IN ('ACCEPTED','OPEN','PARTIALLY_FILLED')", BigDecimal.class,
+                    snapshot.markPrice(), account, rules.instrumentId(), command.positionSide());
             var decision = FuturesOrderRiskGate.admit(policy, snapshot, null, quantity, price,
-                    leverage, existing, available, BigDecimal.ZERO, BigDecimal.ZERO, Instant.now());
+                    leverage, existing.add(pendingNotional), available,
+                    BigDecimal.ZERO, BigDecimal.ZERO, Instant.now());
             reserve = decision.initialMarginUsdt().add(decision.maximumFeeUsdt());
         } else {
             BigDecimal positionQuantity = jdbc.queryForObject("SELECT COALESCE(SUM(quantity),0) "
@@ -128,7 +199,7 @@ public class FuturesTradingExecutionService {
                     + "AND x.instrument_id=? AND x.position_side=? AND x.reduce_only=true "
                     + "AND o.status IN ('ACCEPTED','OPEN','PARTIALLY_FILLED')", BigDecimal.class,
                     account, rules.instrumentId(), command.positionSide());
-            if (positionQuantity.subtract(pending).compareTo(quantity) < 0)
+            if (positionQuantity.subtract(liquidation ? BigDecimal.ZERO : pending).compareTo(quantity) < 0)
                 throw new TradingOrderRejectedException("reduce-only quantity exceeds available position");
         }
         Integer openOrders = jdbc.queryForObject("SELECT COUNT(*) FROM orders WHERE account_id=? "
@@ -144,9 +215,9 @@ public class FuturesTradingExecutionService {
         if (opening) holds.hold(new ReservationHoldCommand(reservationId, account, "USDT", orderId,
                 reserve, request, "futures-hold:" + orderId, owner, "ORDER", "ORDER_HOLD"));
         jdbc.update("INSERT INTO trading_order_executions(order_id,instrument_id,policy_version,"
-                        + "reservation_id,request_hash,position_side,reduce_only,leverage) "
-                        + "VALUES (?,?,?,?,?,?,?,?)", orderId, rules.instrumentId(), rules.policyVersion(),
-                reservationId, fingerprint, command.positionSide(), command.reduceOnly(), leverage);
+                        + "reservation_id,request_hash,position_side,reduce_only,leverage,liquidation) "
+                        + "VALUES (?,?,?,?,?,?,?,?,?)", orderId, rules.instrumentId(), rules.policyVersion(),
+                reservationId, fingerprint, command.positionSide(), command.reduceOnly(), leverage, liquidation);
         for (var candidate : makers) {
             var incoming = order(orderId);
             if (decimal(incoming, "remaining_quantity").signum() == 0) break;
@@ -169,7 +240,7 @@ public class FuturesTradingExecutionService {
             jdbc.update("UPDATE orders SET status=?,updated_at=CURRENT_TIMESTAMP WHERE order_id=?",
                     decimal(result, "filled_quantity").signum() == 0 ? "OPEN" : "PARTIALLY_FILLED", orderId);
         } else releaseAll(result, request);
-        support.complete("FUTURES_ORDER_CREATE", owner, key, orderId);
+        support.complete(scope, owner, key, orderId);
         support.evidence(owner, "FUTURES_ORDER_ACCEPTED", orderId, request,
                 Map.of("instrumentId", rules.instrumentId(), "positionSide", command.positionSide()));
         return queries.detail(owner, "futures", orderId);
@@ -200,8 +271,9 @@ public class FuturesTradingExecutionService {
                 ((Number) taker.get("policy_version")).longValue());
         FuturesRiskPolicy makerPolicy = policies.version(maker.get("instrument_id").toString(),
                 ((Number) maker.get("policy_version")).longValue());
-        if (!takerPolicy.marginPoolAccountId().equals(makerPolicy.marginPoolAccountId()))
-            throw new TradingOrderRejectedException("margin pool changed across open orders");
+        if (!takerPolicy.marginPoolAccountId().equals(makerPolicy.marginPoolAccountId())
+                || !takerPolicy.insuranceAccountId().equals(makerPolicy.insuranceAccountId()))
+            throw new TradingOrderRejectedException("settlement accounts changed across open orders");
         var rule = takerPolicy.execution().rules();
         BigDecimal price = decimal(maker, "price");
         BigDecimal notional = price.multiply(quantity).setScale(rule.quoteScale(), RoundingMode.UNNECESSARY);
@@ -222,6 +294,10 @@ public class FuturesTradingExecutionService {
         if (poolOutgoing.signum() > 0 && available(takerPolicy.marginPoolAccountId(), "USDT")
                 .compareTo(poolOutgoing) < 0)
             throw new TradingOrderRejectedException("margin pool lacks settled USDT backing");
+        BigDecimal insuranceOutgoing = makerLeg.insuranceDebit().add(takerLeg.insuranceDebit());
+        if (insuranceOutgoing.signum() > 0 && available(takerPolicy.insuranceAccountId(), "USDT")
+                .compareTo(insuranceOutgoing) < 0)
+            throw new TradingOrderRejectedException("insurance fund lacks settled USDT backing");
         long journal = support.post(trade, request, entries);
         jdbc.update("INSERT INTO trades(trade_id,market_symbol,maker_order_id,taker_order_id,"
                         + "maker_account_id,taker_account_id,price,quantity,quote_quantity,"
@@ -243,9 +319,9 @@ public class FuturesTradingExecutionService {
     }
 
     private record Leg(boolean opening, BigDecimal margin, BigDecimal fee, BigDecimal payout,
-                       BigDecimal resultingCollateral) {
-        BigDecimal poolDebit() { return opening ? BigDecimal.ZERO : payout.add(fee); }
-        BigDecimal poolCredit() { return opening ? margin : BigDecimal.ZERO; }
+                       BigDecimal resultingCollateral, BigDecimal insuranceDebit) {
+        BigDecimal poolDebit() { return opening ? BigDecimal.ZERO : payout.add(fee).subtract(insuranceDebit).max(BigDecimal.ZERO); }
+        BigDecimal poolCredit() { return opening ? margin : insuranceDebit.subtract(payout.add(fee)).max(BigDecimal.ZERO); }
     }
 
     private void checkOpeningFillRisk(Map<String, Object> order, FuturesRiskPolicy policy,
@@ -277,7 +353,7 @@ public class FuturesTradingExecutionService {
                     rules.quoteScale(), RoundingMode.CEILING);
             BigDecimal previous = currentCollateral(account, rules.instrumentId(),
                     order.get("position_side").toString());
-            return new Leg(true, margin, fee, BigDecimal.ZERO, previous.add(margin));
+            return new Leg(true, margin, fee, BigDecimal.ZERO, previous.add(margin), BigDecimal.ZERO);
         }
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT quantity,entry_notional_usdt,"
                         + "isolated_collateral FROM futures_hedge_positions WHERE account_id=? AND instrument_id=? "
@@ -295,9 +371,12 @@ public class FuturesTradingExecutionService {
         BigDecimal released = oldQty.compareTo(quantity) == 0 ? collateral
                 : collateral.multiply(quantity).divide(oldQty, rules.quoteScale(), RoundingMode.DOWN);
         BigDecimal payout = released.add(result.realizedPnl()).subtract(fee);
-        if (payout.signum() < 0)
+        boolean liquidation = Boolean.TRUE.equals(order.get("liquidation"));
+        if (payout.signum() < 0 && !liquidation)
             throw new TradingOrderRejectedException("bankrupt close requires liquidation settlement");
-        return new Leg(false, released, fee, payout, collateral.subtract(released));
+        BigDecimal insurance = liquidation && payout.signum() < 0 ? payout.negate() : BigDecimal.ZERO;
+        return new Leg(false, released, fee, payout.max(BigDecimal.ZERO),
+                collateral.subtract(released), insurance);
     }
 
     private void append(List<LedgerEntryDraft> entries, Map<String, Object> order,
@@ -307,9 +386,14 @@ public class FuturesTradingExecutionService {
             support.entry(entries, account, "USDT", LedgerDirection.DEBIT, leg.margin().add(leg.fee()));
             support.entry(entries, policy.marginPoolAccountId(), "USDT", LedgerDirection.CREDIT, leg.margin());
         } else {
-            support.entry(entries, policy.marginPoolAccountId(), "USDT", LedgerDirection.DEBIT,
-                    leg.payout().add(leg.fee()));
-            support.entry(entries, account, "USDT", LedgerDirection.CREDIT, leg.payout());
+            if (leg.poolDebit().signum() > 0)
+                support.entry(entries, policy.marginPoolAccountId(), "USDT", LedgerDirection.DEBIT, leg.poolDebit());
+            if (leg.poolCredit().signum() > 0)
+                support.entry(entries, policy.marginPoolAccountId(), "USDT", LedgerDirection.CREDIT, leg.poolCredit());
+            if (leg.insuranceDebit().signum() > 0)
+                support.entry(entries, policy.insuranceAccountId(), "USDT", LedgerDirection.DEBIT, leg.insuranceDebit());
+            if (leg.payout().signum() > 0)
+                support.entry(entries, account, "USDT", LedgerDirection.CREDIT, leg.payout());
         }
         support.entry(entries, policy.execution().feeAccountId(), "USDT", LedgerDirection.CREDIT, leg.fee());
     }

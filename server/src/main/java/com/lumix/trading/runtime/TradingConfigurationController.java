@@ -12,19 +12,30 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/trading/{kind}/configuration")
 public class TradingConfigurationController {
     private final TradingPolicyRepository policies;
-    private final boolean enabled;
-    public TradingConfigurationController(TradingPolicyRepository policies,@Value("${lumix.trading.spot-enabled:false}") boolean enabled){this.policies=policies;this.enabled=enabled;}
-    /** 未完成永續風險閉環時明確回不可開倉，不讓現貨開關間接啟用合約。 */
+    private final FuturesRiskPolicyRepository futures;
+    private final boolean spotEnabled;
+    private final boolean futuresEnabled;
+    public TradingConfigurationController(TradingPolicyRepository policies, FuturesRiskPolicyRepository futures,
+            @Value("${lumix.trading.spot-enabled:false}") boolean spotEnabled,
+            @Value("${lumix.trading.futures-enabled:false}") boolean futuresEnabled){
+        this.policies=policies;this.futures=futures;this.spotEnabled=spotEnabled;this.futuresEnabled=futuresEnabled;
+    }
     @GetMapping
     public ResponseEntity<Configuration> configuration(@PathVariable String kind,@RequestParam String market) {
         TradingPolicyRepository.kind(kind);
         if(market==null||!market.matches("[A-Z0-9][A-Z0-9_-]{0,31}"))throw new IllegalArgumentException("invalid market");
         Configuration value;
-        if("futures".equals(kind))value=new Configuration(false,"FUTURES_RISK_RUNTIME_UNAVAILABLE",null,null,null,null,null,null,null,null);
+        if("futures".equals(kind)) {
+            try {
+                var p=futures.active(market);var r=p.execution().rules();
+                boolean available=futuresEnabled && "USDT".equals(p.collateralAsset());
+                value=new Configuration(available,available?"AVAILABLE":"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
+            }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null);}
+        }
         else {
             try {
                 var p=policies.active(kind,market);var r=p.rules();
-                value=new Configuration(enabled,enabled?"AVAILABLE":"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
+                value=new Configuration(spotEnabled,spotEnabled?"AVAILABLE":"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
             }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null);}
         }
         return ResponseEntity.ok().header("Cache-Control","no-store").body(value);

@@ -114,6 +114,9 @@ public class FuturesFundingSettlementService {
         if (snapshot == null || !snapshot.source().equals(policy.markPriceSource())
                 || Duration.between(periodEnd, snapshot.sourceAt()).abs().compareTo(policy.maximumPriceAge()) > 0)
             throw new TradingOrderRejectedException("funding mark price is unavailable at period end");
+        jdbc.queryForObject("SELECT account_id FROM accounts WHERE account_id=? "
+                + "AND account_category='EXCHANGE' AND status='ACTIVE' FOR UPDATE", String.class,
+                policy.marginPoolAccountId());
         List<Map<String, Object>> rows = jdbc.queryForList("SELECT p.account_id,p.position_side,p.quantity,"
                 + "p.isolated_collateral,p.position_version FROM futures_hedge_positions p "
                 + "WHERE p.instrument_id=? AND p.quantity>0 ORDER BY p.account_id,p.position_side FOR UPDATE OF p",
