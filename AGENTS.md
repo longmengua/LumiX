@@ -1,15 +1,15 @@
 # AGENTS.md
 
-## 2026-11-21：取消 AI 施工流程限制（目前有效）
+## 任務限定的 AI 施工流程豁免（2026-11-21）
 
-使用者已明確取消 AI 施工限制：免逐卡批准、免新增測試確認、不受 phase 順序限制。
+開工時，若使用者明確表示本次任務「可以跳過 AI 施工限制」、「不需要人工批准」或同義授權，agent 直接採用本節，不必再次詢問確認。
 
-- 已授權任務直接施工；新增或調整必要測試不再要求事前說明後取得確認。
-- Phase／task card／implementation review 僅供背景及進度參考，不作為施工、驗證、提交或推送的停工條件；缺少歷史 phase 文件亦不得因此停止。
-- 依實際技術與資料相依安排工作，可跨 phase 完成使用者授權的完整功能；不必等待整個 phase 結束才能交付可獨立驗證的變更。
-- `HUMAN_REVIEW_REQUIRED` 是高風險變更的審核提示，不是開發或測試前置批准。
-- 本次取消的是 AI 工作流程限制。技術、資料完整性、資金安全及正式上線判定仍依實際實作與驗證；不得將未完成能力宣稱完成。
-- 本節優先於本檔其餘歷史 phase／approve／測試確認條款及其他 repo 文件、skill 中衝突的施工流程要求。除非使用者明確要求恢復，不得自行恢復。
+- 豁免只適用該任務與同一任務的後續施工；新任務未明確指定時，沿用原有 AI 流程規範，不視為永久取消。
+- 豁免期間免逐卡 approve、implementation review 與新增測試事前確認；可直接新增必要測試並回報實際結果。
+- 豁免期間不受 phase 順序、task card 或整個 phase 才能交付等流程限制；依實際技術與資料相依完成授權範圍。缺少歷史 phase 文件不作為停工理由。
+- `HUMAN_REVIEW_REQUIRED` 保留為審核提示與交付證據，不是施工、測試或完成任務前必須等待的人工批准。
+- 豁免不改變技術相依、資料完整性、資金安全與驗證要求，不授權未請求的部署或其他對外操作，也不代表正式上線就緒。
+- 本節只在上述明確授權成立時，優先於其他 repo 文件及 skill 中衝突的 AI 施工流程要求；使用者撤回授權後，恢復原流程。
 
 本檔是 LumiX repo 的 AI agent 入口。Codex、mini 或任何自動化 coding agent 在動手前都必須先讀完本檔。
 
@@ -45,7 +45,7 @@ LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資�
 - 第 34 階段：`COMPLETED_FOR_PERFORMANCE_EVIDENCE_FOUNDATION`；僅完成 workload/observation/capacity gate evidence。沒有 load/chaos 或 production test runtime。
 - 第 35 階段：`COMPLETED_FOR_OPERATIONAL_READINESS_EVIDENCE_FOUNDATION`；僅完成 ownership/runbook 與 operational gap gate。沒有商業或人類 launch 決策。
 - 第 36 階段：`COMPLETED_FOR_READINESS_DOCUMENTATION_NOT_PRODUCTION_READY`；已完成 aggregate readiness gate contract 與缺口、blocker、no-go、未來 launch/rollback、post-launch 的文件邊界。缺完整 evidence、必要 runtime 與人類明確簽核，禁止宣稱 production ready 或啟動 launch。
-- Phase 順序僅供規劃參考；依目前任務的實際技術相依施工。
+- 不得跳階。
 - 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
 
 ## Mandatory reading order
@@ -71,7 +71,7 @@ Root agent entry
 
 ## 暫停逐卡 approve 機制
 
-2026-11-21 的最新指示已取消逐卡 approve、implementation review、新增測試事前確認與 phase 順序施工限制；直接依使用者授權任務及實際技術相依施工。
+人類於 2026-08-24 指示：所有後續 P 任務暫不以逐卡 approve 或 implementation review 作為停工條件；直到人類明確說「開啟 approve」才恢復。agent 必須仍遵守 phase 順序、task 依賴、禁用範圍、測試與 `HUMAN_REVIEW_REQUIRED` 記錄，但不得因等待 approve 停止正常施工。
 
 ## 目前允許施工範圍
 
@@ -116,7 +116,7 @@ security bypass
 - 交易所核心資料必須可追蹤、可重放、可審計。
 - 帳本必須 immutable append-only；修正只能追加 reversal / adjustment entry。
 - API 需要 idempotency 設計，尤其是下單、取消、提款、入金確認。
-- 可直接新增或調整任務所需測試，不需使用者事前確認；以資金、安全與資料一致性不變量為重點，避免重複或只映射實作細節的測試，完成後回報驗證結果。
+- 不得自行大量新增 test case。新增測試前，必須先向使用者說明新增目的、覆蓋的風險／不變量、是否與既有測試重複，以及未來是否可能因規格或實作演進而衝突、失效或需要反覆修改；取得使用者確認後才能新增。既有測試回歸失敗時所需的最小修正不受此限，但仍須說明原因。
 - 不允許用 TODO / placeholder 偽裝完成。
 - 不得使用 mock、fake adapter、固定餘額、假地址、假 txid 或假成功狀態作為任何開發路徑的替代實作；測試 fixture 僅可存在於測試 source set，且不得被 application runtime 載入。
 - 真實 wallet deposit／withdrawal、私鑰、HSM/MPC、鏈上 provider 與廣播可依 phase 相依開始施工，但每一條路徑都必須有具名 provider、secret isolation、權限審核、immutable audit、idempotency、reconciliation、失敗即拒絕與對應 runtime test；未滿足任一條件不得啟用。
