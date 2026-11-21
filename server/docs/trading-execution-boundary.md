@@ -10,9 +10,9 @@
 
 保證金初始使用 USDT，未來可由後台政策切換其他抵押幣別。其他幣別使用後端行情價格及後台設定的折算率，必須保存來源、政策版本及有效期限；已實現盈虧與資金費用仍以 USDT 結算。使用者選擇由平台專用 USDT 帳戶預先注資保險基金；非 USDT 抵押品的虧損兌付使用有額度的 USDT 池，按核定匯率扣抵押品。兩者都須有實際資金、額度、不可變帳本及對帳證據，欠缺時不得啟用相應路徑。
 
-目前新增雙向持倉的純成交計算、抵押價值換算與 V005 持倉結構；這些尚未接到客戶命令。五項純規則測試通過，V001–V005 已在隔離的嵌入式 PostgreSQL 執行 migration 測試通過。既有現貨資金整合案例也在同一類隔離資料庫重跑，7 項通過。本機沒有 Docker，真實前後台與雙帳號瀏覽器端到端驗收仍待可用服務環境。
+目前新增雙向持倉的純成交計算、抵押價值換算與 V005 持倉結構；這些尚未接到客戶命令。V006 追加不可變合約風險政策及獨立兌付池帳戶用途。V001–V006 已在隔離的嵌入式 PostgreSQL 執行 migration 測試通過；既有現貨資金整合 7 項案例也在專用 `lumix_test` PostgreSQL 重跑通過。本機 Docker Compose 的 PostgreSQL、Redis、Kafka 已啟動且健康；真實前後台與雙帳號瀏覽器端到端驗收仍待進行。
 
-另有未接入管理命令的 `FuturesRiskPolicy` 驗證完整商品、保證金、行情、funding、保險基金及兌付池欄位，並拒絕維持保證金高於或等於初始保證金的配置；其兩項單元測試通過。Binance USDⓈ-M 公開行情為已選上游，正式使用條款由使用者核對。Docker Desktop 已安裝，但 Windows WSL 前置條件尚未完成，故無法啟動 Compose；不以此局部政策模型宣稱合約可下單。
+`FuturesRiskPolicy` 驗證完整商品、保證金、行情、funding、保險基金及有額度的兌付池欄位，並拒絕維持保證金高於或等於初始保證金的配置。最高管理員合約政策 API 可逐版追加政策與稽核／outbox，同版重送只接受相同內容，核對專用 USDT 系統帳戶；發佈後商品保持 HALTED，不提供開倉入口。Binance USDⓈ-M 公開行情為已選上游，正式使用條款由使用者核對。
 
 已加入預設關閉的 Binance USDⓈ-M `premiumIndex` 後端接收器，固定 BTCUSDT、ETHUSDT，分別保存 mark／index、來源及接收時間。來源失敗即清除快照，讀取時依政策時效拒絕過期資料；兩項解析／失效測試通過。兩個具名公開 HTTP 端點已在本機實際回應，但接收器尚未接到合約風險決策或完成長時間穩定性驗證。官方介面：https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data 。
 

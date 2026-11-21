@@ -16,6 +16,7 @@ class FuturesRiskPolicyTest {
         assertEquals("BTC", policy.collateralAsset());
         assertEquals("named-futures-mark", policy.markPriceSource());
         assertEquals("conversion-usdt", policy.conversionPoolAccountId());
+        assertEquals(decimal("100000"), policy.maximumConversionExposureUsdt());
     }
 
     @Test
@@ -26,7 +27,13 @@ class FuturesRiskPolicyTest {
         assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
                 decimal("0.2"), decimal("5"), decimal("0.2"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
-                Duration.ofHours(8), decimal("0.01"), "insurance-usdt", "conversion-usdt"));
+                Duration.ofHours(8), decimal("0.01"), decimal("100000"),
+                "insurance-usdt", "conversion-usdt"));
+        assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
+                decimal("0.2"), decimal("5"), decimal("0.05"), decimal("1000000"),
+                "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
+                Duration.ofHours(8), decimal("0.01"), BigDecimal.ZERO,
+                "insurance-usdt", "conversion-usdt"));
     }
 
     private static FuturesRiskPolicy policy(String collateral, String insurance, String conversion) {
@@ -39,7 +46,8 @@ class FuturesRiskPolicyTest {
                 TradingExecutionPolicy.CounterpartyModel.CLIENT_TO_CLIENT);
         return new FuturesRiskPolicy(execution, collateral, decimal("0.2"), decimal("5"),
                 decimal("0.05"), decimal("1000000"), "named-futures-mark", "named-futures-index",
-                Duration.ofSeconds(10), Duration.ofHours(8), decimal("0.01"), insurance, conversion);
+                Duration.ofSeconds(10), Duration.ofHours(8), decimal("0.01"), decimal("100000"),
+                insurance, conversion);
     }
 
     private static BigDecimal decimal(String value) { return new BigDecimal(value); }

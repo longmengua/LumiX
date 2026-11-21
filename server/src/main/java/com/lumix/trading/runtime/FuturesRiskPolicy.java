@@ -20,6 +20,7 @@ public record FuturesRiskPolicy(
         Duration maximumPriceAge,
         Duration fundingInterval,
         BigDecimal maximumAbsoluteFundingRate,
+        BigDecimal maximumConversionExposureUsdt,
         String insuranceAccountId,
         String conversionPoolAccountId
 ) {
@@ -45,6 +46,7 @@ public record FuturesRiskPolicy(
             throw new IllegalArgumentException("maintenance margin must be below initial margin");
         maximumPositionNotionalUsdt = positive(maximumPositionNotionalUsdt, "position notional limit");
         maximumAbsoluteFundingRate = rate(maximumAbsoluteFundingRate, "funding rate cap", true);
+        maximumConversionExposureUsdt = positive(maximumConversionExposureUsdt, "conversion pool exposure limit");
         Objects.requireNonNull(maximumPriceAge, "price freshness limit is required");
         Objects.requireNonNull(fundingInterval, "funding interval is required");
         if (maximumPriceAge.isNegative() || maximumPriceAge.isZero()
