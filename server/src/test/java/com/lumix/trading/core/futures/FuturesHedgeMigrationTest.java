@@ -16,12 +16,13 @@ class FuturesHedgeMigrationTest {
             var applied = Flyway.configure().dataSource(dataSource)
                     .locations("classpath:db/migration").load().migrate();
             var jdbc = new JdbcTemplate(dataSource);
-            assertEquals(6, applied.migrationsExecuted);
+            assertEquals(7, applied.migrationsExecuted);
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_hedge_positions'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_hedge_position_events'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_position_events'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_risk_policies'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_risk_policies'", Integer.class));
+            assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='trading_order_position_boundary'", Integer.class));
         }
     }
 }

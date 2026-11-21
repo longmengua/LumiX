@@ -27,12 +27,12 @@ class FuturesRiskPolicyTest {
         assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
                 decimal("0.2"), decimal("5"), decimal("0.2"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
-                Duration.ofHours(8), decimal("0.01"), decimal("100000"),
+                Duration.ofHours(8), decimal("0.01"), decimal("100000"), RoundingMode.DOWN,
                 "margin-usdt", "insurance-usdt", "conversion-usdt"));
         assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
                 decimal("0.2"), decimal("5"), decimal("0.05"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
-                Duration.ofHours(8), decimal("0.01"), BigDecimal.ZERO,
+                Duration.ofHours(8), decimal("0.01"), BigDecimal.ZERO, RoundingMode.DOWN,
                 "margin-usdt", "insurance-usdt", "conversion-usdt"));
     }
 
@@ -47,6 +47,7 @@ class FuturesRiskPolicyTest {
         return new FuturesRiskPolicy(execution, collateral, decimal("0.2"), decimal("5"),
                 decimal("0.05"), decimal("1000000"), "named-futures-mark", "named-futures-index",
                 Duration.ofSeconds(10), Duration.ofHours(8), decimal("0.01"), decimal("100000"),
+                RoundingMode.DOWN,
                 "margin-usdt", insurance, conversion);
     }
 

@@ -16,6 +16,8 @@
 
 接單前風控新增 `FuturesOrderRiskGate`：以具名 mark／index 的來源及時效、委託價和標記價較高者、明確槓桿、持倉名義額上限、手續費與隔離保證金核算；非 USDT 抵押另檢查後端匯率時效、政策折算率、兌付池額度及真實可用餘額。此為純決策，尚未與下單、預留及持倉交易接線，不表示合約可開倉。逐倉政策現亦指定獨立保證金池帳戶，與保險／兌付池分離。
 
+V007 為合約委託保存不可變 LONG／SHORT 方向、reduce-only 與槓桿身分，並保存成交後隔離抵押品。內部 `FuturesHedgePositionStore` 在同交易中核對真實成交、同版風險政策、TRADE journal 的 USDT 分錄，再以版本檢查更新持倉及追加事件。隔離資料庫測試以雙帳戶真實 ledger journal 驗證開倉、部分平倉、全平倉、損益、資金守恆與重送。這是持倉結算的內部步驟；撮合命令、保證金預留、funding、強平及非 USDT 兌付仍未接線，商品保持 HALTED。
+
 已加入預設關閉的 Binance USDⓈ-M `premiumIndex` 後端接收器，固定 BTCUSDT、ETHUSDT，分別保存 mark／index、來源及接收時間。來源失敗即清除快照，讀取時依政策時效拒絕過期資料；兩項解析／失效測試通過。兩個具名公開 HTTP 端點已在本機實際回應，但接收器尚未接到合約風險決策或完成長時間穩定性驗證。官方介面：https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data 。
 
 ## 現有可重用能力與缺口

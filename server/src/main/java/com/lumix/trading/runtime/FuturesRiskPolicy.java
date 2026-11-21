@@ -1,6 +1,7 @@
 package com.lumix.trading.runtime;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.Objects;
 
@@ -21,6 +22,7 @@ public record FuturesRiskPolicy(
         Duration fundingInterval,
         BigDecimal maximumAbsoluteFundingRate,
         BigDecimal maximumConversionExposureUsdt,
+        RoundingMode settlementRounding,
         String marginPoolAccountId,
         String insuranceAccountId,
         String conversionPoolAccountId
@@ -50,6 +52,9 @@ public record FuturesRiskPolicy(
         maximumPositionNotionalUsdt = positive(maximumPositionNotionalUsdt, "position notional limit");
         maximumAbsoluteFundingRate = rate(maximumAbsoluteFundingRate, "funding rate cap", true);
         maximumConversionExposureUsdt = positive(maximumConversionExposureUsdt, "conversion pool exposure limit");
+        Objects.requireNonNull(settlementRounding, "settlement rounding is required");
+        if (settlementRounding == RoundingMode.UNNECESSARY)
+            throw new IllegalArgumentException("explicit settlement rounding is required");
         Objects.requireNonNull(maximumPriceAge, "price freshness limit is required");
         Objects.requireNonNull(fundingInterval, "funding interval is required");
         if (maximumPriceAge.isNegative() || maximumPriceAge.isZero()
