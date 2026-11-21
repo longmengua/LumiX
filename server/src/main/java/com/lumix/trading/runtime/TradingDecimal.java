@@ -18,6 +18,15 @@ public final class TradingDecimal {
         return value.scale() < 0 ? value.setScale(0) : value;
     }
 
+    /** Funding 費率可為正、負或零，仍只能接受有界 plain-decimal 字串。 */
+    public static BigDecimal signed(String text) {
+        if (text == null || text.length() > 38
+                || !text.matches("-?[0-9]{1,18}(?:\\.[0-9]{1,18})?"))
+            throw new IllegalArgumentException("signed trading decimal must be bounded and plain");
+        BigDecimal value = new BigDecimal(text).stripTrailingZeros();
+        return value.scale() < 0 ? value.setScale(0) : value;
+    }
+
     /** 計算後再次確認可入帳範圍；禁止超出 ledger 的整數位或小數精度。 */
     public static BigDecimal ledgerAmount(BigDecimal value) {
         if (value == null || value.signum() < 0 || value.precision() > 36 || value.scale() > 18

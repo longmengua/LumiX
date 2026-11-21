@@ -3,6 +3,7 @@ package com.lumix.trading.runtime;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Objects;
 
 /**
@@ -19,6 +20,7 @@ public record FuturesRiskPolicy(
         String markPriceSource,
         String indexPriceSource,
         Duration maximumPriceAge,
+        Instant fundingScheduleAnchor,
         Duration fundingInterval,
         BigDecimal maximumAbsoluteFundingRate,
         BigDecimal maximumConversionExposureUsdt,
@@ -56,10 +58,14 @@ public record FuturesRiskPolicy(
         if (settlementRounding == RoundingMode.UNNECESSARY)
             throw new IllegalArgumentException("explicit settlement rounding is required");
         Objects.requireNonNull(maximumPriceAge, "price freshness limit is required");
+        Objects.requireNonNull(fundingScheduleAnchor, "funding schedule anchor is required");
         Objects.requireNonNull(fundingInterval, "funding interval is required");
         if (maximumPriceAge.isNegative() || maximumPriceAge.isZero()
                 || fundingInterval.isNegative() || fundingInterval.isZero())
             throw new IllegalArgumentException("price age and funding interval must be positive");
+        if (fundingInterval.getNano() != 0 || fundingInterval.getSeconds() == 0
+                || fundingScheduleAnchor.getNano() != 0)
+            throw new IllegalArgumentException("funding schedule must use whole seconds");
     }
 
     private static String symbol(String value, String name) {

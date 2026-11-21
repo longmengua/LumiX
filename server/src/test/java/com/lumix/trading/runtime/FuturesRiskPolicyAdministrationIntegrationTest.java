@@ -206,7 +206,7 @@ class FuturesRiskPolicyAdministrationIntegrationTest {
         return new FuturesRiskPolicy(execution, "USDT", BigDecimal.ZERO, new BigDecimal("5"),
                 new BigDecimal("0.05"), new BigDecimal(positionLimit),
                 "BINANCE_USDSM_PREMIUM_INDEX", "BINANCE_USDSM_PREMIUM_INDEX", Duration.ofSeconds(10),
-                Duration.ofHours(8), new BigDecimal("0.01"), new BigDecimal("100000"),
+                Instant.EPOCH, Duration.ofHours(8), new BigDecimal("0.01"), new BigDecimal("100000"),
                 RoundingMode.DOWN,
                 "futures-margin", insurance, "futures-pool");
     }

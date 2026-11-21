@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
+import java.time.Instant;
 import org.junit.jupiter.api.Test;
 
 /** 政策 fixture 只在測試中使用，驗證雙向 USDT 永續所需來源與資金責任不可省略。 */
@@ -27,12 +28,12 @@ class FuturesRiskPolicyTest {
         assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
                 decimal("0.2"), decimal("5"), decimal("0.2"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
-                Duration.ofHours(8), decimal("0.01"), decimal("100000"), RoundingMode.DOWN,
+                Instant.EPOCH, Duration.ofHours(8), decimal("0.01"), decimal("100000"), RoundingMode.DOWN,
                 "margin-usdt", "insurance-usdt", "conversion-usdt"));
         assertThrows(IllegalArgumentException.class, () -> new FuturesRiskPolicy(valid.execution(), "BTC",
                 decimal("0.2"), decimal("5"), decimal("0.05"), decimal("1000000"),
                 "named-futures-mark", "named-futures-index", Duration.ofSeconds(10),
-                Duration.ofHours(8), decimal("0.01"), BigDecimal.ZERO, RoundingMode.DOWN,
+                Instant.EPOCH, Duration.ofHours(8), decimal("0.01"), BigDecimal.ZERO, RoundingMode.DOWN,
                 "margin-usdt", "insurance-usdt", "conversion-usdt"));
     }
 
@@ -46,7 +47,7 @@ class FuturesRiskPolicyTest {
                 TradingExecutionPolicy.CounterpartyModel.CLIENT_TO_CLIENT);
         return new FuturesRiskPolicy(execution, collateral, decimal("0.2"), decimal("5"),
                 decimal("0.05"), decimal("1000000"), "named-futures-mark", "named-futures-index",
-                Duration.ofSeconds(10), Duration.ofHours(8), decimal("0.01"), decimal("100000"),
+                Duration.ofSeconds(10), Instant.EPOCH, Duration.ofHours(8), decimal("0.01"), decimal("100000"),
                 RoundingMode.DOWN,
                 "margin-usdt", insurance, conversion);
     }

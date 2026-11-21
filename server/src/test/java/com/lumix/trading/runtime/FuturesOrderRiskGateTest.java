@@ -81,7 +81,7 @@ class FuturesOrderRiskGateTest {
         return new FuturesRiskPolicy(execution, collateral,
                 "USDT".equals(collateral) ? BigDecimal.ZERO : decimal("0.2"), decimal("5"),
                 decimal("0.05"), decimal("1000000"), SOURCE, SOURCE, Duration.ofSeconds(10),
-                Duration.ofHours(8), decimal("0.01"), decimal("100000"), RoundingMode.DOWN,
+                Instant.EPOCH, Duration.ofHours(8), decimal("0.01"), decimal("100000"), RoundingMode.DOWN,
                 "margin", "insurance", "pool");
     }
 
