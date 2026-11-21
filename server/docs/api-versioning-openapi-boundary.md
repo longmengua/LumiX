@@ -3,7 +3,6 @@
 ## 目的
 
 本文件定義 LumiX 後端 API versioning 與 OpenAPI 文件邊界。
-Phase 13 只先固定路徑與文件規範，不實作真正 controller，也不引入 Swagger runtime 依賴。
 
 ## API versioning 規則
 
@@ -53,9 +52,3 @@ risk
 | /api/v1/...      | --> | DTO convention   | --> | OpenAPI document    |
 +------------------+     +------------------+     +---------------------+
 ```
-
-## Phase 13 原則
-
-- 先定義 versioned path，再讓後續 controller 採用。
-- 不在此階段引入 Swagger UI 或 OpenAPI codegen runtime。
-- 不公開 internal package 名稱作為對外契約。

@@ -2,7 +2,7 @@
 
 日期：2026-11-20。範圍：目前 checkout 的 `server/` 主程式、`signer/`、前端呼叫、migration 與 repo 內部署設定。路徑以 repository root 為準。這是後端技術稽核，並非 production readiness 或安全簽核。
 
-任務狀態：盤點、風險分析及最小方案完成；runtime 修補與新增上傳測試未施工。起始 `git status --short` 為空。指定的 `docs/phases/README.md`、P25 README 與整個 `docs/phases/` 在目前 checkout 不存在，不能更新不存在的 phase status，也不能以其他歷史文件推定實際 runtime。
+任務狀態：盤點、風險分析及最小方案完成；runtime 修補與新增上傳測試未施工。起始 `git status --short` 為空。既有文件不能代替實際 runtime 驗證。
 
 ## 主要結論與版本
 

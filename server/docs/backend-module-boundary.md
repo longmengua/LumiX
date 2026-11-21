@@ -3,7 +3,6 @@
 ## 目的
 
 本文件定義 LumiX 後端目前的 package 邊界與後續分層方向。
-Phase 13 的目標不是把交易 runtime 做出來，而是先把 API 與 bounded context 的邊界釘死，避免後續把帳本、錢包、撮合、結算與外部 API 混在同一層。
 
 ## 現況說明
 
@@ -57,7 +56,6 @@ com.lumix.openapi
 com.lumix.idempotency
 ```
 
-它們會在後續 phase 依照實際責任拆分或收斂到上述 bounded context。
 
 ## Dependency direction
 
@@ -88,7 +86,6 @@ common -> all modules
                                +------------------+
 ```
 
-## Phase 13 交付原則
 
 - 先建立 boundary marker，再逐步搬移具體責任。
 - 不用 placeholder 假裝 module 已經完成。

@@ -1,7 +1,6 @@
-# SECURITY_RULES
+# 安全共用規則
 
-- All high-risk logic requires manual review before production use.
-- Do not process or store real private keys in this phase.
-- Do not claim any Phase 9 stub is production ready.
-- Mark high-risk placeholders with `TODO: requires high-reasoning review before production use`.
-- Do not connect real balance-changing logic to a database in this phase.
+- 高風險邏輯在正式使用前須完成適當驗證與人工審核。
+- 私鑰與憑證應隔離管理，不寫入原始碼、測試 fixture 或日誌。
+- 認證、授權與跨站請求防護須依實際入口驗證，失敗時拒絕操作。
+- 不以 stub、mock 或未驗證的成功狀態宣稱可正式使用。

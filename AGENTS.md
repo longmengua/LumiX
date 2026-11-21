@@ -1,200 +1,31 @@
-# AGENTS.md
+# LumiX 開發共用規範
 
-## 任務限定的 AI 施工流程豁免（2026-11-21）
+本檔是 AI agent 的專案入口。開始工作時先讀本檔，再依任務閱讀相關程式碼與規格。
 
-開工時，若使用者明確表示本次任務「可以跳過 AI 施工限制」、「不需要人工批准」或同義授權，agent 直接採用本節，不必再次詢問確認。
+## 專案目標與現況
 
-- 豁免只適用該任務與同一任務的後續施工；新任務未明確指定時，沿用原有 AI 流程規範，不視為永久取消。
-- 豁免期間免逐卡 approve、implementation review 與新增測試事前確認；可直接新增必要測試並回報實際結果。
-- 豁免期間不受 phase 順序、task card 或整個 phase 才能交付等流程限制；依實際技術與資料相依完成授權範圍。缺少歷史 phase 文件不作為停工理由。
-- `HUMAN_REVIEW_REQUIRED` 保留為審核提示與交付證據，不是施工、測試或完成任務前必須等待的人工批准。
-- 豁免不改變技術相依、資料完整性、資金安全與驗證要求，不授權未請求的部署或其他對外操作，也不代表正式上線就緒。
-- 本節只在上述明確授權成立時，優先於其他 repo 文件及 skill 中衝突的 AI 施工流程要求；使用者撤回授權後，恢復原流程。
+LumiX 以可審計、可維運的交易所為目標。已存在的功能須以程式碼、設定與實際驗證判斷。文件或測試通過不代表正式上線就緒。正式上線仍須符合 `docs/governance/PRODUCTION_READINESS_GATES.md` 並取得人類明確簽核。
 
-本檔是 LumiX repo 的 AI agent 入口。Codex、mini 或任何自動化 coding agent 在動手前都必須先讀完本檔。
+## 開發方式
 
-## Project truth
+- 依使用者需求與實際技術相依施工，變更範圍保持明確。閱讀直接相關的文件，避免一次載入全部歷史文件。
+- 重用既有模型、服務與共用元件。變更後執行最窄且足夠的驗證，回報實際結果、未驗證項目與限制。
+- 不以 TODO、placeholder、mock、固定餘額、假地址、假交易或假成功狀態冒充完成。測試 fixture 留在測試 source set。
+- 新增或修改的程式碼遵守 `docs/engineering/code-commenting-standard.md`，以繁體中文註解說明業務、安全及資料一致性原因。
+- 提交前檢查 `git status --short`。只有工作目錄全是本任務變更時才使用 `git add .`，否則明確指定 staging 路徑。
 
-LumiX 不是 MVP。LumiX 的目標是可以正式營運、可以承載真實資金、可以審計、可以維運、可以逐步商業化的交易所系統。
+## 技術與資料邊界
 
-目前權威狀態：
+- 後端使用 Java 21、Spring Boot 3，前端使用 React、TypeScript、Vite。
+- 第三方服務與資料由後端接入。前端只連 LumiX 內部 API 或推播，不持有第三方憑證。
+- API、前台、後台維持獨立服務與埠 8080、8088、8089。本機 Docker Compose 只啟動 PostgreSQL、Redis、Kafka，其餘以主機程序啟動。
+- 金額、價格、數量及費用使用整數最小單位或受控精度 decimal，避免 binary floating point。
+- 帳本採不可變 append-only 記錄，修正以追加 reversal 或 adjustment 表示。資金、交易與管理命令須維持冪等、權限隔離、可追蹤稽核、對帳及失敗即拒絕。
+- 錢包 provider、私鑰、簽章、廣播或資金移動路徑須具備來源、secret isolation、權限審核、不可變稽核、冪等、對帳及相應 runtime 驗證後才能啟用。
+- 修改交易、帳本、錢包、風控、認證、授權或 secret 管理時，回報須標記 `HUMAN_REVIEW_REQUIRED` 與具體審核重點。此標記用於交付審核。
 
-- 第 11 階段：已完成文件層級的 production architecture reset。
-- 第 12 階段：已完成 Production Database Schema 與 Migration foundation。
-- 第 13 階段：已完成 backend module foundation 與 API boundary。
-- 第 14 階段：已完成 immutable ledger engine foundation。
-- 第 15 階段：已完成 trading runtime core foundation。
-- 第 16 階段：已完成 spot sandbox foundation。
-- 第 17 階段：completed，主題是 Futures Core Model。
-- 第 18 階段：completed — Futures Trading Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
-- 第 19 階段：completed — Risk Sandbox foundation；HUMAN_REVIEW_REQUIRED 已批准。
-- 第 20 階段：completed — Contract Trading Integration Gate foundation；HUMAN_REVIEW_REQUIRED 已批准。
-- 第 21 階段：`COMPLETED_FOR_MARKET_DATA_FOUNDATION`；另有進行中的 Binance 現貨深度與日／週／月及 1／5／15／60 分 K 線 runtime、匿名唯讀推播及參考行情頁，本機 K 線／訂單簿視覺驗收已串通，一般設定預設關閉。完整行情、正式部署、安全審核與 production readiness 均未完成；詳見 `server/docs/binance-market-data-boundary.md`。
-- 第 22 階段：`COMPLETED_FOR_DEPOSIT_OBSERVATION_FOUNDATION`；僅完成 address ownership、chain observation、finality/health、read-only reconciliation 與 P23 handoff contract。地址派發、RPC/provider、secret、持久化與 credit 尚未開始。
-- 第 23 階段：`COMPLETED_FOR_DEPOSIT_CREDIT_DECISION_FOUNDATION`；僅完成 eligibility、idempotency、future ledger handoff、reorg correction 與 read-only reconciliation contract。ledger append、balance mutation、credit/reversal runtime 均未開始。
-- 第 24 階段：`COMPLETED_FOR_WITHDRAWAL_REQUEST_FOUNDATION`；僅完成 immutable request、eligibility、lifecycle、reconciliation 與 keyless P25 input contract。沒有 hold 寫入、approval bypass、簽章、廣播、鏈上確認或資金移動 runtime。
-- 第 25 階段：`COMPLETED_FOR_WITHDRAWAL_SIGNING_BOUNDARY_FOUNDATION`；僅完成 approval、keyless signing intent、capability isolation 與 broadcast evidence contract。沒有 signer、secret、RPC、broadcast 或資金完成 runtime。
-- 第 26 階段：`COMPLETED_FOR_RISK_CONTROL_POLICY_FOUNDATION`；僅完成 immutable risk policy、freshness、protection signal 與 governance evidence contract。沒有 freeze、override、limit mutation 或 production risk runtime。
-- 第 27 階段：`COMPLETED_FOR_ADMIN_CONTROL_BOUNDARY_FOUNDATION`；僅完成 immutable session/RBAC、dual-control、read-only view 與 audit evidence contract。沒有 admin command、role mutation 或 bypass。
-- 第 28 階段：`COMPLETED_FOR_AUDIT_COMPLIANCE_EVIDENCE_FOUNDATION`；僅完成 immutable audit/compliance evidence、gap gate 與 export/case reference contract。沒有 export runtime、資料傳送或資產修復。
-- 第 29 階段：`COMPLETED_FOR_API_ADMISSION_CONTRACT_FOUNDATION`；僅完成 version/idempotency/health/rate admission contract。沒有 endpoint、auth runtime 或公開資金／交易服務。
-- 第 30 階段：`COMPLETED_FOR_TRUSTED_UX_PRESENTATION_FOUNDATION`；僅完成 trusted data state presentation 與 sensitive enablement gate。沒有 production UI flow 或 mock-to-production wiring。
-- 第 31 階段：`COMPLETED_FOR_OBSERVABILITY_EVIDENCE_FOUNDATION`；僅完成 signal/runbook routing evidence，沒有 telemetry 或 alert runtime。
-- 第 32 階段：`COMPLETED_FOR_RECOVERY_READINESS_FOUNDATION`；僅完成 backup/replay manifest、mismatch 與 human approval gate。沒有 restore 或 DR runtime。
-- 第 33 階段：`COMPLETED_FOR_SECURITY_EVIDENCE_FOUNDATION`；僅完成 threat/remediation evidence 與 fail-closed gate。沒有 security runtime 或 bypass。
-- 第 34 階段：`COMPLETED_FOR_PERFORMANCE_EVIDENCE_FOUNDATION`；僅完成 workload/observation/capacity gate evidence。沒有 load/chaos 或 production test runtime。
-- 第 35 階段：`COMPLETED_FOR_OPERATIONAL_READINESS_EVIDENCE_FOUNDATION`；僅完成 ownership/runbook 與 operational gap gate。沒有商業或人類 launch 決策。
-- 第 36 階段：`COMPLETED_FOR_READINESS_DOCUMENTATION_NOT_PRODUCTION_READY`；已完成 aggregate readiness gate contract 與缺口、blocker、no-go、未來 launch/rollback、post-launch 的文件邊界。缺完整 evidence、必要 runtime 與人類明確簽核，禁止宣稱 production ready 或啟動 launch。
-- 不得跳階。
-- 不得宣稱 production ready，除非 `docs/governance/PRODUCTION_READINESS_GATES.md` 全部通過，且有人類審核者明確簽核。
+## 文件與 UI
 
-## Mandatory reading order
-
-每次任務開始，只讀必要上下文。
-
-```text
-Root agent entry
-  |
-  +-- AGENTS.md
-  +-- AI_AGENT.md
-  +-- AI_PROGRESS.md
-  |
-  +-- docs/ai/AI_CONTEXT_ROUTING.md
-  |
-  +-- docs/phases/README.md
-  +-- docs/phases/PHASE_25_WITHDRAWAL_SIGNING/README.md
-  |
-  +-- task-specific file listed by the phase README
-```
-
-不要一開始讀完整 `docs/`。除非任務明確要求架構審核，否則過量讀文件會造成 token 浪費與錯誤推論。
-
-## 暫停逐卡 approve 機制
-
-人類於 2026-08-24 指示：所有後續 P 任務暫不以逐卡 approve 或 implementation review 作為停工條件；直到人類明確說「開啟 approve」才恢復。agent 必須仍遵守 phase 順序、task 依賴、禁用範圍、測試與 `HUMAN_REVIEW_REQUIRED` 記錄，但不得因等待 approve 停止正常施工。
-
-## 目前允許施工範圍
-
-目前允許施工範圍：
-
-```text
-server/
-  current phase implementation
-  資產帳本入帳服務、資產保留、餘額投影更新，以及受治理的內部劃轉／空投執行服務
-  schema / contract / runtime tests
-  read-only technical documentation updates
-
-docs/phases/
-  task status update
-  current phase task card 與 implementation notes
-```
-
-資產帳本入帳與受治理的內部劃轉／空投執行服務已由人類於 2026-09-15 明確授權施工；仍必須依
-`docs/planning/ASSET_RUNTIME_PREREQUISITE_SEQUENCE.md` 的順序、維持不可變稽核證據、冪等性、
-權限審核與失敗即拒絕，且每個高風險交付都要標記「需要人工審核」。
-
-目前不允許以未受控方式施工範圍：
-
-```text
-matching engine execution
-settlement engine mutation
-fee collection runtime
-未經權限審核與不可變稽核紀錄的管理員手動調帳
-KYC / AML bypass
-security bypass
-```
-
-## Engineering rules
-
-- 所有第三方服務與資料來源皆由後端接入；前端只可連線 LumiX 內部 API 或內部推播，不得直接呼叫第三方 HTTP／WebSocket，也不得持有第三方憑證。第三方資料須由後端執行來源辨識、存取控制與失敗處理後，再透過內部介面提供前端。
-- 本機開發時 Docker Compose 只可執行 PostgreSQL、Redis 與 Kafka；`server:8080`、`web:8088`、`admin-web:8089` 必須分別以主機程序啟動，讓前後端變更可透過各自的 dev runtime 即時更新。這不改變三者獨立 service、port 與 route/API 隔離要求。
-- 未經使用者明確同意，不得主動增加 backward compatibility（舊 DB/schema 升級、歷史資料 adapter、deprecated API、dual-read／dual-write 或舊行為相容層）。若任務看似需要這類相容性，必須先詢問使用者。同樣地，baseline squash 不得順便刪除用途未確認但仍存在於 current final schema 的物件。
-- Java 後端遵守 Java 21 + Spring Boot 3 的專案方向。
-- 前端遵守 React + TypeScript + Vite 的專案方向。
-- 金額、數量、價格、費用不得使用 binary floating point。
-- 資產數值應使用整數最小單位或可控精度 decimal。
-- 交易所核心資料必須可追蹤、可重放、可審計。
-- 帳本必須 immutable append-only；修正只能追加 reversal / adjustment entry。
-- API 需要 idempotency 設計，尤其是下單、取消、提款、入金確認。
-- 不得自行大量新增 test case。新增測試前，必須先向使用者說明新增目的、覆蓋的風險／不變量、是否與既有測試重複，以及未來是否可能因規格或實作演進而衝突、失效或需要反覆修改；取得使用者確認後才能新增。既有測試回歸失敗時所需的最小修正不受此限，但仍須說明原因。
-- 不允許用 TODO / placeholder 偽裝完成。
-- 不得使用 mock、fake adapter、固定餘額、假地址、假 txid 或假成功狀態作為任何開發路徑的替代實作；測試 fixture 僅可存在於測試 source set，且不得被 application runtime 載入。
-- 真實 wallet deposit／withdrawal、私鑰、HSM/MPC、鏈上 provider 與廣播可依 phase 相依開始施工，但每一條路徑都必須有具名 provider、secret isolation、權限審核、immutable audit、idempotency、reconciliation、失敗即拒絕與對應 runtime test；未滿足任一條件不得啟用。
-- 所有新增或修改的程式碼都必須具備足夠註解，遵守 `docs/engineering/code-commenting-standard.md`。
-- 註解必須使用繁體中文，優先說明為什麼這樣做，而不是重複程式碼表面行為。
-
-## UI 設計治理
-
-- 管理後台採用 **LumiX Institutional Blue**；視覺政策權威為 [UI Design Governance](docs/governance/lumix-institutional-blue.md)，長期 UI 規範與同步責任見 [LumiX UI 長期治理與實作同步文件](docs/ai/LUMIX_UI_GOVERNANCE.md)，目前路徑、元件與資料能力快照見 [LumiX UI 實作快照](docs/ai/LUMIX_UI_IMPLEMENTATION.md)。所有 UI 工作開始前必讀兩份文件，並依其連結檢查現有元件及 token。
-- 路徑、component、API、資料能力與頁面狀態等短期實作快照記錄於 [LumiX UI 實作快照](docs/ai/LUMIX_UI_IMPLEMENTATION.md)；涉及 UI 的工作開始前一併閱讀，完成後同步更新。
-- 「美化、優化 UI、統一設計、增加科技感、改得更高級」預設只改善呈現，保留產品結構與業務功能；不授權改 API、資料模型、流程、權限、導航或新增虛構資料及 CTA。
-- 修改前檢查共用元件、theme／CSS variables、字級／間距／圓角、既有 Hero、icon 與 responsive 實作；遵循 reuse > extend > create，不逐頁複製樣式。
-- 以可用性、資訊層級、一致性、可及性、視覺品質、裝飾效果依序決策；窄畫面不得以裁切或隱藏 overflow 掩蓋內容重疊。
-- 使用者指定的局部修改／Golden Reference 只作用於授權範圍；通用 Hero pattern 不授權自行補 chips、改文案或重做全頁。視覺差異在任務範圍內收斂到權威規範，不另創一套風格。
-- 修改 canonical UI、token、Hero、illustration、responsive 行為、頁面狀態或核准視覺目標時，必須在同一 change 同步更新 `docs/ai/LUMIX_UI_GOVERNANCE.md`；未同步文件的 UI change 視為未完成。
-- 本規範不取代既有資金安全、真實資料、服務隔離與 phase gate；文件完成不代表 token、共用元件或正式 UI runtime 已實作。
-
-## Git staging rules
-
-- 每次準備提交前，必須先執行 `git status --short` 確認工作目錄內容。
-- 工作目錄只包含本 task 的預期變更時，統一使用 `git add .`，避免逐檔 staging 造成不必要的使用者批准。
-- 若工作目錄存在使用者、其他 task 或自動產生的未相關變更，禁止使用 `git add .`；必須改用明確路徑 staging，避免把未相關內容誤提交。
-
-## Documentation rules
-
-所有架構圖、UML、流程圖、狀態圖、ERD 都必須用純文字圖。
-
-後續新增或修改的文件，原則上都要以繁體中文表達為主。
-必要的技術名詞可以保留英文縮寫，但應優先提供中文語意，並在第一次出現時補上中文說明。
-圖內標籤、流程說明與狀態名稱也應優先中文化，避免文件主體混用英文。
-
-文件目錄治理規則：
-
-- `docs/` root 只保留總索引與主題資料夾，不再新增散落的大型主題文件。
-- 權威規則、phase review 與 readiness gate 只放 `docs/governance/`。
-- 路線圖、phase 相依與規劃性文件只放 `docs/planning/`。
-- 專案總覽、詞彙表與低風險背景參考只放 `docs/reference/`。
-- AI workflow、prompt、routing 與 agent 協作文件只放 `docs/ai/`。
-- 架構、產品、營運、exchange-core 與跨服務工程規範留在 root `docs/` 的對應主題資料夾；後端實作文件留在 `server/docs/`，前端實作文件留在 `web/docs/`。
-- Phase 任務、task status、implementation notes 只放 `docs/phases/`。
-- 若新增文件不屬於上述分類，必須先更新對應 `README.md` 的路由說明，再新增檔案。
-- 跨服務架構、治理、規劃與共用規範只可置於 repository root 的 `docs/`；後端實作文件只可置於 `server/docs/`，前端實作文件只可置於 `web/docs/`。禁止在 `src/`、`resources/` 或 migration 目錄存放文件。
-
-允許：
-
-```text
-+---------+       +---------+
-| Client  | ----> | Server  |
-+---------+       +---------+
-```
-
-禁止：
-
-```text
-Mermaid
-PlantUML
-圖片檔
-外部線上圖表工具
-```
-
-## Definition of done for any task
-
-每個任務至少要有：
-
-1. Scope 明確。
-2. 實作或文件變更只碰任務範圍。
-3. 測試或驗證方法清楚。
-4. 若改到 schema，要有 migration 順序與 rollback 說明。
-5. 若改到交易、帳本、錢包、風控，要在 PR 說明標記 `HUMAN_REVIEW_REQUIRED`。
-6. 更新對應階段文件的 task status。
-
-## Start here for current task
-
-Phase 21 至 Phase 36 的 foundation 已完成，且 P36 readiness documentation 已完成；這些都不代表正式行情、入金、credit、提款、簽章、公開 API、正式 UI、營運或 production launch。P36 缺完整 readiness evidence、必要 runtime 與人類明確簽核，所有後續施工必須先以 `PRODUCTION_READINESS_GATES.md` 與 P36 evidence register 的缺口為準：
-
-```text
-P36 evidence gap closure after required runtime dependencies; production launch remains prohibited
-```
-
-Phase 21–36 final review 位於各 phase 目錄的 `phase-*-final-review.md`。後續施工入口為 Phase 36 README 與權威 readiness gates；provider、公開 transport、地址派發、credit、私鑰、HSM/MPC 與鏈上廣播必須依 phase 相依與具名 security / audit gate 實作，不得以未審核捷徑接線。
-Phase 18 到 Phase 20 的已批准歷史分別保留在各 phase 目錄的 `phase-*-final-review.md`。
+- 文件以繁體中文為主。架構、流程與資料圖使用純文字圖。
+- 跨服務規格放在 `docs/` 對應主題，後端實作文件放 `server/docs/`，前端實作文件放 `web/docs/`。
+- UI 工作先讀 `docs/ai/LUMIX_UI_GOVERNANCE.md`、`docs/ai/LUMIX_UI_IMPLEMENTATION.md` 及相關共用元件。設計以 `docs/governance/lumix-institutional-blue.md` 為準，修改共用視覺規則時同步相關文件。

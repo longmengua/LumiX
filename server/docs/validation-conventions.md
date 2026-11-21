@@ -42,8 +42,3 @@ clientOrderId
 | request DTO      | --> | validation exception  | --> | ApiErrorResponse    |
 +------------------+     +-----------------------+     +---------------------+
 ```
-
-## Phase 13 原則
-
-- 先統一 validation contract，再接 web framework 的 annotation。
-- 不在這一階段實作 runtime 邏輯或交易流程。

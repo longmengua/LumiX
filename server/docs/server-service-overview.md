@@ -1,13 +1,5 @@
 # LumiX Server
 
-`server/` 目前承載 Java 21 + Spring Boot 3 後端基礎、phase 相關實作與測試。
+`server/` 承載 Java 21、Spring Boot 3 後端程式與測試。既有介面、測試或局部領域模型的存在，需以實際 runtime 與驗證結果判斷能力範圍。
 
-不要因為 `server/` 內已有介面、stub、測試或局部 domain model，就宣稱正式交易已完成或 production ready。
-
-## 先看哪些文件
-
-- `../../docs/governance/OPERATING_EXCHANGE_MASTER_PLAN.md`
-- `../../docs/governance/PHASE_REVIEW_WORKFLOW.md`
-- `../../docs/architecture/ARCHITECTURE_TEXT_MAP.md`
-- `README.md`
-- `../../docs/phases/PHASE_17_ORDER_INTAKE/README.md`
+開始後端工作時先讀根目錄 `AGENTS.md`，再依任務閱讀 `README.md`、相關後端實作文件與領域規格。整體架構見 `../../docs/architecture/ARCHITECTURE_TEXT_MAP.md`。

@@ -8,12 +8,10 @@
 - Migration 名稱必須可預測且有版本。
 - 已共享的 migration 不可在原檔上修改。
 - 新的資料庫變更必須使用新的 migration 檔。
-- 回滾說明應寫在第 12 階段的 rollout 文件中，不要放進 runtime code。
 
 ## 範圍界線
 
 - 本目錄只規範 migration 與資料庫文件位置；不改變任何 schema 或 runtime 行為。
-- 資金相關 schema 必須仍遵守 immutable ledger、precision 與既有 phase gate。
 
 ## Baseline 與工具行為
 

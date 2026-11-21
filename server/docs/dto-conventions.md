@@ -3,7 +3,6 @@
 ## 目的
 
 本文件定義 LumiX 後端 API request / response DTO 的命名與使用規則。
-Phase 13 先把 DTO 邊界固定，避免後續各 bounded context 各自長出不同格式。
 
 ## 命名規則
 
@@ -40,9 +39,3 @@ API Request -> validation -> application use case -> response/view
 | XxxRequest     | --> | validation layer | --> | XxxResponse/View |
 +----------------+     +------------------+     +------------------+
 ```
-
-## Phase 13 原則
-
-- 先固定命名與欄位語意，再讓後續 API 慢慢接入。
-- 不把 DTO 當成 domain entity。
-- 若後續 API path 採 `/api/v1` 版本化，DTO contract 仍要保持與版本同步，不可因版本不同而偷偷改欄位語意。

@@ -3,7 +3,6 @@
 ## 目的
 
 本文件定義 LumiX 後端測試分層與執行策略。
-Phase 13 先建立測試基礎與命名方式，讓後續高風險流程能在一致層級下被驗證。
 
 ## 測試分類
 
@@ -53,9 +52,3 @@ outbox
 | unit / boundary  | --> | integration test  | --> | PostgreSQL replay    |
 +------------------+     +-------------------+     +----------------------+
 ```
-
-## Phase 13 原則
-
-- 先定義測試分層，再補具體 integration case。
-- 不把 smoke test 當成完整 runtime 驗證。
-- 架構測試若暫時無法完整 enforcement，至少要驗證目前 skeleton 不違規，並在文件中記錄未來可強化的規則。

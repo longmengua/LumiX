@@ -1,38 +1,9 @@
 # AI 文件
 
-AI 文件的目標是讓 agent 少讀、準確讀、安全做，同時讓人類可以快速看懂目前的 agent workflow。
+AI 開發入口為根目錄 `AGENTS.md` 與 `AI_AGENT.md`。依任務使用 `AI_CONTEXT_ROUTING.md` 找到相關規格。
 
-## 穩定入口
+- `LUMIX_UI_GOVERNANCE.md` 記錄共用 UI 設計規範。
+- `LUMIX_UI_IMPLEMENTATION.md` 記錄目前 UI 路徑、元件與資料能力。
+- 程式碼註解規範位於 `docs/engineering/code-commenting-standard.md`。
 
-```text
-AGENTS.md
-  |
-AI_AGENT.md
-  |
-AI_PROGRESS.md
-  |
-docs/ai/AI_CONTEXT_ROUTING.md
-  |
-phase task card
-```
-
-## 這裡放什麼
-
-```text
-AI_CONTEXT_ROUTING.md    任務類型對應該讀哪些文件
-LUMIX_UI_GOVERNANCE.md   管理後台 UI 的真實實作快照、治理同步與變更台帳
-AI_REVIEW_CHECKLIST.md   AI review 時的檢查清單
-MINI_WORKFLOW.md         mini / coding agent 的任務節奏
-AI_START_HERE.md         人類與 AI 共用的快速入口
-AI_MODEL_GATE.md         不同 agent 的能力邊界
-AI_CONTINUE_PROMPT_V3.md 接續施工提示詞
-CODEX_PHASE_PROMPTS.md   phase 實作 / review 提示詞片段
-AI_DOCUMENT_SPLIT_PLAN.md 為什麼這樣拆文件與 token 策略
-codex-task-rules.md       Codex 歷史 task 規則與限制
-```
-
-## 閱讀建議
-
-- 一般 AI 任務不要把整個 `docs/ai/` 全讀完；優先讀 `AI_CONTEXT_ROUTING.md`。
-- UI 任務在讀完 `AI_CONTEXT_ROUTING.md` 後，必讀 `LUMIX_UI_GOVERNANCE.md`；它記錄 canonical 元件、token、頁面狀態與需同步的治理欄位。
-- 只有在調整 agent workflow、prompt、文件拆分策略時，才需要讀 `AI_DOCUMENT_SPLIT_PLAN.md` 或 `CODEX_PHASE_PROMPTS.md`。
+歷史進度應由 Git、程式碼及實際驗證追查。

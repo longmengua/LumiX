@@ -53,9 +53,3 @@ WRITE      - 可能寫入資料，但不代表一定是高風險資金流程
                              v
                         WRITE transaction
 ```
-
-## Phase 13 原則
-
-- 先把 policy 固定，再讓後續 service 套用。
-- 不在此階段加入實際 transaction manager 設定。
-- 不讓 repository 決定交易範圍。

@@ -1,7 +1,6 @@
-# ASSET_RULES
+# 資產共用規則
 
-- Every asset change must go through the ledger service interface.
-- Do not directly modify `balance`, `total`, `available`, or `locked`.
-- Every asset-changing request must carry a `requestId` or `idempotencyKey`.
-- Phase 9 must not implement real debit, credit, or settlement logic.
-- Spot and futures balances must not share one generic account bucket; futures margin is a contract risk field, not a standalone spot lending account.
+- 資產變更透過受控帳本服務，保留不可變記錄與稽核證據。
+- 不直接改寫餘額投影中的 total、available 或 locked 以代替帳本交易。
+- 資產命令須有 requestId 或 idempotencyKey，並驗證權限、併發與對帳。
+- 現貨與合約帳務維持清楚邊界。合約保證金屬於風險模型，不能直接當成現貨可用餘額。

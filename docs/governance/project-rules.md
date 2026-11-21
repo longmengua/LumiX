@@ -1,10 +1,6 @@
-# PROJECT_RULES
+# 專案共用規則
 
-- Backend stack is fixed to Java 21 + Spring Boot 3.
-- Backend source code must live only in `server/`.
-- Build tool for `server/` is Maven with Maven Wrapper.
-- Do not keep Gradle and Maven build systems side by side.
-- Do not create a Node, Fastify, Prisma, or TypeScript backend.
-- Phase 9 only allows skeletons, interfaces, documents, and stubs.
-- Do not implement production ledger logic in Phase 9.
-- Do not cross into Phase 10 before manual review.
+- 後端使用 Java 21、Spring Boot 3 與 Maven Wrapper，程式碼位於 `server/`。
+- 前端使用 React、TypeScript 與 Vite，程式碼位於 `web/`。
+- 依任務所需的技術相依開發，保留服務與資料邊界。
+- 以實際程式、設定及驗證結果描述完成狀態，不以文件或 placeholder 宣稱功能可用。

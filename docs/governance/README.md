@@ -1,21 +1,10 @@
-# 治理與門檻
+# 治理規範
 
-這個資料夾放的是 LumiX 的權威規則，不是一般說明文件。
+本目錄保存跨服務共用的安全、資產、UI 與正式上線判定規範。
 
-## 這裡放什麼
-
-```text
-OPERATING_EXCHANGE_MASTER_PLAN.md   專案總綱與 phase ladder
-PHASE_REVIEW_WORKFLOW.md            每個 phase 的審核流程與必要欄位
-PRODUCTION_READINESS_GATES.md       宣稱正式上線前必須通過的門檻
-documentation-location-policy.md    全 repo 文件位置與例外規範
-```
-
-## 什麼時候先讀這裡
-
-- 後台 UI 設計、美化與視覺一致性：[LumiX Institutional Blue](lumix-institutional-blue.md)，為唯一視覺設計權威；實作盤點與 token 契約由該文件連到前端文件。
-
-- 想確認目前做到哪一階段。
-- 想確認某個任務能不能做、是否屬於跳階。
-- 想確認什麼情況才可以宣稱 production ready。
-- 想做 phase review、release gate 或 human sign-off 前檢查。
+- `project-rules.md` 專案共用原則。
+- `security-rules.md` 安全要求。
+- `asset-rules.md` 資產處理要求。
+- `lumix-institutional-blue.md` UI 視覺規範。
+- `documentation-location-policy.md` 文件位置規範。
+- `PRODUCTION_READINESS_GATES.md` 正式上線判定條件。

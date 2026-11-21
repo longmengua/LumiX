@@ -3,7 +3,6 @@
 ## 目的
 
 本文件定義 LumiX 後端 security boundary skeleton。
-Phase 13 只先建立 authentication、authorization、principal 與高風險操作分類，不實作登入、API key runtime、withdrawal signing 或 admin runtime。
 
 ## 職責切分
 
@@ -49,8 +48,3 @@ RISK_OVERRIDE
          v                         v
    principal model           high-risk operation
 ```
-
-## Phase 13 原則
-
-- 只定義 boundary 與 policy skeleton。
-- 不把 boundary skeleton 誤當成登入或權限系統已完成。
