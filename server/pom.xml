@@ -71,6 +71,20 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <!-- 在沒有 Docker 的開發環境以真實 PostgreSQL 驗證 migration 與資料庫約束。 -->
+            <groupId>io.zonky.test</groupId>
+            <artifactId>embedded-postgres</artifactId>
+            <version>2.2.2</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- embedded PostgreSQL 的壓縮檔解包需要較新版 commons-lang3 API。 -->
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.15.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
         </dependency>
