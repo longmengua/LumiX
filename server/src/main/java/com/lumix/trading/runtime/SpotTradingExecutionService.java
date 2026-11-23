@@ -32,7 +32,12 @@ public class SpotTradingExecutionService {
     }
 
     /** 接受有界 plain-decimal HTTP 命令；沒有 browser 指定的 owner/account 或隱含自動成交。 */
-    public record Command(String marketSymbol,String side,String orderType,String timeInForce,String price,String quantity) { }
+    public record Command(String marketSymbol,String side,String orderType,String timeInForce,String price,String quantity,
+                          String slippageMode,String slippageValue) {
+        public Command(String marketSymbol,String side,String orderType,String timeInForce,String price,String quantity) {
+            this(marketSymbol,side,orderType,timeInForce,price,quantity,null,null);
+        }
+    }
 
     /** 價格優先、持久化序號優先；FOK、競態或任何入帳錯誤會回滾整次命令。 */
     @Transactional
@@ -45,7 +50,8 @@ public class SpotTradingExecutionService {
         BigDecimal quantity=TradingDecimal.positive(command.quantity());
         BigDecimal inputPrice="LIMIT".equals(command.orderType())?TradingDecimal.positive(command.price()):null;
         if("MARKET".equals(command.orderType())&&command.price()!=null)throw new IllegalArgumentException("market order cannot specify a price");
-        String fingerprint=TradingExecutionSupport.hash(support.encode(Arrays.asList(command.marketSymbol(),command.side(),command.orderType(),tif,inputPrice,quantity)));
+        if("LIMIT".equals(command.orderType())&&(command.slippageMode()!=null||command.slippageValue()!=null))throw new IllegalArgumentException("slippage tolerance is for market orders only");
+        String fingerprint=TradingExecutionSupport.hash(support.encode(Arrays.asList(command.marketSymbol(),command.side(),command.orderType(),tif,inputPrice,quantity,command.slippageMode(),command.slippageValue())));
         String request="order-"+UUID.randomUUID();
         support.lockExecution();
         String replay=support.claim("ORDER_CREATE",owner,key,fingerprint,request);
@@ -55,7 +61,7 @@ public class SpotTradingExecutionService {
         if(rule.kind()!=TradingInstrumentRules.Kind.SPOT)throw new IllegalStateException("spot instrument policy required");
         support.requireFeeAccount(policy.feeAccountId(),rule.quoteAsset());
         String account=support.activeAccount(owner,"spot");
-        BigDecimal price=inputPrice==null?protectedPrice(policy,command.side()):inputPrice;
+        BigDecimal price=inputPrice==null?protectedPrice(policy,command.side(),command.slippageMode(),command.slippageValue()):inputPrice;
         TradingLimitOrderValues values=TradingLimitOrderValues.validate(rule,price.toPlainString(),quantity.toPlainString());
         List<Map<String,Object>> makers=makers(rule.instrumentId(),command.side(),price);
         List<String> accounts=new ArrayList<>();accounts.add(account);
@@ -126,14 +132,13 @@ public class SpotTradingExecutionService {
                 +"ORDER BY o.price "+priority+",e.order_sequence ASC LIMIT "+MAXIMUM_MATCHES,instrument,"BUY".equals(side)?"SELL":"BUY",price);
     }
 
-    private BigDecimal protectedPrice(TradingExecutionPolicy policy,String side) {
+    private BigDecimal protectedPrice(TradingExecutionPolicy policy,String side,String slippageMode,String slippageValue) {
         boolean buy="BUY".equals(side);
         List<BigDecimal> prices=jdbc.query("SELECT o.price FROM orders o JOIN trading_order_executions e ON e.order_id=o.order_id "
                 +"JOIN accounts a ON a.account_id=o.account_id JOIN users u ON u.user_id=o.user_id "
                 +"WHERE a.status='ACTIVE' AND u.status='ACTIVE' AND e.instrument_id=? AND o.side=? AND o.status IN ('OPEN','PARTIALLY_FILLED') ORDER BY o.price "+(buy?"ASC":"DESC")+",e.order_sequence LIMIT 1",(r,n)->r.getBigDecimal(1),policy.rules().instrumentId(),buy?"SELL":"BUY");
         if(prices.isEmpty())throw new TradingOrderRejectedException("market order requires real executable liquidity");
-        BigDecimal bound=prices.getFirst().multiply(buy?BigDecimal.ONE.add(policy.maximumSlippage()):BigDecimal.ONE.subtract(policy.maximumSlippage()));
-        return bound.divide(policy.rules().priceTick(),0,buy?RoundingMode.FLOOR:RoundingMode.CEILING).multiply(policy.rules().priceTick());
+        return MarketSlippageProtection.bound(prices.getFirst(),side,policy.rules().priceTick(),policy.maximumSlippage(),slippageMode,slippageValue);
     }
 
     private void settle(Map<String,Object> taker,Map<String,Object> maker,BigDecimal quantity,String request) {

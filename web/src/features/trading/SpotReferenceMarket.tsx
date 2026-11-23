@@ -11,6 +11,7 @@ import { TradingWorkspaceLayout } from './TradingWorkspaceLayout';
 import { SpotReferenceOrderBook, type ReferenceLevel as Level, type ReferenceBook as Book } from './SpotReferenceOrderBook';
 import { useLiveTradingPanels } from './TradingLivePanels';
 import { formatMarketDecimal, isMarketDecimal } from './marketDecimal';
+import { previewExternalBook, type ExternalQuotePreviewPolicy } from './externalQuotePreview';
 type State = { status: 'connecting' | 'unavailable' | 'healthy'; book: Book | null };
 
 /** Binance 的參考行情與未來 LumiX 自身的成交及委託簿必須分開呈現。 */
@@ -20,11 +21,31 @@ export function SpotReferenceMarket({ symbol, kind = 'spot' }: { symbol: string;
   const normalized = symbol.toUpperCase().replace('-', '');
   const supported = normalized === 'BTCUSDT' || normalized === 'ETHUSDT';
   const [state, setState] = useState<State>({ status: 'connecting', book: null });
+  const [quotePolicy, setQuotePolicy] = useState<ExternalQuotePreviewPolicy | null>(null);
   const [candleData, setCandleData] = useState<{ timeframe: StockChartTimeframe; values: MarketCandle[] } | null>(null);
   // 回應附週期標記，切換當下清空圖表，舊 socket 的晚到事件不能覆寫新週期。
   const candles = candleData?.timeframe === timeframe ? candleData.values : null;
   const setCandles = (values: MarketCandle[] | null) => setCandleData(values ? {timeframe, values} : null);
   const english = locale === 'en-US';
+
+  useEffect(() => {
+    if (kind !== 'spot') return;
+    const abort = new AbortController();
+    async function refreshPolicy() {
+      try {
+        const response = await fetch('/api/v1/market-data/external-quote-preview-policy', {
+          signal: abort.signal, credentials: 'same-origin', cache: 'no-store',
+        });
+        if (response.status === 404) { setQuotePolicy(null); return; }
+        if (!response.ok) throw new Error('preview policy unavailable');
+        const policy = await response.json() as ExternalQuotePreviewPolicy;
+        if (!abort.signal.aborted) setQuotePolicy(policy);
+      } catch { if (!abort.signal.aborted) setQuotePolicy(null); }
+    }
+    void refreshPolicy();
+    const timer = window.setInterval(() => void refreshPolicy(), 15000);
+    return () => { abort.abort(); window.clearInterval(timer); };
+  }, [kind]);
 
   useEffect(() => {
     if (!supported || window.location.protocol !== 'https:') {
@@ -98,6 +119,12 @@ export function SpotReferenceMarket({ symbol, kind = 'spot' }: { symbol: string;
 
   const baseAsset = normalized.endsWith('USDT') ? normalized.slice(0, -4) : normalized;
   const live = useLiveTradingPanels(kind, `${baseAsset}-USDT`, baseAsset, english);
+  let displayedBook = state.book;
+  let preview = false;
+  if (kind === 'spot' && state.book && quotePolicy) {
+    try { displayedBook = previewExternalBook(state.book, quotePolicy, baseAsset); preview = true; }
+    catch { displayedBook = null; }
+  }
   const last = candles ? candles[candles.length - 1] : undefined;
   const unavailable = !supported
     ? (english ? 'This market is not supported yet.' : '此交易對目前尚未提供。')
@@ -107,8 +134,8 @@ export function SpotReferenceMarket({ symbol, kind = 'spot' }: { symbol: string;
   // 摘要與所選週期一致，不把月線或分線高低價冒充 24 小時統計。
   const period = timeframe === '1d' || timeframe === '1w' || timeframe === '1mo' ? t(`trading.chart.timeframe.${timeframe}`) : ({'1m':'1min','5m':'5min','15m':'15min','1h':'60min'}[timeframe]);
   const metrics = [
-    {label: english ? 'Best bid' : '最佳買價', value: state.book?.bids[0]?.price},
-    {label: english ? 'Best ask' : '最佳賣價', value: state.book?.asks[0]?.price},
+    {label: english ? 'Best bid' : '最佳買價', value: displayedBook?.bids[0]?.price},
+    {label: english ? 'Best ask' : '最佳賣價', value: displayedBook?.asks[0]?.price},
     {label: english ? `${period} high` : `${period}最高`, value: last?.high},
     {label: english ? `${period} low` : `${period}最低`, value: last?.low},
     {label: english ? `${period} volume (${baseAsset})` : `${period}成交量（${baseAsset}）`, value: last?.volume},
@@ -129,9 +156,11 @@ export function SpotReferenceMarket({ symbol, kind = 'spot' }: { symbol: string;
     <TradingWorkspaceLayout
       className="spot-reference"
       header={header}
-      notice={english ? 'Source: Binance Spot, for reference only. LumiX orders match the separate LumiX order book. This chart is not a perpetual mark price.' : '來源：Binance 現貨，僅供參考。LumiX 下單只與獨立的 LumiX 委託簿成交；此圖不是永續標記價格。'}
+      notice={preview
+        ? (english ? 'Binance Spot quote preview. Source liquidity is not reserved; current LumiX orders still match internal orders only.' : 'Binance 現貨報價預覽。來源掛單未保留；目前 LumiX 下單仍只撮合站內委託。')
+        : (english ? 'Source: Binance Spot, for reference only. Current LumiX orders match internal orders. This chart is not a perpetual mark price.' : '來源：Binance 現貨，僅供參考。目前 LumiX 下單只撮合站內委託；此圖不是永續標記價格。')}
       chart={<TradingMarketChart candles={candles} sourceLabel="Binance · UTC" />}
-      book={<SpotReferenceOrderBook book={state.book} lastPrice={last?.close ?? null} baseAsset={baseAsset} english={english} status={status} />}
+      book={<SpotReferenceOrderBook book={displayedBook} lastPrice={last?.close ?? null} baseAsset={baseAsset} english={english} status={status} preview={preview} />}
       orderPanel={live.orderPanel}
       accountPanel={live.accountPanel}
     />

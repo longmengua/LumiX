@@ -71,8 +71,9 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         if (!request.getRequestURI().startsWith("/api/")) {
             return true;
         }
-        // 公開行情只有唯讀推播；必須精確比對方法與路徑，不能連帶開放帳戶或交易 API。
-        if ("GET".equals(request.getMethod()) && "/api/v1/market-data/stream".equals(request.getRequestURI())) {
+        // 公開行情與報價預覽政策只開放精確 GET 路徑；帳戶、後台及交易命令仍須驗證。
+        if ("GET".equals(request.getMethod()) && ("/api/v1/market-data/stream".equals(request.getRequestURI())
+                || "/api/v1/market-data/external-quote-preview-policy".equals(request.getRequestURI()))) {
             return true;
         }
         if ("GET".equals(request.getMethod()) && isAnonymousCaptchaChallenge(request.getRequestURI())) {

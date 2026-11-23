@@ -59,7 +59,13 @@ public class FuturesTradingExecutionService {
 
     public record Command(String marketSymbol, String side, String positionSide, boolean reduceOnly,
                           String orderType, String timeInForce, String price, String quantity,
-                          String leverage) { }
+                          String leverage, String slippageMode, String slippageValue) {
+        public Command(String marketSymbol, String side, String positionSide, boolean reduceOnly,
+                       String orderType, String timeInForce, String price, String quantity, String leverage) {
+            this(marketSymbol, side, positionSide, reduceOnly, orderType, timeInForce, price, quantity,
+                    leverage, null, null);
+        }
+    }
 
     /** 管理命令在具名標記價顯示權益低於維持保證金時才可送出強制減倉。 */
     @Transactional
@@ -144,10 +150,13 @@ public class FuturesTradingExecutionService {
                 ? TradingDecimal.positive(command.price()) : null;
         if ("MARKET".equals(command.orderType()) && command.price() != null)
             throw new IllegalArgumentException("market order cannot specify a price");
+        if ("LIMIT".equals(command.orderType())
+                && (command.slippageMode() != null || command.slippageValue() != null))
+            throw new IllegalArgumentException("slippage tolerance is for market orders only");
         BigDecimal leverage = TradingDecimal.positive(command.leverage());
         String fingerprint = TradingExecutionSupport.hash(support.encode(Arrays.asList(command.marketSymbol(),
                 command.side(), command.positionSide(), command.reduceOnly(), command.orderType(), tif,
-                requestedPrice, quantity, leverage)));
+                requestedPrice, quantity, leverage, command.slippageMode(), command.slippageValue())));
         String request = "fut-" + UUID.randomUUID();
         support.lockExecution();
         String scope = liquidation ? "FUTURES_LIQUIDATION" : "FUTURES_ORDER_CREATE";
@@ -161,7 +170,8 @@ public class FuturesTradingExecutionService {
             throw new TradingOrderRejectedException("non-USDT collateral runtime is unavailable");
         var rules = policy.execution().rules();
         String account = support.activeAccount(owner, "futures");
-        BigDecimal price = requestedPrice == null ? protectedPrice(policy, command.side()) : requestedPrice;
+        BigDecimal price = requestedPrice == null ? protectedPrice(policy, command.side(),
+                command.slippageMode(), command.slippageValue()) : requestedPrice;
         TradingLimitOrderValues.validate(rules, price.toPlainString(), quantity.toPlainString());
         List<Map<String, Object>> makers = makers(rules.instrumentId(), command.side(), price);
         TreeSet<String> accounts = new TreeSet<>();
@@ -486,7 +496,8 @@ public class FuturesTradingExecutionService {
                 instrument, "BUY".equals(side) ? "SELL" : "BUY", price);
     }
 
-    private BigDecimal protectedPrice(FuturesRiskPolicy policy, String side) {
+    private BigDecimal protectedPrice(FuturesRiskPolicy policy, String side,
+                                      String slippageMode, String slippageValue) {
         String priority = "BUY".equals(side) ? "ASC" : "DESC";
         List<BigDecimal> best = jdbc.query("SELECT o.price FROM orders o JOIN trading_order_executions x "
                         + "ON x.order_id=o.order_id JOIN trading_instruments i ON i.instrument_id=x.instrument_id "
@@ -498,12 +509,8 @@ public class FuturesTradingExecutionService {
                         + ",x.order_sequence LIMIT 1", (row, index) -> row.getBigDecimal(1),
                 policy.execution().rules().instrumentId(), "BUY".equals(side) ? "SELL" : "BUY");
         if (best.isEmpty()) throw new TradingOrderRejectedException("market order needs real futures liquidity");
-        boolean buy = "BUY".equals(side);
-        BigDecimal bound = best.getFirst().multiply(buy
-                ? BigDecimal.ONE.add(policy.execution().maximumSlippage())
-                : BigDecimal.ONE.subtract(policy.execution().maximumSlippage()));
-        BigDecimal tick = policy.execution().rules().priceTick();
-        return bound.divide(tick, 0, buy ? RoundingMode.FLOOR : RoundingMode.CEILING).multiply(tick);
+        return MarketSlippageProtection.bound(best.getFirst(), side, policy.execution().rules().priceTick(),
+                policy.execution().maximumSlippage(), slippageMode, slippageValue);
     }
 
     private Map<String, Object> order(String id) {

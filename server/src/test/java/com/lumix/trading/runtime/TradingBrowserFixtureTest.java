@@ -88,7 +88,7 @@ class TradingBrowserFixtureTest {
         }
         Path file=Path.of(System.getProperty("java.io.tmpdir"),"lumix-e2e-cookies.json");
         Files.writeString(file,new ObjectMapper().writeValueAsString(cookies),StandardCharsets.UTF_8);
-        assertEquals(11,jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=true",Integer.class));
+        assertEquals(13,jdbc.queryForObject("SELECT COUNT(*) FROM flyway_schema_history WHERE success=true",Integer.class));
     }
 
     private static void user(JdbcTemplate jdbc,String id,boolean active){

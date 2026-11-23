@@ -6,6 +6,7 @@ import { PageHeader } from '../../components/layout/PageHeader';
 import { useI18n } from '../../i18n';
 import { SpotAssetConfigurationPanel } from '../features/assets/SpotAssetConfigurationPanel';
 import { AdminTradingPolicyPanel } from '../features/trading/AdminTradingPolicyPanel';
+import { ExternalQuotePreviewPolicyPanel } from '../features/trading/ExternalQuotePreviewPolicyPanel';
 import { AdminUsersPage } from '../features/users/AdminUsersPage';
 
 type WorkspaceTab = { to: string; label: string; content?: ReactNode };
@@ -64,12 +65,16 @@ export function AdminSpotWorkspacePage() {
   return <AdminNavWorkspace title={t('admin.nav.spot')} tabs={[
     { to: '/spot/assets', label: t('admin.spotAssetConfigTitle'), content: <SpotAssetConfigurationPanel /> },
     { to: '/spot/policies', label: locale === 'en-US' ? 'Trading policy' : '交易政策', content: <AdminTradingPolicyPanel kind="spot" /> },
+    { to: '/spot/external-quotes', label: locale === 'en-US' ? 'Binance quote preview' : 'Binance 報價預覽', content: <ExternalQuotePreviewPolicyPanel /> },
   ]} />;
 }
 
 export function AdminFuturesWorkspacePage() {
-  const { t } = useI18n();
-  return <AdminNavWorkspace title={t('admin.nav.futures')} tabs={[{ to: '/futures/configuration', label: t('admin.nav.futures'), content: <AdminTradingPolicyPanel kind="futures" /> }]} />;
+  const { t, locale } = useI18n();
+  return <AdminNavWorkspace title={t('admin.nav.futures')} tabs={[
+    { to: '/futures/configuration', label: t('admin.nav.futures'), content: <AdminTradingPolicyPanel kind="futures" /> },
+    { to: '/futures/external-quotes', label: locale === 'en-US' ? 'Binance quote preview' : 'Binance 報價預覽', content: <ExternalQuotePreviewPolicyPanel /> },
+  ]} />;
 }
 
 export function AdminRiskWorkspacePage() {

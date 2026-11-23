@@ -107,6 +107,27 @@ class SpotTradingExecutionIntegrationTest {
         assertEquals(2,count("orders"));
     }
 
+    /** 客戶滑價界線須限制實際撮合價；超出政策上限的命令不得留下訂單或成交。 */
+    @Test void customerSlippageToleranceCapsActualMarketFills() {
+        place("bob","SELL","100","0.1","near");
+        place("carol","SELL","102","0.1","far");
+        var narrow=transaction.execute(status->engine.place("alice",new SpotTradingExecutionService.Command(
+                "BTC-USDT","BUY","MARKET","IOC",null,"0.5","PERCENT","0.5"),"narrow"));
+        assertMoney("0.1",new BigDecimal(Objects.requireNonNull(narrow).filledQuantity()));
+        assertEquals(1,count("trades"));
+        var fixed=transaction.execute(status->engine.place("alice",new SpotTradingExecutionService.Command(
+                "BTC-USDT","BUY","MARKET","IOC",null,"0.1","FIXED_USDT","2"),"fixed"));
+        assertMoney("0.1",new BigDecimal(Objects.requireNonNull(fixed).filledQuantity()));
+        assertEquals(2,count("trades"));
+        place("bob","SELL","103","0.1","remaining");
+        var rejected=assertThrows(TradingOrderRejectedException.class,()->transaction.execute(status->engine.place("alice",
+                new SpotTradingExecutionService.Command("BTC-USDT","BUY","MARKET","IOC",null,"0.1",
+                        "PERCENT","6"),"too-wide")));
+        assertEquals("slippage tolerance exceeds market policy",rejected.getMessage());
+        assertEquals(2,count("trades"));
+        conserved("USDT");
+    }
+
     /** 相同餘額的並行新單只准一筆取得足額保留，失敗命令不留下孤兒訂單或 reservation。 */
     @Test void concurrentOrdersCannotOverspendAndOwnerCannotCancelOthers() throws Exception {
         ExecutorService executor=Executors.newFixedThreadPool(2);

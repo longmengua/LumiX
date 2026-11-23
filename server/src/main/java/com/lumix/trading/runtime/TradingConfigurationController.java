@@ -29,18 +29,18 @@ public class TradingConfigurationController {
             try {
                 var live=futures.tradable(market);var p=live.policy();var r=p.execution().rules();
                 boolean available=futuresEnabled && "USDT".equals(p.collateralAsset());
-                value=new Configuration(available,available?("ACTIVE".equals(live.status())?"AVAILABLE":"REDUCE_ONLY"):"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
-            }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null);}
+                value=new Configuration(available,available?("ACTIVE".equals(live.status())?"AVAILABLE":"REDUCE_ONLY"):"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()),text(p.execution().maximumSlippage()));
+            }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null,null);}
         }
         else {
             try {
                 var p=policies.active(kind,market);var r=p.rules();
-                value=new Configuration(spotEnabled,spotEnabled?"AVAILABLE":"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()));
-            }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null);}
+                value=new Configuration(spotEnabled,spotEnabled?"AVAILABLE":"NEW_ORDERS_DISABLED",r.baseAsset(),r.quoteAsset(),text(r.priceTick()),text(r.quantityStep()),text(r.minimumQuantity()),text(r.minimumNotional()),text(r.makerFeeRate()),text(r.takerFeeRate()),text(p.maximumSlippage()));
+            }catch(NoSuchElementException missing){value=new Configuration(false,"POLICY_UNAVAILABLE",null,null,null,null,null,null,null,null,null);}
         }
         return ResponseEntity.ok().header("Cache-Control","no-store").body(value);
     }
     private static String text(java.math.BigDecimal value){return value.stripTrailingZeros().toPlainString();}
     /** 費率與最小單位均以 decimal string 傳遞，實際成交費用仍由後端 authoritative 結算。 */
-    public record Configuration(boolean ordersEnabled,String reason,String baseAsset,String quoteAsset,String priceTick,String quantityStep,String minimumQuantity,String minimumNotional,String makerFeeRate,String takerFeeRate){}
+    public record Configuration(boolean ordersEnabled,String reason,String baseAsset,String quoteAsset,String priceTick,String quantityStep,String minimumQuantity,String minimumNotional,String makerFeeRate,String takerFeeRate,String maximumSlippage){}
 }

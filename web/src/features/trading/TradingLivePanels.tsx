@@ -8,10 +8,10 @@ type Fill = { tradeId: string; side: string; price: string; quantity: string; fe
 type Level = { price: string; quantity: string };
 type Position = { positionSide: string; quantity: string; entryNotionalUsdt: string; collateralAsset: string; isolatedCollateral: string };
 type Workspace = { balances: Balance[]; fills: Fill[]; bids: Level[]; asks: Level[]; positions: Position[] };
-type Configuration = { ordersEnabled: boolean; reason: string; makerFeeRate: string | null; takerFeeRate: string | null };
+type Configuration = { ordersEnabled: boolean; reason: string; makerFeeRate: string | null; takerFeeRate: string | null; maximumSlippage: string | null };
 type Reference = { source: string; markPrice: string; indexPrice: string; sourceAt: string };
 type Snapshot = { workspace: Workspace; orders: Order[]; configuration: Configuration; reference: Reference | null; received: number };
-type Command = { marketSymbol: string; side: string; orderType: string; timeInForce: string; price: string | null; quantity: string; positionSide?: string; reduceOnly?: boolean; leverage?: string };
+type Command = { marketSymbol: string; side: string; orderType: string; timeInForce: string; price: string | null; quantity: string; slippageMode?: string; slippageValue?: string; positionSide?: string; reduceOnly?: boolean; leverage?: string };
 class RequestError extends Error { constructor(public status: number) { super(`HTTP ${status}`); } }
 
 /** 所有帳戶資料及命令只經同源 LumiX API；不向第三方傳送 session 或交易意圖。 */
@@ -31,6 +31,12 @@ async function request<T>(path: string, signal: AbortSignal, method = 'GET', bod
   } finally { window.clearTimeout(deadline); signal.removeEventListener('abort', cancel); }
 }
 const amount = (value: string | null) => value !== null && isMarketDecimal(value) ? formatMarketDecimal(value) : '—';
+const percentLimit = (fraction: string | null) => {
+  if (fraction === null || !/^0\.[0-9]+$/.test(fraction)) return '—';
+  const digits = fraction.slice(2).padEnd(2, '0');
+  const decimal = digits.slice(2).replace(/0+$/, '');
+  return `${BigInt(digits.slice(0, 2))}${decimal ? `.${decimal}` : ''}`;
+};
 
 /** 共用真實交易面板：斷線清除舊資產，送單不樂觀成功；不確定結果使用原冪等鍵重試。 */
 export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: string, english: boolean) {
@@ -42,6 +48,8 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
   const [reduceOnly, setReduceOnly] = useState(false);
   const [leverage, setLeverage] = useState('5');
   const [orderType, setOrderType] = useState('LIMIT');
+  const [slippageMode, setSlippageMode] = useState('PERCENT');
+  const [slippageValue, setSlippageValue] = useState('0.1');
   const [price, setPrice] = useState('');
   const [quantity, setQuantity] = useState('');
   const [pending, setPending] = useState<{ body: Command; key: string } | null>(null);
@@ -97,11 +105,13 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
       || (kind === 'futures' && !reduceOnly && (!snapshot.reference || snapshot.configuration.reason === 'REDUCE_ONLY'))))) return;
     const tradeSide = kind === 'spot' ? side : positionSide === 'LONG' ? (reduceOnly ? 'SELL' : 'BUY') : (reduceOnly ? 'BUY' : 'SELL');
     const command = pending ?? { body: { marketSymbol: market, side: tradeSide, orderType, timeInForce: orderType === 'MARKET' ? 'IOC' : 'GTC', price: orderType === 'LIMIT' ? price : null, quantity,
+      ...(orderType === 'MARKET' && slippageMode !== 'SYSTEM' ? { slippageMode, slippageValue } : {}),
       ...(kind === 'futures' ? { positionSide, reduceOnly, leverage } : {}) }, key: crypto.randomUUID() };
     setPending(command); setBusy(true); commandRunning.current = true; setMessage('');
     try {
       const order = await request<Order>(`${path}/orders`, control.current!.signal, 'POST', command.body, command.key);
-      setPending(null); setMessage(text(`委託 ${order.orderId}：${order.status}，已成交 ${order.filledQuantity}。`, `Order ${order.orderId}: ${order.status}; filled ${order.filledQuantity}.`));
+      const closeRemainder = kind === 'futures' && command.body.reduceOnly && !/^0(?:\.0+)?$/.test(order.remainingQuantity);
+      setPending(null); setMessage(text(`委託 ${order.orderId}：已成交 ${order.filledQuantity}，未成交 ${order.remainingQuantity}。${closeRemainder ? '未成交部分仍未平倉。' : ''}`, `Order ${order.orderId}: filled ${order.filledQuantity}, unfilled ${order.remainingQuantity}.${closeRemainder ? ' Unfilled quantity remains open.' : ''}`));
       setSnapshot(null); await refresh(control.current!.signal);
     } catch (error) {
       if (error instanceof RequestError && error.status < 500) {
@@ -139,9 +149,11 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
       <label className="field"><span>{text('委託類型', 'Order type')}</span><select className="input" value={orderType} onChange={event => setOrderType(event.target.value)}><option value="LIMIT">{text('限價 GTC', 'Limit GTC')}</option><option value="MARKET">{text('市價 IOC', 'Market IOC')}</option></select></label>
       <label className="field"><span>{text('可用', 'Available')} ({sourceAsset})</span><output>{amount(available)}</output></label>
       {orderType === 'LIMIT' && <label className="field"><span>{text('價格', 'Price')} (USDT)</span><input className="input" inputMode="decimal" value={price} onChange={event => setPrice(event.target.value)} required pattern="[0-9]+([.][0-9]+)?" /></label>}
+      {orderType === 'MARKET' && <><label className="field"><span>{text('最大滑價', 'Maximum slippage')}</span><select className="input" value={slippageMode} onChange={event => setSlippageMode(event.target.value)}><option value="SYSTEM">{text('平台上限', 'Platform limit')}</option><option value="PERCENT">{text('百分比', 'Percent')}</option><option value="FIXED_USDT">{text('固定價差 USDT', 'Fixed price difference USDT')}</option></select></label>{slippageMode !== 'SYSTEM' && <label className="field"><span>{slippageMode === 'PERCENT' ? '%' : 'USDT'}</span><input className="input" inputMode="decimal" value={slippageValue} onChange={event => setSlippageValue(event.target.value)} required pattern="[0-9]+([.][0-9]+)?" /></label>}</>}
       <label className="field"><span>{text('數量', 'Quantity')} ({baseAsset})</span><input className="input" inputMode="decimal" value={quantity} onChange={event => setQuantity(event.target.value)} required pattern="[0-9]+([.][0-9]+)?" /></label>
     </fieldset>
     {snapshot?.configuration.ordersEnabled ? <><p>{text('費率', 'Fee rates')} maker {amount(snapshot.configuration.makerFeeRate)} / taker {amount(snapshot.configuration.takerFeeRate)} · {text('實收費用以成交結果為準', 'Actual fees follow settlement')}</p>{kind === 'futures' && <p>{snapshot.configuration.reason === 'REDUCE_ONLY' ? text('風險處置中：只接受減倉。', 'Risk halt: reduce only.') : snapshot.reference ? `${text('永續標記價', 'Perpetual mark')} ${amount(snapshot.reference.markPrice)} / ${text('指數價', 'Index')} ${amount(snapshot.reference.indexPrice)} USDT · ${snapshot.reference.source}` : text('永續標記價暫時無法取得；暫停開倉。', 'Perpetual mark is unavailable; opening is paused.')}</p>}</> : <p>{unavailable}</p>}
+    {orderType === 'MARKET' && <p className="trading-form__hint">{text(`平台最大滑價 ${percentLimit(snapshot?.configuration.maximumSlippage ?? null)}%；市價委託以當下站內最優對手價計算價格界線。範圍內可部分成交，超出界線或無流動性則取消餘量。固定價差是每單位幣價差。`, `Platform slippage cap ${percentLimit(snapshot?.configuration.maximumSlippage ?? null)}%. Market orders use the current best internal opposing price. They may fill partially; any remainder is canceled. Fixed difference applies per asset unit.`)}</p>}
     <p className="trading-form__hint">{text('僅與 LumiX 真實委託成交；Binance 行情不保證可成交。', 'Matches real LumiX orders only. Binance reference liquidity is not executable.')}</p>
     <button className="primary-button trading-form__submit" type="submit" disabled={busy || !!cancelPending || (!pending && (!snapshot?.configuration.ordersEnabled || openingBlocked))}>{busy ? text('處理中…', 'Processing…') : pending ? text('重試確認原委託', 'Retry original order') : text('送出委託', 'Place order')}</button>
     <p role="status" aria-live="polite">{message}</p>
@@ -160,8 +172,5 @@ export function useLiveTradingPanels(kind: Kind, market: string, baseAsset: stri
     </>}
     {cancelPending && <button type="button" disabled={busy} onClick={() => void cancel({ orderId: cancelPending.order } as Order)}>{text('重試原撤單', 'Retry cancellation')}</button>}
   </section>;
-  const ownBook = <section className="workspace-panel trading-live-panel"><h2>{text('LumiX 可成交委託簿', 'LumiX executable order book')}</h2>
-    {!snapshot ? <p>{text('委託簿尚未同步。', 'Order book unavailable.')}</p> : <div className="trading-form__grid">{(['asks', 'bids'] as const).map(sideName => <div key={sideName}><h3>{sideName === 'asks' ? text('賣盤', 'Asks') : text('買盤', 'Bids')}</h3>{snapshot.workspace[sideName].length === 0 ? <p>{text('尚無委託', 'No orders')}</p> : snapshot.workspace[sideName].map(level => <p key={level.price}>{amount(level.price)} · {amount(level.quantity)}</p>)}</div>)}</div>}
-  </section>;
-  return { orderPanel: <>{orderPanel}{ownBook}</>, accountPanel };
+  return { orderPanel, accountPanel };
 }
