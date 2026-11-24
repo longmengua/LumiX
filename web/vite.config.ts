@@ -1,10 +1,16 @@
 import { readFileSync } from 'node:fs';
-import { defineConfig, type ProxyOptions } from 'vite';
+import { fileURLToPath } from 'node:url';
+import { defineConfig, loadEnv, type ProxyOptions } from 'vite';
 import react from '@vitejs/plugin-react';
 
-const apiTarget = 'http://127.0.0.1:8080';
-
-export default defineConfig(() => {
+export default defineConfig(({ mode }) => {
+  const repositoryDirectory = fileURLToPath(new URL('..', import.meta.url));
+  const environment = loadEnv(mode, repositoryDirectory, 'LUMIX_');
+  const apiPort = environment.LUMIX_API_PORT || process.env.LUMIX_API_PORT || '8080';
+  if (!/^\d+$/.test(apiPort) || Number(apiPort) < 1 || Number(apiPort) > 65535) {
+    throw new Error('LUMIX_API_PORT 必須是 1 到 65535 的整數');
+  }
+  const apiTarget = `http://127.0.0.1:${apiPort}`;
   // 未明確指定 surface 時採前台最小權限預設，避免一般開發 server 意外承載管理端。
   const surface = process.env.VITE_LUMIX_SURFACE === 'admin' ? 'admin' : 'client';
 

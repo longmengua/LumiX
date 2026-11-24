@@ -71,6 +71,11 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
         if (!request.getRequestURI().startsWith("/api/")) {
             return true;
         }
+        // Demo endpoint 只有在部署開關明確啟用時可免 session，controller 仍限制 loopback 與允許的 Origin。
+        String demoBase = "/api/v1/trading/external-proxy/demo";
+        if ((request.getRequestURI().equals(demoBase)
+                || request.getRequestURI().startsWith(demoBase + "/"))
+                && ("GET".equals(request.getMethod()) || "POST".equals(request.getMethod()))) return true;
         // 公開行情與報價預覽政策只開放精確 GET 路徑；帳戶、後台及交易命令仍須驗證。
         if ("GET".equals(request.getMethod()) && ("/api/v1/market-data/stream".equals(request.getRequestURI())
                 || "/api/v1/market-data/external-quote-preview-policy".equals(request.getRequestURI()))) {

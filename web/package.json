@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:client": "node scripts/start-dev-surface.mjs client 8088",
-    "dev:admin": "node scripts/start-dev-surface.mjs admin 8089",
+    "dev:client": "node scripts/start-dev-surface.mjs client",
+    "dev:admin": "node scripts/start-dev-surface.mjs admin",
     "build": "vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --pretty false"

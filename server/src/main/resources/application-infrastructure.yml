@@ -27,6 +27,8 @@ management:
       enabled: ${LUMIX_AUTH_PASSWORD_RESET_SMTP_ENABLED:false}
 
 server:
+  address: ${LUMIX_API_ADDRESS:127.0.0.1}
+  port: ${LUMIX_API_PORT:8080}
   forward-headers-strategy: framework
 
 lumix:

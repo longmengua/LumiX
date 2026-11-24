@@ -2,6 +2,12 @@
 
 ## 2026-11-22 外部流動性方向施工
 
+### 外部送單 Proxy 與 Demo provider
+
+外部送單統一經 `ExternalOrderProxy` 根據後端政策指定的來源名稱交給對應 `ExternalOrderRouter`，例如 DEMO 交給模擬器、未來 BINANCE 交給 Binance adapter；客戶不選擇此值。新增交易所時不需改動呼叫端的 provider-neutral intent／outcome。`Outcome` 統一回傳外部訂單 ID、英文 `status`、數字 `statusCode`、成交量、成交名義額、成交均價、英文 `reason` 與數字 `reasonCode`；所有 `Code` 欄位一律為穩定數字。
+
+資料庫表 `external_order_proxy_settings` 保存設定鍵 `LUMIX_TRADING_EXTERNAL_PROXY_DEMO_ENABLED`，V014 初始值為 `true`。Proxy 每次送單、查單及列出情境前都讀取此設定，因此切換後不需重啟；關閉時 Demo API 回不存在語意。Demo API 另限制直接 loopback request 與 `LUMIX_TRADING_ALLOWED_ORIGIN`，結果只存程序記憶體，不建立 LumiX order、trade、reservation 或 ledger。支援 RANDOM、NORMAL、DELAYED、PARTIAL、SLIPPAGE_FILLED、SLIPPAGE_REJECTED、VENUE_REJECTED、UNKNOWN_TIMEOUT；DELAYED 初次回 PENDING，三秒後以同一 clientOrderId 查詢才回確定成交。同一 clientOrderId 與相同 intent 重送維持同一結果，不同 intent 則拒絕。
+
 使用者核定採「LumiX 站內客戶互撮＋未成交量送 Binance」兩種模式，不採平台先以自有庫存成交再對沖。站內按價格及時間優先撮合；剩餘量只有外部實際成交後才可確認客戶成交、持倉與帳本。現貨與合約市價 IOC 現已可由客戶選百分比或每單位固定 USDT 滑價界線，並受後台政策上限約束；平倉的未成交部分保留為未平倉位。外部交易 API key 尚未提供，因此現有撮合 runtime **仍只接站內委託**，公開 Binance 深度只作參考或路由價預覽，不保證可成交。
 
 已建立純報價邊界 `ExternalLiquiditySource`、`ExternalQuotePolicy`、`ExternalQuoteCalculator`，以及尚無實作的 `ExternalOrderRouter`。管理政策支援全站百分比與每單位固定 USDT 兩種價差，幣別可對兩者各自調整；不用的欄位填零，可擇一或合併。來源 ask 向上、bid 向下依商品 tick 取整；顯示量依上層提供的可路由額度與商品 step 截斷。快照過期、商品不符、交叉或倒序深度均不產生可用報價。V012／V013 追加不可變預覽政策與審計；最高管理員可從管理後台的現貨或合約頁籤保存版本。現貨頁讀取公開預覽政策並重算顯示價，但來源數量未保留，現有客戶委託仍只與站內委託成交；合約頁仍顯示 Binance 現貨參考簿，不能冒充 Binance 永續流動性。正式執行須補來源交易授權、客戶與外部訂單關聯、外部狀態恢復、部分成交、資金保留、價差與手續費雙重計收政策及對帳。保證金仍是平台內有帳本與可用額約束的資產記錄，未來出金時依已鎖定與可用額判定，不能把未注資餘額當真實資產。

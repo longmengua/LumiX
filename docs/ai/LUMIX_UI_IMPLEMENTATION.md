@@ -20,7 +20,7 @@
 - 現貨提供真實 UTC 日／週／月與 1／5／15／60 分 K 線；後端固定十四條 K 線來源連線，單一訂閱只推播所選週期，最多 320 根歷史，畫面顯示最近 160 根。月線依曆月、週線依 UTC 星期一；來源歷史不足時不補造。切換期間不顯示上一週期資料，過期或斷線清除舊圖。
 - 依使用者指定的 `/futures/BTC-USDT` 排版，現貨與合約共用 `TradingWorkspaceLayout.tsx`，沿用 `market-header`、`market-chart`、`trading-workspace-grid`、`trading-book`、`trading-form`、`balance-panel`：摘要／全寬圖表／左訂單簿右下單面板／底部帳戶區。767px 以下沿用共用垂直排列，現貨 1023px 以下買賣盤單欄，精確數值可換行。訂單簿使用約十列高的可捲動視窗保留完整二十檔，賣盤預設追蹤最佳賣價，手動捲動時保留位置。
 - 共用圖表以固定精度整數計算均線與畫面縮放；成交量文字使用獨立可讀字級，不隨 SVG 壓縮。`SpotReferenceOrderBook` 保留精確累計及可見深度比例。現貨下單面板已接真實 API，需政策與設定啟用；帳戶來自 authenticated primary 查詢。合約共用真實查詢及版型，風險 runtime 未完成前不開倉。
-- 本機執行 `server/scripts/start-market-preview.sh` 後以 `https://localhost:8088/spot/BTC-USDT` 或 `/spot/ETH-USDT` 驗收；Vite 使用明確憑證啟用 HTTPS，僅轉送固定行情 WebSocket 並覆寫 forwarded headers。一般開發仍預設 HTTP；行情不提供明文降級。
+- 本機執行 `server/scripts/start-market-preview.sh` 後以 `https://localhost:8090/spot/BTC-USDT` 或 `/spot/ETH-USDT` 驗收（實際埠讀取 `.env`）；Vite 使用明確憑證啟用 HTTPS，僅轉送固定行情 WebSocket 並覆寫 forwarded headers。一般開發入口由 Nginx 終結 TLS；行情不提供明文降級。
 - 2026-11-19 已完成真實來源及瀏覽器本機視覺驗證：買賣各 20 檔、120 根一分鐘 K 線，連續 70 秒數值更新，390px 畫面、離線清除與恢復訂閱通過。正式 Nginx 部署與安全審核尚未完成；詳細證據見 `server/docs/binance-market-data-boundary.md`。
 
 | 元件                       | 路徑                                                           | 責任                                                                                             |

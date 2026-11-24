@@ -16,4 +16,4 @@
 
 ## 服務入口
 
-API、前台與後台分別使用 8080、8088、8089。變更路由、代理或登入流程前，閱讀 `docs/reference/routes.md` 與 `web/docs/page-map.md`，並確認跨服務隔離及 redirect 行為。
+API、前台與後台預設使用 8080、8090、8100，實際值由 repo root `.env` 管理。本機 Nginx 預設以標準 HTTPS 443 提供前台與獨立後台 hostname。變更路由、代理或登入流程前，閱讀 `docs/reference/routes.md` 與 `web/docs/page-map.md`，並確認跨服務隔離及 redirect 行為。

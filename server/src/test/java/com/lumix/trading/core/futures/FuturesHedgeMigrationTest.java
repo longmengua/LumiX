@@ -16,7 +16,7 @@ class FuturesHedgeMigrationTest {
             var applied = Flyway.configure().dataSource(dataSource)
                     .locations("classpath:db/migration").load().migrate();
             var jdbc = new JdbcTemplate(dataSource);
-            assertEquals(13, applied.migrationsExecuted);
+            assertEquals(14, applied.migrationsExecuted);
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_hedge_positions'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_class WHERE relname='futures_hedge_position_events'", Integer.class));
             assertEquals(1, jdbc.queryForObject("SELECT count(*) FROM pg_trigger WHERE tgname='immutable_futures_position_events'", Integer.class));

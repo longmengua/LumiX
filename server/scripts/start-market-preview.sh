@@ -9,6 +9,15 @@ PREVIEW_DIRECTORY="${SERVER_DIRECTORY}/target/market-preview"
 mkdir -p "${PREVIEW_DIRECTORY}"
 chmod 700 "${PREVIEW_DIRECTORY}"
 
+if [[ -f "${REPOSITORY_DIRECTORY}/.env" ]]; then
+  set -a
+  # shellcheck source=/dev/null
+  source "${REPOSITORY_DIRECTORY}/.env"
+  set +a
+fi
+readonly API_PORT="${LUMIX_API_PORT:-8080}"
+readonly WEB_PORT="${LUMIX_WEB_PORT:-8090}"
+
 if [[ "${NODE_ENV:-development}" == production || "${LUMIX_ENV:-development}" == production || "${SPRING_PROFILES_ACTIVE:-}" == *prod* ]]; then
   echo '拒絕執行：行情驗收入口僅限本機開發。' >&2
   exit 1
@@ -28,7 +37,7 @@ fi
 
 docker compose -f "${REPOSITORY_DIRECTORY}/docker-compose.yml" up -d postgres redis kafka
 export LUMIX_BINANCE_MARKET_FEED_ENABLED=true
-export LUMIX_BINANCE_MARKET_FEED_ALLOWED_ORIGIN=https://localhost:8088
+export LUMIX_BINANCE_MARKET_FEED_ALLOWED_ORIGIN="https://localhost:${WEB_PORT}"
 # forwarded headers 僅由 loopback Vite 轉入；API 不可對外監聽。
 export SERVER_ADDRESS=127.0.0.1
 export LUMIX_ETHEREUM_OBSERVATION_ENABLED=false
@@ -53,13 +62,13 @@ SERVER_PID=$!
 READY=false
 for ((attempt=0; attempt<90; attempt++)); do
   kill -0 "${SERVER_PID}" 2>/dev/null || { tail -n 50 "${PREVIEW_DIRECTORY}/server.log"; exit 1; }
-  if curl --fail --silent http://127.0.0.1:8080/actuator/health > /dev/null; then READY=true; break; fi
+  if curl --fail --silent "http://127.0.0.1:${API_PORT}/actuator/health" > /dev/null; then READY=true; break; fi
   sleep 1
 done
 [[ "${READY}" == true ]] || { echo "後端未就緒，請查看 ${PREVIEW_DIRECTORY}/server.log" >&2; exit 1; }
 (cd "${REPOSITORY_DIRECTORY}/web" && exec npm run dev:client) >"${PREVIEW_DIRECTORY}/web.log" 2>&1 &
 WEB_PID=$!
-echo '本機行情驗收：https://localhost:8088/spot/BTC-USDT（亦可使用 /spot/ETH-USDT）'
+echo "本機行情驗收：https://localhost:${WEB_PORT}/spot/BTC-USDT（亦可使用 /spot/ETH-USDT）"
 echo '首次開啟會出現本機自簽憑證提示；確認網址為 localhost 後接受。'
 echo "日誌：${PREVIEW_DIRECTORY}/server.log、web.log。Ctrl-C 停止驗收程序。"
 # 任一主機程序退出都停止另一個，避免留下看似可用的半套驗收入口。

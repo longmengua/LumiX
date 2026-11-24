@@ -18,23 +18,25 @@
 
 | Port | Route | 用途／預期行為 |
 | --- | --- | --- |
-| `8088` | `/` | 前台首頁 |
-| `8088` | `/login` | 用戶登入 |
-| `8088` | `/register` | 用戶註冊 |
-| `8088` | `/forgot-password` | 用戶忘記密碼 |
-| `8088` | `/account/**` | 用戶帳戶頁面 |
-| `8088` | `/assets/**` | 用戶資產頁面 |
-| `8088` | `/api/v1/**` | 前台 API proxy |
-| `8088` | `/admin`、`/admin/**`、`/api/admin/**` | `404` |
+| `8090` | `/` | 前台首頁 |
+| `8090` | `/login` | 用戶登入 |
+| `8090` | `/register` | 用戶註冊 |
+| `8090` | `/forgot-password` | 用戶忘記密碼 |
+| `8090` | `/account/**` | 用戶帳戶頁面 |
+| `8090` | `/assets/**` | 用戶資產頁面 |
+| `8090` | `/api/v1/**` | 前台 API proxy |
+| `8090` | `/admin`、`/admin/**`、`/api/admin/**` | `404` |
 
 ## 後台
 
 | Port | Route | 用途／預期行為 |
 | --- | --- | --- |
-| `8089` | `/`、`/admin` | 導向 `/admin/login` |
-| `8089` | `/admin/login` | 管理員登入 |
-| `8089` | `/admin/forgot-password` | 管理員忘記密碼 |
-| `8089` | `/admin/reset-password` | 管理員密碼重設 |
-| `8089` | `/admin/users`、`/admin/account/**` | 管理端頁面 |
-| `8089` | `/api/admin/v1/**` | 管理端 API proxy |
-| `8089` | `/login`、`/register`、`/api/v1/**`、其他非 `/admin` HTML route | `404` |
+| `8100` | `/`、`/admin` | 導向 `/admin/login` |
+| `8100` | `/admin/login` | 管理員登入 |
+| `8100` | `/admin/forgot-password` | 管理員忘記密碼 |
+| `8100` | `/admin/reset-password` | 管理員密碼重設 |
+| `8100` | `/admin/users`、`/admin/account/**` | 管理端頁面 |
+| `8100` | `/api/admin/v1/**` | 管理端 API proxy |
+| `8100` | `/login`、`/register`、`/api/v1/**`、其他非 `/admin` HTML route | `404` |
+
+以上為 `.env` 預設內部埠。本機 HTTPS gateway 預設以 `https://localhost` 提供前台，並以 `https://admin.localhost` 提供後台；兩個 hostname 維持頁面與 API 隔離。

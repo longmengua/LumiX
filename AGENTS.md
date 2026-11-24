@@ -18,7 +18,7 @@ LumiX 以可審計、可維運的交易所為目標。已存在的功能須以�
 
 - 後端使用 Java 21、Spring Boot 3，前端使用 React、TypeScript、Vite。
 - 第三方服務與資料由後端接入。前端只連 LumiX 內部 API 或推播，不持有第三方憑證。
-- API、前台、後台維持獨立服務與埠 8080、8088、8089。本機 Docker Compose 只啟動 PostgreSQL、Redis、Kafka，其餘以主機程序啟動。
+- API、前台、後台維持獨立服務；預設埠為 8080、8090、8100，並可透過 repo root `.env` 調整。本機 Docker Compose 只啟動 PostgreSQL、Redis、Kafka，其餘與 Nginx TLS gateway 以主機程序啟動。
 - 金額、價格、數量及費用使用整數最小單位或受控精度 decimal，避免 binary floating point。
 - 帳本採不可變 append-only 記錄，修正以追加 reversal 或 adjustment 表示。資金、交易與管理命令須維持冪等、權限隔離、可追蹤稽核、對帳及失敗即拒絕。
 - 錢包 provider、私鑰、簽章、廣播或資金移動路徑須具備來源、secret isolation、權限審核、不可變稽核、冪等、對帳及相應 runtime 驗證後才能啟用。

@@ -1,10 +1,27 @@
 import { execFileSync, spawn } from 'node:child_process';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const [surface, port] = process.argv.slice(2);
+const [surface] = process.argv.slice(2);
+const repositoryEnv = fileURLToPath(new URL('../../.env', import.meta.url));
 
-if (!['client', 'admin'].includes(surface) || !['8088', '8089'].includes(port)) {
-  throw new Error('用法：start-dev-surface.mjs <client|admin> <8088|8089>');
+// 前後台與 API 共用 repo root 的服務埠設定，避免啟動腳本與反向代理各自保存固定數字。
+if (existsSync(repositoryEnv)) {
+  for (const line of readFileSync(repositoryEnv, 'utf8').split(/\r?\n/)) {
+    const match = line.match(/^\s*([A-Z][A-Z0-9_]*)=(.*)\s*$/);
+    if (match && process.env[match[1]] === undefined) process.env[match[1]] = match[2];
+  }
+}
+
+if (!['client', 'admin'].includes(surface)) {
+  throw new Error('用法：start-dev-surface.mjs <client|admin>');
+}
+
+const port = surface === 'admin'
+  ? (process.env.LUMIX_ADMIN_WEB_PORT || '8100')
+  : (process.env.LUMIX_WEB_PORT || '8090');
+if (!/^\d+$/.test(port) || Number(port) < 1 || Number(port) > 65535) {
+  throw new Error(`${surface === 'admin' ? 'LUMIX_ADMIN_WEB_PORT' : 'LUMIX_WEB_PORT'} 必須是 1 到 65535 的整數`);
 }
 
 // 此 launcher 只服務本機開發；production runtime 不得以 port kill 取代受治理的部署／停止流程。
