@@ -2,11 +2,8 @@
 
 ## 目的與狀態
 
-```text
-P29-R01
-COMPLETED_FOR_INFRASTRUCTURE_FOUNDATION
-HUMAN_REVIEW_REQUIRED: yes
-```
+狀態：`COMPLETED_FOR_INFRASTRUCTURE_FOUNDATION`<br>
+正式環境仍需人工審核：是
 
 本文件與 root `docker-compose.yml` 建立本機依賴 runtime foundation：PostgreSQL primary、Redis 與單節點 Kafka。`server`、`web`、`admin-web` 均在主機以各自開發程序啟動，不可放入 Compose；這讓前後端變更可即時更新，同時保留三個獨立 service 與 port。ELK 集中日誌使用獨立 `observability` profile，詳見 `local-observability.md`。它不是 production launch、帳號認證完成或資金服務啟用的證明。
 
@@ -98,7 +95,7 @@ application RedisConnectionFactory
 - Redis password 只能由部署平台 secret 注入 `LUMIX_REDIS_PASSWORD`；`.env.example` 不包含可用密碼。
 - 業務程式必須透過共用 `RedisConnectionFactory` 或 `RedisTemplate` 使用 Redis，不能自行散落建立 standalone client。
 
-## 使用者認證與 API security runtime（P29-R02/R03）
+## 使用者認證與 API security runtime
 
 - Compose 可提供 PostgreSQL 持久化 credential/session；密碼只能以 BCrypt 雜湊保存，Cookie secret 與 reset token 只保存 SHA-256 摘要。
 - `LUMIX_AUTH_COOKIE_SECURE=false` 只允許本機 HTTP 驗證。交由 TLS ingress 對外時必須設為 `true`，並保持 web 與 `/api` 同源。
@@ -128,16 +125,14 @@ application RedisConnectionFactory
 ## 已完成驗證
 
 ```text
-2026-09-09
+2026-11-25
 PASS  docker compose --env-file .env.example config --quiet
-PASS  Docker build: lumix-web / lumix-server
-PASS  Compose startup: postgres、redis、server 均 healthy；web 已啟動
-PASS  PostgreSQL: Flyway 8 migrations 成功套用
+PASS  Compose startup: PostgreSQL、Redis、Kafka 均 healthy
+PASS  PostgreSQL: Flyway 單一 V001 baseline 可在空資料庫建立完整 schema
 PASS  Redis standalone: PING -> PONG
 PASS  server: /actuator/health -> UP
-PASS  web: / 與 /login -> HTTP 200
-PASS  READ_WRITE_SPLIT 未提供 replica JDBC URL 時，server fail-closed 拒絕啟動
-PASS  web: npm run typecheck
+PASS  web: 8090 / -> HTTP 200；admin-web: 8100 /admin/login -> HTTP 200
+PASS  ELK observability profile：Elasticsearch healthy、Kibana /api/status -> HTTP 200
 ```
 
-未驗證項目：真實 PostgreSQL replica、replication lag、Redis cluster 節點／slot／故障轉移、TLS、外部 secret manager、production network ACL 與 production deployment。這些必須在相應基礎設施存在後另行驗證。
+未驗證項目：真實 PostgreSQL replica、replication lag、Redis cluster 節點／slot／故障轉移、外部 secret manager、production network ACL 與 production deployment。本機 TLS 已驗證，但公開網域與公開憑證仍 pending。這些必須在相應基礎設施存在後另行驗證。

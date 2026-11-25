@@ -1,10 +1,9 @@
 -- LumiX fresh-database baseline.
 -- 此候選檔直接建立目前開發中的完整 PostgreSQL schema；不包含歷史 ALTER/backfill 步驟。
 
--- P12-T02: Identity, account, asset, market foundation schema.
--- 本 migration 只建立使用者、帳戶、資產、交易對與帳戶資產關聯的基礎資料表。
--- 本 migration 不建立 ledger、reservation、orders、trades、deposits、withdrawals。
--- 本 migration 不實作任何 runtime money movement。
+-- Identity, account, asset, market foundation schema.
+-- LumiX 完整初始 schema：身分、帳戶、資產、錢包、帳本、交易、風控、認證與 runtime 設定。
+-- 本檔只建立資料結構與安全預設；初始配置資料由 db/seed.sql 負責，runtime 資金移動由應用層執行。
 
 -- 使用者身分主檔。
 -- 保存登入與帳戶歸屬所需的基本識別資料；不保存資金、帳本、訂單或交易狀態。
@@ -396,7 +395,7 @@ CREATE INDEX idx_ledger_entries_account_id ON ledger_entries (account_id);
 CREATE INDEX idx_ledger_entries_asset_symbol ON ledger_entries (asset_symbol);
 CREATE INDEX idx_ledger_entries_direction ON ledger_entries (direction);
 
--- P12-T05: Order and trade execution schema.
+-- Order and trade execution schema.
 -- 這份 migration 只建立訂單生命週期與成交 execution record 的資料表。
 -- 不建立 reservation、settlement 或 matching runtime，也不在資料庫層執行資金異動。
 --
@@ -777,7 +776,7 @@ COMMENT ON COLUMN trades.traded_at IS
 
 COMMENT ON COLUMN trades.created_at IS
 '資料建立時間。與 traded_at 分開可避免查詢時把寫入延遲誤認為成交延遲。';
--- P12-T06: Wallet lifecycle schema for deposit, withdrawal, address, and chain transaction records.
+-- Wallet lifecycle schema for deposit, withdrawal, address, and chain transaction records.
 -- 這份 migration 只建立錢包生命週期資料結構，供後續對帳與查詢使用。
 -- 不實作鏈上監聽、入金入帳、提款簽章、廣播或任何 runtime money movement。
 -- Rollback 注意事項：若要回滾，必須先確認沒有後續資料依賴這些表；刪除順序應為 withdrawals、deposits、chain_transactions、deposit_addresses。
@@ -1165,11 +1164,11 @@ COMMENT ON COLUMN withdrawals.created_at IS
 COMMENT ON COLUMN withdrawals.updated_at IS
 '資料最後更新時間。狀態進展、風控或對帳修正時由應用層維護。';
 
--- P12-T06: Reservation, hold, and release schema.
+-- Reservation, hold, and release schema.
 -- 這份 migration 只建立 reservation 資料結構，用來表達資金或資產被預留、部分消耗、完全釋放或到期失效的狀態。
 -- 不實作 order hold / release service、withdrawal hold / release service、matching runtime 或 settlement runtime。
 -- reservation 不是 ledger entry，也不是 balance projection；真正的資金異動與對帳仍由後續 runtime 與 ledger / reconciliation 完成。
--- Rollback 注意事項：若要回滾，必須先確認沒有後續流程依賴 reservation；刪除順序為 reservations，且不得影響 V005 wallet lifecycle schema。
+-- Rollback 注意事項：若要回滾，必須先確認沒有流程依賴 reservation；已產生的資金證據不得直接刪除。
 
 -- 預留主檔。
 -- 這只是一份狀態資料結構，記錄某筆資產在特定業務目的下被保留、消耗或釋放的結果，不直接代表資金已扣款。
@@ -1288,7 +1287,7 @@ COMMENT ON COLUMN reservations.created_at IS
 COMMENT ON COLUMN reservations.updated_at IS
 '資料最後更新時間。狀態變更或對帳修正時由應用層維護。';
 
--- P12-T08: Outbox, audit log, and idempotency schema.
+-- Outbox, audit log, and idempotency schema.
 -- 這份 migration 只建立高風險操作的去重、外部副作用與稽核資料結構。
 -- 不實作 idempotency interceptor、event publisher、audit writer、ledger posting、deposit crediting 或 withdrawal runtime。
 -- 這些表只提供 durable storage，實際重試、發佈與審計流程要由後續應用層與 runtime 實作。
@@ -1571,7 +1570,7 @@ COMMENT ON COLUMN audit_logs.after_state IS
 COMMENT ON COLUMN audit_logs.created_at IS
 '資料建立時間。這是稽核紀錄的時間錨點，之後不應更新。';
 
--- P29-R02: 使用者帳密、伺服器端 session 與密碼重設憑證。
+-- 使用者帳密、伺服器端 session 與密碼重設憑證。
 -- 本 migration 僅保存認證資料；不接觸帳本、餘額、交易或任何資金移動。
 -- 密碼與重設 token 只可保存不可逆雜湊，明文不得寫入資料庫、log 或 audit payload。
 
@@ -1660,7 +1659,7 @@ COMMENT ON COLUMN password_reset_requests.token_digest IS
 COMMENT ON COLUMN password_reset_requests.consumed_at IS
 '成功重設密碼後的消耗時間；非空的 token 不得再次使用。';
 
--- P29-R08: 受信任裝置、新裝置登入確認與成功登入的裝置快照。
+-- 受信任裝置、新裝置登入確認與成功登入的裝置快照。
 -- 此 migration 只強化認證邊界；不接觸帳本、資產、交易或任何資金移動。
 -- 所有 cookie／email token 均只保存 SHA-256 摘要，原始秘密不可落庫、寫入 log 或回傳 API。
 
@@ -1751,7 +1750,7 @@ COMMENT ON COLUMN user_sessions.ip_address IS
 COMMENT ON COLUMN user_sessions.device_label IS
 '成功登入時的去敏裝置標籤快照，避免在登入歷程保存原始 User-Agent。';
 
--- P29-R11: 註冊必須完成 email 雙驗證碼後才建立 users / credential / session。
+-- 註冊必須完成 email 雙驗證碼後才建立 users / credential / session。
 -- 原始數字碼與五碼英文字母碼絕不可落庫；只保存 SHA-256 摘要。密碼只以 BCrypt hash 暫存，驗證過期或
 -- 錯誤次數用盡時不會建立帳號。本 migration 不涉及帳本、資產、交易或任何資金移動。
 
@@ -1835,10 +1834,7 @@ COMMENT ON COLUMN admin_principals.activation_requested_at IS
 COMMENT ON COLUMN admin_principals.activated_at IS
 '首次成功設定最高管理員密碼並啟用 server-side 授權的時間。';
 
--- P12-T07: Normalize wallet lifecycle schema without changing the V005 table definitions.
--- 這份 migration 只補強查詢索引，讓 support、reconciliation 與營運查詢能更穩定地查到 wallet lifecycle 資料。
--- 不修改 V005 的欄位、約束或 comment，不新增 runtime service，也不改變任何入金／提款流程語意。
--- Rollback 注意事項：若要回滾，僅移除本 migration 新增的索引即可；不得回頭改寫 V005。
+-- Wallet lifecycle 查詢索引，讓 support、reconciliation 與營運查詢能穩定取得資料。
 
 -- 入金地址與入金紀錄通常會被 support 以 address 直接查詢，因此補 address 層級索引。
 CREATE INDEX idx_deposit_addresses_address ON deposit_addresses (address);
@@ -1850,7 +1846,7 @@ CREATE INDEX idx_withdrawals_chain_type_address ON withdrawals (chain_type, addr
 -- 鏈上交易通常以 tx_hash 直接回查，因此補單欄位索引，降低 support / reconciliation 的查詢成本。
 CREATE INDEX idx_chain_transactions_tx_hash ON chain_transactions (tx_hash);
 
--- P29-R04: 使用者登入紀錄只讀 API 的查詢索引。
+-- 使用者登入紀錄只讀 API 的查詢索引。
 -- user_sessions 已是成功登入 session 的權威來源；本 migration 不新增認證材料、不記錄 IP/user agent，
 -- 也不修改或刪除既有 session，以避免把安全歷程與現有 session 驗證語意混在一起。
 
@@ -1914,7 +1910,7 @@ CREATE INDEX idx_admin_asset_adjustments_source_entry ON admin_asset_adjustments
 CREATE INDEX idx_admin_asset_adjustments_journal ON admin_asset_adjustments (ledger_journal_id);
 COMMENT ON TABLE admin_asset_adjustments IS '受權 admin 的 completed asset adjustment command；資金效果只能在 immutable ledger entries 中取得。';
 
--- P22-R01: Ethereum Mainnet 唯讀入金觀測 runtime。
+-- Ethereum Mainnet 唯讀入金觀測 runtime。
 -- 尚未上線的開發環境採單一 baseline，因此此 schema 與其他現行結構一併初始化。
 -- 本表只保存 immutable chain observation 與 scanner checkpoint；不寫 ledger、balance 或 credit。
 CREATE TABLE ethereum_deposit_events (
@@ -1982,3 +1978,666 @@ CREATE TABLE block_scan_checkpoints (
 
 COMMENT ON TABLE block_scan_checkpoints IS
 'Ethereum scanner 的可驗證 checkpoint。RPC error 或 transaction rollback 時不得前移。';
+
+-- ============================================================================
+-- 提款平台 runtime 與恢復證據
+-- ============================================================================
+-- 提款平台 runtime 擴充。這份 migration 只延伸既有 withdrawals 與既有金融核心；不建立第二份提款主檔。
+-- 回滾：不得直接 DROP。本 migration 含不可變提款、審核及鏈上證據，回滾需先由人工完成資料保全與停用流程。
+
+ALTER TABLE withdrawals DROP CONSTRAINT ck_withdrawals_status;
+ALTER TABLE withdrawals ADD COLUMN user_id VARCHAR(64);
+ALTER TABLE withdrawals ADD COLUMN network VARCHAR(32) NOT NULL DEFAULT 'ETHEREUM';
+ALTER TABLE withdrawals ADD COLUMN destination_address_id UUID;
+ALTER TABLE withdrawals ADD COLUMN normalized_address VARCHAR(64);
+ALTER TABLE withdrawals ADD COLUMN chain_id BIGINT;
+ALTER TABLE withdrawals ADD COLUMN token_contract VARCHAR(64);
+ALTER TABLE withdrawals ADD COLUMN reservation_id VARCHAR(64);
+ALTER TABLE withdrawals ADD COLUMN approval_payload_hash CHAR(64);
+ALTER TABLE withdrawals ADD COLUMN created_ip VARCHAR(64);
+ALTER TABLE withdrawals ADD COLUMN created_device_id UUID;
+ALTER TABLE withdrawals ADD COLUMN request_fingerprint CHAR(64);
+ALTER TABLE withdrawals ADD COLUMN completed_at TIMESTAMP WITH TIME ZONE;
+ALTER TABLE withdrawals ADD CONSTRAINT fk_withdrawals_user FOREIGN KEY (user_id) REFERENCES users(user_id);
+ALTER TABLE withdrawals ADD CONSTRAINT fk_withdrawals_reservation FOREIGN KEY (reservation_id) REFERENCES reservations(reservation_id);
+ALTER TABLE withdrawals ADD CONSTRAINT ck_withdrawals_status CHECK (status IN ('REQUESTED','FUNDS_HELD','RISK_PENDING','RISK_HOLD','MANUAL_REVIEW','APPROVED','REJECTED','FINAL_RISK_CHECK','SIGN_PENDING','SIGNING','SIGNED','BROADCASTING','BROADCASTED','CONFIRMING','COMPLETED','FAILED','CANCELLED'));
+ALTER TABLE withdrawals ADD CONSTRAINT ck_withdrawals_network CHECK (network IN ('ETHEREUM'));
+ALTER TABLE withdrawals ADD CONSTRAINT ck_withdrawals_runtime_chain CHECK (chain_id IS NULL OR chain_id IN (1,11155111));
+CREATE UNIQUE INDEX uq_withdrawals_owner_request_fingerprint ON withdrawals(user_id, request_id, request_fingerprint) WHERE user_id IS NOT NULL;
+CREATE INDEX idx_withdrawals_user_created ON withdrawals(user_id, created_at DESC);
+CREATE INDEX idx_withdrawals_runtime_status ON withdrawals(status, created_at);
+COMMENT ON TABLE withdrawals IS '提款唯一主表。保存不可變請求快照與受控 runtime 狀態，不得另建第二套提款主檔。';
+COMMENT ON COLUMN withdrawals.request_fingerprint IS '使用者、資產、網路、金額與地址的 SHA-256 指紋，用於 durable idempotency 衝突判斷。';
+COMMENT ON COLUMN withdrawals.approval_payload_hash IS '人工核准的 canonical payload SHA-256；簽章前必須重新計算並相等。';
+
+CREATE TABLE withdrawal_addresses (
+    id UUID PRIMARY KEY,
+    user_id VARCHAR(64) NOT NULL REFERENCES users(user_id),
+    network VARCHAR(32) NOT NULL,
+    asset_symbol VARCHAR(32) NOT NULL REFERENCES assets(asset_symbol),
+    address VARCHAR(256) NOT NULL,
+    normalized_address VARCHAR(64) NOT NULL,
+    label VARCHAR(128),
+    status VARCHAR(16) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    verified_at TIMESTAMP WITH TIME ZONE,
+    cooldown_until TIMESTAMP WITH TIME ZONE NOT NULL,
+    activated_at TIMESTAMP WITH TIME ZONE,
+    disabled_at TIMESTAMP WITH TIME ZONE,
+    created_ip VARCHAR(64),
+    created_device_id UUID,
+    CONSTRAINT ck_withdrawal_address_network CHECK (network = 'ETHEREUM'),
+    CONSTRAINT ck_withdrawal_address_status CHECK (status IN ('PENDING','COOLDOWN','ACTIVE','DISABLED')),
+    CONSTRAINT uq_withdrawal_address_identity UNIQUE(user_id, network, asset_symbol, normalized_address)
+);
+CREATE INDEX idx_withdrawal_addresses_owner ON withdrawal_addresses(user_id, status);
+COMMENT ON TABLE withdrawal_addresses IS '使用者提款地址簿；停用採狀態轉換，不可實體刪除，以保留提款歷史與稽核。';
+
+CREATE TABLE withdrawal_risk_assessments (
+    id UUID PRIMARY KEY, withdrawal_id VARCHAR(64) NOT NULL REFERENCES withdrawals(withdrawal_id),
+    decision VARCHAR(16) NOT NULL, score INTEGER NOT NULL, evaluated_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    engine_version VARCHAR(64) NOT NULL,
+    CONSTRAINT ck_withdrawal_risk_decision CHECK (decision IN ('ALLOW','MANUAL_REVIEW','DENY','HOLD'))
+);
+CREATE INDEX idx_withdrawal_risk_assessments_withdrawal ON withdrawal_risk_assessments(withdrawal_id, evaluated_at DESC);
+CREATE TABLE withdrawal_risk_triggers (
+    id UUID PRIMARY KEY, assessment_id UUID NOT NULL REFERENCES withdrawal_risk_assessments(id),
+    rule_code VARCHAR(64) NOT NULL, score_delta INTEGER NOT NULL, decision_effect VARCHAR(16) NOT NULL,
+    evidence_json JSONB NOT NULL DEFAULT '{}'::jsonb,
+    CONSTRAINT ck_withdrawal_risk_trigger_effect CHECK (decision_effect IN ('ALLOW','MANUAL_REVIEW','DENY','HOLD'))
+);
+COMMENT ON TABLE withdrawal_risk_assessments IS '提款風控決策不可變證據；未知依賴或錯誤必須導向 HOLD，不得默許放行。';
+
+CREATE TABLE withdrawal_reviews (
+    id UUID PRIMARY KEY, withdrawal_id VARCHAR(64) NOT NULL REFERENCES withdrawals(withdrawal_id),
+    reviewer_user_id VARCHAR(64) NOT NULL REFERENCES users(user_id), reviewer_role VARCHAR(64) NOT NULL,
+    decision VARCHAR(16) NOT NULL, reason VARCHAR(512) NOT NULL, approval_payload_hash CHAR(64) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_withdrawal_review_decision CHECK (decision IN ('APPROVE','REJECT','ESCALATE')),
+    CONSTRAINT uq_withdrawal_review_reviewer UNIQUE(withdrawal_id, reviewer_user_id)
+);
+CREATE TABLE withdrawal_signing_requests (
+    id UUID PRIMARY KEY, withdrawal_id VARCHAR(64) NOT NULL REFERENCES withdrawals(withdrawal_id),
+    intent_hash CHAR(64) NOT NULL, payload_json JSONB NOT NULL, status VARCHAR(16) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL, signed_raw_transaction TEXT, signed_transaction_hash CHAR(66),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_withdrawal_signing_request_status CHECK (status IN ('PENDING','SIGNED','REJECTED')),
+    CONSTRAINT uq_withdrawal_signing_intent UNIQUE(withdrawal_id, intent_hash),
+    CONSTRAINT uq_withdrawal_signing_withdrawal UNIQUE(withdrawal_id)
+);
+CREATE TABLE withdrawal_chain_transactions (
+    id UUID PRIMARY KEY, withdrawal_id VARCHAR(64) NOT NULL UNIQUE REFERENCES withdrawals(withdrawal_id),
+    transaction_hash CHAR(66) NOT NULL UNIQUE, raw_transaction_hash CHAR(64) NOT NULL UNIQUE,
+    broadcast_attempts INTEGER NOT NULL DEFAULT 0, broadcasted_at TIMESTAMP WITH TIME ZONE,
+    block_number BIGINT, receipt_status VARCHAR(16), finalized_at TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT ck_withdrawal_chain_receipt_status CHECK (receipt_status IS NULL OR receipt_status IN ('PENDING','SUCCESS','FAILED'))
+);
+COMMENT ON TABLE withdrawal_signing_requests IS '固定提款 intent 與簽署結果。主應用不保存私鑰，raw transaction 僅作廣播不確定性對帳。';
+COMMENT ON TABLE withdrawal_chain_transactions IS '鏈上廣播與收據證據；receipt 成功且符合 finality policy 前不得完成帳本結算。';
+
+-- 每個 hot wallet/chain 的 nonce allocator 以資料列鎖串行化，避免多 pod 同時以 pending nonce 簽出相同交易。
+CREATE TABLE withdrawal_nonce_states (
+    chain_id BIGINT NOT NULL, source_address VARCHAR(64) NOT NULL, next_nonce NUMERIC(38,0) NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY(chain_id, source_address), CONSTRAINT ck_withdrawal_nonce_non_negative CHECK(next_nonce >= 0)
+);
+CREATE TABLE withdrawal_nonce_allocations (
+    withdrawal_id VARCHAR(64) PRIMARY KEY REFERENCES withdrawals(withdrawal_id), chain_id BIGINT NOT NULL,
+    source_address VARCHAR(64) NOT NULL, nonce NUMERIC(38,0) NOT NULL, allocated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uq_withdrawal_nonce_per_wallet UNIQUE(chain_id, source_address, nonce), CONSTRAINT ck_withdrawal_allocation_nonce_non_negative CHECK(nonce >= 0)
+);
+COMMENT ON TABLE withdrawal_nonce_states IS '受控 hot wallet nonce 游標；只在取得 provider pending nonce 後初始化，不能以 latest nonce 取代。';
+COMMENT ON TABLE withdrawal_nonce_allocations IS '提款與已配置 nonce 的一對一不可變關聯，供重送與廣播不確定性對帳使用。';
+
+-- 提款 custody 對應帳戶只作 double-entry 的交易所端對應，不投影為使用者可用餘額。
+ALTER TABLE accounts DROP CONSTRAINT ck_accounts_account_purpose;
+ALTER TABLE accounts ADD CONSTRAINT ck_accounts_account_purpose CHECK (account_purpose IS NULL OR account_purpose IN ('AIRDROP_FUNDING', 'ASSET_ADJUSTMENT_COUNTERPARTY', 'WITHDRAWAL_CUSTODY'));
+INSERT INTO users (user_id,email,display_name,status) VALUES ('system:withdrawal-custody','system-withdrawal-custody@lumix.internal','系統提款 custody 對應帳戶','SUSPENDED') ON CONFLICT(user_id) DO NOTHING;
+INSERT INTO accounts(account_id,user_id,account_type,status,account_category,account_purpose) VALUES ('system:withdrawal-custody:spot','system:withdrawal-custody','SPOT','ACTIVE','EXCHANGE','WITHDRAWAL_CUSTODY') ON CONFLICT(account_id) DO NOTHING;
+
+-- ============================================================================
+-- ============================================================================
+-- 補齊提款 runtime 的廣播不確定性與鏈上失敗證據。只延伸既有提款／nonce／鏈交易資料，絕不建立第二個提款主檔。
+-- 回滾：不可直接刪除證據；應先停用 worker、保全鏈上與帳本稽核資料，再由人工決定資料修復程序。
+
+ALTER TABLE withdrawals DROP CONSTRAINT ck_withdrawals_status;
+ALTER TABLE withdrawals ADD CONSTRAINT ck_withdrawals_status CHECK (status IN (
+    'REQUESTED','FUNDS_HELD','RISK_PENDING','RISK_HOLD','MANUAL_REVIEW','APPROVED','REJECTED',
+    'FINAL_RISK_CHECK','SIGN_PENDING','SIGNING','SIGNED','BROADCASTING','BROADCAST_UNKNOWN',
+    'BROADCASTED','CONFIRMING','COMPLETED','FAILED','CANCELLED'
+));
+
+ALTER TABLE withdrawal_nonce_allocations
+    ADD COLUMN status VARCHAR(24) NOT NULL DEFAULT 'RESERVED',
+    ADD COLUMN transaction_hash CHAR(66),
+    ADD COLUMN updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ADD CONSTRAINT ck_withdrawal_nonce_allocation_status CHECK (status IN ('RESERVED','SIGNED','BROADCAST_UNKNOWN','BROADCASTED','CHAIN_FAILED','SETTLED'));
+CREATE UNIQUE INDEX uq_withdrawal_nonce_allocation_tx_hash ON withdrawal_nonce_allocations(transaction_hash) WHERE transaction_hash IS NOT NULL;
+
+ALTER TABLE withdrawal_chain_transactions
+    ADD COLUMN gas_used NUMERIC(38,0),
+    ADD COLUMN effective_gas_price NUMERIC(38,0),
+    ADD COLUMN chain_failure_recorded_at TIMESTAMP WITH TIME ZONE;
+
+COMMENT ON COLUMN withdrawal_nonce_allocations.status IS 'nonce 的不可倒退 lifecycle；BROADCAST_UNKNOWN 前不可重簽或釋放 principal hold。';
+COMMENT ON COLUMN withdrawal_chain_transactions.gas_used IS '失敗或成功收據的 gasUsed 證據；不作 principal 轉出成功的判定。';
+
+-- ============================================================================
+-- 交易執行 schema
+-- ============================================================================
+-- 現貨／永續受控執行的商品、不可變政策與訂單證據；不建立商品、資金或預設費率。
+-- HUMAN_REVIEW_REQUIRED：撮合、扣款與結算使用此 schema；啟用仍要求完整商品／風險政策與真實資產。
+-- 回滾先停新單並保留查詢／撤單；已有資料不得 DROP 或刪除帳本。
+-- 保留現有 markets/orders/trades 的所有物件；新執行資料藉獨立 instrument identity 隔離現貨與永續。
+
+-- 可執行商品識別及明確啟用狀態，不以交易對字尾猜商品種類。
+CREATE TABLE trading_instruments (
+    -- 穩定商品識別，現貨與永續不同。
+    instrument_id VARCHAR(64) PRIMARY KEY,
+    -- 商品類別。
+    instrument_kind VARCHAR(16) NOT NULL CHECK (instrument_kind IN ('SPOT','PERPETUAL')),
+    -- 既有 underlying 資產組合。
+    market_symbol VARCHAR(32) NOT NULL REFERENCES markets(market_symbol),
+    -- 只有具完整政策的 ACTIVE 商品可接新單。
+    status VARCHAR(16) NOT NULL CHECK (status IN ('ACTIVE','HALTED','CLOSED')),
+    -- 目前政策版本；未設定時不能啟用。
+    policy_version BIGINT,
+    -- 建立時間。
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    -- 最後治理變更時間。
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (instrument_kind,market_symbol),
+    CHECK (status <> 'ACTIVE' OR policy_version IS NOT NULL)
+);
+COMMENT ON TABLE trading_instruments IS '可執行商品識別及明確啟用狀態，不以交易對字尾猜商品種類。';
+COMMENT ON COLUMN trading_instruments.instrument_id IS '穩定商品識別，現貨與永續不同。';
+COMMENT ON COLUMN trading_instruments.instrument_kind IS '商品類別。';
+COMMENT ON COLUMN trading_instruments.market_symbol IS '既有 underlying 資產組合。';
+COMMENT ON COLUMN trading_instruments.status IS '只有具完整政策的 ACTIVE 商品可接新單。';
+COMMENT ON COLUMN trading_instruments.policy_version IS '目前政策版本；未設定時不能啟用。';
+COMMENT ON COLUMN trading_instruments.created_at IS '建立時間。';
+COMMENT ON COLUMN trading_instruments.updated_at IS '最後治理變更時間。';
+
+-- 具名完整政策的不可變版本，不存在 runtime 預設費率或風險數字。
+CREATE TABLE trading_execution_policies (
+    -- 政策所屬商品。
+    instrument_id VARCHAR(64) NOT NULL REFERENCES trading_instruments(instrument_id),
+    -- 遞增版本識別。
+    policy_version BIGINT NOT NULL CHECK (policy_version > 0),
+    -- 經 application 驗證的完整規格與費率／風險政策。
+    policy JSONB NOT NULL CHECK (jsonb_typeof(policy) = 'object'),
+    -- 受驗證的政策制定者。
+    created_by VARCHAR(64) NOT NULL,
+    -- 政策建立時間。
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (instrument_id,policy_version)
+);
+COMMENT ON TABLE trading_execution_policies IS '具名完整政策的不可變版本，不存在 runtime 預設費率或風險數字。';
+COMMENT ON COLUMN trading_execution_policies.instrument_id IS '政策所屬商品。';
+COMMENT ON COLUMN trading_execution_policies.policy_version IS '遞增版本識別。';
+COMMENT ON COLUMN trading_execution_policies.policy IS '經 application 驗證的完整規格與費率／風險政策。';
+COMMENT ON COLUMN trading_execution_policies.created_by IS '受驗證的政策制定者。';
+COMMENT ON COLUMN trading_execution_policies.created_at IS '政策建立時間。';
+
+-- 新 runtime 訂單的商品、確定順序與資金證據；不是舊訂單的相容 adapter。
+CREATE TABLE trading_order_executions (
+    -- 既有訂單主檔關聯。
+    order_id VARCHAR(64) PRIMARY KEY REFERENCES orders(order_id),
+    -- 獨立撮合商品。
+    instrument_id VARCHAR(64) NOT NULL REFERENCES trading_instruments(instrument_id),
+    -- 接單時固定的不可變政策版本。
+    policy_version BIGINT NOT NULL,
+    -- 持久化時間優先順序，重啟不改序。
+    order_sequence BIGINT GENERATED ALWAYS AS IDENTITY UNIQUE,
+    -- 只屬於本訂單的資金保留。
+    reservation_id VARCHAR(64) REFERENCES reservations(reservation_id),
+    -- 累積已成交名義額。
+    filled_notional NUMERIC(36,18) NOT NULL DEFAULT 0 CHECK (filled_notional >= 0),
+    -- 未取整的累計費用，用於明確的累計 quote 計費政策。
+    fee_accrued NUMERIC(76,36) NOT NULL DEFAULT 0 CHECK (fee_accrued >= 0),
+    -- 已實際入帳的累計費用。
+    fee_charged NUMERIC(36,18) NOT NULL DEFAULT 0 CHECK (fee_charged >= 0),
+    -- 永續是否只允許減少持倉。
+    reduce_only BOOLEAN NOT NULL DEFAULT FALSE,
+    -- 永續委託的明確槓桿。
+    leverage NUMERIC(18,8),
+    -- canonical 業務內容摘要。
+    request_hash VARCHAR(64) NOT NULL,
+    FOREIGN KEY (instrument_id,policy_version) REFERENCES trading_execution_policies(instrument_id,policy_version)
+);
+COMMENT ON TABLE trading_order_executions IS '新 runtime 訂單的商品、確定順序與資金證據；不是舊訂單的相容 adapter。';
+COMMENT ON COLUMN trading_order_executions.order_id IS '既有訂單主檔關聯。';
+COMMENT ON COLUMN trading_order_executions.instrument_id IS '獨立撮合商品。';
+COMMENT ON COLUMN trading_order_executions.policy_version IS '接單時固定的不可變政策版本。';
+COMMENT ON COLUMN trading_order_executions.order_sequence IS '持久化時間優先順序，重啟不改序。';
+COMMENT ON COLUMN trading_order_executions.reservation_id IS '只屬於本訂單的資金保留。';
+COMMENT ON COLUMN trading_order_executions.filled_notional IS '累積已成交名義額。';
+COMMENT ON COLUMN trading_order_executions.fee_accrued IS '未取整的累計費用，用於明確的累計 quote 計費政策。';
+COMMENT ON COLUMN trading_order_executions.fee_charged IS '已實際入帳的累計費用。';
+COMMENT ON COLUMN trading_order_executions.reduce_only IS '永續是否只允許減少持倉。';
+COMMENT ON COLUMN trading_order_executions.leverage IS '永續委託的明確槓桿。';
+COMMENT ON COLUMN trading_order_executions.request_hash IS 'canonical 業務內容摘要。';
+
+-- 成交與不可變帳本的原子關聯，只有實際成交才寫入。
+CREATE TABLE trading_trade_executions (
+    -- 真實成交識別。
+    trade_id VARCHAR(64) PRIMARY KEY REFERENCES trades(trade_id),
+    -- 成交商品。
+    instrument_id VARCHAR(64) NOT NULL REFERENCES trading_instruments(instrument_id),
+    -- Maker 接單政策版本。
+    maker_policy_version BIGINT NOT NULL,
+    -- Taker 接單政策版本。
+    taker_policy_version BIGINT NOT NULL,
+    -- 與此次成交同交易提交的守恆 journal。
+    ledger_journal_id BIGINT NOT NULL REFERENCES ledger_journals(ledger_journal_id),
+    -- 成交證據建立時間。
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (instrument_id,maker_policy_version) REFERENCES trading_execution_policies(instrument_id,policy_version),
+    FOREIGN KEY (instrument_id,taker_policy_version) REFERENCES trading_execution_policies(instrument_id,policy_version)
+);
+COMMENT ON TABLE trading_trade_executions IS '成交與不可變帳本的原子關聯，只有實際成交才寫入。';
+COMMENT ON COLUMN trading_trade_executions.trade_id IS '真實成交識別。';
+COMMENT ON COLUMN trading_trade_executions.instrument_id IS '成交商品。';
+COMMENT ON COLUMN trading_trade_executions.maker_policy_version IS 'Maker 接單政策版本。';
+COMMENT ON COLUMN trading_trade_executions.taker_policy_version IS 'Taker 接單政策版本。';
+COMMENT ON COLUMN trading_trade_executions.ledger_journal_id IS '與此次成交同交易提交的守恆 journal。';
+COMMENT ON COLUMN trading_trade_executions.created_at IS '成交證據建立時間。';
+
+ALTER TABLE trading_instruments ADD CONSTRAINT fk_trading_current_policy
+    FOREIGN KEY (instrument_id,policy_version) REFERENCES trading_execution_policies(instrument_id,policy_version) DEFERRABLE INITIALLY DEFERRED;
+CREATE INDEX idx_trading_order_priority ON trading_order_executions(instrument_id,order_sequence);
+-- 系統帳戶 purpose 僅增加具名交易用途；保留既有用途，不建立有餘額的系統帳戶。
+ALTER TABLE accounts DROP CONSTRAINT ck_accounts_account_purpose;
+ALTER TABLE accounts ADD CONSTRAINT ck_accounts_account_purpose CHECK (account_purpose IS NULL OR account_purpose IN
+    ('AIRDROP_FUNDING','ASSET_ADJUSTMENT_COUNTERPARTY','WITHDRAWAL_CUSTODY','TRADING_FEE_REVENUE','PERPETUAL_MARGIN_POOL','PERPETUAL_INSURANCE'));
+
+-- 政策與成交 evidence 只能追加；更正另增版本或新 journal，不覆蓋舊證據。
+CREATE FUNCTION prevent_trading_evidence_mutation() RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    RAISE EXCEPTION 'trading evidence is append-only';
+END;
+$$;
+CREATE TRIGGER immutable_trading_policies BEFORE UPDATE OR DELETE ON trading_execution_policies
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+CREATE TRIGGER immutable_trading_trade_evidence BEFORE UPDATE OR DELETE ON trading_trade_executions
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+
+-- ============================================================================
+-- 合約雙向持倉
+-- ============================================================================
+-- 雙向逐倉持倉的持久化投影與不可變變動證據。
+-- HUMAN_REVIEW_REQUIRED：此結構承載合約保證金及損益，只有完整政策與結算 runtime 驗證後才可開倉。
+-- 回滾須先停新單並確認沒有持倉、事件或資金；已有資料不得 DROP。
+
+-- 複合外鍵將持倉限制在明確的永續商品，不靠應用層字尾推測。
+ALTER TABLE trading_instruments ADD CONSTRAINT uq_trading_instrument_id_kind
+    UNIQUE (instrument_id,instrument_kind);
+
+-- 同一帳戶與商品分別保存 LONG、SHORT，禁止以淨數量合併兩個方向。
+CREATE TABLE futures_hedge_positions (
+    -- 使用者的 FUTURES 帳戶，runtime 仍須檢查 owner 與帳戶狀態。
+    account_id VARCHAR(64) NOT NULL REFERENCES accounts(account_id),
+    -- 永續商品，runtime 仍須檢查商品種類及狀態。
+    instrument_id VARCHAR(64) NOT NULL,
+    -- 固定商品種類，與商品表的複合外鍵共同拒絕現貨商品。
+    instrument_kind VARCHAR(16) NOT NULL DEFAULT 'PERPETUAL' CHECK (instrument_kind = 'PERPETUAL'),
+    -- 雙向持倉識別，LONG 與 SHORT 可同時存在。
+    position_side VARCHAR(5) NOT NULL CHECK (position_side IN ('LONG','SHORT')),
+    -- 正數持倉數量，零代表該方向已平倉。
+    quantity NUMERIC(38,18) NOT NULL CHECK (quantity >= 0),
+    -- 未平部位的 USDT 成本基礎；零數量必須清零。
+    entry_notional_usdt NUMERIC(76,36) NOT NULL CHECK (entry_notional_usdt >= 0),
+    -- 此方向專用的抵押幣別；不能從另一方向借用保證金。
+    collateral_asset_symbol VARCHAR(32) NOT NULL REFERENCES assets(asset_symbol),
+    -- 已隔離的抵押品數量，變動須與 reservation／ledger 對帳。
+    isolated_collateral NUMERIC(36,18) NOT NULL CHECK (isolated_collateral >= 0),
+    -- 持倉事件序號，更新須檢查舊版本以防競態覆蓋。
+    position_version BIGINT NOT NULL CHECK (position_version >= 0),
+    -- 最後一次受控更新時間。
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (account_id,instrument_id,position_side),
+    FOREIGN KEY (instrument_id,instrument_kind)
+        REFERENCES trading_instruments(instrument_id,instrument_kind),
+    CHECK ((quantity = 0 AND entry_notional_usdt = 0 AND isolated_collateral = 0)
+        OR (quantity > 0 AND entry_notional_usdt > 0 AND isolated_collateral > 0))
+);
+COMMENT ON TABLE futures_hedge_positions IS '雙向逐倉持倉投影，LONG／SHORT 不相互抵銷；權威變動須有不可變事件與帳本證據。';
+COMMENT ON COLUMN futures_hedge_positions.account_id IS '持倉所屬期貨帳戶。';
+COMMENT ON COLUMN futures_hedge_positions.instrument_id IS '獨立永續商品識別。';
+COMMENT ON COLUMN futures_hedge_positions.instrument_kind IS '固定 PERPETUAL，防止現貨商品寫入合約持倉。';
+COMMENT ON COLUMN futures_hedge_positions.position_side IS '明確 LONG 或 SHORT 方向。';
+COMMENT ON COLUMN futures_hedge_positions.quantity IS '目前未平數量。';
+COMMENT ON COLUMN futures_hedge_positions.entry_notional_usdt IS '未平數量對應的精確 USDT 成本基礎。';
+COMMENT ON COLUMN futures_hedge_positions.collateral_asset_symbol IS '此方向保證金幣別。';
+COMMENT ON COLUMN futures_hedge_positions.isolated_collateral IS '此方向隔離抵押品數量。';
+COMMENT ON COLUMN futures_hedge_positions.position_version IS '防止併發覆蓋的持倉版本。';
+COMMENT ON COLUMN futures_hedge_positions.updated_at IS '最後一次受控更新時間。';
+
+-- 每次倉位變動都保存不可變的前後狀態及已提交帳本，供重放和對帳。
+CREATE TABLE futures_hedge_position_events (
+    -- 事件身分由應用層建立，不能因重試另生相同業務事件。
+    event_id VARCHAR(64) PRIMARY KEY,
+    -- 對應持倉帳戶。
+    account_id VARCHAR(64) NOT NULL,
+    -- 對應永續商品。
+    instrument_id VARCHAR(64) NOT NULL,
+    -- 對應持倉方向。
+    position_side VARCHAR(5) NOT NULL,
+    -- 明確開、加、減、平或強平，禁止含糊的反向淨額更新。
+    event_type VARCHAR(16) NOT NULL CHECK (event_type IN ('OPEN','INCREASE','DECREASE','CLOSE','LIQUIDATE')),
+    -- 成交證據，不能用行情價格憑空產生持倉。
+    trade_id VARCHAR(64) NOT NULL REFERENCES trades(trade_id),
+    -- 事件前版本。
+    previous_version BIGINT NOT NULL CHECK (previous_version >= 0),
+    -- 事件後版本。
+    next_version BIGINT NOT NULL CHECK (next_version > 0),
+    -- 成交數量，方向由 event_type 與 position_side 決定。
+    fill_quantity NUMERIC(38,18) NOT NULL CHECK (fill_quantity > 0),
+    -- 實際成交價格。
+    fill_price_usdt NUMERIC(38,18) NOT NULL CHECK (fill_price_usdt > 0),
+    -- 事件後持倉數量。
+    resulting_quantity NUMERIC(38,18) NOT NULL CHECK (resulting_quantity >= 0),
+    -- 事件後未平 USDT 成本基礎。
+    resulting_entry_notional_usdt NUMERIC(76,36) NOT NULL CHECK (resulting_entry_notional_usdt >= 0),
+    -- 此次實現的 USDT 損益，可正可負。
+    realized_pnl_usdt NUMERIC(36,18) NOT NULL,
+    -- 成交與保證金、手續費及損益必須同交易入帳。
+    ledger_journal_id BIGINT NOT NULL REFERENCES ledger_journals(ledger_journal_id),
+    -- 重放時固定商品／風險政策版本。
+    policy_version BIGINT NOT NULL,
+    -- 受控建立時間。
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id,instrument_id,position_side)
+        REFERENCES futures_hedge_positions(account_id,instrument_id,position_side),
+    FOREIGN KEY (instrument_id,policy_version)
+        REFERENCES trading_execution_policies(instrument_id,policy_version),
+    UNIQUE (account_id,instrument_id,position_side,next_version),
+    UNIQUE (account_id,instrument_id,position_side,trade_id),
+    CHECK (next_version = previous_version + 1),
+    CHECK ((resulting_quantity = 0 AND resulting_entry_notional_usdt = 0)
+        OR (resulting_quantity > 0 AND resulting_entry_notional_usdt > 0))
+);
+COMMENT ON TABLE futures_hedge_position_events IS '逐倉成交的不可變前後狀態、政策版本與帳本證據。';
+COMMENT ON COLUMN futures_hedge_position_events.event_id IS '不可變事件身分。';
+COMMENT ON COLUMN futures_hedge_position_events.account_id IS '持倉帳戶。';
+COMMENT ON COLUMN futures_hedge_position_events.instrument_id IS '永續商品。';
+COMMENT ON COLUMN futures_hedge_position_events.position_side IS 'LONG 或 SHORT。';
+COMMENT ON COLUMN futures_hedge_position_events.event_type IS '開倉、加倉、減倉、平倉或強平。';
+COMMENT ON COLUMN futures_hedge_position_events.trade_id IS '實際成交證據。';
+COMMENT ON COLUMN futures_hedge_position_events.previous_version IS '事件前版本。';
+COMMENT ON COLUMN futures_hedge_position_events.next_version IS '事件後版本。';
+COMMENT ON COLUMN futures_hedge_position_events.fill_quantity IS '本次實際成交數量。';
+COMMENT ON COLUMN futures_hedge_position_events.fill_price_usdt IS '本次 USDT 成交價格。';
+COMMENT ON COLUMN futures_hedge_position_events.resulting_quantity IS '事件後未平數量。';
+COMMENT ON COLUMN futures_hedge_position_events.resulting_entry_notional_usdt IS '事件後未平 USDT 成本基礎。';
+COMMENT ON COLUMN futures_hedge_position_events.realized_pnl_usdt IS '本次 USDT 已實現損益。';
+COMMENT ON COLUMN futures_hedge_position_events.ledger_journal_id IS '同交易提交的帳本 journal。';
+COMMENT ON COLUMN futures_hedge_position_events.policy_version IS '成交時固定的政策版本。';
+COMMENT ON COLUMN futures_hedge_position_events.created_at IS '事件建立時間。';
+
+CREATE TRIGGER immutable_futures_position_events BEFORE UPDATE OR DELETE ON futures_hedge_position_events
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+
+-- ============================================================================
+-- 合約風險政策
+-- ============================================================================
+-- 合約風險政策與成交政策使用同一版本；發佈政策不代表開放合約下單。
+-- HUMAN_REVIEW_REQUIRED：沒有已驗證的保證金、funding、強平與保險資金閉環，不得啟用商品。
+-- 兌付池須與一般合約保證金池分離，避免引用錯誤資金責任。
+ALTER TABLE accounts DROP CONSTRAINT ck_accounts_account_purpose;
+ALTER TABLE accounts ADD CONSTRAINT ck_accounts_account_purpose CHECK (account_purpose IS NULL OR account_purpose IN
+    ('AIRDROP_FUNDING','ASSET_ADJUSTMENT_COUNTERPARTY','WITHDRAWAL_CUSTODY','TRADING_FEE_REVENUE',
+     'PERPETUAL_MARGIN_POOL','PERPETUAL_INSURANCE','PERPETUAL_CONVERSION_POOL'));
+
+CREATE TABLE futures_risk_policies (
+    instrument_id VARCHAR(64) NOT NULL,
+    instrument_kind VARCHAR(16) NOT NULL DEFAULT 'PERPETUAL' CHECK (instrument_kind = 'PERPETUAL'),
+    policy_version BIGINT NOT NULL CHECK (policy_version > 0),
+    policy JSONB NOT NULL CHECK (jsonb_typeof(policy) = 'object'),
+    created_by VARCHAR(64) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (instrument_id, policy_version),
+    FOREIGN KEY (instrument_id, policy_version)
+        REFERENCES trading_execution_policies(instrument_id, policy_version),
+    FOREIGN KEY (instrument_id, instrument_kind)
+        REFERENCES trading_instruments(instrument_id, instrument_kind)
+);
+COMMENT ON TABLE futures_risk_policies IS '不可變的逐倉風險政策；和成交政策同版，商品仍須另經 runtime gate 啟用。';
+COMMENT ON COLUMN futures_risk_policies.policy IS '完整保證金、行情、funding、基金與兌付池邊界。';
+
+CREATE TRIGGER immutable_futures_risk_policies BEFORE UPDATE OR DELETE ON futures_risk_policies
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+
+-- ============================================================================
+-- 合約委託持倉方向
+-- ============================================================================
+-- 合約委託明確保存 LONG／SHORT；BUY／SELL 不得暗示淨倉方向。
+ALTER TABLE trading_order_executions ADD COLUMN position_side VARCHAR(5)
+    CHECK (position_side IS NULL OR position_side IN ('LONG','SHORT'));
+COMMENT ON COLUMN trading_order_executions.position_side IS '永續委託指定的雙向持倉方向；現貨為 NULL。';
+
+-- 重送持倉成交時須讀取原始抵押品結果，不能採用重送請求所帶的數字。
+ALTER TABLE futures_hedge_position_events ADD COLUMN resulting_isolated_collateral NUMERIC(36,18)
+    NOT NULL DEFAULT 0 CHECK (resulting_isolated_collateral >= 0);
+COMMENT ON COLUMN futures_hedge_position_events.resulting_isolated_collateral IS '成交後該方向隔離抵押品數量。';
+
+-- 商品身分與持倉方向在 DB 同時約束，防止直接寫入繞過下單 service。
+CREATE FUNCTION validate_trading_order_position() RETURNS TRIGGER LANGUAGE plpgsql AS $$
+DECLARE kind VARCHAR(16);
+BEGIN
+    SELECT instrument_kind INTO kind FROM trading_instruments WHERE instrument_id = NEW.instrument_id;
+    IF kind = 'PERPETUAL' AND (NEW.position_side IS NULL OR NEW.leverage IS NULL OR NEW.leverage < 1) THEN
+        RAISE EXCEPTION 'futures order requires position side and leverage';
+    END IF;
+    IF kind = 'SPOT' AND (NEW.position_side IS NOT NULL OR NEW.reduce_only OR NEW.leverage IS NOT NULL) THEN
+        RAISE EXCEPTION 'spot order cannot carry futures position fields';
+    END IF;
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW.position_side IS DISTINCT FROM OLD.position_side
+                OR NEW.reduce_only IS DISTINCT FROM OLD.reduce_only
+                OR NEW.leverage IS DISTINCT FROM OLD.leverage
+                OR NEW.instrument_id IS DISTINCT FROM OLD.instrument_id THEN
+            RAISE EXCEPTION 'order position identity is immutable';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+CREATE TRIGGER trading_order_position_boundary BEFORE INSERT OR UPDATE OF
+    position_side,reduce_only,leverage,instrument_id ON trading_order_executions
+    FOR EACH ROW EXECUTE FUNCTION validate_trading_order_position();
+
+-- ============================================================================
+-- 合約命令冪等
+-- ============================================================================
+-- 合約命令與現貨命令使用不同 durable idempotency scope，避免同鍵混用。
+ALTER TABLE idempotency_keys DROP CONSTRAINT ck_idempotency_keys_scope;
+ALTER TABLE idempotency_keys ADD CONSTRAINT ck_idempotency_keys_scope CHECK (scope IN
+    ('ORDER_CREATE','ORDER_CANCEL','FUTURES_ORDER_CREATE','FUTURES_ORDER_CANCEL',
+     'WITHDRAWAL_REQUEST','WITHDRAWAL_CANCEL','LEDGER_POSTING','DEPOSIT_CONFIRMATION',
+     'RESERVATION_HOLD','RESERVATION_RELEASE','RESERVATION_CAPTURE',
+     'INTERNAL_TRANSFER','PLATFORM_INTERNAL_TRANSFER','ADMIN_ACTION'));
+
+-- ============================================================================
+-- 合約資金費率結算
+-- ============================================================================
+-- 逐倉資金費用週期與逐持倉分配；實際 USDT 入帳與事件須在同一交易完成。
+CREATE TABLE futures_funding_cycles (
+    cycle_id VARCHAR(64) PRIMARY KEY,
+    instrument_id VARCHAR(64) NOT NULL,
+    policy_version BIGINT NOT NULL,
+    period_end TIMESTAMPTZ NOT NULL,
+    funding_rate NUMERIC(20,18) NOT NULL,
+    rate_source VARCHAR(32) NOT NULL,
+    mark_price_usdt NUMERIC(38,18) NOT NULL CHECK (mark_price_usdt > 0),
+    mark_source VARCHAR(128) NOT NULL,
+    mark_source_at TIMESTAMPTZ NOT NULL,
+    ledger_journal_id BIGINT REFERENCES ledger_journals(ledger_journal_id),
+    settled_by VARCHAR(64) NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (instrument_id,policy_version)
+        REFERENCES futures_risk_policies(instrument_id,policy_version),
+    UNIQUE (instrument_id,period_end)
+);
+COMMENT ON TABLE futures_funding_cycles IS '不可變 funding 週期、核定費率、標記價來源及同交易帳本證據。';
+
+CREATE TABLE futures_funding_allocations (
+    cycle_id VARCHAR(64) NOT NULL REFERENCES futures_funding_cycles(cycle_id),
+    account_id VARCHAR(64) NOT NULL,
+    instrument_id VARCHAR(64) NOT NULL,
+    position_side VARCHAR(5) NOT NULL,
+    funding_usdt NUMERIC(36,18) NOT NULL,
+    previous_collateral NUMERIC(36,18) NOT NULL CHECK (previous_collateral >= 0),
+    resulting_collateral NUMERIC(36,18) NOT NULL CHECK (resulting_collateral >= 0),
+    previous_version BIGINT NOT NULL CHECK (previous_version >= 0),
+    next_version BIGINT NOT NULL CHECK (next_version = previous_version + 1),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (cycle_id,account_id,instrument_id,position_side),
+    FOREIGN KEY (account_id,instrument_id,position_side)
+        REFERENCES futures_hedge_positions(account_id,instrument_id,position_side),
+    CHECK ((funding_usdt < 0 AND resulting_collateral < previous_collateral)
+        OR (funding_usdt >= 0 AND resulting_collateral = previous_collateral))
+);
+COMMENT ON TABLE futures_funding_allocations IS '每方向 funding 收付及隔離抵押品前後狀態，付款方扣抵押品、收款方收自由 USDT。';
+
+CREATE TRIGGER immutable_futures_funding_cycles BEFORE UPDATE OR DELETE ON futures_funding_cycles
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+CREATE TRIGGER immutable_futures_funding_allocations BEFORE UPDATE OR DELETE ON futures_funding_allocations
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+
+-- ============================================================================
+-- 合約強平證據
+-- ============================================================================
+-- 強平委託由後端在維持保證金不足時建立，客戶命令不得自行標記強平。
+ALTER TABLE trading_order_executions ADD COLUMN liquidation BOOLEAN NOT NULL DEFAULT FALSE;
+COMMENT ON COLUMN trading_order_executions.liquidation IS '受控強平來源；成交後持倉事件標為 LIQUIDATE。';
+
+CREATE FUNCTION validate_futures_liquidation_order() RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+    IF NEW.liquidation AND (NEW.position_side IS NULL OR NOT NEW.reduce_only) THEN
+        RAISE EXCEPTION 'liquidation order must reduce an explicit futures position';
+    END IF;
+    IF TG_OP = 'UPDATE' THEN
+        IF NEW.liquidation IS DISTINCT FROM OLD.liquidation THEN
+            RAISE EXCEPTION 'liquidation identity is immutable';
+        END IF;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+CREATE TRIGGER futures_liquidation_order_boundary BEFORE INSERT OR UPDATE OF liquidation
+    ON trading_order_executions FOR EACH ROW EXECUTE FUNCTION validate_futures_liquidation_order();
+
+CREATE TABLE futures_liquidation_attempts (
+    liquidation_id VARCHAR(64) PRIMARY KEY,
+    account_id VARCHAR(64) NOT NULL,
+    instrument_id VARCHAR(64) NOT NULL,
+    position_side VARCHAR(5) NOT NULL,
+    mark_price_usdt NUMERIC(38,18) NOT NULL CHECK (mark_price_usdt > 0),
+    mark_source VARCHAR(128) NOT NULL,
+    mark_source_at TIMESTAMPTZ NOT NULL,
+    equity_usdt NUMERIC(36,18) NOT NULL,
+    maintenance_usdt NUMERIC(36,18) NOT NULL CHECK (maintenance_usdt > 0),
+    order_id VARCHAR(64) NOT NULL UNIQUE REFERENCES orders(order_id),
+    policy_version BIGINT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (account_id,instrument_id,position_side)
+        REFERENCES futures_hedge_positions(account_id,instrument_id,position_side),
+    FOREIGN KEY (instrument_id,policy_version)
+        REFERENCES futures_risk_policies(instrument_id,policy_version)
+);
+COMMENT ON TABLE futures_liquidation_attempts IS '具名標記價觸發的真實減倉委託；可為部分成交或無成交 IOC。';
+CREATE TRIGGER immutable_futures_liquidation_attempts BEFORE UPDATE OR DELETE ON futures_liquidation_attempts
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+
+ALTER TABLE idempotency_keys DROP CONSTRAINT ck_idempotency_keys_scope;
+ALTER TABLE idempotency_keys ADD CONSTRAINT ck_idempotency_keys_scope CHECK (scope IN
+    ('ORDER_CREATE','ORDER_CANCEL','FUTURES_ORDER_CREATE','FUTURES_ORDER_CANCEL','FUTURES_LIQUIDATION',
+     'WITHDRAWAL_REQUEST','WITHDRAWAL_CANCEL','LEDGER_POSTING','DEPOSIT_CONFIRMATION',
+     'RESERVATION_HOLD','RESERVATION_RELEASE','RESERVATION_CAPTURE',
+     'INTERNAL_TRANSFER','PLATFORM_INTERNAL_TRANSFER','ADMIN_ACTION'));
+
+-- ============================================================================
+-- 合約 reduce-only 與風險停機
+-- ============================================================================
+-- 無流動性或保險基金不足時，保留結算與減倉命令，但停止開倉。
+ALTER TABLE trading_instruments DROP CONSTRAINT trading_instruments_status_check;
+ALTER TABLE trading_instruments ADD CONSTRAINT trading_instruments_status_check
+    CHECK (status IN ('ACTIVE','REDUCE_ONLY','HALTED','CLOSED'));
+COMMENT ON COLUMN trading_instruments.status IS 'REDUCE_ONLY 保留既有持倉處置與 funding，但拒絕新增風險。';
+
+-- ============================================================================
+-- 外部報價預覽政策
+-- ============================================================================
+-- 只保存外部報價預覽政策版本；不啟用 Binance 對沖、客戶成交或資金異動。
+CREATE TABLE external_quote_preview_policies (
+    policy_version BIGINT PRIMARY KEY CHECK (policy_version > 0),
+    source VARCHAR(32) NOT NULL CHECK (source = 'BINANCE'),
+    policy JSONB NOT NULL CHECK (jsonb_typeof(policy) = 'object'),
+    created_by VARCHAR(64) NOT NULL REFERENCES users(user_id),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+COMMENT ON TABLE external_quote_preview_policies IS '最高管理員版本化的外部報價預覽設定；沒有交易啟用效力。';
+COMMENT ON COLUMN external_quote_preview_policies.policy_version IS '嚴格遞增版本；同版內容不可覆寫。';
+COMMENT ON COLUMN external_quote_preview_policies.source IS '預覽行情來源，目前固定 BINANCE。';
+COMMENT ON COLUMN external_quote_preview_policies.policy IS '原始十進位字串費率與幣別調整，供明確重算及稽核。';
+COMMENT ON COLUMN external_quote_preview_policies.created_by IS '提交政策的最高管理員。';
+COMMENT ON COLUMN external_quote_preview_policies.created_at IS '政策寫入時間；不代表交易開始時間。';
+
+-- ============================================================================
+-- 不可變外部報價預覽政策
+-- ============================================================================
+-- 報價預覽版本屬不可變政策證據；更正只能新增下一版，不能覆寫舊版及既有稽核。
+CREATE TRIGGER immutable_external_quote_preview_policies
+    BEFORE UPDATE OR DELETE ON external_quote_preview_policies
+    FOR EACH ROW EXECUTE FUNCTION prevent_trading_evidence_mutation();
+
+COMMENT ON TABLE external_quote_preview_policies IS '最高管理員逐版追加的外部報價預覽設定；舊版不可修改，且沒有交易啟用效力。';
+
+-- ============================================================================
+-- 外部送單 Proxy 設定
+-- ============================================================================
+-- 外部送單 Proxy 的 runtime 開關保存於資料庫；Demo 結果仍不建立正式訂單、成交或帳本資料。
+CREATE TABLE external_order_proxy_settings (
+    setting_key VARCHAR(64) PRIMARY KEY
+        CHECK (setting_key = 'LUMIX_TRADING_EXTERNAL_PROXY_DEMO_ENABLED'),
+    enabled BOOLEAN NOT NULL,
+    version BIGINT NOT NULL CHECK (version > 0),
+    updated_by VARCHAR(64) REFERENCES users(user_id),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO external_order_proxy_settings(setting_key, enabled, version, updated_by)
+VALUES ('LUMIX_TRADING_EXTERNAL_PROXY_DEMO_ENABLED', TRUE, 1, NULL);
+
+COMMENT ON TABLE external_order_proxy_settings IS '外部送單 Proxy 的資料庫 runtime 開關；變更不需重啟服務。';
+COMMENT ON COLUMN external_order_proxy_settings.setting_key IS '穩定設定鍵，目前只允許 Demo provider 開關。';
+COMMENT ON COLUMN external_order_proxy_settings.enabled IS 'true 時允許 loopback Demo API 與 DEMO provider；初始值為 true。';
+COMMENT ON COLUMN external_order_proxy_settings.version IS '每次變更遞增，用於避免管理命令覆蓋較新設定。';
+COMMENT ON COLUMN external_order_proxy_settings.updated_by IS '最後變更設定的最高管理員；migration 初始值為 NULL。';
+COMMENT ON COLUMN external_order_proxy_settings.updated_at IS '最後成功變更時間。';
+
+-- ============================================================================
+-- 交易 runtime 總開關
+-- ============================================================================
+-- 現貨與合約總開關保存於資料庫，讓管理命令可即時切換且不依賴程序環境變數。
+CREATE TABLE trading_runtime_settings (
+    trading_kind VARCHAR(16) PRIMARY KEY
+        CHECK (trading_kind IN ('SPOT', 'FUTURES')),
+    enabled BOOLEAN NOT NULL DEFAULT FALSE,
+    version BIGINT NOT NULL CHECK (version > 0),
+    updated_by VARCHAR(64) REFERENCES users(user_id),
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+INSERT INTO trading_runtime_settings (trading_kind, enabled, version, updated_by) VALUES
+    ('SPOT', FALSE, 1, NULL),
+    ('FUTURES', FALSE, 1, NULL);
+
+COMMENT ON TABLE trading_runtime_settings IS '現貨與合約的資料庫權威總開關；預設關閉，變更無須重啟服務。';
+COMMENT ON COLUMN trading_runtime_settings.trading_kind IS '穩定交易類型，只允許 SPOT 或 FUTURES。';
+COMMENT ON COLUMN trading_runtime_settings.enabled IS 'false 時拒絕新單，但仍允許安全撤單。';
+COMMENT ON COLUMN trading_runtime_settings.version IS '樂觀鎖版本，每次管理變更必須遞增。';

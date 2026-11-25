@@ -492,13 +492,13 @@ Do not record an uncommitted implementation as a released revision. If a working
 - 使用者列表搜尋欄確立為管理端文字輸入基準；後續 text input 與 textarea 必須重用 `.admin-text-input` 的色彩、hover 與 focus 行為。資產調整表單的背景與文字輸入已對齊此基準；dropdown 維持 `.admin-form-select*` 規範。
 - 共用 `ConfirmDialog` 的標頭改為可及的關閉 icon，底部只保留一個具名「取消」操作；標題、說明與操作列使用一致的深色 surface、分隔與 focus 樣式。
 
-## 2026-11-21 真實交易接線施工狀態
+## 真實交易接線現況（2026-11-25）
 
-- 現貨與合約共用 `SpotReferenceMarket` 與 `TradingLivePanels`；交易路由不再載入 mock wallet、mock 委託或本地假送單。共用 API 面板顯示 session owner 的餘額、委託、成交與獨立 LumiX 彙總簿。
+- 現貨與合約共用 `SpotReferenceMarket` 與 `TradingLivePanels`；交易路由不再載入 mock wallet、mock 委託或本地假送單。共用 API 面板顯示 session owner 的餘額、委託與成交；交易頁不顯示 LumiX 自有委託簿區塊。
 - Binance 現貨圖表／外部深度保留來源標示；合約頁明示這不是永續標記價格。沒有把外部參考深度當作 LumiX 可成交流動性。
 - 下單需當前真實快照與後端啟用政策；錯誤、過期、未登入時清除舊資產，不預填零。送單／撤單結果不確定時沿用同一冪等鍵重試，不顯示樂觀成功。
-- 現貨 API、政策治理與 UI 正在整合驗證；永續 margin／PnL／funding／liquidation runtime 尚未完成，不能開倉。此條目不是完整交易交付或端到端驗收完成證據。
+- 現貨與 USDT 逐倉合約的 margin／PnL／funding／liquidation runtime 及雙帳戶端到端驗收已完成；資料庫 SPOT／FUTURES 總開關預設關閉，正式政策、商品與資金未配置前仍不能接單。
 
 - 真實帳戶表格以 `trading-account-table` 提供可鍵盤操作的橫向捲動，完整保留委託識別與金融數值；命令請求十秒超時後維持原冪等識別，不推定交易未執行。
 
-- 本次前端 typecheck／build、同鍵重試與 1440／768／390px 瀏覽器邊界測試已通過；尚未完成真實雙帳戶端到端成交驗收。
+- 前端 typecheck／build、同鍵重試、1440／768／390px 瀏覽器邊界與真實雙帳戶端到端成交驗收均已通過；這不代表 production readiness。

@@ -4,9 +4,9 @@
 
 ## 快照資訊
 
-- 最後更新：2026-11-19
-- 基準 revision：`2b95ebb`
-- 工作區狀態：未提交；本快照以目前 working tree 為準
+- 最後更新：2026-11-25
+- 最新已推送基準 revision：`d11e895`
+- 工作區狀態：migration 與文件同步中；以目前 working tree 為準
 - 前端：React 19.1、TypeScript 5.8、Vite 6.3、React Router DOM 7.6
 - 樣式：`web/src/styles/global.css` 與 `web/src/admin/components/AdminPageHero.css`
 - 前端根目錄：`web/`
@@ -16,12 +16,12 @@
 - 現貨與合約使用唯一 `TradingMarketChart.tsx` 圖表模板，搭配 `TradingChartControls.tsx` 與 `ChartPreferences.ts`。控制列為日線／週線／月線／分線，下拉提供 1min／5min／15min／60min；均線可改週期與開關、取消草稿、恢復預設。預設 MA5／20／60／120，localStorage 只保存視覺偏好，同源頁面與分頁同步。
 - `FuturesMarketChart.tsx` 已退出交易路由；現貨經 `marketCandles.ts` 驗證所選週期、UTC 連續性與精確價量後傳入同一模板。舊 `SpotCandleChart.tsx` 已移除，不保留第二份繪圖。
 - 合約工作區交易對統一呈現 `BTCUSDT`／`ETHUSDT` 格式，不加 `-PERP`；解析時須先辨識報價幣與分隔符，避免重複拼接 USDT。
-- `/spot/:symbol` 使用可匿名訂閱的唯讀 Binance 參考行情推播；目前僅 BTC/USDT、ETH/USDT，需同源 HTTPS／WSS，斷線或不可用時不顯示舊價位。該頁不代表 LumiX 的正式委託簿、成交或下單功能已開放；合約頁共用真實 API 面板，風險 runtime 未完成所以無開倉能力。
+- `/spot/:symbol` 使用可匿名訂閱的唯讀 Binance 參考行情推播；目前僅 BTC/USDT、ETH/USDT，需同源 HTTPS／WSS，斷線或不可用時不顯示舊價位。現貨與合約的真實 API 面板均已接線，但資料庫接單總開關預設關閉；頁面可見不代表正式開放交易。
 - 現貨提供真實 UTC 日／週／月與 1／5／15／60 分 K 線；後端固定十四條 K 線來源連線，單一訂閱只推播所選週期，最多 320 根歷史，畫面顯示最近 160 根。月線依曆月、週線依 UTC 星期一；來源歷史不足時不補造。切換期間不顯示上一週期資料，過期或斷線清除舊圖。
 - 依使用者指定的 `/futures/BTC-USDT` 排版，現貨與合約共用 `TradingWorkspaceLayout.tsx`，沿用 `market-header`、`market-chart`、`trading-workspace-grid`、`trading-book`、`trading-form`、`balance-panel`：摘要／全寬圖表／左訂單簿右下單面板／底部帳戶區。767px 以下沿用共用垂直排列，現貨 1023px 以下買賣盤單欄，精確數值可換行。訂單簿使用約十列高的可捲動視窗保留完整二十檔，賣盤預設追蹤最佳賣價，手動捲動時保留位置。
-- 共用圖表以固定精度整數計算均線與畫面縮放；成交量文字使用獨立可讀字級，不隨 SVG 壓縮。`SpotReferenceOrderBook` 保留精確累計及可見深度比例。現貨下單面板已接真實 API，需政策與設定啟用；帳戶來自 authenticated primary 查詢。合約共用真實查詢及版型，風險 runtime 未完成前不開倉。
-- 本機執行 `server/scripts/start-market-preview.sh` 後以 `https://localhost:8090/spot/BTC-USDT` 或 `/spot/ETH-USDT` 驗收（實際埠讀取 `.env`）；Vite 使用明確憑證啟用 HTTPS，僅轉送固定行情 WebSocket 並覆寫 forwarded headers。一般開發入口由 Nginx 終結 TLS；行情不提供明文降級。
-- 2026-11-19 已完成真實來源及瀏覽器本機視覺驗證：買賣各 20 檔、120 根一分鐘 K 線，連續 70 秒數值更新，390px 畫面、離線清除與恢復訂閱通過。正式 Nginx 部署與安全審核尚未完成；詳細證據見 `server/docs/binance-market-data-boundary.md`。
+- 共用圖表以固定精度整數計算均線與畫面縮放；成交量文字使用獨立可讀字級，不隨 SVG 壓縮。`SpotReferenceOrderBook` 保留精確累計及可見深度比例。現貨與合約下單面板已接真實 API，需資料庫總開關、商品、政策、行情與資金條件同時成立；帳戶資料來自 authenticated primary 查詢。
+- 一般本機開發以 Nginx 在 `https://localhost/spot/BTC-USDT` 或 `/spot/ETH-USDT` 終結 TLS；前台主機程序預設監聽 loopback 8090。固定行情 WebSocket 由同源 gateway 代理並覆寫 forwarded headers，不提供明文降級。
+- 已完成真實來源及瀏覽器本機視覺驗證：買賣各 20 檔、七種週期 K 線、390px 畫面、離線清除與恢復訂閱均通過。本機 Nginx／mkcert HTTPS 已接通；公開網域與正式安全審核仍未完成。詳細證據見 `server/docs/binance-market-data-boundary.md`。
 
 | 元件                       | 路徑                                                           | 責任                                                                                             |
 | -------------------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
@@ -85,7 +85,7 @@
 
 此快照只描述目前可驗證的實作；新增或移除 endpoint、component、token、tab 或 responsive 行為時，請同步更新本文件，並在視覺政策或 UX 原則變動時更新治理文件。
 
-## 2026-11-21 真實交易接線施工狀態
+## 真實交易接線現況（2026-11-25）
 
 2026-11-22：現貨及合約共用下單表單的市價 IOC 新增最大滑價選項，可選平台政策上限、百分比或每單位固定 USDT 價差。後端以站內真實最優對手價計算最差成交價並依 tick 朝客戶有利方向取整；客戶值超出交易政策上限時拒單。限價單不接受滑價欄位。未成交 IOC 餘量取消，合約減倉回覆明示剩餘量仍未平倉。此功能目前只適用 LumiX 站內可成交委託，外部 Binance 送單尚未接通。
 
@@ -95,11 +95,11 @@
 
 同日驗收更新：隔離 `lumix_e2e` 資料庫的兩個真實 session 於 Google Chrome 前台完成現貨互撮與 USDT 合約開平倉；BTC、USDT ledger 各自守恆，最後無未平合約持倉。後台 `/admin/spot/policies` 與 `/admin/futures/configuration` 已接入具權限的目前政策查詢、完整 JSON 政策提交；政策原文保留為 string 往返，避免 JavaScript Number 改變金融精度。合約後台另有啟用／恢復／暫停命令。管理頁 Chrome 驗收可讀到實際政策及商品狀態。測試政策僅在隔離資料庫，不是正式費率或風險政策。
 
-- 現貨與合約共用 `SpotReferenceMarket` 與 `TradingLivePanels`；交易路由不再載入 mock wallet、mock 委託或本地假送單。共用 API 面板顯示 session owner 的餘額、委託、成交與獨立 LumiX 彙總簿。
+- 現貨與合約共用 `SpotReferenceMarket` 與 `TradingLivePanels`；交易路由不再載入 mock wallet、mock 委託或本地假送單。共用 API 面板顯示 session owner 的餘額、委託與成交；交易頁不顯示 LumiX 自有委託簿區塊。
 - Binance 現貨圖表／外部深度保留來源標示；合約頁明示這不是永續標記價格。沒有把外部參考深度當作 LumiX 可成交流動性。
 - 下單需當前真實快照與後端啟用政策；錯誤、過期、未登入時清除舊資產，不預填零。送單／撤單結果不確定時沿用同一冪等鍵重試，不顯示樂觀成功。
-- 現貨 API、政策治理與 UI 正在整合驗證；永續 margin／PnL／funding／liquidation runtime 尚未完成，不能開倉。此條目不是完整交易交付或端到端驗收完成證據。
+- 現貨與 USDT 逐倉合約的 margin／PnL／funding／liquidation runtime 及雙帳戶端到端驗收已完成；資料庫 SPOT／FUTURES 總開關預設關閉，正式政策、商品與資金未配置前仍不能接單。
 
 - 真實帳戶表格以 `trading-account-table` 提供可鍵盤操作的橫向捲動，完整保留委託識別與金融數值；命令請求十秒超時後維持原冪等識別，不推定交易未執行。
 
-- 本次前端 typecheck／build、同鍵重試與 1440／768／390px 瀏覽器邊界測試已通過；尚未完成真實雙帳戶端到端成交驗收。
+- 前端 typecheck／build、同鍵重試、1440／768／390px 瀏覽器邊界與真實雙帳戶端到端成交驗收均已通過；這不代表 production readiness。

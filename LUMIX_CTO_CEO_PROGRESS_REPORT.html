@@ -16,7 +16,7 @@
       <div class="eyebrow">高階管理進度回報 · 內部使用</div>
       <h1>LumiX 平台開發進度</h1>
       <p>現貨、USDT 合約、外部送單 Proxy、本機服務與公開網域的最新交付狀態。</p>
-      <div class="stamp">盤點時間：2026-11-24（Asia/Taipei） · 分支：main · 功能交付基線：30ce59d</div>
+      <div class="stamp">盤點時間：2026-11-25（Asia/Taipei） · 分支：main · 最新已推送基線：d11e895</div>
     </section>
 
     <nav class="tabs" aria-label="報告視角">
@@ -32,8 +32,8 @@
 
       <section class="kpis" aria-label="關鍵狀態">
         <div class="kpi"><strong>已完成並推送</strong><span>現貨與 USDT 合約核心交易</span></div>
-        <div class="kpi"><strong>已完成並提交</strong><span>Proxy Demo、埠與 Nginx 變更</span></div>
-        <div class="kpi"><strong>服務運行中</strong><span>API、前台、後台與依賴服務</span></div>
+        <div class="kpi"><strong>資料庫控管</strong><span>現貨／合約接單預設關閉</span></div>
+        <div class="kpi"><strong>服務運行中</strong><span>API、雙前端、依賴服務與 ELK</span></div>
         <div class="kpi"><strong>Pending</strong><span>公開網域、憑證與路由器轉發</span></div>
       </section>
 
@@ -47,7 +47,7 @@
         <article class="card"><span class="badge done">按需求延後</span><h3>非 USDT 保證金</h3><p>目前不實作實際兌付與折算結算，只保留可擴充介面；非 USDT 政策不得啟用。</p></article>
       </div>
 
-      <h2 class="section">本次已完成並提交</h2>
+      <h2 class="section">基礎能力與治理現況</h2>
       <div class="grid">
         <article class="card"><span class="badge done">已提交</span><h3>外部送單 Proxy</h3><p>建立 provider-neutral 介面，以 source 路由不同交易所 adapter；未知來源拒絕，未與 Binance 憑證耦合。</p></article>
         <article class="card"><span class="badge done">已提交</span><h3>後端 Demo provider</h3><p>支援正常、延遲、部分成交、可接受滑點、滑點超限、交易所拒絕與未知逾時；結果不寫入正式訂單或帳本。</p></article>
@@ -55,6 +55,9 @@
         <article class="card"><span class="badge done">已提交</span><h3>數字狀態代碼</h3><p>回應同時提供英文 status／reason 與穩定數字 statusCode／reasonCode，並驗證描述與代碼一致。</p></article>
         <article class="card"><span class="badge done">已提交</span><h3>服務埠配置</h3><p>預設 API 8080、前台 8090、後台 8100，均可由根目錄 <code>.env</code> 調整。</p></article>
         <article class="card"><span class="badge done">已提交</span><h3>本機 HTTPS Gateway</h3><p>Nginx 與 mkcert 已建立本機 HTTPS；公開憑證路徑預留 Let’s Encrypt ACME 驗證入口。</p></article>
+        <article class="card"><span class="badge done">已提交</span><h3>資料庫接單總開關</h3><p>SPOT／FUTURES 開關存於資料庫，預設關閉；最高管理員更新具版本檢查與稽核，關閉時仍允許撤單。</p></article>
+        <article class="card"><span class="badge done">已整併</span><h3>單一資料庫 Baseline</h3><p>原 V001–V015 已收斂為單一 <code>V001__baseline.sql</code>；結構與初始配置分由 init.sql、seed.sql 管理。</p></article>
+        <article class="card"><span class="badge done">運行中</span><h3>集中日誌</h3><p>Spring Boot ECS JSON 經 Filebeat、Logstash 送至 Elasticsearch，Kibana 綁定本機 5601 查詢。</p></article>
       </div>
 
       <h2 class="section">Pending 與待決事項</h2>
@@ -73,10 +76,10 @@
       <div class="table-wrap"><table>
         <thead><tr><th>範圍</th><th>狀態</th><th>證據／說明</th></tr></thead>
         <tbody>
-          <tr><td>功能交付基線</td><td><span class="badge done">已提交</span></td><td><code>30ce59d</code>：external order proxy demo、資料庫開關、數字代碼、服務埠與 Nginx gateway。</td></tr>
+          <tr><td>最新已推送基線</td><td><span class="badge done">已推送</span></td><td><code>d11e895</code>：現貨／合約接單總開關改為資料庫權威設定，預設關閉。</td></tr>
           <tr><td>合約提交鏈</td><td><span class="badge done">已推送</span></td><td><code>c5dc2d2</code> 至 <code>883a84f</code> 涵蓋成交持倉、USDT hedge、funding、保險強平、即時 UI 與瀏覽器驗收。</td></tr>
           <tr><td>現貨交易</td><td><span class="badge done">已推送</span></td><td><code>8892537</code> 完成 spot execution 與共用 live trading panels。</td></tr>
-          <tr><td>目前工作樹</td><td><span class="badge done">已收尾</span></td><td>功能變更與本進度報告均已納入提交；推送完成後以 Git 狀態確認無未提交修改。</td></tr>
+          <tr><td>目前工作樹</td><td><span class="badge working">已完成待提交</span></td><td>Migration 已合併為單一 V001，資料庫、交易、行情、UI、部署、路由及本進度報告已同步；18 個資料庫／交易案例與文件連結掃描均通過。</td></tr>
         </tbody>
       </table></div>
 
@@ -116,7 +119,7 @@
         </ul></div>
       </details>
 
-      <h2 class="section">目前運行狀態（2026-11-24 實測）</h2>
+      <h2 class="section">目前運行狀態（2026-11-25 實測）</h2>
       <div class="table-wrap"><table>
         <thead><tr><th>服務</th><th>位址</th><th>狀態</th></tr></thead>
         <tbody>
@@ -127,21 +130,21 @@
           <tr><td>PostgreSQL</td><td><code>127.0.0.1:5432</code></td><td>Docker healthy</td></tr>
           <tr><td>Redis</td><td><code>127.0.0.1:6379</code></td><td>Docker healthy</td></tr>
           <tr><td>Kafka</td><td><code>127.0.0.1:9092</code></td><td>Docker healthy</td></tr>
+          <tr><td>Kibana</td><td><code>http://127.0.0.1:5601</code></td><td>API status HTTP 200；Elasticsearch healthy</td></tr>
           <tr><td>公開網域</td><td><code>lumix.ddns.net</code></td><td>DNS 正確；80 外部逾時、443 外部拒絕，已 pending</td></tr>
         </tbody>
       </table></div>
 
       <h2 class="section">下一個可交付單位</h2>
       <ol>
-        <li>完成 Proxy Demo 的窄範圍驗證：編譯、資料庫 V014、開關預設值、各情境、延遲查單、數字代碼與關閉後拒絕。</li>
-        <li>核對安全邊界，特別是 Demo API 的免 session、loopback／Origin 判斷與管理員設定 API。</li>
-        <li>執行前端 typecheck、後端必要驗證與 <code>git diff --check</code>，整理變更後提交並推送。</li>
+        <li>將本次單一 baseline 與文件同步結果提交並推送。</li>
+        <li>正式開放交易前，建立現貨／合約政策、啟用商品、測試資金與保險基金注資，再由資料庫總開關明確開啟。</li>
         <li>等待 Binance API key 與帳戶授權後，再新增正式 BINANCE adapter、外部訂單持久化、恢復、部分成交與對帳。</li>
         <li>公開網域、路由器轉發與 Let’s Encrypt 保持 pending，除非重新排入。</li>
       </ol>
     </section>
 
-    <p class="footer">資料依據：2026-11-24 的 Git 狀態、既有提交紀錄、交易執行邊界文件、目前程序健康檢查與 Docker health。此頁區分「已提交交付」、「仍待驗證」及「Pending」，不以程式存在冒充正式上線。</p>
+    <p class="footer">資料依據：2026-11-25 的 Git 狀態、資料庫 baseline、交易執行邊界、程序健康檢查與 Docker health。此頁區分「已推送交付」、「工作樹同步中」、「仍待驗證」及「Pending」，不以程式存在冒充正式上線。</p>
   </main>
   <script>
     // 分頁只切換本地內容，離線開啟時也能使用。

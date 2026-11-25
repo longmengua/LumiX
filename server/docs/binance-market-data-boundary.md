@@ -1,10 +1,10 @@
 # Binance 現貨行情接入邊界
 
-狀態：BTC/USDT、ETH/USDT 的唯讀深度與七種具名 K 線週期、可匿名讀取的 WebSocket 推播及現貨參考行情頁已實作；現貨與合約共用圖表模板。來源預設關閉，尚未完成正式部署及獨立安全審核。`HUMAN_REVIEW_REQUIRED`。
+狀態（2026-11-25）：BTC/USDT、ETH/USDT 的唯讀深度與七種具名 K 線週期、可匿名讀取的 WebSocket 推播及現貨參考行情頁已實作；現貨與合約共用圖表模板。本機來源已啟用並經 Nginx／mkcert HTTPS 驗證，程式預設仍關閉；公開部署及獨立安全審核尚未完成。`HUMAN_REVIEW_REQUIRED`。
 
 ## 目標與來源
 
-以 Binance 公開現貨資料作為 BTC/USDT、ETH/USDT 的外部參考行情。來源行情與未來 LumiX 自身的成交及委託簿必須分別標示，不能把來源委託簿當成 LumiX 的流動性。使用者表示已簽約；具體授權文件不存放於本文件。
+以 Binance 公開現貨資料作為 BTC/USDT、ETH/USDT 的外部參考行情。來源委託簿只標示為 Binance 參考深度，交易頁不顯示 LumiX 自有委託簿，也不能把來源深度當成 LumiX 可成交流動性。使用者表示已簽約；具體授權文件不存放於本文件。
 
 ## 來源協定與契約差異
 
@@ -31,20 +31,20 @@ Binance 的深度增量帶有首個更新序號 `U` 與最後更新序號 `u`，
 - 僅 `GET /api/v1/market-data/stream` 可匿名讀取，帳戶與交易 API 仍須認證；握手必須由受信任 Nginx 帶入經覆寫的安全協定資訊。Nginx 必須處理 WebSocket Upgrade、限制直接存取後端、覆寫而非轉傳使用者提供的 forwarded headers。不可只憑程式中的 `isSecure()` 防止偽造代理標頭。
 - 每秒推播兩個來源交易對的前 20 檔與所選週期各最多 320 根 K 線，包含來源、發布時間、來源事件時間、本機接收時間、健康狀態與十進位字串價位。握手可選單一 `interval`，例如 `?interval=1d`；省略時為 `1m`。未知週期、重複參數或其他 query key 回 400。訂閱者不能指定上游 URL 或任意交易對；每條連線只接收所選的一種週期。
 - 限制同時 100 連線、單筆輸入 1024 bytes、發送時間 2000ms、負載及發送緩衝各 262144 bytes；每次推播依週期共用序列化結果。匿名唯讀推播不綁定帳戶 session，不健康時不提供舊價位。這些是單一程序的保護，不是跨節點 rate limit 或完整阻斷服務防護。
-- Binance 實際唯讀 WebSocket／快照整合及本機 HTTPS Vite／瀏覽器鏈路已驗證；正式 Nginx 部署仍未驗證。
+- Binance 實際唯讀 WebSocket／快照整合及本機 Nginx／HTTPS／瀏覽器鏈路已驗證；公開 Nginx 部署仍未驗證。
 
-## P21-R02 本機視覺驗收交付（2026-11-19）
+## 本機視覺驗收交付（2026-11-19，2026-11-25 更新）
 
-任務狀態：`READY_FOR_LOCAL_VISUAL_REVIEW`，等待使用者依「能看 K 線、能看訂單簿跳動」驗收；整體 P21-R02 正式行情範圍仍為進行中。`HUMAN_REVIEW_REQUIRED`：精確路徑的匿名行情例外、代理信任及連線資源邊界需要人工審核。
+任務狀態：本機視覺驗收已完成；正式公開行情仍未核准。`HUMAN_REVIEW_REQUIRED`：精確路徑的匿名行情例外、代理信任及連線資源邊界需要人工審核。
 
 從 `server/` 執行 `./scripts/start-market-preview.sh`。此入口只啟動本機 PostgreSQL／Redis／Kafka 依賴與各自的 API、前台主機程序；不啟用鏈上觀測或提款執行。開啟：
 
-- BTC：`https://localhost:8088/spot/BTC-USDT`
-- ETH：`https://localhost:8088/spot/ETH-USDT`
+- BTC：`https://localhost/spot/BTC-USDT`
+- ETH：`https://localhost/spot/ETH-USDT`
 
-本機預設憑證為自簽，首次開啟需核對 localhost 後由使用者接受；不修改系統信任庫。亦可透過 `LUMIX_DEV_TLS_CERT`／`LUMIX_DEV_TLS_KEY` 提供已受信任的本機憑證。預設私鑰及日誌置於 git 忽略的 `server/target/market-preview/`，私鑰權限為 `600`。這不替代正式憑證或 Nginx 部署。
+目前本機 gateway 使用 mkcert 建立並信任的 localhost 開發憑證，私鑰放在 git ignore 目錄；這不替代公開網域的正式憑證或 production ingress。
 
-Vite 明確啟用本機 HTTPS，僅代理固定行情 WebSocket 路徑，覆寫傳入的 forwarded headers；API 與 Vite 均只監聽 loopback。前台 8088 仍拒絕 admin API／HTML，後台 8089 仍只處理管理端；帳戶 API 維持 session 驗證。
+Nginx 在本機 443 終結 TLS 並代理固定行情 WebSocket 路徑，覆寫傳入的 forwarded headers；API、前台 8090 與後台 8100 均只監聽 loopback。前台拒絕 admin API／HTML，後台只處理管理端；帳戶 API 維持 session 驗證。
 
 使用者另指定 `/futures/BTC-USDT` 為現貨排版參考，本機視覺驗收版型已改用同一 `TradingWorkspaceLayout`：上方摘要、全寬 K 線、中段左側訂單簿與右側下單區、底部帳戶區。摘要依所選週期呈現真實統計及最佳買賣價，不冒充 24 小時資料或合約指標。下單區停用且無送單 handler；未接入的帳戶資料及成交比例明示尚未提供，沒有模擬餘額、訂單或假成交。
 
@@ -57,7 +57,7 @@ Vite 明確啟用本機 HTTPS，僅代理固定行情 WebSocket 路徑，覆寫�
 - BTC／ETH 桌面與 390px 手機畫面已檢查；瀏覽器只向 LumiX 同源送出請求，無前端第三方連線或 JavaScript 錯誤。
 - 合約版型對齊已檢查 1440／1280／1024／768／390px。1440px 時摘要及 K 線的座標、高度、寬度與合約一致，中段兩欄寬度及起點一致；帳戶與下單的內容高度依實際可用能力呈現。共用骨架抽取前後的合約版型一致；另依使用者指示，合約名稱統一為 `BTCUSDT`／`ETHUSDT`，移除 `-PERP`，修正 `BTC-USDT` 解析後重複拼接 USDT 的問題。
 - 瀏覽器離線後清除舊訂單簿與圖表，恢復網路後重新訂閱並顯示真實資料。
-- 三個 port 的 15 個路由檢查通過：API HTML 回 404、health 回 200，前台拒絕管理頁、管理端拒絕前台 API，redirect 不跨 port；另確認匿名帳戶 API 回 401。驗證時修正既有 Vite 管理端根入口被誤擋的問題，使 `8089/` 導回同埠的 `/admin/login`。
+- API 8080、前台 8090、後台 8100 的路由隔離檢查通過：API HTML 回 404、health 回 200，前台拒絕管理頁、管理端拒絕前台 API，redirect 不跨 port；匿名帳戶 API 回 401，後台根入口導向同埠 `/admin/login`。
 - `npm run typecheck`、`npm run build` 通過；build 仍有既有 bundle 大小提示。
 
 完整 application 啟動另揭露既有 bean 注入錯誤：三個提款服務同時有 runtime 與可控 Clock 建構子，需明確 `@Autowired`；風控計數服務需明確選擇 `stringRedisTemplate`。本次只修正注入選擇，未變更提款業務規則，實際 application 已成功啟動。
@@ -66,10 +66,10 @@ Vite 明確啟用本機 HTTPS，僅代理固定行情 WebSocket 路徑，覆寫�
 
 ## 七週期與共用模板交付（2026-11-19）
 
-狀態：`READY_FOR_LOCAL_VISUAL_REVIEW`；仍屬 P21-R02 後續本機交付，不代表正式行情或 production readiness。
+狀態：本機視覺驗收已完成；不代表正式公開行情或 production readiness。
 
 - 控制列統一為日線／週線／月線／分線，分線下拉只有 1min、5min、15min、60min。現貨與合約共用 `TradingMarketChart`、`TradingChartControls` 及 `ChartPreferences`，舊 `SpotCandleChart` 已移除。
-- 現貨傳入真實來源資料；`FuturesMarketChart` 僅包裝合約頁原有開發資料，仍明示非真實合約行情。模板不載入來源 adapter，也不把 Binance 現貨當成 LumiX 合約成交。
+- 現貨與合約頁都顯示 Binance Spot 參考 K 線；模板不載入來源 adapter，也不把 Binance 現貨當成 LumiX 合約成交或 Binance 永續流動性。
 - 均線可調整週期、顯示開關、取消草稿及恢復預設；偏好以同源 localStorage 保存，頁面／分頁／重新整理同步，只存視覺設定，不存行情、帳戶或憑證。
 - 切換週期時立即移除上一週期圖表，回應綁定週期且忽略舊連線事件；失敗、過期與離線均清除舊圖及價位，恢復後重訂閱。
 - 實際瀏覽器逐一切換七種週期，BTC／ETH 各週期均健康；本次日／週／分線歷史各 320 根，月線各 112 根，來源不補造更早資料。確認星期一週線與月初開盤、共用均線跨頁與重新整理同步、三種非法訂閱回 400、四種寬度與離線恢復。
@@ -78,4 +78,4 @@ Vite 明確啟用本機 HTTPS，僅代理固定行情 WebSocket 路徑，覆寫�
 
 ## 尚待完成
 
-正式 Nginx／TLS 部署驗證、白名單以外的週期及成交資訊、來源斷線／慢速用戶的完整故障演練、跨節點限流、監控與人工審核均未完成。本機視覺驗收不代表正式行情已可用或 production ready。關閉 `LUMIX_BINANCE_MARKET_FEED_ENABLED` 可停止新來源連線及推播端點，不涉及資料庫 migration。
+公開 Nginx／TLS 部署、白名單以外的週期及成交資訊、來源斷線／慢速用戶的完整故障演練、跨節點限流與人工審核仍未完成；集中日誌與本機 Kibana 已建立。本機視覺驗收不代表正式行情已可用或 production ready。關閉 `LUMIX_BINANCE_MARKET_FEED_ENABLED` 可停止新來源連線及推播端點，不涉及資料庫 migration。

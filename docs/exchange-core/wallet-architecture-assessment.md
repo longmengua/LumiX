@@ -1,6 +1,8 @@
 # Wallet Architecture Assessment
 
-評估日期：2026-10-11。範圍為目前 repository 的 application source、baseline migration、設定與本機部署檔；未執行鏈上、提款或 migration。除非另註明，`EXISTS` 代表可在 application runtime 找到接線，而非只存在 schema、interface 或 pure policy。
+狀態：`ARCHIVED_HISTORICAL_SNAPSHOT`。本檔保留 2026-10-11 尚未接入提款 runtime 前的稽核證據，不代表目前 repository；其中行號與「未實作」判斷在單一 baseline 合併及提款功能完成後已失效。現在的錢包／提款架構請以 `server/docs/wallet-architecture-after-withdrawal.md`、`server/docs/withdrawal-architecture.md` 與 `server/docs/withdrawal-risk-engine.md` 為準。
+
+原評估範圍為當時的 application source、baseline migration、設定與本機部署檔；未執行鏈上、提款或 migration。以下內容只作歷史追溯。
 
 ## Executive Summary
 
@@ -400,15 +402,15 @@ No evidence supports a claim that the application stores a production raw privat
 
 ## Suggested Next Architecture Changes
 
-### Phase 1 — request and reserve boundary
+### Step 1 — request and reserve boundary
 
 Add a persisted authenticated withdrawal request API/orchestrator. Atomically: claim request idempotency, read user restriction/new-device evidence, validate destination/network/asset, create a true `WITHDRAWAL_HOLD`, record audit, and persist the expected state. This needs a new bridge/refactor because current reservation hold is explicitly `ADMIN_HOLD`; reuse its transaction/locking/idempotency pattern, not its hard-coded semantics.
 
-### Phase 2 — controlled decision boundary
+### Step 2 — controlled decision boundary
 
 Persist risk evidence/decisions and review tasks; bind reviewers to actual RBAC and an immutable request snapshot. Add transaction-specific re-authentication and policy-backed limits/address controls. The existing P24/P25 immutable policies can become domain rules, but cannot substitute for persistence, authorization or audit writes.
 
-### Phase 3 — isolated execution and reconciliation
+### Step 3 — isolated execution and reconciliation
 
 Introduce a separately authorized signer gateway/custody adapter, then provider-specific broadcast and chain-confirmation worker. The gateway must consume the existing intent digest and idempotency semantics but own provider timeout/ambiguous-result reconciliation. No local key/HSM/MPC implementation should be selected before a provider/security task authorizes it. Deposit observer/credit must remain a separate ordered track.
 

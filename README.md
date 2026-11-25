@@ -10,4 +10,6 @@ AI 開發入口為 `AGENTS.md`、`AI_AGENT.md` 與 `docs/ai/AI_CONTEXT_ROUTING.m
 
 本機 Docker Compose 啟動 PostgreSQL、Redis、Kafka。API、前台、後台以主機程序分別使用可配置埠（預設 8080、8090、8100）；Nginx 預設在標準 HTTPS 443 提供入口。啟動細節見 `docs/operations/compose-runtime-foundation.md`。
 
+資料庫結構由單一 `server/src/main/resources/db/migration/V001__baseline.sql` 建立；`db/init.sql` 是結構入口，`db/seed.sql` 是可重複執行的初始配置，只有 `LUMIX_DATABASE_SEED_ENABLED=true` 才會在 Flyway 後執行。現貨與合約接單開關保存在資料庫 `trading_runtime_settings`，預設都關閉，不使用環境變數控制。
+
 集中日誌使用可選的 ELK observability profile：Spring Boot ECS JSON → Filebeat → Logstash → Elasticsearch → Kibana。啟動與查詢方式見 `docs/operations/local-observability.md`。

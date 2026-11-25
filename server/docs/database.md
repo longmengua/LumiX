@@ -6,8 +6,8 @@
 
 - Migration SQL 放在 `server/src/main/resources/db/migration/`。
 - Migration 名稱必須可預測且有版本。
-- 已共享的 migration 不可在原檔上修改。
-- 新的資料庫變更必須使用新的 migration 檔。
+- 目前尚未上線，2026-11-25 已將原 V001–V015 收斂為單一 `V001__baseline.sql`；舊版號不是現行升級路徑。
+- 此 baseline 一旦部署至共享或正式環境即不可再改寫，之後的 schema 變更必須新增版本化 migration。
 
 ## 範圍界線
 
@@ -15,7 +15,7 @@
 
 ## Baseline 與工具行為
 
-- 目前專案尚未上線，schema 以單一 `V001__baseline.sql` 建立完整最終狀態；未來 schema 變更仍應使用版本化 Flyway migration。一旦 migration 已共享或已上線，才採 append-only 演進。
+- 目前 schema 以單一 `V001__baseline.sql` 建立完整最終狀態；Flyway 在空資料庫只應看見並套用這一筆 migration。
 - migration SQL 必須清楚標示 precision、constraint 與 foreign key；認證 migration 不得保存明文密碼、session secret 或密碼重設 token，只允許不可逆雜湊。
 - baseline 只描述目前 schema，不保留舊版本升級或歷史 compatibility 的中間步驟。
 - Flyway 從 application classpath 的 `server/src/main/resources/db/migration/` 掃描 SQL migration；該目錄只存放可執行 SQL，說明文件統一留在本目錄。

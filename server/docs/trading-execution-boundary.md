@@ -1,179 +1,65 @@
-# 現貨與合約客戶下單實作邊界
+# 交易執行邊界
 
-## 2026-11-22 外部流動性方向施工
+狀態日期：2026-11-25<br>
+狀態：功能已具備，但接單預設關閉；正式開放仍需人工核准（`HUMAN_REVIEW_REQUIRED`）。
 
-### 外部送單 Proxy 與 Demo provider
+## 權威模型
 
-外部送單統一經 `ExternalOrderProxy` 根據後端政策指定的來源名稱交給對應 `ExternalOrderRouter`，例如 DEMO 交給模擬器、未來 BINANCE 交給 Binance adapter；客戶不選擇此值。新增交易所時不需改動呼叫端的 provider-neutral intent／outcome。`Outcome` 統一回傳外部訂單 ID、英文 `status`、數字 `statusCode`、成交量、成交名義額、成交均價、英文 `reason` 與數字 `reasonCode`；所有 `Code` 欄位一律為穩定數字。
+- LumiX 目前以站內客戶委託優先撮合，現貨與合約命令都由後端在單一資料庫交易內完成委託、成交、預留／釋放與帳本紀錄。
+- Binance 公開行情只作為市場資料與風控參考；目前沒有 Binance API key、正式外部帳戶授權或正式送單 adapter，因此不得宣稱已在 Binance 對沖。
+- 外部整合統一走 provider-neutral 的 `ExternalOrderProxy`／`ExternalOrderRouter`。目前只有後端 Demo router；未來新增 Binance 或其他來源時，呼叫端仍使用相同 intent／outcome 契約。
+- 所有回應的 `status`／`reason` 是英文描述，`statusCode`／`reasonCode` 是穩定數字代碼。
 
-資料庫表 `external_order_proxy_settings` 保存設定鍵 `LUMIX_TRADING_EXTERNAL_PROXY_DEMO_ENABLED`，V014 初始值為 `true`。Proxy 每次送單、查單及列出情境前都讀取此設定，因此切換後不需重啟；關閉時 Demo API 回不存在語意。Demo API 另限制直接 loopback request 與 `LUMIX_TRADING_ALLOWED_ORIGIN`，結果只存程序記憶體，不建立 LumiX order、trade、reservation 或 ledger。支援 RANDOM、NORMAL、DELAYED、PARTIAL、SLIPPAGE_FILLED、SLIPPAGE_REJECTED、VENUE_REJECTED、UNKNOWN_TIMEOUT；DELAYED 初次回 PENDING，三秒後以同一 clientOrderId 查詢才回確定成交。同一 clientOrderId 與相同 intent 重送維持同一結果，不同 intent 則拒絕。
+## 現貨能力
 
-使用者核定採「LumiX 站內客戶互撮＋未成交量送 Binance」兩種模式，不採平台先以自有庫存成交再對沖。站內按價格及時間優先撮合；剩餘量只有外部實際成交後才可確認客戶成交、持倉與帳本。現貨與合約市價 IOC 現已可由客戶選百分比或每單位固定 USDT 滑價界線，並受後台政策上限約束；平倉的未成交部分保留為未平倉位。外部交易 API key 尚未提供，因此現有撮合 runtime **仍只接站內委託**，公開 Binance 深度只作參考或路由價預覽，不保證可成交。
+- 支援 LIMIT／MARKET、GTC／IOC／FOK、站內撮合、部分成交、撤單、資金預留、雙錄帳與命令冪等。
+- 自成交會拒絕；價格、數量、tick、step、最小名義額與行情時效都由商品及不可變政策驗證。
+- 建立新單使用 `POST /api/v1/trading/spot/orders`；撤單使用 `DELETE /api/v1/trading/spot/orders/{orderId}`，兩者都要求登入、允許的 Origin 與 `Idempotency-Key`。
 
-已建立純報價邊界 `ExternalLiquiditySource`、`ExternalQuotePolicy`、`ExternalQuoteCalculator`，以及尚無實作的 `ExternalOrderRouter`。管理政策支援全站百分比與每單位固定 USDT 兩種價差，幣別可對兩者各自調整；不用的欄位填零，可擇一或合併。來源 ask 向上、bid 向下依商品 tick 取整；顯示量依上層提供的可路由額度與商品 step 截斷。快照過期、商品不符、交叉或倒序深度均不產生可用報價。V012／V013 追加不可變預覽政策與審計；最高管理員可從管理後台的現貨或合約頁籤保存版本。現貨頁讀取公開預覽政策並重算顯示價，但來源數量未保留，現有客戶委託仍只與站內委託成交；合約頁仍顯示 Binance 現貨參考簿，不能冒充 Binance 永續流動性。正式執行須補來源交易授權、客戶與外部訂單關聯、外部狀態恢復、部分成交、資金保留、價差與手續費雙重計收政策及對帳。保證金仍是平台內有帳本與可用額約束的資產記錄，未來出金時依已鎖定與可用額判定，不能把未注資餘額當真實資產。
+## USDT 合約能力
 
-日期：2026-11-21。`HUMAN_REVIEW_REQUIRED`。
+- 支援逐倉、LONG／SHORT 雙向持倉、LIMIT／MARKET、GTC／IOC／FOK、reduce-only、資金預留與持倉事件。
+- 已有版本化風險政策、手動核定 funding rate、標記價／指數價檢查、強平 evidence、保險基金分錄及風險停機狀態。
+- 強平只會使用 LumiX 自有可成交簿；沒有流動性時不會假裝成交。保險基金不足時拒絕虛構兌付。
+- 建立新單使用 `POST /api/v1/trading/futures/orders`；撤單使用 `DELETE /api/v1/trading/futures/orders/{orderId}`。
+- 非 USDT 保證金只保留擴充介面，尚未完成抵押品折算、USDT 兌付池與正式結算。
 
-使用者已要求完成現貨與合約客戶下單；本文件將該需求拆成真實交易 runtime 的施工相依，不將表單可點選或 sandbox 通過視為可交易。已完成現貨 runtime 的本機整合實作與共用前端接線；現貨雙帳戶端到端驗收、實際政策啟用與完整永續 runtime 尚未完成。後續依已確認的產品選項及實際技術相依施工，交易與資金變更仍須保留可驗證證據。
+## 資料庫交易總開關
 
-## 2026-11-22 產品選擇與施工狀態
+- `trading_runtime_settings` 是接單開關的唯一權威來源，包含 `SPOT`、`FUTURES`，baseline 與 seed 預設皆為 `enabled=false`。
+- `GET /api/admin/v1/trading/runtime-settings` 讀取目前設定；`PUT /api/admin/v1/trading/runtime-settings/{kind}` 以 `expectedVersion` 更新並在同一交易寫入 audit log。
+- 新單、風險政策命令與合約強平掃描每次都重新讀取資料庫，不依賴前端狀態或環境變數。
+- 關閉新單時仍允許撤單，避免鎖住既有委託與預留資金。
+- 即使開關打開，缺少啟用商品、完整政策、新鮮行情、可用帳戶或已注資保險基金時仍拒絕接單。
 
-使用者核定現貨及合約均由 LumiX 使用者互相撮合；首批現貨為 BTC/USDT、ETH/USDT，合約為 BTCUSDT、ETHUSDT USDT 永續逐倉，且允許同帳戶同商品同時持有 LONG 與 SHORT。費率、槓桿、維持保證金及風險限額採版本化政策，實際啟用數值待核定。後端接入具名標記／指數價格，過期時拒絕新增風險。強平使用 LumiX 委託簿，穿倉由預先注資的保險基金承擔，基金不足或缺流動性時停止增加風險。交付目標為本機完整交易閉環，正式環境啟用另行審核。
+## 外部報價與送單 Proxy
 
-保證金初始使用 USDT，未來可由後台政策切換其他抵押幣別。其他幣別使用後端行情價格及後台設定的折算率，必須保存來源、政策版本及有效期限；已實現盈虧與資金費用仍以 USDT 結算。使用者選擇由平台專用 USDT 帳戶預先注資保險基金；非 USDT 抵押品的虧損兌付使用有額度的 USDT 池，按核定匯率扣抵押品。兩者都須有實際資金、額度、不可變帳本及對帳證據，欠缺時不得啟用相應路徑。
+- 報價邊界由 `ExternalLiquiditySource`、`ExternalQuotePolicy` 與 `ExternalQuoteCalculator` 組成。政策可設定全站百分比、每單位固定 USDT 以及幣別調整；ask 向上、bid 向下依商品 tick 取整。
+- 過期、商品不符、交叉或倒序的外部深度不會產生可用報價。現貨頁可使用公開預覽政策重算顯示價，但目前客戶委託仍只和站內委託成交。
+- `external_order_proxy_settings` 保存 Demo 開關，預設為 `true`。管理員以 `GET`／`PUT /api/admin/v1/trading/external-order-proxy/settings` 讀寫，更新具 optimistic version 與 audit log。
+- Demo API 位於 `/api/v1/trading/external-proxy/demo`，只允許 loopback 與指定 Origin。支援 RANDOM、NORMAL、DELAYED、PARTIAL、SLIPPAGE_FILLED、SLIPPAGE_REJECTED、VENUE_REJECTED、UNKNOWN_TIMEOUT。
+- Demo 結果只存在程序記憶體，不建立正式 LumiX order、trade、reservation 或 ledger；它只用來演練後端體驗，不能當作外部成交證據。
 
-目前新增雙向持倉的純成交計算、抵押價值換算與 V005 持倉結構；這些尚未接到客戶命令。V006 追加不可變合約風險政策及獨立兌付池帳戶用途。V001–V006 已在隔離的嵌入式 PostgreSQL 執行 migration 測試通過；既有現貨資金整合 7 項案例也在專用 `lumix_test` PostgreSQL 重跑通過。本機 Docker Compose 的 PostgreSQL、Redis、Kafka 已啟動且健康；真實前後台與雙帳號瀏覽器端到端驗收仍待進行。
+## 行情來源
 
-`FuturesRiskPolicy` 驗證完整商品、保證金、行情、funding、保險基金及有額度的兌付池欄位，並拒絕維持保證金高於或等於初始保證金的配置。最高管理員合約政策 API 可逐版追加政策與稽核／outbox，同版重送只接受相同內容，核對專用 USDT 系統帳戶；發佈後商品保持 HALTED，不提供開倉入口。Binance USDⓈ-M 公開行情為已選上游，正式使用條款由使用者核對。
+- 前台現貨訂單簿與 K 線使用 Binance Spot 公開行情；BTC／ETH K 線已接入前台。
+- 合約頁目前仍顯示 Binance Spot 參考簿與 K 線，不得標示為 Binance 永續流動性。
+- 後端風控另接 Binance USDⓈ-M 公開標記價／指數價，並執行來源名稱、商品與時效檢查。
 
-接單前風控新增 `FuturesOrderRiskGate`：以具名 mark／index 的來源及時效、委託價和標記價較高者、明確槓桿、持倉名義額上限、手續費與隔離保證金核算；非 USDT 抵押另檢查後端匯率時效、政策折算率、兌付池額度及真實可用餘額。此為純決策，尚未與下單、預留及持倉交易接線，不表示合約可開倉。逐倉政策現亦指定獨立保證金池帳戶，與保險／兌付池分離。
+## 目前本機資料狀態
 
-V007 為合約委託保存不可變 LONG／SHORT 方向、reduce-only 與槓桿身分，並保存成交後隔離抵押品。內部 `FuturesHedgePositionStore` 在同交易中核對真實成交、同版風險政策、TRADE journal 的 USDT 分錄，再以版本檢查更新持倉及追加事件。隔離資料庫測試以雙帳戶真實 ledger journal 驗證開倉、部分平倉、全平倉、損益、資金守恆與重送。
+- 接單總開關：SPOT=false、FUTURES=false。
+- seed 只提供基礎資產、BTC-USDT／ETH-USDT 市場、系統帳戶與本機管理員；不自動創造客戶資金、現貨執行政策、合約風險政策或合約商品。
+- 因此程式能力存在，但全新本機資料庫預設不能直接建立客戶交易。必須先完成資金、政策與商品配置，再由最高管理員明確開啟對應市場。
 
-V008 增加合約命令獨立冪等 scope；`FuturesTradingExecutionService` 已接 USDT 逐倉 LIMIT／MARKET、GTC／IOC／FOK 的真實客戶簿撮合、開倉預留、reduce-only 平倉、USDT 帳本、持倉事件與安全撤單。雙帳戶 PostgreSQL 測試覆蓋開／平倉、獲利與虧損、保證金釋放、重送、FOK、自成交及過期行情。合約仍預設關閉，未經完整 funding／強平／保險及非 USDT 結算驗證不得切成 ACTIVE。
+## Migration 與驗證
 
-V009 增加不可變 funding 週期與逐持倉分配；最高管理員須逐期指定政策上限內的費率，後端以具名且新鮮的標記價執行。正費率 LONG 付 SHORT，負費率反向；付款方隔離保證金下降、收款方收到自由 USDT，雙錄帳與持倉版本在同一交易完成，重送按商品／時點冪等。測試已將 funding 插入兩帳戶開／平倉閉環。自動費率來源、強平與穿倉兌付仍未完成，不能以本機通過宣稱合約可正式接單。
+- 完整 schema 已在 2026-11-25 合併至單一 `V001__baseline.sql`；`db/init.sql` 只引用該 baseline，初始配置由可重複執行的 `db/seed.sql` 負責。
+- 現貨與 USDT 合約的整合測試覆蓋開／平倉、獲利與虧損、funding、強平、保證金釋放、FOK、自成交、過期行情、冪等與帳本守恆。
+- 正式上線前仍需另行完成：真實外部送單 adapter、API key 管理、外部訂單持久化與恢復、部分成交對帳、營運注資、容量／故障演練及人工安全審核。
 
-已加入預設關閉的 Binance USDⓈ-M `premiumIndex` 後端接收器，固定 BTCUSDT、ETHUSDT，分別保存 mark／index、來源及接收時間。來源失敗即清除快照，讀取時依政策時效拒絕過期資料；兩項解析／失效測試通過。兩個具名公開 HTTP 端點已在本機實際回應，但接收器尚未接到合約風險決策或完成長時間穩定性驗證。官方介面：https://developers.binance.com/en/docs/catalog/core-trading-derivatives-trading-usd-s-m-futures/api/rest-api/market-data 。
+## 回退原則
 
-## 現有可重用能力與缺口
-
-| 範圍 | 已有程式證據 | 必須補齊的能力 |
-| --- | --- | --- |
-| 現貨頁 | `web/src/features/trading/SpotReferenceMarket.tsx`、`TradingLivePanels.tsx` | 已接真實 API；仍待核定現貨政策及兩帳戶端到端驗收。Binance 參考簿與 LumiX 自有簿分開呈現 |
-| 合約頁 | `TradingWorkspace.tsx` 重用共用真實 API 面板 | 已移除交易路由的 mock 資金／假送單；永續風險閉環未完成，不開倉 |
-| 訂單／成交 schema | `server/src/main/resources/db/migration/V001__baseline.sql` 的 orders、trades | 現貨下單／撤單 Controller 與交易寫入 service 已實作；仍無永續持倉／資金費率 runtime schema |
-| 市場 schema | markets 的 base／quote 唯一，只有價格／數量 scale | V004 新增獨立商品與不可變現貨執行政策，不能以相同 underlying symbol 混合撮合；永續風險政策待實作 |
-| 帳本 | `TransactionalLedgerPostingService`、`LedgerBalanceProjectionUpdater` | 重用 append-only journal 與 projection；驗證跨帳戶鎖定順序、重放及與 reservation 的原子性 |
-| 資產保留 | `ReservationHoldService`、`ReservationCaptureService`、`ReservationReleaseService` | 新增 OrderReservationChangeService 按成交額 partial capture/release，保留未成交及釋放價格改善額；原有其他業務 reservation 入口不變 |
-| 現貨核心 | `trading/core/spot` 的 orderintake／orderbook／matching／settlement | 現有 sandbox 不可直接暴露作客戶資金 runtime，需要持久化順序、撮合、結算與復原 |
-| 合約核心 | `trading/core/futures` 的 order／margin／position 等 pure gate | 缺持久化訂單、持倉、開平倉、PnL 入帳、資金費率、風險監控與強平／穿倉處理 |
-
-既有產品規格：`docs/product/trading-product-scope.md` 指定現貨限價、風控就緒後市價，以及 USDT 永續、逐倉；`fee-and-revenue-policy.md` 指定 quote 計費方向，但沒有可直接啟用的費率、取整與最低費用政策。sandbox 的槓桿型別或 UI 選項不是正式政策。
-
-## 不依賴具體費率的共同不變量
-
-1. owner 只取自登入 principal；browser 不可指定其他 user／account 身分，查詢、撤單及平倉均再次檢查。
-2. 價格、數量、費率、保證金與盈虧使用受限長度的十進位字串，後端 BigDecimal；禁止 binary floating point 參與資金計算。過大 exponent、非正數、超 scale／precision／步進均拒絕。
-3. 下單及撤單具 owner scope 的 durable idempotency；同鍵不同 payload 拒絕，相同數值不同尾零須有一致 canonical fingerprint，重試不可重複 hold 或成交。
-4. 接單前檢查 user／account／asset／instrument／policy 狀態、交易限制、可用額與請求 admission；狀態與餘額在交易內重新檢查。
-5. 新單必須先保留資金，才能進入可撮合狀態；ACCEPTED／OPEN 不代表 FILLED。無對手單時掛單或依 IOC／FOK 規格處理，禁止依 Binance 價格假造成交。
-6. 價格優先、明確持久化序列的時間優先；maker 價成交；同一 owner 自成交政策明確，不能只比較不同 account ID。市場暫停阻擋新單／撮合，但不任意阻擋 owner 安全撤單。
-7. 撮合結果、partial capture、找零釋放、ledger、訂單數量狀態、trade、audit／outbox 同交易提交或具可驗證重放；不能先送成功、事後再扣款。
-8. 每資產 journal 守恆；projection 保持 total = available + locked，available／remaining 不可負數。費率與風險 policy 版本須保留在 execution evidence，不能重放時套用新政策。
-9. 所有失敗均回滾或保留可對帳的 pending evidence；restart 不可遺失 OPEN 訂單或有效 reservation。跨市場並行也必須避免同帳戶超額花費。
-10. 有限未結委託數、請求大小、單筆最大量、交易時間與併發預算；cookie 認證命令具明確的跨站請求防護及同源邊界。
-
-## 建議施工順序與驗收
-
-### D1：共用 admission、商品與資金保留
-
-- 確認交易對手模型及政策來源；建立獨立現貨／永續 instrument identity，保留既有 schema 所有未確認用途的物件，不新增舊 schema adapter 或 dual-write。
-- 設計十進位輸入、owner scope、版本化商品／fee／risk 規格、durable command idempotency、有限命令 admission 與錯誤契約。
-- 擴充 partial reservation consume／release 與原子稽核；明確驗證與既有提款、劃轉、資產修正共用資產時的鎖順序。單一市場序列化不能取代跨市場 balance lock。
-- 查詢來自真實 DB。缺商品／政策／授權／可用資產即拒絕，沒有 runtime fixture 或預設虛構金額。
-
-驗收：同一餘額並行 hold 不超支、partial capture 不消耗剩餘委託資金、重送不重複、owner 隔離、失敗全回滾。
-
-### D2：現貨交易完整閉環
-
-```text
-登入客戶 -> 下單驗證／冪等 -> hold -> 持久化委託與順序
-  -> LumiX 真實買賣委託撮合 -> 部分／全部成交
-  -> 買方 quote 與賣方 base 扣用
-  -> base／quote／fee 守恆入帳 -> 更新餘額與委託
-  -> 客戶查詢委託／成交／資產
-撤單 -> owner／狀態／競態檢查 -> 釋放僅剩餘 hold -> durable CANCELLED evidence
-```
-
-先落地限價與撤單；市價需價格保護、可計算的預留上界、slippage、深度不足及 IOC／FOK 行為明確後接入，不將可掛單描述成所有 order types 已完成。公開簿若展示 LumiX 委託，必須與外部參考深度分別標示。
-
-驗收：兩個實際帳號以已授權的本機資產入帳建立雙邊資金，完成掛單、部分成交、價格改善、撤單、重送、斷線查回與重新啟動；ledger／reservation／orders／trades 逐項對帳。整合測試 fixture 僅存在 test source set。
-
-### D3：USDT 永續逐倉風險與結算
-
-先確認 client-to-client 或平台對手盤模型。兩者的資本來源、PnL 債務及清算責任不同，不可共用未審核假設。
-
-- 持久化合約規格、單／雙向持倉模式、開平倉／reduce-only、委託保證金與持倉保證金；每次成交後檢查 exposure 與新保證金。
-- 已實現盈虧透過守恆 journal 入帳，未實現盈虧與 authoritative 餘額分開。帳戶沒有可支付來源時不能為贏方憑空產生可提領資產。
-- 標記／指數價格須有具名後端資料來源、來源／接收時間、freshness、異常／斷線策略；Binance 現貨最後價不自動等於永續標記價格。
-- 明確資金費率 interval、rate 計算／來源、cap、快照與冪等扣收；資金費率是產品必要能力，不能設定固定零後宣稱完整。
-- 維持保證金、強平觸發、清算成交流動性、保險／穿倉責任與無流動性停機流程須形成可執行政策；不能只取消委託冒充強平完成。
-- 對帳、恢復與行情失效時的減倉／風險處置必須先於客戶可開新倉。
-
-驗收：開倉／加倉／減倉／平倉、費用、PnL、funding、限制槓桿、自成交、reduce-only 競態、價格失效、強平及穿倉路徑，均有受控可重現證據；沒有完整風險閉環不可開放客戶持倉。
-
-### D4：客戶 UI、端到端與交付
-
-- 重用共用版型、圖表與元件；現貨與合約表單改接各自 authoritative API，不混用 mock balance 或委託簿。
-- 數量／名義額／保證金預估使用精確 decimal；server 回傳 authoritative fee／margin。等待、拒絕、部分成交、撤單失敗與 session 失效明確呈現。
-- 不因資產修正成功就宣稱下單可用；完整顯示可用／鎖定／持倉資料，過期時不能繼續用舊資產預估送單。
-- 同步 `docs/ai/LUMIX_UI_GOVERNANCE.md` 與 `LUMIX_UI_IMPLEMENTATION.md`，執行既有前端 typecheck／build、適當寬度及兩帳戶端到端驗收。
-- 每個完整交付單位保留 HUMAN_REVIEW_REQUIRED、測試／回滾證據與獨立 commit／push；不把下一個未完成單位當成已交付。
-
-## 必須明確的產品參數
-
-已透過問題請求使用者確認：
-
-- 現貨與永續由 LumiX 使用者互相撮合，或平台擔任對手盤。
-- maker／taker 費率、最低費用與 rounding；若本機測試採零費率，需明確同意，且不代表正式 fee policy。
-- 永續逐倉槓桿上限、維持保證金與風險限額、標記／指數價來源、資金費率及清算／穿倉政策。可先擬建議供審閱，但不得從 sandbox 數字自行提升為正式規則。
-
-必要 runtime 測試可依本次任務授權直接新增：資金守恆、超支、冪等、partial fill／cancel race、owner scope、margin／PnL／funding／liquidation。既有 pure sandbox 測試不重複涵蓋這些；交易規格演進需同步維護預期結果。
-
-## Schema、測試與回滾原則
-
-已建立 V004__trading_execution.sql，依序套於 V001–V003 後；已在隔離 PostgreSQL 測試庫驗證，尚未對開發／正式資料庫套用。不變更已套用 baseline。不得以此次需求推定需要支援歷史 schema 升級或刪除現有物件。migration 順序為商品／版本化政策與執行關聯，再持倉／資金費率／清算 evidence，最後才開通相關命令；實際順序須依最終核定模型重新審查。
-
-回滾先停止接新單、保留查詢／安全撤單與對帳；已有持倉時不得直接停掉風險監控。資料保留，ledger 僅能追加修正，不 DROP 訂單／成交／持倉或刪除使用者資金。新 schema 尚無業務資料時才可依核定 rollback 順序退回。
-
-純規則單元測試可離線；MockMvc 驗證公開 API owner／冪等／錯誤契約；資金交易、鎖及原子性必須使用現有隔離 PostgreSQL 測試框架，不以 mocked JdbcTemplate 證明並行資金安全。既有 `JdbcDataSource` 會重建專用 `lumix_test` 測試 schema，因此執行前確認測試 endpoint，不能對使用者開發或正式 DB 操作。
-
-不以目前設計文件表示完成下單。production readiness 與正式 launch 仍受權威 readiness gates 及人類簽核限制。
-
-本次基線驗證（2026-11-21）：
-
-```sh
-./mvnw --offline '-Dtest=SpotSandboxOrderIntakePolicyTest,SpotSandboxMatchingPolicyTest,SpotSandboxSettlementPolicyTest,FuturesOrderPlacementGateTest,FuturesSandboxMatchingGateTest,IsolatedMarginCheckGateTest' test
-```
-
-歷史基線實際執行 32 項，0 failures／errors／skipped；僅證明既有 pure sandbox 規則。以下另記本次新增 runtime 證據；未修改使用者開發資料。
-
-## 2026-11-21 實作與實際驗證紀錄
-
-狀態：`SPOT_RUNTIME_AND_SHARED_UI_IMPLEMENTED_PENDING_POLICY_AND_END_TO_END`。`HUMAN_REVIEW_REQUIRED`。
-
-- D1 已實作：獨立 instrument、不可變政策版本、canonical decimal／冪等、持久化委託序號、partial reservation、owner 查詢與命令來源 gate。現貨採政策明確指定的 CLIENT_TO_CLIENT；不預設實際費率、不預設啟用商品。交易先取全域 transaction advisory lock，再鎖受影響帳戶及 projection；ledger updater 先鎖 projection 才重算，避免等鎖前的舊 SUM 覆蓋新入帳。
-- D2 後端已實作：LIMIT GTC／IOC／FOK、具明確 slippage 保護的 MARKET IOC／FOK、maker 價與價格／持久化序號優先、拒絕自成交、真實 base／quote／fee 守恆、找零釋放、owner 撤單。單命令最多 100 個對手單，超出預算的 GTC 全回滾；沒有外部參考簿成交。
-- D3 未實作：永續 margin、position、PnL、funding、mark／index provider、liquidation／insurance／recovery。交易對手責任及具體政策待明確；目前 API 明示 FUTURES_RISK_RUNTIME_UNAVAILABLE，無開倉入口。
-- D4 已接線但未完整驗收：兩種頁面重用 API 面板，顯示真實餘額／委託／成交／自有簿；前端沒有 mock balance 或本地假成功。外部圖表明示 Binance 現貨參考，不能當作永續 mark。仍待真實兩帳號、核定政策與資產的端到端驗收。
-
-API：
-
-- `GET /api/v1/trading/{kind}/orders`、`GET /{orderId}`：owner-only 委託分頁／明細。
-- `GET /api/v1/trading/{kind}/workspace?market=BTC-USDT`：primary 一致快照的餘額、最近本人成交與 LumiX 聚合簿。無 projection 時回 null，不能假定有資金。
-- `GET /api/v1/trading/{kind}/configuration?market=BTC-USDT`：後端能力及 decimal string 商品規格／費率。沒有完整政策時禁止新單。
-- `POST /api/v1/trading/spot/orders`：最多 4096 bytes JSON，金額必須 JSON string，未知欄位拒絕，必須 `Idempotency-Key`、精確 Origin 與 `X-LumiX-Intent: trading-command`。
-- `DELETE /api/v1/trading/spot/orders/{orderId}`：相同來源與冪等 gate；停止新單不阻擋安全撤單。
-- `POST /api/admin/v1/trading/spot/policies`：最高管理員且精確 admin Origin／`X-LumiX-Intent: trading-policy`，最多 16384 bytes。完整政策逐版本追加，同版異內容拒絕，有 OPEN 單時不能換規格；同交易寫 ADMIN audit/outbox。必要時只建立空的具名收費帳戶，不產生資金。
-
-啟用設定：現貨總開關保存於 `trading_runtime_settings` 且預設 false；`lumix.trading.allowed-origin` 與 `lumix.trading.admin-allowed-origin` 預設空，缺值拒絕命令。政策發佈還需 existing ACTIVE market／assets、明確 CLIENT_TO_CLIENT、費率／取整／slippage／數量限制及收費帳戶。尚未核定產品政策，未啟用實際下單。
-
-驗證：
-
-- PostgreSQL 真實整合及 HTTP／數值單元測試共 31 個不同案例通過：現貨 7、partial reservation 10、query HTTP 3、command HTTP 4、decimal admission 4、ledger 1、internal transfer 2。最後整組 30 項通過後，新增的價格／時間優先案例與全部 7 項現貨測試再跑通過。fixture 僅在 test source set，不被 application 載入。
-- `npm run typecheck`、`npm run build` 通過；既有 bundle size warning 仍在。
-- `web/tests/trading-command-boundary.cjs` 使用僅存在測試 source 的 route fixture，驗證非確定送單同鍵重試、decimal string、1440／768／390px、手機完整表格捲動、合約 gate，零 page errors。這不是兩個真實帳戶的端到端成交證據。
-- 暫時啟動前台做瀏覽器驗證，驗證後已停止；未啟動 API／admin，未啟用交易政策或存入開發資產。
-
-回退：先將資料庫 SPOT 開關關閉；保留 owner 查詢與來源設定下的安全撤單。已有委託／成交的 V004 不可 DROP；ledger 修正只能 append。policy／trade execution evidence 禁止 UPDATE／DELETE。永續風險尚未啟用，沒有持倉可停止監控的暗示。
-
-## 2026-11-22 合約 runtime 進度
-
-V005–V011 已加入雙向逐倉持倉、版本化風險政策、成交事件、funding、強平事件與獨立保險基金分錄。USDT 保證金的雙帳戶開平倉、funding、穿倉強平與帳本守恆已在隔離 PostgreSQL 測試通過。強平從新鮮 Binance USDⓈ-M 標記價判斷權益，僅送出 LumiX 自有簿 reduce-only 市價 IOC；沒有可成交流動性時不宣稱平倉成功。強平以真實保險基金餘額承擔缺口，餘額不足則拒絕結算。無對手盤或資金不足時，商品轉為 REDUCE_ONLY、取消既有開倉委託並保留減倉與風險巡檢。啟用商品前檢查完整 USDT 政策、即時行情與已注資保險帳戶，停用時不可遺留未平持倉或開單。
-
-資料庫 FUTURES 總開關預設 false；啟用後每五秒巡檢 ACTIVE 商品的逐倉持倉。管理端可使用 `POST /api/admin/v1/trading/futures/instruments/status` 切換商品狀態，並以 `POST /api/admin/v1/trading/futures/liquidations` 觸發重新評估的強平。客戶端可查 `GET /api/v1/trading/futures/reference`、共同 workspace 的持倉資料與共用委託 API。所有行情失效時新增風險都停止；既有只減倉仍需 LumiX 實際對手單。
-
-目前未完成非 USDT 保證金的兌付池結算與折算率管理，該類政策只能保存為 HALTED，無法啟用。funding 費率仍由最高管理員按政策時鐘逐期核定，尚無自動費率計算來源。正式費率／風險政策與部署驗收尚未核定，不能視為正式上線就緒。
-
-2026-11-22 隔離瀏覽器驗收：專用 `lumix_e2e` PostgreSQL 資料庫以 test source fixture 建立真實雙帳戶資金與 session，API 8080、前台 8088、後台 8089 分別啟動。Google Chrome 前台經真實 HTTP 完成現貨一筆互撮及合約開／平兩筆互撮；後台經具權限政策查詢顯示同版政策。實際 ledger 對帳 BTC、USDT 淨額均為 0，合約未平持倉數為 0。Binance USDⓈ-M 公開標記／指數來源在本機接通；有界來源時鐘偏差處置後驗收通過。此驗收不替代非 USDT 兌付、正式政策核定或正式部署驗收。
+- 先在資料庫關閉 SPOT／FUTURES 新單，保留登入查詢、撤單、減倉與必要風險巡檢。
+- 已產生的 order、trade、position event、policy、audit 與 ledger evidence 不可刪改；帳務修正只能追加反向或補正分錄。
+- Demo Proxy 可獨立關閉，不影響站內撤單；關閉後不得再接受新的 Demo 送單。
