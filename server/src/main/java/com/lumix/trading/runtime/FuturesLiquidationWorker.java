@@ -3,7 +3,6 @@ package com.lumix.trading.runtime;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -12,22 +11,23 @@ import org.springframework.stereotype.Component;
 /** 已啟用合約的逐倉風險巡檢；每次執行由結算服務重讀標記價與持倉。 */
 @Component
 @Profile("infrastructure")
-@ConditionalOnProperty(name="lumix.trading.futures-enabled",havingValue="true")
 public class FuturesLiquidationWorker {
     private static final Logger log=LoggerFactory.getLogger(FuturesLiquidationWorker.class);
     private final JdbcTemplate jdbc;
     private final FuturesTradingExecutionService trading;
     private final FuturesInstrumentStatusService statuses;
+    private final TradingRuntimeSettingsService settings;
 
     public FuturesLiquidationWorker(JdbcTemplate jdbc,FuturesTradingExecutionService trading,
-            FuturesInstrumentStatusService statuses){
-        this.jdbc=jdbc;this.trading=trading;this.statuses=statuses;
+            FuturesInstrumentStatusService statuses,TradingRuntimeSettingsService settings){
+        this.jdbc=jdbc;this.trading=trading;this.statuses=statuses;this.settings=settings;
     }
 
     private record Candidate(String owner,String market,String side,String position){}
 
     @Scheduled(fixedDelayString="${LUMIX_FUTURES_LIQUIDATION_POLL_DELAY:PT5S}")
     public void scan(){
+        if(!settings.enabled("futures"))return;
         List<Candidate> positions=jdbc.query("SELECT a.user_id,i.market_symbol,p.position_side,"
                 + "p.account_id FROM futures_hedge_positions p "
                 + "JOIN accounts a ON a.account_id=p.account_id "

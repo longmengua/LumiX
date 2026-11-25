@@ -38,3 +38,8 @@ ON CONFLICT (user_id) DO NOTHING;
 INSERT INTO external_order_proxy_settings (setting_key, enabled, version, updated_by)
 VALUES ('LUMIX_TRADING_EXTERNAL_PROXY_DEMO_ENABLED', TRUE, 1, NULL)
 ON CONFLICT (setting_key) DO NOTHING;
+
+INSERT INTO trading_runtime_settings (trading_kind, enabled, version, updated_by) VALUES
+    ('SPOT', FALSE, 1, NULL),
+    ('FUTURES', FALSE, 1, NULL)
+ON CONFLICT (trading_kind) DO NOTHING;

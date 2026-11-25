@@ -8,7 +8,6 @@ import com.lumix.infrastructure.security.ApiAuthenticationFilter;
 import com.lumix.user.auth.domain.AuthenticatedUser;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -27,14 +26,11 @@ public class FuturesTradingCommandController {
     private final FuturesTradingExecutionService service;
     private final TradingCommandSecurity security;
     private final ObjectMapper json;
-    private final boolean enabled;
 
     public FuturesTradingCommandController(FuturesTradingExecutionService service,
-            TradingCommandSecurity security, ObjectMapper json,
-            @Value("${lumix.trading.futures-enabled:false}") boolean enabled) {
+            TradingCommandSecurity security, ObjectMapper json) {
         this.service = service;
         this.security = security;
-        this.enabled = enabled;
         this.json = json.copy().disable(com.fasterxml.jackson.databind.MapperFeature.ALLOW_COERCION_OF_SCALARS)
                 .enable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
                 .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
@@ -51,8 +47,7 @@ public class FuturesTradingCommandController {
     public ResponseEntity<TradingOrderQueryService.OrderView> place(
             @RequestAttribute(ApiAuthenticationFilter.AUTHENTICATED_USER_ATTRIBUTE) AuthenticatedUser actor,
             @RequestHeader("Idempotency-Key") String key, HttpServletRequest request) throws IOException {
-        security.require(request, false);
-        if (!enabled) throw new ApiException(ApiErrorCode.SERVICE_UNAVAILABLE);
+        security.require(request, true, "futures");
         byte[] body = request.getInputStream().readNBytes(4097);
         if (body.length > 4096) throw new IllegalArgumentException("futures order exceeds size limit");
         var command = json.readValue(body, FuturesTradingExecutionService.Command.class);
@@ -65,7 +60,7 @@ public class FuturesTradingCommandController {
             @RequestAttribute(ApiAuthenticationFilter.AUTHENTICATED_USER_ATTRIBUTE) AuthenticatedUser actor,
             @PathVariable String orderId, @RequestHeader("Idempotency-Key") String key,
             HttpServletRequest request) {
-        security.require(request, false);
+        security.require(request, false, "futures");
         if (orderId.length() > 64) throw new IllegalArgumentException("invalid order id");
         return ResponseEntity.ok().header("Cache-Control", "no-store")
                 .body(service.cancel(actor.userId(), orderId, key));

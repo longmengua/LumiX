@@ -34,7 +34,7 @@ public class SpotTradingCommandController {
     public ResponseEntity<TradingOrderQueryService.OrderView> place(
             @RequestAttribute(ApiAuthenticationFilter.AUTHENTICATED_USER_ATTRIBUTE) AuthenticatedUser user,
             @RequestHeader("Idempotency-Key") String key,HttpServletRequest request) throws IOException {
-        security.require(request,true);
+        security.require(request,true,"spot");
         byte[] body=request.getInputStream().readNBytes(4097);
         if(body.length>4096)throw new IllegalArgumentException("order command exceeds size limit");
         var command=json.readValue(body,SpotTradingExecutionService.Command.class);
@@ -46,7 +46,7 @@ public class SpotTradingCommandController {
     public ResponseEntity<TradingOrderQueryService.OrderView> cancel(
             @RequestAttribute(ApiAuthenticationFilter.AUTHENTICATED_USER_ATTRIBUTE) AuthenticatedUser user,
             @PathVariable String orderId,@RequestHeader("Idempotency-Key") String key,HttpServletRequest request) {
-        security.require(request,false);
+        security.require(request,false,"spot");
         if(orderId.length()>64)throw new IllegalArgumentException("invalid order id");
         return ResponseEntity.ok().header("Cache-Control","no-store").body(service.cancel(user.userId(),orderId,key));
     }

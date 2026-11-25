@@ -21,3 +21,4 @@
 \ir migration/V012__external_quote_preview_policy.sql
 \ir migration/V013__immutable_external_quote_preview_policy.sql
 \ir migration/V014__external_order_proxy_settings.sql
+\ir migration/V015__trading_runtime_settings.sql

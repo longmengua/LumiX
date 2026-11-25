@@ -157,7 +157,7 @@ API：
 - `DELETE /api/v1/trading/spot/orders/{orderId}`：相同來源與冪等 gate；停止新單不阻擋安全撤單。
 - `POST /api/admin/v1/trading/spot/policies`：最高管理員且精確 admin Origin／`X-LumiX-Intent: trading-policy`，最多 16384 bytes。完整政策逐版本追加，同版異內容拒絕，有 OPEN 單時不能換規格；同交易寫 ADMIN audit/outbox。必要時只建立空的具名收費帳戶，不產生資金。
 
-啟用設定：`lumix.trading.spot-enabled` 預設 false；`lumix.trading.allowed-origin` 與 `lumix.trading.admin-allowed-origin` 預設空，缺值拒絕命令。政策發佈還需 existing ACTIVE market／assets、明確 CLIENT_TO_CLIENT、費率／取整／slippage／數量限制及收費帳戶。尚未核定產品政策，未啟用實際下單。
+啟用設定：現貨總開關保存於 `trading_runtime_settings` 且預設 false；`lumix.trading.allowed-origin` 與 `lumix.trading.admin-allowed-origin` 預設空，缺值拒絕命令。政策發佈還需 existing ACTIVE market／assets、明確 CLIENT_TO_CLIENT、費率／取整／slippage／數量限制及收費帳戶。尚未核定產品政策，未啟用實際下單。
 
 驗證：
 
@@ -166,13 +166,13 @@ API：
 - `web/tests/trading-command-boundary.cjs` 使用僅存在測試 source 的 route fixture，驗證非確定送單同鍵重試、decimal string、1440／768／390px、手機完整表格捲動、合約 gate，零 page errors。這不是兩個真實帳戶的端到端成交證據。
 - 暫時啟動前台做瀏覽器驗證，驗證後已停止；未啟動 API／admin，未啟用交易政策或存入開發資產。
 
-回退：先關閉 spot-enabled；保留 owner 查詢與來源設定下的安全撤單。已有委託／成交的 V004 不可 DROP；ledger 修正只能 append。policy／trade execution evidence 禁止 UPDATE／DELETE。永續風險尚未啟用，沒有持倉可停止監控的暗示。
+回退：先將資料庫 SPOT 開關關閉；保留 owner 查詢與來源設定下的安全撤單。已有委託／成交的 V004 不可 DROP；ledger 修正只能 append。policy／trade execution evidence 禁止 UPDATE／DELETE。永續風險尚未啟用，沒有持倉可停止監控的暗示。
 
 ## 2026-11-22 合約 runtime 進度
 
 V005–V011 已加入雙向逐倉持倉、版本化風險政策、成交事件、funding、強平事件與獨立保險基金分錄。USDT 保證金的雙帳戶開平倉、funding、穿倉強平與帳本守恆已在隔離 PostgreSQL 測試通過。強平從新鮮 Binance USDⓈ-M 標記價判斷權益，僅送出 LumiX 自有簿 reduce-only 市價 IOC；沒有可成交流動性時不宣稱平倉成功。強平以真實保險基金餘額承擔缺口，餘額不足則拒絕結算。無對手盤或資金不足時，商品轉為 REDUCE_ONLY、取消既有開倉委託並保留減倉與風險巡檢。啟用商品前檢查完整 USDT 政策、即時行情與已注資保險帳戶，停用時不可遺留未平持倉或開單。
 
-`lumix.trading.futures-enabled` 預設 false；啟用後每五秒巡檢 ACTIVE 商品的逐倉持倉。管理端可使用 `POST /api/admin/v1/trading/futures/instruments/status` 切換商品狀態，並以 `POST /api/admin/v1/trading/futures/liquidations` 觸發重新評估的強平。客戶端可查 `GET /api/v1/trading/futures/reference`、共同 workspace 的持倉資料與共用委託 API。所有行情失效時新增風險都停止；既有只減倉仍需 LumiX 實際對手單。
+資料庫 FUTURES 總開關預設 false；啟用後每五秒巡檢 ACTIVE 商品的逐倉持倉。管理端可使用 `POST /api/admin/v1/trading/futures/instruments/status` 切換商品狀態，並以 `POST /api/admin/v1/trading/futures/liquidations` 觸發重新評估的強平。客戶端可查 `GET /api/v1/trading/futures/reference`、共同 workspace 的持倉資料與共用委託 API。所有行情失效時新增風險都停止；既有只減倉仍需 LumiX 實際對手單。
 
 目前未完成非 USDT 保證金的兌付池結算與折算率管理，該類政策只能保存為 HALTED，無法啟用。funding 費率仍由最高管理員按政策時鐘逐期核定，尚無自動費率計算來源。正式費率／風險政策與部署驗收尚未核定，不能視為正式上線就緒。
 

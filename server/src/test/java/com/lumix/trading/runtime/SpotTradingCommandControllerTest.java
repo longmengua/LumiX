@@ -28,8 +28,10 @@ class SpotTradingCommandControllerTest {
     @BeforeEach void setup(){service=mock(SpotTradingExecutionService.class);mvc=controller(true);}
     private MockMvc controller(boolean enabled) {
         var authentication=mock(UserAuthenticationService.class);
+        var settings=mock(TradingRuntimeSettingsService.class);
+        when(settings.enabled("spot")).thenReturn(enabled);
         when(authentication.authenticate(any(SessionSecret.class))).thenReturn(new AuthenticatedUser("owner","owner@example.test","Owner"));
-        return MockMvcBuilders.standaloneSetup(new SpotTradingCommandController(service,new TradingCommandSecurity("https://localhost:8088",enabled),new ObjectMapper()))
+        return MockMvcBuilders.standaloneSetup(new SpotTradingCommandController(service,new TradingCommandSecurity("https://localhost:8088",settings),new ObjectMapper()))
                 .setControllerAdvice(new TradingOrderQueryExceptionHandler())
                 .addFilters(new ApiAuthenticationFilter(authentication,new UserAuthenticationProperties(),new ObjectMapper())).build();
     }
