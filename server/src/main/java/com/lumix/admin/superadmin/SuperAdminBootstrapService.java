@@ -78,9 +78,6 @@ public class SuperAdminBootstrapService implements SuperAdminActivationPort {
         if (configuredEmail.isEmpty()) {
             return;
         }
-        Assert.isTrue(passwordResetDelivery.isAvailable(),
-            "最高管理員信箱已設定，但受控 SMTP password-reset transport 尚未啟用");
-
         SuperAdminPrincipal principal = repository.lockSuperAdmin().orElse(null);
         if (principal != null) {
             if (!principal.user().email().equals(configuredEmail)) {
@@ -89,10 +86,14 @@ public class SuperAdminBootstrapService implements SuperAdminActivationPort {
             if (principal.state() == SuperAdminPrincipal.State.ACTIVE) {
                 return;
             }
+            Assert.isTrue(passwordResetDelivery.isAvailable(),
+                "最高管理員尚未啟用，但受控 SMTP password-reset transport 尚未啟用");
             issueActivationLink(principal.user());
             return;
         }
 
+        Assert.isTrue(passwordResetDelivery.isAvailable(),
+            "最高管理員信箱已設定，但受控 SMTP password-reset transport 尚未啟用");
         AuthenticatedUser user = repository.findUserByEmail(configuredEmail).orElseGet(() -> createBootstrapUser(configuredEmail));
         repository.createPendingSuperAdmin(user.userId());
         issueActivationLink(user);

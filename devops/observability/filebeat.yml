@@ -1,0 +1,25 @@
+filebeat.inputs:
+  - type: filestream
+    id: lumix-api-ecs-json
+    enabled: true
+    paths:
+      - /var/log/lumix/lumix-api*.json
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+          overwrite_keys: true
+    fields:
+      observer.type: filebeat
+    fields_under_root: true
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+queue.mem:
+  events: 4096
+  flush.min_events: 256
+  flush.timeout: 1s
+
+logging.level: info
+logging.metrics.enabled: false

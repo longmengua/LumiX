@@ -6,3 +6,4 @@ dist
 *.tsbuildinfo
 devops/gateway/runtime/
 devops/gateway/certs/
+runtime/logs/

@@ -71,6 +71,66 @@ services:
       - "127.0.0.1:${LUMIX_KAFKA_PORT:-9092}:9092"
     networks: [lumix-internal]
 
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:${ELASTIC_STACK_VERSION:-9.5.7}
+    profiles: [observability]
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: ${LUMIX_ELASTICSEARCH_JAVA_OPTS:--Xms512m -Xmx512m}
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:9200/_cluster/health >/dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+    ports:
+      # 本機除錯入口；正式環境不得停用 Elastic security 或直接公開此 port。
+      - "127.0.0.1:${LUMIX_ELASTICSEARCH_PORT:-9200}:9200"
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    networks: [lumix-internal]
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:${ELASTIC_STACK_VERSION:-9.5.7}
+    profiles: [observability]
+    environment:
+      LS_JAVA_OPTS: ${LUMIX_LOGSTASH_JAVA_OPTS:--Xms256m -Xmx256m}
+      XPACK_MONITORING_ENABLED: "false"
+    volumes:
+      - ./devops/observability/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks: [lumix-internal]
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:${ELASTIC_STACK_VERSION:-9.5.7}
+    profiles: [observability]
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./devops/observability/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ./runtime/logs:/var/log/lumix:ro
+      - filebeat-data:/usr/share/filebeat/data
+    depends_on:
+      - logstash
+    networks: [lumix-internal]
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:${ELASTIC_STACK_VERSION:-9.5.7}
+    profiles: [observability]
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      SERVER_HOST: 0.0.0.0
+      TELEMETRY_ENABLED: "false"
+    ports:
+      - "127.0.0.1:${LUMIX_KIBANA_PORT:-5601}:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks: [lumix-internal]
+
 networks:
   lumix-internal:
     driver: bridge
@@ -78,3 +138,5 @@ networks:
 volumes:
   postgres-data:
   redis-data:
+  elasticsearch-data:
+  filebeat-data:

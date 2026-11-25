@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: lumix-api
   # TLS ingress 終結於可信 reverse proxy 時，讓 request.isSecure() 依 X-Forwarded-Proto 正確判斷。
   # 正式環境 server 不得直接對公網暴露，否則 client 可偽造 forwarded header。
   web:
@@ -32,8 +34,15 @@ server:
   forward-headers-strategy: framework
 
 lumix:
+  observability:
+    environment: ${LUMIX_ENV:development}
+    log-directory: ${LUMIX_LOG_DIRECTORY:../runtime/logs}
+    retention-days: ${LUMIX_LOG_RETENTION_DAYS:14}
   database:
     mode: ${LUMIX_DATABASE_MODE:SINGLE}
+    seed:
+      # 正式環境預設關閉；本機需要初始化配置資料時才明確啟用。
+      enabled: ${LUMIX_DATABASE_SEED_ENABLED:false}
     primary:
       jdbc-url: ${LUMIX_DATABASE_PRIMARY_JDBC_URL}
       username: ${LUMIX_DATABASE_PRIMARY_USERNAME}

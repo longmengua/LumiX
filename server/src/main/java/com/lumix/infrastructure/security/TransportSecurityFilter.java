@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.lumix.api.error.ApiErrorCode;
 import com.lumix.api.error.ApiErrorResponse;
 import com.lumix.common.RequestId;
+import com.lumix.infrastructure.observability.RequestCorrelationLoggingFilter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -45,7 +45,7 @@ public class TransportSecurityFilter extends OncePerRequestFilter {
         throws ServletException, IOException {
         applyResponseSecurityHeaders(response);
         if (properties.isRequireHttps() && !request.isSecure()) {
-            writeError(response, ApiErrorCode.TRANSPORT_SECURITY_REQUIRED);
+            writeError(request, response, ApiErrorCode.TRANSPORT_SECURITY_REQUIRED);
             return;
         }
         filterChain.doFilter(request, response);
@@ -60,11 +60,11 @@ public class TransportSecurityFilter extends OncePerRequestFilter {
         response.setHeader("Referrer-Policy", "no-referrer");
     }
 
-    private void writeError(HttpServletResponse response, ApiErrorCode errorCode) throws IOException {
+    private void writeError(HttpServletRequest request, HttpServletResponse response, ApiErrorCode errorCode) throws IOException {
         response.setStatus(errorCode.getHttpStatus());
         response.setContentType("application/json");
         objectMapper.writeValue(response.getOutputStream(), ApiErrorResponse.of(
-            errorCode, new RequestId(UUID.randomUUID().toString()), null
+            errorCode, new RequestId(RequestCorrelationLoggingFilter.requestId(request)), null
         ));
     }
 }

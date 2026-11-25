@@ -8,7 +8,7 @@ COMPLETED_FOR_INFRASTRUCTURE_FOUNDATION
 HUMAN_REVIEW_REQUIRED: yes
 ```
 
-本文件與 root `docker-compose.yml` 建立本機依賴 runtime foundation：PostgreSQL primary、Redis 與單節點 Kafka。`server`、`web`、`admin-web` 均在主機以各自開發程序啟動，不可放入 Compose；這讓前後端變更可即時更新，同時保留三個獨立 service 與 port。它不是 production launch、帳號認證完成或資金服務啟用的證明。
+本文件與 root `docker-compose.yml` 建立本機依賴 runtime foundation：PostgreSQL primary、Redis 與單節點 Kafka。`server`、`web`、`admin-web` 均在主機以各自開發程序啟動，不可放入 Compose；這讓前後端變更可即時更新，同時保留三個獨立 service 與 port。ELK 集中日誌使用獨立 `observability` profile，詳見 `local-observability.md`。它不是 production launch、帳號認證完成或資金服務啟用的證明。
 
 ## 本機／預備環境啟動
 
@@ -18,6 +18,13 @@ cp .env.example .env
 docker compose config
 docker compose up -d postgres redis kafka
 docker compose ps
+```
+
+需要集中查詢 API log 時，另以 PowerShell 啟動本機 observability profile；預設的 `docker compose up` 不會下載或啟動 ELK：
+
+```text
+.\devops\observability\start-local-observability.ps1
+Kibana: http://127.0.0.1:5601
 ```
 
 另開三個主機終端機，分別啟動 Spring Boot、前台 Vite 與後台 Vite。server 必須連到 loopback 的依賴容器；前後台仍透過 Vite proxy 各自同源連到 `server:8080`，不可跨接對方 API：

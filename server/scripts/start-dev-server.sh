@@ -45,5 +45,9 @@ export LUMIX_DATABASE_PRIMARY_USERNAME="${LUMIX_DATABASE_PRIMARY_USERNAME:-${POS
 export LUMIX_DATABASE_PRIMARY_PASSWORD="${LUMIX_DATABASE_PRIMARY_PASSWORD:-${POSTGRES_PASSWORD}}"
 export LUMIX_REDIS_HOST="${LUMIX_REDIS_HOST:-127.0.0.1}"
 
+# ECS JSON 日誌固定落在 repo runtime 目錄，Filebeat 只讀此目錄；不得寫入 cookie、token 或 credential。
+export LUMIX_LOG_DIRECTORY="${LUMIX_LOG_DIRECTORY:-${REPOSITORY_DIRECTORY}/runtime/logs}"
+mkdir -p "${LUMIX_LOG_DIRECTORY}"
+
 # 不繼承使用者層的私有 mirror；此開發入口只允許公開 Maven Central，避免本機 Nexus 可用性阻斷 API 啟動。
 exec ./mvnw --settings .mvn/settings-public.xml --update-snapshots spring-boot:run

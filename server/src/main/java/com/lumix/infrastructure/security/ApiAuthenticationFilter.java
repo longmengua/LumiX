@@ -5,6 +5,7 @@ import com.lumix.api.error.ApiErrorCode;
 import com.lumix.api.error.ApiErrorResponse;
 import com.lumix.api.error.ApiException;
 import com.lumix.common.RequestId;
+import com.lumix.infrastructure.observability.RequestCorrelationLoggingFilter;
 import com.lumix.user.auth.application.UserAuthenticationService;
 import com.lumix.user.auth.config.UserAuthenticationProperties;
 import com.lumix.user.auth.domain.AuthenticatedUser;
@@ -16,7 +17,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Set;
-import java.util.UUID;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -103,7 +103,7 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
             request.setAttribute(AUTHENTICATED_SESSION_ID_ATTRIBUTE, session.sessionId());
             filterChain.doFilter(request, response);
         } catch (ApiException exception) {
-            writeError(response, exception.getErrorCode());
+            writeError(request, response, exception.getErrorCode());
         }
     }
 
@@ -126,12 +126,12 @@ public class ApiAuthenticationFilter extends OncePerRequestFilter {
             : authenticationProperties.getCookieName();
     }
 
-    private void writeError(HttpServletResponse response, ApiErrorCode errorCode) throws IOException {
+    private void writeError(HttpServletRequest request, HttpServletResponse response, ApiErrorCode errorCode) throws IOException {
         response.setStatus(errorCode.getHttpStatus());
         response.setContentType("application/json");
         response.setHeader("Cache-Control", "no-store");
         objectMapper.writeValue(response.getOutputStream(), ApiErrorResponse.of(
-            errorCode, new RequestId(UUID.randomUUID().toString()), null
+            errorCode, new RequestId(RequestCorrelationLoggingFilter.requestId(request)), null
         ));
     }
 }

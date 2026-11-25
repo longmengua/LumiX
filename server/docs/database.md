@@ -20,3 +20,5 @@
 - baseline 只描述目前 schema，不保留舊版本升級或歷史 compatibility 的中間步驟。
 - Flyway 從 application classpath 的 `server/src/main/resources/db/migration/` 掃描 SQL migration；該目錄只存放可執行 SQL，說明文件統一留在本目錄。
 - 空資料庫直接執行 baseline 後即可由 current application 使用。
+- `db/init.sql` 是空資料庫的結構入口，只引用版本化 DDL migration；一般應用啟動仍以 Flyway 為準，不得把配置資料混入其中。
+- `db/seed.sql` 只保存可重複執行的初始配置資料。只有明確設定 `LUMIX_DATABASE_SEED_ENABLED=true` 才會在 Flyway 完成後執行，正式環境預設關閉。

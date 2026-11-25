@@ -1,6 +1,7 @@
 package com.lumix.admin.superadmin;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
@@ -70,6 +71,23 @@ class SuperAdminBootstrapServiceTest {
         assertThrows(IllegalStateException.class, service::bootstrap);
         verify(repository, never()).createPendingSuperAdmin(anyString());
         verify(delivery, never()).deliverSuperAdminActivation(any(), any(), any());
+    }
+
+    @Test
+    void activeMatchingPrincipalDoesNotRequireSmtpAtEveryRestart() {
+        SuperAdminRepository repository = mock(SuperAdminRepository.class);
+        PasswordResetDeliveryPort delivery = mock(PasswordResetDeliveryPort.class);
+        when(delivery.isAvailable()).thenReturn(false);
+        when(repository.lockSuperAdmin()).thenReturn(Optional.of(new SuperAdminPrincipal(
+            new AuthenticatedUser("admin-1", "root@lumix.example", "最高管理員"),
+            SuperAdminPrincipal.State.ACTIVE
+        )));
+        SuperAdminBootstrapService service = service(repository, "root@lumix.example", delivery);
+
+        assertDoesNotThrow(service::bootstrap);
+
+        verify(delivery, never()).deliverSuperAdminActivation(any(), any(), any());
+        verify(repository, never()).createPendingSuperAdmin(anyString());
     }
 
     @Test

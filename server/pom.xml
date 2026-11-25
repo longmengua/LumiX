@@ -21,6 +21,7 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <ecs-logging-java.version>1.8.0</ecs-logging-java.version>
     </properties>
 
     <dependencies>
@@ -40,6 +41,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+        <dependency>
+            <!-- ECS JSON 讓 Filebeat／Logstash 不必解析不穩定的純文字格式。 -->
+            <groupId>co.elastic.logging</groupId>
+            <artifactId>logback-ecs-encoder</artifactId>
+            <version>${ecs-logging-java.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

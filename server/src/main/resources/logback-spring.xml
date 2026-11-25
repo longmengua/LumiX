@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+    <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+    <springProperty scope="context" name="SERVICE_NAME" source="spring.application.name" defaultValue="lumix-api"/>
+    <springProperty scope="context" name="SERVICE_ENVIRONMENT" source="lumix.observability.environment" defaultValue="development"/>
+    <springProperty scope="context" name="LOG_DIRECTORY" source="lumix.observability.log-directory" defaultValue="../runtime/logs"/>
+    <springProperty scope="context" name="RETENTION_DAYS" source="lumix.observability.retention-days" defaultValue="14"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <appender name="ECS_JSON_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIRECTORY}/lumix-api.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_DIRECTORY}/archive/lumix-api.%d{yyyy-MM-dd}.%i.json.gz</fileNamePattern>
+            <maxFileSize>100MB</maxFileSize>
+            <maxHistory>${RETENTION_DAYS}</maxHistory>
+            <totalSizeCap>1GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="co.elastic.logging.logback.EcsEncoder">
+            <serviceName>${SERVICE_NAME}</serviceName>
+            <serviceEnvironment>${SERVICE_ENVIRONMENT}</serviceEnvironment>
+            <eventDataset>lumix.api</eventDataset>
+            <stackTraceAsArray>false</stackTraceAsArray>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="ECS_JSON_FILE"/>
+    </root>
+</configuration>
